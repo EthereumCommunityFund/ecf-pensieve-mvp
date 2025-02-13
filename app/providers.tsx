@@ -1,24 +1,25 @@
-'use client'
+'use client';
 
-import { HeroUIProvider } from '@heroui/react'
-import '@rainbow-me/rainbowkit/styles.css'
+import { HeroUIProvider } from '@heroui/react';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import '@rainbow-me/rainbowkit/styles.css';
 
-import { config } from '@/config/wagmi'
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { WagmiProvider } from 'wagmi';
 
-const queryClient = new QueryClient()
+import { config } from '@/config/wagmi';
+
+const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider locale="en-US">
-          <HeroUIProvider>{children}</HeroUIProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
-  )
+	return (
+		<WagmiProvider config={config}>
+			<QueryClientProvider client={queryClient}>
+				<RainbowKitProvider locale="en-US">
+					<HeroUIProvider>{children}</HeroUIProvider>
+				</RainbowKitProvider>
+			</QueryClientProvider>
+		</WagmiProvider>
+	);
 }
