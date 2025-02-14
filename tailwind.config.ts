@@ -14,10 +14,15 @@ const config: Config = {
 			colors: {
 				background: 'var(--background)',
 				foreground: 'var(--foreground)',
+				primary: 'var(--primary)',
+				'primary-foreground': 'var(--primary-foreground)',
+			},
+			fontFamily: {
+				sans: ['var(--font-open-sans)', 'Arial', 'sans-serif'],
+				special: ['var(--font-saira)', 'Arial', 'sans-serif'],
 			},
 		},
 	},
-	darkMode: 'class',
 	plugins: [heroui()],
 };
 

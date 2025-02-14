@@ -15,10 +15,12 @@
     "@heroui/react": "^2.6.14",
     "@rainbow-me/rainbowkit": "^2.2.3",
     "@tanstack/react-query": "^5.66.0",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.4.2",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.1",
     "viem": "2.x",
     "wagmi": "^2.14.11"
   },

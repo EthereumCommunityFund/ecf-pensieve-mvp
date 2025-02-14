@@ -5,17 +5,49 @@
 :root {
 	--background: #ffffff;
 	--foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--background: #0a0a0a;
-		--foreground: #ededed;
-	}
+	--primary: #10b981;
+	--primary-foreground: #ffffff;
+	--font-open-sans: 'Open Sans', sans-serif;
+	--font-saira: 'Saira', sans-serif;
 }
 
 body {
 	color: var(--foreground);
 	background: var(--background);
-	font-family: Arial, Helvetica, sans-serif;
+	font-family: var(--font-open-sans), Arial, sans-serif;
+}
+
+.font-special {
+	font-family: var(--font-saira), Arial, sans-serif;
+}
+
+/* 添加字体权重工具类 */
+.font-normal {
+	font-weight: 400;
+}
+
+.font-medium {
+	font-weight: 500;
+}
+
+.font-semibold {
+	font-weight: 600;
+}
+
+.font-bold {
+	font-weight: 700;
+}
+
+@layer components {
+	.btn-base {
+		@apply h-8 px-[10px] py-1 text-sm font-semibold rounded-[5px] cursor-pointer transition-colors duration-200;
+	}
+
+	.btn-ghost {
+		@apply btn-base text-[rgba(0,0,0,0.5)] hover:bg-[rgba(0,0,0,0.05)] hover:text-black;
+	}
+
+	.btn-primary {
+		@apply btn-base bg-black text-white hover:bg-gray-800 flex items-center gap-2;
+	}
 }
