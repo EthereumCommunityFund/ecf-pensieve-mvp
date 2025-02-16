@@ -5,7 +5,7 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { navigationItems, type NavigationItem } from './Navigation';
+import { navigationItems, type NavigationItem } from './navigation';
 
 export function MobileNavigation() {
 	const pathname = usePathname();

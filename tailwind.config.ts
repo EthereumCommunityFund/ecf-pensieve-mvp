@@ -10,6 +10,12 @@ const config: Config = {
 		'./node_modules/@heroui/react/**/*.{js,ts,jsx,tsx}',
 	],
 	theme: {
+		screens: {
+			lg: { min: '1400px' },
+			pc: { min: '1200px', max: '1399px' },
+			tablet: { min: '810px', max: '1199px' },
+			mobile: { min: '390px', max: '799px' },
+		},
 		extend: {
 			colors: {
 				background: 'var(--background)',
@@ -21,9 +27,28 @@ const config: Config = {
 				sans: ['var(--font-open-sans)', 'Arial', 'sans-serif'],
 				special: ['var(--font-saira)', 'Arial', 'sans-serif'],
 			},
+			scale: {
+				'120': '1.2',
+			},
 		},
 	},
-	plugins: [heroui()],
+	plugins: [
+		heroui(),
+		function ({ addUtilities }) {
+			addUtilities({
+				'.scrollbar-hide': {
+					/* IE and Edge */
+					'-ms-overflow-style': 'none',
+					/* Firefox */
+					'scrollbar-width': 'none',
+					/* Safari and Chrome */
+					'&::-webkit-scrollbar': {
+						display: 'none',
+					},
+				},
+			});
+		},
+	],
 };
 
 export default config;

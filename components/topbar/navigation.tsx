@@ -5,6 +5,8 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import DropDownMenu from '@/components/topbar/dropDownMenu';
+
 export type NavigationItem = {
 	name: string;
 	href: string;
@@ -45,7 +47,7 @@ export function Navigation() {
 	};
 
 	return (
-		<nav className="hidden md:flex items-center gap-2">
+		<nav className="flex items-center gap-2.5 mobile:hidden">
 			{navigationItems.map((item) => (
 				<Link
 					key={item.name}
@@ -79,6 +81,8 @@ export function Navigation() {
 					<span className="font-medium">{item.name}</span>
 				</Link>
 			))}
+
+			<DropDownMenu />
 		</nav>
 	);
 }
