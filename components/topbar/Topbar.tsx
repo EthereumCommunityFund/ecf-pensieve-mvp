@@ -70,12 +70,12 @@ export function Topbar() {
 					<div className="flex items-center h-full gap-5">
 						{/* Logo */}
 						<Link href="/public" className="flex items-center h-full min-w-[172px]">
-							<Image src="/Logo.png" alt="ECF" className="h-[24px] w-auto" />
+							<Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
 						</Link>
 
 						{/* Search Box */}
 						<div className="w-[300px] h-[32px] flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-lg px-[10px]">
-							<Image src="/common/search.png" alt="Search" width={20} height={20} />
+							<Image src="/images/common/search.png" alt="Search" width={20} height={20} />
 							<input
 								type="text"
 								placeholder="Quick Search"
@@ -138,7 +138,7 @@ export function Topbar() {
 								<button className="p-2 hover:text-primary">
 									<span className="sr-only">Search</span>
 									<Image
-										src="/common/search.png"
+										src="/images/common/search.png"
 										alt="Search"
 										width={20}
 										height={20}

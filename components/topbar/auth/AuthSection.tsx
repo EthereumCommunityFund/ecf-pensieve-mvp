@@ -25,7 +25,7 @@ export function AuthSection() {
 				}}
 			>
 				<Image
-					src="/common/signIn.png"
+					src="/images/common/signIn.png"
 					alt="Sign In"
 					width={20}
 					height={20}

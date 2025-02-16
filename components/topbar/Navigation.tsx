@@ -17,22 +17,22 @@ export const navigationItems: NavigationItem[] = [
 	{
 		name: 'Home',
 		href: '/',
-		icon: '/home/house.png',
-		activeIcon: '/home/house-active.png',
+		icon: '/images/home/house.png',
+		activeIcon: '/images/home/house-active.png',
 		matchPath: '/',
 	},
 	{
 		name: 'Projects',
 		href: '/projects',
-		icon: '/home/cube.png',
-		activeIcon: '/home/cube.png', // TODO use active icon
+		icon: '/images/home/cube.png',
+		activeIcon: '/images/home/cube.png', // TODO use active icon
 		matchPath: '/projects',
 	},
 	{
 		name: 'Contribute',
 		href: '/contribute',
-		icon: '/home/pencil.png',
-		activeIcon: '/home/pencil.png',
+		icon: '/images/home/pencil.png',
+		activeIcon: '/images/home/pencil.png',
 		matchPath: '/contribute',
 	},
 ] as const;
