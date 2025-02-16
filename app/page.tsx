@@ -14,16 +14,10 @@ export default function Page() {
 			</div>
 			<ConnectButton />
 			<div className="space-y-4">
-				<h1 className="text-4xl font-sans font-bold">这是 Open Sans 字体 (Bold)</h1>
-				<p className="text-lg font-sans">
-					这是 Open Sans 字体 (Regular) - The quick brown fox jumps over the lazy dog
-				</p>
-				<h2 className="text-2xl font-special font-bold">
-					这是 Saira 字体 (SemiBold)，Welcome to ecf.network
-				</h2>
-				<p className="text-lg font-special">
-					这是 Saira 字体 (Regular) - The quick brown fox jumps over the lazy dog
-				</p>
+				<p className="font-sans font-bold"> Open Sans (Bold)</p>
+				<p className="font-sans font-semibold">Open Sans (SemiBold)</p>
+				<p className="font-sans font-medium">Open Sans (Medium)</p>
+				<p className="font-sans">Open Sans (Regular)</p>
 			</div>
 		</div>
 	);

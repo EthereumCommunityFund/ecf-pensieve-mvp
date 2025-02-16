@@ -1,3 +1,5 @@
+@import './fonts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,27 +17,6 @@ body {
 	color: var(--foreground);
 	background: var(--background);
 	font-family: var(--font-open-sans), Arial, sans-serif;
-}
-
-.font-special {
-	font-family: var(--font-saira), Arial, sans-serif;
-}
-
-/* 添加字体权重工具类 */
-.font-normal {
-	font-weight: 400;
-}
-
-.font-medium {
-	font-weight: 500;
-}
-
-.font-semibold {
-	font-weight: 600;
-}
-
-.font-bold {
-	font-weight: 700;
 }
 
 @layer components {
