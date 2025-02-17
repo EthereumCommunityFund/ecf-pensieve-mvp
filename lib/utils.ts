@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import dayjs from 'dayjs';
+import { isAddress } from 'viem';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -35,4 +36,14 @@ export function formatTimeAgo(timestamp: number): string {
 	} else {
 		return `${now.diff(inputTime, 'year')}Y`;
 	}
+}
+
+export function getShortenAddress(address: string): string {
+	if (!address) return '';
+	if (!isAddress(address)) return '';
+
+	const start = address.slice(0, 6);
+	const end = address.slice(-4);
+
+	return `${start}..${end}`;
 }

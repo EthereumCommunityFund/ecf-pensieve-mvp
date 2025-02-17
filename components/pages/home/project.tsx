@@ -109,7 +109,7 @@ export const SectionContent = (props: ISectionContentProps) => {
 										'mx-auto flex items-center justify-center w-[40px] h-[40px] rounded-lg',
 										project.hasVoted
 											? 'bg-[var(--primary-green)]'
-											: 'bg-[rgba(0,0,0,0.05)]',
+											: 'bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.1)]',
 									)}
 								>
 									<Image
