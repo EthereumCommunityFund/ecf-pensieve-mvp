@@ -1,11 +1,11 @@
 import { Image, cn } from '@heroui/react';
 import NextImage from 'next/image';
 
-const Bannar = () => {
+const Banner = () => {
 	return (
 		<div
 			className={cn(
-				'w-full h-[167px] overflow-hidden bg-white rounded-[10px] border border-[rgba(0,0,0,0.1)] p-5 relative bg-[url(/images/home/BannarBg.png)] bg-no-repeat ',
+				'w-full h-[167px] overflow-hidden bg-white rounded-[10px] border border-[rgba(0,0,0,0.1)] p-5 relative bg-[url(/images/home/BannerBg.png)] bg-no-repeat ',
 				'mobile:h-[auto] mobile:bg-none',
 			)}
 			style={{ backgroundPosition: 'right center', backgroundSize: 'auto 100%' }}
@@ -37,4 +37,4 @@ const Bannar = () => {
 	);
 };
 
-export default Bannar;
+export default Banner;
