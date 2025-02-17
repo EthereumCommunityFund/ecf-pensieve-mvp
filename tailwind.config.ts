@@ -34,7 +34,7 @@ const config: Config = {
 	},
 	plugins: [
 		heroui(),
-		function ({ addUtilities }) {
+		function ({ addUtilities }: any) {
 			addUtilities({
 				'.scrollbar-hide': {
 					/* IE and Edge */
