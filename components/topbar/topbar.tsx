@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button, Kbd, Image, Input } from '@heroui/react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Kbd, Image } from '@heroui/react';
 import { usePathname } from 'next/navigation';
 
 import { AuthSection } from '@/components/topbar/auth/AuthSection';
-import DropDownMenu from '@/components/topbar/dropDownMenu';
 
 import { Navigation } from './navigation';
-import { MobileNavigation } from './mobileNavigation';
+import MobileMenu from './mobileMenu';
 
 const navigationItems = [
 	{
@@ -65,29 +63,17 @@ export function Topbar() {
 
 	return (
 		<header className="fixed top-0 left-0 right-0 bg-white border-b border-[rgba(0,0,0,0.1)] z-50 h-[50px]">
-			<div className="w-full px-5 h-full">
+			{/* desktop/tablet */}
+			<div className="mobile:hidden w-full px-5 h-full">
 				<div className="flex justify-between items-center h-full">
-					{/* Logo and Navigation Container */}
 					<div className="flex items-center h-full gap-5">
-						{/* Logo */}
 						<Link
 							href="/public"
-							className="mobile:hidden flex items-center h-full min-w-[172px]"
+							className="flex mobile:flex-1 items-center h-full min-w-[172px]"
 						>
 							<Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
 						</Link>
 
-						{/* menu icon */}
-						<div className="hidden mobile:block cursor-pointer">
-							<Image
-								src="/images/common/List.png"
-								alt="Menu"
-								width={24}
-								height={24}
-							/>
-						</div>
-
-						{/* Search Box */}
 						<div className="mobile:hidden w-[300px] h-[32px] flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-lg px-[10px]">
 							<Image
 								src="/images/common/search.png"
@@ -107,15 +93,25 @@ export function Topbar() {
 							</div>
 						</div>
 
-						{/* Desktop Navigation */}
 						<Navigation />
 					</div>
 
-					{/* Replace ConnectButton with AuthSection */}
-					<div className="flex items-center h-full mobile:hidden">
-						<AuthSection />
-					</div>
+					<AuthSection />
 				</div>
+			</div>
+
+			{/* mobile */}
+			<div className="lg:hidden pc:hidden tablet:hidden flex justify-between items-center w-full px-5 h-full">
+				<MobileMenu />
+
+				<Link
+					href="/public"
+					className="flex-1 flex justify-center items-center h-full min-w-[172px]"
+				>
+					<Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
+				</Link>
+
+				<AuthSection />
 			</div>
 		</header>
 	);

@@ -14,7 +14,7 @@ const config: Config = {
 			lg: { min: '1400px' },
 			pc: { min: '1200px', max: '1399px' },
 			tablet: { min: '810px', max: '1199px' },
-			mobile: { min: '390px', max: '799px' },
+			mobile: { min: '390px', max: '809px' },
 		},
 		extend: {
 			colors: {

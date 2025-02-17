@@ -14,8 +14,8 @@ export function AuthSection() {
 	}
 
 	return (
-		<div className="flex items-center gap-2 shrink-0 ml-5">
-			<AuthButton className="mobile:hidden" variant="signUp">
+		<div className="flex items-center h-full gap-2 shrink-0 ml-5">
+			<AuthButton className="tablet:hidden mobile:hidden" variant="signUp">
 				Sign Up
 			</AuthButton>
 			<AuthButton
@@ -33,7 +33,7 @@ export function AuthSection() {
 					height={20}
 					className="group-hover:brightness-0 group-hover:invert"
 				/>
-				<span className="mobile:hidden pc:block">Sign In</span>
+				<span className="block tablet:hidden mobile:hidden ">Sign In</span>
 			</AuthButton>
 			<div className="hidden">
 				<ConnectButton />
