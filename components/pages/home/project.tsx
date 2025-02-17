@@ -17,16 +17,25 @@ export interface ISectionProps {
 export const SectionList = (props: ISectionProps) => {
 	return (
 		<div>
-			<div className="mt-5 flex items-center justify-between h-[65px] px-[20px] py-[4px]">
+			<div
+				className="mt-5 flex items-center justify-between 
+				mobile:flex-col mobile:items-start mobile:gap-2.5 
+				h-[65px] mobile:h-auto 
+				px-[20px] py-[4px]"
+			>
 				<div>
 					<p className="text-2xl font-bold text-black opacity-80">{props.title}</p>
 					<p className="mt-[5px] text-sm text-black opacity-80">{props.description}</p>
 				</div>
 				{props.buttonText && (
-					<StyledButton onPress={props.onClick}>{props.buttonText}</StyledButton>
+					<StyledButton
+						onPress={props.onClick}
+						className="mobile:w-full mobile:h-[31px] mobile:bg-black mobile:text-white"
+					>
+						{props.buttonText}
+					</StyledButton>
 				)}
 			</div>
-
 			{props.children}
 		</div>
 	);
