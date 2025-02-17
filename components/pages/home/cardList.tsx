@@ -36,29 +36,31 @@ const CardList = () => {
 
 	return (
 		<div className="mt-5 w-full">
-			<div className="flex flex-nowrap gap-5 tablet:overflow-x-auto mobile:overflow-x-auto tablet:pb-5 scrollbar-hide">
-				<CardItem
-					title={CardListData[0].title}
-					description={CardListData[0].description}
-					bgImage={CardListData[0].bgImage}
-				>
-					<CardAction title={CardListData[0].title} onClick={proposeProject} />
-				</CardItem>
-				<CardItem
-					title={CardListData[1].title}
-					description={CardListData[1].description}
-					bgImage={CardListData[1].bgImage}
-				>
-					<CardAction title={CardListData[1].title} onClick={exploreIndex} />
-				</CardItem>
-				<CardItem
-					title={CardListData[2].title}
-					description={CardListData[2].description}
-					bgImage={CardListData[2].bgImage}
-					disabled={true}
-				>
-					<CardAction title={CardListData[2].title} />
-				</CardItem>
+			<div className="overflow-x-auto scrollbar-hide">
+				<div className="flex flex-nowrap gap-5 pb-5 min-w-fit">
+					<CardItem
+						title={CardListData[0].title}
+						description={CardListData[0].description}
+						bgImage={CardListData[0].bgImage}
+					>
+						<CardAction title={CardListData[0].title} onClick={proposeProject} />
+					</CardItem>
+					<CardItem
+						title={CardListData[1].title}
+						description={CardListData[1].description}
+						bgImage={CardListData[1].bgImage}
+					>
+						<CardAction title={CardListData[1].title} onClick={exploreIndex} />
+					</CardItem>
+					<CardItem
+						title={CardListData[2].title}
+						description={CardListData[2].description}
+						bgImage={CardListData[2].bgImage}
+						disabled={true}
+					>
+						<CardAction title={CardListData[2].title} />
+					</CardItem>
+				</div>
 			</div>
 		</div>
 	);
@@ -77,7 +79,11 @@ interface ICardItemProps {
 const CardItem = (props: ICardItemProps) => {
 	return (
 		<div
-			className="group relative mobile:w-[300px] tablet:w-[373px] lg:flex-1 pc:flex-1 min-h-[245px] bg-white rounded-md p-5 border border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)] overflow-hidden"
+			className="group relative shrink-0 min-h-[245px] bg-white rounded-md p-5 border border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)] overflow-hidden
+				mobile:w-[300px] 
+				tablet:w-[373px] 
+				pc:w-auto pc:flex-1 
+				lg:w-auto lg:flex-1"
 			style={{
 				cursor: props.disabled ? 'not-allowed' : 'pointer',
 			}}
