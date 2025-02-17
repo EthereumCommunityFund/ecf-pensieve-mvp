@@ -68,7 +68,7 @@ export function Topbar() {
 				<div className="flex justify-between items-center h-full">
 					<div className="flex items-center h-full gap-5">
 						<Link
-							href="/public"
+							href="/"
 							className="flex mobile:flex-1 items-center h-full min-w-[172px]"
 						>
 							<Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
