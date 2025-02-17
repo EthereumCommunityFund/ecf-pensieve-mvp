@@ -3,21 +3,21 @@ import NextImage from 'next/image';
 
 const CardListData = [
 	{
-		title: 'Propose & Contribute to Projects',
+		title: 'Propose a project',
 		description:
 			'Propose projects, participate with the community to verify on proposals, then contribute on project pages and gain rewards! ',
 		bgImage: '/images/home/PenNib.png',
 		actionName: 'Propose a Project',
 	},
 	{
-		title: 'Curate the Knowledge Base',
+		title: 'Explore the Index',
 		description:
 			'Use your gained experience around the index to support quality contributors and boost projects you care about.',
 		bgImage: '/images/home/PuzzlePiece.png',
 		actionName: 'Explore The Index',
 	},
 	{
-		title: 'Claim Contribution Rewards',
+		title: 'Coming soon',
 		description:
 			'Any web3 projects you contributed to is part of web3 history and illuminating for future. Find the project and claim your contributions here.',
 		bgImage: '/images/home/Sword.png',

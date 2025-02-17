@@ -2,7 +2,7 @@ import { Image, cn, Link } from '@heroui/react';
 import NextImage from 'next/image';
 
 import StyledButton from '@/components/base/button';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber, formatTimeAgo } from '@/lib/utils';
 
 import { IProject } from './projectList';
 
@@ -79,7 +79,7 @@ export const SectionContent = (props: ISectionContentProps) => {
 										<span className="mx-[6px] underline font-bold">
 											@{project.admin}
 										</span>{' '}
-										<span>{project.time}</span>
+										<span>{formatTimeAgo(project.time)}</span>
 									</p>
 									<div className="mt-[10px] flex flex-wrap gap-[8px]">
 										{project.tags.map((tag) => (

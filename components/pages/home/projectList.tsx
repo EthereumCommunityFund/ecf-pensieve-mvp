@@ -7,7 +7,7 @@ export interface IProject {
 	image: string;
 	link: string;
 	admin: string;
-	time: string;
+	time: number;
 	tags: string[];
 	hasVoted: boolean;
 	voteCount: number;
@@ -24,7 +24,7 @@ const TopProjectList: IProject[] = [
 		image: 'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
 		link: 'https://via.placeholder.com/150',
 		admin: 'drivenfast',
-		time: '1w',
+		time: 1739780943631,
 		tags: ['Protocol', 'DAO'],
 		voteCount: 6900,
 		memberCount: 820,
@@ -37,7 +37,7 @@ const TopProjectList: IProject[] = [
 		image: 'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
 		link: 'https://via.placeholder.com/150',
 		admin: 'Admin 2',
-		time: 'Time 2',
+		time: 1719780444631,
 		tags: ['Tag 3', 'Tag 4'],
 		voteCount: 55000,
 		memberCount: 24000,
@@ -50,7 +50,7 @@ const TopProjectList: IProject[] = [
 		image: 'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
 		link: 'https://via.placeholder.com/150',
 		admin: 'Admin 3',
-		time: 'Time 3',
+		time: 1639730943631,
 		tags: ['Tag 5', 'Tag 6'],
 		voteCount: 13498,
 		memberCount: 3409,
