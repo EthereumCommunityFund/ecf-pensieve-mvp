@@ -40,11 +40,11 @@ export default function MobileMenu() {
 							<DrawerBody className="pt-[54px]">
 								<QuickSearch />
 
-								<MobileNavigation />
+								<MobileNavigation onClose={onClose} />
 
 								<Divider />
 
-								<MoreMenu />
+								<MoreMenu onClose={onClose} />
 							</DrawerBody>
 						</>
 					)}
@@ -67,7 +67,11 @@ const QuickSearch = () => {
 	);
 };
 
-const MobileNavigation = () => {
+interface NavigationProps {
+	onClose: () => void;
+}
+
+const MobileNavigation = ({ onClose }: NavigationProps) => {
 	const pathname = usePathname();
 
 	const isActiveRoute = (path: string) => {
@@ -80,6 +84,7 @@ const MobileNavigation = () => {
 				<Link
 					key={item.name}
 					href={item.href}
+					onClick={onClose}
 					className={`
                     w-full h-10
                     flex items-center gap-2.5 rounded-[10px] px-[10px] py-2
@@ -114,13 +119,18 @@ const MobileNavigation = () => {
 	);
 };
 
-const MoreMenu = () => {
+const MoreMenu = ({ onClose }: NavigationProps) => {
 	return (
 		<div className="px-2.5 py-5">
 			<div className="flex flex-wrap gap-[20px]">
 				{DropDownMenuData.common.map((item) => {
 					return (
-						<Link href={item.link} key={item.name} className="font-semibold">
+						<Link
+							href={item.link}
+							key={item.name}
+							onClick={onClose}
+							className="font-semibold"
+						>
 							{item.name}
 						</Link>
 					);
@@ -131,6 +141,7 @@ const MoreMenu = () => {
 					<Link
 						key={item.name}
 						href={item.link}
+						onClick={onClose}
 						className="p-2 rounded-md hover:bg-[rgba(0,0,0,0.05)] transition-colors"
 					>
 						<Image
