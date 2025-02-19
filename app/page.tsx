@@ -2,7 +2,7 @@
 
 import Banner from '@/components/pages/home/banner';
 import CardList from '@/components/pages/home/cardList';
-import ProjectList from '@/components/pages/home/projectList';
+import HomeList from '@/components/pages/home/homeList';
 
 export default function Page() {
 	return (
@@ -11,7 +11,7 @@ export default function Page() {
 
 			<CardList />
 
-			<ProjectList />
+			<HomeList />
 		</>
 	);
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, ButtonProps, cn } from '@heroui/react';
 
 function StyledButton({ className, children, ...props }: ButtonProps) {
