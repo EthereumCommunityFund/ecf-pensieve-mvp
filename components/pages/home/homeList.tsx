@@ -36,7 +36,8 @@ export const MockProjectListData: IProject[] = [
 	{
 		id: 2,
 		name: 'Ethereum Community Fund',
-		description: 'Description 2',
+		description:
+			'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
 		image: 'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
 		link: 'https://via.placeholder.com/150',
 		admin: 'Admin 2',
@@ -49,7 +50,8 @@ export const MockProjectListData: IProject[] = [
 	{
 		id: 3,
 		name: 'Ethereum Community Fund',
-		description: 'Description 3',
+		description:
+			'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
 		image: 'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
 		link: 'https://via.placeholder.com/150',
 		admin: 'Admin 3',
@@ -76,20 +78,21 @@ const SectionList = (props: ISectionProps) => {
 				className="mt-5 flex items-center justify-between
 				mobile:flex-col mobile:items-start mobile:gap-2.5
 				h-[65px] mobile:h-auto
-				px-[20px] py-[4px]"
+				px-[20px]"
 			>
-				<div>
+				<div className="h-[57px]">
 					<ECFTypography type={'subtitle1'} className="font-bold opacity-80">
 						{props.title}
 					</ECFTypography>
-					<ECFTypography type={'body2'} className="mt-[5px] opacity-80">
+					<ECFTypography type={'body2'} className="mt-[5px] leading-[19px] opacity-80">
 						{props.description}
 					</ECFTypography>
 				</div>
 				{props.buttonText && (
 					<ECFButton
+						$size={'small'}
 						onPress={props.onClick}
-						className="mobile:w-full mobile:h-[31px] mobile:bg-black mobile:text-white"
+						className="mobile:w-full mobile:h-[31px]"
 					>
 						{props.buttonText}
 					</ECFButton>

@@ -59,14 +59,16 @@ const DropDownMenu = () => {
 	return (
 		<Dropdown className="shrink-0">
 			<DropdownTrigger>
-				<Image
-					as={NextImage}
-					src="/images/common/DotsThree.png"
-					className="cursor-pointer"
-					alt="menu"
-					width={24}
-					height={24}
-				/>
+				<div className="hover:bg-[rgba(0,0,0,0.05)] rounded-[10px] p-1">
+					<Image
+						as={NextImage}
+						src="/images/common/DotsThree.png"
+						className="cursor-pointer"
+						alt="menu"
+						width={24}
+						height={24}
+					/>
+				</div>
 			</DropdownTrigger>
 			<DropdownMenu>
 				<>

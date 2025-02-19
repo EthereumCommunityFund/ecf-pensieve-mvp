@@ -23,7 +23,7 @@ const ProjectsPage = () => {
 					height={63}
 				/>
 				<div className="flex-1">
-					<ECFTypography type={'title'}>ECF Projects</ECFTypography>
+					<ECFTypography type={'title'}>Projects</ECFTypography>
 					<ECFTypography type={'subtitle2'} className="mt-2.5">
 						Explore projects and initiatives here or add your own to the list!
 					</ECFTypography>
@@ -39,14 +39,14 @@ const ProjectsPage = () => {
 					<ECFButton $size="small">Filter</ECFButton>
 				</div>
 
-				<div>
-					<div className="flex-1 opacity-80 px-2.5 py-2">
+				<div className="flex-1">
+					<div className="opacity-80 px-2.5 py-2">
 						<ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
 						<ECFTypography type={'body2'} className="mt-[5px]">
 							Page Completion Rate (Transparency) * User Supported Votes
 						</ECFTypography>
 					</div>
-					<div className="flex-1 pb-2.5 border-b border-[rgba(0, 0, 0, 0.1)]">
+					<div className="pb-2.5">
 						{MockProjectListData.map((project) => (
 							<ProjectCard key={project.id} project={project} showBorder={true} />
 						))}
@@ -55,14 +55,18 @@ const ProjectsPage = () => {
 
 				<div className="mobile:hidden">
 					<div className="flex h-[73px] justify-start items-start gap-5 w-[300px]">
-						<ECFButton $size="small">Sort</ECFButton>
-						<ECFButton $size="small">Filter</ECFButton>
+						<ECFButton $size="small" className="px-2.5 min-w-0">
+							Sort
+						</ECFButton>
+						<ECFButton $size="small" className="px-2.5 min-w-0">
+							Filter
+						</ECFButton>
 					</div>
 
 					<RewardCard />
 				</div>
 
-				<div className="lg:hidden pc:hidden tablet:hidden mt-5">
+				<div className="lg:hidden pc:hidden tablet:hidden mt-5 w-full">
 					<RewardCard />
 				</div>
 			</div>

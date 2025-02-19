@@ -17,8 +17,8 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 	return (
 		<div
 			className={cn(
-				showBorder && 'border-t border-[rgba(0, 0, 0, 0.1)]',
-				'mt-[10px] pt-[10px]',
+				showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
+				'pb-[10px] pt-[10px]',
 			)}
 		>
 			<Link
@@ -48,11 +48,14 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 						/>
 					</div>
 
-					<div className="flex-1">
-						<ECFTypography type={'body1'} className="font-semibold">
+					<div className="flex-1 max-w-[440px] mobile:max-w-full">
+						<ECFTypography type={'body1'} className="leading-[18px] font-semibold">
 							{project.name}
 						</ECFTypography>
-						<ECFTypography type={'body2'} className="mt-[6px] opacity-65">
+						<ECFTypography
+							type={'body2'}
+							className="mt-[6px] leading-[18px] opacity-65"
+						>
 							{project.description}
 						</ECFTypography>
 						<p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0, 0, 0, 0.8)]">
@@ -66,7 +69,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 							{project.tags.map((tag) => (
 								<span
 									key={tag}
-									className="px-3 py-1 text-[12px] text-black font-semibold rounded-[6px] bg-[rgba(0,0,0,0.05)]"
+									className="h-[22px] px-3 py-1 text-[12px] leading-[12px] text-black font-semibold rounded-[6px] bg-[rgba(0,0,0,0.05)]"
 								>
 									{tag}
 								</span>

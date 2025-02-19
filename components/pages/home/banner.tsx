@@ -13,8 +13,8 @@ const Banner = () => {
 			style={{ backgroundPosition: 'right center', backgroundSize: 'auto 100%' }}
 		>
 			<div className="w-full h-full z-10">
-				<div>
-					<span className="bg-[rgba(0,0,0,0.1)] border border-[rgba(0,0,0,0.2)] rounded-md px-2.5 py-1 text-[14px] font-semibold">
+				<div className="h-[25px]">
+					<span className="h-[25px] bg-[rgba(0,0,0,0.1)] border border-[rgba(0,0,0,0.2)] rounded-md px-2.5 py-1 text-[14px] leading-[17px] font-semibold">
 						ALPHA 0.1.0
 					</span>
 				</div>

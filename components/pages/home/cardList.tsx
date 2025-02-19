@@ -5,7 +5,7 @@ import ECFTypography from '@/components/base/typography';
 
 const CardListData = [
 	{
-		title: 'Propose a project',
+		title: 'Propose & Contribute to Projects',
 		description:
 			'Propose projects, participate with the community to verify on proposals, then contribute on project pages and gain rewards! ',
 		bgImage: '/images/home/PenNib.png',
@@ -39,20 +39,20 @@ const CardList = () => {
 	return (
 		<div className="mt-5 w-full">
 			<div className="overflow-x-auto scrollbar-hide">
-				<div className="flex flex-nowrap gap-5 pb-5 min-w-fit">
+				<div className="flex flex-nowrap gap-5 min-w-fit">
 					<CardItem
 						title={CardListData[0].title}
 						description={CardListData[0].description}
 						bgImage={CardListData[0].bgImage}
 					>
-						<CardAction title={CardListData[0].title} onClick={proposeProject} />
+						<CardAction title={CardListData[0].actionName} onClick={proposeProject} />
 					</CardItem>
 					<CardItem
 						title={CardListData[1].title}
 						description={CardListData[1].description}
 						bgImage={CardListData[1].bgImage}
 					>
-						<CardAction title={CardListData[1].title} onClick={exploreIndex} />
+						<CardAction title={CardListData[1].actionName} onClick={exploreIndex} />
 					</CardItem>
 					<CardItem
 						title={CardListData[2].title}
@@ -60,7 +60,7 @@ const CardList = () => {
 						bgImage={CardListData[2].bgImage}
 						disabled={true}
 					>
-						<CardAction title={CardListData[2].title} />
+						<CardAction title={CardListData[2].actionName} />
 					</CardItem>
 				</div>
 			</div>
@@ -83,7 +83,7 @@ const CardItem = (props: ICardItemProps) => {
 		<div
 			className="group relative shrink-0 min-h-[245px] bg-white rounded-md p-5 border border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)] overflow-hidden
 				mobile:w-[300px] 
-				tablet:w-[373px] 
+				tablet:w-[373px]
 				pc:w-auto pc:flex-1 
 				lg:w-auto lg:flex-1"
 			style={{
@@ -108,7 +108,10 @@ const CardItem = (props: ICardItemProps) => {
 				>
 					{props.title}
 				</ECFTypography>
-				<ECFTypography type={'body1'} className="mt-[14px] min-h-[137px] opacity-80">
+				<ECFTypography
+					type={'body2'}
+					className="leading-[22px] mt-[14px] min-h-[137px] opacity-80"
+				>
 					{props.description}
 				</ECFTypography>
 				{props.children}
@@ -124,7 +127,8 @@ interface ICardActionProps {
 
 const CardAction = (props: ICardActionProps) => {
 	return (
-		<div className="flex items-center justify-start w-full gap-2">
+		// TODO: -5px is a temporary fix for the position -> match figma design
+		<div className="mt-[-5px] flex items-center justify-start w-full gap-2 h-[24px]">
 			{!props.onClick && (
 				<div className="w-[8px] h-[8px] bg-[rgba(0,0,0,0.5)] rounded-[8px]"></div>
 			)}

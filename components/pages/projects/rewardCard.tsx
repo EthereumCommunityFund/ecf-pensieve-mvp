@@ -4,10 +4,13 @@ import ECFTypography from '@/components/base/typography';
 const RewardCard = () => {
 	return (
 		<div className="bg-white w-[300px] mobile:w-full p-5 rounded-[10px] border border-[rgba(0, 0, 0, 0.1)]">
-			<ECFTypography type={'subtitle2'} className="text-[var(--primary-green)]">
+			<ECFTypography
+				type={'subtitle2'}
+				className="text-[var(--primary-green)] leading-[25px] font-bold"
+			>
 				ZERO-TO-ONE Rewards Promo
 			</ECFTypography>
-			<ECFTypography type={'body2'} className="mt-2.5 mb-2.5 opacity-60">
+			<ECFTypography type={'body2'} className="leading-[18px] mt-2.5 mb-5 opacity-60">
 				Proposing new projects will certainly recieved a reward even if their proposal does
 				not pass.
 			</ECFTypography>

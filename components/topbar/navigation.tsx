@@ -7,6 +7,8 @@ import { usePathname } from 'next/navigation';
 
 import DropDownMenu from '@/components/topbar/dropDownMenu';
 
+import ECFTypography from '../base/typography';
+
 export type NavigationItem = {
 	name: string;
 	href: string;
@@ -78,7 +80,9 @@ export function Navigation() {
                             transition-all duration-200
                         `}
 					/>
-					<span className="font-medium">{item.name}</span>
+					<ECFTypography type={'body2'} className="text-inherit font-semibold">
+						{item.name}
+					</ECFTypography>
 				</Link>
 			))}
 

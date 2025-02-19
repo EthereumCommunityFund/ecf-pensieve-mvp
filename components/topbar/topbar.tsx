@@ -84,10 +84,10 @@ export function Topbar() {
 							<input
 								type="text"
 								placeholder="Quick Search"
-								className="flex-1 w-auto h-[20px] bg-transparent border-0 focus:ring-0 focus:outline-none text-sm"
+								className="flex-1 w-auto h-[20px] bg-transparent border-0 focus:ring-0 focus:outline-none text-sm placeholder:text-[rgba(0,0,0,0.3)]"
 							/>
-							<div className="flex items-center h-full">
-								<Kbd keys={['command']} className="bg-[rgba(0,0,0,0.1)]">
+							<div className="flex items-center h-[22px] bg-[rgba(0,0,0,0.1)] rounded-[7px]">
+								<Kbd keys={['command']} className="bg-transparent opacity-30">
 									K
 								</Kbd>
 							</div>

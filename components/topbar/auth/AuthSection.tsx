@@ -30,15 +30,19 @@ export function AuthSection() {
 							</div>
 						</div>
 					</DropdownTrigger>
-					<DropdownMenu>
+					<DropdownMenu disabledKeys={['Connected']}>
 						<>
-							<DropdownItem key="Connected" textValue="Connected">
+							<DropdownItem
+								key="Connected"
+								textValue="Connected"
+								className="text-[rgba(0,0,0,0.3)] hover:text-[rgba(0,0,0,0.5)]"
+							>
 								Connected
 							</DropdownItem>
 							<DropdownItem
 								key="Logout"
 								textValue="Logout"
-								className="text-red-500 hover:text-red-600"
+								className="text-[rgba(0,0,0,0.3)] hover:text-[rgba(0,0,0,0.5)]"
 								onClick={() => disconnect()}
 							>
 								Logout
