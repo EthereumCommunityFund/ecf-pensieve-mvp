@@ -1,4 +1,5 @@
-import StyledButton from '@/components/base/button';
+import ECFButton from '@/components/base/button';
+import ECFTypography from '@/components/base/typography';
 
 import ProjectList from './projectList';
 
@@ -78,16 +79,20 @@ const SectionList = (props: ISectionProps) => {
 				px-[20px] py-[4px]"
 			>
 				<div>
-					<p className="text-2xl font-bold text-black opacity-80">{props.title}</p>
-					<p className="mt-[5px] text-sm text-black opacity-80">{props.description}</p>
+					<ECFTypography type={'subtitle1'} className="font-bold opacity-80">
+						{props.title}
+					</ECFTypography>
+					<ECFTypography type={'body2'} className="mt-[5px] opacity-80">
+						{props.description}
+					</ECFTypography>
 				</div>
 				{props.buttonText && (
-					<StyledButton
+					<ECFButton
 						onPress={props.onClick}
 						className="mobile:w-full mobile:h-[31px] mobile:bg-black mobile:text-white"
 					>
 						{props.buttonText}
-					</StyledButton>
+					</ECFButton>
 				)}
 			</div>
 			{props.children}

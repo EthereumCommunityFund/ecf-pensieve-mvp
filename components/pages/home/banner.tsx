@@ -1,6 +1,8 @@
 import { Image, cn } from '@heroui/react';
 import NextImage from 'next/image';
 
+import ECFTypography from '@/components/base/typography';
+
 const Banner = () => {
 	return (
 		<div
@@ -17,14 +19,14 @@ const Banner = () => {
 					</span>
 				</div>
 
-				<p className="mt-2.5 font-saria text-black text-[38px] font-semibold">
+				<ECFTypography type={'title'} className="mt-2.5">
 					Welcome to{' '}
 					<span className="text-[var(--primary-green)]">ecf.network,</span>{' '}
-				</p>
+				</ECFTypography>
 
-				<div className="mt-[10px] text-black text-[18px]">
+				<ECFTypography type={'subtitle2'} className="mt-2.5">
 					A community-curated and governed platform to discover credible web3 projects.
-				</div>
+				</ECFTypography>
 			</div>
 
 			<div

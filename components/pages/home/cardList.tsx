@@ -1,6 +1,8 @@
 import { Image } from '@heroui/react';
 import NextImage from 'next/image';
 
+import ECFTypography from '@/components/base/typography';
+
 const CardListData = [
 	{
 		title: 'Propose a project',
@@ -88,7 +90,6 @@ const CardItem = (props: ICardItemProps) => {
 				cursor: props.disabled ? 'not-allowed' : 'pointer',
 			}}
 		>
-			{/* 背景图片容器 */}
 			<div className="absolute right-[-40px] bottom-[-40px] w-[193px] h-[193px] transition-transform duration-300 ease-in-out group-hover:scale-120 mobile:hidden tablet:block">
 				<Image
 					src={props.bgImage}
@@ -100,14 +101,16 @@ const CardItem = (props: ICardItemProps) => {
 				/>
 			</div>
 
-			{/* 内容区域 */}
 			<div className="relative z-10">
-				<div className="text-[var(--primary-green)] font-saria text-2xl font-semibold">
+				<ECFTypography
+					type={'subtitle1'}
+					className="font-saria text-[var(--primary-green)]"
+				>
 					{props.title}
-				</div>
-				<div className="mt-[14px] min-h-[137px] text-base text-black font-semibold opacity-80">
+				</ECFTypography>
+				<ECFTypography type={'body1'} className="mt-[14px] min-h-[137px] opacity-80">
 					{props.description}
-				</div>
+				</ECFTypography>
 				{props.children}
 			</div>
 		</div>
@@ -125,7 +128,9 @@ const CardAction = (props: ICardActionProps) => {
 			{!props.onClick && (
 				<div className="w-[8px] h-[8px] bg-[rgba(0,0,0,0.5)] rounded-[8px]"></div>
 			)}
-			<div className="text-base text-black font-bold">{props.title}</div>
+			<ECFTypography type={'body1'} className="font-bold">
+				{props.title}
+			</ECFTypography>
 			{props.onClick && (
 				<Image
 					src="/images/common/ArrowRight.png"
