@@ -80,7 +80,7 @@ const SectionList = (props: ISectionProps) => {
 				h-[65px] mobile:h-auto
 				px-[20px]"
 			>
-				<div className="h-[57px]">
+				<div className="h-[57px] mobile:h-auto">
 					<ECFTypography type={'subtitle1'} className="font-bold opacity-80">
 						{props.title}
 					</ECFTypography>
