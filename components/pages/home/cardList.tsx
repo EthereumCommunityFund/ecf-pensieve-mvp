@@ -81,7 +81,7 @@ interface ICardItemProps {
 const CardItem = (props: ICardItemProps) => {
 	return (
 		<div
-			className="group relative shrink-0 min-h-[245px] bg-white rounded-md p-5 border border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)] overflow-hidden
+			className="group relative shrink-0 min-h-[245px] bg-white rounded-md px-[19px] py-5 border border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)] overflow-hidden
 				mobile:w-[300px] 
 				tablet:w-[373px]
 				pc:w-auto pc:flex-1 
@@ -90,7 +90,7 @@ const CardItem = (props: ICardItemProps) => {
 				cursor: props.disabled ? 'not-allowed' : 'pointer',
 			}}
 		>
-			<div className="absolute right-0 bottom-0 w-[140px] h-[140px] transition-transform duration-300 ease-in-out opacity-20">
+			<div className="absolute right-0 bottom-0 w-[140px] h-[140px] transition-transform duration-300 ease-in-out opacity-50">
 				<Image
 					src={props.bgImage}
 					alt={props.title}
@@ -113,8 +113,11 @@ const CardItem = (props: ICardItemProps) => {
 				>
 					{props.description}
 				</ECFTypography>
-				{props.children}
+
+				<div className='h-[24px]'></div>
 			</div>
+
+			{props.children}
 		</div>
 	);
 };
@@ -126,8 +129,7 @@ interface ICardActionProps {
 
 const CardAction = (props: ICardActionProps) => {
 	return (
-		// TODO: -5px is a temporary fix for the position -> match figma design
-		<div className="mt-[-5px] flex items-center justify-start w-full gap-2 h-[24px]">
+		<div className="absolute bottom-[19px] left-0 right-0 px-5 flex items-center justify-start w-full gap-2 h-[24px]">
 			{!props.onClick && (
 				<div className="w-[8px] h-[8px] bg-[rgba(0,0,0,0.5)] rounded-[8px]"></div>
 			)}
