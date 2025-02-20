@@ -109,7 +109,7 @@ const CardItem = (props: ICardItemProps) => {
 				</ECFTypography>
 				<ECFTypography
 					type={'body1'}
-					className="leading-[25.6px] mt-[14px] min-h-[137px] mobile:min-h-auto opacity-80"
+					className="leading-[25.6px] mt-[14px] min-h-[130px] mobile:min-h-auto opacity-80"
 				>
 					{props.description}
 				</ECFTypography>
