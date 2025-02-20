@@ -8,21 +8,21 @@ const CardListData = [
 		title: 'Propose & Contribute to Projects',
 		description:
 			'Propose projects, participate with the community to verify on proposals, then contribute on project pages and gain rewards! ',
-		bgImage: '/images/home/PenNib.png',
+		bgImage: '/images/home/CardBgPenNib.png',
 		actionName: 'Propose a Project',
 	},
 	{
 		title: 'Explore the Index',
 		description:
 			'Use your gained experience around the index to support quality contributors and boost projects you care about.',
-		bgImage: '/images/home/PuzzlePiece.png',
+		bgImage: '/images/home/CardBgPuzzlePiece.png',
 		actionName: 'Explore The Index',
 	},
 	{
 		title: 'Coming soon',
 		description:
 			'Any web3 projects you contributed to is part of web3 history and illuminating for future. Find the project and claim your contributions here.',
-		bgImage: '/images/home/Sword.png',
+		bgImage: '/images/home/CardBgTreasureChest.png',
 		actionName: 'Coming Soon',
 	},
 ];
@@ -90,14 +90,13 @@ const CardItem = (props: ICardItemProps) => {
 				cursor: props.disabled ? 'not-allowed' : 'pointer',
 			}}
 		>
-			<div className="absolute right-[-40px] bottom-[-40px] w-[193px] h-[193px] transition-transform duration-300 ease-in-out group-hover:scale-120 mobile:hidden tablet:block">
+			<div className="absolute right-0 bottom-0 w-[140px] h-[140px] transition-transform duration-300 ease-in-out opacity-20">
 				<Image
 					src={props.bgImage}
 					alt={props.title}
 					as={NextImage}
-					width={193}
-					height={193}
-					className="w-full h-full object-contain"
+					width={140}
+					height={140}
 				/>
 			</div>
 
@@ -141,7 +140,7 @@ const CardAction = (props: ICardActionProps) => {
 					alt="arrow-right"
 					width={24}
 					height={24}
-					className="transition-transform duration-300 ease-in-out group-hover:translate-x-5"
+					className="transition-transform duration-300 ease-in-out group-hover:translate-x-[6px]"
 				/>
 			)}
 		</div>
