@@ -90,7 +90,7 @@ const CardItem = (props: ICardItemProps) => {
 				cursor: props.disabled ? 'not-allowed' : 'pointer',
 			}}
 		>
-			<div className="absolute right-0 bottom-0 w-[140px] h-[140px] transition-transform duration-300 ease-in-out opacity-50">
+			<div className="absolute right-0 bottom-0 w-[140px] h-[140px] transition-transform duration-300 ease-in-out opacity-20">
 				<Image
 					src={props.bgImage}
 					alt={props.title}
@@ -109,7 +109,7 @@ const CardItem = (props: ICardItemProps) => {
 				</ECFTypography>
 				<ECFTypography
 					type={'body1'}
-					className="leading-[25.6px] mt-[14px] min-h-[130px] mobile:min-h-auto opacity-80"
+					className="text-[rgba(0,0,0,0.8)] leading-[25.6px] mt-[14px] min-h-[130px] mobile:min-h-auto"
 				>
 					{props.description}
 				</ECFTypography>
@@ -129,9 +129,11 @@ interface ICardActionProps {
 
 const CardAction = (props: ICardActionProps) => {
 	return (
-		<div className="absolute bottom-[19px] left-0 right-0 px-5 flex items-center justify-start w-full gap-2 h-[24px]">
+		<div className="absolute bottom-[19px] left-0 right-0 px-5 flex items-center justify-start w-full gap-2 h-[24px]" style={{
+			opacity: !props.onClick ? '0.5' : '1'
+		}}>
 			{!props.onClick && (
-				<div className="w-[8px] h-[8px] bg-[rgba(0,0,0,0.5)] rounded-[8px]"></div>
+				<div className="w-[8px] h-[8px] bg-black rounded-[8px]"></div>
 			)}
 			<ECFTypography type={'body1'} className="font-bold">
 				{props.title}

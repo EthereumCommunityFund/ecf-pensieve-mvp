@@ -55,7 +55,7 @@ export function Navigation() {
 					key={item.name}
 					href={item.href}
 					className={`
-                        flex items-center gap-2 h-8 rounded-lg px-2.5
+                        flex items-center gap-2 h-8 rounded-[10px] px-2.5
                         transition-all duration-200 whitespace-nowrap flex-shrink-0
                         ${
 							isActiveRoute(item.matchPath)
