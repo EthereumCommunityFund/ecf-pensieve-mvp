@@ -109,8 +109,8 @@ const CardItem = (props: ICardItemProps) => {
 					{props.title}
 				</ECFTypography>
 				<ECFTypography
-					type={'body2'}
-					className="leading-[22px] mt-[14px] min-h-[137px] opacity-80"
+					type={'body1'}
+					className="font-semibold leading-[26px] mt-[14px] min-h-[137px] opacity-80"
 				>
 					{props.description}
 				</ECFTypography>

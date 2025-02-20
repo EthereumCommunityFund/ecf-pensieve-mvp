@@ -7,6 +7,7 @@ import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/r
 
 import { AuthButton } from '@/components/topbar/auth/AuthButton';
 import { getShortenAddress } from '@/lib/utils';
+import ECFTypography from '@/components/base/typography';
 
 export function AuthSection() {
 	const { isConnected, address } = useAccount();
@@ -55,9 +56,11 @@ export function AuthSection() {
 	}
 
 	return (
-		<div className="flex items-center h-full gap-2 shrink-0 ml-5">
+		<div className="flex items-center h-full gap-2.5 shrink-0 ml-5">
 			<AuthButton className="tablet:hidden mobile:hidden" variant="signUp">
-				Sign Up
+				<ECFTypography type="body2" className="tablet:hidden mobile:hidden">
+					Sign Up
+				</ECFTypography>
 			</AuthButton>
 			<AuthButton
 				variant="signIn"
@@ -70,11 +73,13 @@ export function AuthSection() {
 				<Image
 					src="/images/common/signIn.png"
 					alt="Sign In"
-					width={20}
-					height={20}
+					width={24}
+					height={24}
 					className="group-hover:brightness-0 group-hover:invert"
 				/>
-				<span className="block tablet:hidden mobile:hidden ">Sign In</span>
+				<ECFTypography type="body1" className="tablet:hidden mobile:hidden">
+					Sign In
+				</ECFTypography>
 			</AuthButton>
 			<div className="hidden">
 				<ConnectButton />

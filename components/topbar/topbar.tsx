@@ -7,6 +7,8 @@ import { usePathname } from 'next/navigation';
 
 import { AuthSection } from '@/components/topbar/auth/AuthSection';
 
+import ECFTypography from '../base/typography';
+
 import { Navigation } from './navigation';
 import MobileMenu from './mobileMenu';
 
@@ -67,29 +69,35 @@ export function Topbar() {
 			<div className="mobile:hidden w-full px-5 h-full">
 				<div className="flex justify-between items-center h-full">
 					<div className="flex items-center h-full gap-5">
-						<Link
-							href="/"
-							className="flex mobile:flex-1 items-center h-full min-w-[172px]"
-						>
-							<Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
+						<Link href="/" className="flex items-center h-full min-w-[171px]">
+							<Image
+								src="/images/Logo.png"
+								alt="ECF"
+								className="w-[171px] h-[auto]"
+							/>
 						</Link>
 
-						<div className="mobile:hidden w-[300px] h-[32px] flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-lg px-[10px]">
+						<div className="w-[300px] h-[32px] flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-lg p-2.5 cursor-pointer">
 							<Image
 								src="/images/common/search.png"
 								alt="Search"
 								width={20}
 								height={20}
 							/>
-							<input
+							{/* <input
 								type="text"
 								placeholder="Quick Search"
 								className="flex-1 w-auto h-[20px] bg-transparent border-0 focus:ring-0 focus:outline-none text-sm placeholder:text-[rgba(0,0,0,0.3)]"
-							/>
-							<div className="flex items-center h-[22px] bg-[rgba(0,0,0,0.1)] rounded-[7px]">
-								<Kbd keys={['command']} className="bg-transparent opacity-30">
-									K
-								</Kbd>
+							/> */}
+							{/* TODO: global search modal */}
+							<ECFTypography type="body2" className="flex-1 font-semibold opacity-30">
+								Quick Search
+							</ECFTypography>
+
+							<div className="flex items-center h-[22px] px-1 bg-[rgba(0,0,0,0.1)] rounded-[7px]">
+								<span className="text-[12px] leading-[20px] text-black font-semibold opacity-40">
+									⌘K
+								</span>
 							</div>
 						</div>
 

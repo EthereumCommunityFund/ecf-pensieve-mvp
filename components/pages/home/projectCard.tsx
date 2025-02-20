@@ -67,12 +67,12 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 						</p>
 						<div className="mt-[10px] flex flex-wrap gap-[8px]">
 							{project.tags.map((tag) => (
-								<span
+								<div
 									key={tag}
 									className="h-[22px] px-3 py-1 text-[12px] leading-[12px] text-black font-semibold rounded-[6px] bg-[rgba(0,0,0,0.05)]"
 								>
 									{tag}
-								</span>
+								</div>
 							))}
 						</div>
 					</div>

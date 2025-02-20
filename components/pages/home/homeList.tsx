@@ -84,7 +84,10 @@ const SectionList = (props: ISectionProps) => {
 					<ECFTypography type={'subtitle1'} className="font-bold opacity-80">
 						{props.title}
 					</ECFTypography>
-					<ECFTypography type={'body2'} className="mt-[5px] leading-[19px] opacity-80">
+					<ECFTypography
+						type={'body2'}
+						className="mt-[5px] leading-[19px] font-normal opacity-80"
+					>
 						{props.description}
 					</ECFTypography>
 				</div>
@@ -92,7 +95,7 @@ const SectionList = (props: ISectionProps) => {
 					<ECFButton
 						$size={'small'}
 						onPress={props.onClick}
-						className="mobile:w-full mobile:h-[31px]"
+						className="h-[31px] mobile:w-full mobile:h-[31px]"
 					>
 						{props.buttonText}
 					</ECFButton>
