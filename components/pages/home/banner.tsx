@@ -15,7 +15,7 @@ const Banner = () => {
 			<div className="w-full h-full z-10">
 				<div className="flex h-[25px]">
 					<p className="h-[25px] bg-[rgba(0,0,0,0.1)] border border-[rgba(0,0,0,0.2)] rounded-md px-2.5 py-1 flex items-center justify-end">
-						<span className='text-[14px] leading-[17px] tracking-[0.1] font-semibold'>ALPHA 0.1.0</span>
+						<span className='text-[14px] leading-[17px] tracking-[1.4] font-semibold'>ALPHA 0.1.0</span>
 					</p>
 				</div>
 

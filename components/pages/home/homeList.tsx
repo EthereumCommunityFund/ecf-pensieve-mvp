@@ -95,7 +95,7 @@ const SectionList = (props: ISectionProps) => {
 					<ECFButton
 						$size={'small'}
 						onPress={props.onClick}
-						className="h-[31px] mobile:w-full mobile:h-[31px]"
+						className="h-[31px] px-2.5 mobile:w-full mobile:h-[31px]"
 					>
 						{props.buttonText}
 					</ECFButton>
