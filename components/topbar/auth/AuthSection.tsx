@@ -21,11 +21,12 @@ export function AuthSection() {
 					alt="Notifications"
 					width={32}
 					height={32}
+					className="tablet:hidden mobile:hidden"
 				/>
 				<Dropdown>
 					<DropdownTrigger>
 						<div className="flex justify-end items-center h-8 gap-2.5 px-2.5 rounded-[5px] bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.1)] cursor-pointer">
-							<div className="block bg-[rgba(0,0,0,0.1)] w-[24px] h-[24px] rounded-[24px]"></div>
+							<div className="tablet:hidden mobile:hidden block bg-[rgba(0,0,0,0.1)] w-[24px] h-[24px] rounded-[24px]"></div>
 							<div className="text-[16px] leading-[22px] text-black font-semibold">
 								{getShortenAddress(address)}
 							</div>

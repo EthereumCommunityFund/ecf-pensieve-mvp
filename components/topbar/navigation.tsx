@@ -49,7 +49,7 @@ export function Navigation() {
 	};
 
 	return (
-		<nav className="flex items-center gap-2.5 mobile:hidden">
+		<nav className="flex items-center gap-2.5 mobile:hidden mr-5 shrink-0">
 			{navigationItems.map((item) => (
 				<Link
 					key={item.name}
@@ -57,10 +57,9 @@ export function Navigation() {
 					className={`
                         flex items-center gap-2 h-8 rounded-[10px] px-2.5
                         transition-all duration-200 whitespace-nowrap flex-shrink-0
-                        ${
-							isActiveRoute(item.matchPath)
-								? 'bg-black text-white' // Active state
-								: 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]' // Default & Hover states
+                        ${isActiveRoute(item.matchPath)
+							? 'bg-black text-white' // Active state
+							: 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]' // Default & Hover states
 						}
                     `}
 				>
@@ -72,10 +71,9 @@ export function Navigation() {
 						height={24}
 						className={`
                             w-6 h-6 flex-shrink-0
-                            ${
-								isActiveRoute(item.matchPath)
-									? 'brightness-0 invert' // Active state (white icon)
-									: 'brightness-0' // Default state (black icon)
+                            ${isActiveRoute(item.matchPath)
+								? 'brightness-0 invert' // Active state (white icon)
+								: 'brightness-0' // Default state (black icon)
 							}
                             transition-all duration-200
                         `}
