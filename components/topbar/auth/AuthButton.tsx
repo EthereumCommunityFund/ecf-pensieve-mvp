@@ -8,8 +8,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants = {
-	signIn: 'text-base bg-[rgba(0,0,0,0.05)] flex items-center gap-2 w-[108px]',
-	signUp: 'text-sm opacity-50 w-[73px]',
+	signIn: 'text-base bg-[rgba(0,0,0,0.05)] flex items-center gap-2 w-[108px] mobile:w-auto',
+	signUp: 'text-sm opacity-50 w-[73px] mobile:w-auto',
 };
 
 export function AuthButton({ variant = 'signIn', className, children, ...props }: ButtonProps) {
