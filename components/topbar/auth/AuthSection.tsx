@@ -77,7 +77,7 @@ export function AuthSection() {
 					height={24}
 					className="group-hover:brightness-0 group-hover:invert"
 				/>
-				<ECFTypography type="body1" className="tablet:hidden mobile:hidden">
+				<ECFTypography type="body1" className="mobile:hidden">
 					Sign In
 				</ECFTypography>
 			</AuthButton>
