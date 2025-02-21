@@ -69,9 +69,9 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 							{project.tags.map((tag) => (
 								<div
 									key={tag}
-									className="h-[22px] px-3 py-1 text-[12px] leading-[12px] text-black font-semibold rounded-[6px] bg-[rgba(0,0,0,0.05)]"
+									className="h-[22px] px-3 flex items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)]"
 								>
-									{tag}
+									<span className='text-[12px] leading-[12px] text-black font-semibold'>{tag}</span>
 								</div>
 							))}
 						</div>
