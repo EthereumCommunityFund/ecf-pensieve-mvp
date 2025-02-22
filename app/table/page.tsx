@@ -1,5 +1,6 @@
-import Button from '@/components/base/button';
 import Link from 'next/link';
+
+import Button from '@/components/base/button';
 
 const TablePage = () => {
 	return (

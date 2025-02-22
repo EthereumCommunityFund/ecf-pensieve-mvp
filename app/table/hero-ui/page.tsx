@@ -363,12 +363,12 @@ function CustomCellTable() {
 						className="capitalize"
 						color={
 							statusColorMap[user.status] as
-							| 'success'
-							| 'danger'
-							| 'warning'
-							| 'default'
-							| 'primary'
-							| 'secondary'
+								| 'success'
+								| 'danger'
+								| 'warning'
+								| 'default'
+								| 'primary'
+								| 'secondary'
 						}
 						size="sm"
 						variant="flat"
@@ -441,12 +441,12 @@ function SingleRowSelectionTable() {
 				aria-label="Example static collection table"
 				color={
 					selectedColor as
-					| 'default'
-					| 'primary'
-					| 'secondary'
-					| 'success'
-					| 'warning'
-					| 'danger'
+						| 'default'
+						| 'primary'
+						| 'secondary'
+						| 'success'
+						| 'warning'
+						| 'danger'
 				}
 				defaultSelectedKeys={['2']}
 				selectionMode="single"
@@ -491,12 +491,12 @@ function SingleRowSelectionTable() {
 						className="capitalize"
 						color={
 							color as
-							| 'default'
-							| 'primary'
-							| 'secondary'
-							| 'success'
-							| 'warning'
-							| 'danger'
+								| 'default'
+								| 'primary'
+								| 'secondary'
+								| 'success'
+								| 'warning'
+								| 'danger'
 						}
 						value={color}
 					>
@@ -520,12 +520,12 @@ function MultiRowSelectionTable() {
 				aria-label="Example static collection table"
 				color={
 					selectedColor as
-					| 'default'
-					| 'primary'
-					| 'secondary'
-					| 'success'
-					| 'warning'
-					| 'danger'
+						| 'default'
+						| 'primary'
+						| 'secondary'
+						| 'success'
+						| 'warning'
+						| 'danger'
 				}
 				defaultSelectedKeys={['1', '3']}
 				selectionMode="multiple"
@@ -570,12 +570,12 @@ function MultiRowSelectionTable() {
 						className="capitalize"
 						color={
 							color as
-							| 'default'
-							| 'primary'
-							| 'secondary'
-							| 'success'
-							| 'warning'
-							| 'danger'
+								| 'default'
+								| 'primary'
+								| 'secondary'
+								| 'success'
+								| 'warning'
+								| 'danger'
 						}
 						value={color}
 					>
@@ -1276,7 +1276,7 @@ function CustomStyleTable() {
 
 	return (
 		<>
-			<h2 className='text-2xl font-bold'>Custom Style Table</h2>
+			<h2 className="text-2xl font-bold">Custom Style Table</h2>
 
 			<Table
 				isCompact

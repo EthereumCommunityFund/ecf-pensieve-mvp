@@ -71,7 +71,9 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 									key={tag}
 									className="h-[22px] px-3 flex items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)]"
 								>
-									<span className='text-[12px] leading-[12px] text-black font-semibold'>{tag}</span>
+									<span className="text-[12px] leading-[12px] text-black font-semibold">
+										{tag}
+									</span>
 								</div>
 							))}
 						</div>
