@@ -1,4 +1,5 @@
 import { initTRPC, TRPCError } from '@trpc/server';
+import superJSON from 'superjson';
 
 import { db } from '../db';
 import { getServiceSupabase } from '../supabase/client';
@@ -39,7 +40,9 @@ export const createTRPCContext = async (opts: {
   };
 };
 
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.context<Context>().create({
+  transformer: superJSON,
+});
 
 export const router = t.router;
 export const publicProcedure = t.procedure;

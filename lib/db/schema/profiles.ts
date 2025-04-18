@@ -1,3 +1,4 @@
+import { InferSelectModel } from 'drizzle-orm';
 import { pgSchema, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 const authSchema = pgSchema('auth');
@@ -18,3 +19,5 @@ export const profiles = pgTable('profiles', {
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export type Profile = InferSelectModel<typeof profiles>;

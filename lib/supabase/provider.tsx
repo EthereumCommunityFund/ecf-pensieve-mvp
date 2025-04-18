@@ -3,17 +3,22 @@
 import { Session, User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import { Profile } from '../db/schema/profiles';
+import { trpc } from '../trpc/client';
+
 import { supabase } from './client';
 
 type SupabaseContextType = {
   user: User | null;
   session: Session | null;
+  profile: Profile | null;
   isLoading: boolean;
 };
 
 const SupabaseContext = createContext<SupabaseContextType>({
   user: null,
   session: null,
+  profile: null,
   isLoading: true,
 });
 
@@ -21,6 +26,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const utils = trpc.useUtils();
+  const { data: profile } = trpc.user.getCurrentUser.useQuery(undefined, {
+    enabled: !!user?.id,
+  });
 
   useEffect(() => {
     const initializeSupabase = async () => {
@@ -36,6 +46,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session?.user || null);
           setIsLoading(false);
+          if (event === 'SIGNED_OUT') {
+            utils.user.getCurrentUser.setData(undefined, undefined);
+          }
         },
       );
 
@@ -48,7 +61,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SupabaseContext.Provider value={{ user, session, isLoading }}>
+    <SupabaseContext.Provider
+      value={{ user, session, isLoading, profile: profile || null }}
+    >
       {children}
     </SupabaseContext.Provider>
   );
