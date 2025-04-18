@@ -1,20 +1,41 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink } from '@trpc/client';
+import { httpBatchLink, TRPCClientError } from '@trpc/client';
 import { useState } from 'react';
 
 import { supabase } from '../supabase/client';
 
 import { trpc } from './client';
 
+const customRetry = (failureCount: number, error: unknown): boolean => {
+  if (error instanceof TRPCClientError) {
+    const code = error.data?.code;
+
+    if (code === 'UNAUTHORIZED') {
+      return false;
+    }
+  }
+
+  return failureCount < 3;
+};
+
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: customRetry,
+          },
+        },
+      }),
+  );
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: `/api`,
+          url: `/api/trpc`,
           async headers() {
             const {
               data: { session },
