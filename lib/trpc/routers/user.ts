@@ -2,15 +2,15 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { users } from '../../db/schema/users';
+import { profiles } from '../../db/schema/profiles';
 import { protectedProcedure, router } from '../server';
 
 export const userRouter = router({
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const [user] = await ctx.db
       .select()
-      .from(users)
-      .where(eq(users.id, ctx.user.id));
+      .from(profiles)
+      .where(eq(profiles.user_id, ctx.user.id));
 
     if (!user) {
       throw new TRPCError({
@@ -31,12 +31,12 @@ export const userRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const [updatedUser] = await ctx.db
-        .update(users)
+        .update(profiles)
         .set({
           ...input,
           updated_at: new Date(),
         })
-        .where(eq(users.id, ctx.user.id))
+        .where(eq(profiles.user_id, ctx.user.id))
         .returning();
 
       return updatedUser;

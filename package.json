@@ -11,8 +11,8 @@
     "tsc": "tsc --noEmit",
     "prettier": "prettier --write .",
     "prepare": "husky",
-    "db:generate": "drizzle-kit generate:pg",
-    "db:migrate": "drizzle-kit migrate:pg",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
