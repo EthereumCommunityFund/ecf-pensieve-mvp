@@ -5,13 +5,13 @@ import CardList from '@/components/pages/home/cardList';
 import HomeList from '@/components/pages/home/homeList';
 
 export default function Page() {
-	return (
-		<>
-			<Banner />
+  return (
+    <>
+      <Banner />
 
-			<CardList />
+      <CardList />
 
-			<HomeList />
-		</>
-	);
+      <HomeList />
+    </>
+  );
 }

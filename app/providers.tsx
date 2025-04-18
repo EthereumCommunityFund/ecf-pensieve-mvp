@@ -13,13 +13,13 @@ import { config } from '@/config/wagmi';
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
-	return (
-		<WagmiProvider config={config}>
-			<QueryClientProvider client={queryClient}>
-				<RainbowKitProvider locale="en-US">
-					<HeroUIProvider>{children}</HeroUIProvider>
-				</RainbowKitProvider>
-			</QueryClientProvider>
-		</WagmiProvider>
-	);
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider locale="en-US">
+          <HeroUIProvider>{children}</HeroUIProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
 }

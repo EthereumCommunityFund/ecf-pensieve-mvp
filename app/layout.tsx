@@ -4,14 +4,18 @@ import { MainLayout } from '@/components/layout/mainLayout';
 
 import { Providers } from './providers';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-	return (
-		<html lang="en" className="light min-w-[390px]">
-			<body className="font-sans">
-				<Providers>
-					<MainLayout>{children}</MainLayout>
-				</Providers>
-			</body>
-		</html>
-	);
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className="min-w-[390px] light">
+      <body className="font-sans">
+        <Providers>
+          <MainLayout>{children}</MainLayout>
+        </Providers>
+      </body>
+    </html>
+  );
 }
