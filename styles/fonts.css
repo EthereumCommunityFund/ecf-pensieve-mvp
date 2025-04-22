@@ -67,6 +67,10 @@
   font-family: var(--font-saira), Arial, sans-serif;
 }
 
+.font-open-sans {
+  font-family: var(--font-open-sans), Arial, sans-serif;
+}
+
 .font-normal {
   font-weight: 400;
 }

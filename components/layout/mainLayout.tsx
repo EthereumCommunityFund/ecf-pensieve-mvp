@@ -4,7 +4,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <Topbar />
-      <main className="mx-auto px-5 pb-[63px] pt-[70px]">{children}</main>
+      <main className="mx-auto h-full pt-[50px]">{children}</main>
     </div>
   );
 }

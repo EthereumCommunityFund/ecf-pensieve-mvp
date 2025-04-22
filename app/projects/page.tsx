@@ -1,12 +1,13 @@
 'use client';
 
 import { Image } from '@heroui/react';
+import Link from 'next/link';
 
 import ECFButton from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import { MockProjectListData } from '@/components/pages/home/homeList';
 import ProjectCard from '@/components/pages/home/projectCard';
-import RewardCard from '@/components/pages/projects/rewardCard';
+import RewardCard from '@/components/pages/project/rewardCard';
 
 const ProjectsPage = () => {
   const handleProposeProject = () => {
@@ -27,9 +28,11 @@ const ProjectsPage = () => {
           <ECFTypography type={'subtitle2'} className="mt-2.5">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          <ECFButton onPress={handleProposeProject} className="mt-2.5">
-            Propose a Project
-          </ECFButton>
+          <Link href="/project/create">
+            <ECFButton onPress={handleProposeProject} className="mt-2.5">
+              Propose a Project
+            </ECFButton>
+          </Link>
         </div>
       </div>
 
