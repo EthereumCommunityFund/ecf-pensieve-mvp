@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm'; // 需要导入 sql 函数来处理数据库默认函数
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   jsonb,
