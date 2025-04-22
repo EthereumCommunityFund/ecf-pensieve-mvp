@@ -8,16 +8,22 @@ const users = authSchema.table('users', {
 });
 
 export const profiles = pgTable('profiles', {
-  user_id: uuid('user_id')
+  userId: uuid('user_id')
     .primaryKey()
+    .notNull()
     .references(() => users.id, {
       onDelete: 'cascade',
     }),
   name: text('name').notNull(),
-  avatar_url: text('avatar_url'),
+  avatarUrl: text('avatar_url'),
   address: text('address').notNull(),
-  created_at: timestamp('created_at').defaultNow().notNull(),
-  updated_at: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
 });
 
 export type Profile = InferSelectModel<typeof profiles>;

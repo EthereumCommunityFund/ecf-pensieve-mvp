@@ -1,0 +1,49 @@
+import { sql } from 'drizzle-orm'; // 需要导入 sql 函数来处理数据库默认函数
+import {
+  boolean,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+import { profiles } from './profiles';
+
+export const projects = pgTable('projects', {
+  uuid: uuid('uuid')
+    .default(sql`gen_random_uuid()`)
+    .notNull()
+    .primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+  name: text('name').notNull(),
+  tagline: text('tagline').notNull(),
+  categories: text('categories').array().notNull(),
+  mainDescription: text('main_description').notNull(),
+  logoUrl: text('logo_url').notNull(),
+  websiteUrl: text('website_url').notNull(),
+  appUrl: text('app_url'),
+  dateFounded: timestamp('date_founded', {
+    withTimezone: false,
+    mode: 'date',
+  }).notNull(),
+  dateLaunch: timestamp('date_launch', { withTimezone: false, mode: 'date' }),
+  devStatus: text('dev_status').notNull(),
+  fundingStatus: text('funding_status'),
+  openSource: boolean('open_source').notNull(),
+  codeRepo: text('code_repo'),
+  tokenContract: text('token_contract'),
+  orgStructure: text('org_structure').notNull(),
+  publicGoods: boolean('public_goods').notNull(),
+  founders: jsonb('founders').array().notNull(),
+  creator: uuid('creator')
+    .notNull()
+    .references(() => profiles.userId),
+  refs: jsonb('refs').array(),
+});

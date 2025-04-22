@@ -10,7 +10,7 @@ export const userRouter = router({
     const [user] = await ctx.db
       .select()
       .from(profiles)
-      .where(eq(profiles.user_id, ctx.user.id));
+      .where(eq(profiles.userId, ctx.user.id));
 
     if (!user) {
       throw new TRPCError({
@@ -34,9 +34,8 @@ export const userRouter = router({
         .update(profiles)
         .set({
           ...input,
-          updated_at: new Date(),
         })
-        .where(eq(profiles.user_id, ctx.user.id))
+        .where(eq(profiles.userId, ctx.user.id))
         .returning();
 
       return updatedUser;
