@@ -1,8 +1,8 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import superJSON from 'superjson';
 
-import { db } from '../db';
-import { getServiceSupabase } from '../supabase/client';
+import { db } from '@/lib/db';
+import { getServiceSupabase } from '@/lib/supabase/client';
 
 export type Context = {
   user: { id: string } | null;

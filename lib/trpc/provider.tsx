@@ -5,7 +5,7 @@ import { httpBatchLink, TRPCClientError } from '@trpc/client';
 import { useState } from 'react';
 import superJSON from 'superjson';
 
-import { supabase } from '../supabase/client';
+import { supabase } from '@/lib/supabase/client';
 
 import { trpc } from './client';
 

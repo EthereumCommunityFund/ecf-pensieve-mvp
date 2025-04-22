@@ -2,8 +2,8 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { profiles } from '../../db/schema/profiles';
-import { protectedProcedure, router } from '../server';
+import { profiles } from '@/lib/db/schema';
+import { protectedProcedure, router } from '@/lib/trpc/server';
 
 export const userRouter = router({
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
