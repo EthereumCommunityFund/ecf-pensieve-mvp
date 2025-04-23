@@ -234,7 +234,6 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 <PhotoUpload
                   initialUrl={field.value ?? undefined}
                   onUploadSuccess={field.onChange}
-                  api="/api/file/upload"
                   className="rounded-full"
                 >
                   <Avatar

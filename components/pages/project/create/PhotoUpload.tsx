@@ -2,79 +2,113 @@ import { PhotoIcon } from '@heroicons/react/24/outline';
 import { cn, Spinner } from '@heroui/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useUpload } from '@/hooks/useUpload';
+import { trpc } from '@/lib/trpc/client';
 
-interface AvatarUploadProps {
+interface PhotoUploadProps {
   initialUrl?: string;
   onUploadSuccess?: (url: string) => void;
   accept?: string[];
-  api?: string;
   children?: React.ReactNode;
   className?: string;
   isDisabled?: boolean;
+  maxSizeMB?: number;
 }
 
-export const AvatarUpload: React.FC<AvatarUploadProps> = ({
+export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   initialUrl,
   onUploadSuccess,
-  accept = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'],
-  api = '/api/file/upload',
+  accept = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   children,
   className = '',
   isDisabled = false,
+  maxSizeMB = 10,
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUrl, setLocalUrl] = useState<string | undefined>(initialUrl);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { url, isLoading, errorMessage, handleUpload } = useUpload({
-    api,
-    onSuccess: (uploadedUrl) => {
-      onUploadSuccess?.(uploadedUrl);
+  const uploadMutation = trpc.file.uploadFile.useMutation({
+    onSuccess: (data) => {
+      setLocalUrl(data.url);
+      onUploadSuccess?.(data.url);
+      setErrorMessage(null);
+    },
+    onError: (error) => {
+      console.error('Upload failed:', error);
+      setErrorMessage(error.message || 'Upload failed. Please try again.');
     },
   });
 
-  // 合并两个 useEffect 为一个，优化状态更新逻辑
   useEffect(() => {
-    if (!isLoading) {
-      if (url) {
-        setLocalUrl(url);
-      } else if (initialUrl !== localUrl) {
-        setLocalUrl(initialUrl);
-      }
+    if (!uploadMutation.isPending && initialUrl !== localUrl) {
+      setLocalUrl(initialUrl);
     }
-  }, [isLoading, url, initialUrl]);
+  }, [initialUrl, uploadMutation.isPending]);
 
   const handleClick = useCallback(() => {
-    fileInputRef.current?.click();
+    if (!isDisabled && !uploadMutation.isPending) {
+      fileInputRef.current?.click();
+    }
+  }, [isDisabled, uploadMutation.isPending]);
+
+  const resetInput = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }, []);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
+      setErrorMessage(null);
       const file = e.target.files?.[0];
+
       if (file) {
-        try {
-          await handleUpload(file);
-        } catch (error) {
-          console.error('文件上传失败:', error);
+        if (!accept.includes(file.type)) {
+          setErrorMessage(`Invalid file type. Accepted: ${accept.join(', ')}`);
+          resetInput();
+          return;
         }
+
+        if (file.size > maxSizeMB * 1024 * 1024) {
+          setErrorMessage(`File exceeds ${maxSizeMB}MB limit.`);
+          resetInput();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+          const base64String = loadEvent.target?.result as string;
+          if (base64String) {
+            uploadMutation.mutate({ data: base64String, type: file.type });
+          } else {
+            setErrorMessage('Failed to read file.');
+            console.error('FileReader onload result is null or not a string');
+          }
+        };
+        reader.onerror = (error) => {
+          setErrorMessage('Error reading file.');
+          console.error('FileReader error:', error);
+        };
+        reader.readAsDataURL(file);
       }
-      // 重置 input 以便同一文件可以再次上传
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+
+      resetInput();
     },
-    [handleUpload],
+    [accept, maxSizeMB, uploadMutation.mutate, resetInput],
   );
 
+  const isLoading = uploadMutation.isPending;
+
   const avatarOverlay = isLoading ? (
-    <div className="absolute inset-0 flex items-center justify-center bg-opacity-40">
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
       <Spinner size="sm" color="white" />
     </div>
   ) : (
     isHovering &&
-    localUrl && (
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black  bg-opacity-40 transition-opacity duration-200">
+    localUrl &&
+    !isDisabled && (
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black bg-opacity-40 transition-opacity duration-200">
         <PhotoIcon className="size-6 text-white opacity-50" />
       </div>
     )
@@ -88,13 +122,16 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       )}
     >
       <div
-        className="group relative w-full cursor-pointer"
-        onClick={!isDisabled ? handleClick : undefined}
-        onMouseEnter={() => setIsHovering(true)}
+        className={cn(
+          'group relative w-full',
+          !isDisabled && !isLoading ? 'cursor-pointer' : 'cursor-default',
+        )}
+        onClick={handleClick}
+        onMouseEnter={() => !isDisabled && !isLoading && setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
         {children}
-        {!isDisabled && avatarOverlay}
+        {avatarOverlay}
       </div>
 
       <input
@@ -103,11 +140,11 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         className="hidden"
         accept={accept.join(',')}
         onChange={handleFileChange}
-        disabled={isDisabled}
+        disabled={isDisabled || isLoading}
       />
 
       {errorMessage && (
-        <div className="mt-2 text-center text-sm text-red-500">
+        <div className="mt-2 w-full text-center text-sm text-red-500">
           {errorMessage}
         </div>
       )}
@@ -115,4 +152,4 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   );
 };
 
-export default AvatarUpload;
+export default PhotoUpload;
