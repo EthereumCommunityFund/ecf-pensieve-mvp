@@ -1,8 +1,8 @@
 'use client';
 
 import { Avatar, Input, Select, SelectItem, Textarea, cn } from '@heroui/react';
-import { Scales } from '@phosphor-icons/react/dist/ssr';
-import React, { useEffect } from 'react';
+import { Image as ImageIcon } from '@phosphor-icons/react';
+import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { basicsFieldsConfig } from '@/components/pages/project/create/formData';
@@ -14,23 +14,12 @@ import { StepFormProps } from '../types';
 const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   control,
   errors,
-  watch,
   setValue,
   trigger,
   onAddReference,
+  applicableStates,
+  onChangeApplicableStates,
 }) => {
-  const appUrlConfig = basicsFieldsConfig.appUrl;
-  const appUrlApplicableKey = appUrlConfig?.applicableKey;
-  const isAppUrlApplicable = appUrlApplicableKey
-    ? watch(appUrlApplicableKey)
-    : true;
-
-  useEffect(() => {
-    if (!isAppUrlApplicable) {
-      setValue(basicsFieldsConfig.appUrl.key, null, { shouldValidate: true });
-    }
-  }, [isAppUrlApplicable, setValue]);
-
   const categoriesConfig = basicsFieldsConfig.categories;
   const presetCategories = categoriesConfig?.presetCategories || [];
 
@@ -148,7 +137,7 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 }}
                 placeholder={basicsFieldsConfig.categories.placeholder}
                 selectionMode="multiple"
-                selectedKeys={field.value}
+                selectedKeys={field.value || []}
                 onSelectionChange={(keys) => field.onChange(Array.from(keys))}
                 isInvalid={!!error}
                 errorMessage={error?.message}
@@ -234,14 +223,16 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 <PhotoUpload
                   initialUrl={field.value ?? undefined}
                   onUploadSuccess={field.onChange}
-                  className="rounded-full"
+                  className="size-[140px] rounded-full bg-transparent"
                 >
                   <Avatar
                     size="lg"
-                    icon={<Scales className="size-8 text-gray-400" />}
+                    icon={
+                      <ImageIcon className="size-[64px] text-gray-400" />
+                    }
                     src={field.value ?? undefined}
                     alt={basicsFieldsConfig.projectLogo.label}
-                    className="cursor-pointer border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100"
+                    className="size-[140px] cursor-pointer border border-dashed border-gray-300 bg-black/5 hover:bg-gray-200"
                   />
                 </PhotoUpload>
                 {error && (
@@ -311,24 +302,16 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         shortDescription={basicsFieldsConfig.appUrl.shortDescription}
         weight={basicsFieldsConfig.appUrl.weight}
         showReference={basicsFieldsConfig.appUrl.showReference}
-        showApplicable={basicsFieldsConfig.appUrl.showApplicable}
-        isApplicable={!!isAppUrlApplicable}
-        onApplicableChange={
-          basicsFieldsConfig.appUrl.applicableKey
-            ? (isSelected) =>
-                setValue(basicsFieldsConfig.appUrl.applicableKey!, isSelected, {
-                  shouldValidate: true,
-                })
-            : undefined
+        onAddReference={() =>
+          onAddReference(
+            basicsFieldsConfig.appUrl.key,
+            basicsFieldsConfig.appUrl.label,
+          )
         }
-        onAddReference={
-          basicsFieldsConfig.appUrl.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.appUrl.key,
-                  basicsFieldsConfig.appUrl.label,
-                )
-            : undefined
+        showApplicable={true}
+        isApplicable={applicableStates.appUrl}
+        onApplicableChange={(val: boolean) =>
+          onChangeApplicableStates(basicsFieldsConfig.appUrl.key, val)
         }
       >
         <Controller
@@ -340,13 +323,15 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 {...field}
                 value={field.value || ''}
                 onChange={(e) => field.onChange(e.target.value)}
-                isDisabled={!isAppUrlApplicable}
+                isDisabled={!applicableStates.appUrl}
                 classNames={{
                   base: cn('group w-full', error ? 'border-red-500' : ''),
                   inputWrapper: cn(
                     'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
                     'rounded-lg h-[42px] flex px-0',
-                    !isAppUrlApplicable ? 'opacity-50 cursor-not-allowed' : '',
+                    !applicableStates.appUrl
+                      ? 'opacity-50 cursor-not-allowed'
+                      : '',
                   ),
                   input:
                     'font-normal text-black placeholder:text-black placeholder:opacity-60',

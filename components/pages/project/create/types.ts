@@ -78,14 +78,23 @@ export interface ProjectCreatePayload {
   refs: ReferenceData[] | null; // Array of reference objects or null
 }
 
+export type ApplicableField =
+  | 'appUrl'
+  | 'dateLaunch'
+  | 'fundingStatus'
+  | 'codeRepo'
+  | 'tokenContract';
+
 export interface StepFormProps {
   control: Control<ProjectFormData>;
   errors: FieldErrors<ProjectFormData>;
-  register: UseFormRegister<ProjectFormData>; // 可能需要用于简单字段或特殊情况
+  register: UseFormRegister<ProjectFormData>;
   watch: UseFormWatch<ProjectFormData>;
   setValue: UseFormSetValue<ProjectFormData>;
   trigger: UseFormTrigger<ProjectFormData>;
-  onAddReference: (key: string, label?: string) => void; // 添加引用处理函数
+  onAddReference: (key: string, label?: string) => void;
+  applicableStates: Record<ApplicableField, boolean>;
+  onChangeApplicableStates: (field: ApplicableField, value: boolean) => void;
 }
 
 export const stepFields = {

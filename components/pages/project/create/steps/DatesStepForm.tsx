@@ -3,7 +3,7 @@
 import { DatePicker, Select, SelectItem } from '@heroui/react';
 import { DateValue, parseDate } from '@internationalized/date';
 import dayjs from 'dayjs';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { datesFieldsConfig } from '@/components/pages/project/create/formData';
@@ -14,38 +14,11 @@ import { ProjectFormData, StepFormProps } from '../types';
 const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   control,
   errors,
-  watch,
   setValue,
   onAddReference,
+  applicableStates,
+  onChangeApplicableStates,
 }) => {
-  const launchDateConfig = datesFieldsConfig.dateLaunch;
-  const launchDateApplicableKey = launchDateConfig?.applicableKey;
-
-  const fundingStatusConfig = datesFieldsConfig.fundingStatus;
-  const fundingStatusApplicableKey = fundingStatusConfig?.applicableKey;
-
-  const isLaunchDateApplicable = launchDateApplicableKey
-    ? !!watch(launchDateApplicableKey)
-    : true;
-  const isFundingStatusApplicable = fundingStatusApplicableKey
-    ? !!watch(fundingStatusApplicableKey)
-    : true;
-
-  useEffect(() => {
-    if (!isLaunchDateApplicable && launchDateConfig) {
-      setValue(launchDateConfig.key, null, { shouldValidate: true });
-    }
-    if (!isFundingStatusApplicable && fundingStatusConfig) {
-      setValue(fundingStatusConfig.key, null, { shouldValidate: true });
-    }
-  }, [
-    isLaunchDateApplicable,
-    isFundingStatusApplicable,
-    setValue,
-    launchDateConfig,
-    fundingStatusConfig,
-  ]);
-
   const devStatusOptions = datesFieldsConfig.devStatus?.options || [];
   const fundingStatusOptions = datesFieldsConfig.fundingStatus?.options || [];
 
@@ -109,51 +82,47 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         />
       </FormFieldContainer>
 
-      {launchDateApplicableKey && (
-        <FormFieldContainer
-          label={launchDateConfig.label}
-          description={launchDateConfig.description}
-          shortDescription={launchDateConfig.shortDescription}
-          weight={launchDateConfig.weight}
-          showReference={launchDateConfig.showReference}
-          showApplicable={launchDateConfig.showApplicable}
-          isApplicable={isLaunchDateApplicable}
-          onApplicableChange={
-            launchDateConfig.showApplicable
-              ? (isSelected) =>
-                  setValue(launchDateApplicableKey, isSelected, {
-                    shouldValidate: true,
-                  })
-              : undefined
-          }
-          onAddReference={
-            launchDateConfig.showReference
-              ? () =>
-                  onAddReference(launchDateConfig.key, launchDateConfig.label)
-              : undefined
-          }
-        >
-          <Controller
-            name={launchDateConfig.key}
-            control={control}
-            render={({ field, fieldState: { error } }) => {
-              return (
-                <DatePicker
-                  value={dateToDateValue(field.value)}
-                  onChange={(value: DateValue | null) => {
-                    field.onChange(dateValueToDate(value));
-                  }}
-                  isInvalid={!!error}
-                  errorMessage={error?.message}
-                  isDisabled={!isLaunchDateApplicable}
-                  className="w-full"
-                  aria-label={launchDateConfig.label}
-                />
-              );
-            }}
-          />
-        </FormFieldContainer>
-      )}
+      <FormFieldContainer
+        label={datesFieldsConfig.dateLaunch.label}
+        description={datesFieldsConfig.dateLaunch.description}
+        shortDescription={datesFieldsConfig.dateLaunch.shortDescription}
+        weight={datesFieldsConfig.dateLaunch.weight}
+        showReference={datesFieldsConfig.dateLaunch.showReference}
+        showApplicable={true}
+        isApplicable={applicableStates.dateLaunch}
+        onApplicableChange={(val) =>
+          onChangeApplicableStates('dateLaunch', val)
+        }
+        onAddReference={
+          datesFieldsConfig.dateLaunch.showReference
+            ? () =>
+                onAddReference(
+                  datesFieldsConfig.dateLaunch.key,
+                  datesFieldsConfig.dateLaunch.label,
+                )
+            : undefined
+        }
+      >
+        <Controller
+          name={datesFieldsConfig.dateLaunch.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => {
+            return (
+              <DatePicker
+                value={dateToDateValue(field.value)}
+                onChange={(value: DateValue | null) => {
+                  field.onChange(dateValueToDate(value));
+                }}
+                isInvalid={!!error}
+                errorMessage={error?.message}
+                isDisabled={!applicableStates.dateLaunch}
+                className="w-full"
+                aria-label={datesFieldsConfig.dateLaunch.label}
+              />
+            );
+          }}
+        />
+      </FormFieldContainer>
 
       <FormFieldContainer
         label={datesFieldsConfig.devStatus.label}
@@ -198,61 +167,54 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         />
       </FormFieldContainer>
 
-      {fundingStatusApplicableKey && (
-        <FormFieldContainer
-          label={fundingStatusConfig.label}
-          description={fundingStatusConfig.description}
-          shortDescription={fundingStatusConfig.shortDescription}
-          weight={fundingStatusConfig.weight}
-          showReference={fundingStatusConfig.showReference}
-          showApplicable={fundingStatusConfig.showApplicable}
-          isApplicable={isFundingStatusApplicable}
-          onApplicableChange={
-            fundingStatusConfig.showApplicable
-              ? (isSelected) =>
-                  setValue(fundingStatusApplicableKey, isSelected, {
-                    shouldValidate: true,
-                  })
-              : undefined
-          }
-          onAddReference={
-            fundingStatusConfig.showReference
-              ? () =>
-                  onAddReference(
-                    fundingStatusConfig.key,
-                    fundingStatusConfig.label,
-                  )
-              : undefined
-          }
-        >
-          <Controller
-            name={fundingStatusConfig.key}
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <Select
-                aria-label={fundingStatusConfig.label}
-                placeholder={fundingStatusConfig.placeholder}
-                selectedKeys={field.value ? [field.value] : []}
-                onSelectionChange={(keys) => {
-                  const value = Array.from(keys)[0] ?? null;
-                  field.onChange(value as ProjectFormData['fundingStatus']);
-                }}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-                items={fundingStatusOptions}
-                isDisabled={!isFundingStatusApplicable}
-                className="w-full"
-              >
-                {(item) => (
-                  <SelectItem key={item.value} textValue={item.label}>
-                    {item.label}
-                  </SelectItem>
-                )}
-              </Select>
-            )}
-          />
-        </FormFieldContainer>
-      )}
+      <FormFieldContainer
+        label={datesFieldsConfig.fundingStatus.label}
+        description={datesFieldsConfig.fundingStatus.description}
+        shortDescription={datesFieldsConfig.fundingStatus.shortDescription}
+        weight={datesFieldsConfig.fundingStatus.weight}
+        showReference={datesFieldsConfig.fundingStatus.showReference}
+        showApplicable={true}
+        isApplicable={applicableStates.fundingStatus}
+        onApplicableChange={(val) =>
+          onChangeApplicableStates('fundingStatus', val)
+        }
+        onAddReference={
+          datesFieldsConfig.fundingStatus.showReference
+            ? () =>
+                onAddReference(
+                  datesFieldsConfig.fundingStatus.key,
+                  datesFieldsConfig.fundingStatus.label,
+                )
+            : undefined
+        }
+      >
+        <Controller
+          name={datesFieldsConfig.fundingStatus.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <Select
+              aria-label={datesFieldsConfig.fundingStatus.label}
+              placeholder={datesFieldsConfig.fundingStatus.placeholder}
+              selectedKeys={field.value ? [field.value] : []}
+              onSelectionChange={(keys) => {
+                const value = Array.from(keys)[0] ?? null;
+                field.onChange(value as ProjectFormData['fundingStatus']);
+              }}
+              isInvalid={!!error}
+              errorMessage={error?.message}
+              items={fundingStatusOptions}
+              isDisabled={!applicableStates.fundingStatus}
+              className="w-full"
+            >
+              {(item) => (
+                <SelectItem key={item.value} textValue={item.label}>
+                  {item.label}
+                </SelectItem>
+              )}
+            </Select>
+          )}
+        />
+      </FormFieldContainer>
     </div>
   );
 };

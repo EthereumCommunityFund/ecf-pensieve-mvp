@@ -18,11 +18,12 @@ import DatesStepForm from './steps/DatesStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
 import {
+  ApplicableField,
   CreateProjectStep,
   ProjectCreatePayload,
   ProjectFormData,
   ReferenceData,
-  stepFields, // Import the step fields mapping
+  stepFields,
   StepStatus,
 } from './types';
 import { projectSchema } from './validation';
@@ -88,6 +89,7 @@ const transformProjectData = (
   formData: ProjectFormData,
   userId: string,
   references: ReferenceData[],
+  applicableStates: Record<ApplicableField, boolean>,
 ): ProjectCreatePayload => {
   return {
     name: formData.projectName,
@@ -96,23 +98,24 @@ const transformProjectData = (
     mainDescription: formData.mainDescription,
     logoUrl: formData.projectLogo,
     websiteUrl: formData.websiteUrl,
-    appUrl: formData.isAppUrlApplicable ? formData.appUrl : null,
+    appUrl: applicableStates['appUrl'] ? null : formData.appUrl,
     dateFounded: formData.dateFounded
       ? dayjs(formData.dateFounded).utc().toISOString()
       : '', // Should not be empty if required
-    dateLaunch:
-      formData.isLaunchDateApplicable && formData.dateLaunch
+    dateLaunch: applicableStates['dateLaunch']
+      ? null
+      : formData.dateLaunch
         ? dayjs(formData.dateLaunch).utc().toISOString()
         : null,
     devStatus: formData.devStatus as ProjectCreatePayload['devStatus'], // Cast, already validated
-    fundingStatus: formData.isFundingStatusApplicable
-      ? (formData.fundingStatus as ProjectCreatePayload['fundingStatus'])
-      : null,
+    fundingStatus: applicableStates['fundingStatus']
+      ? null
+      : (formData.fundingStatus as ProjectCreatePayload['fundingStatus']),
     openSource: formData.openSource === 'Yes',
-    codeRepo: formData.isCodeRepoApplicable ? formData.codeRepo : null,
-    tokenContract: formData.isTokenContractApplicable
-      ? formData.tokenContract
-      : null,
+    codeRepo: applicableStates['codeRepo'] ? null : formData.codeRepo,
+    tokenContract: applicableStates['tokenContract']
+      ? null
+      : formData.tokenContract,
     orgStructure: formData.orgStructure as ProjectCreatePayload['orgStructure'], // Cast
     publicGoods: formData.publicGoods === 'Yes',
     founders: formData.founders.map((founder) => JSON.stringify(founder)), // Serialize founders
@@ -121,9 +124,11 @@ const transformProjectData = (
   };
 };
 
+const defaultProjectLogo =
+  'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
+
 const CreateProjectForm: React.FC = () => {
   const router = useRouter();
-  // TODO login logic
   const { user } = useCurrentUser(); // Get current user
   const createProjectMutation = useMockMutation(); // Replace with actual tRPC hook: trpc.project.create.useMutation();
 
@@ -148,6 +153,16 @@ const CreateProjectForm: React.FC = () => {
     label: '',
   });
 
+  const [applicableStates, setApplicableStates] = useState<
+    Record<ApplicableField, boolean>
+  >({
+    appUrl: true,
+    dateLaunch: true,
+    fundingStatus: true,
+    codeRepo: true,
+    tokenContract: true,
+  });
+
   const methods = useForm<ProjectFormData>({
     resolver: yupResolver(projectSchema),
     mode: 'onTouched', // Validate on blur/change after first touch
@@ -156,8 +171,7 @@ const CreateProjectForm: React.FC = () => {
       tagline: '',
       categories: [],
       mainDescription: '',
-      projectLogo:
-        'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg',
+      projectLogo: defaultProjectLogo,
       websiteUrl: '',
       appUrl: null,
       dateFounded: null,
@@ -274,7 +288,12 @@ const CreateProjectForm: React.FC = () => {
       return;
     }
 
-    const payload = transformProjectData(formData, user.id, references);
+    const payload = transformProjectData(
+      formData,
+      user.id,
+      references,
+      applicableStates,
+    );
 
     createProjectMutation.mutate(payload, {
       onSuccess: (data) => {
@@ -345,6 +364,16 @@ const CreateProjectForm: React.FC = () => {
     [currentReferenceField.label],
   );
 
+  const onChangeApplicableStates = useCallback(
+    (field: ApplicableField, value: boolean) => {
+      setApplicableStates((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    [],
+  );
+
   const stepProps = {
     control,
     errors,
@@ -352,6 +381,8 @@ const CreateProjectForm: React.FC = () => {
     setValue,
     trigger,
     onAddReference: handleAddReference,
+    applicableStates,
+    onChangeApplicableStates,
   };
 
   return (
@@ -392,11 +423,7 @@ const CreateProjectForm: React.FC = () => {
               stepId={CreateProjectStep.Organization}
               currentStep={currentStep}
             >
-              <OrganizationStepForm
-                control={control}
-                errors={errors}
-                onAddReference={handleAddReference}
-              />
+              <OrganizationStepForm {...stepProps} />
             </StepWrapper>
 
             <FormActions
