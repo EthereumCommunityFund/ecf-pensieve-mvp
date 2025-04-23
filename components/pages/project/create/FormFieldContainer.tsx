@@ -86,7 +86,7 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
       {showReference && (
         <div className="flex h-[28px] items-center justify-end px-[8px] opacity-60">
           <ECFButton
-            className="h-[20px] gap-[5px] border-none bg-transparent px-0 text-[14px] font-[600] text-black hover:bg-transparent active:bg-transparent"
+            className="h-[28px] gap-[5px] border-none bg-transparent px-[8px] text-[14px] font-[600] text-black hover:bg-black/10 active:bg-black/10"
             onPress={onAddReference}
             startContent={<PlusIcon size={16} />}
           >
