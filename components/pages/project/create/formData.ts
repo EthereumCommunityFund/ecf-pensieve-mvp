@@ -30,7 +30,6 @@ export interface FormFieldConfig<K extends keyof ProjectFormData> {
   options?: { value: string; label: string }[]; // For select, radio
   presetCategories?: string[]; // Specific for categories
   showApplicable?: boolean; // Whether the applicable switch should be shown
-  applicableKey?: keyof ProjectFormData; // The key controlling applicability (e.g., 'isAppUrlApplicable')
   showReference?: boolean; // Whether the reference button should be shown
   startContentText?: string; // For URL inputs
   minRows?: number; // For Textarea
@@ -111,14 +110,7 @@ export const basicsFieldsConfig: {
     placeholder: '输入 URL',
     startContentText: 'https://',
     showApplicable: true,
-    applicableKey: 'isAppUrlApplicable',
     showReference: true,
-  },
-  isAppUrlApplicable: {
-    key: 'isAppUrlApplicable',
-    label: '应用 URL 是否适用',
-    type: 'switchableUrl',
-    showReference: false,
   },
 };
 
@@ -144,14 +136,7 @@ export const datesFieldsConfig: {
     type: 'switchableDate',
     placeholder: '选择日期',
     showApplicable: true,
-    applicableKey: 'isLaunchDateApplicable',
     showReference: true,
-  },
-  isLaunchDateApplicable: {
-    key: 'isLaunchDateApplicable',
-    label: '产品发布日期是否适用',
-    type: 'switchableDate',
-    showReference: false,
   },
   devStatus: {
     key: 'devStatus',
@@ -178,19 +163,12 @@ export const datesFieldsConfig: {
     type: 'select',
     placeholder: '选择融资状态',
     showApplicable: true,
-    applicableKey: 'isFundingStatusApplicable',
     options: [
       { value: 'Funded', label: '已获得资金' },
       { value: 'VC Invested', label: 'VC 投资' },
       { value: 'No Funding', label: '无资金' },
     ],
     showReference: true,
-  },
-  isFundingStatusApplicable: {
-    key: 'isFundingStatusApplicable',
-    label: '融资状态是否适用',
-    type: 'select',
-    showReference: false,
   },
 };
 
@@ -219,14 +197,7 @@ export const technicalsFieldsConfig: {
     type: 'switchableUrl',
     placeholder: 'https://github.com/your-org/repo',
     showApplicable: true,
-    applicableKey: 'isCodeRepoApplicable',
     showReference: true,
-  },
-  isCodeRepoApplicable: {
-    key: 'isCodeRepoApplicable',
-    label: '代码仓库是否适用',
-    type: 'switchableUrl',
-    showReference: false,
   },
   tokenContract: {
     key: 'tokenContract',
@@ -237,14 +208,7 @@ export const technicalsFieldsConfig: {
     type: 'switchableUrl',
     placeholder: '0x...',
     showApplicable: true,
-    applicableKey: 'isTokenContractApplicable',
     showReference: true,
-  },
-  isTokenContractApplicable: {
-    key: 'isTokenContractApplicable',
-    label: 'Token 合约是否适用',
-    type: 'switchableUrl',
-    showReference: false,
   },
 };
 

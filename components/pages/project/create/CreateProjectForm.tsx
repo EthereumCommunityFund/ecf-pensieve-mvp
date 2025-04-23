@@ -156,21 +156,17 @@ const CreateProjectForm: React.FC = () => {
       tagline: '',
       categories: [],
       mainDescription: '',
-      projectLogo: null, // Default for string URL is null or ''
+      projectLogo:
+        'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg',
       websiteUrl: '',
       appUrl: null,
-      isAppUrlApplicable: true,
       dateFounded: null,
       dateLaunch: null,
-      isLaunchDateApplicable: true,
       devStatus: '',
       fundingStatus: null,
-      isFundingStatusApplicable: true,
       openSource: '',
       codeRepo: null,
-      isCodeRepoApplicable: true,
       tokenContract: null,
-      isTokenContractApplicable: true,
       orgStructure: '',
       publicGoods: '',
       founders: [{ fullName: '', titleRole: '' }], // Start with one founder

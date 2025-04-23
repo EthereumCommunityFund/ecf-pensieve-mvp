@@ -35,22 +35,17 @@ export interface ProjectFormData {
   projectLogo: string | null; // 存储上传后的 URL 字符串
   websiteUrl: string;
   appUrl: string | null;
-  isAppUrlApplicable: boolean;
 
   // Dates & Statuses
   dateFounded: Date | null; // 使用 Date 对象以便 Picker 处理
   dateLaunch: Date | null;
-  isLaunchDateApplicable: boolean;
   devStatus: 'Live' | 'In Development' | 'Discontinued' | 'Stealth' | ''; // 添加空字符串以允许初始未选状态
   fundingStatus: 'Funded' | 'VC Invested' | 'No Funding' | '' | null; // 添加空字符串
-  isFundingStatusApplicable: boolean;
 
   // Technicals
   openSource: 'Yes' | 'No' | ''; // 使用字符串以便 Select 处理
   codeRepo: string | null;
-  isCodeRepoApplicable: boolean;
   tokenContract: string | null;
-  isTokenContractApplicable: boolean;
 
   // Organization
   orgStructure: 'Centralized' | 'DAO' | 'Decentralized' | ''; // 添加空字符串
@@ -102,23 +97,14 @@ export const stepFields = {
     'projectLogo',
     'websiteUrl',
     'appUrl',
-    'isAppUrlApplicable',
   ],
   [CreateProjectStep.Dates]: [
     'dateFounded',
     'dateLaunch',
-    'isLaunchDateApplicable',
     'devStatus',
     'fundingStatus',
-    'isFundingStatusApplicable',
   ],
-  [CreateProjectStep.Technicals]: [
-    'openSource',
-    'codeRepo',
-    'isCodeRepoApplicable',
-    'tokenContract',
-    'isTokenContractApplicable',
-  ],
+  [CreateProjectStep.Technicals]: ['openSource', 'codeRepo', 'tokenContract'],
   [CreateProjectStep.Organization]: ['orgStructure', 'publicGoods', 'founders'],
 } as const;
 
