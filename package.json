@@ -31,6 +31,7 @@
     "dotenv": "^16.5.0",
     "dotenv-cli": "^8.0.0",
     "drizzle-orm": "^0.42.0",
+    "ethers": "^6.13.5",
     "framer-motion": "^12.4.2",
     "next": "15.1.7",
     "postgres": "^3.4.5",
