@@ -7,17 +7,18 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { datesFieldsConfig } from '@/components/pages/project/create/formData';
+import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
-import { FormFieldContainer } from '../FormFieldContainer';
 import { ProjectFormData, StepFormProps } from '../types';
 
 const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   control,
   errors,
   setValue,
+  fieldApplicability,
+  onChangeApplicability,
   onAddReference,
-  applicableStates,
-  onChangeApplicableStates,
 }) => {
   const devStatusOptions = datesFieldsConfig.devStatus?.options || [];
   const fundingStatusOptions = datesFieldsConfig.fundingStatus?.options || [];
@@ -46,20 +47,10 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   return (
     <div className="flex flex-col gap-[40px]">
       <FormFieldContainer
-        label={datesFieldsConfig.dateFounded.label}
-        description={datesFieldsConfig.dateFounded.description}
-        shortDescription={datesFieldsConfig.dateFounded.shortDescription}
-        weight={datesFieldsConfig.dateFounded.weight}
-        showReference={datesFieldsConfig.dateFounded.showReference}
-        onAddReference={
-          datesFieldsConfig.dateFounded.showReference
-            ? () =>
-                onAddReference(
-                  datesFieldsConfig.dateFounded.key,
-                  datesFieldsConfig.dateFounded.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: datesFieldsConfig.dateFounded,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={datesFieldsConfig.dateFounded.key}
@@ -83,25 +74,14 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={datesFieldsConfig.dateLaunch.label}
-        description={datesFieldsConfig.dateLaunch.description}
-        shortDescription={datesFieldsConfig.dateLaunch.shortDescription}
-        weight={datesFieldsConfig.dateLaunch.weight}
-        showReference={datesFieldsConfig.dateLaunch.showReference}
-        showApplicable={true}
-        isApplicable={applicableStates.dateLaunch}
-        onApplicableChange={(val) =>
-          onChangeApplicableStates('dateLaunch', val)
-        }
-        onAddReference={
-          datesFieldsConfig.dateLaunch.showReference
-            ? () =>
-                onAddReference(
-                  datesFieldsConfig.dateLaunch.key,
-                  datesFieldsConfig.dateLaunch.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: datesFieldsConfig.dateLaunch,
+          showApplicable: true,
+          isApplicable: fieldApplicability.dateLaunch,
+          onChangeApplicability: (val) =>
+            onChangeApplicability('dateLaunch', val),
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={datesFieldsConfig.dateLaunch.key}
@@ -115,7 +95,7 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 }}
                 isInvalid={!!error}
                 errorMessage={error?.message}
-                isDisabled={!applicableStates.dateLaunch}
+                isDisabled={!fieldApplicability.dateLaunch}
                 className="w-full"
                 aria-label={datesFieldsConfig.dateLaunch.label}
               />
@@ -125,20 +105,10 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={datesFieldsConfig.devStatus.label}
-        description={datesFieldsConfig.devStatus.description}
-        shortDescription={datesFieldsConfig.devStatus.shortDescription}
-        weight={datesFieldsConfig.devStatus.weight}
-        showReference={datesFieldsConfig.devStatus.showReference}
-        onAddReference={
-          datesFieldsConfig.devStatus.showReference
-            ? () =>
-                onAddReference(
-                  datesFieldsConfig.devStatus.key,
-                  datesFieldsConfig.devStatus.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: datesFieldsConfig.devStatus,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={datesFieldsConfig.devStatus.key}
@@ -168,25 +138,14 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={datesFieldsConfig.fundingStatus.label}
-        description={datesFieldsConfig.fundingStatus.description}
-        shortDescription={datesFieldsConfig.fundingStatus.shortDescription}
-        weight={datesFieldsConfig.fundingStatus.weight}
-        showReference={datesFieldsConfig.fundingStatus.showReference}
-        showApplicable={true}
-        isApplicable={applicableStates.fundingStatus}
-        onApplicableChange={(val) =>
-          onChangeApplicableStates('fundingStatus', val)
-        }
-        onAddReference={
-          datesFieldsConfig.fundingStatus.showReference
-            ? () =>
-                onAddReference(
-                  datesFieldsConfig.fundingStatus.key,
-                  datesFieldsConfig.fundingStatus.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: datesFieldsConfig.fundingStatus,
+          showApplicable: true,
+          isApplicable: fieldApplicability.fundingStatus,
+          onChangeApplicability: (val) =>
+            onChangeApplicability('fundingStatus', val),
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={datesFieldsConfig.fundingStatus.key}
@@ -203,7 +162,7 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               isInvalid={!!error}
               errorMessage={error?.message}
               items={fundingStatusOptions}
-              isDisabled={!applicableStates.fundingStatus}
+              isDisabled={!fieldApplicability.fundingStatus}
               className="w-full"
             >
               {(item) => (

@@ -15,7 +15,7 @@ export interface FormFieldContainerProps {
 
   showApplicable?: boolean;
   isApplicable?: boolean;
-  onApplicableChange?: (isApplicable: boolean) => void;
+  onChangeApplicability?: (isApplicable: boolean) => void;
 
   showReference?: boolean;
   onAddReference?: () => void;
@@ -29,7 +29,7 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
   children,
   showApplicable,
   isApplicable = true,
-  onApplicableChange = () => {},
+  onChangeApplicability = () => {},
   showReference = true,
   onAddReference,
 }) => {
@@ -78,7 +78,7 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
         <div className="flex justify-start">
           <ApplicableSwitch
             isApplicable={isApplicable}
-            onChange={onApplicableChange}
+            onChange={onChangeApplicability}
           />
         </div>
       )}

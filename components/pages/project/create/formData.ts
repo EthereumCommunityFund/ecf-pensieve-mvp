@@ -17,7 +17,7 @@ export type FieldType =
   | 'switchableDate'
   | 'select'
   | 'radio'
-  | 'founderList'; // Add more types as needed
+  | 'founderList';
 
 export interface FormFieldConfig<K extends keyof ProjectFormData> {
   key: K;

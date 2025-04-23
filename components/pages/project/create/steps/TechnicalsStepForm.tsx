@@ -6,8 +6,9 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { technicalsFieldsConfig } from '@/components/pages/project/create/formData';
+import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
-import { FormFieldContainer } from '../FormFieldContainer';
 import { ProjectFormData, StepFormProps } from '../types';
 
 const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
@@ -15,31 +16,20 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   errors,
   watch,
   setValue,
+  fieldApplicability,
+  onChangeApplicability,
   onAddReference,
-  applicableStates,
-  onChangeApplicableStates,
 }) => {
   const openSourceValue = watch(technicalsFieldsConfig.openSource.key);
-
   const openSourceOptions = technicalsFieldsConfig.openSource?.options || [];
 
   return (
     <div className="flex flex-col gap-[40px]">
       <FormFieldContainer
-        label={technicalsFieldsConfig.openSource.label}
-        description={technicalsFieldsConfig.openSource.description}
-        shortDescription={technicalsFieldsConfig.openSource.shortDescription}
-        weight={technicalsFieldsConfig.openSource.weight}
-        showReference={technicalsFieldsConfig.openSource.showReference}
-        onAddReference={
-          technicalsFieldsConfig.openSource.showReference
-            ? () =>
-                onAddReference(
-                  technicalsFieldsConfig.openSource.key,
-                  technicalsFieldsConfig.openSource.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: technicalsFieldsConfig.openSource,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={technicalsFieldsConfig.openSource.key}
@@ -69,23 +59,14 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={technicalsFieldsConfig.codeRepo.label}
-        description={technicalsFieldsConfig.codeRepo.description}
-        shortDescription={technicalsFieldsConfig.codeRepo.shortDescription}
-        weight={technicalsFieldsConfig.codeRepo.weight}
-        showReference={technicalsFieldsConfig.codeRepo.showReference}
-        showApplicable={true}
-        isApplicable={applicableStates.codeRepo}
-        onApplicableChange={(val) => onChangeApplicableStates('codeRepo', val)}
-        onAddReference={
-          technicalsFieldsConfig.codeRepo.showReference
-            ? () =>
-                onAddReference(
-                  technicalsFieldsConfig.codeRepo.key,
-                  technicalsFieldsConfig.codeRepo.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: technicalsFieldsConfig.codeRepo,
+          showApplicable: true,
+          isApplicable: fieldApplicability.codeRepo,
+          onChangeApplicability: (val) =>
+            onChangeApplicability('codeRepo', val),
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={technicalsFieldsConfig.codeRepo.key}
@@ -98,7 +79,7 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               placeholder={technicalsFieldsConfig.codeRepo.placeholder}
               isInvalid={!!error}
               errorMessage={error?.message}
-              isDisabled={!applicableStates.codeRepo}
+              isDisabled={!fieldApplicability.codeRepo}
               startContent={
                 technicalsFieldsConfig.codeRepo.startContentText ? (
                   <div className="pointer-events-none mr-1 flex h-full items-center rounded-l-lg bg-[#E1E1E1] px-3">
@@ -118,25 +99,14 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={technicalsFieldsConfig.tokenContract.label}
-        description={technicalsFieldsConfig.tokenContract.description}
-        shortDescription={technicalsFieldsConfig.tokenContract.shortDescription}
-        weight={technicalsFieldsConfig.tokenContract.weight}
-        showReference={technicalsFieldsConfig.tokenContract.showReference}
-        showApplicable={true}
-        isApplicable={applicableStates.tokenContract}
-        onApplicableChange={(val) =>
-          onChangeApplicableStates('tokenContract', val)
-        }
-        onAddReference={
-          technicalsFieldsConfig.tokenContract.showReference
-            ? () =>
-                onAddReference(
-                  technicalsFieldsConfig.tokenContract.key,
-                  technicalsFieldsConfig.tokenContract.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: technicalsFieldsConfig.tokenContract,
+          showApplicable: true,
+          isApplicable: fieldApplicability.tokenContract,
+          onChangeApplicability: (val) =>
+            onChangeApplicability('tokenContract', val),
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={technicalsFieldsConfig.tokenContract.key}
@@ -149,7 +119,7 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               placeholder={technicalsFieldsConfig.tokenContract.placeholder}
               isInvalid={!!error}
               errorMessage={error?.message}
-              isDisabled={!applicableStates.tokenContract}
+              isDisabled={!fieldApplicability.tokenContract}
               startContent={
                 technicalsFieldsConfig.tokenContract.startContentText ? (
                   <div className="pointer-events-none mr-1 flex h-full items-center rounded-l-lg bg-[#E1E1E1] px-3">

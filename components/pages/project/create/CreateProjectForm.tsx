@@ -26,7 +26,7 @@ import {
   stepFields,
   StepStatus,
 } from './types';
-import { projectSchema } from './validation';
+import { FieldApplicabilityContext, projectSchema } from './validation';
 // Assume trpc client and a way to get user ID are available
 // import { trpc } from '@/utils/trpc';
 // import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -89,7 +89,7 @@ const transformProjectData = (
   formData: ProjectFormData,
   userId: string,
   references: ReferenceData[],
-  applicableStates: Record<ApplicableField, boolean>,
+  fieldApplicability: Record<ApplicableField, boolean>,
 ): ProjectCreatePayload => {
   return {
     name: formData.projectName,
@@ -98,22 +98,22 @@ const transformProjectData = (
     mainDescription: formData.mainDescription,
     logoUrl: formData.projectLogo,
     websiteUrl: formData.websiteUrl,
-    appUrl: applicableStates['appUrl'] ? null : formData.appUrl,
+    appUrl: fieldApplicability['appUrl'] ? null : formData.appUrl,
     dateFounded: formData.dateFounded
       ? dayjs(formData.dateFounded).utc().toISOString()
       : '', // Should not be empty if required
-    dateLaunch: applicableStates['dateLaunch']
+    dateLaunch: fieldApplicability['dateLaunch']
       ? null
       : formData.dateLaunch
         ? dayjs(formData.dateLaunch).utc().toISOString()
         : null,
     devStatus: formData.devStatus as ProjectCreatePayload['devStatus'], // Cast, already validated
-    fundingStatus: applicableStates['fundingStatus']
+    fundingStatus: fieldApplicability['fundingStatus']
       ? null
       : (formData.fundingStatus as ProjectCreatePayload['fundingStatus']),
     openSource: formData.openSource === 'Yes',
-    codeRepo: applicableStates['codeRepo'] ? null : formData.codeRepo,
-    tokenContract: applicableStates['tokenContract']
+    codeRepo: fieldApplicability['codeRepo'] ? null : formData.codeRepo,
+    tokenContract: fieldApplicability['tokenContract']
       ? null
       : formData.tokenContract,
     orgStructure: formData.orgStructure as ProjectCreatePayload['orgStructure'], // Cast
@@ -153,7 +153,7 @@ const CreateProjectForm: React.FC = () => {
     label: '',
   });
 
-  const [applicableStates, setApplicableStates] = useState<
+  const [fieldApplicability, setFieldApplicability] = useState<
     Record<ApplicableField, boolean>
   >({
     appUrl: true,
@@ -164,8 +164,14 @@ const CreateProjectForm: React.FC = () => {
   });
 
   const methods = useForm<ProjectFormData>({
-    resolver: yupResolver(projectSchema),
-    mode: 'onTouched', // Validate on blur/change after first touch
+    resolver: yupResolver<
+      ProjectFormData,
+      FieldApplicabilityContext,
+      ProjectFormData
+    >(projectSchema, {
+      context: fieldApplicability,
+    }),
+    mode: 'onTouched',
     defaultValues: {
       projectName: '',
       tagline: '',
@@ -183,7 +189,7 @@ const CreateProjectForm: React.FC = () => {
       tokenContract: null,
       orgStructure: '',
       publicGoods: '',
-      founders: [{ fullName: '', titleRole: '' }], // Start with one founder
+      founders: [{ fullName: '', titleRole: '' }],
     },
   });
 
@@ -205,6 +211,35 @@ const CreateProjectForm: React.FC = () => {
     setIsCurrentStepValid(!hasErrorsInCurrentStep);
   }, [errors, currentStep, trigger]);
 
+  useEffect(() => {
+    const fieldsToValidate: (keyof ProjectFormData)[] = [];
+    if (Object.prototype.hasOwnProperty.call(fieldApplicability, 'appUrl')) {
+      fieldsToValidate.push('appUrl');
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(fieldApplicability, 'dateLaunch')
+    ) {
+      fieldsToValidate.push('dateLaunch');
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(fieldApplicability, 'fundingStatus')
+    ) {
+      fieldsToValidate.push('fundingStatus');
+    }
+    if (Object.prototype.hasOwnProperty.call(fieldApplicability, 'codeRepo')) {
+      fieldsToValidate.push('codeRepo');
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(fieldApplicability, 'tokenContract')
+    ) {
+      fieldsToValidate.push('tokenContract');
+    }
+
+    if (fieldsToValidate.length > 0) {
+      trigger(fieldsToValidate);
+    }
+  }, [fieldApplicability, trigger]);
+
   const stepsOrder: CreateProjectStep[] = [
     CreateProjectStep.Basics,
     CreateProjectStep.Dates,
@@ -217,10 +252,13 @@ const CreateProjectForm: React.FC = () => {
     const isValid = await trigger(currentFields);
 
     setIsCurrentStepValid(isValid);
+    console.log('isValid:', isValid);
     if (isValid) {
       const currentIndex = stepsOrder.indexOf(currentStep);
+      console.log('currentIndex:', currentIndex);
       if (currentIndex < stepsOrder.length - 1) {
         const nextStep = stepsOrder[currentIndex + 1];
+        console.log('nextStep:', nextStep);
         setStepStatuses((prev) => ({
           ...prev,
           [currentStep]: 'Finished',
@@ -228,8 +266,18 @@ const CreateProjectForm: React.FC = () => {
         }));
         setCurrentStep(nextStep);
       } else {
-        // Last step, trigger final submit
-        handleSubmit(onSubmit)();
+        console.log('Last step, trigger final submit');
+        console.log('表单当前错误:', errors);
+        console.log('表单当前值:', getValues());
+
+        const allValid = await trigger();
+        console.log('全表单验证结果:', allValid, errors);
+        console.log('fieldApplicability:', fieldApplicability);
+
+        handleSubmit((data: ProjectFormData) => {
+          console.log('onSubmit被调用,数据:', data);
+          onSubmit(data);
+        })();
       }
     }
   };
@@ -251,9 +299,8 @@ const CreateProjectForm: React.FC = () => {
     if (stepStatuses[step] === 'Finished') {
       setStepStatuses((prev) => ({
         ...prev,
-        // Set all intermediate steps back to finished? or handle individually?
         [currentStep]:
-          prev[currentStep] === 'Active' ? 'Finished' : prev[currentStep], // Keep finished if it was
+          prev[currentStep] === 'Active' ? 'Finished' : prev[currentStep],
         [step]: 'Active',
       }));
       setCurrentStep(step);
@@ -279,6 +326,7 @@ const CreateProjectForm: React.FC = () => {
   };
 
   const onSubmit = async (formData: ProjectFormData) => {
+    console.log('onSubmit 函数被执行:', formData);
     if (!user?.id) {
       addToast({
         title: 'Error',
@@ -292,8 +340,10 @@ const CreateProjectForm: React.FC = () => {
       formData,
       user.id,
       references,
-      applicableStates,
+      fieldApplicability,
     );
+
+    console.log('transformProjectData Payload:', payload);
 
     createProjectMutation.mutate(payload, {
       onSuccess: (data) => {
@@ -302,7 +352,6 @@ const CreateProjectForm: React.FC = () => {
           description: 'Project created successfully!',
           color: 'success',
         });
-        // router.push(`/projects/${data.id}`); // Use actual ID from response
         router.push('/projects');
       },
       onError: (error: any) => {
@@ -314,7 +363,6 @@ const CreateProjectForm: React.FC = () => {
               message: message as string,
             });
           });
-          // TODO: Maybe switch to the first step with a server error?
           addToast({
             title: 'Validation Error',
             description: 'Please check the highlighted fields.',
@@ -344,14 +392,12 @@ const CreateProjectForm: React.FC = () => {
   const handleSaveReference = useCallback(
     (reference: ReferenceData) => {
       setReferences((prev) => {
-        // 检查是否已存在相同字段的引用，如果有则更新
         const exists = prev.findIndex((ref) => ref.key === reference.key);
         if (exists >= 0) {
           const updated = [...prev];
           updated[exists] = reference;
           return updated;
         }
-        // 否则添加新引用
         return [...prev, reference];
       });
 
@@ -364,9 +410,9 @@ const CreateProjectForm: React.FC = () => {
     [currentReferenceField.label],
   );
 
-  const onChangeApplicableStates = useCallback(
+  const onChangeApplicability = useCallback(
     (field: ApplicableField, value: boolean) => {
-      setApplicableStates((prev) => ({
+      setFieldApplicability((prev) => ({
         ...prev,
         [field]: value,
       }));
@@ -380,9 +426,9 @@ const CreateProjectForm: React.FC = () => {
     watch,
     setValue,
     trigger,
+    fieldApplicability,
+    onChangeApplicability,
     onAddReference: handleAddReference,
-    applicableStates,
-    onChangeApplicableStates,
   };
 
   return (
@@ -428,7 +474,7 @@ const CreateProjectForm: React.FC = () => {
 
             <FormActions
               currentStep={currentStep}
-              isSubmitting={createProjectMutation.isLoading || isSubmitting} // Combine RHF and mutation loading state
+              isSubmitting={createProjectMutation.isLoading || isSubmitting}
               isStepValid={isCurrentStepValid}
               onBack={handleBack}
               onNext={handleNext}

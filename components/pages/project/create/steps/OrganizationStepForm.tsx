@@ -6,8 +6,9 @@ import React from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
 import { organizationFieldsConfig } from '@/components/pages/project/create/formData';
+import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
-import { FormFieldContainer } from '../FormFieldContainer';
 import { ProjectFormData, StepFormProps } from '../types';
 
 const OrganizationStepForm: React.FC<
@@ -31,22 +32,10 @@ const OrganizationStepForm: React.FC<
   return (
     <div className="flex flex-col gap-[40px]">
       <FormFieldContainer
-        label={organizationFieldsConfig.orgStructure.label}
-        description={organizationFieldsConfig.orgStructure.description}
-        shortDescription={
-          organizationFieldsConfig.orgStructure.shortDescription
-        }
-        weight={organizationFieldsConfig.orgStructure.weight}
-        showReference={organizationFieldsConfig.orgStructure.showReference}
-        onAddReference={
-          organizationFieldsConfig.orgStructure.showReference
-            ? () =>
-                onAddReference(
-                  organizationFieldsConfig.orgStructure.key,
-                  organizationFieldsConfig.orgStructure.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: organizationFieldsConfig.orgStructure,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={organizationFieldsConfig.orgStructure.key}
@@ -76,20 +65,10 @@ const OrganizationStepForm: React.FC<
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={organizationFieldsConfig.publicGoods.label}
-        description={organizationFieldsConfig.publicGoods.description}
-        shortDescription={organizationFieldsConfig.publicGoods.shortDescription}
-        weight={organizationFieldsConfig.publicGoods.weight}
-        showReference={organizationFieldsConfig.publicGoods.showReference}
-        onAddReference={
-          organizationFieldsConfig.publicGoods.showReference
-            ? () =>
-                onAddReference(
-                  organizationFieldsConfig.publicGoods.key,
-                  organizationFieldsConfig.publicGoods.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: organizationFieldsConfig.publicGoods,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={organizationFieldsConfig.publicGoods.key}
@@ -189,7 +168,7 @@ const OrganizationStepForm: React.FC<
           ))}
 
           <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
-            {foundersConfig.showReference && (
+            {foundersConfig.showReference && onAddReference && (
               <Button
                 variant="light"
                 size="sm"
@@ -201,7 +180,7 @@ const OrganizationStepForm: React.FC<
                 + 添加引用
               </Button>
             )}
-            {!foundersConfig.showReference && <div></div>}
+            {(!foundersConfig.showReference || !onAddReference) && <div></div>}
             <Button
               variant="ghost"
               color="primary"

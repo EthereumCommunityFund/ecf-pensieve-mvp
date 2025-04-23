@@ -6,8 +6,9 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { basicsFieldsConfig } from '@/components/pages/project/create/formData';
+import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
-import { FormFieldContainer } from '../FormFieldContainer';
 import PhotoUpload from '../PhotoUpload';
 import { StepFormProps } from '../types';
 
@@ -16,9 +17,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   errors,
   setValue,
   trigger,
+  fieldApplicability,
+  onChangeApplicability,
   onAddReference,
-  applicableStates,
-  onChangeApplicableStates,
 }) => {
   const categoriesConfig = basicsFieldsConfig.categories;
   const presetCategories = categoriesConfig?.presetCategories || [];
@@ -26,20 +27,10 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   return (
     <div className="flex flex-col gap-[40px]">
       <FormFieldContainer
-        label={basicsFieldsConfig.projectName.label}
-        description={basicsFieldsConfig.projectName.description}
-        shortDescription={basicsFieldsConfig.projectName.shortDescription}
-        weight={basicsFieldsConfig.projectName.weight}
-        showReference={basicsFieldsConfig.projectName.showReference}
-        onAddReference={
-          basicsFieldsConfig.projectName.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.projectName.key,
-                  basicsFieldsConfig.projectName.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.projectName,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={basicsFieldsConfig.projectName.key}
@@ -67,20 +58,10 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={basicsFieldsConfig.tagline.label}
-        description={basicsFieldsConfig.tagline.description}
-        shortDescription={basicsFieldsConfig.tagline.shortDescription}
-        weight={basicsFieldsConfig.tagline.weight}
-        showReference={basicsFieldsConfig.tagline.showReference}
-        onAddReference={
-          basicsFieldsConfig.tagline.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.tagline.key,
-                  basicsFieldsConfig.tagline.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.tagline,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={basicsFieldsConfig.tagline.key}
@@ -108,20 +89,10 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={basicsFieldsConfig.categories.label}
-        description={basicsFieldsConfig.categories.description}
-        shortDescription={basicsFieldsConfig.categories.shortDescription}
-        weight={basicsFieldsConfig.categories.weight}
-        showReference={basicsFieldsConfig.categories.showReference}
-        onAddReference={
-          basicsFieldsConfig.categories.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.categories.key,
-                  basicsFieldsConfig.categories.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.categories,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={basicsFieldsConfig.categories.key}
@@ -158,20 +129,10 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={basicsFieldsConfig.mainDescription.label}
-        description={basicsFieldsConfig.mainDescription.description}
-        shortDescription={basicsFieldsConfig.mainDescription.shortDescription}
-        weight={basicsFieldsConfig.mainDescription.weight}
-        showReference={basicsFieldsConfig.mainDescription.showReference}
-        onAddReference={
-          basicsFieldsConfig.mainDescription.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.mainDescription.key,
-                  basicsFieldsConfig.mainDescription.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.mainDescription,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={basicsFieldsConfig.mainDescription.key}
@@ -200,19 +161,10 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={basicsFieldsConfig.projectLogo.label}
-        description={basicsFieldsConfig.projectLogo.description}
-        shortDescription={basicsFieldsConfig.projectLogo.shortDescription}
-        showReference={basicsFieldsConfig.projectLogo.showReference}
-        onAddReference={
-          basicsFieldsConfig.projectLogo.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.projectLogo.key,
-                  basicsFieldsConfig.projectLogo.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.projectLogo,
+          onAddReference: onAddReference,
+        })}
       >
         <div className="flex items-center gap-4">
           <Controller
@@ -227,9 +179,7 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 >
                   <Avatar
                     size="lg"
-                    icon={
-                      <ImageIcon className="size-[64px] text-gray-400" />
-                    }
+                    icon={<ImageIcon className="size-[64px] text-gray-400" />}
                     src={field.value ?? undefined}
                     alt={basicsFieldsConfig.projectLogo.label}
                     className="size-[140px] cursor-pointer border border-dashed border-gray-300 bg-black/5 hover:bg-gray-200"
@@ -247,20 +197,10 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={basicsFieldsConfig.websiteUrl.label}
-        description={basicsFieldsConfig.websiteUrl.description}
-        shortDescription={basicsFieldsConfig.websiteUrl.shortDescription}
-        weight={basicsFieldsConfig.websiteUrl.weight}
-        showReference={basicsFieldsConfig.websiteUrl.showReference}
-        onAddReference={
-          basicsFieldsConfig.websiteUrl.showReference
-            ? () =>
-                onAddReference(
-                  basicsFieldsConfig.websiteUrl.key,
-                  basicsFieldsConfig.websiteUrl.label,
-                )
-            : undefined
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.websiteUrl,
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={basicsFieldsConfig.websiteUrl.key}
@@ -297,22 +237,13 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        label={basicsFieldsConfig.appUrl.label}
-        description={basicsFieldsConfig.appUrl.description}
-        shortDescription={basicsFieldsConfig.appUrl.shortDescription}
-        weight={basicsFieldsConfig.appUrl.weight}
-        showReference={basicsFieldsConfig.appUrl.showReference}
-        onAddReference={() =>
-          onAddReference(
-            basicsFieldsConfig.appUrl.key,
-            basicsFieldsConfig.appUrl.label,
-          )
-        }
-        showApplicable={true}
-        isApplicable={applicableStates.appUrl}
-        onApplicableChange={(val: boolean) =>
-          onChangeApplicableStates(basicsFieldsConfig.appUrl.key, val)
-        }
+        {...createContainerProps({
+          fieldConfig: basicsFieldsConfig.appUrl,
+          showApplicable: true,
+          isApplicable: fieldApplicability.appUrl,
+          onChangeApplicability: (val) => onChangeApplicability('appUrl', val),
+          onAddReference: onAddReference,
+        })}
       >
         <Controller
           name={basicsFieldsConfig.appUrl.key}
@@ -323,13 +254,13 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 {...field}
                 value={field.value || ''}
                 onChange={(e) => field.onChange(e.target.value)}
-                isDisabled={!applicableStates.appUrl}
+                isDisabled={!fieldApplicability.appUrl}
                 classNames={{
                   base: cn('group w-full', error ? 'border-red-500' : ''),
                   inputWrapper: cn(
                     'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
                     'rounded-lg h-[42px] flex px-0',
-                    !applicableStates.appUrl
+                    !fieldApplicability.appUrl
                       ? 'opacity-50 cursor-not-allowed'
                       : '',
                   ),

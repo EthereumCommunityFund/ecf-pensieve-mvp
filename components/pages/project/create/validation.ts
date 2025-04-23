@@ -1,169 +1,214 @@
 import * as yup from 'yup';
 
-import { FounderInput, ProjectFormData } from './types'; // 确保路径正确
+import { ApplicableField, FounderInput, ProjectFormData } from './types';
 
-// 定义文件大小限制 (2MB)
+// Rename ValidationContext for clarity
+export type FieldApplicabilityContext = Record<ApplicableField, boolean>;
+
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-// 定义支持的文件类型
 const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/gif'];
 
 const founderSchema: yup.ObjectSchema<FounderInput> = yup.object().shape({
-  fullName: yup.string().required('创始人姓名不能为空'),
-  titleRole: yup.string().required('创始人职位/角色不能为空'),
+  fullName: yup.string().required('Founder name is required'),
+  titleRole: yup.string().required('Founder title/role is required'),
 });
 
 export const basicsSchema = yup.object().shape({
   projectName: yup
     .string()
-    .required('项目名称不能为空')
-    .max(250, '项目名称不能超过 250 个字符'),
+    .required('Project name is required')
+    .max(250, 'Project name cannot exceed 250 characters'),
   tagline: yup
     .string()
-    .required('标语不能为空')
-    .max(250, '标语不能超过 250 个字符'),
+    .required('Tagline is required')
+    .max(250, 'Tagline cannot exceed 250 characters'),
   categories: yup
     .array()
     .of(yup.string().required())
-    .min(1, '至少选择或输入一个类别')
-    .required('类别不能为空'),
+    .min(1, 'Select at least one category')
+    .required('Categories are required'),
   mainDescription: yup
     .string()
-    .required('主要描述不能为空')
-    .max(250, '主要描述不能超过 250 个字符'),
+    .required('Main description is required')
+    .max(250, 'Main description cannot exceed 250 characters'),
   projectLogo: yup
     .string()
-    .url('无效的 Logo URL') // 基本 URL 验证
+    .url('Invalid Logo URL') // Basic URL validation
     .nullable()
-    .optional(), // Logo 是可选的
-  websiteUrl: yup.string().url('请输入有效的 URL').required('项目网站不能为空'),
-  isAppUrlApplicable: yup.boolean().required(),
+    .optional(), // Logo is optional
+  websiteUrl: yup
+    .string()
+    .url('Please enter a valid URL')
+    .required('Project website is required'),
   appUrl: yup
     .string()
-    .url('请输入有效的 URL')
+    .url('Please enter a valid URL')
     .nullable()
-    .when('isAppUrlApplicable', {
-      is: true,
-      then: (schema) => schema.required('应用 URL 不能为空'),
-      otherwise: (schema) => schema.optional(), // 已经是 nullable
+    .test('appUrlRequired', 'App URL is required', function (value) {
+      // Use renamed context type
+      const context = this.options.context as
+        | FieldApplicabilityContext
+        | undefined;
+      // Logic remains: check if applicability is set to false (meaning required)
+      if (context?.appUrl === false && !value) {
+        return false;
+      }
+      return true;
     }),
-  // logoUrlPreview 不需要验证
 });
 
-// 步骤 2: Dates & Statuses
+// Step 2: Dates & Statuses
 export const datesSchema = yup.object().shape({
   dateFounded: yup
     .date()
-    .required('成立日期不能为空')
-    .max(new Date(), '成立日期不能晚于今天')
-    .nullable(), // 使用 nullable 因为 DatePicker 可能返回 null
-  isLaunchDateApplicable: yup.boolean().required(),
+    .required('Foundation date is required')
+    .max(new Date(), 'Foundation date cannot be later than today')
+    .nullable(), // Using nullable because DatePicker might return null
   dateLaunch: yup
     .date()
     .nullable()
-    .when('isLaunchDateApplicable', {
-      is: true,
-      then: (schema) => schema.required('产品发布日期不能为空'),
-      otherwise: (schema) => schema.optional(),
+    .test('dateLaunchRequired', 'Launch date is required', function (value) {
+      // Use renamed context type
+      const context = this.options.context as
+        | FieldApplicabilityContext
+        | undefined;
+      if (context?.dateLaunch === false && !value) {
+        return false;
+      }
+      return true;
     }),
   devStatus: yup
     .string()
     .oneOf(
       ['Live', 'In Development', 'Discontinued', 'Stealth'],
-      '无效的开发状态',
+      'Invalid development status',
     )
-    .required('开发状态不能为空'),
-  isFundingStatusApplicable: yup.boolean().required(),
+    .required('Development status is required'),
   fundingStatus: yup
     .string()
     .nullable()
-    .oneOf(['Funded', 'VC Invested', 'No Funding', null], '无效的融资状态') // 包含 null
-    .when('isFundingStatusApplicable', {
-      is: true,
-      then: (schema) => schema.required('融资状态不能为空'),
-      otherwise: (schema) => schema.optional(),
-    }),
+    .oneOf(
+      ['Funded', 'VC Invested', 'No Funding', null],
+      'Invalid funding status',
+    )
+    .test(
+      'fundingStatusRequired',
+      'Funding status is required',
+      function (value) {
+        // Use renamed context type
+        const context = this.options.context as
+          | FieldApplicabilityContext
+          | undefined;
+        if (context?.fundingStatus === false && value === null) {
+          return this.createError({
+            message: 'Funding status is required',
+            path: this.path,
+          });
+        }
+        return true;
+      },
+    ),
 });
 
-// 步骤 3: Technicals
+// Step 3: Technicals
 export const technicalsSchema = yup.object().shape({
   openSource: yup
     .string()
-    .oneOf(['Yes', 'No'], '请选择是否开源')
-    .required('请选择是否开源'),
-  isCodeRepoApplicable: yup.boolean().required(),
+    .oneOf(['Yes', 'No'], 'Please select whether the project is open source')
+    .required('Please select whether the project is open source'),
   codeRepo: yup
     .string()
-    .url('请输入有效的 URL')
+    .url('Please enter a valid URL')
     .nullable()
-    .when('isCodeRepoApplicable', {
-      is: true,
-      then: (schema) => schema.required('代码仓库 URL 不能为空'),
-      otherwise: (schema) => schema.optional(),
-    }),
-  isTokenContractApplicable: yup.boolean().required(),
+    .test(
+      'codeRepoRequired',
+      'Code repository URL is required',
+      function (value) {
+        // Use renamed context type
+        const context = this.options.context as
+          | FieldApplicabilityContext
+          | undefined;
+        if (context?.codeRepo === false && !value) {
+          return false;
+        }
+        return true;
+      },
+    ),
   tokenContract: yup
     .string()
-    .matches(/^0x[a-fA-F0-9]{40}$/, '无效的以太坊地址格式')
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
     .nullable()
-    .when('isTokenContractApplicable', {
-      is: true,
-      then: (schema) => schema.required('Token 合约地址不能为空'),
-      otherwise: (schema) => schema.optional(),
-    }),
+    .test(
+      'tokenContractRequired',
+      'Token contract address is required',
+      function (value) {
+        // Use renamed context type
+        const context = this.options.context as
+          | FieldApplicabilityContext
+          | undefined;
+        if (context?.tokenContract === false && !value) {
+          return false;
+        }
+        return true;
+      },
+    ),
 });
 
-// 步骤 4: Organization
+// Step 4: Organization
 export const organizationSchema = yup.object().shape({
   orgStructure: yup
     .string()
-    .oneOf(['Centralized', 'DAO', 'Decentralized'], '无效的组织结构')
-    .required('组织结构不能为空'),
+    .oneOf(
+      ['Centralized', 'DAO', 'Decentralized'],
+      'Invalid organization structure',
+    )
+    .required('Organization structure is required'),
   publicGoods: yup
     .string()
-    .oneOf(['Yes', 'No'], '请选择是否属于公共物品')
-    .required('请选择是否属于公共物品'),
+    .oneOf(['Yes', 'No'], 'Please select whether the project is a public good')
+    .required('Please select whether the project is a public good'),
   founders: yup
     .array()
     .of(founderSchema)
-    .min(1, '至少需要一位创始人信息')
-    .required('创始人信息不能为空'),
+    .min(1, 'At least one founder is required')
+    .required('Founder information is required'),
 });
-
-// 组合所有步骤的 Schema
-export const projectSchema: yup.ObjectSchema<ProjectFormData> = yup
+// Combine all step schemas
+// Explicitly type the final schema object and use type assertion
+export const projectSchema = yup
   .object()
   .shape({
-    // Basics
+    /**
+     * Basics
+     */
     projectName: basicsSchema.fields.projectName,
     tagline: basicsSchema.fields.tagline,
     categories: basicsSchema.fields.categories,
     mainDescription: basicsSchema.fields.mainDescription,
     projectLogo: basicsSchema.fields.projectLogo,
     websiteUrl: basicsSchema.fields.websiteUrl,
-    isAppUrlApplicable: basicsSchema.fields.isAppUrlApplicable,
     appUrl: basicsSchema.fields.appUrl,
 
-    // Dates & Statuses
+    /**
+     * Dates & Statuses
+     */
     dateFounded: datesSchema.fields.dateFounded,
-    isLaunchDateApplicable: datesSchema.fields.isLaunchDateApplicable,
     dateLaunch: datesSchema.fields.dateLaunch,
     devStatus: datesSchema.fields.devStatus,
-    isFundingStatusApplicable: datesSchema.fields.isFundingStatusApplicable,
     fundingStatus: datesSchema.fields.fundingStatus,
 
-    // Technicals
+    /**
+     * Technicals
+     */
     openSource: technicalsSchema.fields.openSource,
-    isCodeRepoApplicable: technicalsSchema.fields.isCodeRepoApplicable,
     codeRepo: technicalsSchema.fields.codeRepo,
-    isTokenContractApplicable:
-      technicalsSchema.fields.isTokenContractApplicable,
     tokenContract: technicalsSchema.fields.tokenContract,
 
-    // Organization
+    /**
+     * Organization
+     */
     orgStructure: organizationSchema.fields.orgStructure,
     publicGoods: organizationSchema.fields.publicGoods,
     founders: organizationSchema.fields.founders,
-
-    // logoUrlPreview is not part of validation schema
   })
-  .defined(); // Use .defined() to ensure the object itself is not undefined
+  .defined() as yup.ObjectSchema<ProjectFormData>;
