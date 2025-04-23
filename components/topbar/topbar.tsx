@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { AuthSection } from '@/components/topbar/auth/AuthSection';
-
 import ECFTypography from '../base/typography';
+import UserProfileSection from '../auth/UserProfileSection';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';
@@ -107,7 +106,9 @@ export function Topbar() {
             <Navigation />
           </div>
 
-          <AuthSection />
+          <UserProfileSection />
+
+          {/* <AuthSection /> */}
         </div>
       </div>
 
@@ -122,7 +123,8 @@ export function Topbar() {
           <Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
         </Link>
 
-        <AuthSection />
+        {/*<AuthSection />*/}
+        <UserProfileSection />
       </div>
     </header>
   );

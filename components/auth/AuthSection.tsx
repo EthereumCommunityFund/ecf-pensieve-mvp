@@ -10,8 +10,8 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import { useAccount, useDisconnect } from 'wagmi';
 
+import { AuthButton } from '@/components/auth/AuthButton';
 import ECFTypography from '@/components/base/typography';
-import { AuthButton } from '@/components/topbar/auth/AuthButton';
 import { getShortenAddress } from '@/lib/utils';
 
 export function AuthSection() {

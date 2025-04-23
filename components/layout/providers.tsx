@@ -11,7 +11,9 @@ import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 
+import AuthPrompt from '@/components/auth/AuthPrompt';
 import { config } from '@/config/wagmi';
+import { AuthProvider } from '@/context/AuthContext';
 import { SupabaseProvider } from '@/lib/supabase/provider';
 import { TRPCProvider } from '@/lib/trpc/provider';
 
@@ -19,37 +21,40 @@ const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider locale="en-US">
-          <TRPCProvider>
-            <SupabaseProvider>
-              <HeroUIProvider>
-                <HeroToastProvider
-                  placement={'bottom-left'}
-                  toastOffset={20}
-                  toastProps={{
-                    classNames: {
-                      base: 'max-w-[350px]',
-                      content: 'min-w-0',
-                      wrapper: 'min-w-0',
-                      title: 'break-words whitespace-normal',
-                      description: 'break-words whitespace-normal',
-                    },
-                    variant: 'flat',
-                  }}
-                  regionProps={{
-                    classNames: {
-                      base: 'z-[1500]',
-                    },
-                  }}
-                />
-                {children}
-              </HeroUIProvider>
-            </SupabaseProvider>
-          </TRPCProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <HeroUIProvider>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider locale="en-US">
+            <TRPCProvider>
+              <SupabaseProvider>
+                <AuthProvider>
+                  <HeroToastProvider
+                    placement={'bottom-left'}
+                    toastOffset={20}
+                    toastProps={{
+                      classNames: {
+                        base: 'max-w-[350px]',
+                        content: 'min-w-0',
+                        wrapper: 'min-w-0',
+                        title: 'break-words whitespace-normal',
+                        description: 'break-words whitespace-normal',
+                      },
+                      variant: 'flat',
+                    }}
+                    regionProps={{
+                      classNames: {
+                        base: 'z-[1500]',
+                      },
+                    }}
+                  />
+                  {children}
+                  <AuthPrompt />
+                </AuthProvider>
+              </SupabaseProvider>
+            </TRPCProvider>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </HeroUIProvider>
   );
 }
