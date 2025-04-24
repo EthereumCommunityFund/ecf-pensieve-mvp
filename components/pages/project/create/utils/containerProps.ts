@@ -8,6 +8,8 @@ export interface ICreateContainerPropsParams {
   isApplicable?: boolean;
   onChangeApplicability?: (val: boolean) => void;
   onAddReference?: (key: string, label: string) => void;
+  hasFieldValue?: (fieldName: string) => boolean;
+  hasFieldReference?: (fieldKey: string) => boolean;
 }
 
 export const createContainerProps = ({
@@ -16,7 +18,13 @@ export const createContainerProps = ({
   isApplicable,
   onChangeApplicability,
   onAddReference,
+  hasFieldValue,
+  hasFieldReference,
 }: ICreateContainerPropsParams): Omit<FormFieldContainerProps, 'children'> => {
+  const fieldKey = fieldConfig.key as string;
+  const hasValue = hasFieldValue ? hasFieldValue(fieldKey) : false;
+  const hasReference = hasFieldReference ? hasFieldReference(fieldKey) : false;
+
   return {
     label: fieldConfig.label,
     description: fieldConfig.description,
@@ -28,7 +36,9 @@ export const createContainerProps = ({
     onChangeApplicability,
     onAddReference:
       fieldConfig.showReference && onAddReference
-        ? () => onAddReference(fieldConfig.key as string, fieldConfig.label)
+        ? () => onAddReference(fieldKey, fieldConfig.label)
         : undefined,
+    hasValue,
+    hasReference,
   };
 };

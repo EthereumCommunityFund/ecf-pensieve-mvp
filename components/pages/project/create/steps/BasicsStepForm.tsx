@@ -10,6 +10,7 @@ import { basicsFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
+import InputPrefix from '../InputPrefix';
 import PhotoUpload from '../PhotoUpload';
 import { StepFormProps } from '../types';
 
@@ -21,6 +22,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
+  hasFieldValue,
+  hasFieldReference,
 }) => {
   const categoriesConfig = basicsFieldsConfig.categories;
   const presetCategories = categoriesConfig?.presetCategories || [];
@@ -31,6 +34,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.projectName,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -40,15 +45,6 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
             <div>
               <Input
                 {...field}
-                classNames={{
-                  base: cn('group w-full', error ? 'border-red-500' : ''),
-                  inputWrapper: cn(
-                    'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
-                    'rounded-lg px-3 h-[42px]',
-                  ),
-                  input:
-                    'font-normal text-black placeholder:text-black placeholder:opacity-60',
-                }}
                 placeholder={basicsFieldsConfig.projectName.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}
@@ -62,6 +58,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.tagline,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -71,15 +69,6 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
             <div>
               <Input
                 {...field}
-                classNames={{
-                  base: cn('group w-full', error ? 'border-red-500' : ''),
-                  inputWrapper: cn(
-                    'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
-                    'rounded-lg px-3 h-[42px]',
-                  ),
-                  input:
-                    'font-normal text-black placeholder:text-black placeholder:opacity-60',
-                }}
                 placeholder={basicsFieldsConfig.tagline.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}
@@ -93,6 +82,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.categories,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -133,6 +124,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.mainDescription,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -165,6 +158,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.projectLogo,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <div className="flex items-center gap-4">
@@ -201,6 +196,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.websiteUrl,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -210,24 +207,16 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
             <div>
               <Input
                 {...field}
-                classNames={{
-                  base: cn('group w-full', error ? 'border-red-500' : ''),
-                  inputWrapper: cn(
-                    'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
-                    'rounded-lg h-[42px] flex px-0',
-                  ),
-                  input:
-                    'font-normal text-black placeholder:text-black placeholder:opacity-60',
-                }}
                 startContent={
                   basicsFieldsConfig.websiteUrl.startContentText && (
-                    <div className="mr-1 flex h-full items-center rounded-l-lg bg-[#E1E1E1] px-3">
-                      <span className="font-semibold text-black opacity-40">
-                        {basicsFieldsConfig.websiteUrl.startContentText}
-                      </span>
-                    </div>
+                    <InputPrefix
+                      prefix={basicsFieldsConfig.websiteUrl.startContentText}
+                    />
                   )
                 }
+                classNames={{
+                  inputWrapper: 'pl-0 pr-[10px]',
+                }}
                 placeholder={basicsFieldsConfig.websiteUrl.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}
@@ -244,6 +233,8 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
           isApplicable: fieldApplicability.appUrl,
           onChangeApplicability: (val) => onChangeApplicability('appUrl', val),
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -257,24 +248,13 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 onChange={(e) => field.onChange(e.target.value)}
                 isDisabled={!fieldApplicability.appUrl}
                 classNames={{
-                  base: cn('group w-full', error ? 'border-red-500' : ''),
-                  inputWrapper: cn(
-                    'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
-                    'rounded-lg h-[42px] flex px-0',
-                    !fieldApplicability.appUrl
-                      ? 'opacity-50 cursor-not-allowed'
-                      : '',
-                  ),
-                  input:
-                    'font-normal text-black placeholder:text-black placeholder:opacity-60',
+                  inputWrapper: 'pl-0 pr-[10px]',
                 }}
                 startContent={
                   basicsFieldsConfig.appUrl.startContentText && (
-                    <div className="mr-1 flex h-full items-center rounded-l-lg bg-[#E1E1E1] px-3">
-                      <span className="font-semibold text-black opacity-40">
-                        {basicsFieldsConfig.appUrl.startContentText}
-                      </span>
-                    </div>
+                    <InputPrefix
+                      prefix={basicsFieldsConfig.appUrl.startContentText}
+                    />
                   )
                 }
                 placeholder={basicsFieldsConfig.appUrl.placeholder}

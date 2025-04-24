@@ -111,6 +111,7 @@ const CreateProjectForm: React.FC = () => {
   const [currentReferenceField, setCurrentReferenceField] = useState({
     key: '',
     label: '',
+    existingReference: null as ReferenceData | null,
   });
 
   const [fieldApplicability, setFieldApplicability] = useState<
@@ -340,13 +341,41 @@ const CreateProjectForm: React.FC = () => {
     });
   };
 
-  const handleAddReference = useCallback((key: string, label?: string) => {
-    setCurrentReferenceField({
-      key,
-      label: label || key,
-    });
-    setIsReferenceModalOpen(true);
-  }, []);
+  const hasFieldValue = useCallback(
+    (fieldName: string): boolean => {
+      const value = getValues(fieldName as keyof ProjectFormData);
+      return value !== null && value !== undefined && value !== '';
+    },
+    [getValues],
+  );
+
+  const hasFieldReference = useCallback(
+    (fieldKey: string): boolean => {
+      return references.some((ref) => ref.key === fieldKey);
+    },
+    [references],
+  );
+
+  const getFieldReference = useCallback(
+    (fieldKey: string): ReferenceData | null => {
+      return references.find((ref) => ref.key === fieldKey) || null;
+    },
+    [references],
+  );
+
+  const handleAddReference = useCallback(
+    (key: string, label?: string) => {
+      const existingReference = getFieldReference(key);
+
+      setCurrentReferenceField({
+        key,
+        label: label || key,
+        existingReference,
+      });
+      setIsReferenceModalOpen(true);
+    },
+    [getFieldReference],
+  );
 
   const handleSaveReference = useCallback(
     (reference: ReferenceData) => {
@@ -369,6 +398,22 @@ const CreateProjectForm: React.FC = () => {
     [currentReferenceField.label],
   );
 
+  const handleRemoveReference = useCallback(
+    (fieldKey: string) => {
+      const fieldLabel =
+        references.find((ref) => ref.key === fieldKey)?.key || fieldKey;
+
+      setReferences((prev) => prev.filter((ref) => ref.key !== fieldKey));
+
+      addToast({
+        title: '引用已删除',
+        description: `已删除 "${fieldLabel}" 的引用`,
+        color: 'warning',
+      });
+    },
+    [references],
+  );
+
   const onChangeApplicability = useCallback(
     (field: ApplicableField, value: boolean) => {
       setFieldApplicability((prev) => ({
@@ -388,6 +433,9 @@ const CreateProjectForm: React.FC = () => {
     fieldApplicability,
     onChangeApplicability,
     onAddReference: handleAddReference,
+    onRemoveReference: handleRemoveReference,
+    hasFieldValue,
+    hasFieldReference,
   };
 
   return (
@@ -451,8 +499,10 @@ const CreateProjectForm: React.FC = () => {
         isOpen={isReferenceModalOpen}
         onClose={() => setIsReferenceModalOpen(false)}
         onAddReference={handleSaveReference}
+        onRemoveReference={handleRemoveReference}
         fieldKey={currentReferenceField.key}
         fieldLabel={currentReferenceField.label}
+        existingReference={currentReferenceField.existingReference}
       />
     </FormProvider>
   );

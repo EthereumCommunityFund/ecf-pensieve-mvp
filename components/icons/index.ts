@@ -4,6 +4,8 @@ export { default as CheckIcon } from './Check';
 export { default as CodeIcon } from './Code';
 export { default as GaugeIcon } from './Gauge';
 export { default as InfoIcon } from './Info';
+export { default as LinkIcon } from './Link';
+export { default as PaperClipIcon } from './PaperClip';
 export { default as PlusIcon } from './Plus';
 export { default as WalletIcon } from './Wallet';
 export { default as XCircleIcon } from './XCircle';

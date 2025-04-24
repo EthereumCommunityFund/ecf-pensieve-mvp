@@ -20,16 +20,20 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
+  hasFieldValue,
+  hasFieldReference,
 }) => {
   const openSourceValue = watch(technicalsFieldsConfig.openSource.key);
   const openSourceOptions = technicalsFieldsConfig.openSource?.options || [];
 
   return (
-    <div className="flex flex-col gap-[40px]">
+    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
         {...createContainerProps({
           fieldConfig: technicalsFieldsConfig.openSource,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -67,6 +71,8 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
           onChangeApplicability: (val) =>
             onChangeApplicability('codeRepo', val),
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -107,6 +113,8 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
           onChangeApplicability: (val) =>
             onChangeApplicability('tokenContract', val),
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller

@@ -14,7 +14,7 @@ import { ProjectFormData, StepFormProps } from '../types';
 
 const OrganizationStepForm: React.FC<
   Omit<StepFormProps, 'register' | 'watch' | 'setValue' | 'trigger'>
-> = ({ control, errors, onAddReference }) => {
+> = ({ control, errors, onAddReference, hasFieldValue, hasFieldReference }) => {
   const { register } = useFormContext<ProjectFormData>();
 
   const foundersConfig = organizationFieldsConfig.founders;
@@ -31,11 +31,13 @@ const OrganizationStepForm: React.FC<
     organizationFieldsConfig.publicGoods?.options || [];
 
   return (
-    <div className="flex flex-col gap-[40px]">
+    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
         {...createContainerProps({
           fieldConfig: organizationFieldsConfig.orgStructure,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -69,6 +71,8 @@ const OrganizationStepForm: React.FC<
         {...createContainerProps({
           fieldConfig: organizationFieldsConfig.publicGoods,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -98,28 +102,35 @@ const OrganizationStepForm: React.FC<
         />
       </FormFieldContainer>
 
-      {foundersConfig && foundersKey && (
+      <FormFieldContainer
+        {...createContainerProps({
+          fieldConfig: organizationFieldsConfig.founders,
+          onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
+        })}
+      >
         <div className="space-y-4 rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
-              {foundersConfig.label}
-              {foundersConfig.weight && (
+              {foundersConfig?.label}
+              {foundersConfig?.weight && (
                 <span className="ml-2 text-xs text-gray-500">
-                  ({foundersConfig.weight})
+                  ({foundersConfig?.weight})
                 </span>
               )}
             </h3>
-            {foundersConfig.shortDescription && (
-              <Tooltip content={foundersConfig.shortDescription}>
+            {foundersConfig?.shortDescription && (
+              <Tooltip content={foundersConfig?.shortDescription}>
                 <span className="cursor-help">
                   <Scales className="size-5 text-gray-400" />
                 </span>
               </Tooltip>
             )}
           </div>
-          {foundersConfig.description && (
+          {foundersConfig?.description && (
             <p className="text-sm text-gray-500">
-              {foundersConfig.description}
+              {foundersConfig?.description}
             </p>
           )}
 
@@ -169,19 +180,19 @@ const OrganizationStepForm: React.FC<
           ))}
 
           <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
-            {foundersConfig.showReference && onAddReference && (
+            {foundersConfig?.showReference && onAddReference && (
               <Button
                 variant="light"
                 size="sm"
                 className="h-auto p-0 text-xs"
                 onPress={() =>
-                  onAddReference(foundersKey, foundersConfig.label)
+                  onAddReference(foundersKey, foundersConfig?.label)
                 }
               >
                 + 添加引用
               </Button>
             )}
-            {(!foundersConfig.showReference || !onAddReference) && <div></div>}
+            {(!foundersConfig?.showReference || !onAddReference) && <div></div>}
             <Button
               variant="ghost"
               color="primary"
@@ -192,7 +203,7 @@ const OrganizationStepForm: React.FC<
             </Button>
           </div>
         </div>
-      )}
+      </FormFieldContainer>
     </div>
   );
 };

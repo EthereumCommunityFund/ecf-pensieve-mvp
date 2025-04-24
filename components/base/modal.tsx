@@ -21,13 +21,13 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>((props, ref) => {
       'rounded-[10px]',
       'backdrop-blur-[5px] transition-all duration-200',
       'shadow-none',
-      'w-[400px] mobile:w-[calc(100vw-32px)] p-[20px] box-content',
+      'w-[400px] m-0 mobile:w-[calc(100vw-32px)] p-[20px] box-content',
       classNames?.base,
     ),
     wrapper: cn('bg-black/40 items-center', 'z-[1100]', classNames?.wrapper),
     backdrop: cn('bg-[rgba(0,0,0,0.2)]', classNames?.backdrop),
     header: cn('p-0 text-[18px] leading-[1.2] font-[600]', classNames?.header),
-    body: cn('mt-[10px] p-0', classNames?.body),
+    body: cn('p-[20px] mobile:p-[10px]', classNames?.body),
     footer: cn(
       'mt-[20px] p-0 justify-between mobile:flex-col',
       classNames?.footer,
@@ -74,16 +74,21 @@ export const CommonModalHeader: React.FC<{
   title: string;
   onClose: () => void;
   isDisabled?: boolean;
+  closeIcon?: React.ReactNode;
   classNames?: {
+    base?: string;
     title?: string;
+    button?: string;
   };
-}> = ({ title, onClose, isDisabled, classNames = {} }) => {
+}> = ({ title, onClose, isDisabled, classNames = {}, closeIcon }) => {
   return (
-    <ModalHeader className="flex h-[25px] items-center justify-between">
+    <ModalHeader
+      className={cn('flex items-center justify-between', classNames?.base)}
+    >
       {/* TODO font mono sans */}
       <h3
         className={cn(
-          'text-[18px] font-[600] text-white overflow-hidden',
+          'text-[18px] font-[600] text-black overflow-hidden',
           classNames?.title,
         )}
       >
@@ -91,11 +96,14 @@ export const CommonModalHeader: React.FC<{
       </h3>
       <Button
         isIconOnly
-        className="size-auto min-h-0 min-w-0 bg-transparent p-0 opacity-30"
+        className={cn(
+          'size-auto min-h-0 min-w-0 bg-transparent p-0 opacity-30',
+          classNames?.button,
+        )}
         onPress={onClose}
         disabled={isDisabled}
       >
-        <XCircleIcon size={24} />
+        {closeIcon || <XCircleIcon size={24} />}
       </Button>
     </ModalHeader>
   );

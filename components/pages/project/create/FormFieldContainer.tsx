@@ -1,8 +1,8 @@
-import { Tooltip } from '@heroui/react';
+import { cn, Tooltip } from '@heroui/react';
 import React from 'react';
 
-import { ECFButton } from '@/components/base';
-import { InfoIcon, PlusIcon } from '@/components/icons';
+import { Button } from '@/components/base';
+import { InfoIcon, PaperClipIcon, PlusIcon } from '@/components/icons';
 
 import ApplicableSwitch from './ApplicableSwitch';
 
@@ -19,6 +19,8 @@ export interface FormFieldContainerProps {
 
   showReference?: boolean;
   onAddReference?: () => void;
+  hasValue?: boolean;
+  hasReference?: boolean;
 }
 
 export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
@@ -32,6 +34,8 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
   onChangeApplicability = () => {},
   showReference = true,
   onAddReference,
+  hasValue = false,
+  hasReference = false,
 }) => {
   return (
     <div className="flex w-full flex-col gap-[10px]">
@@ -85,13 +89,29 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
       {children}
       {showReference && (
         <div className="flex h-[28px] items-center justify-end px-[8px] opacity-60">
-          <ECFButton
-            className="h-[28px] gap-[5px] border-none bg-transparent px-[8px] text-[14px] font-[600] text-black hover:bg-black/10 active:bg-black/10"
+          <Button
+            color="secondary"
+            className={cn(
+              'h-[28px] gap-[5px] border-none px-[8px]',
+              hasReference
+                ? 'bg-[rgba(0,0,0,0.05)] opacity-100'
+                : 'opacity-60 hover:bg-black/10 hover:opacity-100',
+              !hasValue &&
+                !hasReference &&
+                'cursor-not-allowed opacity-40 hover:opacity-40',
+            )}
             onPress={onAddReference}
-            startContent={<PlusIcon size={16} />}
+            isDisabled={!hasValue && !hasReference}
+            startContent={
+              hasReference ? (
+                <PaperClipIcon size={18} />
+              ) : (
+                <PlusIcon size={16} />
+              )
+            }
           >
-            Add Reference
-          </ECFButton>
+            {hasReference ? 'Reference Added' : 'Add Reference'}
+          </Button>
         </div>
       )}
     </div>

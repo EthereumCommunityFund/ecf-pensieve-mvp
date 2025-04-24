@@ -99,8 +99,11 @@ export interface StepFormProps {
   setValue: UseFormSetValue<ProjectFormData>;
   trigger: UseFormTrigger<ProjectFormData>;
   onAddReference: (key: string, label?: string) => void;
+  onRemoveReference?: (fieldKey: string) => void;
   fieldApplicability: Record<ApplicableField, boolean>;
   onChangeApplicability: (field: ApplicableField, value: boolean) => void;
+  hasFieldValue: (fieldName: string) => boolean;
+  hasFieldReference: (fieldKey: string) => boolean;
 }
 
 export const stepFields = {

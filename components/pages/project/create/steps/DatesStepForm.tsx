@@ -19,6 +19,8 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
+  hasFieldValue,
+  hasFieldReference,
 }) => {
   const devStatusOptions = datesFieldsConfig.devStatus?.options || [];
   const fundingStatusOptions = datesFieldsConfig.fundingStatus?.options || [];
@@ -45,11 +47,13 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   };
 
   return (
-    <div className="flex flex-col gap-[40px]">
+    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
         {...createContainerProps({
           fieldConfig: datesFieldsConfig.dateFounded,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -81,6 +85,8 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
           onChangeApplicability: (val) =>
             onChangeApplicability('dateLaunch', val),
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -108,6 +114,8 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
         {...createContainerProps({
           fieldConfig: datesFieldsConfig.devStatus,
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
@@ -145,6 +153,8 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
           onChangeApplicability: (val) =>
             onChangeApplicability('fundingStatus', val),
           onAddReference: onAddReference,
+          hasFieldValue,
+          hasFieldReference,
         })}
       >
         <Controller
