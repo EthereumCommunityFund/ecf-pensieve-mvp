@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
+import { trpc } from '@/lib/trpc/client';
+
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
 import FormActions from './FormActions';
@@ -27,63 +29,8 @@ import {
   StepStatus,
 } from './types';
 import { FieldApplicabilityContext, projectSchema } from './validation';
-// Assume trpc client and a way to get user ID are available
-// import { trpc } from '@/utils/trpc';
-// import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 dayjs.extend(utc);
-
-// --- Mock tRPC and User Hook ---
-const useMockMutation = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState<any>(null);
-
-  const mutate = async (
-    payload: ProjectCreatePayload,
-    options?: {
-      onSuccess?: (data: any) => void;
-      onError?: (error: any) => void;
-    },
-  ) => {
-    setIsLoading(true);
-    setIsSuccess(false);
-    setIsError(false);
-    setError(null);
-    console.log('Submitting payload:', payload);
-    await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate network delay
-
-    // Simulate success/error
-    const shouldSucceed = Math.random() > 0.2;
-
-    if (shouldSucceed) {
-      const mockResponse = { id: `proj_${Date.now()}`, ...payload };
-      console.log('Mock Success Response:', mockResponse);
-      setIsLoading(false);
-      setIsSuccess(true);
-      options?.onSuccess?.(mockResponse);
-    } else {
-      const mockError = new Error(
-        'Failed to create project (simulated backend error)',
-      );
-      // Simulate field-specific error (optional)
-      // const mockError = { message: "Backend validation failed", fieldErrors: { projectName: "Project name already exists" } };
-      console.error('Mock Error:', mockError);
-      setIsLoading(false);
-      setIsError(true);
-      setError(mockError);
-      options?.onError?.(mockError);
-    }
-  };
-
-  return { mutate, isLoading, isSuccess, isError, error };
-};
-
-const useCurrentUser = () => {
-  return { user: { id: 'user-uuid-placeholder' } }; // Replace with actual user logic
-};
-// --- End Mock ---
 
 const transformProjectData = (
   formData: ProjectFormData,
@@ -96,41 +43,54 @@ const transformProjectData = (
     tagline: formData.tagline,
     categories: formData.categories,
     mainDescription: formData.mainDescription,
-    logoUrl: formData.projectLogo,
+    logoUrl: formData.projectLogo || '',
     websiteUrl: formData.websiteUrl,
-    appUrl: fieldApplicability['appUrl'] ? null : formData.appUrl,
+    appUrl: fieldApplicability['appUrl']
+      ? undefined
+      : formData.appUrl || undefined,
     dateFounded: formData.dateFounded
-      ? dayjs(formData.dateFounded).utc().toISOString()
-      : '', // Should not be empty if required
+      ? new Date(formData.dateFounded)
+      : new Date(),
     dateLaunch: fieldApplicability['dateLaunch']
-      ? null
+      ? undefined
       : formData.dateLaunch
-        ? dayjs(formData.dateLaunch).utc().toISOString()
-        : null,
-    devStatus: formData.devStatus as ProjectCreatePayload['devStatus'], // Cast, already validated
+        ? new Date(formData.dateLaunch)
+        : undefined,
+    devStatus: formData.devStatus || 'In Development',
     fundingStatus: fieldApplicability['fundingStatus']
-      ? null
-      : (formData.fundingStatus as ProjectCreatePayload['fundingStatus']),
+      ? undefined
+      : formData.fundingStatus || undefined,
     openSource: formData.openSource === 'Yes',
-    codeRepo: fieldApplicability['codeRepo'] ? null : formData.codeRepo,
+    codeRepo: fieldApplicability['codeRepo']
+      ? undefined
+      : formData.codeRepo || undefined,
     tokenContract: fieldApplicability['tokenContract']
-      ? null
-      : formData.tokenContract,
-    orgStructure: formData.orgStructure as ProjectCreatePayload['orgStructure'], // Cast
+      ? undefined
+      : formData.tokenContract || undefined,
+    orgStructure: formData.orgStructure || 'Centralized',
     publicGoods: formData.publicGoods === 'Yes',
-    founders: formData.founders.map((founder) => JSON.stringify(founder)), // Serialize founders
-    creator: userId,
-    refs: references.length > 0 ? references : null,
+    founders: formData.founders.map((founder) => ({
+      name: founder.fullName,
+      title: founder.titleRole,
+    })),
+    refs:
+      references.length > 0
+        ? references.map((ref) => ({ key: ref.key, value: ref.value }))
+        : undefined,
   };
 };
 
 const defaultProjectLogo =
   'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
 
+const useCurrentUser = () => {
+  return { user: { id: 'user-uuid-placeholder' } };
+};
+
 const CreateProjectForm: React.FC = () => {
   const router = useRouter();
-  const { user } = useCurrentUser(); // Get current user
-  const createProjectMutation = useMockMutation(); // Replace with actual tRPC hook: trpc.project.create.useMutation();
+  const { user } = useCurrentUser(); // 获取当前用户
+  const createProjectMutation = trpc.project.createProject.useMutation();
 
   const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
     CreateProjectStep.Basics,
@@ -330,7 +290,7 @@ const CreateProjectForm: React.FC = () => {
     if (!user?.id) {
       addToast({
         title: 'Error',
-        description: 'User not authenticated.',
+        description: '用户未认证',
         color: 'danger',
       });
       return;
@@ -348,32 +308,31 @@ const CreateProjectForm: React.FC = () => {
     createProjectMutation.mutate(payload, {
       onSuccess: (data) => {
         addToast({
-          title: 'Success',
-          description: 'Project created successfully!',
+          title: '成功',
+          description: '项目创建成功！',
           color: 'success',
         });
         router.push('/projects');
       },
       onError: (error: any) => {
-        console.error('Submission Error:', error);
-        if (error?.fieldErrors) {
-          Object.entries(error.fieldErrors).forEach(([field, message]) => {
+        console.error('提交错误:', error);
+        if (error?.data?.zodError?.fieldErrors) {
+          const fieldErrors = error.data.zodError.fieldErrors;
+          Object.entries(fieldErrors).forEach(([field, messages]) => {
             setError(field as keyof ProjectFormData, {
               type: 'server',
-              message: message as string,
+              message: Array.isArray(messages) ? messages[0] : String(messages),
             });
           });
           addToast({
-            title: 'Validation Error',
-            description: 'Please check the highlighted fields.',
+            title: '验证错误',
+            description: '请检查高亮显示的字段',
             color: 'warning',
           });
         } else {
           addToast({
-            title: 'Submission Failed',
-            description:
-              error?.message ||
-              'An unexpected error occurred. Please try again.',
+            title: '提交失败',
+            description: error?.message || '发生了意外错误，请重试',
             color: 'danger',
           });
         }
@@ -474,7 +433,7 @@ const CreateProjectForm: React.FC = () => {
 
             <FormActions
               currentStep={currentStep}
-              isSubmitting={createProjectMutation.isLoading || isSubmitting}
+              isSubmitting={createProjectMutation.isPending || isSubmitting}
               isStepValid={isCurrentStepValid}
               onBack={handleBack}
               onNext={handleNext}

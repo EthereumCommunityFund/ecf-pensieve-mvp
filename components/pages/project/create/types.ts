@@ -24,6 +24,7 @@ export interface FounderInput {
 export interface ReferenceData {
   key: string; // 被引用的字段名 (e.g., 'projectName')
   ref: string; // 引用 URL
+  value: string; // 引用值
 }
 
 export interface ProjectFormData {
@@ -61,21 +62,26 @@ export interface ProjectCreatePayload {
   tagline: string;
   categories: string[];
   mainDescription: string;
-  logoUrl: string | null;
+  logoUrl: string;
   websiteUrl: string;
-  appUrl: string | null;
-  dateFounded: string; // ISO 8601 string
-  dateLaunch: string | null; // ISO 8601 string or null
-  devStatus: 'Live' | 'In Development' | 'Discontinued' | 'Stealth';
-  fundingStatus: 'Funded' | 'VC Invested' | 'No Funding' | null;
+  appUrl?: string;
+  dateFounded: Date;
+  dateLaunch?: Date;
+  devStatus: string;
+  fundingStatus?: string;
   openSource: boolean;
-  codeRepo: string | null;
-  tokenContract: string | null; // Ethereum address string or null
-  orgStructure: 'Centralized' | 'DAO' | 'Decentralized';
+  codeRepo?: string;
+  tokenContract?: string;
+  orgStructure: string;
   publicGoods: boolean;
-  founders: string[]; // Array of JSON strings: '{"fullName": "...", "titleRole": "..."}'
-  creator: string; // Current user's UUID string
-  refs: ReferenceData[] | null; // Array of reference objects or null
+  founders: {
+    name: string;
+    title: string;
+  }[];
+  refs?: {
+    key: string;
+    value: string;
+  }[];
 }
 
 export type ApplicableField =
