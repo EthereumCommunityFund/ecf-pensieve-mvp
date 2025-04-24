@@ -14,9 +14,9 @@ import {
 import { createSiweMessage } from 'viem/siwe';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
-import type { Profile } from '@/lib/db/schema'; // Assuming Profile type exported from schema or similar
 import { supabase } from '@/lib/supabase/client'; // Adjust path as needed
-import { trpc } from '@/lib/trpc/client'; // Adjust path as needed
+import { trpc } from '@/lib/trpc/client';
+import { IProfile } from '@/types'; // Adjust path as needed
 
 // Types similar to SupabaseContext in Zuzalu
 type AuthStatus =
@@ -41,7 +41,7 @@ interface AuthState {
 interface UserState {
   session: any; // Replace 'any' with Supabase Session type if available
   user: User | null; // Supabase User type
-  profile: Profile | null; // Your Profile type
+  profile: IProfile | null; // Your Profile type
   newUser: boolean; // Flag specifically for the prompt flow
 }
 
@@ -57,7 +57,7 @@ interface IAuthContext {
   isAuthenticated: boolean;
   authError: string | null;
   user: User | null;
-  profile: Profile | null;
+  profile: IProfile | null;
   newUser: boolean; // Expose newUser flag
   isAuthPromptVisible: boolean;
   connectSource: ConnectSource;
@@ -75,7 +75,7 @@ interface IAuthContext {
   showAuthPrompt: (source?: ConnectSource) => void;
   hideAuthPrompt: () => void;
   setConnectSource: (source: ConnectSource) => void;
-  fetchUserProfile: () => Promise<Profile | null>;
+  fetchUserProfile: () => Promise<IProfile | null>;
 }
 
 export const CreateProfileErrorPrefix = '[Create Profile Failed]';
@@ -194,7 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, 50); // Short delay
   }, [resetAuthState, disconnectAsync]);
 
-  const fetchUserProfile = useCallback(async (): Promise<Profile | null> => {
+  const fetchUserProfile = useCallback(async (): Promise<IProfile | null> => {
     // Check Supabase session first
     const sessionData = await supabase.auth.getSession();
     const currentSupabaseUser = sessionData?.data?.session?.user;

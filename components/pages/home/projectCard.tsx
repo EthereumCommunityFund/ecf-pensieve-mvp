@@ -5,7 +5,7 @@ import NextImage from 'next/image';
 
 import ECFTypography from '@/components/base/typography';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
-import { IProject } from '@/types/project';
+import { IProject } from '@/types';
 
 interface IProjectCardProps {
   project: IProject;
@@ -63,7 +63,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             <p className="text-[rgba(0, 0, 0.8)] mt-[6px] text-[11px] leading-[18px]">
               <span className="opacity-60">by: </span>
               <span className="mx-[6px] font-bold underline">
-                {project.creator}
+                {project.creator?.name}
               </span>{' '}
               <span className="opacity-60">
                 {formatTimeAgo(project.createdAt.getTime())}

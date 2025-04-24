@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import React from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import { trpc } from '@/lib/trpc/client';
-import { IProject } from '@/types/project';
 
 import ProjectList from './projectList';
 
@@ -78,7 +78,7 @@ const HomeList = () => {
             <ECFTypography type="body1">加载中...</ECFTypography>
           </div>
         ) : projects.length > 0 ? (
-          <ProjectList projectList={projects as IProject[]} />
+          <ProjectList projectList={projects} />
         ) : (
           <div className="flex justify-center py-8">
             <ECFTypography type="body1">暂无项目</ECFTypography>

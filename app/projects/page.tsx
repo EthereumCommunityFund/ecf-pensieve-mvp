@@ -8,7 +8,6 @@ import ECFTypography from '@/components/base/typography';
 import ProjectCard from '@/components/pages/home/projectCard';
 import RewardCard from '@/components/pages/project/rewardCard';
 import { trpc } from '@/lib/trpc/client';
-import { IProject } from '@/types/project';
 
 const ProjectsPage = () => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
@@ -80,7 +79,7 @@ const ProjectsPage = () => {
                 {allProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
-                    project={project as IProject}
+                    project={project}
                     showBorder={true}
                   />
                 ))}
