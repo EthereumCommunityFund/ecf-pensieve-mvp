@@ -1,9 +1,9 @@
 import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { profiles, projects } from '@/lib/db/schema';
-import { protectedProcedure, router } from '@/lib/trpc/server';
+import { projects } from '@/lib/db/schema';
+import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 export const projectRouter = router({
   createProject: protectedProcedure
@@ -66,22 +66,58 @@ export const projectRouter = router({
       return project;
     }),
 
-  update: protectedProcedure
+  getProjects: publicProcedure
+    .input(
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50),
+          offset: z.number().default(0),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 50;
+      const offset = input?.offset ?? 0;
+
+      const items = await ctx.db
+        .select()
+        .from(projects)
+        .orderBy(desc(projects.createdAt))
+        .offset(offset)
+        .limit(limit);
+
+      const countResult = await ctx.db
+        .select({ count: sql`count(*)::int` })
+        .from(projects);
+
+      const totalCount = Number(countResult[0]?.count ?? 0);
+
+      return {
+        items,
+        totalCount,
+        hasMore: offset + items.length < totalCount,
+      };
+    }),
+
+  getProjectById: publicProcedure
     .input(
       z.object({
-        name: z.string().optional(),
-        avatar_url: z.string().optional(),
+        id: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const [updatedUser] = await ctx.db
-        .update(profiles)
-        .set({
-          ...input,
-        })
-        .where(eq(profiles.userId, ctx.user.id))
-        .returning();
+    .query(async ({ ctx, input }) => {
+      const [project] = await ctx.db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, input.id));
 
-      return updatedUser;
+      if (!project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Project not found',
+        });
+      }
+
+      return project;
     }),
 });

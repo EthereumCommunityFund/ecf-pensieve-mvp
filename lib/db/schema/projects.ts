@@ -11,7 +11,7 @@ import {
 import { profiles } from './profiles';
 
 export const projects = pgTable('projects', {
-  uuid: uuid('uuid')
+  id: uuid('id')
     .default(sql`gen_random_uuid()`)
     .notNull()
     .primaryKey(),
