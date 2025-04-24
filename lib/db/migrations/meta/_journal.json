@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1745334499230,
-      "tag": "0000_overrated_ogun",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1745336310989,
-      "tag": "0001_groovy_tony_stark",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1745467448001,
-      "tag": "0002_complete_human_fly",
+      "when": 1745469435423,
+      "tag": "0000_sudden_shinko_yamashiro",
       "breakpoints": true
     }
   ]

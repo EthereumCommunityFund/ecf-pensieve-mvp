@@ -1,3 +1,9 @@
+CREATE TABLE "login_nonces" (
+	"address" text PRIMARY KEY NOT NULL,
+	"nonce" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "profiles" (
 	"user_id" uuid PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -8,7 +14,7 @@ CREATE TABLE "profiles" (
 );
 --> statement-breakpoint
 CREATE TABLE "projects" (
-	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" bigserial PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"name" text NOT NULL,

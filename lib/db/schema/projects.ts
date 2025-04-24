@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm';
 import {
+  bigserial,
   boolean,
   jsonb,
   pgTable,
@@ -11,10 +11,7 @@ import {
 import { profiles } from './profiles';
 
 export const projects = pgTable('projects', {
-  id: uuid('id')
-    .default(sql`gen_random_uuid()`)
-    .notNull()
-    .primaryKey(),
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .defaultNow()
     .notNull(),

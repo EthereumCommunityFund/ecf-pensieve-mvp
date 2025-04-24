@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { projects } from '@/lib/db/schema';
@@ -71,38 +71,45 @@ export const projectRouter = router({
       z
         .object({
           limit: z.number().min(1).max(100).default(50),
-          offset: z.number().default(0),
+          cursor: z.number().optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;
-      const offset = input?.offset ?? 0;
+      const cursor = input?.cursor;
 
-      const items = await ctx.db
+      const query = ctx.db
         .select()
         .from(projects)
-        .orderBy(desc(projects.createdAt))
-        .offset(offset)
+        .orderBy(desc(projects.id))
         .limit(limit);
 
-      const countResult = await ctx.db
-        .select({ count: sql`count(*)::int` })
-        .from(projects);
+      if (cursor) {
+        query.where(gt(projects.id, cursor));
+      }
 
-      const totalCount = Number(countResult[0]?.count ?? 0);
+      const items = await query;
+
+      const nextCursor =
+        items.length === limit ? items[items.length - 1].id : undefined;
+
+      const totalCount = await ctx.db
+        .select({ count: sql`count(*)::int` })
+        .from(projects)
+        .then((res) => Number(res[0]?.count ?? 0));
 
       return {
         items,
+        nextCursor,
         totalCount,
-        hasMore: offset + items.length < totalCount,
       };
     }),
 
   getProjectById: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: z.number(),
       }),
     )
     .query(async ({ ctx, input }) => {
