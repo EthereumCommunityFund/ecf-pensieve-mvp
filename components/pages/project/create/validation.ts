@@ -43,18 +43,7 @@ export const basicsSchema = yup.object().shape({
   appUrl: yup
     .string()
     .url('Please enter a valid URL')
-    .nullable()
-    .test('appUrlRequired', 'App URL is required', function (value) {
-      // Use renamed context type
-      const context = this.options.context as
-        | FieldApplicabilityContext
-        | undefined;
-      // Logic remains: check if applicability is set to false (meaning required)
-      if (!context?.appUrl && !value) {
-        return false;
-      }
-      return true;
-    }),
+    .required('App URL is required when applicable'),
 });
 
 // Step 2: Dates & Statuses
@@ -62,41 +51,12 @@ export const datesSchema = yup.object().shape({
   dateFounded: yup
     .date()
     .required('Foundation date is required')
-    .max(new Date(), 'Foundation date cannot be later than today')
-    .nullable(), // Using nullable because DatePicker might return null
-  dateLaunch: yup
-    .date()
-    .nullable()
-    .test('dateLaunchRequired', 'Launch date is required', function (value) {
-      // Use renamed context type
-      const context = this.options.context as
-        | FieldApplicabilityContext
-        | undefined;
-      if (!context?.dateLaunch && !value) {
-        return false;
-      }
-      return true;
-    }),
+    .max(new Date(), 'Foundation date cannot be later than today'),
+  dateLaunch: yup.date().required('Launch date is required when applicable'),
   devStatus: yup.string().required('Development status is required'),
   fundingStatus: yup
     .string()
-    .nullable()
-    .test(
-      'fundingStatusRequired',
-      'Funding status is required',
-      function (value) {
-        const context = this.options.context as
-          | FieldApplicabilityContext
-          | undefined;
-        if (!context?.fundingStatus && value === null) {
-          return this.createError({
-            message: 'Funding status is required',
-            path: this.path,
-          });
-        }
-        return true;
-      },
-    ),
+    .required('Funding status is required when applicable'),
 });
 
 // Step 3: Technicals
@@ -107,39 +67,11 @@ export const technicalsSchema = yup.object().shape({
   codeRepo: yup
     .string()
     .url('Please enter a valid URL')
-    .nullable()
-    .test(
-      'codeRepoRequired',
-      'Code repository URL is required',
-      function (value) {
-        // Use renamed context type
-        const context = this.options.context as
-          | FieldApplicabilityContext
-          | undefined;
-        if (!context?.codeRepo && !value) {
-          return false;
-        }
-        return true;
-      },
-    ),
+    .required('Code repository URL is required when applicable'),
   tokenContract: yup
     .string()
     .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
-    .nullable()
-    .test(
-      'tokenContractRequired',
-      'Token contract address is required',
-      function (value) {
-        // Use renamed context type
-        const context = this.options.context as
-          | FieldApplicabilityContext
-          | undefined;
-        if (!context?.tokenContract && !value) {
-          return false;
-        }
-        return true;
-      },
-    ),
+    .required('Token contract address is required when applicable'),
 });
 
 // Step 4: Organization
@@ -160,42 +92,9 @@ export const organizationSchema = yup.object().shape({
     .min(1, 'At least one founder is required')
     .required('Founder information is required'),
 });
-// Combine all step schemas
-// Explicitly type the final schema object and use type assertion
-export const projectSchema = yup
-  .object()
-  .shape({
-    /**
-     * Basics
-     */
-    projectName: basicsSchema.fields.projectName,
-    tagline: basicsSchema.fields.tagline,
-    categories: basicsSchema.fields.categories,
-    mainDescription: basicsSchema.fields.mainDescription,
-    projectLogo: basicsSchema.fields.projectLogo,
-    websiteUrl: basicsSchema.fields.websiteUrl,
-    appUrl: basicsSchema.fields.appUrl,
 
-    /**
-     * Dates & Statuses
-     */
-    dateFounded: datesSchema.fields.dateFounded,
-    dateLaunch: datesSchema.fields.dateLaunch,
-    devStatus: datesSchema.fields.devStatus,
-    fundingStatus: datesSchema.fields.fundingStatus,
-
-    /**
-     * Technicals
-     */
-    openSource: technicalsSchema.fields.openSource,
-    codeRepo: technicalsSchema.fields.codeRepo,
-    tokenContract: technicalsSchema.fields.tokenContract,
-
-    /**
-     * Organization
-     */
-    orgStructure: organizationSchema.fields.orgStructure,
-    publicGoods: organizationSchema.fields.publicGoods,
-    founders: organizationSchema.fields.founders,
-  })
+export const projectSchema = basicsSchema
+  .concat(datesSchema)
+  .concat(technicalsSchema)
+  .concat(organizationSchema)
   .defined() as yup.ObjectSchema<ProjectFormData>;

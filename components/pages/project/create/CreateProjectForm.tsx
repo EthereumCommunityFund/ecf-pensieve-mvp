@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { trpc } from '@/lib/trpc/client';
@@ -93,7 +93,7 @@ const CreateProjectForm: React.FC = () => {
   const createProjectMutation = trpc.project.createProject.useMutation();
 
   const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
-    CreateProjectStep.Organization,
+    CreateProjectStep.Basics,
   );
   const [stepStatuses, setStepStatuses] = useState<
     Record<CreateProjectStep, StepStatus>
@@ -131,14 +131,14 @@ const CreateProjectForm: React.FC = () => {
     >(projectSchema, {
       context: fieldApplicability,
     }),
-    mode: 'onSubmit',
+    mode: 'all',
     defaultValues: {
-      projectName: 'leo18 project',
+      projectName: '',
       tagline: '',
       categories: [],
-      mainDescription: 'mainDescription',
+      mainDescription: '',
       projectLogo: defaultProjectLogo,
-      websiteUrl: 'https://www.google.com',
+      websiteUrl: '',
       appUrl: null,
       dateFounded: null,
       dateLaunch: null,
@@ -165,35 +165,6 @@ const CreateProjectForm: React.FC = () => {
     setValue,
   } = methods;
 
-  useEffect(() => {
-    const fieldsToValidate: (keyof ProjectFormData)[] = [];
-    if (Object.prototype.hasOwnProperty.call(fieldApplicability, 'appUrl')) {
-      fieldsToValidate.push('appUrl');
-    }
-    if (
-      Object.prototype.hasOwnProperty.call(fieldApplicability, 'dateLaunch')
-    ) {
-      fieldsToValidate.push('dateLaunch');
-    }
-    if (
-      Object.prototype.hasOwnProperty.call(fieldApplicability, 'fundingStatus')
-    ) {
-      fieldsToValidate.push('fundingStatus');
-    }
-    if (Object.prototype.hasOwnProperty.call(fieldApplicability, 'codeRepo')) {
-      fieldsToValidate.push('codeRepo');
-    }
-    if (
-      Object.prototype.hasOwnProperty.call(fieldApplicability, 'tokenContract')
-    ) {
-      fieldsToValidate.push('tokenContract');
-    }
-
-    if (fieldsToValidate.length > 0) {
-      trigger(fieldsToValidate);
-    }
-  }, [fieldApplicability, trigger]);
-
   const stepsOrder: CreateProjectStep[] = [
     CreateProjectStep.Basics,
     CreateProjectStep.Dates,
@@ -202,8 +173,25 @@ const CreateProjectForm: React.FC = () => {
   ];
 
   const handleNext = async () => {
-    const currentFields = stepFields[currentStep];
-    const isValid = await trigger(currentFields);
+    const currentStepFields = stepFields[currentStep];
+
+    // Filter fields based on current applicability
+    const applicableFieldsToValidate = currentStepFields.filter((field) => {
+      if (field in fieldApplicability) {
+        return fieldApplicability[field as ApplicableField];
+      }
+      return true;
+    }) as (keyof ProjectFormData)[];
+
+    console.log(
+      `Fields to validate for step ${currentStep}:`,
+      applicableFieldsToValidate,
+    );
+
+    const isValid =
+      applicableFieldsToValidate.length > 0
+        ? await trigger(applicableFieldsToValidate)
+        : true;
 
     console.log(`Step ${currentStep} validation result:`, isValid);
     if (isValid) {
@@ -218,6 +206,7 @@ const CreateProjectForm: React.FC = () => {
         setCurrentStep(nextStep);
       } else {
         console.log('Final step, calling handleSubmit...');
+        // handleSubmit will still use the context for full form validation
         handleSubmit(onSubmit)();
       }
     }
