@@ -1,15 +1,15 @@
 'use client';
 
-import { Select, SelectItem } from '@heroui/react';
 import { Code, CurrencyEth } from '@phosphor-icons/react/dist/ssr';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
-import { Input } from '@/components/base';
+import { Input, Select, SelectItem } from '@/components/base';
 import { technicalsFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
+import InputPrefix from '../InputPrefix';
 import { ProjectFormData, StepFormProps } from '../types';
 
 const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
@@ -50,14 +50,13 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
-              items={openSourceOptions}
               className="w-full"
             >
-              {(item) => (
-                <SelectItem key={item.value} textValue={item.label}>
-                  {item.label}
+              {openSourceOptions.map((option) => (
+                <SelectItem key={option.value} textValue={option.label}>
+                  {option.label}
                 </SelectItem>
-              )}
+              ))}
             </Select>
           )}
         />
@@ -89,11 +88,9 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               isDisabled={!fieldApplicability.codeRepo}
               startContent={
                 technicalsFieldsConfig.codeRepo.startContentText ? (
-                  <div className="pointer-events-none mr-1 flex h-full items-center rounded-l-lg bg-[#E1E1E1] px-3">
-                    <span className="font-semibold text-black opacity-40">
-                      {technicalsFieldsConfig.codeRepo.startContentText}
-                    </span>
-                  </div>
+                  <InputPrefix
+                    prefix={technicalsFieldsConfig.codeRepo.startContentText}
+                  />
                 ) : (
                   <Code className="pointer-events-none size-4 text-gray-400" />
                 )
@@ -131,11 +128,11 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               isDisabled={!fieldApplicability.tokenContract}
               startContent={
                 technicalsFieldsConfig.tokenContract.startContentText ? (
-                  <div className="pointer-events-none mr-1 flex h-full items-center rounded-l-lg bg-[#E1E1E1] px-3">
-                    <span className="font-semibold text-black opacity-40">
-                      {technicalsFieldsConfig.tokenContract.startContentText}
-                    </span>
-                  </div>
+                  <InputPrefix
+                    prefix={
+                      technicalsFieldsConfig.tokenContract.startContentText
+                    }
+                  />
                 ) : (
                   <CurrencyEth className="pointer-events-none size-4 text-gray-400" />
                 )

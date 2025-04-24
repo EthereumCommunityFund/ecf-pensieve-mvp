@@ -1,4 +1,5 @@
 export { default as BuildingIcon } from './Building';
+export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';
 export { default as CheckIcon } from './Check';
 export { default as CodeIcon } from './Code';

@@ -1,6 +1,5 @@
 'use client';
 
-import { DatePicker, Select, SelectItem } from '@heroui/react';
 import { DateValue, parseDate } from '@internationalized/date';
 import dayjs from 'dayjs';
 import React from 'react';
@@ -9,6 +8,8 @@ import { Controller } from 'react-hook-form';
 import { datesFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
+import { DatePicker, Select, SelectItem } from '@/components/base';
+import { CalendarBlankIcon } from '@/components/icons';
 
 import { ProjectFormData, StepFormProps } from '../types';
 
@@ -71,6 +72,8 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 isRequired
                 className="w-full"
                 aria-label={datesFieldsConfig.dateFounded.label}
+                radius="sm"
+                selectorIcon={<CalendarBlankIcon size={20} />}
               />
             );
           }}
@@ -104,6 +107,8 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
                 isDisabled={!fieldApplicability.dateLaunch}
                 className="w-full"
                 aria-label={datesFieldsConfig.dateLaunch.label}
+                radius={'sm'}
+                selectorIcon={<CalendarBlankIcon size={20} />}
               />
             );
           }}
@@ -127,19 +132,20 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               placeholder={datesFieldsConfig.devStatus.placeholder}
               selectedKeys={field.value ? [field.value] : []}
               onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as ProjectFormData['devStatus']);
+                const selectedKey = Array.from(keys)[0];
+                const valueAsString =
+                  selectedKey !== undefined ? String(selectedKey) : '';
+                field.onChange(valueAsString as ProjectFormData['devStatus']);
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
-              items={devStatusOptions}
               className="w-full"
             >
-              {(item) => (
-                <SelectItem key={item.value} textValue={item.label}>
-                  {item.label}
+              {devStatusOptions.map((option) => (
+                <SelectItem key={option.value} textValue={option.label}>
+                  {option.label}
                 </SelectItem>
-              )}
+              ))}
             </Select>
           )}
         />
@@ -171,15 +177,14 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
-              items={fundingStatusOptions}
               isDisabled={!fieldApplicability.fundingStatus}
               className="w-full"
             >
-              {(item) => (
-                <SelectItem key={item.value} textValue={item.label}>
-                  {item.label}
+              {fundingStatusOptions.map((option) => (
+                <SelectItem key={option.value} textValue={option.label}>
+                  {option.label}
                 </SelectItem>
-              )}
+              ))}
             </Select>
           )}
         />

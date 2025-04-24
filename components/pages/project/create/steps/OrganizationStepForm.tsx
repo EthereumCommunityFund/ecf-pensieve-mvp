@@ -1,10 +1,9 @@
 'use client';
 
-import { Select, SelectItem } from '@heroui/react';
 import React from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
-import { Button } from '@/components/base';
+import { Button, Select, SelectItem } from '@/components/base';
 import { organizationFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
@@ -55,14 +54,13 @@ const OrganizationStepForm: React.FC<
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
-              items={orgStructureOptions}
               className="w-full"
             >
-              {(item) => (
-                <SelectItem key={item.value} textValue={item.label}>
-                  {item.label}
+              {orgStructureOptions.map((option) => (
+                <SelectItem key={option.value} textValue={option.label}>
+                  {option.label}
                 </SelectItem>
-              )}
+              ))}
             </Select>
           )}
         />
@@ -90,14 +88,13 @@ const OrganizationStepForm: React.FC<
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
-              items={publicGoodsOptions}
               className="w-full"
             >
-              {(item) => (
-                <SelectItem key={item.value} textValue={item.label}>
-                  {item.label}
+              {publicGoodsOptions.map((option) => (
+                <SelectItem key={option.value} textValue={option.label}>
+                  {option.label}
                 </SelectItem>
-              )}
+              ))}
             </Select>
           )}
         />

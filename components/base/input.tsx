@@ -16,25 +16,30 @@ const BaseInput = React.forwardRef<HTMLInputElement, InputProps>(
       <HInput
         ref={ref}
         classNames={{
-          base: cn('group', classNames?.base),
+          base: cn('group outline-none focus:outline-none', classNames?.base),
           label: cn('text-black/60', classNames?.label),
           mainWrapper: cn(classNames?.mainWrapper),
           innerWrapper: cn('bg-transparent', classNames?.innerWrapper),
           inputWrapper: cn(
             'h-[40px] px-[10px] rounded-[8px]',
-            'bg-black/[0.05] hover:bg-black/[0.05] group-data-[focus=true]:bg-black/[0.05]',
-            'border border-black/[0.1] focus-within:border-black/[0.4] data-[invalid=true]:border-[rgba(215,84,84,0.8)',
+            'bg-[rgba(0,0,0,0.05)] border border-black/10',
+            'hover:border-black/40',
+            'group-data-[focus=true]:border-black/40',
+            'group-data-[focus=true]:bg-[rgba(0,0,0,0.05)]',
+            'group-data-[focus-visible=true]:border-black/40',
+            'group-data-[focus-visible=true]:bg-[rgba(0,0,0,0.05)]',
             classNames?.inputWrapper,
           ),
           input: cn(
             '!text-black',
             'placeholder:text-black/60',
+            'focus:outline-none',
             classNames?.input,
           ),
           helperWrapper: cn(classNames?.helperWrapper),
           clearButton: cn(classNames?.clearButton),
           description: cn(classNames?.description),
-          errorMessage: cn('text-[#D75454]', classNames?.errorMessage),
+          errorMessage: cn(classNames?.errorMessage),
         }}
         {...rest}
       />
@@ -47,6 +52,7 @@ BaseInput.displayName = 'BaseInput';
 const Input = extendVariants(BaseInput, {
   defaultVariants: {
     size: 'md',
+    variant: 'bordered',
   },
 });
 
@@ -63,8 +69,9 @@ const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           innerWrapper: cn('bg-transparent', classNames?.innerWrapper),
           inputWrapper: cn(
             'h-[40px] px-[10px] rounded-[8px] min-h-[95px]',
-            'bg-black/[0.05] hover:bg-black/[0.05] group-data-[focus=true]:bg-black/[0.05]',
-            'border border-black/[0.1] focus-within:border-black/[0.4] data-[invalid=true]:border-[rgba(215,84,84,0.8)',
+            'bg-black/[0.05]',
+            'border border-black/[0.1]',
+            'hover:bg-black/[0.05] focus-within:border-black/[0.4]',
             classNames?.inputWrapper,
           ),
           input: cn(
@@ -75,7 +82,7 @@ const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           helperWrapper: cn(classNames?.helperWrapper),
           clearButton: cn(classNames?.clearButton),
           description: cn(classNames?.description),
-          errorMessage: cn('text-[#D75454]', classNames?.errorMessage),
+          errorMessage: cn(classNames?.errorMessage),
         }}
         {...rest}
       />
@@ -88,6 +95,7 @@ BaseTextarea.displayName = 'BaseTextarea';
 const Textarea = extendVariants(BaseTextarea, {
   defaultVariants: {
     size: 'md',
+    variant: 'bordered',
   },
 });
 

@@ -22,6 +22,7 @@ const config: Config = {
         foreground: 'var(--foreground)',
         primary: 'var(--primary)',
         'primary-foreground': 'var(--primary-foreground)',
+        danger: '#D75454',
       },
       fontFamily: {
         sans: ['var(--font-open-sans)', 'Arial', 'sans-serif'],

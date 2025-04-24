@@ -1,11 +1,11 @@
 'use client';
 
-import { Avatar, Select, SelectItem, cn } from '@heroui/react';
+import { Avatar } from '@heroui/react';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
-import { Input, Textarea } from '@/components/base';
+import { Input, Select, SelectItem, Textarea } from '@/components/base';
 import { basicsFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
@@ -92,28 +92,19 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
           render={({ field, fieldState: { error } }) => (
             <div>
               <Select
-                classNames={{
-                  base: cn('group w-full', error ? 'border-red-500' : ''),
-                  trigger: cn(
-                    'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)] rounded-lg h-[42px]',
-                  ),
-                }}
+                variant="bordered"
                 placeholder={basicsFieldsConfig.categories.placeholder}
                 selectionMode="multiple"
                 selectedKeys={field.value || []}
                 onSelectionChange={(keys) => field.onChange(Array.from(keys))}
                 isInvalid={!!error}
                 errorMessage={error?.message}
-                items={presetCategories.map((category) => ({
-                  value: category,
-                  label: category,
-                }))}
               >
-                {(item) => (
-                  <SelectItem key={item.value} textValue={item.label}>
-                    {item.label}
+                {presetCategories.map((category) => (
+                  <SelectItem key={category} textValue={category}>
+                    {category}
                   </SelectItem>
-                )}
+                ))}
               </Select>
             </div>
           )}

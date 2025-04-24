@@ -197,6 +197,7 @@ export const technicalsFieldsConfig: {
     label: 'Open-Source?',
     description: 'Is this project now open-source?',
     shortDescription: 'Whether the project follows an open-source model.',
+    placeholder: 'Select open-source status',
     weight: '15',
     type: 'radio',
     options: [
@@ -254,6 +255,7 @@ export const organizationFieldsConfig: {
     description: 'Is this project a public good?',
     shortDescription: 'Whether the project contributes to the public domain.',
     weight: '10',
+    placeholder: 'Select public goods',
     type: 'radio',
     options: [
       { value: 'Yes', label: 'Yes' },

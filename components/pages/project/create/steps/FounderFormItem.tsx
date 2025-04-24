@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@heroui/react';
 import React from 'react';
 import {
   FieldError,
@@ -9,7 +8,7 @@ import {
   UseFormRegister,
 } from 'react-hook-form';
 
-import { Input } from '@/components/base';
+import { Button, Input } from '@/components/base';
 import XCircleIcon from '@/components/icons/XCircle';
 
 import { ProjectFormData } from '../types';
