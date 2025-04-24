@@ -1,8 +1,8 @@
 'use client';
 
-import Banner from '@/components/pages/home/banner';
-import CardList from '@/components/pages/home/cardList';
-import HomeList from '@/components/pages/home/homeList';
+import Banner from '@/components/pages/home/Banner';
+import CardList from '@/components/pages/home/CardList';
+import HomeList from '@/components/pages/home/HomeList';
 
 export default function Page() {
   return (

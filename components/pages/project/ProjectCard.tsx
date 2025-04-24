@@ -1,11 +1,38 @@
 'use client';
 
-import { cn, Image, Link } from '@heroui/react';
+import { cn, Image, Link, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
 
 import ECFTypography from '@/components/base/typography';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProject } from '@/types';
+
+export function ProjectCardSkeleton() {
+  return (
+    <div className="py-[10px]">
+      <div className="flex items-center justify-start gap-[20px] rounded-[10px] p-[10px]">
+        <div className="flex flex-1 items-start gap-[14px]">
+          <Skeleton className="size-[100px] rounded-[10px] mobile:size-[60px]" />
+          <div className="max-w-[440px] flex-1 mobile:max-w-full">
+            <Skeleton className="h-[18px] w-[200px] rounded-[4px]" />
+            <Skeleton className="mt-[6px] h-[18px] w-full rounded-[4px]" />
+            <Skeleton className="mt-[6px] h-[18px] w-[120px] rounded-[4px]" />
+            <div className="mt-[10px] flex flex-wrap gap-[8px]">
+              <Skeleton className="h-[22px] w-[60px] rounded-[6px]" />
+              <Skeleton className="h-[22px] w-[60px] rounded-[6px]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center gap-[4px] text-center">
+          <Skeleton className="mx-auto size-[40px] rounded-lg" />
+          <Skeleton className="h-[13px] w-[30px] rounded-[4px]" />
+          <Skeleton className="h-[11px] w-[20px] rounded-[4px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface IProjectCardProps {
   project: IProject;
@@ -36,7 +63,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             />
           </div>
 
-          <div className="border-[rgba(0, 0, 0.1)] size-[60px] overflow-hidden rounded-[5px] border lg:hidden pc:hidden tablet:hidden">
+          <div className="border-[rgba(0, 0, 0.1)] hidden size-[60px] overflow-hidden rounded-[5px] border mobile:block">
             <Image
               src={project.logoUrl}
               as={NextImage}

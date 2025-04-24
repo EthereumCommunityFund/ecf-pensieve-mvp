@@ -7,7 +7,9 @@ import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import { trpc } from '@/lib/trpc/client';
 
-import ProjectList from './projectList';
+import { ProjectCardSkeleton } from '../project/ProjectCard';
+
+import ProjectList from './ProjectList';
 
 interface ISectionProps {
   title: string;
@@ -74,8 +76,10 @@ const HomeList = () => {
         onClick={viewAllProject}
       >
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <ECFTypography type="body1">加载中...</ECFTypography>
+          <div className="mt-2.5 px-[10px]">
+            <ProjectCardSkeleton />
+            <ProjectCardSkeleton />
+            <ProjectCardSkeleton />
           </div>
         ) : projects.length > 0 ? (
           <ProjectList projectList={projects} />

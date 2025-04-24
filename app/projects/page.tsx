@@ -5,7 +5,9 @@ import Link from 'next/link';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import ProjectCard from '@/components/pages/home/projectCard';
+import ProjectCard, {
+  ProjectCardSkeleton,
+} from '@/components/pages/project/ProjectCard';
 import RewardCard from '@/components/pages/project/rewardCard';
 import { trpc } from '@/lib/trpc/client';
 
@@ -71,8 +73,10 @@ const ProjectsPage = () => {
           {/* 项目列表 */}
           <div className="pb-2.5">
             {isLoading ? (
-              <div className="flex justify-center py-8">
-                <ECFTypography type="body1">加载中...</ECFTypography>
+              <div>
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
               </div>
             ) : allProjects.length > 0 ? (
               <>
@@ -84,7 +88,8 @@ const ProjectsPage = () => {
                   />
                 ))}
 
-                {/* 加载更多按钮 */}
+                {isFetchingNextPage && <ProjectCardSkeleton />}
+
                 {hasNextPage && (
                   <div className="flex justify-center py-4">
                     <ECFButton
