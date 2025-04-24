@@ -7,6 +7,7 @@ import { ECFButton } from '@/components/base/button';
 import {
   BuildingIcon,
   CardsIcon,
+  CheckIcon,
   CodeIcon,
   GaugeIcon,
 } from '@/components/icons';
@@ -59,19 +60,26 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
           return (
             <li key={step}>
               <ECFButton
-                type="button"
                 onPress={() => isClickable && goToStep(step)}
                 disabled={!isClickable}
                 className={cn(
-                  'flex items-center justify-start gap-[10px] w-full px-[10px] h-[44px] rounded-[5px] bg-transparent text-[16px] text-black font-[600]',
-                  isActive ? 'bg-[rgba(0,0,0,0.1)] ' : 'opacity-50',
+                  'flex items-center justify-start gap-[7px] w-full px-[10px] h-[44px] rounded-[5px] text-[16px] text-black font-[600]',
+                  isActive ? 'bg-[rgba(0,0,0,0.1)] ' : 'bg-transparent',
                   status === 'Inactive'
                     ? 'cursor-not-allowed'
                     : 'cursor-pointer',
                 )}
               >
-                {getStepIcons(step, 32)}
-                <span className="ml-3">{stepLabels[step]}</span>
+                <div
+                  className={cn(
+                    'flex-1 flex items-center justify-start gap-[10px]',
+                    isActive ? 'opacity-100' : 'opacity-50',
+                  )}
+                >
+                  {getStepIcons(step, 32)}
+                  <span className="flex-1 text-left">{stepLabels[step]}</span>
+                </div>
+                {status === 'Finished' && <CheckIcon size={20} />}
               </ECFButton>
             </li>
           );

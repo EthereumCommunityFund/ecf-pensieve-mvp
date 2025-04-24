@@ -395,14 +395,14 @@ const CreateProjectForm: React.FC = () => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="flex min-h-screen gap-[40px] px-[160px] py-[40px] tablet:gap-[20px] tablet:px-[20px] mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0"
+        className="flex min-h-screen gap-[40px] px-[160px] pb-[40px] tablet:gap-[20px] tablet:px-[20px] mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0"
       >
         <StepNavigation
           currentStep={currentStep}
           stepStatuses={stepStatuses}
           goToStep={handleGoToStep}
         />
-        <div className="flex flex-1 flex-col gap-[40px]">
+        <div className="flex flex-1 flex-col gap-[40px] mobile:gap-[20px]">
           <StepHeader currentStep={currentStep} />
 
           <div className="flex flex-col gap-[20px] mobile:px-[14px]">

@@ -26,7 +26,7 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   const presetCategories = categoriesConfig?.presetCategories || [];
 
   return (
-    <div className="flex flex-col gap-[40px]">
+    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
         {...createContainerProps({
           fieldConfig: basicsFieldsConfig.projectName,
