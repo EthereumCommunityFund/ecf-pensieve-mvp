@@ -5,3 +5,4 @@ export { default as GaugeIcon } from './Gauge';
 export { default as InfoIcon } from './Info';
 export { default as PlusIcon } from './Plus';
 export { default as WalletIcon } from './Wallet';
+export { default as XCircleIcon } from './XCircle';

@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import ECFTypography from '../base/typography';
 import UserProfileSection from '../auth/UserProfileSection';
+import ECFTypography from '../base/typography';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';

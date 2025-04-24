@@ -1,10 +1,11 @@
 'use client';
 
-import { Button, Input, Select, SelectItem, Tooltip } from '@heroui/react';
+import { Button, Select, SelectItem, Tooltip } from '@heroui/react';
 import { Plus, Scales, Trash } from '@phosphor-icons/react/dist/ssr';
 import React from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
+import { Input } from '@/components/base';
 import { organizationFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';

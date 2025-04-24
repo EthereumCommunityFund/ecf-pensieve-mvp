@@ -1,7 +1,7 @@
 import { Tooltip } from '@heroui/react';
 import React from 'react';
 
-import ECFButton from '@/components/base/button';
+import { ECFButton } from '@/components/base';
 import { InfoIcon, PlusIcon } from '@/components/icons';
 
 import ApplicableSwitch from './ApplicableSwitch';

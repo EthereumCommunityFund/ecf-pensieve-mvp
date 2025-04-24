@@ -3,7 +3,7 @@
 import { cn } from '@heroui/react';
 import React from 'react';
 
-import ECFButton from '@/components/base/button';
+import { ECFButton } from '@/components/base/button';
 import {
   BuildingIcon,
   CardsIcon,

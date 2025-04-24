@@ -12,8 +12,8 @@ import {
 import { SignOut, UserCircle } from '@phosphor-icons/react'; // Example icons
 import React, { useState } from 'react';
 
-import { useAuth } from '@/context/AuthContext'; // Adjust path
 import { WalletIcon } from '@/components/icons';
+import { useAuth } from '@/context/AuthContext'; // Adjust path
 
 // Helper to format address
 const formatAddress = (address?: string | null, chars = 6): string => {

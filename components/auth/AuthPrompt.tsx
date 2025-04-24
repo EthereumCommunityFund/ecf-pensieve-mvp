@@ -16,9 +16,8 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'; // Assuming RainbowKit f
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 
+import { ECFButton } from '@/components/base';
 import { useAuth } from '@/context/AuthContext'; // Adjust path
-
-import ECFButton from '../base/button';
 
 // Reusable Auth Button (similar to Zuzalu's)
 const AuthButton = ({

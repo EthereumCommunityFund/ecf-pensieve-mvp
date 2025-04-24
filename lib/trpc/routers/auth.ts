@@ -1,9 +1,9 @@
+import { SupabaseClient } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
 import { count, eq } from 'drizzle-orm';
 import { ethers } from 'ethers';
 import { generateSiweNonce } from 'viem/siwe';
 import { z } from 'zod';
-import { SupabaseClient } from '@supabase/supabase-js';
 
 import { loginNonces, profiles } from '@/lib/db/schema';
 import { publicProcedure, router } from '@/lib/trpc/server';

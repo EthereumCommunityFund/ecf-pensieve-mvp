@@ -1,4 +1,4 @@
-import ECFButton from '@/components/base/button';
+import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 
 const RewardCard = () => {

@@ -2,7 +2,7 @@
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 
-import ECFButton from '@/components/base/button';
+import { ECFButton } from '@/components/base/button';
 
 const BackHeader = () => {
   const router = useRouter();

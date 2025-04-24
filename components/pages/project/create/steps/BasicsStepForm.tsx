@@ -1,10 +1,11 @@
 'use client';
 
-import { Avatar, Input, Select, SelectItem, Textarea, cn } from '@heroui/react';
+import { Avatar, Select, SelectItem, cn } from '@heroui/react';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
+import { Input, Textarea } from '@/components/base';
 import { basicsFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';

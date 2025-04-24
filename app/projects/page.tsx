@@ -3,7 +3,7 @@
 import { Image } from '@heroui/react';
 import Link from 'next/link';
 
-import ECFButton from '@/components/base/button';
+import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import { MockProjectListData } from '@/components/pages/home/homeList';
 import ProjectCard from '@/components/pages/home/projectCard';

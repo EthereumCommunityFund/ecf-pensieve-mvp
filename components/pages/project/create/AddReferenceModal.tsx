@@ -1,5 +1,7 @@
 'use client';
 
+import React, { useState } from 'react';
+
 import {
   Button,
   Input,
@@ -8,8 +10,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-} from '@heroui/react';
-import React, { useState } from 'react';
+} from '@/components/base';
 
 import { ReferenceData } from './types';
 

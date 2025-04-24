@@ -14,9 +14,9 @@ import {
 import { createSiweMessage } from 'viem/siwe';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
-import { trpc } from '@/lib/trpc/client'; // Adjust path as needed
-import { supabase } from '@/lib/supabase/client'; // Adjust path as needed
 import type { Profile } from '@/lib/db/schema'; // Assuming Profile type exported from schema or similar
+import { supabase } from '@/lib/supabase/client'; // Adjust path as needed
+import { trpc } from '@/lib/trpc/client'; // Adjust path as needed
 
 // Types similar to SupabaseContext in Zuzalu
 type AuthStatus =

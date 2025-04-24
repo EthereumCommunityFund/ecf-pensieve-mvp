@@ -3,7 +3,7 @@
 import { cn } from '@heroui/react';
 import React from 'react';
 
-import ECFButton from '@/components/base/button';
+import { Button } from '@/components/base';
 
 import { CreateProjectStep } from './types';
 
@@ -27,7 +27,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   const isFirstStep = currentStep === CreateProjectStep.Basics;
   const isLastStep = currentStep === CreateProjectStep.Organization;
 
-  const baseButtonClassnames = 'rounded-[5px] px-[30px] h-[40px] text-[14px]';
+  const baseButtonClassnames = 'px-[30px] h-[40px]';
 
   const onDiscardButtonPress = () => {
     if (isFirstStep) {
@@ -39,27 +39,25 @@ const FormActions: React.FC<FormActionsProps> = ({
 
   return (
     <div className="mt-[20px] flex justify-end gap-[10px] pr-[10px]">
-      <ECFButton
-        className={cn(
-          baseButtonClassnames,
-          'bg-transparent border border-black/10 text-black',
-        )}
+      <Button
+        color="secondary"
+        size="md"
+        className={cn(baseButtonClassnames)}
         onPress={onDiscardButtonPress}
         isDisabled={isSubmitting}
       >
         {isFirstStep ? 'Discard' : 'Back'}
-      </ECFButton>
-      <ECFButton
-        className={cn(
-          baseButtonClassnames,
-          'bg-black text-white hover:bg-black/90 hover:text-white',
-        )}
+      </Button>
+      <Button
+        color="primary"
+        size="md"
+        className={cn(baseButtonClassnames)}
         onPress={onNext}
         isDisabled={!isStepValid || isSubmitting}
         isLoading={isSubmitting && isLastStep}
       >
         {isLastStep ? (isSubmitting ? 'Submitting...' : 'Submit') : 'Next'}
-      </ECFButton>
+      </Button>
     </div>
   );
 };

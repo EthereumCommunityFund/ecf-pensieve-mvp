@@ -1,14 +1,14 @@
 'use client';
+import React from 'react';
 
 import {
   Button,
+  CommonModalHeader,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
-  ModalHeader,
-} from '@heroui/react';
-import React from 'react';
+} from '@/components/base';
 
 interface DiscardConfirmModalProps {
   isOpen: boolean;
@@ -24,16 +24,35 @@ const DiscardConfirmModal: React.FC<DiscardConfirmModalProps> = ({
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose} size="sm">
       <ModalContent>
-        <ModalHeader>放弃更改？</ModalHeader>
+        <CommonModalHeader
+          title="Confirm Exit?"
+          onClose={onClose}
+          classNames={{
+            title: 'text-[#D75454]',
+          }}
+        />
         <ModalBody>
-          <p>您确定要放弃所有更改并退出吗？此操作无法撤销。</p>
+          <p className="text-[16px] leading-[20px] text-black opacity-80">
+            You are trying to leave this page. Doing so will lose your inputs.
+          </p>
         </ModalBody>
+
         <ModalFooter>
-          <Button variant="light" onPress={onClose}>
-            取消
+          <Button
+            color="secondary"
+            size="md"
+            className="flex-1"
+            onPress={onConfirm}
+          >
+            Yes, Leave
           </Button>
-          <Button color="danger" onPress={onConfirm}>
-            确认放弃
+          <Button
+            color="primary"
+            size="md"
+            className="flex-1"
+            onPress={onClose}
+          >
+            No, Stay
           </Button>
         </ModalFooter>
       </ModalContent>
