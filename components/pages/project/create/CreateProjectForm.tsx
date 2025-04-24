@@ -89,11 +89,11 @@ const useCurrentUser = () => {
 
 const CreateProjectForm: React.FC = () => {
   const router = useRouter();
-  const { user } = useCurrentUser(); // 获取当前用户
+  const { user } = useCurrentUser();
   const createProjectMutation = trpc.project.createProject.useMutation();
 
   const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
-    CreateProjectStep.Basics,
+    CreateProjectStep.Organization,
   );
   const [stepStatuses, setStepStatuses] = useState<
     Record<CreateProjectStep, StepStatus>
@@ -131,7 +131,7 @@ const CreateProjectForm: React.FC = () => {
     >(projectSchema, {
       context: fieldApplicability,
     }),
-    mode: 'onTouched',
+    mode: 'onSubmit',
     defaultValues: {
       projectName: 'leo18 project',
       tagline: '',
