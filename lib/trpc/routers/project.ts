@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { projects } from '@/lib/db/schema';
+import { profiles, projects } from '@/lib/db/schema';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 export const projectRouter = router({
@@ -80,8 +80,12 @@ export const projectRouter = router({
       const cursor = input?.cursor;
 
       const query = ctx.db
-        .select()
+        .select({
+          project: projects,
+          creator: profiles,
+        })
         .from(projects)
+        .leftJoin(profiles, eq(projects.creator, profiles.userId))
         .orderBy(desc(projects.id))
         .limit(limit);
 
@@ -89,7 +93,12 @@ export const projectRouter = router({
         query.where(gt(projects.id, cursor));
       }
 
-      const items = await query;
+      const results = await query;
+
+      const items = results.map(({ project, creator }) => ({
+        ...project,
+        creator,
+      }));
 
       const nextCursor =
         items.length === limit ? items[items.length - 1].id : undefined;
@@ -113,18 +122,27 @@ export const projectRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const [project] = await ctx.db
-        .select()
+      const result = await ctx.db
+        .select({
+          project: projects,
+          creator: profiles,
+        })
         .from(projects)
+        .leftJoin(profiles, eq(projects.creator, profiles.userId))
         .where(eq(projects.id, input.id));
 
-      if (!project) {
+      if (result.length === 0) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Project not found',
         });
       }
 
-      return project;
+      const { project, creator } = result[0];
+
+      return {
+        ...project,
+        creator,
+      };
     }),
 });
