@@ -1,8 +1,7 @@
 'use client';
 
 import ProjectCard from '@/components/pages/home/projectCard';
-
-import { IProject } from './homeList';
+import { IProject } from '@/types/project';
 
 export interface IProjectListProps {
   projectList: IProject[];

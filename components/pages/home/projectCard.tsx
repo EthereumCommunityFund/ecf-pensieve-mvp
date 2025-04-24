@@ -5,8 +5,7 @@ import NextImage from 'next/image';
 
 import ECFTypography from '@/components/base/typography';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
-
-import { IProject } from './homeList';
+import { IProject } from '@/types/project';
 
 interface IProjectCardProps {
   project: IProject;
@@ -28,7 +27,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
         <div className="flex flex-1 items-start gap-[14px]">
           <div className="border-[rgba(0, 0, 0.1)] size-[100px] overflow-hidden rounded-[10px] border mobile:hidden">
             <Image
-              src={project.image}
+              src={project.logoUrl}
               as={NextImage}
               alt={project.name}
               className="object-cover"
@@ -39,7 +38,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 
           <div className="border-[rgba(0, 0, 0.1)] size-[60px] overflow-hidden rounded-[5px] border lg:hidden pc:hidden tablet:hidden">
             <Image
-              src={project.image}
+              src={project.logoUrl}
               as={NextImage}
               alt={project.name}
               className="object-cover"
@@ -59,17 +58,19 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
               type={'body2'}
               className="mt-[6px] leading-[18px] opacity-65"
             >
-              {project.description}
+              {project.mainDescription}
             </ECFTypography>
             <p className="text-[rgba(0, 0, 0.8)] mt-[6px] text-[11px] leading-[18px]">
               <span className="opacity-60">by: </span>
               <span className="mx-[6px] font-bold underline">
-                @{project.admin}
+                {project.creator}
               </span>{' '}
-              <span className="opacity-60">{formatTimeAgo(project.time)}</span>
+              <span className="opacity-60">
+                {formatTimeAgo(project.createdAt.getTime())}
+              </span>
             </p>
             <div className="mt-[10px] flex flex-wrap gap-[8px]">
-              {project.tags.map((tag) => (
+              {project.categories.map((tag) => (
                 <div
                   key={tag}
                   className="flex h-[22px] items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)] px-3"
@@ -87,17 +88,11 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
           <div
             className={cn(
               'mx-auto flex items-center justify-center w-[40px] h-[40px] rounded-lg',
-              project.hasVoted
-                ? 'bg-[var(--primary-green)]'
-                : 'bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.1)]',
+              'bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.1)]',
             )}
           >
             <Image
-              src={
-                project.hasVoted
-                  ? '/images/common/CaretUpLight.png'
-                  : '/images/common/CaretUpDark.png'
-              }
+              src="/images/common/CaretUpDark.png"
               as={NextImage}
               alt={'vote'}
               width={24}
@@ -105,10 +100,10 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             />
           </div>
           <p className="font-saria text-[13px] font-semibold leading-[20px] text-black opacity-60">
-            {formatNumber(project.voteCount)}
+            {formatNumber(0)}
           </p>
           <p className="text-[rgba(0, 0, 0.7)] font-saria text-[11px] font-semibold leading-[17px] opacity-60">
-            {formatNumber(project.memberCount)}
+            {formatNumber(0)}
           </p>
         </div>
       </Link>

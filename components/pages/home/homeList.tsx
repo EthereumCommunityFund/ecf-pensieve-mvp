@@ -1,70 +1,13 @@
+'use client';
+
+import Link from 'next/link';
+
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
+import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types/project';
 
 import ProjectList from './projectList';
-
-export interface IProject {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  link: string;
-  admin: string;
-  time: number;
-  tags: string[];
-  hasVoted: boolean;
-  voteCount: number;
-  memberCount: number;
-}
-
-// TODO: get data from backend
-export const MockProjectListData: IProject[] = [
-  {
-    id: 1,
-    name: 'Ethereum Community Fund',
-    description:
-      'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
-    image:
-      'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
-    link: 'https://via.placeholder.com/150',
-    admin: 'drivenfast',
-    time: 1739780943631,
-    tags: ['Protocol', 'DAO'],
-    voteCount: 6900,
-    memberCount: 820,
-    hasVoted: false,
-  },
-  {
-    id: 2,
-    name: 'Ethereum Community Fund',
-    description:
-      'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
-    image:
-      'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
-    link: 'https://via.placeholder.com/150',
-    admin: 'Admin 2',
-    time: 1719780444631,
-    tags: ['Tag 3', 'Tag 4'],
-    voteCount: 55000,
-    memberCount: 24000,
-    hasVoted: true,
-  },
-  {
-    id: 3,
-    name: 'Ethereum Community Fund',
-    description:
-      'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
-    image:
-      'https://framerusercontent.com/images/DR52ReCNMmZcc4aFYNUYxdKXU.jpg?scale-down-to=1024',
-    link: 'https://via.placeholder.com/150',
-    admin: 'Admin 3',
-    time: 1639730943631,
-    tags: ['Tag 5', 'Tag 6'],
-    voteCount: 13498,
-    memberCount: 3409,
-    hasVoted: false,
-  },
-];
 
 interface ISectionProps {
   title: string;
@@ -95,13 +38,15 @@ const SectionList = (props: ISectionProps) => {
           </ECFTypography>
         </div>
         {props.buttonText && (
-          <ECFButton
-            $size={'small'}
-            onPress={props.onClick}
-            className="h-[31px] px-2.5 mobile:h-[31px] mobile:w-full"
-          >
-            {props.buttonText}
-          </ECFButton>
+          <Link href="/projects">
+            <ECFButton
+              $size={'small'}
+              onPress={props.onClick}
+              className="h-[31px] px-2.5 mobile:h-[31px] mobile:w-full"
+            >
+              {props.buttonText}
+            </ECFButton>
+          </Link>
         )}
       </div>
       {props.children}
@@ -110,9 +55,15 @@ const SectionList = (props: ISectionProps) => {
 };
 
 const HomeList = () => {
+  const { data: projectsData, isLoading } = trpc.project.getProjects.useQuery({
+    limit: 10,
+  });
+
   const viewAllProject = () => {
     console.log('view all project');
   };
+
+  const projects = projectsData?.items || [];
 
   return (
     <div className="mt-5">
@@ -122,7 +73,17 @@ const HomeList = () => {
         buttonText="View All Projects"
         onClick={viewAllProject}
       >
-        <ProjectList projectList={MockProjectListData} />
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <ECFTypography type="body1">加载中...</ECFTypography>
+          </div>
+        ) : projects.length > 0 ? (
+          <ProjectList projectList={projects as IProject[]} />
+        ) : (
+          <div className="flex justify-center py-8">
+            <ECFTypography type="body1">暂无项目</ECFTypography>
+          </div>
+        )}
       </SectionList>
       <SectionList title="Top Secure Projects" description="LIST COMING SOON" />
       <SectionList

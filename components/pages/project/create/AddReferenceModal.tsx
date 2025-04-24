@@ -47,10 +47,12 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
       return;
     }
 
-    // 提交引用
+    // 提交引用 - URL同时用作ref和value
+    const trimmedUrl = url.trim();
     onAddReference({
       key: fieldKey,
-      ref: url.trim(),
+      ref: trimmedUrl,
+      value: trimmedUrl,
     });
 
     // 重置并关闭
@@ -75,7 +77,7 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
             添加支持性引用链接。这可以是文档、资源或能验证信息的任何链接。
           </p>
           <Input
-            label="引用 URL"
+            label="引用链接"
             placeholder="https://example.com/reference"
             value={url}
             onChange={(e) => {

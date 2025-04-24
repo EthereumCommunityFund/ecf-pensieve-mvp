@@ -5,14 +5,33 @@ import Link from 'next/link';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import { MockProjectListData } from '@/components/pages/home/homeList';
 import ProjectCard from '@/components/pages/home/projectCard';
 import RewardCard from '@/components/pages/project/rewardCard';
+import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types/project';
 
 const ProjectsPage = () => {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    trpc.project.getProjects.useInfiniteQuery(
+      {
+        limit: 10,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
+
+  const handleLoadMore = () => {
+    if (!isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   const handleProposeProject = () => {
     console.log('Propose a Project');
   };
+
+  const allProjects = data?.pages.flatMap((page) => page.items) || [];
 
   return (
     <div className="pb-10">
@@ -49,14 +68,41 @@ const ProjectsPage = () => {
               Page Completion Rate (Transparency) * User Supported Votes
             </ECFTypography>
           </div>
+
+          {/* 项目列表 */}
           <div className="pb-2.5">
-            {MockProjectListData.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                showBorder={true}
-              />
-            ))}
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <ECFTypography type="body1">加载中...</ECFTypography>
+              </div>
+            ) : allProjects.length > 0 ? (
+              <>
+                {allProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project as IProject}
+                    showBorder={true}
+                  />
+                ))}
+
+                {/* 加载更多按钮 */}
+                {hasNextPage && (
+                  <div className="flex justify-center py-4">
+                    <ECFButton
+                      onPress={handleLoadMore}
+                      isDisabled={isFetchingNextPage}
+                      $size="small"
+                    >
+                      {isFetchingNextPage ? '加载中...' : '加载更多'}
+                    </ECFButton>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex justify-center py-8">
+                <ECFTypography type="body1">暂无项目</ECFTypography>
+              </div>
+            )}
           </div>
         </div>
 
