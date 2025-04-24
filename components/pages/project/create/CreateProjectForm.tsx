@@ -105,7 +105,6 @@ const CreateProjectForm: React.FC = () => {
   });
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [references, setReferences] = useState<ReferenceData[]>([]);
-  const [isCurrentStepValid, setIsCurrentStepValid] = useState(false);
 
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
   const [currentReferenceField, setCurrentReferenceField] = useState({
@@ -167,12 +166,6 @@ const CreateProjectForm: React.FC = () => {
   } = methods;
 
   useEffect(() => {
-    const currentFields = stepFields[currentStep];
-    const hasErrorsInCurrentStep = currentFields.some((field) => errors[field]);
-    setIsCurrentStepValid(!hasErrorsInCurrentStep);
-  }, [errors, currentStep, trigger]);
-
-  useEffect(() => {
     const fieldsToValidate: (keyof ProjectFormData)[] = [];
     if (Object.prototype.hasOwnProperty.call(fieldApplicability, 'appUrl')) {
       fieldsToValidate.push('appUrl');
@@ -212,14 +205,11 @@ const CreateProjectForm: React.FC = () => {
     const currentFields = stepFields[currentStep];
     const isValid = await trigger(currentFields);
 
-    setIsCurrentStepValid(isValid);
-    console.log('isValid:', isValid);
+    console.log(`Step ${currentStep} validation result:`, isValid);
     if (isValid) {
       const currentIndex = stepsOrder.indexOf(currentStep);
-      console.log('currentIndex:', currentIndex);
       if (currentIndex < stepsOrder.length - 1) {
         const nextStep = stepsOrder[currentIndex + 1];
-        console.log('nextStep:', nextStep);
         setStepStatuses((prev) => ({
           ...prev,
           [currentStep]: 'Finished',
@@ -227,18 +217,8 @@ const CreateProjectForm: React.FC = () => {
         }));
         setCurrentStep(nextStep);
       } else {
-        console.log('Last step, trigger final submit');
-        console.log('表单当前错误:', errors);
-        console.log('表单当前值:', getValues());
-
-        const allValid = await trigger();
-        console.log('全表单验证结果:', allValid, errors);
-        console.log('fieldApplicability:', fieldApplicability);
-
-        handleSubmit((data: ProjectFormData) => {
-          console.log('onSubmit被调用,数据:', data);
-          onSubmit(data);
-        })();
+        console.log('Final step, calling handleSubmit...');
+        handleSubmit(onSubmit)();
       }
     }
   };
@@ -482,7 +462,6 @@ const CreateProjectForm: React.FC = () => {
             <FormActions
               currentStep={currentStep}
               isSubmitting={createProjectMutation.isPending || isSubmitting}
-              isStepValid={isCurrentStepValid}
               onBack={handleBack}
               onNext={handleNext}
               onDiscard={handleDiscard}

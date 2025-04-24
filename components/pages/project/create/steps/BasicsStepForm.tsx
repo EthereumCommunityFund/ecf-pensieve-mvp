@@ -135,15 +135,6 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
             <div>
               <Textarea
                 {...field}
-                classNames={{
-                  base: cn('group', error ? 'border-red-500' : ''),
-                  inputWrapper: cn(
-                    'bg-[rgba(0,0,0,0.05)] border border-[rgba(0,0,0,0.1)]',
-                    'rounded-lg px-3 min-h-[100px]',
-                  ),
-                  input:
-                    'font-normal text-black placeholder:text-black placeholder:opacity-60',
-                }}
                 placeholder={basicsFieldsConfig.mainDescription.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}

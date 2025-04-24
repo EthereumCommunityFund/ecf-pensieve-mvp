@@ -50,7 +50,7 @@ export const basicsSchema = yup.object().shape({
         | FieldApplicabilityContext
         | undefined;
       // Logic remains: check if applicability is set to false (meaning required)
-      if (context?.appUrl === false && !value) {
+      if (!context?.appUrl && !value) {
         return false;
       }
       return true;
@@ -72,34 +72,23 @@ export const datesSchema = yup.object().shape({
       const context = this.options.context as
         | FieldApplicabilityContext
         | undefined;
-      if (context?.dateLaunch === false && !value) {
+      if (!context?.dateLaunch && !value) {
         return false;
       }
       return true;
     }),
-  devStatus: yup
-    .string()
-    .oneOf(
-      ['Live', 'In Development', 'Discontinued', 'Stealth'],
-      'Invalid development status',
-    )
-    .required('Development status is required'),
+  devStatus: yup.string().required('Development status is required'),
   fundingStatus: yup
     .string()
     .nullable()
-    .oneOf(
-      ['Funded', 'VC Invested', 'No Funding', null],
-      'Invalid funding status',
-    )
     .test(
       'fundingStatusRequired',
       'Funding status is required',
       function (value) {
-        // Use renamed context type
         const context = this.options.context as
           | FieldApplicabilityContext
           | undefined;
-        if (context?.fundingStatus === false && value === null) {
+        if (!context?.fundingStatus && value === null) {
           return this.createError({
             message: 'Funding status is required',
             path: this.path,
@@ -114,7 +103,6 @@ export const datesSchema = yup.object().shape({
 export const technicalsSchema = yup.object().shape({
   openSource: yup
     .string()
-    .oneOf(['Yes', 'No'], 'Please select whether the project is open source')
     .required('Please select whether the project is open source'),
   codeRepo: yup
     .string()
@@ -128,7 +116,7 @@ export const technicalsSchema = yup.object().shape({
         const context = this.options.context as
           | FieldApplicabilityContext
           | undefined;
-        if (context?.codeRepo === false && !value) {
+        if (!context?.codeRepo && !value) {
           return false;
         }
         return true;
@@ -146,7 +134,7 @@ export const technicalsSchema = yup.object().shape({
         const context = this.options.context as
           | FieldApplicabilityContext
           | undefined;
-        if (context?.tokenContract === false && !value) {
+        if (!context?.tokenContract && !value) {
           return false;
         }
         return true;
@@ -165,7 +153,6 @@ export const organizationSchema = yup.object().shape({
     .required('Organization structure is required'),
   publicGoods: yup
     .string()
-    .oneOf(['Yes', 'No'], 'Please select whether the project is a public good')
     .required('Please select whether the project is a public good'),
   founders: yup
     .array()

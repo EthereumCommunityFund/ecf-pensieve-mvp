@@ -10,7 +10,6 @@ import { CreateProjectStep } from './types';
 interface FormActionsProps {
   currentStep: CreateProjectStep;
   isSubmitting: boolean;
-  isStepValid: boolean;
   onBack: () => void;
   onNext: () => void;
   onDiscard: () => void;
@@ -19,7 +18,6 @@ interface FormActionsProps {
 const FormActions: React.FC<FormActionsProps> = ({
   currentStep,
   isSubmitting,
-  isStepValid,
   onBack,
   onNext,
   onDiscard,
@@ -53,7 +51,7 @@ const FormActions: React.FC<FormActionsProps> = ({
         size="md"
         className={cn(baseButtonClassnames)}
         onPress={onNext}
-        isDisabled={!isStepValid || isSubmitting}
+        isDisabled={isSubmitting}
         isLoading={isSubmitting && isLastStep}
       >
         {isLastStep ? (isSubmitting ? 'Submitting...' : 'Submit') : 'Next'}
