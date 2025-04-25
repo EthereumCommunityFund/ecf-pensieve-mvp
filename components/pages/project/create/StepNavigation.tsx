@@ -50,7 +50,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   goToStep,
 }) => {
   return (
-    <nav className="sticky top-[50px] flex h-[calc(100vh-50px)] w-[220px] shrink-0 flex-col gap-[20px] self-start mobile:hidden">
+    <nav className="sticky top-[50px] w-[220px] shrink-0 flex-col gap-[20px] self-start mobile:hidden">
       <ul className="space-y-4 pt-5">
         {stepsOrder.map((step, index) => {
           const status = stepStatuses[step];

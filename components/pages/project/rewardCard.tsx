@@ -14,7 +14,7 @@ const RewardCard = () => {
         type={'body2'}
         className="mb-5 mt-2.5 leading-[18px] opacity-60"
       >
-        Proposing new projects will certainly recieved a reward even if their
+        Proposing new projects will certainly received a reward even if their
         proposal does not pass.
       </ECFTypography>
       <ECFButton className="h-[35px] w-full text-sm text-[var(--primary-green)] hover:text-[var(--primary-green)]">

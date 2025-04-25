@@ -204,6 +204,10 @@ const CreateProjectForm: React.FC = () => {
           [nextStep]: 'Active',
         }));
         setCurrentStep(nextStep);
+        // Scroll to top after step change
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+        });
       } else {
         console.log('Final step, calling handleSubmit...');
         // handleSubmit will still use the context for full form validation
