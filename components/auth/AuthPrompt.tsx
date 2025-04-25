@@ -1,24 +1,30 @@
 'use client';
 
+import { addToast, Spinner } from '@heroui/react';
+import { X } from '@phosphor-icons/react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useAccount, useDisconnect, useEnsName } from 'wagmi';
+
 import {
-  addToast,
+  Button,
+  Input,
   Modal,
   ModalBody,
   ModalContent,
-  ModalFooter,
   ModalHeader,
-  Spinner,
-} from '@heroui/react';
-import { X } from '@phosphor-icons/react';
-import { ConnectButton } from '@rainbow-me/rainbowkit'; // Assuming RainbowKit for connect button
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
+} from '@/components/base';
+import { useAuth } from '@/context/AuthContext';
 
-import { Button, Input } from '@/components/base';
-import { ECFButton } from '@/components/base';
-import { useAuth } from '@/context/AuthContext'; // Adjust path
+import ConnectWalletButton from './ConnectWalletButton';
 
-// Reusable Auth Button (similar to Zuzalu's)
+type LoadingButtonType = 'skip' | 'continue' | null;
+
 const AuthButton = ({
   children,
   isLoading,
@@ -33,7 +39,7 @@ const AuthButton = ({
 const CloseButton = ({ onPress }: { onPress: () => void }) => (
   <Button
     onPress={onPress}
-    className="size-auto min-w-0 bg-transparent p-0 opacity-60 transition-opacity hover:opacity-100"
+    className="size-auto min-w-0 border-none bg-transparent p-0 opacity-60 transition-opacity hover:opacity-100"
     aria-label="Close"
   >
     <X size={20} weight="light" className="text-gray-600 hover:text-gray-900" />
@@ -55,29 +61,50 @@ const AuthPrompt: React.FC = () => {
     performFullLogoutAndReload, // Use this for hard reset on close sometimes
     isAuthenticating, // Combined flag
     isCreatingProfile,
+    isFetchingProfile,
     isLoggingIn,
   } = useAuth();
 
   const { disconnectAsync } = useDisconnect();
   const { isConnected, address } = useAccount();
+  const { data: ensName } = useEnsName({ address });
   const [inputUsername, setInputUsername] = useState('');
+  const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
+  const connectionIntentRef = useRef(false);
 
   const isLoading = isAuthenticating || isCreatingProfile || isLoggingIn;
-  const maxUsernameLength = 50; // Match backend validation?
+  const maxUsernameLength = 50;
+
+  useEffect(() => {
+    if (
+      isConnected &&
+      authStatus === 'idle' &&
+      isAuthPromptVisible &&
+      connectionIntentRef.current
+    ) {
+      connectionIntentRef.current = false;
+      authenticate().catch((err) => {
+        console.error(
+          '[NewAuthPrompt] Authentication triggered by useEffect failed:',
+          err,
+        );
+        addToast({
+          title: err.message || 'Authentication failed',
+          color: 'danger',
+        });
+      });
+    }
+
+    if ((!isAuthPromptVisible || !isConnected) && connectionIntentRef.current) {
+      connectionIntentRef.current = false;
+    }
+  }, [isConnected, authStatus, isAuthPromptVisible, authenticate]);
 
   useEffect(() => {
     if (isAuthPromptVisible) {
       setInputUsername('');
     }
   }, [isAuthPromptVisible]);
-
-  // Reset input username if an error occurs during profile creation
-  useEffect(() => {
-    if (authStatus === 'error' && authError?.includes('Username')) {
-      // Keep prompt open but maybe clear input or indicate error
-      // setInputUsername(''); // Optional: clear input on username taken error
-    }
-  }, [authStatus, authError]);
 
   const onInputChange = useCallback(
     (value: string) => {
@@ -90,13 +117,45 @@ const AuthPrompt: React.FC = () => {
     [maxUsernameLength],
   );
 
-  const handleContinue = useCallback(async () => {
-    if (!inputUsername.trim()) {
-      addToast({ title: 'Please enter a username.', color: 'warning' });
-      return;
-    }
-    await createProfile(inputUsername.trim());
-  }, [inputUsername, createProfile]);
+  const handleProfileAction = useCallback(
+    async (options: {
+      useInputUsername?: boolean;
+      buttonType: LoadingButtonType;
+    }) => {
+      const { useInputUsername = false, buttonType } = options;
+
+      if (address) {
+        setLoadingButton(buttonType);
+
+        try {
+          const usernameToUse = useInputUsername
+            ? inputUsername
+            : ((ensName || address.slice(0, 10)) as string);
+
+          await createProfile(usernameToUse);
+        } catch (e: any) {
+          addToast({
+            title: e.message || 'Fail to create profile',
+            color: 'danger',
+          });
+        } finally {
+          setLoadingButton(null);
+        }
+      }
+    },
+    [address, ensName, inputUsername, createProfile],
+  );
+
+  const handleSkip = useCallback(() => {
+    return handleProfileAction({ buttonType: 'skip' });
+  }, [handleProfileAction]);
+
+  const handleContinue = useCallback(() => {
+    return handleProfileAction({
+      useInputUsername: true,
+      buttonType: 'continue',
+    });
+  }, [handleProfileAction]);
 
   const handleCloseAndReset = useCallback(async () => {
     setInputUsername('');
@@ -123,68 +182,17 @@ const AuthPrompt: React.FC = () => {
           </ModalHeader>
           <CloseButton onPress={handleCloseAndReset} />
         </div>
-        <ModalBody className="gap-4 px-5 pb-5 pt-4">
-          <p className="text-sm text-gray-600">{description}</p>
-          {/* Use RainbowKit ConnectButton or your preferred connect component */}
-          <ConnectButton.Custom>
-            {({
-              account,
-              chain,
-              openAccountModal,
-              openChainModal,
-              openConnectModal,
-              mounted,
-            }) => {
-              const ready = mounted;
-              const connected = ready && account && chain;
-
-              return (
-                <div
-                  {...(!ready && {
-                    'aria-hidden': true,
-                    style: {
-                      opacity: 0,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    },
-                  })}
-                >
-                  {(() => {
-                    if (!connected) {
-                      return (
-                        <ECFButton
-                          onPress={openConnectModal}
-                          color="primary"
-                          className="w-full"
-                          isLoading={isLoading} // Show loading if auth started before connection
-                        >
-                          Connect Wallet
-                        </ECFButton>
-                      );
-                    }
-                    // Wallet.tsx is connected, trigger authentication
-                    return (
-                      <ECFButton
-                        onPress={authenticate}
-                        color="primary"
-                        className="w-full"
-                        isLoading={isLoading}
-                      >
-                        {isAuthenticating
-                          ? 'Check Wallet...'
-                          : isLoggingIn
-                            ? 'Logging In...'
-                            : 'Sign In Message'}
-                      </ECFButton>
-                    );
-                  })()}
-                </div>
-              );
+        <ModalBody className="gap-[10px] pb-5">
+          <p className="text-[14px] leading-[1.4] text-black/80">
+            {description}
+          </p>
+          <ConnectWalletButton
+            isLoading={isAuthenticating || isFetchingProfile}
+            authenticate={authenticate}
+            onInitiateConnect={() => {
+              connectionIntentRef.current = true;
             }}
-          </ConnectButton.Custom>
-          {authStatus === 'error' && authError && (
-            <p className="mt-2 text-center text-sm text-red-500">{authError}</p>
-          )}
+          />
         </ModalBody>
         <div className="w-full rounded-b-lg border-t border-gray-200 bg-gray-50 px-5 py-3">
           <p className="text-center text-xs text-gray-500">
@@ -200,9 +208,13 @@ const AuthPrompt: React.FC = () => {
     isLoading,
     authStatus,
     authError,
+    handleCloseAndReset,
+    isAuthenticating,
+    isFetchingProfile,
   ]);
 
   const renderNewUserContent = useMemo(() => {
+    const isAnyLoading = loadingButton !== null;
     return (
       <>
         <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
@@ -213,8 +225,7 @@ const AuthPrompt: React.FC = () => {
         </div>
         <ModalBody className="gap-5 px-5 pb-5 pt-4">
           <p className="text-sm text-gray-600">
-            Your wallet is verified. Please choose a username to complete your
-            registration.
+            {`Let's create your username. You can skip this or change it later. Default will be your address.`}
           </p>
           <div>
             <label
@@ -236,21 +247,29 @@ const AuthPrompt: React.FC = () => {
               disabled={isCreatingProfile}
               maxLength={maxUsernameLength}
             />
-            {authStatus === 'error' && authError && (
-              <p className="mt-2 text-sm text-red-500">{authError}</p>
-            )}
+          </div>
+
+          <div className="flex justify-between gap-[10px]">
+            <Button
+              color="secondary"
+              className="flex-1"
+              onPress={handleSkip}
+              isDisabled={isAnyLoading}
+              isLoading={loadingButton === 'skip'}
+            >
+              Skip
+            </Button>
+            <Button
+              onPress={handleContinue}
+              color="primary"
+              className="flex-1"
+              isDisabled={!inputUsername || isAnyLoading}
+              isLoading={loadingButton === 'continue'}
+            >
+              Continue
+            </Button>
           </div>
         </ModalBody>
-        <ModalFooter className="flex justify-end gap-3 border-t border-gray-200 px-5 pb-5 pt-4">
-          <ECFButton
-            onPress={handleContinue}
-            color="primary"
-            isDisabled={!inputUsername || isCreatingProfile}
-            isLoading={isCreatingProfile}
-          >
-            Continue & Sign In
-          </ECFButton>
-        </ModalFooter>
       </>
     );
   }, [
@@ -261,9 +280,14 @@ const AuthPrompt: React.FC = () => {
     authError,
     handleCloseAndReset,
     authStatus,
+    handleSkip,
+    loadingButton,
   ]);
 
   const renderLoggedInContent = useMemo(() => {
+    const username = profile?.name;
+    const isAddressUsername =
+      username && address && username === address.slice(0, 10);
     return (
       <>
         <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
@@ -272,12 +296,12 @@ const AuthPrompt: React.FC = () => {
           </ModalHeader>
           <CloseButton onPress={hideAuthPrompt} />
         </div>
-        <ModalBody className="px-5 pb-5 pt-4">
-          {profile?.name && (
-            <p className="mb-4 text-center text-xl font-semibold text-gray-800">
-              Welcome back,{' '}
+        <ModalBody>
+          {username && !isAddressUsername && (
+            <p className="text-center text-xl font-semibold text-gray-800">
+              Welcome,{' '}
               <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                {profile.name}
+                {username}
               </span>
               !
             </p>
@@ -285,19 +309,19 @@ const AuthPrompt: React.FC = () => {
           <p className="text-center text-sm text-gray-600">
             You are now logged in and ready to use Pensieve.
           </p>
+          <div className="mt-[10px]">
+            <Button
+              onPress={hideAuthPrompt}
+              color="secondary"
+              className="w-full"
+            >
+              Let's Go!
+            </Button>
+          </div>
         </ModalBody>
-        <ModalFooter className="border-t border-gray-200 px-5 pb-5 pt-4">
-          <ECFButton
-            onPress={hideAuthPrompt}
-            color="primary"
-            className="w-full"
-          >
-            Let's Go!
-          </ECFButton>
-        </ModalFooter>
       </>
     );
-  }, [profile, hideAuthPrompt]);
+  }, [profile, hideAuthPrompt, address]);
 
   const renderModalContent = useCallback(() => {
     if (!isConnected) {
@@ -311,6 +335,7 @@ const AuthPrompt: React.FC = () => {
         return renderConnectWalletContent;
 
       case 'awaiting_username':
+      case 'creating_profile':
         return renderNewUserContent;
 
       case 'fetching_profile':
@@ -327,9 +352,6 @@ const AuthPrompt: React.FC = () => {
           return renderLoggedInContent;
         }
 
-      case 'creating_profile':
-        return renderNewUserContent;
-
       default:
         return (
           <ModalBody className="flex items-center justify-center p-10">
@@ -344,6 +366,7 @@ const AuthPrompt: React.FC = () => {
     renderConnectWalletContent,
     renderNewUserContent,
     renderLoggedInContent,
+    newUser,
   ]);
 
   return (
@@ -357,6 +380,7 @@ const AuthPrompt: React.FC = () => {
       backdrop="opaque"
       className="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-xl"
       classNames={{
+        base: 'p-0 w-[420px] mobile:w-[calc(90vw)]',
         backdrop: 'bg-gray-900/30 backdrop-blur-sm',
       }}
     >

@@ -1,7 +1,6 @@
 'use client';
 
-import { addToast } from '@heroui/react'; // Assuming HeroUI toast is set up
-import { User } from '@supabase/supabase-js'; // Correct Supabase User type
+import { User } from '@supabase/supabase-js';
 import {
   createContext,
   ReactNode,
@@ -14,11 +13,10 @@ import {
 import { createSiweMessage } from 'viem/siwe';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
-import { supabase } from '@/lib/supabase/client'; // Adjust path as needed
+import { supabase } from '@/lib/supabase/client';
 import { trpc } from '@/lib/trpc/client';
-import { IProfile } from '@/types'; // Adjust path as needed
+import { IProfile } from '@/types';
 
-// Types similar to SupabaseContext in Zuzalu
 type AuthStatus =
   | 'idle'
   | 'authenticating'
@@ -28,7 +26,7 @@ type AuthStatus =
   | 'authenticated'
   | 'error';
 
-type ConnectSource = 'connectButton' | 'invalidAction' | 'pageLoad'; // Example sources
+type ConnectSource = 'connectButton' | 'invalidAction' | 'pageLoad';
 
 interface AuthState {
   status: AuthStatus;
@@ -39,10 +37,10 @@ interface AuthState {
 }
 
 interface UserState {
-  session: any; // Replace 'any' with Supabase Session type if available
-  user: User | null; // Supabase User type
-  profile: IProfile | null; // Your Profile type
-  newUser: boolean; // Flag specifically for the prompt flow
+  session: any; // TODO Replace 'any' with Supabase Session type if available
+  user: User | null;
+  profile: IProfile | null;
+  newUser: boolean;
 }
 
 interface SignatureData {
@@ -63,9 +61,10 @@ interface IAuthContext {
   connectSource: ConnectSource;
 
   // Status Flags
-  isAuthenticating: boolean; // Covers 'authenticating' and 'verifying'
-  isLoggingIn: boolean; // Covers 'logging_in'
-  isCreatingProfile: boolean; // Covers 'creating_profile'
+  isAuthenticating: boolean;
+  isLoggingIn: boolean;
+  isFetchingProfile: boolean;
+  isCreatingProfile: boolean;
 
   // Actions
   authenticate: () => Promise<void>;
@@ -88,22 +87,38 @@ const initialContext: IAuthContext = {
   user: null,
   profile: null,
   newUser: false,
+
   isAuthPromptVisible: false,
   connectSource: 'pageLoad',
+
   isAuthenticating: false,
   isLoggingIn: false,
+  isFetchingProfile: false,
   isCreatingProfile: false,
+
   authenticate: async () => {},
-  createProfile: async () => {},
   logout: async () => {},
   performFullLogoutAndReload: async () => {},
   showAuthPrompt: () => {},
   hideAuthPrompt: () => {},
   setConnectSource: () => {},
+  createProfile: async () => {},
   fetchUserProfile: async () => null,
 };
 
 const AuthContext = createContext<IAuthContext>(initialContext);
+
+export const isUserDenied = (error: any) => {
+  const errorMessageLower = error.message?.toLowerCase() || '';
+  return (
+    errorMessageLower.includes('user denied') ||
+    errorMessageLower.includes('user rejected') ||
+    errorMessageLower.includes('request rejected') ||
+    errorMessageLower.includes('cancelled') ||
+    errorMessageLower.includes('canceled') ||
+    error.code === 4001
+  );
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -120,6 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     newUser: false,
   });
   const signatureDataRef = useRef<SignatureData>({});
+  const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
 
   const { address, isConnected, chain } = useAccount();
   const { disconnectAsync } = useDisconnect();
@@ -130,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkRegistrationQuery = trpc.auth.checkRegistration.useQuery(
     { address: address! },
     {
-      enabled: false, // Only call manually or when needed
+      enabled: false,
       retry: false,
       refetchOnWindowFocus: false,
     },
@@ -138,7 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const getCurrentUserQuery = trpc.user.getCurrentUser.useQuery(
     undefined, // No input needed for protected procedure
     {
-      enabled: false, // Call only when authenticated
+      enabled: false,
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -159,25 +175,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateAuthState = useCallback(
     (status: AuthStatus, error: string | null = null) => {
-      console.log(
-        '[AuthContext] Status change:',
-        status,
-        error ? `Error: ${error}` : '',
-      );
-      setAuthState((prev) => ({
-        ...prev,
-        status,
-        error: error ? error.replace('TRPCClientError: ', '') : null,
-      }));
-      if (
-        status === 'authenticated' ||
-        status === 'idle' ||
-        status === 'error'
-      ) {
-        console.log(
-          '[AuthContext] Clearing signature data for status:',
-          status,
-        );
+      setAuthState((prev) => ({ ...prev, status, error }));
+      const shouldClearSignature =
+        status === 'authenticated' || status === 'idle' || status === 'error';
+      // TODO to confirm: Clear signature data on status change to authenticated, idle, or error
+      if (shouldClearSignature) {
         signatureDataRef.current = {};
       }
     },
@@ -186,23 +188,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetAuthState = useCallback(() => {
     setUserState({ session: null, user: null, profile: null, newUser: false });
-    updateAuthState('idle');
+    setAuthState((prev) => ({
+      ...prev,
+      status: 'idle',
+      error: null,
+      isPromptVisible: false,
+    }));
     signatureDataRef.current = {};
-  }, [updateAuthState]);
+  }, []);
 
   const logout = useCallback(async () => {
     updateAuthState('idle');
     await supabase.auth.signOut();
     resetAuthState();
-  }, [resetAuthState]);
+  }, [resetAuthState, updateAuthState]);
 
   const performFullLogoutAndReload = useCallback(async () => {
-    await supabase.auth.signOut();
     try {
       await disconnectAsync();
       await logout();
-    } catch (e) {
-      console.error('Error disconnecting wallet:', e);
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
     } finally {
       window.location.reload();
     }
@@ -213,13 +219,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const currentSupabaseUser = sessionData?.data?.session?.user;
 
     if (!currentSupabaseUser) {
-      return null;
+      return handleError('Get profile failed, please try again.', false, false);
     }
 
     // Ensure local state matches Supabase session user
     if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
       setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
     }
+
+    updateAuthState('fetching_profile');
 
     try {
       const profileData = await getCurrentUserQuery.refetch();
@@ -231,28 +239,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateAuthState('authenticated');
         return profileData.data;
       } else {
-        addToast({
-          title: 'Could not load user profile data.',
-          color: 'danger',
-        });
+        // TODO to confirm: should updateAuthState('authenticated') here?
         return handleError('Get profile failed, please try again.');
       }
     } catch (error: any) {
-      addToast({
-        title: 'Failed to load user profile. Logging out.',
-        color: 'danger',
-      });
       return handleError(
         `Failed to fetch profile: ${error.message || 'Please try again later'}`,
       );
     }
-  }, [getCurrentUserQuery, userState.user, authState.status, resetAuthState]);
+  }, [
+    getCurrentUserQuery,
+    userState.user,
+    authState.status,
+    handleError,
+    updateAuthState,
+  ]);
 
   const handleSupabaseLogin = useCallback(
-    async (token: string): Promise<boolean> => {
+    async (token: string): Promise<void> => {
       updateAuthState('fetching_profile');
       try {
-        // Use the token from backend's generateAuthToken to sign in
         const { data: sessionData, error: otpError } =
           await supabase.auth.verifyOtp({
             type: 'magiclink', // Type must match backend generation
@@ -260,17 +266,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
         if (otpError) {
-          console.error('[AuthContext] Supabase verifyOtp failed:', otpError);
-          throw new Error(
-            otpError.message || 'Login failed during verification.',
+          handleError(
+            otpError?.message || 'Login failed during verification.',
+            false,
+            true,
           );
         }
         if (!sessionData?.session || !sessionData?.user) {
-          console.error(
-            '[AuthContext] Supabase verifyOtp response invalid:',
-            sessionData,
-          );
-          throw new Error('Login verification did not return a valid session.');
+          handleError('Login failed during verification.', false, true);
         }
 
         setUserState((prev) => ({
@@ -283,46 +286,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (profile) {
           updateAuthState('authenticated');
           setUserState((prev) => ({ ...prev, newUser: false }));
-          return true;
         } else {
-          if (authState.status === 'fetching_profile') {
-            updateAuthState('error', 'Profile fetch failed after login.');
-          }
-          return false; // Indicate failure if profile couldn't be fetched
+          handleError('Profile fetch failed after login.', false, true);
         }
       } catch (error: any) {
-        if (authState.status === 'fetching_profile') {
-          updateAuthState('error', error.message || 'Login failed.');
-        }
-        await supabase.auth.signOut(); // Ensure Supabase session is cleared on error
+        handleError(error.message || 'Login failed.', false, true);
+        await supabase.auth.signOut();
         resetAuthState();
-        return false;
       }
     },
-    [updateAuthState, fetchUserProfile, resetAuthState],
+    [updateAuthState, fetchUserProfile, resetAuthState, handleError],
   );
 
   const authenticate = useCallback(async () => {
     if (!address || !chain) {
-      addToast({
-        title: 'Please connect your wallet first.',
-        color: 'warning',
-      });
+      handleError('Wallet not connected, cannot authenticate.', false, false);
       return;
     }
+
     if (
       authState.status === 'authenticating' ||
-      authState.status === 'fetching_profile'
-    )
+      authState.status === 'fetching_profile' ||
+      authState.status === 'authenticated'
+    ) {
       return;
+    }
 
     updateAuthState('authenticating');
     setUserState((prev) => ({ ...prev, newUser: false }));
     signatureDataRef.current = {};
 
     try {
-      // 1. Get Nonce and Check Registration concurrently
-      console.log('[AuthContext] Fetching nonce and checking registration...');
       const [nonceResult, registrationResult] = await Promise.all([
         generateNonceMutation.mutateAsync({ address }),
         checkRegistrationQuery.refetch().then((res) => {
@@ -330,8 +324,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             throw new Error(
               `Failed to check registration: ${res.error.message}`,
             );
-          if (typeof res.data?.registered !== 'boolean')
-            throw new Error('Invalid registration status received.');
           return res.data;
         }),
       ]);
@@ -340,16 +332,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const isRegistered = registrationResult?.registered;
 
       if (!nonce) {
-        throw new Error('Failed to retrieve nonce from server.');
+        handleError('Failed to retrieve nonce from server.', false, true);
       }
-      console.log(
-        `[AuthContext] Nonce received. Registered status (frontend check): ${isRegistered}`,
-      );
 
       const message = createSiweMessage({
         domain: window.location.host,
         address,
-        statement: 'Sign in with Ethereum to the app.',
+        statement: 'Sign in to the Pensieve app',
         uri: window.location.origin,
         version: '1',
         chainId: chain.id,
@@ -362,36 +351,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!isRegistered) {
         setUserState((prev) => ({ ...prev, newUser: true }));
+        // TODO: updateAuthState('awaiting_username') or updateAuthState('authenticated');
         updateAuthState('awaiting_username');
         return;
       } else {
-        const verifyResult = await verifyMutation.mutateAsync({
+        const { token } = await verifyMutation.mutateAsync({
           address,
           signature,
-          message, // No username sent
+          message,
         });
 
-        if (verifyResult.isNewUser) {
-          addToast({
-            title: 'Account status mismatch. Please try again.',
-            color: 'danger',
-          });
-          await performFullLogoutAndReload();
-          return;
-        }
-
-        await handleSupabaseLogin(verifyResult.token);
+        await handleSupabaseLogin(token);
       }
     } catch (error: any) {
       const errorMessage =
         error.message || 'Authentication failed. Please try again.';
-      if (error.code === 'ACTION_REJECTED' || error?.cause?.code === 4001) {
-        updateAuthState('idle', 'Signature request rejected.');
-        addToast({ title: 'Signature request rejected.', color: 'warning' });
+      if (isUserDenied(error)) {
+        handleError('User denied signature or cancelled.', true, true);
       } else {
-        updateAuthState('error', errorMessage.replace('TRPCClientError: ', ''));
+        handleError(errorMessage);
       }
-      signatureDataRef.current = {}; // Clear signature data on any error
+      signatureDataRef.current = {};
     }
   }, [
     address,
@@ -402,44 +382,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkRegistrationQuery,
     signMessageAsync,
     verifyMutation,
+    handleError,
     handleSupabaseLogin,
-    performFullLogoutAndReload,
   ]);
 
   const createProfile = useCallback(
     async (username: string) => {
       if (authState.status !== 'awaiting_username') {
-        console.warn(
-          '[AuthContext] createProfile called with invalid status:',
-          authState.status,
+        handleError(
+          `${CreateProfileErrorPrefix} Invalid action. Please sign in again.`,
         );
-        updateAuthState('error', 'Invalid action. Please sign in again.');
         return;
       }
 
       if (!address) {
-        updateAuthState('error', 'Wallet.tsx not connected.');
+        handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
         return;
       }
       if (
         !signatureDataRef.current.message ||
         !signatureDataRef.current.signature
       ) {
-        console.warn(
-          '[AuthContext] createProfile called without signature data (status: awaiting_username). Forcing re-auth.',
-        );
-        updateAuthState(
-          'error',
-          'Authentication session expired. Please sign in again.',
+        handleError(
+          `${CreateProfileErrorPrefix} Authentication session expired. Please sign in again.`,
         );
         return;
       }
 
       updateAuthState('creating_profile');
-      console.log(
-        'signatureDataRef before verify in createProfile:',
-        signatureDataRef.current,
-      );
 
       try {
         const verifyResult = await verifyMutation.mutateAsync({
@@ -449,29 +419,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username,
         });
 
-        const loginSuccess = await handleSupabaseLogin(verifyResult.token);
-        // updateAuthState in handleSupabaseLogin or error handling will clear signatureDataRef
+        await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
-        console.error('[AuthContext] Profile creation failed:', error);
-        const errorMessage =
-          error.message || 'Failed to create profile. Please try again.';
-        let displayError = errorMessage.replace('TRPCClientError: ', '');
-
-        // Specific handling for username conflict
-        if (
-          errorMessage.includes('Username already taken') ||
-          (error?.data?.code === 'CONFLICT' &&
-            error?.message.includes('Username'))
-        ) {
-          displayError = 'Username already taken. Please choose another.';
-        } else if (error?.data?.code === 'CONFLICT') {
-          displayError =
-            'This wallet may already be registered. Try logging in.';
-        }
-        updateAuthState('error', displayError);
-        // Keep signature data in case user wants to retry with a different username?
-        // No, backend nonce is likely consumed/invalid. Force re-auth.
-        signatureDataRef.current = {};
+        // TODO: what if api error, can retry again?
+        handleError(
+          `${CreateProfileErrorPrefix}: ${error.message || 'Please try again'}`,
+        );
       }
     },
     [
@@ -480,31 +433,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateAuthState,
       verifyMutation,
       handleSupabaseLogin,
+      handleError,
     ],
   );
 
   useEffect(() => {
     const checkInitialSession = async () => {
-      updateAuthState('fetching_profile', null);
       setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: true }));
+      updateAuthState('authenticating');
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
         if (session) {
-          console.log('[AuthContext] Initial session found.');
           setUserState((prev) => ({ ...prev, session, user: session.user }));
-          await fetchUserProfile(); // Fetch profile for existing session
-          // Fetch User Profile will set status to 'authenticated' or handle errors/logout
+          await fetchUserProfile();
         } else {
-          console.log('[AuthContext] No initial session found.');
           resetAuthState();
-          updateAuthState('idle'); // Ensure status is idle if no session
         }
       } catch (error: any) {
-        console.error('[AuthContext] Error checking initial session:', error);
-        resetAuthState(); // Reset on error
-        updateAuthState('idle'); // Ensure status is idle on error
+        resetAuthState();
       } finally {
         setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
       }
@@ -512,90 +460,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkInitialSession();
   }, []);
 
-  const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
-
   useEffect(() => {
     if (
-      prevIsConnectedRef.current === true &&
+      prevIsConnectedRef.current &&
       !isConnected &&
       authState.status === 'authenticated'
     ) {
-      console.log(
-        '[AuthContext] Wallet.tsx disconnected while authenticated, logging out.',
-      );
       performFullLogoutAndReload();
     }
     prevIsConnectedRef.current = isConnected;
   }, [isConnected, authState.status, performFullLogoutAndReload]);
 
   const showAuthPrompt = useCallback(
-    (source: ConnectSource = 'connectButton') => {
+    async (source: ConnectSource = 'connectButton') => {
       if (isConnected) {
-        // If connected but not authenticated (e.g., error state), allow re-authentication attempt
-        if (authState.status !== 'authenticated') {
-          resetAuthState(); // Clear previous errors/state
-          setAuthState((prev) => ({
-            ...prev,
-            isPromptVisible: true,
-            connectSource: source,
-          }));
-          // Optionally trigger authenticate() here automatically? Or let user click sign in.
-          // authenticate(); // <-- Uncomment to auto-trigger sign-in if wallet already connected
-        } else {
-          // Already connected and authenticated, maybe just ignore or show profile?
-          console.log(
-            '[AuthContext] showAuthPrompt called while already authenticated.',
-          );
-          // Or, treat as a request to switch account? -> force disconnect first.
-          disconnectAsync().then(() => {
-            resetAuthState();
-            setAuthState((prev) => ({
-              ...prev,
-              isPromptVisible: true,
-              connectSource: source,
-            }));
-          });
-        }
-      } else {
-        // Wallet.tsx not connected
-        resetAuthState(); // Clear any previous error/state
-        setAuthState((prev) => ({
-          ...prev,
-          isPromptVisible: true,
-          connectSource: source,
-        }));
+        await disconnectAsync();
       }
+
+      if (authState.status === 'error') {
+        resetAuthState();
+      }
+
+      setAuthState((prev) => ({
+        ...prev,
+        connectSource: source,
+        isPromptVisible: true,
+      }));
     },
-    [
-      isConnected,
-      disconnectAsync,
-      resetAuthState,
-      authState.status,
-      authenticate,
-    ],
+    [isConnected, disconnectAsync, resetAuthState, authState.status],
   );
 
   const hideAuthPrompt = useCallback(() => {
     setAuthState((prev) => ({ ...prev, isPromptVisible: false }));
-    if (
-      authState.status === 'error' &&
-      !authState.error?.includes('Username')
-    ) {
+    if (authState.status === 'error') {
       resetAuthState();
     }
-    if (authState.status === 'authenticated' && userState.newUser) {
-      console.log(
-        '[AuthContext] User cancelled registration prompt, logging out.',
-      );
-      performFullLogoutAndReload();
-    }
-  }, [
-    authState.status,
-    authState.error,
-    userState.newUser,
-    resetAuthState,
-    performFullLogoutAndReload,
-  ]);
+  }, [authState.status, resetAuthState]);
 
   const setConnectSource = useCallback((source: ConnectSource) => {
     setAuthState((prev) => ({ ...prev, connectSource: source }));
@@ -605,15 +505,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     authStatus: authState.status,
     isCheckingInitialAuth: authState.isCheckingInitialAuth,
     isAuthenticated:
-      authState.status === 'authenticated' && !!userState.profile, // Be stricter: require profile
+      authState.status === 'authenticated' && !!userState.profile,
     authError: authState.error,
     user: userState.user,
     profile: userState.profile,
-    newUser: userState.newUser, // Expose newUser flag from userState
+    newUser: userState.newUser,
     isAuthPromptVisible: authState.isPromptVisible,
     connectSource: authState.connectSource,
     isAuthenticating: authState.status === 'authenticating',
     isLoggingIn: authState.status === 'fetching_profile',
+    isFetchingProfile: authState.status === 'fetching_profile',
     isCreatingProfile: authState.status === 'creating_profile',
     authenticate,
     createProfile,
