@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import {
   createContext,
   ReactNode,
@@ -21,7 +21,6 @@ type AuthStatus =
   | 'idle'
   | 'authenticating'
   | 'fetching_profile'
-  | 'awaiting_username'
   | 'creating_profile'
   | 'authenticated'
   | 'error';
@@ -37,7 +36,7 @@ interface AuthState {
 }
 
 interface UserState {
-  session: any; // TODO Replace 'any' with Supabase Session type if available
+  session: Session | null;
   user: User | null;
   profile: IProfile | null;
   newUser: boolean;
@@ -172,12 +171,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateAuthState = useCallback(
     (status: AuthStatus, error: string | null = null) => {
       setAuthState((prev) => ({ ...prev, status, error }));
-      const shouldClearSignature =
-        status === 'authenticated' || status === 'idle' || status === 'error';
-      // TODO to confirm: Clear signature data on status change to authenticated, idle, or error
-      if (shouldClearSignature) {
-        signatureDataRef.current = {};
-      }
     },
     [],
   );
@@ -190,7 +183,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       error: null,
       isPromptVisible: false,
     }));
-    signatureDataRef.current = {};
   }, []);
 
   const logout = useCallback(async () => {
@@ -310,7 +302,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     updateAuthState('authenticating');
     setUserState((prev) => ({ ...prev, newUser: false }));
-    signatureDataRef.current = {};
 
     try {
       const [nonceResult, registrationResult] = await Promise.all([
@@ -347,8 +338,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!isRegistered) {
         setUserState((prev) => ({ ...prev, newUser: true }));
-        // TODO: updateAuthState('awaiting_username') or updateAuthState('authenticated');
-        updateAuthState('awaiting_username');
+        updateAuthState('authenticated');
         return;
       } else {
         const { token } = await verifyMutation.mutateAsync({
@@ -367,7 +357,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         handleError(errorMessage);
       }
-      signatureDataRef.current = {};
     }
   }, [
     address,
@@ -384,24 +373,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const createProfile = useCallback(
     async (username: string) => {
-      if (authState.status !== 'awaiting_username') {
-        handleError(
-          `${CreateProfileErrorPrefix} Invalid action. Please sign in again.`,
-        );
-        return;
-      }
-
       if (!address) {
         handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
-        return;
-      }
-      if (
-        !signatureDataRef.current.message ||
-        !signatureDataRef.current.signature
-      ) {
-        handleError(
-          `${CreateProfileErrorPrefix} Authentication session expired. Please sign in again.`,
-        );
         return;
       }
 
@@ -410,8 +383,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const verifyResult = await verifyMutation.mutateAsync({
           address,
-          signature: signatureDataRef.current.signature,
-          message: signatureDataRef.current.message,
+          signature: signatureDataRef.current.signature!,
+          message: signatureDataRef.current.message!,
           username,
         });
 
@@ -500,8 +473,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const contextValue: IAuthContext = {
     authStatus: authState.status,
     isCheckingInitialAuth: authState.isCheckingInitialAuth,
-    isAuthenticated:
-      authState.status === 'authenticated' && !!userState.profile,
+    isAuthenticated: authState.status === 'authenticated',
     authError: authState.error,
     user: userState.user,
     profile: userState.profile,

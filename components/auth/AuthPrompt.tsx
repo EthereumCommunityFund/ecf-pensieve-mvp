@@ -19,7 +19,7 @@ import {
   ModalContent,
   ModalHeader,
 } from '@/components/base';
-import { useAuth } from '@/context/AuthContext';
+import { CreateProfileErrorPrefix, useAuth } from '@/context/AuthContext';
 
 import ConnectWalletButton from './ConnectWalletButton';
 
@@ -330,11 +330,9 @@ const AuthPrompt: React.FC = () => {
 
     switch (authStatus) {
       case 'idle':
-      case 'error':
       case 'authenticating':
         return renderConnectWalletContent;
 
-      case 'awaiting_username':
       case 'creating_profile':
         return renderNewUserContent;
 
@@ -351,6 +349,12 @@ const AuthPrompt: React.FC = () => {
         } else {
           return renderLoggedInContent;
         }
+
+      case 'error':
+        if (authError?.includes(CreateProfileErrorPrefix)) {
+          return renderNewUserContent;
+        }
+        return renderConnectWalletContent;
 
       default:
         return (
