@@ -1,6 +1,6 @@
 'use client';
 
-import { Code, CurrencyEth } from '@phosphor-icons/react/dist/ssr';
+import { Code } from '@phosphor-icons/react/dist/ssr';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
@@ -94,7 +94,9 @@ const TechnicalsStepForm: React.FC<
                   <Code className="pointer-events-none size-4 text-gray-400" />
                 )
               }
-              className="w-full"
+              classNames={{
+                inputWrapper: 'pl-0 pr-[10px]',
+              }}
               aria-label={technicalsFieldsConfig.codeRepo.label}
             />
           )}
@@ -124,17 +126,6 @@ const TechnicalsStepForm: React.FC<
               isInvalid={!!error}
               errorMessage={error?.message}
               isDisabled={!fieldApplicability.tokenContract}
-              startContent={
-                technicalsFieldsConfig.tokenContract.startContentText ? (
-                  <InputPrefix
-                    prefix={
-                      technicalsFieldsConfig.tokenContract.startContentText
-                    }
-                  />
-                ) : (
-                  <CurrencyEth className="pointer-events-none size-4 text-gray-400" />
-                )
-              }
               className="w-full"
               aria-label={technicalsFieldsConfig.tokenContract.label}
             />

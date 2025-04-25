@@ -214,6 +214,7 @@ export const technicalsFieldsConfig: {
     weight: '15',
     type: 'switchableUrl',
     placeholder: 'https://github.com/your-org/repo',
+    startContentText: 'https://',
     showApplicable: true,
     showReference: true,
   },
@@ -291,7 +292,7 @@ export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
   tokenContract: true,
 };
 
-// Default project logo
+// TODO delete: Default project logo, for test
 const DEFAULT_PROJECT_LOGO =
   'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
 

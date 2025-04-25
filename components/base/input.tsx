@@ -54,6 +54,13 @@ const Input = extendVariants(BaseInput, {
     size: 'md',
     variant: 'bordered',
   },
+  variants: {
+    isDisabled: {
+      true: {
+        base: 'opacity-30',
+      },
+    },
+  },
 });
 
 const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
@@ -96,6 +103,13 @@ const Textarea = extendVariants(BaseTextarea, {
   defaultVariants: {
     size: 'md',
     variant: 'bordered',
+  },
+  variants: {
+    isDisabled: {
+      true: {
+        base: 'opacity-30',
+      },
+    },
   },
 });
 
