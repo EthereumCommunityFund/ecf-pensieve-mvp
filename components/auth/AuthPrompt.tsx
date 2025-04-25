@@ -1,21 +1,20 @@
 'use client';
 
 import {
-  Button, // Assuming Button, Input, Spinner from HeroUI
-  Input,
+  addToast,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
   Spinner,
-  addToast,
 } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit'; // Assuming RainbowKit for connect button
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 
+import { Button, Input } from '@/components/base';
 import { ECFButton } from '@/components/base';
 import { useAuth } from '@/context/AuthContext'; // Adjust path
 
@@ -52,21 +51,23 @@ const AuthPrompt: React.FC = () => {
     profile,
     authError,
     connectSource,
+    logout,
     performFullLogoutAndReload, // Use this for hard reset on close sometimes
     isAuthenticating, // Combined flag
     isCreatingProfile,
     isLoggingIn,
   } = useAuth();
+
+  const { disconnectAsync } = useDisconnect();
   const { isConnected, address } = useAccount();
   const [inputUsername, setInputUsername] = useState('');
 
   const isLoading = isAuthenticating || isCreatingProfile || isLoggingIn;
   const maxUsernameLength = 50; // Match backend validation?
 
-  // Reset input when prompt becomes visible or user logs out inside prompt
   useEffect(() => {
     if (isAuthPromptVisible) {
-      setInputUsername(''); // Reset on open
+      setInputUsername('');
     }
   }, [isAuthPromptVisible]);
 
@@ -97,16 +98,12 @@ const AuthPrompt: React.FC = () => {
     await createProfile(inputUsername.trim());
   }, [inputUsername, createProfile]);
 
-  // Decide when to fully logout vs just hide the prompt on close
-  const handleClose = useCallback(() => {
-    if (authStatus === 'authenticated' && !profile) {
-      // If stuck in a state where auth succeeded but profile missing, force logout on close
-      performFullLogoutAndReload();
-    } else {
-      // Use the hideAuthPrompt logic from context which handles cancellation during registration
-      hideAuthPrompt();
-    }
-  }, [authStatus, profile, hideAuthPrompt, performFullLogoutAndReload]);
+  const handleCloseAndReset = useCallback(async () => {
+    setInputUsername('');
+    await hideAuthPrompt();
+    await logout();
+    await disconnectAsync();
+  }, [hideAuthPrompt, logout, disconnectAsync]);
 
   const renderConnectWalletContent = useMemo(() => {
     const title =
@@ -124,7 +121,7 @@ const AuthPrompt: React.FC = () => {
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
             {title}
           </ModalHeader>
-          <CloseButton onPress={hideAuthPrompt} />
+          <CloseButton onPress={handleCloseAndReset} />
         </div>
         <ModalBody className="gap-4 px-5 pb-5 pt-4">
           <p className="text-sm text-gray-600">{description}</p>
@@ -177,7 +174,7 @@ const AuthPrompt: React.FC = () => {
                           ? 'Check Wallet...'
                           : isLoggingIn
                             ? 'Logging In...'
-                            : 'Sign In'}
+                            : 'Sign In Message'}
                       </ECFButton>
                     );
                   })()}
@@ -212,8 +209,7 @@ const AuthPrompt: React.FC = () => {
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
             Welcome to Pensieve!
           </ModalHeader>
-          {/* Allow closing, use handleClose logic which triggers logout if registration cancelled */}
-          <CloseButton onPress={handleClose} />
+          <CloseButton onPress={handleCloseAndReset} />
         </div>
         <ModalBody className="gap-5 px-5 pb-5 pt-4">
           <p className="text-sm text-gray-600">
@@ -246,10 +242,6 @@ const AuthPrompt: React.FC = () => {
           </div>
         </ModalBody>
         <ModalFooter className="flex justify-end gap-3 border-t border-gray-200 px-5 pb-5 pt-4">
-          {/* Optional: Add a "Cancel" button that performs logout? handleClose already does this */}
-          {/* <AuthButton onPress={handleClose} className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300" disabled={isCreatingProfile}>
-              Cancel & Log Out
-           </AuthButton> */}
           <ECFButton
             onPress={handleContinue}
             color="primary"
@@ -267,7 +259,7 @@ const AuthPrompt: React.FC = () => {
     handleContinue,
     isCreatingProfile,
     authError,
-    handleClose,
+    handleCloseAndReset,
     authStatus,
   ]);
 
@@ -315,47 +307,28 @@ const AuthPrompt: React.FC = () => {
     switch (authStatus) {
       case 'idle':
       case 'error':
-      case 'authenticating': // Show connect/sign-in during initial auth steps
+      case 'authenticating':
         return renderConnectWalletContent;
 
-      // Add the new state check here:
       case 'awaiting_username':
-        // Render the username input form
         return renderNewUserContent;
 
-      case 'authenticated':
-        // Now, authenticated status *only* means fully logged in (implicitly newUser is false)
-        if (profile) {
-          return renderLoggedInContent;
+      case 'fetching_profile':
+        if (newUser) {
+          return renderNewUserContent;
         } else {
-          // Profile might still be fetching after handleSupabaseLogin completed
-          // Show profile loading state
-          return (
-            <ModalBody className="flex items-center justify-center p-10">
-              <Spinner
-                label="Loading profile..."
-                size="lg"
-                className="text-gray-700"
-              />
-            </ModalBody>
-          );
+          return renderConnectWalletContent;
+        }
+
+      case 'authenticated':
+        if (newUser) {
+          return renderNewUserContent;
+        } else {
+          return renderLoggedInContent;
         }
 
       case 'creating_profile':
-        // Show username input form but with loading state on the button
         return renderNewUserContent;
-
-      case 'fetching_profile': // Changed from 'logging_in'
-        // Show a generic loading state while verifying token and fetching profile
-        return (
-          <ModalBody className="flex items-center justify-center p-10">
-            <Spinner
-              label="Verifying & Loading..."
-              size="lg"
-              className="text-gray-700"
-            />
-          </ModalBody>
-        );
 
       default:
         return (
@@ -376,11 +349,11 @@ const AuthPrompt: React.FC = () => {
   return (
     <Modal
       isOpen={isAuthPromptVisible}
-      onClose={handleClose} // Use controlled close handler
+      onClose={hideAuthPrompt}
       placement="center"
       hideCloseButton={true}
-      size="md" // Adjust size as needed
-      isDismissable={false} // Prevent closing by clicking outside during critical flows
+      size="md"
+      isDismissable={false}
       backdrop="opaque"
       className="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-xl"
       classNames={{
