@@ -1,6 +1,8 @@
 import * as yup from 'yup';
 
-import { ApplicableField, FounderInput, ProjectFormData } from './types';
+import { ApplicableField } from '@/components/pages/project/create/FormData';
+
+import { FounderInput, ProjectFormData } from './types';
 
 // Rename ValidationContext for clarity
 export type FieldApplicabilityContext = Record<ApplicableField, boolean>;
