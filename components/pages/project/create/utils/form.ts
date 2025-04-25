@@ -27,21 +27,21 @@ export const transformProjectData = (
       ? new Date(formData.dateFounded)
       : new Date(),
     dateLaunch: fieldApplicability['dateLaunch']
-      ? undefined
-      : formData.dateLaunch
+      ? formData.dateLaunch
         ? new Date(formData.dateLaunch)
-        : undefined,
+        : undefined
+      : undefined,
     devStatus: formData.devStatus || 'In Development',
     fundingStatus: fieldApplicability['fundingStatus']
-      ? undefined
-      : formData.fundingStatus || undefined,
+      ? formData.fundingStatus || undefined
+      : undefined,
     openSource: formData.openSource === 'Yes',
     codeRepo: fieldApplicability['codeRepo']
-      ? undefined
-      : formData.codeRepo || undefined,
+      ? formData.codeRepo || undefined
+      : undefined,
     tokenContract: fieldApplicability['tokenContract']
-      ? undefined
-      : formData.tokenContract || undefined,
+      ? formData.tokenContract || undefined
+      : undefined,
     orgStructure: formData.orgStructure || 'Centralized',
     publicGoods: formData.publicGoods === 'Yes',
     founders: formData.founders.map((founder) => ({
