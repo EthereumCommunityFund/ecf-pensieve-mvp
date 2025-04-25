@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
-import { trpc } from '@/lib/trpc/client';
 import {
   ApplicableField,
   DEFAULT_CREATE_PROJECT_FORM_DATA,
@@ -16,6 +15,7 @@ import {
 } from '@/components/pages/project/create/FormData';
 import { transformProjectData } from '@/components/pages/project/create/utils/form';
 import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -286,8 +286,7 @@ const CreateProjectForm: React.FC = () => {
       if (stepStatuses[step] === 'Finished') {
         setStepStatuses((prev) => ({
           ...prev,
-          [currentStep]:
-            prev[currentStep] === 'Active' ? 'Finished' : prev[currentStep],
+          [currentStep]: 'Inactive',
           [step]: 'Active',
         }));
         setCurrentStep(step);
