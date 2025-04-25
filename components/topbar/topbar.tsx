@@ -42,7 +42,6 @@ export function Topbar() {
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();
         setIsSearchOpen(true);
-        // 这里可以聚焦到搜索框
         const searchInput = document.querySelector(
           'input[type="text"]',
         ) as HTMLInputElement;
@@ -76,7 +75,7 @@ export function Topbar() {
               />
             </Link>
 
-            <div className="flex h-[32px] w-[300px] cursor-pointer items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] p-2.5">
+            <div className="flex h-[32px] w-[300px] cursor-pointer items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] p-2.5 tablet:hidden">
               <Image
                 src="/images/common/search.png"
                 alt="Search"

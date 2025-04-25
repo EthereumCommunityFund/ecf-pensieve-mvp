@@ -2,35 +2,49 @@
 
 import {
   Avatar,
-  Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Spinner,
-} from '@heroui/react'; // Assuming HeroUI components
-import { SignOut, UserCircle } from '@phosphor-icons/react'; // Example icons
+  Image,
+} from '@heroui/react';
+import { SignOut } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import Copy from '@/components/biz/common/Copy';
+import { Button } from '@/components/base';
 import { WalletIcon } from '@/components/icons';
-import { useAuth } from '@/context/AuthContext'; // Adjust path
+import { useAuth } from '@/context/AuthContext';
 
-// Helper to format address
 const formatAddress = (address?: string | null, chars = 6): string => {
   if (!address) return '';
   return `${address.substring(0, chars)}...${address.substring(address.length - chars)}`;
 };
 
-const UserProfileSection: React.FC = () => {
+const formatUserName = (name?: string) => {
+  if (!name) return '';
+  if (name.length > 20) {
+    return `${name.slice(0, 6)}...${name.slice(-6)}`;
+  }
+  return name;
+};
+
+export interface IUserProfileSection {
+  avatarSize?: number;
+}
+
+const UserProfileSection: React.FC<IUserProfileSection> = ({
+  avatarSize = 24,
+}) => {
   const {
     isAuthenticated,
     profile,
     user,
     performFullLogoutAndReload,
     showAuthPrompt,
-    isCheckingInitialAuth, // Use this to show loading state initially
-    fetchUserProfile, // Allow manual profile refresh?
-    authStatus, // Get authStatus to differentiate between loading profile and not logged in
+    isCheckingInitialAuth,
+    fetchUserProfile,
+    authStatus,
   } = useAuth();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // State for potential profile edit modal
@@ -38,20 +52,13 @@ const UserProfileSection: React.FC = () => {
   const handleOpenProfileModal = () => setIsProfileModalOpen(true);
   const handleCloseProfileModal = () => setIsProfileModalOpen(false);
 
-  if (
-    isCheckingInitialAuth ||
-    (authStatus === 'fetching_profile' && !profile)
-  ) {
-    // Show loading spinner during initial check or if logging in but profile not yet loaded
-    return <Spinner size="sm" className="text-gray-700" />;
-  }
+  const formattedName = formatUserName(profile?.name);
 
   if (!isAuthenticated || !profile) {
     return (
       <Button
         startContent={<WalletIcon size={20} />}
         onPress={() => showAuthPrompt('connectButton')}
-        // Adjusted button style for light theme
         className="h-[30px] rounded-[8px] border border-gray-300 bg-gray-100 text-[14px] font-[500] leading-[1.2] text-gray-800 hover:bg-gray-200"
       >
         Connect
@@ -59,77 +66,69 @@ const UserProfileSection: React.FC = () => {
     );
   }
 
-  // Authenticated state: Show user dropdown
-  const userAddress = profile.address || user?.user_metadata?.address;
-  const displayAddress = formatAddress(userAddress);
-  const avatarUrl = profile.avatarUrl || undefined;
-  const usernameInitial = profile.name?.substring(0, 1).toUpperCase() || 'U';
-
   return (
     <>
       <Dropdown
         placement="bottom-end"
-        // Removed "dark", assuming HeroUI adapts or uses light mode defaults
-        // Explicitly set background and text if needed, e.g., className="text-gray-900 bg-white border border-gray-200 rounded-md shadow-lg"
         className="rounded-md border border-gray-200 bg-white text-gray-900 shadow-lg" // Example light theme dropdown styling
       >
         <DropdownTrigger>
-          <Avatar
-            isBordered
-            as="button"
-            className="border-gray-300 transition-transform" // Light border color
-            color="secondary" // Keep or adjust based on theme
+          <Button
             size="sm"
-            src={avatarUrl}
-            fallback={
-              // Adjusted fallback style for light theme
-              <div className="flex size-full items-center justify-center bg-secondary-100 text-secondary-700">
-                {usernameInitial}
-              </div>
-            }
-          />
+            className="border-none bg-[rgba(0,0,0,0.05)] px-[10px] py-[4px]"
+          >
+            <Image
+              src={profile?.avatarUrl ?? '/images/user/avatar_p.png'}
+              alt="avatar"
+              height={avatarSize}
+              width={avatarSize}
+              className="object-cover"
+            />
+            <span className="text-[16px] font-[600] leading-[1.2] text-gray-800">
+              {formattedName}
+            </span>
+          </Button>
         </DropdownTrigger>
-        {/* Adjusted DropdownMenu text/color defaults assumed to be light, or specify explicitly */}
         <DropdownMenu aria-label="Profile Actions" variant="flat">
-          <DropdownItem
-            key="profileInfo"
-            isReadOnly
-            className="h-14 gap-2 opacity-100"
-            textValue={`Signed in as ${profile.name}`}
-          >
-            <p className="font-semibold text-gray-800">Signed in as</p>
-            <p className="font-semibold text-secondary-600">
-              {profile.name}
-            </p>{' '}
-            {/* Adjust color if needed */}
-            <p className="text-xs text-gray-500">{displayAddress}</p>
+          <DropdownItem key="profileInfo">
+            <Copy
+              text={profile?.address}
+              message={'Wallet address copied'}
+              useCustomChildren={true}
+            >
+              <div className="flex w-[full] items-center gap-[10px] rounded-[8px] p-[5px] hover:bg-[rgba(255,255,255,0.05)]">
+                <Avatar
+                  src={profile?.avatarUrl ?? '/images/user/avatar_p.png'}
+                  alt="avatar"
+                  className="size-[40px] shrink-0"
+                />
+                <div className="w-[128px]">
+                  <p className="truncate text-[16px] font-[500] leading-[1.2] text-black">
+                    {formattedName}
+                  </p>
+                  <p className="mt-[5px] text-[13px] leading-[1.4] text-black opacity-70">
+                    {formatAddress(profile.address)}
+                  </p>
+                </div>
+              </div>
+            </Copy>
           </DropdownItem>
-          <DropdownItem
-            key="editProfile"
-            startContent={<UserCircle size={18} className="text-gray-500" />} // Icon color
-            onPress={handleOpenProfileModal}
-            textValue="Edit Profile"
-            className="text-gray-700"
-          >
-            Edit Profile
-          </DropdownItem>
+
           <DropdownItem
             key="logout"
             color="danger"
             startContent={<SignOut size={18} />} // Danger color should provide icon color
             onPress={performFullLogoutAndReload}
             textValue="Log Out"
-            className="text-danger-600" // Explicit danger text color
+            className="mt-[10px] border-t border-[rgba(255,255,255,0.1)] text-danger-600"
           >
             Log Out
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
 
-      {/* Placeholder for Profile Edit Modal - Light theme */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          {/* Light theme modal background, text, border */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-gray-900 shadow-xl">
             <h2 className="mb-4 text-lg font-semibold text-gray-800">
               Edit Profile (Placeholder)
@@ -137,7 +136,6 @@ const UserProfileSection: React.FC = () => {
             <p className="text-gray-600">
               Profile editing feature coming soon.
             </p>
-            {/* Ensure button has appropriate light theme styling */}
             <Button
               onPress={handleCloseProfileModal}
               className="mt-4 bg-gray-200 text-gray-800 hover:bg-gray-300"
