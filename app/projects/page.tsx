@@ -9,9 +9,12 @@ import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
 import RewardCard from '@/components/pages/project/rewardCard';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
 const ProjectsPage = () => {
+  const { profile } = useAuth();
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     trpc.project.getProjects.useInfiniteQuery(
       {
@@ -48,11 +51,13 @@ const ProjectsPage = () => {
           <ECFTypography type={'subtitle2'} className="mt-2.5">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          <Link href="/project/create">
-            <ECFButton onPress={handleProposeProject} className="mt-2.5">
-              Propose a Project
-            </ECFButton>
-          </Link>
+          {profile && (
+            <Link href="/project/create">
+              <ECFButton onPress={handleProposeProject} className="mt-2.5">
+                Propose a Project
+              </ECFButton>
+            </Link>
+          )}
         </div>
       </div>
 
