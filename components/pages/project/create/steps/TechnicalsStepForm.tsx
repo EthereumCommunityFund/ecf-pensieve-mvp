@@ -7,12 +7,14 @@ import { Controller } from 'react-hook-form';
 import { Input, Select, SelectItem } from '@/components/base';
 import { technicalsFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
-import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
+import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import InputPrefix from '../InputPrefix';
 import { ProjectFormData, StepFormProps } from '../types';
 
-const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
+const TechnicalsStepForm: React.FC<
+  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+> = ({
   control,
   errors,
   watch,
@@ -20,7 +22,6 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
-  hasFieldValue,
   hasFieldReference,
 }) => {
   const openSourceValue = watch(technicalsFieldsConfig.openSource.key);
@@ -29,10 +30,9 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   return (
     <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.openSource,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -63,14 +63,13 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.codeRepo,
           showApplicable: true,
           isApplicable: fieldApplicability.codeRepo,
           onChangeApplicability: (val) =>
             onChangeApplicability('codeRepo', val),
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -103,14 +102,13 @@ const TechnicalsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.tokenContract,
           showApplicable: true,
           isApplicable: fieldApplicability.tokenContract,
           onChangeApplicability: (val) =>
             onChangeApplicability('tokenContract', val),
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >

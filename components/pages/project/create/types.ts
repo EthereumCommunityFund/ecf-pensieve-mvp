@@ -95,7 +95,6 @@ export interface StepFormProps {
   onRemoveReference?: (fieldKey: string) => void;
   fieldApplicability: Record<ApplicableField, boolean>;
   onChangeApplicability: (field: ApplicableField, value: boolean) => void;
-  hasFieldValue: (fieldName: string) => boolean;
   hasFieldReference: (fieldKey: string) => boolean;
 }
 

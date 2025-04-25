@@ -76,7 +76,7 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
         )}
       </div>
       {description && (
-        <span className="text-sm text-black opacity-80">{description}</span>
+        <span className="text-[13px] text-black opacity-80">{description}</span>
       )}
       {showApplicable && (
         <div className="flex justify-start">
@@ -110,7 +110,7 @@ export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
               )
             }
           >
-            {hasReference ? 'Reference Added' : 'Add Reference'}
+            {hasReference ? 'Edit Reference' : 'Add Reference'}
           </Button>
         </div>
       )}

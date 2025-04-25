@@ -5,22 +5,23 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
-import { datesFieldsConfig } from '@/components/pages/project/create/formData';
-import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
-import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 import { DatePicker, Select, SelectItem } from '@/components/base';
 import { CalendarBlankIcon } from '@/components/icons';
+import { datesFieldsConfig } from '@/components/pages/project/create/formData';
+import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import { ProjectFormData, StepFormProps } from '../types';
 
-const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
+const DatesStepForm: React.FC<
+  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+> = ({
   control,
   errors,
   setValue,
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
-  hasFieldValue,
   hasFieldReference,
 }) => {
   const devStatusOptions = datesFieldsConfig.devStatus?.options || [];
@@ -50,10 +51,9 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   return (
     <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.dateFounded,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -81,14 +81,13 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.dateLaunch,
           showApplicable: true,
           isApplicable: fieldApplicability.dateLaunch,
           onChangeApplicability: (val) =>
             onChangeApplicability('dateLaunch', val),
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -116,10 +115,9 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.devStatus,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -152,14 +150,13 @@ const DatesStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.fundingStatus,
           showApplicable: true,
           isApplicable: fieldApplicability.fundingStatus,
           onChangeApplicability: (val) =>
             onChangeApplicability('fundingStatus', val),
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >

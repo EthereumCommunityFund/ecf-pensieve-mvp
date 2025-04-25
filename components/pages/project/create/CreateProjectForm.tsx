@@ -316,14 +316,6 @@ const CreateProjectForm: React.FC = () => {
     });
   };
 
-  const hasFieldValue = useCallback(
-    (fieldName: string): boolean => {
-      const value = getValues(fieldName as keyof ProjectFormData);
-      return value !== null && value !== undefined && value !== '';
-    },
-    [getValues],
-  );
-
   const hasFieldReference = useCallback(
     (fieldKey: string): boolean => {
       return references.some((ref) => ref.key === fieldKey);
@@ -409,7 +401,6 @@ const CreateProjectForm: React.FC = () => {
     onChangeApplicability,
     onAddReference: handleAddReference,
     onRemoveReference: handleRemoveReference,
-    hasFieldValue,
     hasFieldReference,
   };
 

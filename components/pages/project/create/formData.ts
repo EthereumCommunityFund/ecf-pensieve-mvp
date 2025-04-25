@@ -93,7 +93,7 @@ export const basicsFieldsConfig: {
   projectLogo: {
     key: 'projectLogo',
     label: 'Project Logo',
-    description: 'provide a longer description about this project in detail',
+    description: 'provide a logo for this project',
     shortDescription: 'The visual logo of the project.',
     type: 'photo',
     showReference: true,

@@ -3,7 +3,7 @@
 import { cn } from '@heroui/react';
 import React from 'react';
 
-import { ECFButton } from '@/components/base/button';
+import { Button } from '@/components/base/button';
 import {
   BuildingIcon,
   CardsIcon,
@@ -50,8 +50,8 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   goToStep,
 }) => {
   return (
-    <nav className="sticky top-[50px] w-[220px] shrink-0 flex-col gap-[20px] self-start mobile:hidden">
-      <ul className="space-y-4 pt-5">
+    <nav className="sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start mobile:hidden">
+      <ul className="space-y-4">
         {stepsOrder.map((step, index) => {
           const status = stepStatuses[step];
           const isActive = step === currentStep;
@@ -59,11 +59,12 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
 
           return (
             <li key={step}>
-              <ECFButton
+              <Button
+                color="secondary"
                 onPress={() => isClickable && goToStep(step)}
                 disabled={!isClickable}
                 className={cn(
-                  'flex items-center justify-start gap-[7px] w-full px-[10px] h-[44px] rounded-[5px] text-[16px] text-black font-[600]',
+                  'flex items-center justify-start border-none gap-[7px] w-full px-[10px] h-[44px] rounded-[5px] text-[16px] text-black font-[600]',
                   isActive ? 'bg-[rgba(0,0,0,0.1)] ' : 'bg-transparent',
                   status === 'Inactive'
                     ? 'cursor-not-allowed'
@@ -80,7 +81,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
                   <span className="flex-1 text-left">{stepLabels[step]}</span>
                 </div>
                 {status === 'Finished' && <CheckIcon size={20} />}
-              </ECFButton>
+              </Button>
             </li>
           );
         })}

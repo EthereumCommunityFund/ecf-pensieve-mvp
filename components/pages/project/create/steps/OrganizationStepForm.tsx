@@ -6,14 +6,17 @@ import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { Button, Select, SelectItem } from '@/components/base';
 import { organizationFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
-import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
+import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
-import { ProjectFormData, StepFormProps } from '../types';
 import FounderFormItem from '../FounderFormItem';
+import { ProjectFormData, StepFormProps } from '../types';
 
 const OrganizationStepForm: React.FC<
-  Omit<StepFormProps, 'register' | 'watch' | 'setValue' | 'trigger'>
-> = ({ control, errors, onAddReference, hasFieldValue, hasFieldReference }) => {
+  Omit<
+    StepFormProps,
+    'register' | 'watch' | 'setValue' | 'trigger' | 'hasFieldValue'
+  >
+> = ({ control, errors, onAddReference, hasFieldReference }) => {
   const { register } = useFormContext<ProjectFormData>();
 
   const foundersConfig = organizationFieldsConfig.founders;
@@ -32,10 +35,9 @@ const OrganizationStepForm: React.FC<
   return (
     <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: organizationFieldsConfig.orgStructure,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -66,10 +68,9 @@ const OrganizationStepForm: React.FC<
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: organizationFieldsConfig.publicGoods,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -101,10 +102,9 @@ const OrganizationStepForm: React.FC<
 
       <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[20px]">
         <FormFieldContainer
-          {...createContainerProps({
+          {...useCreateContainerPropsWithValue({
             fieldConfig: organizationFieldsConfig.founders,
             onAddReference: onAddReference,
-            hasFieldValue,
             hasFieldReference,
           })}
         >

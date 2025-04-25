@@ -8,13 +8,15 @@ import { Controller } from 'react-hook-form';
 import { Input, Select, SelectItem, Textarea } from '@/components/base';
 import { basicsFieldsConfig } from '@/components/pages/project/create/formData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
-import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
+import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import InputPrefix from '../InputPrefix';
 import PhotoUpload from '../PhotoUpload';
 import { StepFormProps } from '../types';
 
-const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
+const BasicsStepForm: React.FC<
+  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+> = ({
   control,
   errors,
   setValue,
@@ -22,7 +24,6 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
-  hasFieldValue,
   hasFieldReference,
 }) => {
   const categoriesConfig = basicsFieldsConfig.categories;
@@ -31,10 +32,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
   return (
     <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.projectName,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -55,10 +55,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.tagline,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -79,10 +78,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.categories,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -112,10 +110,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.mainDescription,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -137,10 +134,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.projectLogo,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -175,10 +171,9 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.websiteUrl,
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
@@ -209,13 +204,12 @@ const BasicsStepForm: React.FC<Omit<StepFormProps, 'register'>> = ({
       </FormFieldContainer>
 
       <FormFieldContainer
-        {...createContainerProps({
+        {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.appUrl,
           showApplicable: true,
           isApplicable: fieldApplicability.appUrl,
           onChangeApplicability: (val) => onChangeApplicability('appUrl', val),
           onAddReference: onAddReference,
-          hasFieldValue,
           hasFieldReference,
         })}
       >
