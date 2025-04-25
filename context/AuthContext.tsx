@@ -119,14 +119,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     profile: null,
     newUser: false,
   });
-  // Store message/signature temporarily for createProfile call
   const signatureDataRef = useRef<SignatureData>({});
 
   const { address, isConnected, chain } = useAccount();
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
 
-  // tRPC mutations/queries
   const generateNonceMutation = trpc.auth.generateNonce.useMutation();
   const verifyMutation = trpc.auth.verify.useMutation();
   const checkRegistrationQuery = trpc.auth.checkRegistration.useQuery(
@@ -144,6 +142,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       retry: 1,
       refetchOnWindowFocus: false,
     },
+  );
+
+  const handleError = useCallback(
+    (message: string, resetToIdle = false, throwError = true) => {
+      setAuthState((prev) => ({
+        ...prev,
+        status: resetToIdle ? 'idle' : 'error',
+        error: resetToIdle ? null : message,
+      }));
+      if (throwError) throw new Error(message);
+      return null;
+    },
+    [],
   );
 
   const updateAuthState = useCallback(
@@ -179,92 +190,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signatureDataRef.current = {};
   }, [updateAuthState]);
 
-  const performFullLogoutAndReload = useCallback(async () => {
-    console.log('[AuthContext] Performing full logout and reload...');
+  const logout = useCallback(async () => {
+    updateAuthState('idle');
     await supabase.auth.signOut();
     resetAuthState();
+  }, [resetAuthState]);
+
+  const performFullLogoutAndReload = useCallback(async () => {
+    await supabase.auth.signOut();
     try {
-      await disconnectAsync(); // Disconnect wallet
+      await disconnectAsync();
+      await logout();
     } catch (e) {
       console.error('Error disconnecting wallet:', e);
+    } finally {
+      window.location.reload();
     }
-    // Use timeout to allow state updates before reload
-    setTimeout(() => {
-      window.location.reload(); // Reload page
-    }, 50); // Short delay
-  }, [resetAuthState, disconnectAsync]);
+  }, [disconnectAsync, logout]);
 
   const fetchUserProfile = useCallback(async (): Promise<IProfile | null> => {
-    // Check Supabase session first
     const sessionData = await supabase.auth.getSession();
     const currentSupabaseUser = sessionData?.data?.session?.user;
 
     if (!currentSupabaseUser) {
-      console.warn(
-        '[AuthContext] FetchUserProfile: No active Supabase session found.',
-      );
-      // If context thought it was authenticated, force logout
-      if (authState.status === 'authenticated') {
-        await performFullLogoutAndReload();
-      } else {
-        resetAuthState(); // Otherwise just reset state
-      }
       return null;
     }
 
     // Ensure local state matches Supabase session user
     if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
-      console.log(
-        '[AuthContext] FetchUserProfile: Updating user from session.',
-      );
       setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
     }
 
-    console.log('[AuthContext] Fetching user profile via tRPC...');
     try {
-      // Use refetch to ensure fresh data
       const profileData = await getCurrentUserQuery.refetch();
       if (profileData.error) {
         throw profileData.error;
       }
       if (profileData.data) {
-        console.log(
-          '[AuthContext] Profile fetched successfully:',
-          profileData.data.name,
-        );
         setUserState((prev) => ({ ...prev, profile: profileData.data }));
         updateAuthState('authenticated');
         return profileData.data;
       } else {
-        console.warn(
-          '[AuthContext] FetchUserProfile: No profile data returned from tRPC.',
-        );
         addToast({
           title: 'Could not load user profile data.',
           color: 'danger',
         });
-        await performFullLogoutAndReload(); // Force logout for inconsistent state
-        return null;
+        return handleError('Get profile failed, please try again.');
       }
     } catch (error: any) {
-      console.error(
-        '[AuthContext] Failed to fetch user profile via tRPC:',
-        error,
-      );
       addToast({
         title: 'Failed to load user profile. Logging out.',
         color: 'danger',
       });
-      await performFullLogoutAndReload(); // Force logout if profile fetch fails
-      return null;
+      return handleError(
+        `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+      );
     }
-  }, [
-    getCurrentUserQuery,
-    userState.user,
-    authState.status,
-    resetAuthState,
-    performFullLogoutAndReload,
-  ]);
+  }, [getCurrentUserQuery, userState.user, authState.status, resetAuthState]);
 
   const handleSupabaseLogin = useCallback(
     async (token: string): Promise<boolean> => {
@@ -291,33 +273,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error('Login verification did not return a valid session.');
         }
 
-        console.log(
-          '[AuthContext] Supabase login successful, session established.',
-        );
         setUserState((prev) => ({
           ...prev,
           session: sessionData.session,
           user: sessionData.user,
         }));
 
-        // Now fetch the profile associated with this user
         const profile = await fetchUserProfile();
         if (profile) {
           updateAuthState('authenticated');
           setUserState((prev) => ({ ...prev, newUser: false }));
           return true;
         } else {
-          // fetchUserProfile handles logout if profile fetch fails
-          console.warn(
-            '[AuthContext] Supabase login succeeded, but profile fetch failed.',
-          );
           if (authState.status === 'fetching_profile') {
             updateAuthState('error', 'Profile fetch failed after login.');
           }
           return false; // Indicate failure if profile couldn't be fetched
         }
       } catch (error: any) {
-        console.error('[AuthContext] handleSupabaseLogin error:', error);
         if (authState.status === 'fetching_profile') {
           updateAuthState('error', error.message || 'Login failed.');
         }
@@ -373,7 +346,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         `[AuthContext] Nonce received. Registered status (frontend check): ${isRegistered}`,
       );
 
-      // 2. Create SIWE message
       const message = createSiweMessage({
         domain: window.location.host,
         address,
@@ -384,40 +356,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         nonce: nonce,
       });
 
-      // 3. Sign Message
       updateAuthState('authenticating', 'Waiting for signature...');
       const signature = await signMessageAsync({ message });
       signatureDataRef.current = { message, signature };
 
-      console.log('signatureDataRef', signatureDataRef.current);
-
-      // --- Logic Fork based on Frontend Registration Check ---
       if (!isRegistered) {
-        // 4a. New User Flow - Set state to awaiting_username and return
-        console.log(
-          '[AuthContext] New user detected. Setting state to awaiting_username.',
-        );
         setUserState((prev) => ({ ...prev, newUser: true }));
         updateAuthState('awaiting_username');
         return;
       } else {
-        // 4b. Existing User Flow - Proceed to verify with backend
-        console.log(
-          '[AuthContext] Existing user detected (frontend check). Verifying signature with backend...',
-        );
-
         const verifyResult = await verifyMutation.mutateAsync({
           address,
           signature,
           message, // No username sent
         });
 
-        // Backend confirms user exists (isNewUser should be false)
         if (verifyResult.isNewUser) {
-          // This indicates a discrepancy between frontend check and backend reality!
-          console.error(
-            '[AuthContext] CRITICAL MISMATCH: Frontend check said registered, but backend verify returned isNewUser: true. Forcing logout.',
-          );
           addToast({
             title: 'Account status mismatch. Please try again.',
             color: 'danger',
@@ -426,13 +380,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        console.log(
-          '[AuthContext] Existing user verified by backend. Logging in...',
-        );
         await handleSupabaseLogin(verifyResult.token);
       }
     } catch (error: any) {
-      console.error('[AuthContext] Authentication failed:', error);
       const errorMessage =
         error.message || 'Authentication failed. Please try again.';
       if (error.code === 'ACTION_REJECTED' || error?.cause?.code === 4001) {
@@ -533,13 +483,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ],
   );
 
-  const logout = useCallback(async () => {
-    console.log('[AuthContext] Logging out...');
-    await supabase.auth.signOut();
-    resetAuthState();
-  }, [resetAuthState]);
-
-  // Effect to check initial Supabase session
   useEffect(() => {
     const checkInitialSession = async () => {
       updateAuthState('fetching_profile', null);
@@ -552,7 +495,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.log('[AuthContext] Initial session found.');
           setUserState((prev) => ({ ...prev, session, user: session.user }));
           await fetchUserProfile(); // Fetch profile for existing session
-          // fetchUserProfile will set status to 'authenticated' or handle errors/logout
+          // Fetch User Profile will set status to 'authenticated' or handle errors/logout
         } else {
           console.log('[AuthContext] No initial session found.');
           resetAuthState();
@@ -567,10 +510,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     checkInitialSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, []);
 
-  // Effect to handle wallet disconnection while authenticated
   const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
 
   useEffect(() => {
@@ -587,7 +528,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     prevIsConnectedRef.current = isConnected;
   }, [isConnected, authState.status, performFullLogoutAndReload]);
 
-  // UI Prompt Controls
   const showAuthPrompt = useCallback(
     (source: ConnectSource = 'connectButton') => {
       if (isConnected) {
@@ -637,15 +577,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const hideAuthPrompt = useCallback(() => {
     setAuthState((prev) => ({ ...prev, isPromptVisible: false }));
-    // Reset error state ONLY if it wasn't a username conflict?
-    // If username conflict, keep error message for user to see.
     if (
       authState.status === 'error' &&
       !authState.error?.includes('Username')
     ) {
       resetAuthState();
     }
-    // If user cancels during 'newUser' step, log them out.
     if (authState.status === 'authenticated' && userState.newUser) {
       console.log(
         '[AuthContext] User cancelled registration prompt, logging out.',
