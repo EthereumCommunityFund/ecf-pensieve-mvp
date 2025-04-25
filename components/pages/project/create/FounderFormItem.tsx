@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import React from 'react';
 import {
   FieldError,
@@ -9,9 +10,8 @@ import {
 } from 'react-hook-form';
 
 import { Button, Input } from '@/components/base';
-import XCircleIcon from '@/components/icons/XCircle';
 
-import { ProjectFormData } from '../types';
+import { ProjectFormData } from './types';
 
 interface FounderFormItemProps {
   index: number;
@@ -64,11 +64,16 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
         <Button
           isIconOnly
           size="sm"
-          className="mt-[24px] h-[40px] bg-transparent"
+          className="mt-[24px] size-[40px] border-none bg-transparent p-[4px] text-black"
           onPress={() => remove(index)}
           aria-label={`Remove founder ${index + 1}`}
         >
-          <XCircleIcon size={24} />
+          <Image
+            src="/images/common/xCircle.svg"
+            alt="Remove"
+            width={32}
+            height={32}
+          />
         </Button>
       )}
     </div>

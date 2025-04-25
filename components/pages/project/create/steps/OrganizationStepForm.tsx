@@ -9,8 +9,7 @@ import { FormFieldContainer } from '@/components/pages/project/create/FormFieldC
 import { createContainerProps } from '@/components/pages/project/create/utils/containerProps';
 
 import { ProjectFormData, StepFormProps } from '../types';
-
-import FounderFormItem from './FounderFormItem';
+import FounderFormItem from '../FounderFormItem';
 
 const OrganizationStepForm: React.FC<
   Omit<StepFormProps, 'register' | 'watch' | 'setValue' | 'trigger'>
