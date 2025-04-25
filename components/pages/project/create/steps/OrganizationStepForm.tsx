@@ -4,7 +4,7 @@ import React from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
 import { Button, Select, SelectItem } from '@/components/base';
-import { organizationFieldsConfig } from '@/components/pages/project/create/formData';
+import { organizationFieldsConfig } from '@/components/pages/project/create/FormData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 

@@ -1,5 +1,5 @@
+import { FormFieldConfig } from '../FormData';
 import { FormFieldContainerProps } from '../FormFieldContainer';
-import { FormFieldConfig } from '../formData';
 import { ProjectFormData } from '../types';
 
 export interface ICreateContainerPropsParams {

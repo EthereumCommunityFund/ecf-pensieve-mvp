@@ -5,10 +5,17 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { trpc } from '@/lib/trpc/client';
+import {
+  ApplicableField,
+  DEFAULT_CREATE_PROJECT_FORM_DATA,
+  DEFAULT_FIELD_APPLICABILITY,
+} from '@/components/pages/project/create/FormData';
+import { transformProjectData } from '@/components/pages/project/create/utils/form';
+import { useAuth } from '@/context/AuthContext';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -20,9 +27,7 @@ import DatesStepForm from './steps/DatesStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
 import {
-  ApplicableField,
   CreateProjectStep,
-  ProjectCreatePayload,
   ProjectFormData,
   ReferenceData,
   stepFields,
@@ -32,125 +37,50 @@ import { FieldApplicabilityContext, projectSchema } from './validation';
 
 dayjs.extend(utc);
 
-const transformProjectData = (
-  formData: ProjectFormData,
-  userId: string,
-  references: ReferenceData[],
-  fieldApplicability: Record<ApplicableField, boolean>,
-): ProjectCreatePayload => {
-  return {
-    name: formData.projectName,
-    tagline: formData.tagline,
-    categories: formData.categories,
-    mainDescription: formData.mainDescription,
-    logoUrl: formData.projectLogo || '',
-    websiteUrl: formData.websiteUrl,
-    appUrl: fieldApplicability['appUrl']
-      ? undefined
-      : formData.appUrl || undefined,
-    dateFounded: formData.dateFounded
-      ? new Date(formData.dateFounded)
-      : new Date(),
-    dateLaunch: fieldApplicability['dateLaunch']
-      ? undefined
-      : formData.dateLaunch
-        ? new Date(formData.dateLaunch)
-        : undefined,
-    devStatus: formData.devStatus || 'In Development',
-    fundingStatus: fieldApplicability['fundingStatus']
-      ? undefined
-      : formData.fundingStatus || undefined,
-    openSource: formData.openSource === 'Yes',
-    codeRepo: fieldApplicability['codeRepo']
-      ? undefined
-      : formData.codeRepo || undefined,
-    tokenContract: fieldApplicability['tokenContract']
-      ? undefined
-      : formData.tokenContract || undefined,
-    orgStructure: formData.orgStructure || 'Centralized',
-    publicGoods: formData.publicGoods === 'Yes',
-    founders: formData.founders.map((founder) => ({
-      name: founder.fullName,
-      title: founder.titleRole,
-    })),
-    refs:
-      references.length > 0
-        ? references.map((ref) => ({ key: ref.key, value: ref.value }))
-        : undefined,
-  };
-};
-
-const defaultProjectLogo =
-  'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
-
-const useCurrentUser = () => {
-  return { user: { id: 'user-uuid-placeholder' } };
+// Default step statuses
+const DEFAULT_STEP_STATUSES: Record<CreateProjectStep, StepStatus> = {
+  [CreateProjectStep.Basics]: 'Active',
+  [CreateProjectStep.Dates]: 'Inactive',
+  [CreateProjectStep.Technicals]: 'Inactive',
+  [CreateProjectStep.Organization]: 'Inactive',
 };
 
 const CreateProjectForm: React.FC = () => {
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const { profile } = useAuth();
   const createProjectMutation = trpc.project.createProject.useMutation();
 
+  // Step status management
   const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
     CreateProjectStep.Basics,
   );
   const [stepStatuses, setStepStatuses] = useState<
     Record<CreateProjectStep, StepStatus>
-  >({
-    [CreateProjectStep.Basics]: 'Active',
-    [CreateProjectStep.Dates]: 'Inactive',
-    [CreateProjectStep.Technicals]: 'Inactive',
-    [CreateProjectStep.Organization]: 'Inactive',
-  });
-  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
-  const [references, setReferences] = useState<ReferenceData[]>([]);
+  >(DEFAULT_STEP_STATUSES);
 
+  // Modal states
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
+
+  // References and field applicability states
+  const [references, setReferences] = useState<ReferenceData[]>([]);
   const [currentReferenceField, setCurrentReferenceField] = useState({
     key: '',
     label: '',
     existingReference: null as ReferenceData | null,
   });
-
   const [fieldApplicability, setFieldApplicability] = useState<
     Record<ApplicableField, boolean>
-  >({
-    appUrl: true,
-    dateLaunch: true,
-    fundingStatus: true,
-    codeRepo: true,
-    tokenContract: true,
-  });
+  >(DEFAULT_FIELD_APPLICABILITY);
 
   const methods = useForm<ProjectFormData>({
     resolver: yupResolver<
       ProjectFormData,
       FieldApplicabilityContext,
       ProjectFormData
-    >(projectSchema, {
-      context: fieldApplicability,
-    }),
+    >(projectSchema, { context: fieldApplicability }),
     mode: 'all',
-    defaultValues: {
-      projectName: '',
-      tagline: '',
-      categories: [],
-      mainDescription: '',
-      projectLogo: defaultProjectLogo,
-      websiteUrl: '',
-      appUrl: null,
-      dateFounded: null,
-      dateLaunch: null,
-      devStatus: '',
-      fundingStatus: null,
-      openSource: '',
-      codeRepo: null,
-      tokenContract: null,
-      orgStructure: '',
-      publicGoods: '',
-      founders: [{ fullName: '', titleRole: '' }],
-    },
+    defaultValues: DEFAULT_CREATE_PROJECT_FORM_DATA,
   });
 
   const {
@@ -165,58 +95,177 @@ const CreateProjectForm: React.FC = () => {
     setValue,
   } = methods;
 
-  const stepsOrder: CreateProjectStep[] = [
-    CreateProjectStep.Basics,
-    CreateProjectStep.Dates,
-    CreateProjectStep.Technicals,
-    CreateProjectStep.Organization,
-  ];
+  // Step order
+  const stepsOrder = useMemo(
+    () => [
+      CreateProjectStep.Basics,
+      CreateProjectStep.Dates,
+      CreateProjectStep.Technicals,
+      CreateProjectStep.Organization,
+    ],
+    [],
+  );
 
-  const handleNext = async () => {
-    const currentStepFields = stepFields[currentStep];
+  /**
+   * Get applicable fields for the current step
+   */
+  const getApplicableFields = useCallback(
+    (stepFields: readonly string[]) => {
+      return stepFields.filter((field) => {
+        if (field in fieldApplicability) {
+          return fieldApplicability[field as ApplicableField];
+        }
+        return true;
+      }) as (keyof ProjectFormData)[];
+    },
+    [fieldApplicability],
+  );
 
-    // Filter fields based on current applicability
-    const applicableFieldsToValidate = currentStepFields.filter((field) => {
-      if (field in fieldApplicability) {
-        return fieldApplicability[field as ApplicableField];
+  /**
+   * Form submission handler
+   */
+  const onSubmit = useCallback(
+    async (formData: ProjectFormData) => {
+      if (!profile?.userId) {
+        addToast({
+          title: 'Error',
+          description: 'User not authenticated',
+          color: 'danger',
+        });
+        return;
       }
-      return true;
-    }) as (keyof ProjectFormData)[];
 
-    console.log(
-      `Fields to validate for step ${currentStep}:`,
-      applicableFieldsToValidate,
-    );
+      const payload = transformProjectData(
+        formData,
+        references,
+        fieldApplicability,
+      );
 
-    const isValid =
+      createProjectMutation.mutate(payload, {
+        onSuccess: () => {
+          addToast({
+            title: 'Success',
+            description: 'Project created successfully!',
+            color: 'success',
+          });
+          router.push('/projects');
+        },
+        onError: (error: any) => {
+          if (error?.data?.zodError?.fieldErrors) {
+            const fieldErrors = error.data.zodError.fieldErrors;
+            Object.entries(fieldErrors).forEach(([field, messages]) => {
+              setError(field as keyof ProjectFormData, {
+                type: 'server',
+                message: Array.isArray(messages)
+                  ? messages[0]
+                  : String(messages),
+              });
+            });
+            addToast({
+              title: 'Validation Error',
+              description: 'Please check the highlighted fields',
+              color: 'warning',
+            });
+          } else {
+            addToast({
+              title: 'Submission Failed',
+              description:
+                error?.message ||
+                'An unexpected error occurred, please try again',
+              color: 'danger',
+            });
+          }
+        },
+      });
+    },
+    [
+      profile?.userId,
+      references,
+      fieldApplicability,
+      createProjectMutation,
+      router,
+      setError,
+    ],
+  );
+
+  /**
+   * Proceed to next step or submit form
+   */
+  const handleNext = useCallback(async () => {
+    const currentStepFieldList = stepFields[currentStep];
+    const applicableFieldsToValidate = getApplicableFields([
+      ...currentStepFieldList,
+    ]);
+
+    // Validate current step
+    const isStepValid =
       applicableFieldsToValidate.length > 0
         ? await trigger(applicableFieldsToValidate)
         : true;
 
-    console.log(`Step ${currentStep} validation result:`, isValid);
-    if (isValid) {
-      const currentIndex = stepsOrder.indexOf(currentStep);
-      if (currentIndex < stepsOrder.length - 1) {
-        const nextStep = stepsOrder[currentIndex + 1];
-        setStepStatuses((prev) => ({
-          ...prev,
-          [currentStep]: 'Finished',
-          [nextStep]: 'Active',
-        }));
-        setCurrentStep(nextStep);
-        // Scroll to top after step change
-        requestAnimationFrame(() => {
-          window.scrollTo(0, 0);
-        });
-      } else {
-        console.log('Final step, calling handleSubmit...');
-        // handleSubmit will still use the context for full form validation
-        handleSubmit(onSubmit)();
-      }
+    if (!isStepValid) {
+      addToast({
+        title: 'Validation Error',
+        description: 'Please check the highlighted fields in the current step',
+        color: 'warning',
+      });
+      return;
     }
-  };
 
-  const handleBack = () => {
+    const currentIndex = stepsOrder.indexOf(currentStep);
+
+    // If not the last step, proceed to next step
+    if (currentIndex < stepsOrder.length - 1) {
+      const nextStep = stepsOrder[currentIndex + 1];
+      setStepStatuses((prev) => ({
+        ...prev,
+        [currentStep]: 'Finished',
+        [nextStep]: 'Active',
+      }));
+      setCurrentStep(nextStep);
+
+      // Scroll to top
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+      return;
+    }
+
+    // Last step, perform final validation
+    const allFormFields = Object.keys(getValues()) as (keyof ProjectFormData)[];
+    const fieldsToValidateFinally = allFormFields.filter((field) => {
+      if (field in fieldApplicability) {
+        return fieldApplicability[field as ApplicableField];
+      }
+      return true;
+    });
+
+    const isFinalValidationValid = await trigger(fieldsToValidateFinally);
+
+    if (isFinalValidationValid) {
+      await onSubmit(getValues());
+    } else {
+      addToast({
+        title: 'Validation Error',
+        description:
+          'Please review all steps and ensure required fields are filled',
+        color: 'warning',
+      });
+    }
+  }, [
+    currentStep,
+    getApplicableFields,
+    onSubmit,
+    stepsOrder,
+    trigger,
+    getValues,
+    fieldApplicability,
+  ]);
+
+  /**
+   * Go back to previous step
+   */
+  const handleBack = useCallback(() => {
     const currentIndex = stepsOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       const prevStep = stepsOrder[currentIndex - 1];
@@ -227,95 +276,48 @@ const CreateProjectForm: React.FC = () => {
       }));
       setCurrentStep(prevStep);
     }
-  };
+  }, [currentStep, stepsOrder]);
 
-  const handleGoToStep = (step: CreateProjectStep) => {
-    if (stepStatuses[step] === 'Finished') {
-      setStepStatuses((prev) => ({
-        ...prev,
-        [currentStep]:
-          prev[currentStep] === 'Active' ? 'Finished' : prev[currentStep],
-        [step]: 'Active',
-      }));
-      setCurrentStep(step);
-    }
-  };
+  /**
+   * Jump to a specific step (only finished steps)
+   */
+  const handleGoToStep = useCallback(
+    (step: CreateProjectStep) => {
+      if (stepStatuses[step] === 'Finished') {
+        setStepStatuses((prev) => ({
+          ...prev,
+          [currentStep]:
+            prev[currentStep] === 'Active' ? 'Finished' : prev[currentStep],
+          [step]: 'Active',
+        }));
+        setCurrentStep(step);
+      }
+    },
+    [currentStep, stepStatuses],
+  );
 
-  const handleDiscard = () => {
+  /**
+   * Discard form
+   */
+  const handleDiscard = useCallback(() => {
     setIsDiscardModalOpen(true);
-  };
+  }, []);
 
-  const confirmDiscard = () => {
+  /**
+   * Confirm discard form
+   */
+  const confirmDiscard = useCallback(() => {
     reset();
     setReferences([]);
     setCurrentStep(CreateProjectStep.Basics);
-    setStepStatuses({
-      [CreateProjectStep.Basics]: 'Active',
-      [CreateProjectStep.Dates]: 'Inactive',
-      [CreateProjectStep.Technicals]: 'Inactive',
-      [CreateProjectStep.Organization]: 'Inactive',
-    });
+    setStepStatuses(DEFAULT_STEP_STATUSES);
     setIsDiscardModalOpen(false);
     router.push('/projects');
-  };
+  }, [reset, router]);
 
-  const onSubmit = async (formData: ProjectFormData) => {
-    console.log('onSubmit function executed:', formData);
-    if (!user?.id) {
-      addToast({
-        title: 'Error',
-        description: 'User not authenticated',
-        color: 'danger',
-      });
-      return;
-    }
-
-    const payload = transformProjectData(
-      formData,
-      user.id,
-      references,
-      fieldApplicability,
-    );
-
-    console.log('transformProjectData Payload:', payload);
-
-    createProjectMutation.mutate(payload, {
-      onSuccess: (data) => {
-        addToast({
-          title: 'Success',
-          description: 'Project created successfully!',
-          color: 'success',
-        });
-        router.push('/projects');
-      },
-      onError: (error: any) => {
-        console.error('Submission error:', error);
-        if (error?.data?.zodError?.fieldErrors) {
-          const fieldErrors = error.data.zodError.fieldErrors;
-          Object.entries(fieldErrors).forEach(([field, messages]) => {
-            setError(field as keyof ProjectFormData, {
-              type: 'server',
-              message: Array.isArray(messages) ? messages[0] : String(messages),
-            });
-          });
-          addToast({
-            title: 'Validation Error',
-            description: 'Please check the highlighted fields',
-            color: 'warning',
-          });
-        } else {
-          addToast({
-            title: 'Submission Failed',
-            description:
-              error?.message ||
-              'An unexpected error occurred, please try again',
-            color: 'danger',
-          });
-        }
-      },
-    });
-  };
-
+  /**
+   * Check if a field has a reference
+   */
   const hasFieldReference = useCallback(
     (fieldKey: string): boolean => {
       return references.some((ref) => ref.key === fieldKey);
@@ -323,6 +325,9 @@ const CreateProjectForm: React.FC = () => {
     [references],
   );
 
+  /**
+   * Get field reference
+   */
   const getFieldReference = useCallback(
     (fieldKey: string): ReferenceData | null => {
       return references.find((ref) => ref.key === fieldKey) || null;
@@ -330,10 +335,12 @@ const CreateProjectForm: React.FC = () => {
     [references],
   );
 
+  /**
+   * Add field reference
+   */
   const handleAddReference = useCallback(
     (key: string, label?: string) => {
       const existingReference = getFieldReference(key);
-
       setCurrentReferenceField({
         key,
         label: label || key,
@@ -344,13 +351,18 @@ const CreateProjectForm: React.FC = () => {
     [getFieldReference],
   );
 
+  /**
+   * Save field reference
+   */
   const handleSaveReference = useCallback(
     (reference: ReferenceData) => {
       setReferences((prev) => {
-        const exists = prev.findIndex((ref) => ref.key === reference.key);
-        if (exists >= 0) {
+        const existingIndex = prev.findIndex(
+          (ref) => ref.key === reference.key,
+        );
+        if (existingIndex >= 0) {
           const updated = [...prev];
-          updated[exists] = reference;
+          updated[existingIndex] = reference;
           return updated;
         }
         return [...prev, reference];
@@ -365,6 +377,9 @@ const CreateProjectForm: React.FC = () => {
     [currentReferenceField.label],
   );
 
+  /**
+   * Remove field reference
+   */
   const handleRemoveReference = useCallback(
     (fieldKey: string) => {
       const fieldLabel =
@@ -381,7 +396,10 @@ const CreateProjectForm: React.FC = () => {
     [references],
   );
 
-  const onChangeApplicability = useCallback(
+  /**
+   * Change field applicability
+   */
+  const handleApplicabilityChange = useCallback(
     (field: ApplicableField, value: boolean) => {
       setFieldApplicability((prev) => ({
         ...prev,
@@ -398,7 +416,7 @@ const CreateProjectForm: React.FC = () => {
     setValue,
     trigger,
     fieldApplicability,
-    onChangeApplicability,
+    onChangeApplicability: handleApplicabilityChange,
     onAddReference: handleAddReference,
     onRemoveReference: handleRemoveReference,
     hasFieldReference,
@@ -455,11 +473,13 @@ const CreateProjectForm: React.FC = () => {
           </div>
         </div>
       </form>
+
       <DiscardConfirmModal
         isOpen={isDiscardModalOpen}
         onClose={() => setIsDiscardModalOpen(false)}
         onConfirm={confirmDiscard}
       />
+
       <AddReferenceModal
         isOpen={isReferenceModalOpen}
         onClose={() => setIsReferenceModalOpen(false)}

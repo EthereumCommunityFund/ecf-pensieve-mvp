@@ -274,3 +274,43 @@ export const organizationFieldsConfig: {
     showReference: true,
   },
 };
+
+export type ApplicableField =
+  | 'appUrl'
+  | 'dateLaunch'
+  | 'fundingStatus'
+  | 'codeRepo'
+  | 'tokenContract';
+
+// Default field applicability
+export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
+  appUrl: true,
+  dateLaunch: true,
+  fundingStatus: true,
+  codeRepo: true,
+  tokenContract: true,
+};
+
+// Default project logo
+const DEFAULT_PROJECT_LOGO =
+  'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
+
+export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
+  projectName: '',
+  tagline: '',
+  categories: [],
+  mainDescription: '',
+  projectLogo: DEFAULT_PROJECT_LOGO,
+  websiteUrl: '',
+  appUrl: null,
+  dateFounded: null,
+  dateLaunch: null,
+  devStatus: '',
+  fundingStatus: null,
+  openSource: '',
+  codeRepo: null,
+  tokenContract: null,
+  orgStructure: '',
+  publicGoods: '',
+  founders: [{ fullName: '', titleRole: '' }],
+};

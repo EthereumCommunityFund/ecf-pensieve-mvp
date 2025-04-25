@@ -7,7 +7,7 @@ import { Controller } from 'react-hook-form';
 
 import { DatePicker, Select, SelectItem } from '@/components/base';
 import { CalendarBlankIcon } from '@/components/icons';
-import { datesFieldsConfig } from '@/components/pages/project/create/formData';
+import { datesFieldsConfig } from '@/components/pages/project/create/FormData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 

@@ -7,6 +7,8 @@ import {
   UseFormWatch,
 } from 'react-hook-form';
 
+import { ApplicableField } from '@/components/pages/project/create/FormData';
+
 export enum CreateProjectStep {
   Basics = 'basics',
   Dates = 'dates',
@@ -76,13 +78,6 @@ export interface ProjectCreatePayload {
     value: string;
   }[];
 }
-
-export type ApplicableField =
-  | 'appUrl'
-  | 'dateLaunch'
-  | 'fundingStatus'
-  | 'codeRepo'
-  | 'tokenContract';
 
 export interface StepFormProps {
   control: Control<ProjectFormData>;

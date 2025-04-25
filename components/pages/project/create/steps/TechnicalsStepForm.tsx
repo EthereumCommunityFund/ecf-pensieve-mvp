@@ -5,7 +5,7 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { Input, Select, SelectItem } from '@/components/base';
-import { technicalsFieldsConfig } from '@/components/pages/project/create/formData';
+import { technicalsFieldsConfig } from '@/components/pages/project/create/FormData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
