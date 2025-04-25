@@ -47,14 +47,14 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
 
   const handleSubmit = () => {
     if (!url || !url.trim()) {
-      setError('请输入有效的引用 URL');
+      setError('Please enter a valid reference URL');
       return;
     }
 
     try {
       new URL(url);
     } catch (e) {
-      setError('请输入有效的 URL 格式');
+      setError('Please enter a valid URL format');
       return;
     }
 

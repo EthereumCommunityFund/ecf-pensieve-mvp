@@ -22,39 +22,32 @@ export interface FounderInput {
 }
 
 export interface ReferenceData {
-  key: string; // 被引用的字段名 (e.g., 'projectName')
-  ref: string; // 引用 URL
-  value: string; // 引用值
+  key: string;
+  ref: string;
+  value: string;
 }
 
 export interface ProjectFormData {
-  // Basics
   projectName: string;
   tagline: string;
   categories: string[];
   mainDescription: string;
-  projectLogo: string | null; // 存储上传后的 URL 字符串
+  projectLogo: string | null;
   websiteUrl: string;
   appUrl: string | null;
 
-  // Dates & Statuses
-  dateFounded: Date | null; // 使用 Date 对象以便 Picker 处理
+  dateFounded: Date | null;
   dateLaunch: Date | null;
-  devStatus: 'Live' | 'In Development' | 'Discontinued' | 'Stealth' | ''; // 添加空字符串以允许初始未选状态
-  fundingStatus: 'Funded' | 'VC Invested' | 'No Funding' | '' | null; // 添加空字符串
+  devStatus: string;
+  fundingStatus: string | null;
 
-  // Technicals
-  openSource: 'Yes' | 'No' | ''; // 使用字符串以便 Select 处理
+  openSource: 'Yes' | 'No' | '';
   codeRepo: string | null;
   tokenContract: string | null;
 
-  // Organization
-  orgStructure: 'Centralized' | 'DAO' | 'Decentralized' | ''; // 添加空字符串
-  publicGoods: 'Yes' | 'No' | ''; // 使用字符串以便 Select 处理
+  orgStructure: string | null;
+  publicGoods: 'Yes' | 'No' | '';
   founders: FounderInput[];
-
-  // Non-field state, potentially managed outside RHF but included for Yup schema if needed
-  // refs implicitly managed via separate state
 }
 
 export interface ProjectCreatePayload {

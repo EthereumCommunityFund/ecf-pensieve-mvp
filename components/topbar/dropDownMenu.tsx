@@ -83,7 +83,7 @@ const DropDownMenu = () => {
             </DropdownItem>
           ))}
 
-          {/* 社交媒体图标容器 */}
+          {/* Social media icon container */}
           <DropdownItem
             key="social"
             textValue="social"

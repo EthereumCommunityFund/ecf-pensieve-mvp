@@ -70,7 +70,7 @@ const ProjectsPage = () => {
             </ECFTypography>
           </div>
 
-          {/* 项目列表 */}
+          {/* Project list */}
           <div className="pb-2.5">
             {isLoading ? (
               <div>
@@ -97,14 +97,14 @@ const ProjectsPage = () => {
                       isDisabled={isFetchingNextPage}
                       $size="small"
                     >
-                      {isFetchingNextPage ? '加载中...' : '加载更多'}
+                      {isFetchingNextPage ? 'Loading...' : 'Load More'}
                     </ECFButton>
                   </div>
                 )}
               </>
             ) : (
               <div className="flex justify-center py-8">
-                <ECFTypography type="body1">暂无项目</ECFTypography>
+                <ECFTypography type="body1">No projects yet</ECFTypography>
               </div>
             )}
           </div>

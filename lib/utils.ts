@@ -9,13 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatNumber(num: number): string {
   if (num >= 10000) {
-    // 万以上的数字
+    // Numbers over 10,000
     return (num / 10000).toFixed(2) + 'W';
   } else if (num >= 1000) {
-    // 千以上的数字
+    // Numbers over 1,000
     return (num / 1000).toFixed(1) + 'K';
   } else {
-    // 三位数及以下正常展示
+    // Display numbers 999 and below normally
     return num.toString();
   }
 }

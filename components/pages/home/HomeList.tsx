@@ -85,7 +85,7 @@ const HomeList = () => {
           <ProjectList projectList={projects} />
         ) : (
           <div className="flex justify-center py-8">
-            <ECFTypography type="body1">暂无项目</ECFTypography>
+            <ECFTypography type="body1">No projects yet</ECFTypography>
           </div>
         )}
       </SectionList>

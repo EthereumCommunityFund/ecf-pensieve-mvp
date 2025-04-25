@@ -256,11 +256,11 @@ const CreateProjectForm: React.FC = () => {
   };
 
   const onSubmit = async (formData: ProjectFormData) => {
-    console.log('onSubmit 函数被执行:', formData);
+    console.log('onSubmit function executed:', formData);
     if (!user?.id) {
       addToast({
         title: 'Error',
-        description: '用户未认证',
+        description: 'User not authenticated',
         color: 'danger',
       });
       return;
@@ -278,14 +278,14 @@ const CreateProjectForm: React.FC = () => {
     createProjectMutation.mutate(payload, {
       onSuccess: (data) => {
         addToast({
-          title: '成功',
-          description: '项目创建成功！',
+          title: 'Success',
+          description: 'Project created successfully!',
           color: 'success',
         });
         router.push('/projects');
       },
       onError: (error: any) => {
-        console.error('提交错误:', error);
+        console.error('Submission error:', error);
         if (error?.data?.zodError?.fieldErrors) {
           const fieldErrors = error.data.zodError.fieldErrors;
           Object.entries(fieldErrors).forEach(([field, messages]) => {
@@ -295,14 +295,16 @@ const CreateProjectForm: React.FC = () => {
             });
           });
           addToast({
-            title: '验证错误',
-            description: '请检查高亮显示的字段',
+            title: 'Validation Error',
+            description: 'Please check the highlighted fields',
             color: 'warning',
           });
         } else {
           addToast({
-            title: '提交失败',
-            description: error?.message || '发生了意外错误，请重试',
+            title: 'Submission Failed',
+            description:
+              error?.message ||
+              'An unexpected error occurred, please try again',
             color: 'danger',
           });
         }
@@ -359,8 +361,8 @@ const CreateProjectForm: React.FC = () => {
       });
 
       addToast({
-        title: '引用已添加',
-        description: `已为 "${currentReferenceField.label}" 添加引用`,
+        title: 'Reference Added',
+        description: `Reference added for "${currentReferenceField.label}"`,
         color: 'success',
       });
     },
@@ -375,9 +377,9 @@ const CreateProjectForm: React.FC = () => {
       setReferences((prev) => prev.filter((ref) => ref.key !== fieldKey));
 
       addToast({
-        title: '引用已删除',
-        description: `已删除 "${fieldLabel}" 的引用`,
         color: 'warning',
+        title: 'Reference Deleted',
+        description: `Reference deleted for "${fieldLabel}"`,
       });
     },
     [references],
