@@ -145,11 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const verifyMutation = trpc.auth.verify.useMutation();
   const checkRegistrationQuery = trpc.auth.checkRegistration.useQuery(
     { address: address! },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
+    { enabled: !!address },
   );
   const getCurrentUserQuery = trpc.user.getCurrentUser.useQuery(
     undefined, // No input needed for protected procedure
