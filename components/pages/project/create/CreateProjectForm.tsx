@@ -131,6 +131,7 @@ const CreateProjectForm: React.FC = () => {
           title: 'Error',
           description: 'User not authenticated',
           color: 'danger',
+          timeout: 2000,
         });
         return;
       }
@@ -147,6 +148,7 @@ const CreateProjectForm: React.FC = () => {
             title: 'Success',
             description: 'Project created successfully!',
             color: 'success',
+            timeout: 2000,
           });
           router.push('/projects');
         },
@@ -165,6 +167,7 @@ const CreateProjectForm: React.FC = () => {
               title: 'Validation Error',
               description: 'Please check the highlighted fields',
               color: 'warning',
+              timeout: 2000,
             });
           } else {
             addToast({
@@ -173,6 +176,7 @@ const CreateProjectForm: React.FC = () => {
                 error?.message ||
                 'An unexpected error occurred, please try again',
               color: 'danger',
+              timeout: 2000,
             });
           }
         },
@@ -208,6 +212,7 @@ const CreateProjectForm: React.FC = () => {
         title: 'Validation Error',
         description: 'Please check the highlighted fields in the current step',
         color: 'warning',
+        timeout: 2000,
       });
       return;
     }
@@ -366,12 +371,6 @@ const CreateProjectForm: React.FC = () => {
         }
         return [...prev, reference];
       });
-
-      addToast({
-        title: 'Reference Added',
-        description: `Reference added for "${currentReferenceField.label}"`,
-        color: 'success',
-      });
     },
     [currentReferenceField.label],
   );
@@ -385,12 +384,6 @@ const CreateProjectForm: React.FC = () => {
         references.find((ref) => ref.key === fieldKey)?.key || fieldKey;
 
       setReferences((prev) => prev.filter((ref) => ref.key !== fieldKey));
-
-      addToast({
-        color: 'warning',
-        title: 'Reference Deleted',
-        description: `Reference deleted for "${fieldLabel}"`,
-      });
     },
     [references],
   );
