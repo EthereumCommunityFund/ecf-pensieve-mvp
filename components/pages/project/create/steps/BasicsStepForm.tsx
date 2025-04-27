@@ -145,7 +145,7 @@ const BasicsStepForm: React.FC<
             name={basicsFieldsConfig.projectLogo.key}
             control={control}
             render={({ field, fieldState: { error } }) => (
-              <>
+              <div>
                 <PhotoUpload
                   initialUrl={field.value ?? undefined}
                   onUploadSuccess={field.onChange}
@@ -159,12 +159,12 @@ const BasicsStepForm: React.FC<
                     className="size-[140px] cursor-pointer border border-dashed border-gray-300 bg-black/5 hover:bg-gray-200"
                   />
                 </PhotoUpload>
-                {error && (
-                  <p className="self-center text-sm text-red-600">
-                    {error.message}
+                {errors.projectLogo && (
+                  <p className="text-[12px] text-danger">
+                    {errors.projectLogo.message}
                   </p>
                 )}
-              </>
+              </div>
             )}
           />
         </div>

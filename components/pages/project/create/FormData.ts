@@ -301,7 +301,7 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
   tagline: '',
   categories: [],
   mainDescription: '',
-  projectLogo: DEFAULT_PROJECT_LOGO,
+  projectLogo: '',
   websiteUrl: '',
   appUrl: null,
   dateFounded: null,

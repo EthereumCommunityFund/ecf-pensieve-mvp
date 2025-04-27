@@ -35,9 +35,8 @@ export const basicsSchema = yup.object().shape({
     .max(250, 'Main description cannot exceed 250 characters'),
   projectLogo: yup
     .string()
-    .url('Invalid Logo URL') // Basic URL validation
-    .nullable()
-    .optional(), // Logo is optional
+    .url('Invalid Logo URL')
+    .required('Project logo is required'),
   websiteUrl: yup
     .string()
     .url('Please enter a valid URL')
