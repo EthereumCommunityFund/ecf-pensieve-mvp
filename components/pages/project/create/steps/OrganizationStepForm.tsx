@@ -127,7 +127,7 @@ const OrganizationStepForm: React.FC<
             <Button
               color="secondary"
               size="md"
-              className="px-[20px]"
+              className="px-[20px] mobile:w-full"
               onPress={() => append({ fullName: '', titleRole: '' })}
             >
               Add Entry

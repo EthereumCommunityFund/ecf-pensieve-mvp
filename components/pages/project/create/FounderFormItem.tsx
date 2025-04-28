@@ -61,20 +61,37 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
         }}
       />
       {canRemove && (
-        <Button
-          isIconOnly
-          size="sm"
-          className="mt-[24px] size-[40px] border-none bg-transparent p-[4px] text-black"
-          onPress={() => remove(index)}
-          aria-label={`Remove founder ${index + 1}`}
-        >
-          <Image
-            src="/images/common/xCircle.svg"
-            alt="Remove"
-            width={32}
-            height={32}
-          />
-        </Button>
+        <div className="mt-[28px] flex justify-end mobile:mt-0 mobile:w-full">
+          <Button
+            isIconOnly
+            size="sm"
+            className="size-[32px] border-none bg-transparent p-[5px] text-[13px] font-[400] leading-[16px] text-black mobile:hidden"
+            onPress={() => remove(index)}
+            aria-label={`Remove founder ${index + 1}`}
+          >
+            <Image
+              src="/images/common/xCircle.svg"
+              alt="Remove"
+              width={32}
+              height={32}
+            />
+          </Button>
+
+          <Button
+            size="sm"
+            className="hidden gap-[5px] border-none bg-transparent p-[5px] text-[13px] font-[400] leading-[16px] text-black mobile:flex"
+            onPress={() => remove(index)}
+            aria-label={`Remove founder ${index + 1}`}
+          >
+            <Image
+              src="/images/common/xCircle.svg"
+              alt="Remove"
+              width={20}
+              height={20}
+            />
+            <span>Remove</span>
+          </Button>
+        </div>
       )}
     </div>
   );
