@@ -15,6 +15,7 @@ import {
   ModalContent,
 } from '@/components/base';
 import { normalizeUrl } from '@/components/pages/project/create/utils/form';
+import { devLog } from '@/utils/devLog';
 
 import InputPrefix from './InputPrefix';
 import { ReferenceData } from './types';
@@ -82,6 +83,11 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
 
   const onSubmit = (data: ReferenceFormData) => {
     const trimmedUrl = data.url.trim();
+
+    devLog('Reference Form Data', {
+      original: data,
+      trimmed: trimmedUrl,
+    });
 
     onAddReference({
       key: fieldKey,

@@ -16,6 +16,7 @@ import {
 import { transformProjectData } from '@/components/pages/project/create/utils/form';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -142,6 +143,9 @@ const CreateProjectForm: React.FC = () => {
         fieldApplicability,
       );
 
+      // 开发环境日志
+      devLog('Payload (onSubmit)', payload);
+
       createProjectMutation.mutate(payload, {
         onSuccess: () => {
           addToast({
@@ -196,8 +200,11 @@ const CreateProjectForm: React.FC = () => {
    * Proceed to next step or submit form
    */
   const handleNext = useCallback(async () => {
-    // TODO only for dev, remove when on production
-    console.log('[handleNext] Current Full Form Data:', getValues());
+    devLog('Form Data (handleNext)', getValues());
+    devLog(
+      'Transformed Data (handleNext)',
+      transformProjectData(getValues(), references, fieldApplicability),
+    );
 
     const currentStepFieldList = stepFields[currentStep];
     const applicableFieldsToValidate = getApplicableFields([
@@ -268,6 +275,7 @@ const CreateProjectForm: React.FC = () => {
     trigger,
     getValues,
     fieldApplicability,
+    references,
   ]);
 
   /**
