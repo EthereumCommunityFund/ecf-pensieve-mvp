@@ -52,10 +52,7 @@ export const basicsSchema = yup.object().shape({
 
 // Step 2: Dates & Statuses
 export const datesSchema = yup.object().shape({
-  dateFounded: yup
-    .date()
-    .required('Foundation date is required')
-    .max(new Date(), 'Foundation date cannot be later than today'),
+  dateFounded: yup.date().required('Foundation date is required'),
   dateLaunch: yup.date().required('Launch date is required when applicable'),
   devStatus: yup.string().required('Development status is required'),
   fundingStatus: yup

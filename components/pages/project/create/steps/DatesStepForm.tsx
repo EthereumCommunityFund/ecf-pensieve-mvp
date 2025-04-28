@@ -63,6 +63,7 @@ const DatesStepForm: React.FC<
           render={({ field, fieldState: { error } }) => {
             return (
               <DatePicker
+                showMonthAndYearPickers={true}
                 value={dateToDateValue(field.value)}
                 onChange={(value: DateValue | null) => {
                   field.onChange(dateValueToDate(value));
@@ -97,6 +98,7 @@ const DatesStepForm: React.FC<
           render={({ field, fieldState: { error } }) => {
             return (
               <DatePicker
+                showMonthAndYearPickers={true}
                 value={dateToDateValue(field.value)}
                 onChange={(value: DateValue | null) => {
                   field.onChange(dateValueToDate(value));
