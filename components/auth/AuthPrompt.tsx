@@ -91,6 +91,7 @@ const AuthPrompt: React.FC = () => {
         addToast({
           title: err.message || 'Authentication failed',
           color: 'danger',
+          timeout: 2000,
         });
       });
     }
@@ -137,6 +138,7 @@ const AuthPrompt: React.FC = () => {
           addToast({
             title: e.message || 'Fail to create profile',
             color: 'danger',
+            timeout: 2000,
           });
         } finally {
           setLoadingButton(null);
@@ -203,11 +205,7 @@ const AuthPrompt: React.FC = () => {
     );
   }, [
     connectSource,
-    hideAuthPrompt,
     authenticate,
-    isLoading,
-    authStatus,
-    authError,
     handleCloseAndReset,
     isAuthenticating,
     isFetchingProfile,
@@ -277,9 +275,7 @@ const AuthPrompt: React.FC = () => {
     onInputChange,
     handleContinue,
     isCreatingProfile,
-    authError,
     handleCloseAndReset,
-    authStatus,
     handleSkip,
     loadingButton,
   ]);
@@ -366,11 +362,11 @@ const AuthPrompt: React.FC = () => {
   }, [
     isConnected,
     authStatus,
-    profile,
     renderConnectWalletContent,
     renderNewUserContent,
     renderLoggedInContent,
     newUser,
+    authError,
   ]);
 
   return (

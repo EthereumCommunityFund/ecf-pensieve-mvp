@@ -369,22 +369,17 @@ const CreateProjectForm: React.FC = () => {
   /**
    * Save field reference
    */
-  const handleSaveReference = useCallback(
-    (reference: ReferenceData) => {
-      setReferences((prev) => {
-        const existingIndex = prev.findIndex(
-          (ref) => ref.key === reference.key,
-        );
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = reference;
-          return updated;
-        }
-        return [...prev, reference];
-      });
-    },
-    [currentReferenceField.label],
-  );
+  const handleSaveReference = useCallback((reference: ReferenceData) => {
+    setReferences((prev) => {
+      const existingIndex = prev.findIndex((ref) => ref.key === reference.key);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = reference;
+        return updated;
+      }
+      return [...prev, reference];
+    });
+  }, []);
 
   /**
    * Remove field reference

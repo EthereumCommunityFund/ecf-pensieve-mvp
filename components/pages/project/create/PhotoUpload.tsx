@@ -44,7 +44,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
     if (!uploadMutation.isPending && initialUrl !== localUrl) {
       setLocalUrl(initialUrl);
     }
-  }, [initialUrl, uploadMutation.isPending]);
+  }, [initialUrl, uploadMutation.isPending, localUrl]);
 
   const handleClick = useCallback(() => {
     if (!isDisabled && !uploadMutation.isPending) {
@@ -101,14 +101,14 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const isLoading = uploadMutation.isPending;
 
   const avatarOverlay = isLoading ? (
-    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
       <Spinner size="sm" color="white" />
     </div>
   ) : (
     isHovering &&
     localUrl &&
     !isDisabled && (
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black bg-opacity-40 transition-opacity duration-200">
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 transition-opacity duration-200">
         <PhotoIcon className="size-6 text-white opacity-50" />
       </div>
     )
