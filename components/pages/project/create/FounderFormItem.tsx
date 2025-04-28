@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import React from 'react';
 import {
   FieldError,
@@ -8,6 +7,7 @@ import {
   Merge,
   UseFormRegister,
 } from 'react-hook-form';
+import { XCircle } from '@phosphor-icons/react';
 
 import { Button, Input } from '@/components/base';
 
@@ -65,16 +65,11 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
           <Button
             isIconOnly
             size="sm"
-            className="size-[32px] border-none bg-transparent p-[5px] text-[13px] font-[400] leading-[16px] text-black mobile:hidden"
+            className="size-[32px] border-none bg-transparent p-[4px] text-[13px] font-[400] leading-[16px] text-black mobile:hidden"
             onPress={() => remove(index)}
             aria-label={`Remove founder ${index + 1}`}
           >
-            <Image
-              src="/images/common/xCircle.svg"
-              alt="Remove"
-              width={32}
-              height={32}
-            />
+            <XCircle size={24} />
           </Button>
 
           <Button
@@ -83,12 +78,7 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
             onPress={() => remove(index)}
             aria-label={`Remove founder ${index + 1}`}
           >
-            <Image
-              src="/images/common/xCircle.svg"
-              alt="Remove"
-              width={20}
-              height={20}
-            />
+            <XCircle size={20} />
             <span>Remove</span>
           </Button>
         </div>
