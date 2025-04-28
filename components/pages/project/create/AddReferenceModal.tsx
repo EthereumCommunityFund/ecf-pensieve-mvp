@@ -1,7 +1,10 @@
 'use client';
 
+import { yupResolver } from '@hookform/resolvers/yup';
 import { X } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
 
 import {
   Button,
@@ -11,6 +14,7 @@ import {
   ModalBody,
   ModalContent,
 } from '@/components/base';
+import { normalizeUrl } from '@/components/pages/project/create/utils/form';
 
 import InputPrefix from './InputPrefix';
 import { ReferenceData } from './types';
@@ -25,6 +29,28 @@ interface AddReferenceModalProps {
   existingReference?: ReferenceData | null;
 }
 
+interface ReferenceFormData {
+  url: string;
+}
+
+const referenceSchema = yup.object().shape({
+  url: yup
+    .string()
+    .test('is-valid-url', 'Please enter a valid URL format', (value) => {
+      if (!value) return false;
+
+      // only validate, not modify the original value
+      const normalizedForValidation = normalizeUrl(value);
+      try {
+        new URL(normalizedForValidation || '');
+        return true;
+      } catch (e) {
+        return false;
+      }
+    })
+    .required('Please enter a reference URL'),
+});
+
 const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
   isOpen,
   onClose,
@@ -34,43 +60,40 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
   fieldLabel,
   existingReference,
 }) => {
-  const [url, setUrl] = useState('');
-  const [error, setError] = useState('');
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ReferenceFormData>({
+    resolver: yupResolver(referenceSchema),
+    defaultValues: {
+      url: '',
+    },
+  });
 
   useEffect(() => {
-    if (isOpen && existingReference?.value) {
-      setUrl(existingReference.value);
-    } else if (isOpen && !existingReference) {
-      setUrl('');
+    if (isOpen) {
+      reset({
+        url: existingReference?.value || '',
+      });
     }
-  }, [isOpen, existingReference]);
+  }, [isOpen, existingReference, reset]);
 
-  const handleSubmit = () => {
-    if (!url || !url.trim()) {
-      setError('Please enter a valid reference URL');
-      return;
-    }
+  const onSubmit = (data: ReferenceFormData) => {
+    const trimmedUrl = data.url.trim();
 
-    try {
-      new URL(url);
-    } catch (e) {
-      setError('Please enter a valid URL format');
-      return;
-    }
-
-    const trimmedUrl = url.trim();
     onAddReference({
       key: fieldKey,
       ref: trimmedUrl,
       value: trimmedUrl,
     });
 
-    setError('');
     onClose();
   };
 
   const handleCancel = () => {
-    setError('');
+    reset();
     onClose();
   };
 
@@ -78,7 +101,7 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
     if (onRemoveReference && fieldKey) {
       onRemoveReference(fieldKey);
     }
-    setError('');
+    reset();
     onClose();
   };
 
@@ -111,48 +134,53 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
             </span>{' '}
           </p>
 
-          <Input
-            label="Reference Link"
-            labelPlacement="outside"
-            placeholder="Type in URL"
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              if (error) setError('');
-            }}
-            isInvalid={!!error}
-            errorMessage={error}
-            classNames={{
-              inputWrapper: 'pl-0 pr-[10px]',
-              label: 'text-[16px] font-[600]',
-            }}
-            startContent={<InputPrefix prefix="https://" />}
-          />
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Controller
+              name="url"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  label="Reference Link"
+                  labelPlacement="outside"
+                  placeholder="Type in URL"
+                  {...field}
+                  isInvalid={!!errors.url}
+                  errorMessage={errors.url?.message}
+                  classNames={{
+                    inputWrapper: 'pl-0 pr-[10px]',
+                    label: 'text-[16px] font-[600]',
+                  }}
+                  startContent={<InputPrefix prefix="https://" />}
+                />
+              )}
+            />
 
-          <p className="text-[13px] leading-[1.2] text-black/80">
-            References serve as documented sources that substantiate the
-            accuracy and credibility of the input associated with an item. This
-            will help with community validation.
-          </p>
+            <p className="mt-3 text-[13px] leading-[1.2] text-black/80">
+              References serve as documented sources that substantiate the
+              accuracy and credibility of the input associated with an item.
+              This will help with community validation.
+            </p>
 
-          <div className="flex items-center justify-end gap-[10px]">
-            <Button
-              color="secondary"
-              size="md"
-              onPress={isEditing ? handleRemove : handleCancel}
-              className="px-[20px]"
-            >
-              {isEditing ? 'Remove' : 'Discard'}
-            </Button>
-            <Button
-              color="primary"
-              size="md"
-              onPress={handleSubmit}
-              className="px-[30px]"
-            >
-              {isEditing ? 'Save' : 'Confirm'}
-            </Button>
-          </div>
+            <div className="mt-5 flex items-center justify-end gap-[10px]">
+              <Button
+                color="secondary"
+                size="md"
+                onPress={isEditing ? handleRemove : handleCancel}
+                className="px-[20px]"
+                type="button"
+              >
+                {isEditing ? 'Remove' : 'Discard'}
+              </Button>
+              <Button
+                color="primary"
+                size="md"
+                className="px-[30px]"
+                type="submit"
+              >
+                {isEditing ? 'Save' : 'Confirm'}
+              </Button>
+            </div>
+          </form>
         </ModalBody>
       </ModalContent>
     </Modal>
