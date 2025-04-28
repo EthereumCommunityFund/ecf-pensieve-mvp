@@ -1,5 +1,5 @@
 export const devLog = (label: string, ...args: any[]) => {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     const color = '#7bbea6';
     console.log(
       `%c[Penseive] ${label}`,
