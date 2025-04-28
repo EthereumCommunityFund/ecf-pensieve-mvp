@@ -196,6 +196,9 @@ const CreateProjectForm: React.FC = () => {
    * Proceed to next step or submit form
    */
   const handleNext = useCallback(async () => {
+    // TODO only for dev, remove when on production
+    console.log('[handleNext] Current Full Form Data:', getValues());
+
     const currentStepFieldList = stepFields[currentStep];
     const applicableFieldsToValidate = getApplicableFields([
       ...currentStepFieldList,

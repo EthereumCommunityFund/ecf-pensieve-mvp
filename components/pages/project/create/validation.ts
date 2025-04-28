@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
 import { ApplicableField } from '@/components/pages/project/create/FormData';
+import { normalizeUrl } from '@/components/pages/project/create/utils/form';
 
 import { FounderInput, ProjectFormData } from './types';
 
@@ -39,10 +40,12 @@ export const basicsSchema = yup.object().shape({
     .required('Project logo is required'),
   websiteUrl: yup
     .string()
+    .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Project website is required'),
   appUrl: yup
     .string()
+    .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('App URL is required when applicable'),
 });
@@ -67,6 +70,7 @@ export const technicalsSchema = yup.object().shape({
     .required('Please select whether the project is open source'),
   codeRepo: yup
     .string()
+    .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Code repository URL is required when applicable'),
   tokenContract: yup

@@ -19,9 +19,9 @@ export const transformProjectData = (
     categories: formData.categories,
     mainDescription: formData.mainDescription,
     logoUrl: formData.projectLogo || '',
-    websiteUrl: formData.websiteUrl,
+    websiteUrl: normalizeUrl(formData.websiteUrl) || '',
     appUrl: fieldApplicability['appUrl']
-      ? formData.appUrl || undefined
+      ? normalizeUrl(formData.appUrl) || undefined
       : undefined,
     dateFounded: formData.dateFounded
       ? new Date(formData.dateFounded)
@@ -37,7 +37,7 @@ export const transformProjectData = (
       : undefined,
     openSource: formData.openSource === 'Yes',
     codeRepo: fieldApplicability['codeRepo']
-      ? formData.codeRepo || undefined
+      ? normalizeUrl(formData.codeRepo) || undefined
       : undefined,
     tokenContract: fieldApplicability['tokenContract']
       ? formData.tokenContract || undefined
@@ -53,4 +53,26 @@ export const transformProjectData = (
         ? references.map((ref) => ({ key: ref.key, value: ref.value }))
         : undefined,
   };
+};
+
+export const normalizeUrl = (
+  value: string | null | undefined,
+): string | null | undefined => {
+  if (!value) {
+    return value;
+  }
+
+  const trimmedValue = value.trim();
+  if (trimmedValue === '') {
+    return trimmedValue;
+  }
+
+  if (
+    trimmedValue.startsWith('http://') ||
+    trimmedValue.startsWith('https://')
+  ) {
+    return trimmedValue;
+  }
+
+  return `https://${trimmedValue}`;
 };
