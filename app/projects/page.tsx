@@ -39,7 +39,7 @@ const ProjectsPage = () => {
 
   return (
     <div className="pb-10">
-      <div className="border-[rgba(0, 0, 0.1)] flex w-full items-start justify-start gap-5 rounded-[10px] border bg-white p-5">
+      <div className="flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
         <Image
           src="/images/projects/logo.png"
           alt="ECF project Logo"

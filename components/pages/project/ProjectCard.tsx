@@ -52,23 +52,23 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
         className="flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)] mobile:items-start"
       >
         <div className="flex flex-1 items-start gap-[14px]">
-          <div className="border-[rgba(0, 0, 0.1)] size-[100px] overflow-hidden rounded-[10px] border mobile:hidden">
+          <div className="size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)] mobile:hidden">
             <Image
               src={project.logoUrl}
               as={NextImage}
               alt={project.name}
-              className="object-cover"
+              className="rounded-[10px] object-cover"
               width={100}
               height={100}
             />
           </div>
 
-          <div className="border-[rgba(0, 0, 0.1)] hidden size-[60px] overflow-hidden rounded-[5px] border mobile:block">
+          <div className="hidden size-[60px] overflow-hidden rounded-[5px] border border-[rgba(0,0,0,0.1)] mobile:block">
             <Image
               src={project.logoUrl}
               as={NextImage}
               alt={project.name}
-              className="object-cover"
+              className="rounded-[5px] object-cover"
               width={60}
               height={60}
             />
@@ -87,7 +87,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             >
               {project.mainDescription}
             </ECFTypography>
-            <p className="text-[rgba(0, 0, 0.8)] mt-[6px] text-[11px] leading-[18px]">
+            <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
               <span className="opacity-60">by: </span>
               <span className="mx-[6px] font-bold underline">
                 {project.creator?.name}
@@ -129,7 +129,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
           <p className="font-saria text-[13px] font-semibold leading-[20px] text-black opacity-60">
             {formatNumber(0)}
           </p>
-          <p className="text-[rgba(0, 0, 0.7)] font-saria text-[11px] font-semibold leading-[17px] opacity-60">
+          <p className="font-saria text-[11px] font-semibold leading-[17px] text-[rgba(0,0,0,0.7)] opacity-60">
             {formatNumber(0)}
           </p>
         </div>

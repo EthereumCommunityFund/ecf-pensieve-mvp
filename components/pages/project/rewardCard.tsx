@@ -3,7 +3,7 @@ import ECFTypography from '@/components/base/typography';
 
 const RewardCard = () => {
   return (
-    <div className="border-[rgba(0, 0, 0.1)] w-[300px] rounded-[10px] border bg-white p-5 mobile:w-full">
+    <div className="w-[300px] rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5 mobile:w-full">
       <ECFTypography
         type={'subtitle2'}
         className="font-bold leading-[25px] text-[var(--primary-green)]"
