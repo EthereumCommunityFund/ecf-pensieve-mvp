@@ -37,19 +37,20 @@ interface ReferenceFormData {
 const referenceSchema = yup.object().shape({
   url: yup
     .string()
-    .test('is-valid-url', 'Please enter a valid URL format', (value) => {
+    .test('is-valid-url', 'Please enter a valid URL', (value) => {
       if (!value) return false;
 
       // only validate, not modify the original value
       const normalizedForValidation = normalizeUrl(value);
       try {
-        new URL(normalizedForValidation || '');
-        return true;
+        const url = new URL(normalizedForValidation || '');
+        const hostname = url.hostname;
+        return hostname.includes('.') && hostname.length > 3;
       } catch (e) {
         return false;
       }
     })
-    .required('Please enter a reference URL'),
+    .required('Please enter a valid URL'),
 });
 
 const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
