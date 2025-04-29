@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import {
@@ -45,6 +45,13 @@ const DEFAULT_STEP_STATUSES: Record<CreateProjectStep, StepStatus> = {
   [CreateProjectStep.Technicals]: 'Inactive',
   [CreateProjectStep.Organization]: 'Inactive',
 };
+
+const STEPS_ORDER = [
+  CreateProjectStep.Basics,
+  CreateProjectStep.Dates,
+  CreateProjectStep.Technicals,
+  CreateProjectStep.Organization,
+];
 
 const CreateProjectForm: React.FC = () => {
   const router = useRouter();
@@ -92,17 +99,8 @@ const CreateProjectForm: React.FC = () => {
     control,
     watch,
     setValue,
+    clearErrors,
   } = methods;
-
-  const stepsOrder = useMemo(
-    () => [
-      CreateProjectStep.Basics,
-      CreateProjectStep.Dates,
-      CreateProjectStep.Technicals,
-      CreateProjectStep.Organization,
-    ],
-    [],
-  );
 
   const getApplicableFields = useCallback(
     (stepFields: readonly string[]) => {
@@ -221,7 +219,7 @@ const CreateProjectForm: React.FC = () => {
         const newStatuses = { ...prev };
         const currentStatus = prev[currentStep];
         const targetStatus = prev[targetStep];
-        const targetStepIndex = stepsOrder.indexOf(targetStep);
+        const targetStepIndex = STEPS_ORDER.indexOf(targetStep);
 
         if (isMovingForward) {
           newStatuses[currentStep] = 'Finished';
@@ -234,7 +232,7 @@ const CreateProjectForm: React.FC = () => {
           targetStatus === 'Finished' ? 'Finished' : 'Active';
 
         if (isMovingForward) {
-          stepsOrder.forEach((stepKey, index) => {
+          STEPS_ORDER.forEach((stepKey, index) => {
             if (index > targetStepIndex) {
               newStatuses[stepKey] =
                 prev[stepKey] === 'Finished' ? 'Finished' : 'Inactive';
@@ -245,7 +243,7 @@ const CreateProjectForm: React.FC = () => {
         return newStatuses;
       });
     },
-    [stepsOrder],
+    [],
   );
 
   const handleNext = useCallback(async () => {
@@ -258,10 +256,16 @@ const CreateProjectForm: React.FC = () => {
     const isStepValid = await validateCurrentStep();
     if (!isStepValid) return;
 
-    const currentIndex = stepsOrder.indexOf(currentStep);
+    const currentIndex = STEPS_ORDER.indexOf(currentStep);
 
-    if (currentIndex < stepsOrder.length - 1) {
-      const nextStep = stepsOrder[currentIndex + 1];
+    if (currentIndex < STEPS_ORDER.length - 1) {
+      const nextStep = STEPS_ORDER[currentIndex + 1];
+
+      const nextStepFields = stepFields[nextStep];
+      nextStepFields.forEach((field) => {
+        clearErrors(field as keyof ProjectFormData);
+      });
+
       updateStepStatuses(currentStep, nextStep, true);
       setCurrentStep(nextStep);
 
@@ -296,7 +300,6 @@ const CreateProjectForm: React.FC = () => {
   }, [
     currentStep,
     validateCurrentStep,
-    stepsOrder,
     updateStepStatuses,
     onSubmit,
     trigger,
@@ -304,20 +307,27 @@ const CreateProjectForm: React.FC = () => {
     fieldApplicability,
     errors,
     scrollToError,
+    clearErrors,
+    references,
   ]);
 
-  const handleBack = useCallback(() => {
-    const currentIndex = stepsOrder.indexOf(currentStep);
+  const handleBack = useCallback(async () => {
+    const currentIndex = STEPS_ORDER.indexOf(currentStep);
     if (currentIndex > 0) {
-      const prevStep = stepsOrder[currentIndex - 1];
+      const prevStep = STEPS_ORDER[currentIndex - 1];
+
+      if (stepStatuses[currentStep] === 'Finished') {
+        const isStepValid = await validateCurrentStep();
+        if (!isStepValid) return;
+      }
+
       updateStepStatuses(currentStep, prevStep, false);
       setCurrentStep(prevStep);
-
       requestAnimationFrame(() => {
         window.scrollTo(0, 0);
       });
     }
-  }, [currentStep, stepsOrder, updateStepStatuses]);
+  }, [currentStep, stepStatuses, validateCurrentStep, updateStepStatuses]);
 
   const handleGoToStep = useCallback(
     async (targetStep: CreateProjectStep) => {
@@ -325,8 +335,8 @@ const CreateProjectForm: React.FC = () => {
         return;
       }
 
-      const currentStepIndex = stepsOrder.indexOf(currentStep);
-      const targetStepIndex = stepsOrder.indexOf(targetStep);
+      const currentStepIndex = STEPS_ORDER.indexOf(currentStep);
+      const targetStepIndex = STEPS_ORDER.indexOf(targetStep);
       const isMovingBackward = targetStepIndex < currentStepIndex;
 
       if (isMovingBackward) {
@@ -347,7 +357,7 @@ const CreateProjectForm: React.FC = () => {
         window.scrollTo(0, 0);
       });
     },
-    [currentStep, validateCurrentStep, stepsOrder, updateStepStatuses],
+    [currentStep, validateCurrentStep, updateStepStatuses],
   );
 
   const handleDiscard = useCallback(() => {
@@ -418,8 +428,12 @@ const CreateProjectForm: React.FC = () => {
         ...prev,
         [field]: value,
       }));
+
+      if (!value) {
+        clearErrors(field as keyof ProjectFormData);
+      }
     },
-    [],
+    [clearErrors],
   );
 
   const stepProps = {
