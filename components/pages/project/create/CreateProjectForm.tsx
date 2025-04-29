@@ -1,6 +1,5 @@
 'use client';
 
-import { addToast } from '@heroui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -8,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import React, { useCallback, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
+import { addToast } from '@/components/base';
 import {
   ApplicableField,
   DEFAULT_CREATE_PROJECT_FORM_DATA,
@@ -121,7 +121,6 @@ const CreateProjectForm: React.FC = () => {
           title: 'Error',
           description: 'User not authenticated',
           color: 'danger',
-          timeout: 2000,
         });
         return;
       }
@@ -140,7 +139,6 @@ const CreateProjectForm: React.FC = () => {
             title: 'Success',
             description: 'Project created successfully!',
             color: 'success',
-            timeout: 2000,
           });
           router.push('/projects');
         },
@@ -159,7 +157,6 @@ const CreateProjectForm: React.FC = () => {
               title: 'Validation Error',
               description: 'Please check the highlighted fields',
               color: 'warning',
-              timeout: 2000,
             });
           } else {
             addToast({
@@ -168,7 +165,6 @@ const CreateProjectForm: React.FC = () => {
                 error?.message ||
                 'An unexpected error occurred, please try again',
               color: 'danger',
-              timeout: 2000,
             });
           }
         },
@@ -202,7 +198,6 @@ const CreateProjectForm: React.FC = () => {
         description:
           'Please fix the errors in the current step before proceeding',
         color: 'warning',
-        timeout: 2000,
       });
     }
 
@@ -294,7 +289,6 @@ const CreateProjectForm: React.FC = () => {
         description:
           'Please review all steps and ensure required fields are filled',
         color: 'warning',
-        timeout: 2000,
       });
     }
   }, [
