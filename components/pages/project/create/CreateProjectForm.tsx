@@ -17,6 +17,7 @@ import { transformProjectData } from '@/components/pages/project/create/utils/fo
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
+import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -50,6 +51,7 @@ const CreateProjectForm: React.FC = () => {
   const router = useRouter();
   const { profile } = useAuth();
   const createProjectMutation = trpc.project.createProject.useMutation();
+  const { scrollToError } = useFormScrollToError();
 
   // Step status management
   const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
@@ -218,6 +220,7 @@ const CreateProjectForm: React.FC = () => {
         : true;
 
     if (!isStepValid) {
+      scrollToError(errors);
       addToast({
         title: 'Validation Error',
         description: 'Please check the highlighted fields in the current step',
@@ -260,6 +263,7 @@ const CreateProjectForm: React.FC = () => {
     if (isFinalValidationValid) {
       await onSubmit(getValues());
     } else {
+      scrollToError(errors);
       addToast({
         title: 'Validation Error',
         description:
@@ -276,6 +280,8 @@ const CreateProjectForm: React.FC = () => {
     getValues,
     fieldApplicability,
     references,
+    errors,
+    scrollToError,
   ]);
 
   /**
