@@ -1,7 +1,8 @@
 'use client';
 
-import { cn, Image, Link, Skeleton } from '@heroui/react';
+import { cn, Image, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
+import Link from 'next/link';
 
 import ECFTypography from '@/components/base/typography';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
