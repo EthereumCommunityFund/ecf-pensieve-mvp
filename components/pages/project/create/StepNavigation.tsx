@@ -49,13 +49,16 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   stepStatuses,
   goToStep,
 }) => {
+  const currentStepIndex = stepsOrder.indexOf(currentStep);
+
   return (
     <nav className="sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start mobile:hidden">
       <ul className="space-y-4">
         {stepsOrder.map((step, index) => {
           const status = stepStatuses[step];
           const isActive = step === currentStep;
-          const isClickable = status === 'Finished' || isActive;
+          const isClickable =
+            status === 'Finished' || isActive || index <= currentStepIndex;
 
           return (
             <li key={step}>
@@ -66,9 +69,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
                 className={cn(
                   'flex items-center justify-start border-none gap-[7px] w-full px-[10px] h-[44px] rounded-[5px] text-[16px] text-black font-[600]',
                   isActive ? 'bg-[rgba(0,0,0,0.1)] ' : 'bg-transparent',
-                  status === 'Inactive'
-                    ? 'cursor-not-allowed'
-                    : 'cursor-pointer',
+                  !isClickable ? 'cursor-not-allowed' : 'cursor-pointer',
                 )}
               >
                 <div

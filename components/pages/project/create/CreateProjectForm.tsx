@@ -39,7 +39,6 @@ import { FieldApplicabilityContext, projectSchema } from './validation';
 
 dayjs.extend(utc);
 
-// Default step statuses
 const DEFAULT_STEP_STATUSES: Record<CreateProjectStep, StepStatus> = {
   [CreateProjectStep.Basics]: 'Active',
   [CreateProjectStep.Dates]: 'Inactive',
@@ -95,7 +94,6 @@ const CreateProjectForm: React.FC = () => {
     setValue,
   } = methods;
 
-  // Step order
   const stepsOrder = useMemo(
     () => [
       CreateProjectStep.Basics,
@@ -188,19 +186,12 @@ const CreateProjectForm: React.FC = () => {
     ],
   );
 
-  const handleNext = useCallback(async () => {
-    devLog('Form Data (handleNext)', getValues());
-    devLog(
-      'Transformed Data (handleNext)',
-      transformProjectData(getValues(), references, fieldApplicability),
-    );
-
+  const validateCurrentStep = useCallback(async (): Promise<boolean> => {
     const currentStepFieldList = stepFields[currentStep];
     const applicableFieldsToValidate = getApplicableFields([
       ...currentStepFieldList,
     ]);
 
-    // Validate current step
     const isStepValid =
       applicableFieldsToValidate.length > 0
         ? await trigger(applicableFieldsToValidate)
@@ -210,33 +201,76 @@ const CreateProjectForm: React.FC = () => {
       scrollToError(errors);
       addToast({
         title: 'Validation Error',
-        description: 'Please check the highlighted fields in the current step',
+        description:
+          'Please fix the errors in the current step before proceeding',
         color: 'warning',
         timeout: 2000,
       });
-      return;
     }
+
+    return isStepValid;
+  }, [currentStep, getApplicableFields, trigger, errors, scrollToError]);
+
+  const updateStepStatuses = useCallback(
+    (
+      currentStep: CreateProjectStep,
+      targetStep: CreateProjectStep,
+      isMovingForward: boolean,
+    ) => {
+      setStepStatuses((prev) => {
+        const newStatuses = { ...prev };
+        const currentStatus = prev[currentStep];
+        const targetStatus = prev[targetStep];
+        const targetStepIndex = stepsOrder.indexOf(targetStep);
+
+        if (isMovingForward) {
+          newStatuses[currentStep] = 'Finished';
+        } else {
+          newStatuses[currentStep] =
+            currentStatus === 'Finished' ? 'Finished' : 'Inactive';
+        }
+
+        newStatuses[targetStep] =
+          targetStatus === 'Finished' ? 'Finished' : 'Active';
+
+        if (isMovingForward) {
+          stepsOrder.forEach((stepKey, index) => {
+            if (index > targetStepIndex) {
+              newStatuses[stepKey] =
+                prev[stepKey] === 'Finished' ? 'Finished' : 'Inactive';
+            }
+          });
+        }
+
+        return newStatuses;
+      });
+    },
+    [stepsOrder],
+  );
+
+  const handleNext = useCallback(async () => {
+    devLog('Form Data (handleNext)', getValues());
+    devLog(
+      'Transformed Data (handleNext)',
+      transformProjectData(getValues(), references, fieldApplicability),
+    );
+
+    const isStepValid = await validateCurrentStep();
+    if (!isStepValid) return;
 
     const currentIndex = stepsOrder.indexOf(currentStep);
 
-    // If not the last step, proceed to next step
     if (currentIndex < stepsOrder.length - 1) {
       const nextStep = stepsOrder[currentIndex + 1];
-      setStepStatuses((prev) => ({
-        ...prev,
-        [currentStep]: 'Finished',
-        [nextStep]: 'Active',
-      }));
+      updateStepStatuses(currentStep, nextStep, true);
       setCurrentStep(nextStep);
 
-      // Scroll to top
       requestAnimationFrame(() => {
         window.scrollTo(0, 0);
       });
       return;
     }
 
-    // Last step, perform final validation
     const allFormFields = Object.keys(getValues()) as (keyof ProjectFormData)[];
     const fieldsToValidateFinally = allFormFields.filter((field) => {
       if (field in fieldApplicability) {
@@ -256,17 +290,18 @@ const CreateProjectForm: React.FC = () => {
         description:
           'Please review all steps and ensure required fields are filled',
         color: 'warning',
+        timeout: 2000,
       });
     }
   }, [
     currentStep,
-    getApplicableFields,
-    onSubmit,
+    validateCurrentStep,
     stepsOrder,
+    updateStepStatuses,
+    onSubmit,
     trigger,
     getValues,
     fieldApplicability,
-    references,
     errors,
     scrollToError,
   ]);
@@ -275,27 +310,44 @@ const CreateProjectForm: React.FC = () => {
     const currentIndex = stepsOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       const prevStep = stepsOrder[currentIndex - 1];
-      setStepStatuses((prev) => ({
-        ...prev,
-        [currentStep]: 'Inactive',
-        [prevStep]: 'Active',
-      }));
+      updateStepStatuses(currentStep, prevStep, false);
       setCurrentStep(prevStep);
+
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
     }
-  }, [currentStep, stepsOrder]);
+  }, [currentStep, stepsOrder, updateStepStatuses]);
 
   const handleGoToStep = useCallback(
-    (step: CreateProjectStep) => {
-      if (stepStatuses[step] === 'Finished') {
-        setStepStatuses((prev) => ({
-          ...prev,
-          [currentStep]: 'Inactive',
-          [step]: 'Active',
-        }));
-        setCurrentStep(step);
+    async (targetStep: CreateProjectStep) => {
+      if (targetStep === currentStep) {
+        return;
       }
+
+      const currentStepIndex = stepsOrder.indexOf(currentStep);
+      const targetStepIndex = stepsOrder.indexOf(targetStep);
+      const isMovingBackward = targetStepIndex < currentStepIndex;
+
+      if (isMovingBackward) {
+        updateStepStatuses(currentStep, targetStep, false);
+        setCurrentStep(targetStep);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+        });
+        return;
+      }
+
+      const isCurrentStepValid = await validateCurrentStep();
+      if (!isCurrentStepValid) return;
+
+      updateStepStatuses(currentStep, targetStep, true);
+      setCurrentStep(targetStep);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
     },
-    [currentStep, stepStatuses],
+    [currentStep, validateCurrentStep, stepsOrder, updateStepStatuses],
   );
 
   const handleDiscard = useCallback(() => {
