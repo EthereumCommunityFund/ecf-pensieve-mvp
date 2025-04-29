@@ -15,9 +15,9 @@ import {
 } from '@/components/pages/project/create/FormData';
 import { transformProjectData } from '@/components/pages/project/create/utils/form';
 import { useAuth } from '@/context/AuthContext';
+import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
-import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -53,7 +53,6 @@ const CreateProjectForm: React.FC = () => {
   const createProjectMutation = trpc.project.createProject.useMutation();
   const { scrollToError } = useFormScrollToError();
 
-  // Step status management
   const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
     CreateProjectStep.Basics,
   );
@@ -61,11 +60,9 @@ const CreateProjectForm: React.FC = () => {
     Record<CreateProjectStep, StepStatus>
   >(DEFAULT_STEP_STATUSES);
 
-  // Modal states
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
 
-  // References and field applicability states
   const [references, setReferences] = useState<ReferenceData[]>([]);
   const [currentReferenceField, setCurrentReferenceField] = useState({
     key: '',
@@ -109,9 +106,6 @@ const CreateProjectForm: React.FC = () => {
     [],
   );
 
-  /**
-   * Get applicable fields for the current step
-   */
   const getApplicableFields = useCallback(
     (stepFields: readonly string[]) => {
       return stepFields.filter((field) => {
@@ -124,9 +118,6 @@ const CreateProjectForm: React.FC = () => {
     [fieldApplicability],
   );
 
-  /**
-   * Form submission handler
-   */
   const onSubmit = useCallback(
     async (formData: ProjectFormData) => {
       if (!profile?.userId) {
@@ -145,7 +136,6 @@ const CreateProjectForm: React.FC = () => {
         fieldApplicability,
       );
 
-      // 开发环境日志
       devLog('Payload (onSubmit)', payload);
 
       createProjectMutation.mutate(payload, {
@@ -198,9 +188,6 @@ const CreateProjectForm: React.FC = () => {
     ],
   );
 
-  /**
-   * Proceed to next step or submit form
-   */
   const handleNext = useCallback(async () => {
     devLog('Form Data (handleNext)', getValues());
     devLog(
@@ -284,9 +271,6 @@ const CreateProjectForm: React.FC = () => {
     scrollToError,
   ]);
 
-  /**
-   * Go back to previous step
-   */
   const handleBack = useCallback(() => {
     const currentIndex = stepsOrder.indexOf(currentStep);
     if (currentIndex > 0) {
@@ -300,9 +284,6 @@ const CreateProjectForm: React.FC = () => {
     }
   }, [currentStep, stepsOrder]);
 
-  /**
-   * Jump to a specific step (only finished steps)
-   */
   const handleGoToStep = useCallback(
     (step: CreateProjectStep) => {
       if (stepStatuses[step] === 'Finished') {
@@ -317,16 +298,10 @@ const CreateProjectForm: React.FC = () => {
     [currentStep, stepStatuses],
   );
 
-  /**
-   * Discard form
-   */
   const handleDiscard = useCallback(() => {
     setIsDiscardModalOpen(true);
   }, []);
 
-  /**
-   * Confirm discard form
-   */
   const confirmDiscard = useCallback(() => {
     reset();
     setReferences([]);
@@ -336,9 +311,6 @@ const CreateProjectForm: React.FC = () => {
     router.push('/projects');
   }, [reset, router]);
 
-  /**
-   * Check if a field has a reference
-   */
   const hasFieldReference = useCallback(
     (fieldKey: string): boolean => {
       return references.some((ref) => ref.key === fieldKey);
@@ -346,9 +318,6 @@ const CreateProjectForm: React.FC = () => {
     [references],
   );
 
-  /**
-   * Get field reference
-   */
   const getFieldReference = useCallback(
     (fieldKey: string): ReferenceData | null => {
       return references.find((ref) => ref.key === fieldKey) || null;
@@ -356,9 +325,6 @@ const CreateProjectForm: React.FC = () => {
     [references],
   );
 
-  /**
-   * Add field reference
-   */
   const handleAddReference = useCallback(
     (key: string, label?: string) => {
       const existingReference = getFieldReference(key);
@@ -372,9 +338,6 @@ const CreateProjectForm: React.FC = () => {
     [getFieldReference],
   );
 
-  /**
-   * Save field reference
-   */
   const handleSaveReference = useCallback((reference: ReferenceData) => {
     setReferences((prev) => {
       const existingIndex = prev.findIndex((ref) => ref.key === reference.key);
@@ -387,9 +350,6 @@ const CreateProjectForm: React.FC = () => {
     });
   }, []);
 
-  /**
-   * Remove field reference
-   */
   const handleRemoveReference = useCallback(
     (fieldKey: string) => {
       const fieldLabel =
@@ -400,9 +360,6 @@ const CreateProjectForm: React.FC = () => {
     [references],
   );
 
-  /**
-   * Change field applicability
-   */
   const handleApplicabilityChange = useCallback(
     (field: ApplicableField, value: boolean) => {
       setFieldApplicability((prev) => ({
