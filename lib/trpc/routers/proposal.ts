@@ -2,10 +2,10 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { proposals } from '@/lib/db/schema/proposals';
 import { projects } from '@/lib/db/schema/projects';
+import { proposals } from '@/lib/db/schema/proposals';
 
-import { protectedProcedure, router } from '../server';
+import { protectedProcedure, publicProcedure, router } from '../server';
 
 export const proposalRouter = router({
   createProposal: protectedProcedure
@@ -45,6 +45,35 @@ export const proposalRouter = router({
         ...input,
         creator: ctx.user.id,
       });
+
+      return proposal;
+    }),
+
+  getProposalsByProjectId: publicProcedure
+    .input(z.object({ projectId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const proposalsData = await ctx.db
+        .select()
+        .from(proposals)
+        .where(eq(proposals.projectId, input.projectId));
+
+      return proposalsData;
+    }),
+
+  getProposalById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const proposal = await ctx.db
+        .select()
+        .from(proposals)
+        .where(eq(proposals.id, input.id));
+
+      if (!proposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Proposal not found',
+        });
+      }
 
       return proposal;
     }),
