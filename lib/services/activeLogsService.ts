@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { activeLogs } from '@/lib/db/schema/activeLogs';
+import { activeLogs } from '@/lib/db/schema';
 
 export enum LogType {
   PROJECT = 'project',

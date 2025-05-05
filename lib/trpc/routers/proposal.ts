@@ -2,8 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { projects } from '@/lib/db/schema/projects';
-import { proposals } from '@/lib/db/schema/proposals';
+import { projects, proposals } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
