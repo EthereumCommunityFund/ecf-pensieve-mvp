@@ -17,7 +17,7 @@ export async function addActiveLog(
   userId: string,
   action: string,
   type: string,
-  targetId?: number,
+  targetId: number,
 ) {
   try {
     const [insertedLog] = await db
