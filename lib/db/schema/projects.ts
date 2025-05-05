@@ -43,4 +43,5 @@ export const projects = pgTable('projects', {
     .notNull()
     .references(() => profiles.userId),
   refs: jsonb('refs').array(),
+  isPublished: boolean('is_published').notNull().default(false),
 });
