@@ -50,6 +50,13 @@
       "when": 1746423387243,
       "tag": "0006_lazy_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1746424198076,
+      "tag": "0007_parched_midnight",
+      "breakpoints": true
     }
   ]
 }
