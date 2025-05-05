@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { desc, eq, gt, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { profiles, projects } from '@/lib/db/schema';
@@ -72,12 +72,19 @@ export const projectRouter = router({
         .object({
           limit: z.number().min(1).max(100).default(50),
           cursor: z.number().optional(),
+          isPublished: z.boolean().optional().default(false),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;
       const cursor = input?.cursor;
+      const isPublished = input?.isPublished ?? false;
+
+      const baseCondition = eq(projects.isPublished, isPublished);
+      const whereCondition = cursor
+        ? and(baseCondition, gt(projects.id, cursor))
+        : baseCondition;
 
       const query = ctx.db
         .select({
@@ -86,12 +93,9 @@ export const projectRouter = router({
         })
         .from(projects)
         .leftJoin(profiles, eq(projects.creator, profiles.userId))
+        .where(whereCondition)
         .orderBy(desc(projects.id))
         .limit(limit);
-
-      if (cursor) {
-        query.where(gt(projects.id, cursor));
-      }
 
       const results = await query;
 
