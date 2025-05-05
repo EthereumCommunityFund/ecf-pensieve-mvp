@@ -19,7 +19,7 @@ export const voteRecords = pgTable('vote_records', {
   proposalId: bigint('proposal_id', { mode: 'number' })
     .notNull()
     .references(() => proposals.id),
-  userId: uuid('user_id')
+  creator: uuid('creator')
     .notNull()
     .references(() => profiles.userId),
 });
