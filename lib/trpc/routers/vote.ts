@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { proposals, voteRecords } from '@/lib/db/schema';
@@ -261,17 +261,11 @@ export const voteRouter = router({
 
       const proposalIds = projectProposals.map((p) => p.id);
 
-      const votes = await Promise.all(
-        proposalIds.map(async (proposalId) => {
-          const proposalVotes = await ctx.db
-            .select()
-            .from(voteRecords)
-            .where(eq(voteRecords.proposalId, proposalId));
+      const votes = await ctx.db
+        .select()
+        .from(voteRecords)
+        .where(inArray(voteRecords.proposalId, proposalIds));
 
-          return proposalVotes;
-        }),
-      );
-
-      return votes.flat();
+      return votes;
     }),
 });
