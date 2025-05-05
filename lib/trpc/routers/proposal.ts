@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { projects } from '@/lib/db/schema/projects';
 import { proposals } from '@/lib/db/schema/proposals';
+import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -41,10 +42,22 @@ export const proposalRouter = router({
         });
       }
 
-      const proposal = await ctx.db.insert(proposals).values({
-        ...input,
-        creator: ctx.user.id,
-      });
+      const [proposal] = await ctx.db
+        .insert(proposals)
+        .values({
+          ...input,
+          creator: ctx.user.id,
+        })
+        .returning();
+
+      if (!proposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Proposal not found',
+        });
+      }
+
+      logUserActivity.proposal.create(ctx.user.id, proposal.id);
 
       return proposal;
     }),

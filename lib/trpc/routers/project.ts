@@ -3,6 +3,7 @@ import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { profiles, projects } from '@/lib/db/schema';
+import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 export const projectRouter = router({
@@ -62,6 +63,8 @@ export const projectRouter = router({
           message: 'project not found',
         });
       }
+
+      logUserActivity.project.create(ctx.user.id, project.id);
 
       return project;
     }),
