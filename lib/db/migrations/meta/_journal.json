@@ -43,6 +43,13 @@
       "when": 1746419147917,
       "tag": "0005_chubby_scarecrow",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1746423387243,
+      "tag": "0006_lazy_hawkeye",
+      "breakpoints": true
     }
   ]
 }
