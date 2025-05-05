@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { proposals, voteRecords } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
-import { protectedProcedure, router } from '../server';
+import { protectedProcedure, publicProcedure, router } from '../server';
 
 export const voteRouter = router({
   createVote: protectedProcedure
@@ -211,5 +211,54 @@ export const voteRouter = router({
       logUserActivity.vote.delete(ctx.user.id, deletedVote.id);
 
       return deletedVote;
+    }),
+
+  getVotesByProposalId: publicProcedure
+    .input(
+      z.object({
+        proposalId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const votes = await ctx.db
+        .select()
+        .from(voteRecords)
+        .where(eq(voteRecords.proposalId, input.proposalId));
+
+      return votes;
+    }),
+
+  getVotesByProjectId: publicProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { projectId } = input;
+
+      const projectProposals = await ctx.db
+        .select()
+        .from(proposals)
+        .where(eq(proposals.projectId, projectId));
+
+      if (!projectProposals || projectProposals.length === 0) {
+        return [];
+      }
+
+      const proposalIds = projectProposals.map((p) => p.id);
+
+      const votes = await Promise.all(
+        proposalIds.map(async (proposalId) => {
+          const proposalVotes = await ctx.db
+            .select()
+            .from(voteRecords)
+            .where(eq(voteRecords.proposalId, proposalId));
+
+          return proposalVotes;
+        }),
+      );
+
+      return votes.flat();
     }),
 });
