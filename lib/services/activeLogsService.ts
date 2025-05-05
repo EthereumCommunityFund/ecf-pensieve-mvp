@@ -18,6 +18,7 @@ export async function addActiveLog(
   action: string,
   type: string,
   targetId: number,
+  projectId?: number,
 ) {
   try {
     const [insertedLog] = await db
@@ -27,6 +28,7 @@ export async function addActiveLog(
         action,
         type,
         targetId,
+        projectId,
       })
       .returning();
 
@@ -38,12 +40,12 @@ export async function addActiveLog(
 }
 
 const createLogActions = (type: LogType) => ({
-  create: (userId: string, targetId: number) =>
-    addActiveLog(userId, LogAction.CREATE, type, targetId),
-  update: (userId: string, targetId: number) =>
-    addActiveLog(userId, LogAction.UPDATE, type, targetId),
-  delete: (userId: string, targetId: number) =>
-    addActiveLog(userId, LogAction.DELETE, type, targetId),
+  create: (userId: string, targetId: number, projectId?: number) =>
+    addActiveLog(userId, LogAction.CREATE, type, targetId, projectId),
+  update: (userId: string, targetId: number, projectId?: number) =>
+    addActiveLog(userId, LogAction.UPDATE, type, targetId, projectId),
+  delete: (userId: string, targetId: number, projectId?: number) =>
+    addActiveLog(userId, LogAction.DELETE, type, targetId, projectId),
 });
 
 export const logUserActivity = {

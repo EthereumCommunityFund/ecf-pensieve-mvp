@@ -1,4 +1,4 @@
-import { and, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
@@ -41,5 +41,44 @@ export const activeRouter = router({
         date: activity.date,
         count: Number(activity.count),
       }));
+    }),
+
+  getUserActivities: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.string().uuid().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userId, limit, cursor } = input;
+
+      const baseCondition = eq(activeLogs.userId, userId);
+      const whereCondition = cursor
+        ? and(baseCondition, gt(activeLogs.id, cursor))
+        : baseCondition;
+
+      const items = await ctx.db
+        .select()
+        .from(activeLogs)
+        .where(whereCondition)
+        .orderBy(desc(activeLogs.createdAt))
+        .limit(limit);
+
+      const nextCursor =
+        items.length === limit ? items[items.length - 1].id : undefined;
+
+      const totalCount = await ctx.db
+        .select({ count: sql`count(*)::int` })
+        .from(activeLogs)
+        .where(baseCondition)
+        .then((res) => Number(res[0]?.count ?? 0));
+
+      return {
+        items,
+        nextCursor,
+        totalCount,
+      };
     }),
 });

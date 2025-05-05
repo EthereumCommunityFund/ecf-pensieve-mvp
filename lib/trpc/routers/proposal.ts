@@ -56,7 +56,11 @@ export const proposalRouter = router({
         });
       }
 
-      logUserActivity.proposal.create(ctx.user.id, proposal.id);
+      logUserActivity.proposal.create(
+        ctx.user.id,
+        proposal.id,
+        proposal.projectId,
+      );
 
       return proposal;
     }),

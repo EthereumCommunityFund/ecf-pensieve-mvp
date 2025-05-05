@@ -64,7 +64,7 @@ export const projectRouter = router({
         });
       }
 
-      logUserActivity.project.create(ctx.user.id, project.id);
+      logUserActivity.project.create(ctx.user.id, project.id, project.id);
 
       return project;
     }),

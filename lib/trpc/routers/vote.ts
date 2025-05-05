@@ -31,10 +31,12 @@ export const voteRouter = router({
         });
       }
 
+      const projectId = proposal[0].projectId;
+
       const projectProposals = await ctx.db
         .select()
         .from(proposals)
-        .where(eq(proposals.projectId, proposal[0].projectId));
+        .where(eq(proposals.projectId, projectId));
 
       const projectProposalIds = projectProposals.map((p) => p.id);
 
@@ -87,7 +89,7 @@ export const voteRouter = router({
         })
         .returning();
 
-      logUserActivity.vote.create(ctx.user.id, vote.id);
+      logUserActivity.vote.create(ctx.user.id, vote.id, projectId);
 
       return vote;
     }),
@@ -115,10 +117,12 @@ export const voteRouter = router({
         });
       }
 
+      const projectId = targetProposal[0].projectId;
+
       const projectProposals = await ctx.db
         .select()
         .from(proposals)
-        .where(eq(proposals.projectId, targetProposal[0].projectId));
+        .where(eq(proposals.projectId, projectId));
 
       const projectProposalIds = projectProposals.map((p) => p.id);
 
@@ -171,7 +175,7 @@ export const voteRouter = router({
         .where(eq(voteRecords.id, voteToSwitch.id))
         .returning();
 
-      logUserActivity.vote.update(ctx.user.id, updatedVote.id);
+      logUserActivity.vote.update(ctx.user.id, updatedVote.id, projectId);
 
       return updatedVote;
     }),
@@ -190,11 +194,18 @@ export const voteRouter = router({
         eq(voteRecords.creator, ctx.user.id),
       );
 
-      const existingVote = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(condition)
-        .limit(1);
+      const [existingVote, voteWithProposal] = await Promise.all([
+        ctx.db.select().from(voteRecords).where(condition).limit(1),
+        ctx.db
+          .select({
+            voteRecord: voteRecords,
+            proposal: proposals,
+          })
+          .from(voteRecords)
+          .where(condition)
+          .innerJoin(proposals, eq(voteRecords.proposalId, proposals.id))
+          .limit(1),
+      ]);
 
       if (!existingVote || existingVote.length === 0) {
         throw new TRPCError({
@@ -203,12 +214,14 @@ export const voteRouter = router({
         });
       }
 
+      const projectId = voteWithProposal[0]?.proposal.projectId;
+
       const [deletedVote] = await ctx.db
         .delete(voteRecords)
         .where(condition)
         .returning();
 
-      logUserActivity.vote.delete(ctx.user.id, deletedVote.id);
+      logUserActivity.vote.delete(ctx.user.id, deletedVote.id, projectId);
 
       return deletedVote;
     }),
