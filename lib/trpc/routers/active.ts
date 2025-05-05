@@ -2,7 +2,7 @@ import { and, desc, eq, gt, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
-import { activeLogs } from '@/lib/db/schema';
+import { activeLogs, projects } from '@/lib/db/schema';
 
 import { publicProcedure, router } from '../server';
 
@@ -60,14 +60,20 @@ export const activeRouter = router({
         : baseCondition;
 
       const items = await ctx.db
-        .select()
+        .select({
+          activeLog: activeLogs,
+          projectName: projects.name,
+        })
         .from(activeLogs)
+        .leftJoin(projects, eq(activeLogs.projectId, projects.id))
         .where(whereCondition)
         .orderBy(desc(activeLogs.createdAt))
         .limit(limit);
 
       const nextCursor =
-        items.length === limit ? items[items.length - 1].id : undefined;
+        items.length === limit
+          ? items[items.length - 1].activeLog.id
+          : undefined;
 
       const totalCount = await ctx.db
         .select({ count: sql`count(*)::int` })
