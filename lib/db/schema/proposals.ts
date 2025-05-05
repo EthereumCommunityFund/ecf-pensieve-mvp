@@ -22,7 +22,7 @@ export const proposals = pgTable('proposals', {
   projectId: bigint('project_id', { mode: 'number' })
     .notNull()
     .references(() => projects.id),
-  userId: uuid('user_id')
+  creator: uuid('creator')
     .notNull()
     .references(() => profiles.userId),
 });
