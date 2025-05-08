@@ -1,4 +1,4 @@
-import { Skeleton } from '@heroui/react';
+import { Avatar, Skeleton } from '@heroui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ export default function Setting() {
   const { user: viewedUserProfile, isLoading } = useProfileData();
   const { mutate: updateProfile, isPending } =
     trpc.user.updateProfile.useMutation();
+  const { fetchUserProfile } = useAuth();
   const utils = trpc.useUtils();
 
   const [isOwner, setIsOwner] = useState(false);
@@ -70,11 +71,12 @@ export default function Setting() {
       },
       {
         onSuccess: () => {
-          utils.user.getCurrentUser.invalidate();
+          fetchUserProfile();
+          utils.user.getUserByAddress.invalidate();
         },
       },
     );
-  }, [isOwner, getValues, updateProfile, utils]);
+  }, [isOwner, getValues, updateProfile, fetchUserProfile]);
 
   const handleDiscard = useCallback(() => {
     if (!isOwner) return;
@@ -143,12 +145,16 @@ export default function Setting() {
                   className="size-[120px] overflow-hidden rounded-full"
                   isDisabled={!isOwner || isSubmitting}
                 >
-                  <div
-                    className={`flex size-[120px] items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#28C196] to-white ${
-                      isOwner && !isSubmitting
-                        ? 'cursor-pointer'
-                        : 'cursor-not-allowed opacity-50'
-                    }`}
+                  <Avatar
+                    size="lg"
+                    icon={
+                      <div
+                        className={`flex size-[120px] items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#28C196] to-white`}
+                      />
+                    }
+                    src={field.value ?? undefined}
+                    alt="Avatar"
+                    className="size-[120px] cursor-pointer border"
                   />
                 </PhotoUpload>
               )}

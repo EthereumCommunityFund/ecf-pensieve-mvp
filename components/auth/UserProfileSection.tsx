@@ -11,8 +11,8 @@ import {
 import { SignOut } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import Copy from '@/components/biz/common/Copy';
 import { Button } from '@/components/base';
+import Copy from '@/components/biz/common/Copy';
 import { WalletIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 
@@ -54,7 +54,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
 
   const formattedName = formatUserName(profile?.name);
 
-  if (!isAuthenticated || !profile) {
+  if (!profile) {
     return (
       <Button
         startContent={<WalletIcon size={20} />}
