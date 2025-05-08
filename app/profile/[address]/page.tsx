@@ -1,9 +1,9 @@
 'use client';
 
 import { Tab, Tabs } from '@heroui/react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { GitCommit, UserSquare } from '@phosphor-icons/react';
+import { useState } from 'react';
+import { useParams } from 'next/navigation';
 
 import ECFTypography from '@/components/base/typography';
 import { cn } from '@/lib/utils';
@@ -11,23 +11,12 @@ import { cn } from '@/lib/utils';
 import Setting from './components/setting';
 
 const ProfileSettingsPage = () => {
-  const router = useRouter();
+  const { address } = useParams();
   const [activeTab, setActiveTab] = useState<'profile' | 'contributions'>(
     'profile',
   );
 
-  // Mock data for connected address and weight
-  const connectedAddress = '0x0asd0sd9f0uhch08323nk23jc877sa9ds9';
   const userWeight = '80';
-
-  const handleSaveChanges = () => {
-    // Save profile changes logic here
-    router.push('/profile');
-  };
-
-  const handleDiscard = () => {
-    router.push('/profile');
-  };
 
   return (
     <div className="mx-auto flex w-full max-w-[800px] flex-col items-center gap-10 pb-16 pt-8">
@@ -37,7 +26,7 @@ const ProfileSettingsPage = () => {
             Connected Address:
           </ECFTypography>
           <ECFTypography type="caption" className="opacity-80">
-            {connectedAddress}
+            {address}
           </ECFTypography>
         </div>
 
