@@ -1,93 +1,188 @@
-import { useState } from 'react';
+import { Skeleton } from '@heroui/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { Input } from '@/components/base';
-import { ECFButton } from '@/components/base/button';
+import { Button } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import PhotoUpload from '@/components/pages/project/create/PhotoUpload';
+import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
+
+import { useProfileData } from './dataContext';
+
+const profileFormSchema = z.object({
+  displayName: z.string().min(1, 'Display name is required'),
+  avatarUrl: z.string().url('Invalid URL format').or(z.literal('')).optional(),
+});
+type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function Setting() {
-  const [displayName, setDisplayName] = useState('drivenfast');
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const router = useRouter();
+  const { address: profileAddressFromRoute } = useParams();
+  const { profile: authProfile } = useAuth();
+  const { user: viewedUserProfile, isLoading } = useProfileData();
+  const { mutate: updateProfile, isPending } =
+    trpc.user.updateProfile.useMutation();
+  const utils = trpc.useUtils();
 
-  const handleSaveChanges = () => {
-    // Save profile changes logic here
-  };
+  const [isOwner, setIsOwner] = useState(false);
 
-  const handleDiscard = () => {
-    // Discard changes logic here
-  };
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+    getValues,
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
+    values: {
+      displayName: viewedUserProfile?.name || '',
+      avatarUrl: viewedUserProfile?.avatarUrl || '',
+    },
+  });
+
+  useEffect(() => {
+    if (!isLoading && !viewedUserProfile) {
+      router.replace('/');
+    }
+  }, [isLoading, viewedUserProfile, router]);
+
+  useEffect(() => {
+    const currentAddr =
+      typeof profileAddressFromRoute === 'string'
+        ? profileAddressFromRoute.toLowerCase()
+        : undefined;
+    const authAddr = authProfile?.address?.toLowerCase();
+    setIsOwner(!!currentAddr && !!authAddr && currentAddr === authAddr);
+  }, [profileAddressFromRoute, authProfile]);
+
+  const onSubmit = useCallback(() => {
+    if (!isOwner) return;
+    const formData = getValues();
+    updateProfile(
+      {
+        name: formData.displayName,
+        avatarUrl: formData.avatarUrl,
+      },
+      {
+        onSuccess: () => {
+          utils.user.getCurrentUser.invalidate();
+        },
+      },
+    );
+  }, [isOwner, getValues, updateProfile, utils]);
+
+  const handleDiscard = useCallback(() => {
+    if (!isOwner) return;
+    reset({
+      displayName: viewedUserProfile?.name || '',
+      avatarUrl: viewedUserProfile?.avatarUrl || '',
+    });
+  }, [isOwner, reset, viewedUserProfile]);
 
   return (
-    <div className="flex w-full flex-col gap-10">
-      {/* Display Name Input */}
-      <div className="flex w-full flex-col">
-        <div className="flex w-full flex-col gap-1">
-          <ECFTypography type="h4" className="font-semibold">
-            Display Name
-          </ECFTypography>
-          <ECFTypography type="body2" className="opacity-80">
-            This is your publicly viewable displayed name
-          </ECFTypography>
-        </div>
-        <div className="h-[40px] w-full rounded-lg border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] p-[0px_10px]">
-          <Input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            className="size-full border-none bg-transparent opacity-60"
-            placeholder="Enter your display name"
-          />
-        </div>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex w-full flex-col gap-10"
+    >
+      <div className="flex w-full flex-col gap-[5px]">
+        <ECFTypography type="body1" className="font-semibold">
+          Display Name
+        </ECFTypography>
+        <ECFTypography type="caption" className="opacity-80">
+          This is publicly viewable displayed name
+        </ECFTypography>
+        {isLoading && !getValues('displayName') ? (
+          <Skeleton className="h-[40px] w-full rounded-[8px]" />
+        ) : (
+          <>
+            <Controller
+              name="displayName"
+              control={control}
+              disabled={!isOwner || isSubmitting}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  className="size-full border-none bg-transparent opacity-60 disabled:opacity-50"
+                  placeholder="Enter your display name"
+                />
+              )}
+            />
+            {errors.displayName && (
+              <ECFTypography type="caption" className="mt-1 text-red-500">
+                {errors.displayName.message}
+              </ECFTypography>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Avatar Upload */}
-      <div className="flex w-full flex-col">
-        <div className="flex w-full flex-col gap-1">
-          <ECFTypography type="h4" className="font-semibold">
-            Avatar
-          </ECFTypography>
-          <ECFTypography type="body2" className="opacity-80">
-            This is your publicly viewable avatar
-          </ECFTypography>
-          <div className="mt-4">
-            <PhotoUpload
-              initialUrl={avatarUrl}
-              onUploadSuccess={setAvatarUrl}
-              className="size-[120px] overflow-hidden rounded-full"
-            >
-              <div className="flex size-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#28C196] to-white">
-                {!avatarUrl && (
-                  <svg
-                    width="40"
-                    height="40"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12 12.75C8.83 12.75 6.25 10.17 6.25 7C6.25 3.83 8.83 1.25 12 1.25C15.17 1.25 17.75 3.83 17.75 7C17.75 10.17 15.17 12.75 12 12.75ZM12 2.75C9.66 2.75 7.75 4.66 7.75 7C7.75 9.34 9.66 11.25 12 11.25C14.34 11.25 16.25 9.34 16.25 7C16.25 4.66 14.34 2.75 12 2.75Z"
-                      fill="white"
-                    />
-                    <path
-                      d="M20.5901 22.75C20.1801 22.75 19.8401 22.41 19.8401 22C19.8401 18.55 16.3202 15.75 12.0002 15.75C7.68015 15.75 4.16016 18.55 4.16016 22C4.16016 22.41 3.82016 22.75 3.41016 22.75C3.00016 22.75 2.66016 22.41 2.66016 22C2.66016 17.73 6.85015 14.25 12.0002 14.25C17.1502 14.25 21.3401 17.73 21.3401 22C21.3401 22.41 21.0001 22.75 20.5901 22.75Z"
-                      fill="white"
-                    />
-                  </svg>
-                )}
-              </div>
-            </PhotoUpload>
-          </div>
-        </div>
+      <div className="flex w-full flex-col gap-[5px]">
+        <ECFTypography type="body1" className="font-semibold">
+          Avatar
+        </ECFTypography>
+        <ECFTypography type="caption" className="opacity-80">
+          This is publicly viewable avatar
+        </ECFTypography>
+        {isLoading && !getValues('avatarUrl') ? (
+          <Skeleton className="mt-[2px] size-[120px] rounded-full" />
+        ) : (
+          <>
+            <Controller
+              name="avatarUrl"
+              control={control}
+              disabled={!isOwner || isSubmitting}
+              render={({ field }) => (
+                <PhotoUpload
+                  initialUrl={field.value || undefined}
+                  onUploadSuccess={(url) => field.onChange(url || '')}
+                  className="size-[120px] overflow-hidden rounded-full"
+                  isDisabled={!isOwner || isSubmitting}
+                >
+                  <div
+                    className={`flex size-[120px] items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#28C196] to-white ${
+                      isOwner && !isSubmitting
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed opacity-50'
+                    }`}
+                  />
+                </PhotoUpload>
+              )}
+            />
+            {errors.avatarUrl && (
+              <ECFTypography type="caption" className="mt-1 text-red-500">
+                {errors.avatarUrl.message}
+              </ECFTypography>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex w-full items-center justify-end gap-2 px-[10px]">
-        <ECFButton variant onClick={handleSaveChanges}>
-          Save Changes
-        </ECFButton>
-        <ECFButton variant="secondary" onClick={handleDiscard}>
-          Discard
-        </ECFButton>
-      </div>
-    </div>
+      {isOwner && (
+        <div className="flex h-[40px] w-full items-center justify-end gap-2 px-[10px]">
+          <Button
+            color="secondary"
+            className="px-[20px] text-[14px] font-semibold"
+            onPress={handleDiscard}
+            disabled={!isDirty || isLoading || isSubmitting}
+          >
+            Discard
+          </Button>
+          <Button
+            color="primary"
+            type="submit"
+            className="px-[30px] text-[14px] font-semibold"
+            disabled={!isDirty || isLoading || isSubmitting}
+            isLoading={isPending}
+          >
+            Save Changes
+          </Button>
+        </div>
+      )}
+    </form>
   );
 }
