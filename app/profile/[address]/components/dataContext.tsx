@@ -16,9 +16,14 @@ export const DataContext = createContext<{
 export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const { address } = useParams();
 
-  const { data: user, isLoading } = trpc.user.getUserByAddress.useQuery({
-    address: address as string,
-  });
+  const { data: user, isLoading } = trpc.user.getUserByAddress.useQuery(
+    {
+      address: address as string,
+    },
+    {
+      retry: 1,
+    },
+  );
 
   return (
     <DataContext.Provider value={{ user: user ?? null, isLoading }}>
