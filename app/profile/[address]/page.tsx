@@ -2,8 +2,8 @@
 
 import { Tab, Tabs } from '@heroui/react';
 import { GitCommit, UserSquare } from '@phosphor-icons/react';
-import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import { cn } from '@/lib/utils';
@@ -13,9 +13,25 @@ import Setting from './components/setting';
 
 const ProfileSettingsPage = () => {
   const { address } = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab');
+
   const [activeTab, setActiveTab] = useState<'profile' | 'contributions'>(
-    'profile',
+    initialTab === 'contributions' ? 'contributions' : 'profile',
   );
+
+  useEffect(() => {
+    const currentTab = searchParams.get('tab');
+    if (
+      currentTab &&
+      (currentTab === 'profile' || currentTab === 'contributions')
+    ) {
+      setActiveTab(currentTab);
+    } else if (!currentTab) {
+      router.push(`/profile/${address}?tab=profile`, { scroll: false });
+    }
+  }, [searchParams, address, router]);
 
   const userWeight = '80';
 
@@ -44,9 +60,11 @@ const ProfileSettingsPage = () => {
       <div className="w-full">
         <Tabs
           selectedKey={activeTab}
-          onSelectionChange={(key) =>
-            setActiveTab(key as 'profile' | 'contributions')
-          }
+          onSelectionChange={(key) => {
+            const newTab = key as 'profile' | 'contributions';
+            setActiveTab(newTab);
+            router.push(`/profile/${address}?tab=${newTab}`, { scroll: false });
+          }}
           variant="underlined"
           className="w-full"
           classNames={{
