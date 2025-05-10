@@ -24,6 +24,7 @@
     "@hookform/resolvers": "^5.0.1",
     "@internationalized/date": "^3.7.0",
     "@lxdao/uploader3-connector": "^1.2.0",
+    "@nivo/calendar": "^0.94.0",
     "@phosphor-icons/react": "^2.1.7",
     "@rainbow-me/rainbowkit": "^2.2.3",
     "@supabase/supabase-js": "^2.49.4",

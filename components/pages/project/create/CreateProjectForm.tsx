@@ -1,7 +1,6 @@
 'use client';
 
 import { yupResolver } from '@hookform/resolvers/yup';
-import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useState } from 'react';
@@ -16,6 +15,7 @@ import {
 import { transformProjectData } from '@/components/pages/project/create/utils/form';
 import { useAuth } from '@/context/AuthContext';
 import { useFormScrollToError } from '@/hooks/useFormScrollToError';
+import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
 

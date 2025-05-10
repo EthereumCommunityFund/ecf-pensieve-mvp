@@ -2,12 +2,13 @@
 
 import { Tab, Tabs } from '@heroui/react';
 import { GitCommit, UserSquare } from '@phosphor-icons/react';
-import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import { cn } from '@/lib/utils';
 
+import Contributions from './components/contributions';
 import Setting from './components/setting';
 
 const ProfileSettingsPage = () => {
@@ -19,7 +20,7 @@ const ProfileSettingsPage = () => {
   const userWeight = '80';
 
   return (
-    <div className="mx-auto flex w-full max-w-[800px] flex-col items-center gap-10 pb-16 pt-8">
+    <div className="mx-auto flex w-full max-w-[800px] flex-col items-center gap-5 pb-16 pt-8">
       <div className="flex w-full items-center justify-center gap-[10px]">
         <div className="flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
           <ECFTypography type="caption" className="opacity-50">
@@ -95,6 +96,7 @@ const ProfileSettingsPage = () => {
       </div>
 
       {activeTab === 'profile' && <Setting />}
+      {activeTab === 'contributions' && <Contributions />}
     </div>
   );
 };
