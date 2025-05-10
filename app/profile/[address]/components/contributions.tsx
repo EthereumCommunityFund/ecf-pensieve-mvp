@@ -1,18 +1,29 @@
 import { ResponsiveCalendar } from '@nivo/calendar';
+import { scaleThreshold } from 'd3-scale';
 
 import ECFTypography from '@/components/base/typography';
 import dayjs from '@/lib/dayjs';
 
 export default function Contributions() {
   const data = [
-    { day: '2025-03-01', value: 3 },
+    { day: '2025-03-01', value: 10 },
     { day: '2025-03-02', value: 2 },
     { day: '2025-03-03', value: 1 },
-    { day: '2025-03-04', value: 0 },
+    { day: '2025-03-04', value: 18 },
+    { day: '2025-03-05', value: 15 },
+    { day: '2025-03-06', value: 10 },
+    { day: '2025-03-07', value: 10 },
+    { day: '2025-03-08', value: 7 },
+    { day: '2025-03-09', value: 10 },
+    { day: '2025-03-10', value: 10 },
   ];
 
   const currentYearStart = dayjs().startOf('year').format('YYYY-MM-DD');
   const currentYearEnd = dayjs().endOf('year').format('YYYY-MM-DD');
+
+  const contributionsColorScale = scaleThreshold<number, string>()
+    .domain([5, 10, 15, 20])
+    .range(['#aceebb', '#4ac26b', '#2da44e', '#116329']);
 
   return (
     <div className="w-full">
@@ -22,13 +33,13 @@ export default function Contributions() {
             style={{ height: 'calc(100% - 30px)' }}
             className="overflow-x-auto"
           >
-            <div className="h-full min-w-[708px]">
+            <div id="active-contributions" className="h-full min-w-[708px]">
               <ResponsiveCalendar
                 data={data}
                 from={currentYearStart}
                 to={currentYearEnd}
                 emptyColor="#EBEBEB"
-                colors={['#61cdbb', '#97e3d5', '#e8c1a0', '#f47560']}
+                colorScale={contributionsColorScale as any}
                 margin={{ top: 10, right: 10, bottom: -20, left: 10 }}
                 yearSpacing={40}
                 monthBorderColor="transparent"
