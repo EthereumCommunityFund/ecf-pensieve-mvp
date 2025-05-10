@@ -64,15 +64,20 @@ export const activeRouter = router({
         userId: z.string(),
         limit: z.number().min(1).max(100).default(50),
         cursor: z.string().uuid().optional(),
+        type: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { userId, limit, cursor } = input;
+      const { userId, limit, cursor, type } = input;
 
       const baseCondition = eq(activeLogs.userId, userId);
+      const conditions = [baseCondition];
+      if (type) {
+        conditions.push(eq(activeLogs.type, type));
+      }
       const whereCondition = cursor
-        ? and(baseCondition, gt(activeLogs.id, cursor))
-        : baseCondition;
+        ? and(...conditions, gt(activeLogs.id, cursor))
+        : and(...conditions);
 
       const items = await ctx.db
         .select({
