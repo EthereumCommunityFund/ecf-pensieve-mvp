@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { projects, proposals } from '@/lib/db/schema';
+import { profiles, projects, proposals } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -71,17 +71,22 @@ export const proposalRouter = router({
       const proposalsData = await ctx.db
         .select()
         .from(proposals)
+        .leftJoin(profiles, eq(proposals.creator, profiles.userId))
         .where(eq(proposals.projectId, input.projectId));
 
-      return proposalsData;
+      return proposalsData.map(({ proposals, profiles }) => ({
+        ...proposals,
+        creator: profiles,
+      }));
     }),
 
   getProposalById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const proposal = await ctx.db
+      const [proposal] = await ctx.db
         .select()
         .from(proposals)
+        .leftJoin(profiles, eq(proposals.creator, profiles.userId))
         .where(eq(proposals.id, input.id));
 
       if (!proposal) {
@@ -91,6 +96,9 @@ export const proposalRouter = router({
         });
       }
 
-      return proposal;
+      return {
+        ...proposal,
+        creator: proposal.profiles,
+      };
     }),
 });
