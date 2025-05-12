@@ -69,14 +69,17 @@ export const proposalRouter = router({
     .input(z.object({ projectId: z.number() }))
     .query(async ({ ctx, input }) => {
       const proposalsData = await ctx.db
-        .select()
+        .select({
+          proposal: proposals,
+          creator: profiles,
+        })
         .from(proposals)
         .leftJoin(profiles, eq(proposals.creator, profiles.userId))
         .where(eq(proposals.projectId, input.projectId));
 
-      return proposalsData.map(({ proposals, profiles }) => ({
-        ...proposals,
-        creator: profiles,
+      return proposalsData.map(({ proposal, creator }) => ({
+        ...proposal,
+        creator,
       }));
     }),
 
@@ -84,7 +87,10 @@ export const proposalRouter = router({
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const [proposal] = await ctx.db
-        .select()
+        .select({
+          proposal: proposals,
+          creator: profiles,
+        })
         .from(proposals)
         .leftJoin(profiles, eq(proposals.creator, profiles.userId))
         .where(eq(proposals.id, input.id));
@@ -97,8 +103,8 @@ export const proposalRouter = router({
       }
 
       return {
-        ...proposal,
-        creator: proposal.profiles,
+        ...proposal.proposal,
+        creator: proposal.creator,
       };
     }),
 });

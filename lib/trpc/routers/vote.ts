@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { proposals, voteRecords } from '@/lib/db/schema';
+import { profiles, proposals, voteRecords } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -234,11 +234,18 @@ export const voteRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const votes = await ctx.db
-        .select()
+        .select({
+          voteRecord: voteRecords,
+          creator: profiles,
+        })
         .from(voteRecords)
+        .leftJoin(profiles, eq(voteRecords.creator, profiles.userId))
         .where(eq(voteRecords.proposalId, input.proposalId));
 
-      return votes;
+      return votes.map(({ voteRecord, creator }) => ({
+        ...voteRecord,
+        creator,
+      }));
     }),
 
   getVotesByProjectId: publicProcedure
@@ -262,10 +269,17 @@ export const voteRouter = router({
       const proposalIds = projectProposals.map((p) => p.id);
 
       const votes = await ctx.db
-        .select()
+        .select({
+          voteRecord: voteRecords,
+          creator: profiles,
+        })
         .from(voteRecords)
+        .leftJoin(profiles, eq(voteRecords.creator, profiles.userId))
         .where(inArray(voteRecords.proposalId, proposalIds));
 
-      return votes;
+      return votes.map(({ voteRecord, creator }) => ({
+        ...voteRecord,
+        creator,
+      }));
     }),
 });
