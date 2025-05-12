@@ -9,8 +9,7 @@ import {
   Image,
 } from '@heroui/react';
 import { SignOut, User } from '@phosphor-icons/react';
-import React, { useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 
 import { Button } from '@/components/base';
 import Copy from '@/components/biz/common/Copy';
@@ -47,17 +46,12 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
     fetchUserProfile,
     authStatus,
   } = useAuth();
-  const router = useRouter();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleCloseProfileModal = () => setIsProfileModalOpen(false);
 
   const formattedName = formatUserName(profile?.name);
-
-  const handleMyProfile = useCallback(() => {
-    router.push(`/profile/${profile?.address}`);
-  }, [router, profile?.address]);
 
   if (!profile) {
     return (
@@ -127,14 +121,13 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
           >
             My Profile
           </DropdownItem>
-          {/* <Divider /> */}
           <DropdownItem
             key="logout"
             color="danger"
-            startContent={<SignOut size={18} />} // Danger color should provide icon color
+            startContent={<SignOut size={18} />}
             onPress={performFullLogoutAndReload}
             textValue="Log Out"
-            className="mt-[10px] border-t border-[rgba(255,255,255,0.1)] text-danger-600"
+            className="mt-[10px] text-danger-600"
           >
             Log Out
           </DropdownItem>
