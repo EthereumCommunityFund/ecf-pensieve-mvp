@@ -5,7 +5,7 @@ import React from 'react';
 
 import { Button } from '@/components/base';
 
-import { CreateProjectStep } from './types';
+import { CreateProjectStep, IFormTypeEnum } from './types';
 
 interface FormActionsProps {
   currentStep: CreateProjectStep;
@@ -13,6 +13,7 @@ interface FormActionsProps {
   onBack: () => void;
   onNext: () => void;
   onDiscard: () => void;
+  formType?: IFormTypeEnum;
 }
 
 const FormActions: React.FC<FormActionsProps> = ({
@@ -21,6 +22,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   onBack,
   onNext,
   onDiscard,
+  formType = IFormTypeEnum.Project,
 }) => {
   const isFirstStep = currentStep === CreateProjectStep.Basics;
   const isLastStep = currentStep === CreateProjectStep.Organization;
@@ -54,7 +56,13 @@ const FormActions: React.FC<FormActionsProps> = ({
         isDisabled={isSubmitting}
         isLoading={isSubmitting && isLastStep}
       >
-        {isLastStep ? (isSubmitting ? 'Submitting...' : 'Submit') : 'Next'}
+        {isLastStep
+          ? isSubmitting
+            ? 'Submitting...'
+            : formType === IFormTypeEnum.Project
+              ? 'Create Project'
+              : 'Create Proposal'
+          : 'Next'}
       </Button>
     </div>
   );

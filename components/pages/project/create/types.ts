@@ -9,6 +9,11 @@ import {
 
 import { ApplicableField } from '@/components/pages/project/create/FormData';
 
+export enum IFormTypeEnum {
+  Project = 'project',
+  Proposal = 'proposal',
+}
+
 export enum CreateProjectStep {
   Basics = 'basics',
   Dates = 'dates',
@@ -72,6 +77,18 @@ export interface ProjectCreatePayload {
   founders: {
     name: string;
     title: string;
+  }[];
+  refs?: {
+    key: string;
+    value: string;
+  }[];
+}
+
+export interface ProposalCreatePayload {
+  projectId: number;
+  items: {
+    key: string;
+    value: string;
   }[];
   refs?: {
     key: string;
