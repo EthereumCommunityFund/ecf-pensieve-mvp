@@ -18,20 +18,20 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const proposal = await ctx.db
+      const [proposal] = await ctx.db
         .select()
         .from(proposals)
         .where(eq(proposals.id, proposalId))
         .limit(1);
 
-      if (!proposal || proposal.length === 0) {
+      if (!proposal) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Proposal not found',
         });
       }
 
-      const projectId = proposal[0].projectId;
+      const projectId = proposal.projectId;
 
       const projectProposals = await ctx.db
         .select()
@@ -89,7 +89,13 @@ export const voteRouter = router({
         })
         .returning();
 
-      logUserActivity.vote.create(ctx.user.id, vote.id, projectId);
+      logUserActivity.vote.create({
+        userId: ctx.user.id,
+        targetId: vote.id,
+        projectId,
+        items: [{ field: key }],
+        proposalCreatorId: proposal.creator,
+      });
 
       return vote;
     }),
@@ -104,20 +110,20 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const targetProposal = await ctx.db
+      const [targetProposal] = await ctx.db
         .select()
         .from(proposals)
         .where(eq(proposals.id, proposalId))
         .limit(1);
 
-      if (!targetProposal || targetProposal.length === 0) {
+      if (!targetProposal) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Target proposal not found',
         });
       }
 
-      const projectId = targetProposal[0].projectId;
+      const projectId = targetProposal.projectId;
 
       const projectProposals = await ctx.db
         .select()
@@ -175,7 +181,13 @@ export const voteRouter = router({
         .where(eq(voteRecords.id, voteToSwitch.id))
         .returning();
 
-      logUserActivity.vote.update(ctx.user.id, updatedVote.id, projectId);
+      logUserActivity.vote.update({
+        userId: ctx.user.id,
+        targetId: updatedVote.id,
+        projectId,
+        items: [{ field: key }],
+        proposalCreatorId: targetProposal.creator,
+      });
 
       return updatedVote;
     }),
@@ -214,14 +226,21 @@ export const voteRouter = router({
         });
       }
 
-      const projectId = voteWithProposal[0]?.proposal.projectId;
+      const { voteRecord, proposal } = voteWithProposal[0];
+      const projectId = proposal.projectId;
 
       const [deletedVote] = await ctx.db
         .delete(voteRecords)
         .where(condition)
         .returning();
 
-      logUserActivity.vote.delete(ctx.user.id, deletedVote.id, projectId);
+      logUserActivity.vote.delete({
+        userId: ctx.user.id,
+        targetId: deletedVote.id,
+        projectId,
+        items: [{ field: voteRecord.key }],
+        proposalCreatorId: proposal.creator,
+      });
 
       return deletedVote;
     }),
