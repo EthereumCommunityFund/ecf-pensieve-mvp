@@ -1,8 +1,8 @@
 'use client';
 
 import { cn, Image } from '@heroui/react';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
@@ -11,41 +11,42 @@ import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
 
 const ProjectPage = () => {
-  const { id } = useParams();
-  const [projectId, setProjectId] = useState<number | null>(null);
+  const { id: projectId } = useParams();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (id) {
-      const numId = Number(id);
-      if (!isNaN(numId)) {
-        setProjectId(numId);
-      }
-    }
-  }, [id]);
-
-  const { data: project, isLoading: isProjectLoading } =
-    trpc.project.getProjectById.useQuery(
-      { id: projectId as number },
-      {
-        enabled: !!projectId,
-        select: (data) => {
-          devLog('getProjectById', data);
-          return data;
-        },
+  const {
+    data: project,
+    isLoading: isProjectLoading,
+    isFetched: isProjectFetched,
+  } = trpc.project.getProjectById.useQuery(
+    { id: Number(projectId) },
+    {
+      enabled: !!projectId,
+      select: (data) => {
+        devLog('getProjectById', data);
+        return data;
       },
-    );
+    },
+  );
 
-  const { data: proposals, isLoading: isProposalsLoading } =
-    trpc.proposal.getProposalsByProjectId.useQuery(
-      { projectId: projectId as number },
-      {
-        enabled: !!projectId,
-        select: (data) => {
-          devLog('getProposalsByProjectId', data);
-          return data;
-        },
+  const {
+    data: proposals,
+    isLoading: isProposalsLoading,
+    isFetched: isProposalsFetched,
+  } = trpc.proposal.getProposalsByProjectId.useQuery(
+    { projectId: Number(projectId) },
+    {
+      enabled: !!projectId,
+      select: (data) => {
+        devLog('getProposalsByProjectId', data);
+        return data;
       },
-    );
+    },
+  );
+
+  const onSubmitProposal = useCallback(() => {
+    router.push(`/project/${projectId}/proposal/create`);
+  }, [router, projectId]);
 
   if (isProjectLoading) {
     return (
@@ -148,7 +149,7 @@ const ProjectPage = () => {
               are accurate.
             </p>
           </div>
-          <Button>Submit a Proposal</Button>
+          <Button onPress={onSubmitProposal}>Submit a Proposal</Button>
           <div className="text-center text-[12px] font-[400] leading-[16px] text-black/45">
             {' '}
             Community Validation v0.0.1

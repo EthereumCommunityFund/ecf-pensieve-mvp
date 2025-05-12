@@ -88,6 +88,19 @@ export default [
           ignore: ['css'],
         },
       ],
+
+      'tailwindcss/no-contradicting-classname': [
+        'error',
+        {
+          config: {
+            classNameContradictions: {
+              'font-mona': [],
+              'font-saria': [],
+              'font-sans': [],
+            },
+          },
+        },
+      ],
     },
   },
   {
