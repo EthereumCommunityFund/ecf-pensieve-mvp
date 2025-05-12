@@ -26,7 +26,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-open-sans)', 'Arial', 'sans-serif'],
-        special: ['var(--font-saira)', 'Arial', 'sans-serif'],
+        saira: ['var(--font-saira)', 'Arial', 'sans-serif'],
+        mona: ['var(--font-mona-sans)', 'Arial', 'sans-serif'],
       },
       scale: {
         '120': '1.2',
