@@ -6,7 +6,12 @@ import CreateProjectForm from '@/components/pages/project/create/CreateProjectFo
 const CreateProjectPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-[20px] mobile:gap-[10px]">
-      <BackHeader />
+      <BackHeader>
+        <span>Contribute</span>
+        <span className="font-[600]">/</span>
+        <span>Proposal a Project</span>
+      </BackHeader>
+
       <CreateProjectForm />
     </div>
   );

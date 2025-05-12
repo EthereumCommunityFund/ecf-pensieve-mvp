@@ -1,10 +1,15 @@
 'use client';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import { ReactNode } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 
-const BackHeader = () => {
+interface BackHeaderProps {
+  children?: ReactNode;
+}
+
+const BackHeader = ({ children }: BackHeaderProps) => {
   const router = useRouter();
 
   const handleBack = () => {
@@ -32,9 +37,7 @@ const BackHeader = () => {
         </ECFButton>
       </div>
       <div className="font-open-sans flex items-center justify-start gap-[10px] text-[14px] font-[400] text-black">
-        <span>Contribute</span>
-        <span className="font-[600]">/</span>
-        <span>Proposal a Project</span>
+        {children}
       </div>
     </div>
   );
