@@ -1,7 +1,8 @@
 import { clsx, type ClassValue } from 'clsx';
-import dayjs from 'dayjs';
 import { twMerge } from 'tailwind-merge';
 import { isAddress } from 'viem';
+
+import dayjs from '@/lib/dayjs';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

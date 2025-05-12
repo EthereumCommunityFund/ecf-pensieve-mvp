@@ -2,7 +2,6 @@ import { db } from '@/lib/db';
 import { activeLogs } from '@/lib/db/schema';
 
 export enum LogType {
-  PROJECT = 'project',
   PROPOSAL = 'proposal',
   VOTE = 'vote',
 }
@@ -49,7 +48,6 @@ const createLogActions = (type: LogType) => ({
 });
 
 export const logUserActivity = {
-  project: createLogActions(LogType.PROJECT),
   proposal: createLogActions(LogType.PROPOSAL),
   vote: createLogActions(LogType.VOTE),
 };

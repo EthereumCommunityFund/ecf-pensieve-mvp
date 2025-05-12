@@ -8,11 +8,11 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import { SignOut } from '@phosphor-icons/react';
+import { SignOut, User } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import Copy from '@/components/biz/common/Copy';
 import { Button } from '@/components/base';
+import Copy from '@/components/biz/common/Copy';
 import { WalletIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 
@@ -47,14 +47,13 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
     authStatus,
   } = useAuth();
 
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // State for potential profile edit modal
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const handleOpenProfileModal = () => setIsProfileModalOpen(true);
   const handleCloseProfileModal = () => setIsProfileModalOpen(false);
 
   const formattedName = formatUserName(profile?.name);
 
-  if (!isAuthenticated || !profile) {
+  if (!profile) {
     return (
       <Button
         startContent={<WalletIcon size={20} />}
@@ -113,14 +112,22 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
               </div>
             </Copy>
           </DropdownItem>
-
+          <DropdownItem
+            key="profile"
+            startContent={<User size={18} />}
+            textValue="My Profile"
+            className="mt-[10px]"
+            href={`/profile/${profile?.address}`}
+          >
+            My Profile
+          </DropdownItem>
           <DropdownItem
             key="logout"
             color="danger"
-            startContent={<SignOut size={18} />} // Danger color should provide icon color
+            startContent={<SignOut size={18} />}
             onPress={performFullLogoutAndReload}
             textValue="Log Out"
-            className="mt-[10px] border-t border-[rgba(255,255,255,0.1)] text-danger-600"
+            className="mt-[10px] text-danger-600"
           >
             Log Out
           </DropdownItem>

@@ -33,3 +33,12 @@ body {
     @apply btn-base bg-black text-white hover:bg-gray-800 flex items-center gap-2;
   }
 }
+
+#active-contributions {
+  svg {
+    rect {
+      rx: 3px;
+      ry: 3px;
+    }
+  }
+}

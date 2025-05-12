@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
@@ -11,17 +11,32 @@ export const activeRouter = router({
     .input(
       z.object({
         userId: z.string(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = input.userId;
+      const { startDate, endDate } = input;
 
-      const oneYearAgo = dayjs.utc().subtract(1, 'year').toDate();
+      const conditions = [eq(activeLogs.userId, userId)];
 
-      const condition = and(
-        eq(activeLogs.userId, userId),
-        gte(activeLogs.createdAt, oneYearAgo),
-      );
+      if (startDate) {
+        conditions.push(
+          gte(activeLogs.createdAt, dayjs.utc(startDate).toDate()),
+        );
+      } else {
+        const oneYearAgo = dayjs.utc().subtract(1, 'year').toDate();
+        conditions.push(gte(activeLogs.createdAt, oneYearAgo));
+      }
+
+      if (endDate) {
+        conditions.push(
+          lte(activeLogs.createdAt, dayjs.utc(endDate).endOf('day').toDate()),
+        );
+      }
+
+      const queryCondition = and(...conditions);
 
       const dailyActivities = await ctx.db
         .select({
@@ -29,7 +44,7 @@ export const activeRouter = router({
           count: sql<number>`COUNT(${activeLogs.id})`,
         })
         .from(activeLogs)
-        .where(condition)
+        .where(queryCondition)
         .groupBy(
           sql`TO_CHAR(${activeLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
         )
@@ -38,8 +53,8 @@ export const activeRouter = router({
         );
 
       return dailyActivities.map((activity) => ({
-        date: activity.date,
-        count: Number(activity.count),
+        day: activity.date,
+        value: Number(activity.count),
       }));
     }),
 
@@ -49,15 +64,20 @@ export const activeRouter = router({
         userId: z.string(),
         limit: z.number().min(1).max(100).default(50),
         cursor: z.string().uuid().optional(),
+        type: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { userId, limit, cursor } = input;
+      const { userId, limit, cursor, type } = input;
 
       const baseCondition = eq(activeLogs.userId, userId);
+      const conditions = [baseCondition];
+      if (type) {
+        conditions.push(eq(activeLogs.type, type));
+      }
       const whereCondition = cursor
-        ? and(baseCondition, gt(activeLogs.id, cursor))
-        : baseCondition;
+        ? and(...conditions, gt(activeLogs.id, cursor))
+        : and(...conditions);
 
       const items = await ctx.db
         .select({

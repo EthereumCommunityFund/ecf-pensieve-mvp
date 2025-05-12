@@ -1,5 +1,6 @@
 import { router } from '../server';
 
+import { activeRouter } from './active';
 import { authRouter } from './auth';
 import { fileRouter } from './file';
 import { projectRouter } from './project';
@@ -12,6 +13,7 @@ export const appRouter = router({
   file: fileRouter,
   project: projectRouter,
   proposal: proposalRouter,
+  active: activeRouter,
 });
 
 export type AppRouter = typeof appRouter;

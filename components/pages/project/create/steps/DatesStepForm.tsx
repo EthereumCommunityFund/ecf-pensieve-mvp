@@ -1,7 +1,6 @@
 'use client';
 
 import { DateValue, parseDate } from '@internationalized/date';
-import dayjs from 'dayjs';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
@@ -10,6 +9,7 @@ import { CalendarBlankIcon } from '@/components/icons';
 import { datesFieldsConfig } from '@/components/pages/project/create/FormData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
+import dayjs from '@/lib/dayjs';
 
 import { ProjectFormData, StepFormProps } from '../types';
 
