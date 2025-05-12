@@ -1,7 +1,8 @@
-import { sql } from 'drizzle-orm';
+import { InferSelectModel, sql } from 'drizzle-orm';
 import {
   bigint,
   index,
+  json,
   pgTable,
   text,
   timestamp,
@@ -29,6 +30,10 @@ export const activeLogs = pgTable(
     projectId: bigint('project_id', { mode: 'number' }).references(
       () => projects.id,
     ),
+    items: json('items'),
+    proposalCreatorId: uuid('proposal_creator_id').references(
+      () => profiles.userId,
+    ),
   },
   (table) => {
     return {
@@ -42,3 +47,5 @@ export const activeLogs = pgTable(
     };
   },
 );
+
+export type ActiveLog = InferSelectModel<typeof activeLogs>;

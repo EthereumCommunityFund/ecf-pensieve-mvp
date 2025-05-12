@@ -1,7 +1,7 @@
-import { Skeleton } from '@heroui/react';
+import { cn, Skeleton, Tab, Tabs } from '@heroui/react';
 import { ResponsiveCalendar } from '@nivo/calendar';
 import { scaleThreshold } from 'd3-scale';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import dayjs from '@/lib/dayjs';
@@ -12,6 +12,13 @@ import { useProfileData } from './dataContext';
 const contributionsColorScale = scaleThreshold<number, string>()
   .domain([5, 10, 15, 20])
   .range(['#aceebb', '#4ac26b', '#2da44e', '#116329']);
+
+const tabItems = [
+  { key: 'all', label: 'View All' },
+  { key: 'edits', label: 'Edits' },
+  { key: 'votes', label: 'Votes' },
+  { key: 'proposals', label: 'Proposals' },
+];
 
 export default function Contributions() {
   const currentYearStart = dayjs().startOf('year').format('YYYY-MM-DD');
@@ -29,6 +36,7 @@ export default function Contributions() {
         enabled: !!user?.userId,
       },
     );
+  const [activeTab, setActiveTab] = useState('all');
 
   const isLoadingContributions = isLoading || !user?.userId;
 
@@ -40,7 +48,7 @@ export default function Contributions() {
   }, [contributions]);
 
   return (
-    <div className="w-full">
+    <div className="flex w-full flex-col gap-[20px]">
       <div className="h-[156px] w-full px-[45px]">
         <div className="relative size-full overflow-hidden rounded-[10px] border border-black/10 bg-white">
           <div
@@ -93,6 +101,42 @@ export default function Contributions() {
             </ECFTypography>
           )}
         </div>
+      </div>
+      <ECFTypography type="body1" className="font-semibold">
+        Your Activity
+      </ECFTypography>
+      <div className="w-full">
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={(key) => {
+            setActiveTab(key as string);
+          }}
+          variant="underlined"
+          className="w-full"
+          classNames={{
+            tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
+            tab: 'w-fit flex justify-start items-center',
+            cursor: 'bg-black w-[102%] bottom-[-4px] left-[-4px] right-[-4px]',
+            tabContent: 'font-semibold',
+          }}
+        >
+          {tabItems.map(({ key, label }) => (
+            <Tab
+              key={key}
+              title={
+                <ECFTypography
+                  type="body1"
+                  className={cn(
+                    'font-semibold',
+                    activeTab === key ? 'opacity-100' : 'opacity-60',
+                  )}
+                >
+                  {label}
+                </ECFTypography>
+              }
+            />
+          ))}
+        </Tabs>
       </div>
     </div>
   );

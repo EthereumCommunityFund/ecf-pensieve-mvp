@@ -64,7 +64,11 @@ export const projectRouter = router({
         });
       }
 
-      logUserActivity.proposal.create(ctx.user.id, project.id, project.id);
+      logUserActivity.project.create({
+        userId: ctx.user.id,
+        targetId: project.id,
+        projectId: project.id,
+      });
 
       return project;
     }),

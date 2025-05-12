@@ -11,6 +11,19 @@ import { cn } from '@/lib/utils';
 import Contributions from './components/contributions';
 import Setting from './components/setting';
 
+const tabItems = [
+  {
+    key: 'profile',
+    label: 'Profile Settings',
+    icon: <UserSquare size={32} weight="fill" />,
+  },
+  {
+    key: 'contributions',
+    label: 'Contributions',
+    icon: <GitCommit size={32} weight="fill" />,
+  },
+];
+
 const ProfileSettingsPage = () => {
   const { address } = useParams();
   const router = useRouter();
@@ -74,42 +87,25 @@ const ProfileSettingsPage = () => {
             tabContent: 'font-semibold',
           }}
         >
-          <Tab
-            key="profile"
-            title={
-              <div className="flex items-center gap-[10px]">
-                <UserSquare size={32} weight="fill" />
-                <ECFTypography
-                  type="body1"
-                  className={cn(
-                    'font-semibold',
-                    activeTab === 'profile' ? 'opacity-100' : 'opacity-60',
-                  )}
-                >
-                  Profile Settings
-                </ECFTypography>
-              </div>
-            }
-          />
-          <Tab
-            key="contributions"
-            title={
-              <div className="flex items-center gap-[10px]">
-                <GitCommit size={32} weight="fill" />
-                <ECFTypography
-                  type="body1"
-                  className={cn(
-                    'font-semibold',
-                    activeTab === 'contributions'
-                      ? 'opacity-100'
-                      : 'opacity-60',
-                  )}
-                >
-                  Contributions
-                </ECFTypography>
-              </div>
-            }
-          />
+          {tabItems.map(({ key, label, icon }) => (
+            <Tab
+              key={key}
+              title={
+                <div className="flex items-center gap-[10px]">
+                  {icon}
+                  <ECFTypography
+                    type="body1"
+                    className={cn(
+                      'font-semibold',
+                      activeTab === key ? 'opacity-100' : 'opacity-60',
+                    )}
+                  >
+                    {label}
+                  </ECFTypography>
+                </div>
+              }
+            />
+          ))}
         </Tabs>
       </div>
 
