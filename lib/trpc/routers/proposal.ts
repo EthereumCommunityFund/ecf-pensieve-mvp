@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { projects, proposals } from '@/lib/db/schema';
+import { profiles, projects, proposals } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -69,19 +69,30 @@ export const proposalRouter = router({
     .input(z.object({ projectId: z.number() }))
     .query(async ({ ctx, input }) => {
       const proposalsData = await ctx.db
-        .select()
+        .select({
+          proposal: proposals,
+          creator: profiles,
+        })
         .from(proposals)
+        .leftJoin(profiles, eq(proposals.creator, profiles.userId))
         .where(eq(proposals.projectId, input.projectId));
 
-      return proposalsData;
+      return proposalsData.map(({ proposal, creator }) => ({
+        ...proposal,
+        creator,
+      }));
     }),
 
   getProposalById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const proposal = await ctx.db
-        .select()
+      const [proposal] = await ctx.db
+        .select({
+          proposal: proposals,
+          creator: profiles,
+        })
         .from(proposals)
+        .leftJoin(profiles, eq(proposals.creator, profiles.userId))
         .where(eq(proposals.id, input.id));
 
       if (!proposal) {
@@ -91,6 +102,9 @@ export const proposalRouter = router({
         });
       }
 
-      return proposal;
+      return {
+        ...proposal.proposal,
+        creator: proposal.creator,
+      };
     }),
 });
