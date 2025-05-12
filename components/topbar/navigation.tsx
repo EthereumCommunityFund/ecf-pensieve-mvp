@@ -5,6 +5,7 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { GitPullDarkIcon, GitPullLightIcon } from '@/components/icons';
 import DropDownMenu from '@/components/topbar/dropDownMenu';
 
 import ECFTypography from '../base/typography';
@@ -12,11 +13,12 @@ import ECFTypography from '../base/typography';
 export type NavigationItem = {
   name: string;
   href: string;
-  icon: string;
-  activeIcon: string;
+  icon: string | React.ReactNode;
+  activeIcon: string | React.ReactNode;
   matchPath: string;
 };
 
+// TODO replace png -> svg icon
 export const navigationItems: NavigationItem[] = [
   {
     name: 'Home',
@@ -31,6 +33,13 @@ export const navigationItems: NavigationItem[] = [
     icon: '/images/home/Cube-Light.png',
     activeIcon: '/images/home/Cube-Dark.png',
     matchPath: '/projects',
+  },
+  {
+    name: 'Pending Projects',
+    href: '/projects/pending',
+    icon: <GitPullDarkIcon />,
+    activeIcon: <GitPullLightIcon />,
+    matchPath: '/projects/pending',
   },
   {
     name: 'Contribute',
@@ -64,22 +73,34 @@ export function Navigation() {
                         }
                     `}
         >
-          <Image
-            src={isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
-            as={NextImage}
-            alt={item.name}
-            width={24}
-            height={24}
-            className={`
-                            size-6 shrink-0
-                            ${
-                              isActiveRoute(item.matchPath)
-                                ? 'brightness-0 invert' // Active state (white icon)
-                                : 'brightness-0' // Default state (black icon)
-                            }
-                            transition-all duration-200
-                        `}
-          />
+          {typeof (isActiveRoute(item.matchPath)
+            ? item.activeIcon
+            : item.icon) === 'string' ? (
+            <Image
+              src={
+                isActiveRoute(item.matchPath)
+                  ? (item.activeIcon as string)
+                  : (item.icon as string)
+              }
+              as={NextImage}
+              alt={item.name}
+              width={24}
+              height={24}
+              className={`
+                              size-6 shrink-0
+                              ${
+                                isActiveRoute(item.matchPath)
+                                  ? 'brightness-0 invert' // Active state (white icon)
+                                  : 'brightness-0' // Default state (black icon)
+                              }
+                              transition-all duration-200
+                          `}
+            />
+          ) : (
+            <div className="size-6 shrink-0">
+              {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
+            </div>
+          )}
           <ECFTypography type={'body2'} className="font-semibold text-inherit">
             {item.name}
           </ECFTypography>

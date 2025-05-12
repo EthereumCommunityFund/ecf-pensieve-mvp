@@ -4,6 +4,7 @@ export { default as CardsIcon } from './Cards';
 export { default as CheckIcon } from './Check';
 export { default as CodeIcon } from './Code';
 export { default as GaugeIcon } from './Gauge';
+export { GitPullDarkIcon, GitPullLightIcon } from './GitPull';
 export { default as InfoIcon } from './Info';
 export { default as LinkIcon } from './Link';
 export { default as PaperClipIcon } from './PaperClip';
