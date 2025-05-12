@@ -8,8 +8,9 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import { SignOut } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { SignOut, User } from '@phosphor-icons/react';
+import React, { useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/base';
 import Copy from '@/components/biz/common/Copy';
@@ -46,13 +47,17 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
     fetchUserProfile,
     authStatus,
   } = useAuth();
+  const router = useRouter();
 
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // State for potential profile edit modal
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const handleOpenProfileModal = () => setIsProfileModalOpen(true);
   const handleCloseProfileModal = () => setIsProfileModalOpen(false);
 
   const formattedName = formatUserName(profile?.name);
+
+  const handleMyProfile = useCallback(() => {
+    router.push(`/profile/${profile?.address}`);
+  }, [router, profile?.address]);
 
   if (!profile) {
     return (
@@ -113,7 +118,16 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
               </div>
             </Copy>
           </DropdownItem>
-
+          <DropdownItem
+            key="profile"
+            startContent={<User size={18} />}
+            textValue="My Profile"
+            className="mt-[10px]"
+            href={`/profile/${profile?.address}`}
+          >
+            My Profile
+          </DropdownItem>
+          {/* <Divider /> */}
           <DropdownItem
             key="logout"
             color="danger"
