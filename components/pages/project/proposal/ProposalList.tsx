@@ -42,9 +42,9 @@ const ProposalList = ({
 
   if (!proposals || proposals.length === 0) {
     return (
-      <div className="rounded-[10px] border border-black/10 bg-white p-[20px] text-center">
+      <div className="mt-[20px] rounded-[10px] border border-black/10 bg-white px-[20px] py-[100px] text-center">
         <ECFTypography type="body1">
-          No proposals found for this project.
+          No proposal found in this project.
         </ECFTypography>
       </div>
     );

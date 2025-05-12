@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
 import { Button } from '@/components/base';
-import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
 import ProposalList from '@/components/pages/project/proposal/ProposalList';
 import { trpc } from '@/lib/trpc/client';
@@ -49,14 +48,6 @@ const ProjectPage = () => {
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/${projectId}/proposal/create`);
   }, [router, projectId]);
-
-  if (isProjectFetched && !project) {
-    return (
-      <div className="flex h-[300px] items-center justify-center">
-        <ECFTypography type="body1">Project Not Found</ECFTypography>
-      </div>
-    );
-  }
 
   return (
     <div className="pb-[20px]">
