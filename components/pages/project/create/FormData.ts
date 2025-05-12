@@ -1,8 +1,12 @@
+import { IProject } from '@/types';
+
 import {
   BasicsKeys,
   DatesKeys,
+  IFormTypeEnum,
   OrganizationKeys,
   ProjectFormData,
+  ReferenceData,
   TechnicalsKeys,
 } from './types';
 
@@ -283,7 +287,6 @@ export type ApplicableField =
   | 'codeRepo'
   | 'tokenContract';
 
-// Default field applicability
 export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
   appUrl: true,
   dateLaunch: true,
@@ -314,4 +317,102 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
   orgStructure: '',
   publicGoods: '',
   founders: [{ fullName: '', titleRole: '' }],
+};
+
+export const convertProjectToFormData = (
+  project: IProject,
+): ProjectFormData => {
+  return {
+    projectName: project.name,
+    tagline: project.tagline,
+    categories: project.categories,
+    mainDescription: project.mainDescription,
+    projectLogo: project.logoUrl,
+    websiteUrl: project.websiteUrl,
+    appUrl: project.appUrl || null,
+    dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
+    dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,
+    devStatus: project.devStatus,
+    fundingStatus: project.fundingStatus || null,
+    openSource: project.openSource ? 'Yes' : 'No',
+    codeRepo: project.codeRepo || null,
+    tokenContract: project.tokenContract || null,
+    orgStructure: project.orgStructure,
+    publicGoods: project.publicGoods ? 'Yes' : 'No',
+    founders: project.founders.map((founder: any) => ({
+      fullName: founder.name,
+      titleRole: founder.title,
+    })),
+  };
+};
+
+export const convertProjectRefsToReferenceData = (
+  project: IProject,
+): ReferenceData[] => {
+  if (!project.refs || !Array.isArray(project.refs)) {
+    return [];
+  }
+
+  return project.refs.map((ref: any) => ({
+    key: ref.key,
+    ref: ref.value,
+    value: ref.value,
+  }));
+};
+
+const isLocalDev = process.env.NODE_ENV !== 'production';
+const isAutoFillForm = process.env.NEXT_PUBLIC_AUTO_FILL_FORM === 'true';
+
+export const getInitialFormValues = (
+  formType: IFormTypeEnum,
+  projectData: IProject | undefined,
+  setReferences?: (refs: ReferenceData[]) => void,
+): ProjectFormData => {
+  if (
+    formType === IFormTypeEnum.Proposal &&
+    isLocalDev &&
+    isAutoFillForm &&
+    projectData
+  ) {
+    if (setReferences && projectData.refs && Array.isArray(projectData.refs)) {
+      const referenceData = convertProjectRefsToReferenceData(projectData);
+      if (referenceData.length > 0) {
+        setTimeout(() => {
+          setReferences(referenceData);
+        }, 0);
+      }
+    }
+
+    return convertProjectToFormData(projectData);
+  }
+
+  return DEFAULT_CREATE_PROJECT_FORM_DATA;
+};
+
+export const updateFormWithProjectData = (
+  formType: IFormTypeEnum,
+  projectData: IProject | undefined,
+  setValue: (name: keyof ProjectFormData, value: any) => void,
+  setReferences?: (refs: ReferenceData[]) => void,
+): void => {
+  if (
+    formType === IFormTypeEnum.Proposal &&
+    isLocalDev &&
+    isAutoFillForm &&
+    projectData
+  ) {
+    const formData = convertProjectToFormData(projectData);
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        setValue(key as keyof ProjectFormData, value as any);
+      }
+    });
+
+    if (setReferences && projectData.refs && Array.isArray(projectData.refs)) {
+      const referenceData = convertProjectRefsToReferenceData(projectData);
+      if (referenceData.length > 0) {
+        setReferences(referenceData);
+      }
+    }
+  }
 };

@@ -3,14 +3,15 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { addToast } from '@/components/base';
 import {
   ApplicableField,
-  DEFAULT_CREATE_PROJECT_FORM_DATA,
   DEFAULT_FIELD_APPLICABILITY,
+  getInitialFormValues,
+  updateFormWithProjectData,
 } from '@/components/pages/project/create/FormData';
 import {
   transformProjectData,
@@ -20,6 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 import AddReferenceModal from './AddReferenceModal';
@@ -64,6 +66,7 @@ interface CreateProjectFormProps {
   onSuccess?: () => void;
   onError?: (error: any) => void;
   redirectPath?: string;
+  projectData?: IProject;
 }
 
 const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
@@ -73,6 +76,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   onSuccess: externalOnSuccess,
   onError: externalOnError,
   redirectPath,
+  projectData,
 }) => {
   const router = useRouter();
   const { profile } = useAuth();
@@ -100,6 +104,10 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     Record<ApplicableField, boolean>
   >(DEFAULT_FIELD_APPLICABILITY);
 
+  const initialFormValues = useCallback(() => {
+    return getInitialFormValues(formType, projectData, setReferences);
+  }, [formType, projectData, setReferences]);
+
   const methods = useForm<ProjectFormData>({
     resolver: yupResolver<
       ProjectFormData,
@@ -107,8 +115,17 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       ProjectFormData
     >(projectSchema, { context: fieldApplicability }),
     mode: 'all',
-    defaultValues: DEFAULT_CREATE_PROJECT_FORM_DATA,
+    defaultValues: initialFormValues(),
   });
+
+  useEffect(() => {
+    updateFormWithProjectData(
+      formType,
+      projectData,
+      methods.setValue,
+      setReferences,
+    );
+  }, [projectData, formType, methods.setValue, setReferences]);
 
   const {
     handleSubmit,
