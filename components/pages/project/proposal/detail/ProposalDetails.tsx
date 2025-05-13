@@ -25,6 +25,7 @@ import { IProposal } from '@/types';
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
+import TooltipItemWeight from './table/TooltipItemWeight';
 import TooltipTh from './table/TooltipTh';
 
 interface ProposalItem {
@@ -126,10 +127,11 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
       size: 235,
       cell: (info) => {
         return (
-          <div className="py-[10px]">
+          <div className="flex items-center justify-between">
             <span className="text-[14px] font-[600] leading-[20px] text-black">
               {info.getValue()}
             </span>
+            <TooltipItemWeight itemWeight={88} />
           </div>
         );
       },
