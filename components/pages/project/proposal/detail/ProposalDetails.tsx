@@ -25,6 +25,7 @@ import { IProposal } from '@/types';
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
+import TooltipTh from './table/TooltipTh';
 
 interface ProposalItem {
   property: string;
@@ -116,18 +117,30 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
 
   const columns = [
     columnHelper.accessor('property', {
-      header: 'Property',
-      size: 235,
-      cell: (info) => (
-        <div className="py-[10px]">
-          <span className="text-[14px] font-[600] leading-[20px] text-black">
-            {info.getValue()}
-          </span>
-        </div>
+      header: () => (
+        <TooltipTh
+          title="Property"
+          tooltipContext="The property name of the project item"
+        />
       ),
+      size: 235,
+      cell: (info) => {
+        return (
+          <div className="py-[10px]">
+            <span className="text-[14px] font-[600] leading-[20px] text-black">
+              {info.getValue()}
+            </span>
+          </div>
+        );
+      },
     }),
     columnHelper.accessor('input', {
-      header: 'Input',
+      header: () => (
+        <TooltipTh
+          title="Input"
+          tooltipContext="The input value provided by the user"
+        />
+      ),
       size: 250,
       cell: (info) => {
         const value = info.getValue();
@@ -143,31 +156,39 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
       },
     }),
     columnHelper.accessor('reference', {
-      header: 'Reference',
+      header: () => (
+        <TooltipTh
+          title="Reference"
+          tooltipContext="Reference information for this property"
+        />
+      ),
       size: 124,
       cell: (info) => {
         const value = info.getValue();
         return value ? (
-          <div className="py-[10px]">
+          <div className="mx-auto flex justify-center">
             <Button
               color="secondary"
-              size="sm"
-              className="min-h-0 min-w-0 border-none bg-transparent px-[10px] py-[2px] text-[14px] font-[400] leading-[20px] text-black"
+              size="md"
+              className="w-[104px] text-[13px] font-[400]"
             >
               Reference
             </Button>
           </div>
         ) : (
-          <div className="py-[10px]">
-            <span className="text-[14px] font-[400] leading-[20px] text-black/30">
-              empty
-            </span>
+          <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+            empty
           </div>
         );
       },
     }),
     columnHelper.accessor('support', {
-      header: 'Support',
+      header: () => (
+        <TooltipTh
+          title="Support"
+          tooltipContext="Number of supporters for this property"
+        />
+      ),
       size: 220,
       cell: (info) => {
         const value = info.getValue();
@@ -244,7 +265,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
           property: FIELD_LABELS[key] || key,
           input: value,
           reference: reference ? reference.value : '',
-          support: 0,
+          support: 1,
         });
       }
     });
@@ -315,7 +336,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
                   <th
                     key={header.id}
                     style={{ width: `${header.getSize()}px` }}
-                    className={`border-b border-r border-black/10 px-[20px] py-[10px] text-left
+                    className={`h-[30px] border-b border-r border-black/10 px-[10px] text-left
                       text-[14px] font-[600] text-black/60
                       ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
                     `}
@@ -344,7 +365,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
                     key={cell.id}
                     style={{ width: `${cell.column.getSize()}px` }}
                     className={`min-h-[60px] border-b border-r
-                      border-black/10 px-[20px] py-[10px]
+                      border-black/10 px-[10px]
                       ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
                       ${rowIndex === table.getRowModel().rows.length - 1 ? 'border-b-0' : ''}
                     `}
