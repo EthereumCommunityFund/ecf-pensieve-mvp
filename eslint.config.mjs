@@ -95,10 +95,16 @@ export default [
           config: {
             classNameContradictions: {
               'font-mona': [],
-              'font-saria': [],
+              'font-saira': [],
               'font-sans': [],
             },
           },
+        },
+      ],
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        {
+          whitelist: ['font-mona', 'font-saira', 'font-sans', 'scrollbar-hide'],
         },
       ],
     },
