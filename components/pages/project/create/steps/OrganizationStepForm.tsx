@@ -33,7 +33,7 @@ const OrganizationStepForm: React.FC<
     organizationFieldsConfig.publicGoods?.options || [];
 
   return (
-    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
+    <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: organizationFieldsConfig.orgStructure,
@@ -127,7 +127,7 @@ const OrganizationStepForm: React.FC<
             <Button
               color="secondary"
               size="md"
-              className="px-[20px] mobile:w-full"
+              className="mobile:w-full px-[20px]"
               onPress={() => append({ fullName: '', titleRole: '' })}
             >
               Add Entry

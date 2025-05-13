@@ -30,7 +30,7 @@ const BasicsStepForm: React.FC<
   const presetCategories = categoriesConfig?.presetCategories || [];
 
   return (
-    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
+    <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.projectName,
@@ -160,7 +160,7 @@ const BasicsStepForm: React.FC<
                   />
                 </PhotoUpload>
                 {errors.projectLogo && (
-                  <p className="text-[12px] text-danger">
+                  <p className="text-danger text-[12px]">
                     {errors.projectLogo.message}
                   </p>
                 )}

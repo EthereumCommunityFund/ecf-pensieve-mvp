@@ -58,7 +58,7 @@ export function Navigation() {
   };
 
   return (
-    <nav className="mr-5 flex shrink-0 items-center gap-2.5 mobile:hidden">
+    <nav className="mobile:hidden mr-5 flex shrink-0 items-center gap-2.5">
       {navigationItems.map((item) => (
         <Link
           key={item.name}

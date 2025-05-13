@@ -35,7 +35,7 @@ const CreateProposalPage = () => {
       </BackHeader>
 
       {/* tip */}
-      <div className="mt-[20px] px-[160px] pb-[40px] tablet:px-[20px] mobile:px-[14px]">
+      <div className="tablet:px-[20px] mobile:px-[14px] mt-[20px] px-[160px] pb-[40px]">
         <div className="rounded-[10px] bg-[#EAEAEA] p-[20px]">
           <p className="font-mona text-[18px] font-[600] leading-[25px] text-black/50">
             You are creating an opposing proposal for:

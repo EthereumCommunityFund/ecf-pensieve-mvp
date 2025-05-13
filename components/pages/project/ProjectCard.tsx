@@ -13,8 +13,8 @@ export function ProjectCardSkeleton() {
     <div className="py-[10px]">
       <div className="flex items-center justify-start gap-[20px] rounded-[10px] p-[10px]">
         <div className="flex flex-1 items-start gap-[14px]">
-          <Skeleton className="size-[100px] rounded-[10px] mobile:size-[60px]" />
-          <div className="max-w-[440px] flex-1 mobile:max-w-full">
+          <Skeleton className="mobile:size-[60px] size-[100px] rounded-[10px]" />
+          <div className="mobile:max-w-full max-w-[440px] flex-1">
             <Skeleton className="h-[18px] w-[200px] rounded-[4px]" />
             <Skeleton className="mt-[6px] h-[18px] w-full rounded-[4px]" />
             <Skeleton className="mt-[6px] h-[18px] w-[120px] rounded-[4px]" />
@@ -50,10 +50,10 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
     >
       <Link
         href={`/project/${project.id}`}
-        className="flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)] mobile:items-start"
+        className="mobile:items-start flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]"
       >
         <div className="flex flex-1 items-start gap-[14px]">
-          <div className="size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)] mobile:hidden">
+          <div className="mobile:hidden size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)]">
             <Image
               src={project.logoUrl}
               as={NextImage}
@@ -64,7 +64,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             />
           </div>
 
-          <div className="hidden size-[60px] overflow-hidden rounded-[5px] border border-[rgba(0,0,0,0.1)] mobile:block">
+          <div className="mobile:block hidden size-[60px] overflow-hidden rounded-[5px] border border-[rgba(0,0,0,0.1)]">
             <Image
               src={project.logoUrl}
               as={NextImage}
@@ -75,7 +75,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             />
           </div>
 
-          <div className="max-w-[440px] flex-1 mobile:max-w-full">
+          <div className="mobile:max-w-full max-w-[440px] flex-1">
             <ECFTypography
               type={'body1'}
               className="font-semibold leading-[18px]"

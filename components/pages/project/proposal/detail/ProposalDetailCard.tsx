@@ -12,6 +12,7 @@ interface IProposalDetailCardProps {
   isLeading?: boolean;
   hasVoted?: boolean;
 }
+
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
   const { proposal, projectId, isLeading, hasVoted } = props;
   const proposalName = useMemo(() => {
@@ -20,7 +21,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       (item: any) => item.key === 'projectName',
     ) as { key: string; value: string } | undefined;
     return nameItem?.value || 'Unnamed Proposal';
-  }, [proposal?.items]);
+  }, [proposal]);
 
   const formattedDate = useMemo(() => {
     if (!proposal) return '';
@@ -30,7 +31,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       day: 'numeric',
       year: 'numeric',
     });
-  }, [proposal?.createdAt]);
+  }, [proposal]);
 
   const formatAddress = useMemo(() => {
     if (!proposal) return '';
@@ -39,7 +40,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           proposal.creator.address.length - 6,
         )}`
       : '0x000...00000';
-  }, [proposal?.creator?.address]);
+  }, [proposal]);
 
   const progressPercentage = 48;
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { XCircle } from '@phosphor-icons/react';
 import React from 'react';
 import {
   FieldError,
@@ -7,7 +8,6 @@ import {
   Merge,
   UseFormRegister,
 } from 'react-hook-form';
-import { XCircle } from '@phosphor-icons/react';
 
 import { Button, Input } from '@/components/base';
 
@@ -35,7 +35,7 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
   canRemove,
 }) => {
   return (
-    <div className="flex items-start gap-[10px] mobile:flex-col">
+    <div className="mobile:flex-col flex items-start gap-[10px]">
       <Input
         className="flex-1"
         label="Full Name"
@@ -61,11 +61,11 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
         }}
       />
       {canRemove && (
-        <div className="mt-[28px] flex justify-end mobile:mt-0 mobile:w-full">
+        <div className="mobile:mt-0 mobile:w-full mt-[28px] flex justify-end">
           <Button
             isIconOnly
             size="sm"
-            className="size-[32px] border-none bg-transparent p-[4px] text-[13px] font-[400] leading-[16px] text-black mobile:hidden"
+            className="mobile:hidden size-[32px] border-none bg-transparent p-[4px] text-[13px] font-[400] leading-[16px] text-black"
             onPress={() => remove(index)}
             aria-label={`Remove founder ${index + 1}`}
           >
@@ -74,7 +74,7 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
 
           <Button
             size="sm"
-            className="hidden gap-[5px] border-none bg-transparent p-[5px] text-[13px] font-[400] leading-[16px] text-black mobile:flex"
+            className="mobile:flex hidden gap-[5px] border-none bg-transparent p-[5px] text-[13px] font-[400] leading-[16px] text-black"
             onPress={() => remove(index)}
             aria-label={`Remove founder ${index + 1}`}
           >

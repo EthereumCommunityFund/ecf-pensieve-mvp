@@ -31,7 +31,7 @@ const DiscardConfirmModal: React.FC<DiscardConfirmModalProps> = ({
             title: 'text-[#D75454]',
           }}
         />
-        <ModalBody className="mt-[10px] p-0 mobile:p-0">
+        <ModalBody className="mobile:p-0 mt-[10px] p-0">
           <p className="text-[16px] leading-[20px] text-black opacity-80">
             You are trying to leave this page. Doing so will lose your inputs.
           </p>

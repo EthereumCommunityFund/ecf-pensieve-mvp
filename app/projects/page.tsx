@@ -8,7 +8,7 @@ import ECFTypography from '@/components/base/typography';
 import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
-import RewardCard from '@/components/pages/project/rewardCard';
+import RewardCard from '@/components/pages/project/RewardCard';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
@@ -61,8 +61,8 @@ const ProjectsPage = () => {
         </div>
       </div>
 
-      <div className="mt-5 flex items-start justify-between gap-10 px-2.5 mobile:flex-col mobile:gap-5">
-        <div className="flex w-full items-center justify-end gap-2.5 lg:hidden pc:hidden tablet:hidden">
+      <div className="mobile:flex-col mobile:gap-5 mt-5 flex items-start justify-between gap-10 px-2.5">
+        <div className="pc:hidden tablet:hidden flex w-full items-center justify-end gap-2.5 lg:hidden">
           <ECFButton $size="small">Sort</ECFButton>
           <ECFButton $size="small">Filter</ECFButton>
         </div>
@@ -128,7 +128,7 @@ const ProjectsPage = () => {
           <RewardCard />
         </div>
 
-        <div className="mt-5 w-full lg:hidden pc:hidden tablet:hidden">
+        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden">
           <RewardCard />
         </div>
       </div>

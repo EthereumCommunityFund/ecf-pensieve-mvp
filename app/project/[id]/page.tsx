@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { Button } from '@/components/base';
 import BackHeader from '@/components/pages/project/BackHeader';
-import ProposalList from '@/components/pages/project/proposal/ProposalList';
+import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';

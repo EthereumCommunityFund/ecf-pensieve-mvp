@@ -31,7 +31,7 @@ export function AuthSection() {
         <Dropdown>
           <DropdownTrigger>
             <div className="flex h-8 cursor-pointer items-center justify-end gap-2.5 rounded-[5px] bg-[rgba(0,0,0,0.05)] px-2.5 hover:bg-[rgba(0,0,0,0.1)]">
-              <div className="block size-[24px] rounded-[24px] bg-[rgba(0,0,0,0.1)] tablet:hidden mobile:hidden"></div>
+              <div className="tablet:hidden mobile:hidden block size-[24px] rounded-[24px] bg-[rgba(0,0,0,0.1)]"></div>
               <div className="text-[16px] font-semibold leading-[22px] text-black">
                 {getShortenAddress(address)}
               </div>

@@ -52,7 +52,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   const currentStepIndex = stepsOrder.indexOf(currentStep);
 
   return (
-    <nav className="sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start mobile:hidden">
+    <nav className="mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start">
       <ul className="space-y-4">
         {stepsOrder.map((step, index) => {
           const status = stepStatuses[step];
@@ -98,14 +98,14 @@ export const StepHeader: React.FC<{ currentStep: CreateProjectStep }> = ({
 }) => {
   return (
     <>
-      <div className="flex h-[50px] items-center justify-start border-b border-[rgba(0,0,0,0.1)] bg-[rgba(245,245,245,0.8)] px-[10px] backdrop-blur-[5px] mobile:hidden">
+      <div className="mobile:hidden flex h-[50px] items-center justify-start border-b border-[rgba(0,0,0,0.1)] bg-[rgba(245,245,245,0.8)] px-[10px] backdrop-blur-[5px]">
         {/* TODO fontFamily: Mona Sans */}
         <span className="text-[24px] font-[700] text-black opacity-80">
           {stepLabels[currentStep]}
         </span>
       </div>
 
-      <div className="hidden h-[44px] items-center justify-start gap-[10px] border-b border-[rgba(0,0,0,0.2)] px-[14px] pb-[10px] pt-[6px] mobile:flex">
+      <div className="mobile:flex hidden h-[44px] items-center justify-start gap-[10px] border-b border-[rgba(0,0,0,0.2)] px-[14px] pb-[10px] pt-[6px]">
         {getStepIcons(currentStep, 24)}
         <span className="text-[16px] font-[600] leading-[26px] text-black">
           {stepLabels[currentStep]}

@@ -28,7 +28,7 @@ const TechnicalsStepForm: React.FC<
   const openSourceOptions = technicalsFieldsConfig.openSource?.options || [];
 
   return (
-    <div className="flex flex-col gap-[40px] mobile:gap-[20px]">
+    <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.openSource,

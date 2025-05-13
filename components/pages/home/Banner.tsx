@@ -22,7 +22,7 @@ const Banner = () => {
 
         <ECFTypography
           type={'title'}
-          className="mt-2.5 mobile:text-[30px] mobile:leading-[42px]"
+          className="mobile:text-[30px] mobile:leading-[42px] mt-2.5"
         >
           Welcome to{' '}
           <span className="text-[var(--primary-green)]">ecf.network,</span>{' '}
@@ -30,7 +30,7 @@ const Banner = () => {
 
         <ECFTypography
           type={'subtitle2'}
-          className="mt-2.5 mobile:text-base mobile:leading-[26px]"
+          className="mobile:text-base mobile:leading-[26px] mt-2.5"
         >
           A community-curated and governed platform to discover credible web3
           projects.

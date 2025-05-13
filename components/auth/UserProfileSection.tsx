@@ -127,7 +127,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             startContent={<SignOut size={18} />}
             onPress={performFullLogoutAndReload}
             textValue="Log Out"
-            className="mt-[10px] text-danger-600"
+            className="text-danger-600 mt-[10px]"
           >
             Log Out
           </DropdownItem>

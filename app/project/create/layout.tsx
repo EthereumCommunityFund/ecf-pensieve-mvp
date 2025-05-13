@@ -1,6 +1,6 @@
 const ProjectCreateLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="h-full bg-[#F4F4F4] pt-[20px] mobile:pt-[10px]">
+    <div className="mobile:pt-[10px] h-full bg-[#F4F4F4] pt-[20px]">
       {children}
     </div>
   );

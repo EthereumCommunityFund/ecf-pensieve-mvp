@@ -23,12 +23,12 @@ const SectionList = (props: ISectionProps) => {
   return (
     <div>
       <div
-        className="mt-5 flex h-[65px] items-center
-				justify-between px-[20px] mobile:h-auto
-				mobile:flex-col mobile:items-start
-				mobile:gap-2.5"
+        className="mobile:h-auto mobile:flex-col mobile:items-start mobile:gap-2.5
+				mt-5 flex h-[65px]
+				items-center justify-between
+				px-[20px]"
       >
-        <div className="h-[57px] mobile:h-auto">
+        <div className="mobile:h-auto h-[57px]">
           <ECFTypography type={'subtitle1'} className="font-bold opacity-80">
             {props.title}
           </ECFTypography>
@@ -44,7 +44,7 @@ const SectionList = (props: ISectionProps) => {
             <ECFButton
               $size={'small'}
               onPress={props.onClick}
-              className="h-[31px] px-2.5 mobile:h-[31px] mobile:w-full"
+              className="mobile:h-[31px] mobile:w-full h-[31px] px-2.5"
             >
               {props.buttonText}
             </ECFButton>

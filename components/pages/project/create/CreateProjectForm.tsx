@@ -152,6 +152,33 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     [fieldApplicability],
   );
 
+  const handleSubmissionError = useCallback(
+    (error: any) => {
+      if (error?.data?.zodError?.fieldErrors) {
+        const fieldErrors = error.data.zodError.fieldErrors;
+        Object.entries(fieldErrors).forEach(([field, messages]) => {
+          setError(field as keyof ProjectFormData, {
+            type: 'server',
+            message: Array.isArray(messages) ? messages[0] : String(messages),
+          });
+        });
+        addToast({
+          title: 'Validation Error',
+          description: 'Please check the highlighted fields',
+          color: 'warning',
+        });
+      } else {
+        addToast({
+          title: 'Submission Failed',
+          description:
+            error?.message || 'An unexpected error occurred, please try again',
+          color: 'danger',
+        });
+      }
+    },
+    [setError],
+  );
+
   const onSubmit = useCallback(
     async (formData: ProjectFormData) => {
       if (!profile?.userId) {
@@ -253,34 +280,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       externalOnError,
       redirectPath,
       router,
+      handleSubmissionError,
     ],
-  );
-
-  const handleSubmissionError = useCallback(
-    (error: any) => {
-      if (error?.data?.zodError?.fieldErrors) {
-        const fieldErrors = error.data.zodError.fieldErrors;
-        Object.entries(fieldErrors).forEach(([field, messages]) => {
-          setError(field as keyof ProjectFormData, {
-            type: 'server',
-            message: Array.isArray(messages) ? messages[0] : String(messages),
-          });
-        });
-        addToast({
-          title: 'Validation Error',
-          description: 'Please check the highlighted fields',
-          color: 'warning',
-        });
-      } else {
-        addToast({
-          title: 'Submission Failed',
-          description:
-            error?.message || 'An unexpected error occurred, please try again',
-          color: 'danger',
-        });
-      }
-    },
-    [setError],
   );
 
   const validateCurrentStep = useCallback(async (): Promise<boolean> => {
@@ -516,12 +517,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     });
   }, []);
 
-  const handleRemoveReference = useCallback(
-    (fieldKey: string) => {
-      setReferences((prev) => prev.filter((ref) => ref.key !== fieldKey));
-    },
-    [references],
-  );
+  const handleRemoveReference = useCallback((fieldKey: string) => {
+    setReferences((prev) => prev.filter((ref) => ref.key !== fieldKey));
+  }, []);
 
   const handleApplicabilityChange = useCallback(
     (field: ApplicableField, value: boolean) => {

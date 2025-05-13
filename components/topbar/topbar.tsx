@@ -64,7 +64,7 @@ export function Topbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-[50px] min-w-[390px] border-b border-[rgba(0,0,0,0.1)] bg-white">
       {/* desktop/tablet */}
-      <div className="size-full px-5 mobile:hidden">
+      <div className="mobile:hidden size-full px-5">
         <div className="flex h-full items-center justify-between">
           <div className="flex h-full items-center gap-5">
             <Link href="/" className="flex h-full min-w-[171px] items-center">
@@ -75,7 +75,7 @@ export function Topbar() {
               />
             </Link>
 
-            <div className="flex h-[32px] w-[300px] cursor-pointer items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] p-2.5 tablet:hidden">
+            <div className="tablet:hidden flex h-[32px] w-[300px] cursor-pointer items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] p-2.5">
               <Image
                 src="/images/common/search.png"
                 alt="Search"
@@ -112,7 +112,7 @@ export function Topbar() {
       </div>
 
       {/* mobile */}
-      <div className="flex size-full items-center justify-between px-5 lg:hidden pc:hidden tablet:hidden">
+      <div className="pc:hidden tablet:hidden flex size-full items-center justify-between px-5 lg:hidden">
         <MobileMenu />
 
         <Link

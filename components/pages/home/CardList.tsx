@@ -37,7 +37,7 @@ const CardList = () => {
 
   return (
     <div className="mt-5 w-full">
-      <div className="overflow-x-auto scrollbar-hide">
+      <div className="scrollbar-hide overflow-x-auto">
         <div className="flex min-w-fit flex-nowrap gap-5">
           <CardItem
             title={CardListData[0].title}
@@ -86,11 +86,11 @@ interface ICardItemProps {
 const CardItem = (props: ICardItemProps) => {
   return (
     <div
-      className="group relative min-h-[245px] shrink-0 overflow-hidden rounded-md border border-[rgba(0,0,0,0.1)] bg-white px-[19px] py-5 hover:border-[rgba(0,0,0,0.2)]
-				lg:w-auto 
-				lg:flex-1
-				pc:w-auto pc:flex-1 
-				tablet:w-[373px] mobile:w-[300px]"
+      className="pc:w-auto pc:flex-1 tablet:w-[373px] mobile:w-[300px] group relative min-h-[245px] shrink-0 overflow-hidden rounded-md border border-[rgba(0,0,0,0.1)]
+				bg-white 
+				px-[19px]
+				py-5 hover:border-[rgba(0,0,0,0.2)] 
+				lg:w-auto lg:flex-1"
       style={{
         cursor: props.disabled ? 'not-allowed' : 'pointer',
       }}
@@ -104,7 +104,7 @@ const CardItem = (props: ICardItemProps) => {
         </ECFTypography>
         <ECFTypography
           type={'body1'}
-          className="mt-[14px] min-h-[130px] leading-[25.6px] text-[rgba(0,0,0,0.8)] mobile:min-h-0"
+          className="mobile:min-h-0 mt-[14px] min-h-[130px] leading-[25.6px] text-[rgba(0,0,0,0.8)]"
         >
           {props.description}
         </ECFTypography>
