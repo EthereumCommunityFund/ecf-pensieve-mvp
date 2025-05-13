@@ -85,7 +85,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 interface ProposalDetailsProps {
-  proposal: IProposal;
+  proposal?: IProposal;
   projectId: number;
 }
 
@@ -207,7 +207,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     };
 
     // 将提案项目按类别分组
-    proposal.items.forEach((item: any) => {
+    proposal?.items.forEach((item: any) => {
       const key = item.key;
       const value = item.value;
 
@@ -324,37 +324,6 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
               />
             </svg>
           </Button>
-          <div className="flex items-center gap-[5px]">
-            <span className="text-[14px] font-[400] leading-[20px] text-black">
-              Your Weight
-            </span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="8"
-                cy="8"
-                r="7.5"
-                stroke="black"
-                strokeOpacity="0.5"
-              />
-              <path
-                d="M8 4V8.5"
-                stroke="black"
-                strokeOpacity="0.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="8" cy="11" r="1" fill="black" fillOpacity="0.5" />
-            </svg>
-            <span className="text-[14px] font-[700] leading-[20px] text-black">
-              00
-            </span>
-          </div>
         </div>
       </div>
 
@@ -439,18 +408,6 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
             )}
           </div>
         ))}
-      </div>
-
-      {/* 投票或提案按钮 */}
-      <div className="mt-[20px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
-        <ECFTypography type="subtitle2">Vote or Propose</ECFTypography>
-        <ECFTypography type="body2" className="text-black/60">
-          Vote on existing proposals or submit a new one for review if none are
-          accurate.
-        </ECFTypography>
-        <Button color="primary" className="mt-[10px]">
-          Submit a Proposal
-        </Button>
       </div>
     </div>
   );

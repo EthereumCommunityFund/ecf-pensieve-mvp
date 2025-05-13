@@ -4,8 +4,8 @@ import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
-import { Button } from '@/components/base';
 import BackHeader from '@/components/pages/project/BackHeader';
+import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
@@ -68,11 +68,12 @@ const ProjectPage = () => {
       {/* Proposal list */}
       <div
         className={cn(
-          'mt-[20px] mx-[20px] mobile:mx-[10px] pt-[20px] ',
-          'flex items-start justify-center gap-[40px] mobile:flex-col',
+          'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
+          'flex items-start justify-center gap-[40px] ',
+          'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
         )}
       >
-        <div className="max-w-[780px] flex-1">
+        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[800px] flex-1 ">
           <div className="font-mona flex items-center justify-between border-b border-black/10 bg-[rgba(245,245,245,0.80)] py-[8px] backdrop-blur-[5px]">
             <p className="text-[24px] font-[700] leading-[34px] text-black/80 ">
               Proposals
@@ -94,23 +95,7 @@ const ProjectPage = () => {
           />
         </div>
 
-        {/* Submit Proposal Entry */}
-        <div className="flex w-[300px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[14px]">
-          <div className="flex flex-col gap-[10px]">
-            <p className="text-[18px] font-[600] leading-[25px] text-black">
-              Vote of Propose
-            </p>
-            <p className="text-[15px] font-[400] leading-[20px] text-black/80">
-              Vote on existing proposals or submit a new one for review if none
-              are accurate.
-            </p>
-          </div>
-          <Button onPress={onSubmitProposal}>Submit a Proposal</Button>
-          <div className="text-center text-[12px] font-[400] leading-[16px] text-black/45">
-            {' '}
-            Community Validation v0.0.1
-          </div>
-        </div>
+        <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
       </div>
     </div>
   );

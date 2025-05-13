@@ -55,8 +55,8 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
         'mobile:flex-col gap-[10px]',
         'mt-[10px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'p-[20px] mobile:p-[14px]',
-        'mx-[20px] mobile:mx-[10px]',
+        'p-[20px] tablet:p-[14px] mobile:p-[14px]',
+        'mx-[20px] tablet:mx-[10px] mobile:mx-[10px]',
       )}
     >
       {/* basic info */}
