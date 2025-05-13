@@ -117,6 +117,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
   const columns = [
     columnHelper.accessor('property', {
       header: 'Property',
+      size: 235,
       cell: (info) => (
         <div className="py-[10px]">
           <span className="text-[14px] font-[600] leading-[20px] text-black">
@@ -127,6 +128,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     }),
     columnHelper.accessor('input', {
       header: 'Input',
+      size: 250,
       cell: (info) => {
         const value = info.getValue();
         return (
@@ -142,6 +144,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     }),
     columnHelper.accessor('reference', {
       header: 'Reference',
+      size: 124,
       cell: (info) => {
         const value = info.getValue();
         return value ? (
@@ -165,6 +168,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     }),
     columnHelper.accessor('support', {
       header: 'Support',
+      size: 220,
       cell: (info) => {
         const value = info.getValue();
         return (
@@ -294,27 +298,39 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
   const renderTable = useCallback(
     (table: Table<ProposalItem>) => (
       <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
-        <table className="w-full border-collapse">
+        <table className="w-full table-fixed border-separate border-spacing-0">
+          <colgroup>
+            {table.getAllColumns().map((column) => (
+              <col
+                key={column.id}
+                width={`${column.getSize()}px`}
+                style={{ width: `${column.getSize()}px` }}
+              />
+            ))}
+          </colgroup>
           <thead>
             <tr className="bg-[#F5F5F5]">
               {table.getHeaderGroups().map((headerGroup) =>
                 headerGroup.headers.map((header, index) => (
                   <th
                     key={header.id}
-                    className={`border border-t-0 border-black/10 px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60 ${
-                      index === 0 ? 'border-l-0' : ''
-                    } ${
-                      index === headerGroup.headers.length - 1
-                        ? 'border-r-0'
-                        : ''
-                    }`}
+                    style={{ width: `${header.getSize()}px` }}
+                    className={`border-b border-r border-black/10 px-[20px] py-[10px] text-left
+                      text-[14px] font-[600] text-black/60
+                      ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
+                    `}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                    <div
+                      className="flex items-center"
+                      style={{ width: '100%', overflow: 'hidden' }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </div>
                   </th>
                 )),
               )}
@@ -326,19 +342,19 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
                 {row.getVisibleCells().map((cell, cellIndex) => (
                   <td
                     key={cell.id}
-                    className={`min-h-[60px] border border-black/10 px-[10px] ${
-                      cellIndex === 0 ? 'border-l-0' : ''
-                    } ${
-                      cellIndex === row.getVisibleCells().length - 1
-                        ? 'border-r-0'
-                        : ''
-                    } ${
-                      rowIndex === table.getRowModel().rows.length - 1
-                        ? 'border-b-0'
-                        : ''
-                    }`}
+                    style={{ width: `${cell.column.getSize()}px` }}
+                    className={`min-h-[60px] border-b border-r
+                      border-black/10 px-[20px] py-[10px]
+                      ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
+                      ${rowIndex === table.getRowModel().rows.length - 1 ? 'border-b-0' : ''}
+                    `}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <div style={{ width: '100%', overflow: 'hidden' }}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </div>
                   </td>
                 ))}
               </tr>
