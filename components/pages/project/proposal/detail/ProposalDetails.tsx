@@ -293,15 +293,21 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
 
   const renderTable = useCallback(
     (table: Table<ProposalItem>) => (
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-black/10">
+            <tr className="bg-[#F5F5F5]">
               {table.getHeaderGroups().map((headerGroup) =>
-                headerGroup.headers.map((header) => (
+                headerGroup.headers.map((header, index) => (
                   <th
                     key={header.id}
-                    className="px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60"
+                    className={`border border-t-0 border-black/10 px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60 ${
+                      index === 0 ? 'border-l-0' : ''
+                    } ${
+                      index === headerGroup.headers.length - 1
+                        ? 'border-r-0'
+                        : ''
+                    }`}
                   >
                     {header.isPlaceholder
                       ? null
@@ -315,13 +321,23 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
             </tr>
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="border-b border-black/10 last:border-b-0"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-[20px]">
+            {table.getRowModel().rows.map((row, rowIndex) => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map((cell, cellIndex) => (
+                  <td
+                    key={cell.id}
+                    className={`min-h-[60px] border border-black/10 px-[10px] ${
+                      cellIndex === 0 ? 'border-l-0' : ''
+                    } ${
+                      cellIndex === row.getVisibleCells().length - 1
+                        ? 'border-r-0'
+                        : ''
+                    } ${
+                      rowIndex === table.getRowModel().rows.length - 1
+                        ? 'border-b-0'
+                        : ''
+                    }`}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -336,7 +352,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
 
   const renderCategoryHeader = useCallback(
     (title: string, description: string, category: CategoryKey) => (
-      <div className="flex items-center justify-between border-b border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+      <div className="flex items-center justify-between rounded-t-[10px] border border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
@@ -372,7 +388,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
       <TableSectionHeader title="Project Overview" description="" />
 
       <div className="flex flex-col gap-[20px]">
-        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
             CATEGORIES[CreateProjectStep.Basics].title,
             CATEGORIES[CreateProjectStep.Basics].description,
@@ -386,7 +402,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
             CATEGORIES[CreateProjectStep.Dates].title,
             CATEGORIES[CreateProjectStep.Dates].description,
@@ -400,7 +416,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
             CATEGORIES[CreateProjectStep.Technicals].title,
             CATEGORIES[CreateProjectStep.Technicals].description,
@@ -414,7 +430,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
             CATEGORIES[CreateProjectStep.Organization].title,
             CATEGORIES[CreateProjectStep.Organization].description,
