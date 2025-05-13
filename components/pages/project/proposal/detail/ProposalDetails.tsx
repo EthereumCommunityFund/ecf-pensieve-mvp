@@ -12,6 +12,9 @@ import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
 import { IProposal } from '@/types';
 
+import ActionSectionHeader from './ActionSectionHeader';
+import TableSectionHeader from './TableSectionHeader';
+
 interface ProposalItem {
   property: string;
   input: string;
@@ -99,10 +102,8 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     organization: true,
   });
 
-  // 创建列帮助器
   const columnHelper = createColumnHelper<ProposalItem>();
 
-  // 定义列
   const columns = [
     columnHelper.accessor('property', {
       header: 'Property',
@@ -197,7 +198,6 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     }),
   ];
 
-  // 处理提案数据，转换为表格数据
   const tableData = useMemo(() => {
     const result: Record<CategoryKey, ProposalItem[]> = {
       basics: [],
@@ -241,7 +241,6 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     return result;
   }, [proposal]);
 
-  // 将表格实例的创建移到组件顶层
   const tablesBasics = useReactTable<ProposalItem>({
     data: tableData.basics,
     columns,
@@ -266,7 +265,6 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // 创建一个包含所有表格的对象
   const tables = useMemo(() => {
     return {
       basics: tablesBasics,
@@ -276,7 +274,6 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     };
   }, [tablesBasics, tablesDates, tablesTechnicals, tablesOrganization]);
 
-  // 切换类别展开/折叠状态
   const toggleCategory = (category: CategoryKey) => {
     setExpandedCategories((prev) => ({
       ...prev,
@@ -286,46 +283,12 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
 
   return (
     <div className="flex flex-col gap-[20px]">
-      <div className="flex items-center justify-between">
-        <ECFTypography type="subtitle1">Items</ECFTypography>
-        <div className="flex items-center gap-[10px]">
-          <Button
-            color="secondary"
-            size="sm"
-            className="min-h-0 min-w-0 border-none bg-transparent px-[10px] py-[2px]"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 6H21"
-                stroke="black"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M7 12H17"
-                stroke="black"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M11 18H13"
-                stroke="black"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Button>
-        </div>
-      </div>
+      <ActionSectionHeader />
+
+      <TableSectionHeader
+        title="Basics"
+        description="These are the basic information about the project"
+      />
 
       <div className="flex flex-col gap-[20px]">
         {/* 遍历所有类别 */}
