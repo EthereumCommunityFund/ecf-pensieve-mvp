@@ -1,11 +1,14 @@
 'use client';
 
+import { Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { Skeleton } from '@heroui/react';
 
 import { Button } from '@/components/base';
 import { IProposal } from '@/types';
+
+import { ActiveLeadingLabel } from '../common/LeadingLabel';
+import VotedLabel from '../common/VotedLabel';
 
 interface ProposalListItemProps {
   proposal: IProposal;
@@ -50,74 +53,13 @@ const ProposalListItem = ({
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
       {/* leading */}
       <div className="flex items-center gap-[10px]">
-        {isLeading && (
-          <div className="flex items-center gap-[5px] rounded-[5px] border border-[rgba(104,204,174,0.40)] bg-[rgba(104,204,174,0.10)] px-[8px] py-[4px] text-[14px] font-[400] leading-[20px] text-[#40A486]">
-            <span>Leading Proposal</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-            >
-              <path
-                d="M8.4375 8.4375C8.58668 8.4375 8.72976 8.49676 8.83525 8.60225C8.94074 8.70774 9 8.85082 9 9V11.8125C9 11.9617 9.05926 12.1048 9.16475 12.2102C9.27024 12.3157 9.41332 12.375 9.5625 12.375"
-                stroke="#40A486"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M8.71875 6.60938C9.10708 6.60938 9.42188 6.29458 9.42188 5.90625C9.42188 5.51792 9.10708 5.20312 8.71875 5.20312C8.33042 5.20312 8.01562 5.51792 8.01562 5.90625C8.01562 6.29458 8.33042 6.60938 8.71875 6.60938Z"
-                fill="#40A486"
-              />
-              <path
-                d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
-                stroke="#40A486"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        )}
-        {hasVoted && (
-          <div className="flex items-center gap-[5px] text-[14px] font-[700] leading-[20px] text-[#40A486]">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-            >
-              <g clipPath="url(#clip0_860_7270)">
-                <path
-                  d="M6.875 10.625L8.75 12.5L13.125 8.125"
-                  stroke="#40A486"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z"
-                  stroke="#40A486"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-              <defs>
-                <clipPath id="clip0_860_7270">
-                  <rect width="20" height="20" fill="white" />
-                </clipPath>
-              </defs>
-            </svg>
-            <span>You voted in this proposal</span>
-          </div>
-        )}
+        {isLeading && <ActiveLeadingLabel />}
+        {hasVoted && <VotedLabel />}
       </div>
 
       {/* title and date */}
       <div className="flex items-center gap-[10px] border-b border-black/10 pb-[10px]">
-        <p className="font-mona text-[18px] font-[700] leading-[1.6px] text-black">
+        <p className="font-mona text-[18px] font-[700] leading-[1.6] text-black">
           {proposalName}
         </p>
         <span className="text-[14px] font-[400] leading-[20px] text-black">
