@@ -10,8 +10,19 @@ import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
+import {
+  basicsFieldsConfig,
+  datesFieldsConfig,
+  organizationFieldsConfig,
+  technicalsFieldsConfig,
+} from '@/components/pages/project/create/FormData';
+import {
+  CreateProjectStep,
+  stepFields,
+} from '@/components/pages/project/create/types';
 import { IProposal } from '@/types';
 
+import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
 
@@ -22,69 +33,67 @@ interface ProposalItem {
   support: number;
 }
 
-type CategoryKey = 'basics' | 'dates' | 'technicals' | 'organization';
+type CategoryKey = CreateProjectStep;
 
-interface CategoryConfig {
-  title: string;
-  description: string;
-  items: string[];
-}
-
-const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
-  basics: {
+const CATEGORIES: Record<
+  CreateProjectStep,
+  {
+    title: string;
+    description: string;
+    items: string[];
+  }
+> = {
+  [CreateProjectStep.Basics]: {
     title: 'Basics',
-    description: 'These are the basic information about the project',
-    items: [
-      'projectName',
-      'tagline',
-      'categories',
-      'mainDescription',
-      'projectLogo',
-      'websiteUrl',
-      'appUrl',
-    ],
+    description: '',
+    items: [...stepFields[CreateProjectStep.Basics]],
   },
-  dates: {
-    title: 'Dates',
-    description: 'These are the basic information about the project',
-    items: ['dateFounded', 'dateLaunch'],
+  [CreateProjectStep.Dates]: {
+    title: 'Dates & Statuses',
+    description: '',
+    items: [...stepFields[CreateProjectStep.Dates]],
   },
-  technicals: {
+  [CreateProjectStep.Technicals]: {
     title: 'Technicals',
-    description: 'These are the basic information about the project',
-    items: [
-      'devStatus',
-      'openSource',
-      'codeRepo',
-      'tokenContract',
-      'publicGoods',
-    ],
+    description: '',
+    items: [...stepFields[CreateProjectStep.Technicals]],
   },
-  organization: {
+  [CreateProjectStep.Organization]: {
     title: 'Organization',
-    description: 'These are the basic information about the project',
-    items: ['orgStructure', 'fundingStatus', 'founders'],
+    description: '',
+    items: [...stepFields[CreateProjectStep.Organization]],
   },
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  projectName: 'Project Name',
-  tagline: 'Tagline',
-  categories: 'Categories',
-  mainDescription: 'Description',
-  projectLogo: 'Project Logo',
-  websiteUrl: 'Website',
-  appUrl: 'App Link',
-  dateFounded: 'Date Founded',
-  dateLaunch: 'Product Launch Date',
-  devStatus: 'Development Status',
-  openSource: 'Open-source Status',
-  codeRepo: 'Repository Link',
-  tokenContract: 'Token Contract',
-  publicGoods: 'Public-Goods Nature',
-  orgStructure: 'Organization Structure',
-  fundingStatus: 'Funding Status',
-  founders: 'Founders',
+  ...Object.entries(basicsFieldsConfig).reduce(
+    (acc, [key, config]) => {
+      acc[key] = config.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  ),
+  ...Object.entries(datesFieldsConfig).reduce(
+    (acc, [key, config]) => {
+      acc[key] = config.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  ),
+  ...Object.entries(technicalsFieldsConfig).reduce(
+    (acc, [key, config]) => {
+      acc[key] = config.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  ),
+  ...Object.entries(organizationFieldsConfig).reduce(
+    (acc, [key, config]) => {
+      acc[key] = config.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  ),
 };
 
 interface ProposalDetailsProps {
@@ -93,13 +102,14 @@ interface ProposalDetailsProps {
 }
 
 const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
-  const [expandedCategories, setExpandedCategories] = useState<
-    Record<CategoryKey, boolean>
-  >({
-    basics: true,
-    dates: true,
-    technicals: true,
-    organization: true,
+  const [isPageExpanded, setIsPageExpanded] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
+
+  const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
+    [CreateProjectStep.Basics]: true,
+    [CreateProjectStep.Dates]: true,
+    [CreateProjectStep.Technicals]: true,
+    [CreateProjectStep.Organization]: true,
   });
 
   const columnHelper = createColumnHelper<ProposalItem>();
@@ -200,28 +210,25 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
 
   const tableData = useMemo(() => {
     const result: Record<CategoryKey, ProposalItem[]> = {
-      basics: [],
-      dates: [],
-      technicals: [],
-      organization: [],
+      [CreateProjectStep.Basics]: [],
+      [CreateProjectStep.Dates]: [],
+      [CreateProjectStep.Technicals]: [],
+      [CreateProjectStep.Organization]: [],
     };
 
-    // 将提案项目按类别分组
     proposal?.items.forEach((item: any) => {
       const key = item.key;
       const value = item.value;
 
-      // 查找该字段属于哪个类别
       let category: CategoryKey | null = null;
-      for (const [catKey, catConfig] of Object.entries(CATEGORIES)) {
-        if (catConfig.items.includes(key)) {
+      for (const catKey of Object.values(CreateProjectStep)) {
+        if (CATEGORIES[catKey as CategoryKey].items.includes(key)) {
           category = catKey as CategoryKey;
           break;
         }
       }
 
       if (category) {
-        // 查找是否有对应的引用
         const reference = (
           proposal.refs as Array<{
             key: string;
@@ -233,7 +240,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
           property: FIELD_LABELS[key] || key,
           input: value,
           reference: reference ? reference.value : '',
-          support: 0, // 默认支持数为0
+          support: 0,
         });
       }
     });
@@ -241,136 +248,181 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     return result;
   }, [proposal]);
 
-  const tablesBasics = useReactTable<ProposalItem>({
-    data: tableData.basics,
+  const basicsTable = useReactTable<ProposalItem>({
+    data: tableData[CreateProjectStep.Basics],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const tablesDates = useReactTable<ProposalItem>({
-    data: tableData.dates,
+  const datesTable = useReactTable<ProposalItem>({
+    data: tableData[CreateProjectStep.Dates],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const tablesTechnicals = useReactTable<ProposalItem>({
-    data: tableData.technicals,
+  const technicalsTable = useReactTable<ProposalItem>({
+    data: tableData[CreateProjectStep.Technicals],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const tablesOrganization = useReactTable<ProposalItem>({
-    data: tableData.organization,
+  const organizationTable = useReactTable<ProposalItem>({
+    data: tableData[CreateProjectStep.Organization],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const tables = useMemo(() => {
-    return {
-      basics: tablesBasics,
-      dates: tablesDates,
-      technicals: tablesTechnicals,
-      organization: tablesOrganization,
-    };
-  }, [tablesBasics, tablesDates, tablesTechnicals, tablesOrganization]);
 
   const toggleCategory = (category: CategoryKey) => {
-    setExpandedCategories((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
+    setExpanded((prev) => {
+      // 创建一个新对象，避免直接修改 prev
+      const newExpanded = { ...prev };
+      // 切换指定类别的展开状态
+      newExpanded[category] = !newExpanded[category];
+      return newExpanded;
+    });
   };
+
+  const getAnimationStyle = (isExpanded: boolean) => ({
+    height: isExpanded ? 'auto' : '0',
+    opacity: isExpanded ? 1 : 0,
+    overflow: 'hidden',
+    transition: 'opacity 0.2s ease',
+    transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)',
+    transformOrigin: 'top',
+    transitionProperty: 'opacity, transform',
+    transitionDuration: '0.2s',
+  });
+
+  const renderTable = (table: any) => (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-black/10">
+            {table.getHeaderGroups().map((headerGroup: any) =>
+              headerGroup.headers.map((header: any) => (
+                <th
+                  key={header.id}
+                  className="px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60"
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </th>
+              )),
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row: any) => (
+            <tr
+              key={row.id}
+              className="border-b border-black/10 last:border-b-0"
+            >
+              {row.getVisibleCells().map((cell: any) => (
+                <td key={cell.id} className="px-[20px]">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderCategoryHeader = (
+    title: string,
+    description: string,
+    category: CategoryKey,
+  ) => (
+    <div className="flex items-center justify-between border-b border-black/10 bg-[#F5F5F5] px-[20px] py-[10px]">
+      <div>
+        <ECFTypography type="subtitle2">{title}</ECFTypography>
+        <ECFTypography type="body2" className="text-black/60">
+          {description}
+        </ECFTypography>
+      </div>
+      <div className="flex items-center gap-[10px]">
+        <CollapseButton
+          isExpanded={expanded[category]}
+          onChange={() => toggleCategory(category)}
+        />
+        <MetricButton onClick={() => {}} />
+        <FilterButton onClick={() => {}} />
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-[20px]">
-      <ActionSectionHeader />
-
-      <TableSectionHeader
-        title="Basics"
-        description="These are the basic information about the project"
+      <ActionSectionHeader
+        isExpanded={isPageExpanded}
+        isFiltered={isFiltered}
+        onChangeExpand={() => setIsPageExpanded((pre) => !pre)}
+        onChangeFilter={() => setIsFiltered((pre) => !pre)}
       />
 
-      <div className="flex flex-col gap-[20px]">
-        {/* 遍历所有类别 */}
-        {(Object.keys(CATEGORIES) as CategoryKey[]).map((category) => (
-          <div
-            key={category}
-            className="overflow-hidden rounded-[10px] border border-black/10 bg-white"
-          >
-            {/* 类别标题 */}
-            <div className="flex items-center justify-between border-b border-black/10 bg-[#F5F5F5] px-[20px] py-[10px]">
-              <div>
-                <ECFTypography type="subtitle2">
-                  {CATEGORIES[category].title}
-                </ECFTypography>
-                <ECFTypography type="body2" className="text-black/60">
-                  {CATEGORIES[category].description}
-                </ECFTypography>
-              </div>
-              <div className="flex items-center gap-[10px]">
-                <Button
-                  color="secondary"
-                  size="sm"
-                  className="min-h-0 min-w-0 border-none bg-transparent px-[10px] py-[2px]"
-                  onPress={() => toggleCategory(category)}
-                >
-                  {expandedCategories[category] ? 'Collapse' : 'Expand'}
-                </Button>
-                <Button
-                  color="secondary"
-                  size="sm"
-                  className="min-h-0 min-w-0 border-none bg-transparent px-[10px] py-[2px]"
-                >
-                  Metrics
-                </Button>
-              </div>
-            </div>
+      <TableSectionHeader title="Project Overview" description="" />
 
-            {/* 表格内容 */}
-            {expandedCategories[category] && (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-black/10">
-                      {tables[category].getHeaderGroups().map((headerGroup) =>
-                        headerGroup.headers.map((header) => (
-                          <th
-                            key={header.id}
-                            className="px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60"
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                          </th>
-                        )),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tables[category].getRowModel().rows.map((row) => (
-                      <tr
-                        key={row.id}
-                        className="border-b border-black/10 last:border-b-0"
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="px-[20px]">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+      <div className="flex flex-col gap-[20px]">
+        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+          {renderCategoryHeader(
+            CATEGORIES[CreateProjectStep.Basics].title,
+            CATEGORIES[CreateProjectStep.Basics].description,
+            CreateProjectStep.Basics,
+          )}
+          <div
+            className="table-content-wrapper"
+            style={getAnimationStyle(expanded[CreateProjectStep.Basics])}
+          >
+            {renderTable(basicsTable)}
           </div>
-        ))}
+        </div>
+
+        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+          {renderCategoryHeader(
+            CATEGORIES[CreateProjectStep.Dates].title,
+            CATEGORIES[CreateProjectStep.Dates].description,
+            CreateProjectStep.Dates,
+          )}
+          <div
+            className="table-content-wrapper"
+            style={getAnimationStyle(expanded[CreateProjectStep.Dates])}
+          >
+            {renderTable(datesTable)}
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+          {renderCategoryHeader(
+            CATEGORIES[CreateProjectStep.Technicals].title,
+            CATEGORIES[CreateProjectStep.Technicals].description,
+            CreateProjectStep.Technicals,
+          )}
+          <div
+            className="table-content-wrapper"
+            style={getAnimationStyle(expanded[CreateProjectStep.Technicals])}
+          >
+            {renderTable(technicalsTable)}
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+          {renderCategoryHeader(
+            CATEGORIES[CreateProjectStep.Organization].title,
+            CATEGORIES[CreateProjectStep.Organization].description,
+            CreateProjectStep.Organization,
+          )}
+          <div
+            className="table-content-wrapper"
+            style={getAnimationStyle(expanded[CreateProjectStep.Organization])}
+          >
+            {renderTable(organizationTable)}
+          </div>
+        </div>
       </div>
     </div>
   );
