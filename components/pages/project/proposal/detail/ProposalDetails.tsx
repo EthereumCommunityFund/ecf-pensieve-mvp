@@ -6,10 +6,9 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
-import ECFTypography from '@/components/base/typography';
 import {
   basicsFieldsConfig,
   datesFieldsConfig,
@@ -333,27 +332,30 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     </div>
   );
 
-  const renderCategoryHeader = (
-    title: string,
-    description: string,
-    category: CategoryKey,
-  ) => (
-    <div className="flex items-center justify-between border-b border-black/10 bg-[#F5F5F5] px-[20px] py-[10px]">
-      <div>
-        <ECFTypography type="subtitle2">{title}</ECFTypography>
-        <ECFTypography type="body2" className="text-black/60">
-          {description}
-        </ECFTypography>
+  const renderCategoryHeader = useCallback(
+    (title: string, description: string, category: CategoryKey) => (
+      <div className="flex items-center justify-between border-b border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+        <div className="flex flex-col gap-[5px]">
+          <p className="text-[18px] font-[700] leading-[25px] text-black/80">
+            {title}
+          </p>
+          {description ?? (
+            <p className="text-[13px] font-[600] leading-[18px] text-black/40">
+              {description}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-[10px]">
+          <CollapseButton
+            isExpanded={expanded[category]}
+            onChange={() => toggleCategory(category)}
+          />
+          <MetricButton onClick={() => {}} />
+          <FilterButton onClick={() => {}} />
+        </div>
       </div>
-      <div className="flex items-center gap-[10px]">
-        <CollapseButton
-          isExpanded={expanded[category]}
-          onChange={() => toggleCategory(category)}
-        />
-        <MetricButton onClick={() => {}} />
-        <FilterButton onClick={() => {}} />
-      </div>
-    </div>
+    ),
+    [expanded, toggleCategory],
   );
 
   return (
