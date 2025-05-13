@@ -4,6 +4,7 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  Table,
   useReactTable,
 } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
@@ -273,9 +274,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
 
   const toggleCategory = (category: CategoryKey) => {
     setExpanded((prev) => {
-      // 创建一个新对象，避免直接修改 prev
       const newExpanded = { ...prev };
-      // 切换指定类别的展开状态
       newExpanded[category] = !newExpanded[category];
       return newExpanded;
     });
@@ -292,44 +291,47 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     transitionDuration: '0.2s',
   });
 
-  const renderTable = (table: any) => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-black/10">
-            {table.getHeaderGroups().map((headerGroup: any) =>
-              headerGroup.headers.map((header: any) => (
-                <th
-                  key={header.id}
-                  className="px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </th>
-              )),
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row: any) => (
-            <tr
-              key={row.id}
-              className="border-b border-black/10 last:border-b-0"
-            >
-              {row.getVisibleCells().map((cell: any) => (
-                <td key={cell.id} className="px-[20px]">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
+  const renderTable = useCallback(
+    (table: Table<ProposalItem>) => (
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-black/10">
+              {table.getHeaderGroups().map((headerGroup) =>
+                headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="px-[20px] py-[10px] text-left text-[14px] font-[600] text-black/60"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                )),
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="border-b border-black/10 last:border-b-0"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-[20px]">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ),
+    [],
   );
 
   const renderCategoryHeader = useCallback(
