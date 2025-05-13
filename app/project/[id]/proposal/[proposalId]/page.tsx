@@ -90,7 +90,11 @@ const ProposalPage = () => {
         )}
       >
         <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[820px] flex-1">
-          <ProposalDetails proposal={proposal} projectId={Number(projectId)} />
+          <ProposalDetails
+            project={project}
+            proposal={proposal}
+            projectId={Number(projectId)}
+          />
         </div>
 
         <div className="tablet:w-full mobile:w-full flex w-[300px] flex-col gap-[20px]">

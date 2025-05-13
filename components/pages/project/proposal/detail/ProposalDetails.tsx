@@ -20,15 +20,16 @@ import {
   CreateProjectStep,
   stepFields,
 } from '@/components/pages/project/create/types';
-import { IProposal } from '@/types';
+import { IProject, IProposal } from '@/types';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
 import TooltipItemWeight from './table/TooltipItemWeight';
 import TooltipTh from './table/TooltipTh';
+import VoteItem from './table/VoteItem';
 
-interface ProposalItem {
+export interface ITableProposalItem {
   property: string;
   input: string;
   reference: string;
@@ -100,10 +101,15 @@ const FIELD_LABELS: Record<string, string> = {
 
 interface ProposalDetailsProps {
   proposal?: IProposal;
+  project?: IProject;
   projectId: number;
 }
 
-const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
+const ProposalDetails = ({
+  proposal,
+  projectId,
+  project,
+}: ProposalDetailsProps) => {
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
 
@@ -114,7 +120,7 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     [CreateProjectStep.Organization]: true,
   });
 
-  const columnHelper = createColumnHelper<ProposalItem>();
+  const columnHelper = createColumnHelper<ITableProposalItem>();
 
   const columns = [
     columnHelper.accessor('property', {
@@ -124,10 +130,10 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
           tooltipContext="The property name of the project item"
         />
       ),
-      size: 235,
+      size: 220,
       cell: (info) => {
         return (
-          <div className="flex items-center justify-between">
+          <div className="flex w-full items-center justify-between">
             <span className="text-[14px] font-[600] leading-[20px] text-black">
               {info.getValue()}
             </span>
@@ -147,12 +153,11 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
       cell: (info) => {
         const value = info.getValue();
         return (
-          <div className="py-[10px]">
-            <div className="flex items-center gap-[5px]">
-              <span className="text-[14px] font-[400] leading-[20px] text-black">
-                {value}
-              </span>
-            </div>
+          <div
+            className="flex items-center overflow-hidden whitespace-normal break-words"
+            style={{ maxWidth: '230px' }}
+          >
+            {value}
           </div>
         );
       },
@@ -167,19 +172,21 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
       size: 124,
       cell: (info) => {
         const value = info.getValue();
-        return value ? (
+        return (
           <div className="mx-auto flex justify-center">
-            <Button
-              color="secondary"
-              size="md"
-              className="w-[104px] text-[13px] font-[400]"
-            >
-              Reference
-            </Button>
-          </div>
-        ) : (
-          <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
-            empty
+            {value ? (
+              <Button
+                color="secondary"
+                size="md"
+                className="w-[104px] text-[13px] font-[400]"
+              >
+                Reference
+              </Button>
+            ) : (
+              <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+                empty
+              </div>
+            )}
           </div>
         );
       },
@@ -193,50 +200,19 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
       ),
       size: 220,
       cell: (info) => {
-        const value = info.getValue();
         return (
-          <div className="py-[10px]">
-            <div className="flex items-center gap-[5px]">
-              <Button
-                color="secondary"
-                size="sm"
-                className="min-h-0 min-w-0 border-none bg-transparent px-[10px] py-[2px]"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 4L12 20"
-                    stroke="#28C196"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M19 11L12 4L5 11"
-                    stroke="#28C196"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Button>
-              <span className="text-[14px] font-[400] leading-[20px] text-black">
-                {value}
-              </span>
-            </div>
-          </div>
+          <VoteItem
+            project={project!}
+            proposal={proposal!}
+            proposalItem={info.row.original}
+          />
         );
       },
     }),
   ];
 
   const tableData = useMemo(() => {
-    const result: Record<CategoryKey, ProposalItem[]> = {
+    const result: Record<CategoryKey, ITableProposalItem[]> = {
       [CreateProjectStep.Basics]: [],
       [CreateProjectStep.Dates]: [],
       [CreateProjectStep.Technicals]: [],
@@ -275,25 +251,25 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
     return result;
   }, [proposal]);
 
-  const basicsTable = useReactTable<ProposalItem>({
+  const basicsTable = useReactTable<ITableProposalItem>({
     data: tableData[CreateProjectStep.Basics],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const datesTable = useReactTable<ProposalItem>({
+  const datesTable = useReactTable<ITableProposalItem>({
     data: tableData[CreateProjectStep.Dates],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const technicalsTable = useReactTable<ProposalItem>({
+  const technicalsTable = useReactTable<ITableProposalItem>({
     data: tableData[CreateProjectStep.Technicals],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const organizationTable = useReactTable<ProposalItem>({
+  const organizationTable = useReactTable<ITableProposalItem>({
     data: tableData[CreateProjectStep.Organization],
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -319,15 +295,16 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
   });
 
   const renderTable = useCallback(
-    (table: Table<ProposalItem>) => (
+    (table: Table<ITableProposalItem>) => (
       <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
-        <table className="w-full table-fixed border-separate border-spacing-0">
+        <table className="box-border w-full table-fixed border-separate border-spacing-0">
           <colgroup>
             {table.getAllColumns().map((column) => (
               <col
                 key={column.id}
-                width={`${column.getSize()}px`}
-                style={{ width: `${column.getSize()}px` }}
+                style={{
+                  width: `${column.getSize()}px`,
+                }}
               />
             ))}
           </colgroup>
@@ -337,7 +314,10 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
                 headerGroup.headers.map((header, index) => (
                   <th
                     key={header.id}
-                    style={{ width: `${header.getSize()}px` }}
+                    style={{
+                      width: `${header.getSize()}px`,
+                      boxSizing: 'border-box',
+                    }}
                     className={`h-[30px] border-b border-r border-black/10 px-[10px] text-left
                       text-[14px] font-[600] text-black/60
                       ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
@@ -365,14 +345,17 @@ const ProposalDetails = ({ proposal, projectId }: ProposalDetailsProps) => {
                 {row.getVisibleCells().map((cell, cellIndex) => (
                   <td
                     key={cell.id}
-                    style={{ width: `${cell.column.getSize()}px` }}
-                    className={`min-h-[60px] border-b border-r
-                      border-black/10 px-[10px]
+                    style={{
+                      width: `${cell.column.getSize()}px`,
+                      boxSizing: 'border-box',
+                    }}
+                    className={` border-b border-r
+                      border-black/10
                       ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
                       ${rowIndex === table.getRowModel().rows.length - 1 ? 'border-b-0' : ''}
                     `}
                   >
-                    <div style={{ width: '100%', overflow: 'hidden' }}>
+                    <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
