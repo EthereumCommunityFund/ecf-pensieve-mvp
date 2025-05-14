@@ -6,6 +6,7 @@ import { fileRouter } from './file';
 import { projectRouter } from './project';
 import { proposalRouter } from './proposal';
 import { userRouter } from './user';
+import { voteRouter } from './vote';
 
 export const appRouter = router({
   user: userRouter,
@@ -14,6 +15,7 @@ export const appRouter = router({
   project: projectRouter,
   proposal: proposalRouter,
   active: activeRouter,
+  vote: voteRouter,
 });
 
 export type AppRouter = typeof appRouter;
