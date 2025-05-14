@@ -37,6 +37,17 @@ const ProposalPage = () => {
     },
   );
 
+  const {
+    data: proposals,
+    isLoading: isProposalsLoading,
+    isFetched: isProposalsFetched,
+  } = trpc.proposal.getProposalsByProjectId.useQuery(
+    { projectId: Number(projectId) },
+    {
+      enabled: !!projectId,
+    },
+  );
+
   const proposalName = useMemo(() => {
     if (!proposal) return '';
     const nameItem = proposal.items.find(
@@ -93,6 +104,7 @@ const ProposalPage = () => {
           <ProposalDetails
             project={project}
             proposal={proposal}
+            proposals={proposals || []}
             projectId={Number(projectId)}
           />
         </div>

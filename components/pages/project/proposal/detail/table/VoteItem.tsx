@@ -82,12 +82,15 @@ const VoteItem: FC<IProps> = ({
         color="secondary"
         size="sm"
         isIconOnly
-        isLoading={isLoading}
         disabled={isLoading}
         onPress={onAction}
         className={cn(
           'px-[5px] border-none',
-          isValidated ? 'hover:bg-transparent cursor-default' : 'opacity-30',
+          isValidated
+            ? 'hover:bg-transparent cursor-default'
+            : isVoted
+              ? ''
+              : 'opacity-30',
         )}
       >
         {isVoted ? (

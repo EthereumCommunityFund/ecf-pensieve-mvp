@@ -7,7 +7,7 @@ import {
   Table,
   useReactTable,
 } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import {
@@ -20,13 +20,17 @@ import {
   CreateProjectStep,
   stepFields,
 } from '@/components/pages/project/create/types';
-import { IProject, IProposal, IVote } from '@/types';
+import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { trpc } from '@/lib/trpc/client';
+import { IProject, IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
+import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
+import CancelVoteModal from './table/CancelVoteModal';
+import SwitchVoteModal from './table/SwitchVoteModal';
 import TooltipItemWeight from './table/TooltipItemWeight';
 import TooltipTh from './table/TooltipTh';
 import VoteItem from './table/VoteItem';
@@ -104,6 +108,7 @@ const FIELD_LABELS: Record<string, string> = {
 
 interface ProposalDetailsProps {
   proposal?: IProposal;
+  proposals: IProposal[];
   project?: IProject;
   projectId: number;
 }
@@ -112,6 +117,7 @@ const ProposalDetails = ({
   proposal,
   projectId,
   project,
+  proposals,
 }: ProposalDetailsProps) => {
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
@@ -122,6 +128,15 @@ const ProposalDetails = ({
     [CreateProjectStep.Technicals]: true,
     [CreateProjectStep.Organization]: true,
   });
+
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [currentVoteItem, setCurrentVoteItem] =
+    useState<ITableProposalItem | null>(null);
+  const [sourceProposal, setSourceProposal] = useState<IProposal | null>(null);
+
+  const [doNotShowCancelModal, setDoNotShowCancelModal] =
+    useState<boolean>(false);
 
   const {
     data: votesOfProposal,
@@ -198,7 +213,6 @@ const ProposalDetails = ({
       const payload = { proposalId: proposal!.id, key };
       createVoteMutation.mutate(payload, {
         onSuccess: (data) => {
-          devLog('onVote success', data);
           refetchVotesOfProposal();
           refetchVotesOfProject();
         },
@@ -207,7 +221,12 @@ const ProposalDetails = ({
         },
       });
     },
-    [createVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
+    [
+      proposal,
+      createVoteMutation,
+      refetchVotesOfProposal,
+      refetchVotesOfProject,
+    ],
   );
 
   const onSwitchVote = useCallback(
@@ -224,7 +243,12 @@ const ProposalDetails = ({
         },
       });
     },
-    [switchVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
+    [
+      proposal,
+      switchVoteMutation,
+      refetchVotesOfProposal,
+      refetchVotesOfProject,
+    ],
   );
 
   const onCancelVote = useCallback(
@@ -246,14 +270,78 @@ const ProposalDetails = ({
     [cancelVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
   );
 
-  const onVoteAction = useCallback(async (item: ITableProposalItem) => {
-    devLog('onVoteAction item', item);
-    // 1、如果还没投过票 -> onVote
-    // 2、如果在当前 proposal 已经投过票 -> 弹窗二次确认 -> onCancel
-    // 3、如果在当前 project 有投过票，但是不是当前 proposal -> 弹窗二次确认 -> onSwitch
+  useEffect(() => {
+    const savedValue = safeGetLocalStorage(StorageKey_DoNotShowCancelModal);
+    setDoNotShowCancelModal(savedValue === 'true');
   }, []);
 
-  const isVoteInfoLoading = isVotesOfProposalLoading || isVotesOfProjectLoading;
+  const onVoteAction = useCallback(
+    async (item: ITableProposalItem) => {
+      devLog('onVoteAction item', item);
+
+      setCurrentVoteItem(item);
+      if (!isVotedInProject(item.key)) {
+        await onCreateVote(item.key);
+        return;
+      }
+      if (isVotedInProposal(item.key)) {
+        if (doNotShowCancelModal) {
+          await onCancelVote(votesOfProposalMap[item.key].id);
+        } else {
+          setIsCancelModalOpen(true);
+        }
+        return;
+      }
+
+      if (isVotedInProject(item.key) && !isVotedInProposal(item.key)) {
+        const sourceVote = votesOfProjectMap[item.key];
+        // TODO confirm how to display No of proposal
+        const sourceProposalData =
+          proposals?.find((p) => p.id === sourceVote.proposalId) || null;
+        setSourceProposal(sourceProposalData);
+        setIsSwitchModalOpen(true);
+      }
+    },
+    [
+      isVotedInProject,
+      isVotedInProposal,
+      onCreateVote,
+      onCancelVote,
+      votesOfProposalMap,
+      votesOfProjectMap,
+      doNotShowCancelModal,
+      proposals,
+    ],
+  );
+
+  const handleCancelVoteConfirm = useCallback(async () => {
+    try {
+      if (!currentVoteItem) return;
+      await onCancelVote(votesOfProposalMap[currentVoteItem!.key].id);
+      setIsCancelModalOpen(false);
+    } catch (err) {
+      // TODO toast
+      console.error(err);
+    }
+  }, [currentVoteItem, votesOfProposalMap, onCancelVote]);
+
+  const handleSwitchVoteConfirm = useCallback(async () => {
+    try {
+      if (!currentVoteItem) return;
+      await onSwitchVote(currentVoteItem.key);
+      setIsSwitchModalOpen(false);
+    } catch (err) {
+      // TODO toast
+      console.error(err);
+    }
+  }, [currentVoteItem, onSwitchVote]);
+
+  const isFetchVoteInfoLoading =
+    isVotesOfProposalLoading || isVotesOfProjectLoading;
+  const isVoteActionPending =
+    createVoteMutation.isPending ||
+    switchVoteMutation.isPending ||
+    cancelVoteMutation.isPending;
 
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
@@ -341,7 +429,7 @@ const ProposalDetails = ({
               project={project!}
               proposal={proposal!}
               proposalItem={info.row.original}
-              isLoading={isVoteInfoLoading}
+              isLoading={isFetchVoteInfoLoading || isVoteActionPending}
               isVoted={!!votesOfProposalMap[info.row.original.key]}
               onAction={() => onVoteAction(info.row.original)}
             />
@@ -349,7 +437,15 @@ const ProposalDetails = ({
         },
       }),
     ],
-    [project, proposal, onVoteAction, isVoteInfoLoading, votesOfProposalMap],
+    [
+      columnHelper,
+      project,
+      proposal,
+      onVoteAction,
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      votesOfProposalMap,
+    ],
   );
 
   const tableData = useMemo(() => {
@@ -417,13 +513,13 @@ const ProposalDetails = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const toggleCategory = (category: CategoryKey) => {
+  const toggleCategory = useCallback((category: CategoryKey) => {
     setExpanded((prev) => {
       const newExpanded = { ...prev };
       newExpanded[category] = !newExpanded[category];
       return newExpanded;
     });
-  };
+  }, []);
 
   const getAnimationStyle = (isExpanded: boolean) => ({
     height: isExpanded ? 'auto' : '0',
@@ -558,10 +654,7 @@ const ProposalDetails = ({
             CATEGORIES[CreateProjectStep.Basics].description,
             CreateProjectStep.Basics,
           )}
-          <div
-            className="table-content-wrapper"
-            style={getAnimationStyle(expanded[CreateProjectStep.Basics])}
-          >
+          <div style={getAnimationStyle(expanded[CreateProjectStep.Basics])}>
             {renderTable(basicsTable)}
           </div>
         </div>
@@ -572,10 +665,7 @@ const ProposalDetails = ({
             CATEGORIES[CreateProjectStep.Dates].description,
             CreateProjectStep.Dates,
           )}
-          <div
-            className="table-content-wrapper"
-            style={getAnimationStyle(expanded[CreateProjectStep.Dates])}
-          >
+          <div style={getAnimationStyle(expanded[CreateProjectStep.Dates])}>
             {renderTable(datesTable)}
           </div>
         </div>
@@ -587,7 +677,6 @@ const ProposalDetails = ({
             CreateProjectStep.Technicals,
           )}
           <div
-            className="table-content-wrapper"
             style={getAnimationStyle(expanded[CreateProjectStep.Technicals])}
           >
             {renderTable(technicalsTable)}
@@ -601,13 +690,29 @@ const ProposalDetails = ({
             CreateProjectStep.Organization,
           )}
           <div
-            className="table-content-wrapper"
             style={getAnimationStyle(expanded[CreateProjectStep.Organization])}
           >
             {renderTable(organizationTable)}
           </div>
         </div>
       </div>
+
+      <SwitchVoteModal
+        isOpen={isSwitchModalOpen}
+        onClose={() => setIsSwitchModalOpen(false)}
+        onConfirm={handleSwitchVoteConfirm}
+        isLoading={switchVoteMutation.isPending}
+        proposalItem={currentVoteItem || undefined}
+        sourceProposal={sourceProposal || undefined}
+      />
+
+      <CancelVoteModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancelVoteConfirm}
+        isLoading={cancelVoteMutation.isPending}
+        proposalItem={currentVoteItem || undefined}
+      />
     </div>
   );
 };
