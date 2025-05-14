@@ -20,7 +20,9 @@ import {
   CreateProjectStep,
   stepFields,
 } from '@/components/pages/project/create/types';
-import { IProject, IProposal } from '@/types';
+import { IProject, IProposal, IVote } from '@/types';
+import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -30,6 +32,7 @@ import TooltipTh from './table/TooltipTh';
 import VoteItem from './table/VoteItem';
 
 export interface ITableProposalItem {
+  key: string;
   property: string;
   input: string;
   reference: string;
@@ -120,6 +123,138 @@ const ProposalDetails = ({
     [CreateProjectStep.Organization]: true,
   });
 
+  const {
+    data: votesOfProposal,
+    isLoading: isVotesOfProposalLoading,
+    isFetched: isVotesOfProposalFetched,
+    refetch: refetchVotesOfProposal,
+  } = trpc.vote.getVotesByProposalId.useQuery(
+    { proposalId: Number(proposal?.id) },
+    {
+      enabled: !!proposal && !!proposal.id,
+      select: (data) => {
+        devLog('getVotesByProposalId', data);
+        return data;
+      },
+    },
+  );
+
+  const {
+    data: votesOfProject,
+    isLoading: isVotesOfProjectLoading,
+    isFetched: isVotesOfProjectFetched,
+    refetch: refetchVotesOfProject,
+  } = trpc.vote.getVotesByProjectId.useQuery(
+    { projectId: Number(projectId) },
+    {
+      enabled: !!projectId,
+      select: (data) => {
+        devLog('getVotesByProjectId', data);
+        return data;
+      },
+    },
+  );
+
+  const votesOfProposalMap = useMemo(() => {
+    return (votesOfProposal || []).reduce(
+      (acc, vote) => {
+        acc[vote.key] = vote;
+        return acc;
+      },
+      {} as Record<string, IVote>,
+    );
+  }, [votesOfProposal]);
+
+  const votesOfProjectMap = useMemo(() => {
+    return (votesOfProject || []).reduce(
+      (acc, vote) => {
+        acc[vote.key] = vote;
+        return acc;
+      },
+      {} as Record<string, IVote>,
+    );
+  }, [votesOfProject]);
+
+  const isVotedInProposal = useCallback(
+    (key: string) => {
+      return !!votesOfProposalMap[key];
+    },
+    [votesOfProposalMap],
+  );
+
+  const isVotedInProject = useCallback(
+    (key: string) => {
+      return !!votesOfProjectMap[key];
+    },
+    [votesOfProjectMap],
+  );
+
+  const createVoteMutation = trpc.vote.createVote.useMutation();
+  const switchVoteMutation = trpc.vote.switchVote.useMutation();
+  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
+
+  const onCreateVote = useCallback(
+    async (key: string) => {
+      const payload = { proposalId: proposal!.id, key };
+      createVoteMutation.mutate(payload, {
+        onSuccess: (data) => {
+          devLog('onVote success', data);
+          refetchVotesOfProposal();
+          refetchVotesOfProject();
+        },
+        onError: (error) => {
+          devLog('onVote error', error);
+        },
+      });
+    },
+    [createVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
+  );
+
+  const onSwitchVote = useCallback(
+    async (key: string) => {
+      const payload = { proposalId: proposal!.id, key };
+      switchVoteMutation.mutate(payload, {
+        onSuccess: (data) => {
+          devLog('onSwitchVote success', data);
+          refetchVotesOfProposal();
+          refetchVotesOfProject();
+        },
+        onError: (error) => {
+          devLog('onSwitchVote error', error);
+        },
+      });
+    },
+    [switchVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
+  );
+
+  const onCancelVote = useCallback(
+    async (id: number) => {
+      cancelVoteMutation.mutate(
+        { id },
+        {
+          onSuccess: (data) => {
+            devLog('onCancelVote success', data);
+            refetchVotesOfProposal();
+            refetchVotesOfProject();
+          },
+          onError: (error) => {
+            devLog('onCancelVote error', error);
+          },
+        },
+      );
+    },
+    [cancelVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
+  );
+
+  const onVoteAction = useCallback(async (item: ITableProposalItem) => {
+    devLog('onVoteAction item', item);
+    // 1、如果还没投过票 -> onVote
+    // 2、如果在当前 proposal 已经投过票 -> 弹窗二次确认 -> onCancel
+    // 3、如果在当前 project 有投过票，但是不是当前 proposal -> 弹窗二次确认 -> onSwitch
+  }, []);
+
+  const isVoteInfoLoading = isVotesOfProposalLoading || isVotesOfProjectLoading;
+
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
   const columns = useMemo(
@@ -206,12 +341,15 @@ const ProposalDetails = ({
               project={project!}
               proposal={proposal!}
               proposalItem={info.row.original}
+              isLoading={isVoteInfoLoading}
+              isVoted={!!votesOfProposalMap[info.row.original.key]}
+              onAction={() => onVoteAction(info.row.original)}
             />
           );
         },
       }),
     ],
-    [project, proposal],
+    [project, proposal, onVoteAction, isVoteInfoLoading, votesOfProposalMap],
   );
 
   const tableData = useMemo(() => {
@@ -243,6 +381,7 @@ const ProposalDetails = ({
         )?.find((ref) => ref.key === key);
 
         result[category].push({
+          key: key,
           property: FIELD_LABELS[key] || key,
           input: value,
           reference: reference ? reference.value : '',

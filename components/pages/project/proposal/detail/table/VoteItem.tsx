@@ -10,11 +10,23 @@ interface IProps {
   project: IProject;
   proposal: IProposal;
   proposalItem: ITableProposalItem;
+  isVoted: boolean;
+  isLoading: boolean;
+  onAction: () => Promise<void>;
 }
-const VoteItem: FC<IProps> = ({ project, proposal, proposalItem }) => {
+
+const VoteItem: FC<IProps> = ({
+  project,
+  proposal,
+  proposalItem,
+  onAction,
+  isVoted,
+  isLoading,
+}) => {
   // TODO isValidated value
   const value = Math.floor(Math.random() * 11);
   const isValidated = value === 10;
+
   return (
     <div className="flex flex-1 items-center justify-between">
       <div className="flex items-center justify-start gap-[10px]">
@@ -70,12 +82,15 @@ const VoteItem: FC<IProps> = ({ project, proposal, proposalItem }) => {
         color="secondary"
         size="sm"
         isIconOnly
+        isLoading={isLoading}
+        disabled={isLoading}
+        onPress={onAction}
         className={cn(
           'px-[5px] border-none',
           isValidated ? 'hover:bg-transparent cursor-default' : 'opacity-30',
         )}
       >
-        {isValidated ? (
+        {isVoted ? (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="21"
