@@ -85,10 +85,9 @@ export const CommonModalHeader: React.FC<{
     <ModalHeader
       className={cn('flex items-center justify-between', classNames?.base)}
     >
-      {/* TODO font mono sans */}
       <h3
         className={cn(
-          'text-[18px] font-[600] text-black overflow-hidden',
+          'text-[18px] font-[600] text-black overflow-hidden font-mona',
           classNames?.title,
         )}
       >
