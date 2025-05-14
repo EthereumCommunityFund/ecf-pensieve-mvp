@@ -10,7 +10,8 @@ interface IProps {
   project: IProject;
   proposal: IProposal;
   proposalItem: ITableProposalItem;
-  isVoted: boolean;
+  votedMemberCount: number;
+  isUserVoted: boolean;
   isLoading: boolean;
   onAction: () => Promise<void>;
 }
@@ -19,13 +20,13 @@ const VoteItem: FC<IProps> = ({
   project,
   proposal,
   proposalItem,
+  votedMemberCount,
   onAction,
-  isVoted,
+  isUserVoted,
   isLoading,
 }) => {
-  // TODO isValidated value
-  const value = Math.floor(Math.random() * 11);
-  const isValidated = value === 10;
+  // TODO quorum is empty now
+  const isValidated = votedMemberCount === 10;
 
   return (
     <div className="flex flex-1 items-center justify-between">
@@ -37,7 +38,7 @@ const VoteItem: FC<IProps> = ({
           size="sm"
           minValue={0}
           maxValue={10}
-          value={value}
+          value={votedMemberCount}
           strokeWidth={3}
           formatOptions={{
             style: 'decimal',
@@ -73,7 +74,7 @@ const VoteItem: FC<IProps> = ({
             </defs>
           </svg>
           <span className="font-mona text-[14px] font-[600] leading-[19px] text-black">
-            2/3
+            {votedMemberCount}/10
           </span>
         </div>
       </div>
@@ -88,12 +89,12 @@ const VoteItem: FC<IProps> = ({
           'px-[5px] border-none',
           isValidated
             ? 'hover:bg-transparent cursor-default'
-            : isVoted
+            : isUserVoted
               ? ''
               : 'opacity-30',
         )}
       >
-        {isVoted ? (
+        {isUserVoted ? (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="21"

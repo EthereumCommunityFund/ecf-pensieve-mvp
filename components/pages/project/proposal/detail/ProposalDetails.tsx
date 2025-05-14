@@ -21,6 +21,7 @@ import {
   stepFields,
 } from '@/components/pages/project/create/types';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -119,6 +120,7 @@ const ProposalDetails = ({
   project,
   proposals,
 }: ProposalDetailsProps) => {
+  const { profile } = useAuth();
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
 
@@ -170,38 +172,82 @@ const ProposalDetails = ({
     },
   );
 
-  const votesOfProposalMap = useMemo(() => {
+  const votesOfKeyInProposalMap = useMemo(() => {
     return (votesOfProposal || []).reduce(
       (acc, vote) => {
-        acc[vote.key] = vote;
+        if (!acc[vote.key]) {
+          acc[vote.key] = [];
+        }
+        acc[vote.key].push(vote);
         return acc;
       },
-      {} as Record<string, IVote>,
+      {} as Record<string, IVote[]>,
     );
   }, [votesOfProposal]);
 
-  const votesOfProjectMap = useMemo(() => {
+  const votedOfKeyInProjectMap = useMemo(() => {
     return (votesOfProject || []).reduce(
       (acc, vote) => {
-        acc[vote.key] = vote;
+        if (!acc[vote.key]) {
+          acc[vote.key] = [];
+        }
+        acc[vote.key].push(vote);
         return acc;
       },
-      {} as Record<string, IVote>,
+      {} as Record<string, IVote[]>,
     );
   }, [votesOfProject]);
 
-  const isVotedInProposal = useCallback(
+  const userVotesOfProposalMap = useMemo(() => {
+    if (!profile) return {};
+    return (votesOfProposal || [])
+      .filter((vote) => vote.creator?.userId === profile?.userId)
+      .reduce(
+        (acc, vote) => {
+          acc[vote.key] = vote;
+          return acc;
+        },
+        {} as Record<string, IVote>,
+      );
+  }, [votesOfProposal, profile]);
+
+  const userVotesOfProjectMap = useMemo(() => {
+    if (!profile) return {};
+    return (votesOfProject || [])
+      .filter((vote) => vote.creator?.userId === profile?.userId)
+      .reduce(
+        (acc, vote) => {
+          acc[vote.key] = vote;
+          return acc;
+        },
+        {} as Record<string, IVote>,
+      );
+  }, [votesOfProject, profile]);
+
+  const isUserVotedInProposal = useCallback(
     (key: string) => {
-      return !!votesOfProposalMap[key];
+      if (!profile) return false;
+      const votesOfKey = votesOfKeyInProposalMap[key] || [];
+      if (!votesOfKey || votesOfKey.length === 0) return false;
+      const isUserVoted = votesOfKey?.find(
+        (vote) => vote.creator?.userId === profile?.userId,
+      );
+      return !!isUserVoted;
     },
-    [votesOfProposalMap],
+    [profile, votesOfKeyInProposalMap],
   );
 
-  const isVotedInProject = useCallback(
+  const isUserVotedInProject = useCallback(
     (key: string) => {
-      return !!votesOfProjectMap[key];
+      if (!profile) return false;
+      const votesOfKey = votedOfKeyInProjectMap[key] || [];
+      if (!votesOfKey || votesOfKey.length === 0) return false;
+      const isUserVoted = votesOfKey?.find(
+        (vote) => vote.creator?.userId === profile?.userId,
+      );
+      return !!isUserVoted;
     },
-    [votesOfProjectMap],
+    [profile, votedOfKeyInProjectMap],
   );
 
   const createVoteMutation = trpc.vote.createVote.useMutation();
@@ -280,21 +326,21 @@ const ProposalDetails = ({
       devLog('onVoteAction item', item);
 
       setCurrentVoteItem(item);
-      if (!isVotedInProject(item.key)) {
+      if (!isUserVotedInProject(item.key)) {
         await onCreateVote(item.key);
         return;
       }
-      if (isVotedInProposal(item.key)) {
+      if (isUserVotedInProposal(item.key)) {
         if (doNotShowCancelModal) {
-          await onCancelVote(votesOfProposalMap[item.key].id);
+          await onCancelVote(userVotesOfProposalMap[item.key].id);
         } else {
           setIsCancelModalOpen(true);
         }
         return;
       }
 
-      if (isVotedInProject(item.key) && !isVotedInProposal(item.key)) {
-        const sourceVote = votesOfProjectMap[item.key];
+      if (isUserVotedInProject(item.key) && !isUserVotedInProposal(item.key)) {
+        const sourceVote = userVotesOfProjectMap[item.key];
         // TODO confirm how to display No of proposal
         const sourceProposalData =
           proposals?.find((p) => p.id === sourceVote.proposalId) || null;
@@ -303,12 +349,12 @@ const ProposalDetails = ({
       }
     },
     [
-      isVotedInProject,
-      isVotedInProposal,
+      isUserVotedInProject,
+      isUserVotedInProposal,
       onCreateVote,
       onCancelVote,
-      votesOfProposalMap,
-      votesOfProjectMap,
+      userVotesOfProposalMap,
+      userVotesOfProjectMap,
       doNotShowCancelModal,
       proposals,
     ],
@@ -317,13 +363,13 @@ const ProposalDetails = ({
   const handleCancelVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
-      await onCancelVote(votesOfProposalMap[currentVoteItem!.key].id);
+      await onCancelVote(userVotesOfProposalMap[currentVoteItem!.key].id);
       setIsCancelModalOpen(false);
     } catch (err) {
       // TODO toast
       console.error(err);
     }
-  }, [currentVoteItem, votesOfProposalMap, onCancelVote]);
+  }, [currentVoteItem, userVotesOfProposalMap, onCancelVote]);
 
   const handleSwitchVoteConfirm = useCallback(async () => {
     try {
@@ -430,7 +476,10 @@ const ProposalDetails = ({
               proposal={proposal!}
               proposalItem={info.row.original}
               isLoading={isFetchVoteInfoLoading || isVoteActionPending}
-              isVoted={!!votesOfProposalMap[info.row.original.key]}
+              isUserVoted={isUserVotedInProposal(info.row.original.key)}
+              votedMemberCount={
+                votesOfKeyInProposalMap[info.row.original.key]?.length || 0
+              }
               onAction={() => onVoteAction(info.row.original)}
             />
           );
@@ -444,7 +493,8 @@ const ProposalDetails = ({
       onVoteAction,
       isFetchVoteInfoLoading,
       isVoteActionPending,
-      votesOfProposalMap,
+      votesOfKeyInProposalMap,
+      isUserVotedInProposal,
     ],
   );
 
