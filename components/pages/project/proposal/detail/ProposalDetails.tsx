@@ -2,6 +2,7 @@
 
 import { Skeleton } from '@heroui/react';
 import {
+  ColumnDef,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -24,10 +25,10 @@ import {
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { cn } from '@/lib/utils';
 import { IProject, IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
 import { safeGetLocalStorage } from '@/utils/localStorage';
-import { cn } from '@/lib/utils';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -401,113 +402,147 @@ const ProposalDetails = ({
 
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('property', {
-        header: () => (
-          <TooltipTh
-            title="Property"
-            tooltipContext="The property name of the project item"
+  const columns = useMemo(() => {
+    const propertyColumn = columnHelper.accessor('property', {
+      id: 'property',
+      header: () => (
+        <TooltipTh
+          title="Property"
+          tooltipContext="The property name of the project item"
+        />
+      ),
+      size: isPageExpanded ? 247 : 220,
+      cell: (info) => {
+        return (
+          <div className="flex w-full items-center justify-between">
+            <span className="text-[14px] font-[600] leading-[20px] text-black">
+              {info.getValue()}
+            </span>
+            <TooltipItemWeight itemWeight={88} />
+          </div>
+        );
+      },
+    });
+
+    const fieldTypeColumn = columnHelper.accessor('property', {
+      id: 'fieldType',
+      header: () => (
+        <TooltipTh
+          title="Field Type"
+          tooltipContext="The type of the field for the project item"
+        />
+      ),
+      size: 220, // Size for the new column when expanded
+      cell: (info) => {
+        const value = info.getValue();
+        return (
+          <div
+            className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
+            // style={{ maxWidth: '200px' }} // Let column size control width
+          >
+            {value}
+          </div>
+        );
+      },
+    });
+
+    const inputColumn = columnHelper.accessor('input', {
+      header: () => (
+        <TooltipTh
+          title="Input"
+          tooltipContext="The input value provided by the user"
+        />
+      ),
+      size: isPageExpanded ? 480 : 250,
+      cell: (info) => {
+        const value = info.getValue();
+        return (
+          <div
+            className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
+            style={{ maxWidth: isPageExpanded ? '460px' : '230px' }} // Adjusted maxWidth based on column size
+          >
+            {value}
+          </div>
+        );
+      },
+    });
+
+    const referenceColumn = columnHelper.accessor('reference', {
+      header: () => (
+        <TooltipTh
+          title="Reference"
+          tooltipContext="Reference information for this property"
+        />
+      ),
+      size: 124,
+      cell: (info) => {
+        const value = info.getValue();
+        return (
+          <div className="mx-auto flex justify-center">
+            {value ? (
+              <Button
+                color="secondary"
+                size="md"
+                className="w-[104px] text-[13px] font-[400]"
+              >
+                Reference
+              </Button>
+            ) : (
+              <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+                empty
+              </div>
+            )}
+          </div>
+        );
+      },
+    });
+
+    const supportColumn = columnHelper.accessor('support', {
+      header: () => (
+        <TooltipTh
+          title="Support"
+          tooltipContext="Number of supporters for this property"
+        />
+      ),
+      size: 220,
+      cell: (info) => {
+        return (
+          <VoteItem
+            project={project!}
+            proposal={proposal!}
+            proposalItem={info.row.original}
+            isLoading={isFetchVoteInfoLoading || isVoteActionPending}
+            isUserVoted={isUserVotedInProposal(info.row.original.key)}
+            votedMemberCount={
+              votesOfKeyInProposalMap[info.row.original.key]?.length || 0
+            }
+            onAction={() => onVoteAction(info.row.original)}
           />
-        ),
-        size: isPageExpanded ? 247 : 220,
-        cell: (info) => {
-          return (
-            <div className="flex w-full items-center justify-between">
-              <span className="text-[14px] font-[600] leading-[20px] text-black">
-                {info.getValue()}
-              </span>
-              <TooltipItemWeight itemWeight={88} />
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('input', {
-        header: () => (
-          <TooltipTh
-            title="Input"
-            tooltipContext="The input value provided by the user"
-          />
-        ),
-        size: isPageExpanded ? 480 : 250,
-        cell: (info) => {
-          const value = info.getValue();
-          return (
-            <div
-              className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
-              style={{ maxWidth: '230px' }}
-            >
-              {value}
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('reference', {
-        header: () => (
-          <TooltipTh
-            title="Reference"
-            tooltipContext="Reference information for this property"
-          />
-        ),
-        size: 124,
-        cell: (info) => {
-          const value = info.getValue();
-          return (
-            <div className="mx-auto flex justify-center">
-              {value ? (
-                <Button
-                  color="secondary"
-                  size="md"
-                  className="w-[104px] text-[13px] font-[400]"
-                >
-                  Reference
-                </Button>
-              ) : (
-                <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
-                  empty
-                </div>
-              )}
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('support', {
-        header: () => (
-          <TooltipTh
-            title="Support"
-            tooltipContext="Number of supporters for this property"
-          />
-        ),
-        size: 220,
-        cell: (info) => {
-          return (
-            <VoteItem
-              project={project!}
-              proposal={proposal!}
-              proposalItem={info.row.original}
-              isLoading={isFetchVoteInfoLoading || isVoteActionPending}
-              isUserVoted={isUserVotedInProposal(info.row.original.key)}
-              votedMemberCount={
-                votesOfKeyInProposalMap[info.row.original.key]?.length || 0
-              }
-              onAction={() => onVoteAction(info.row.original)}
-            />
-          );
-        },
-      }),
-    ],
-    [
-      isPageExpanded,
-      columnHelper,
-      project,
-      proposal,
-      onVoteAction,
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      votesOfKeyInProposalMap,
-      isUserVotedInProposal,
-    ],
-  );
+        );
+      },
+    });
+
+    const resultColumns: ColumnDef<ITableProposalItem, any>[] = isPageExpanded
+      ? [
+          propertyColumn,
+          fieldTypeColumn,
+          inputColumn,
+          referenceColumn,
+          supportColumn,
+        ]
+      : [propertyColumn, inputColumn, referenceColumn, supportColumn];
+    return resultColumns;
+  }, [
+    isPageExpanded,
+    columnHelper,
+    project,
+    proposal,
+    onVoteAction,
+    isFetchVoteInfoLoading,
+    isVoteActionPending,
+    votesOfKeyInProposalMap,
+    isUserVotedInProposal,
+  ]);
 
   const tableData = useMemo(() => {
     const result: Record<CategoryKey, ITableProposalItem[]> = {
