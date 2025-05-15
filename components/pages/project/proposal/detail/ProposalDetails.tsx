@@ -21,6 +21,7 @@ import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
+import { useAuth } from '@/context/AuthContext';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -64,6 +65,7 @@ const ProposalDetails = ({
   isFiltered,
   toggleFiltered,
 }: ProposalDetailsProps) => {
+  const { profile } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [CreateProjectStep.Basics]: true,
     [CreateProjectStep.Dates]: true,
@@ -105,6 +107,11 @@ const ProposalDetails = ({
 
   const onVoteAction = useCallback(
     async (item: ITableProposalItem) => {
+      if (!profile) {
+        console.warn('not login');
+        // TODO prompt to login ?
+        return;
+      }
       await handleVoteAction(item, doNotShowCancelModal, {
         setCurrentVoteItem,
         setIsCancelModalOpen,
@@ -112,7 +119,7 @@ const ProposalDetails = ({
         setSourceProposal,
       });
     },
-    [handleVoteAction, doNotShowCancelModal],
+    [profile, handleVoteAction, doNotShowCancelModal],
   );
 
   const handleCancelVoteConfirm = useCallback(async () => {

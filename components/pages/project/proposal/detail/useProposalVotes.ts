@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useAccount } from 'wagmi';
 
 import { ITableProposalItem } from '@/components/pages/project/proposal/detail/ProposalDetails';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +12,7 @@ export function useProposalVotes(
   projectId: number,
   proposals?: IProposal[],
 ) {
+  const { isConnected } = useAccount();
   const { profile } = useAuth();
 
   const {
@@ -130,6 +132,7 @@ export function useProposalVotes(
   const onCreateVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
+      if (!profile) return;
       const payload = { proposalId: proposal.id, key };
       createVoteMutation.mutate(payload, {
         onSuccess: (data) => {
@@ -142,6 +145,7 @@ export function useProposalVotes(
       });
     },
     [
+      profile,
       proposal,
       createVoteMutation,
       refetchVotesOfProposal,
@@ -152,6 +156,7 @@ export function useProposalVotes(
   const onSwitchVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
+      if (!profile) return;
       const payload = { proposalId: proposal.id, key };
       switchVoteMutation.mutate(payload, {
         onSuccess: (data) => {
@@ -165,6 +170,7 @@ export function useProposalVotes(
       });
     },
     [
+      profile,
       proposal,
       switchVoteMutation,
       refetchVotesOfProposal,
@@ -174,6 +180,7 @@ export function useProposalVotes(
 
   const onCancelVote = useCallback(
     async (id: number) => {
+      if (!profile) return;
       cancelVoteMutation.mutate(
         { id },
         {
@@ -188,7 +195,12 @@ export function useProposalVotes(
         },
       );
     },
-    [cancelVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
+    [
+      profile,
+      cancelVoteMutation,
+      refetchVotesOfProposal,
+      refetchVotesOfProject,
+    ],
   );
 
   const findSourceProposal = useCallback(
