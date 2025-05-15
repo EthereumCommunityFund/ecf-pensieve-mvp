@@ -27,6 +27,7 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
 import { safeGetLocalStorage } from '@/utils/localStorage';
+import { cn } from '@/lib/utils';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -113,6 +114,10 @@ interface ProposalDetailsProps {
   proposals: IProposal[];
   project?: IProject;
   projectId: number;
+  isFiltered: boolean;
+  toggleFiltered: () => void;
+  isPageExpanded: boolean;
+  toggleExpanded: () => void;
 }
 
 const ProposalDetails = ({
@@ -120,10 +125,12 @@ const ProposalDetails = ({
   projectId,
   project,
   proposals,
+  isPageExpanded,
+  toggleExpanded,
+  isFiltered,
+  toggleFiltered,
 }: ProposalDetailsProps) => {
   const { profile } = useAuth();
-  const [isPageExpanded, setIsPageExpanded] = useState(false);
-  const [isFiltered, setIsFiltered] = useState(false);
 
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [CreateProjectStep.Basics]: true,
@@ -403,7 +410,7 @@ const ProposalDetails = ({
             tooltipContext="The property name of the project item"
           />
         ),
-        size: 220,
+        size: isPageExpanded ? 247 : 220,
         cell: (info) => {
           return (
             <div className="flex w-full items-center justify-between">
@@ -422,7 +429,7 @@ const ProposalDetails = ({
             tooltipContext="The input value provided by the user"
           />
         ),
-        size: 250,
+        size: isPageExpanded ? 480 : 250,
         cell: (info) => {
           const value = info.getValue();
           return (
@@ -490,6 +497,7 @@ const ProposalDetails = ({
       }),
     ],
     [
+      isPageExpanded,
       columnHelper,
       project,
       proposal,
@@ -704,7 +712,12 @@ const ProposalDetails = ({
 
       return (
         <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
-          <table className="box-border w-full table-fixed border-separate border-spacing-0">
+          <table
+            className={cn(
+              'box-border w-full  border-separate border-spacing-0',
+              isPageExpanded ? '' : 'table-fixed',
+            )}
+          >
             {colGroupDefinition}
             {tableHeaders}
             <tbody>
@@ -746,8 +759,8 @@ const ProposalDetails = ({
       <ActionSectionHeader
         isExpanded={isPageExpanded}
         isFiltered={isFiltered}
-        onChangeExpand={() => setIsPageExpanded((pre) => !pre)}
-        onChangeFilter={() => setIsFiltered((pre) => !pre)}
+        onChangeExpand={toggleExpanded}
+        onChangeFilter={toggleFiltered}
       />
 
       <TableSectionHeader title="Project Overview" description="" />

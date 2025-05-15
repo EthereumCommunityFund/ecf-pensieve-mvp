@@ -16,7 +16,16 @@ const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
   const router = useRouter();
 
-  const [isTableExpanded, setIsTableExpanded] = useState(false);
+  const [isPageExpanded, setIsPageExpanded] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
+
+  const togglePageExpanded = useCallback(() => {
+    setIsPageExpanded((pre) => !pre);
+  }, []);
+
+  const toggleFiltered = useCallback(() => {
+    setIsFiltered((pre) => !pre);
+  }, []);
 
   const { data: project, isFetched: isProjectFetched } =
     trpc.project.getProjectById.useQuery(
@@ -98,18 +107,33 @@ const ProposalPage = () => {
           'mt-[20px] mx-auto flex justify-center items-start gap-[40px]',
           'tablet:flex-col tablet:gap-[20px] tablet:px-[20px] mobile:flex-col mobile:gap-[20px]',
           'tablet:px-[10px] mobile:px-[10px]',
+          isPageExpanded ? 'px-[80px]' : '',
         )}
       >
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[820px] flex-1">
+        <div
+          className={cn(
+            'tablet:max-w-[9999px] mobile:max-w-[9999px] w-full flex-1',
+            isPageExpanded ? '' : 'max-w-[820px]',
+          )}
+        >
           <ProposalDetails
             project={project}
             proposal={proposal}
             proposals={proposals || []}
             projectId={Number(projectId)}
+            isPageExpanded={isPageExpanded}
+            isFiltered={isFiltered}
+            toggleExpanded={togglePageExpanded}
+            toggleFiltered={toggleFiltered}
           />
         </div>
 
-        <div className="tablet:w-full mobile:w-full flex w-[300px] flex-col gap-[20px]">
+        <div
+          className={cn(
+            'tablet:w-full mobile:w-full flex w-[300px] flex-col gap-[20px]',
+            isPageExpanded ? 'hidden' : '',
+          )}
+        >
           <div className="tablet:hidden mobile:hidden">
             <UserWeightCard weight={100} />
           </div>
