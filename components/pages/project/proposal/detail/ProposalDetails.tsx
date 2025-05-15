@@ -424,7 +424,7 @@ const ProposalDetails = ({
           const value = info.getValue();
           return (
             <div
-              className="flex items-center overflow-hidden whitespace-normal break-words"
+              className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
               style={{ maxWidth: '230px' }}
             >
               {value}
