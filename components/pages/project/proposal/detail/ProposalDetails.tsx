@@ -1,5 +1,6 @@
 'use client';
 
+import { Skeleton } from '@heroui/react';
 import {
   createColumnHelper,
   flexRender,
@@ -139,6 +140,8 @@ const ProposalDetails = ({
 
   const [doNotShowCancelModal, setDoNotShowCancelModal] =
     useState<boolean>(false);
+
+  const isOverallLoading = !proposal;
 
   const {
     data: votesOfProposal,
@@ -506,7 +509,11 @@ const ProposalDetails = ({
       [CreateProjectStep.Organization]: [],
     };
 
-    proposal?.items.forEach((item: any) => {
+    if (!proposal) {
+      return result;
+    }
+
+    proposal.items.forEach((item: any) => {
       const key = item.key;
       const value = item.value;
 
@@ -609,80 +616,128 @@ const ProposalDetails = ({
   );
 
   const renderTable = useCallback(
-    (table: Table<ITableProposalItem>) => (
-      <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
-        <table className="box-border w-full table-fixed border-separate border-spacing-0">
-          <colgroup>
-            {table.getAllColumns().map((column) => (
-              <col
-                key={column.id}
-                style={{
-                  width: `${column.getSize()}px`,
-                }}
-              />
-            ))}
-          </colgroup>
-          <thead>
-            <tr className="bg-[#F5F5F5]">
-              {table.getHeaderGroups().map((headerGroup) =>
-                headerGroup.headers.map((header, index) => (
-                  <th
-                    key={header.id}
-                    style={{
-                      width: `${header.getSize()}px`,
-                      boxSizing: 'border-box',
-                    }}
-                    className={`h-[30px] border-b border-r border-black/10 px-[10px] text-left
-                      text-[14px] font-[600] text-black/60
-                      ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
-                    `}
+    (table: Table<ITableProposalItem>, forceSkeleton: boolean) => {
+      const noDataForThisTable = table.options.data.length === 0;
+      const showSkeleton = forceSkeleton || noDataForThisTable;
+
+      const tableHeaders = (
+        <thead>
+          <tr className="bg-[#F5F5F5]">
+            {table.getHeaderGroups().map((headerGroup) =>
+              headerGroup.headers.map((header, index) => (
+                <th
+                  key={header.id}
+                  style={{
+                    width: `${header.getSize()}px`,
+                    boxSizing: 'border-box',
+                  }}
+                  className={`h-[30px] border-b border-r border-black/10 px-[10px] text-left
+                    text-[14px] font-[600] text-black/60
+                    ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
+                  `}
+                >
+                  <div
+                    className="flex items-center"
+                    style={{ width: '100%', overflow: 'hidden' }}
                   >
-                    <div
-                      className="flex items-center"
-                      style={{ width: '100%', overflow: 'hidden' }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </div>
-                  </th>
-                )),
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row, rowIndex) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell, cellIndex) => (
-                  <td
-                    key={cell.id}
-                    style={{
-                      width: `${cell.column.getSize()}px`,
-                      boxSizing: 'border-box',
-                    }}
-                    className={` border-b border-r
-                      border-black/10
-                      ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
-                      ${rowIndex === table.getRowModel().rows.length - 1 ? 'border-b-0' : ''}
-                    `}
-                  >
-                    <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </div>
-                  </td>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </div>
+                </th>
+              )),
+            )}
+          </tr>
+        </thead>
+      );
+
+      const colGroupDefinition = (
+        <colgroup>
+          {table.getAllColumns().map((column) => (
+            <col
+              key={column.id}
+              style={{
+                width: `${column.getSize()}px`,
+              }}
+            />
+          ))}
+        </colgroup>
+      );
+
+      if (showSkeleton) {
+        return (
+          <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
+            <table className="box-border w-full table-fixed border-separate border-spacing-0">
+              {colGroupDefinition}
+              {tableHeaders}
+              <tbody>
+                {Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <tr key={`skeleton-row-${rowIndex}`}>
+                    {table.getAllColumns().map((column, cellIndex) => (
+                      <td
+                        key={`skeleton-cell-${column.id}-${rowIndex}`}
+                        style={{
+                          width: `${column.getSize()}px`,
+                          boxSizing: 'border-box',
+                        }}
+                        className={` border-b border-r
+                          border-black/10
+                          ${cellIndex === table.getAllColumns().length - 1 ? 'border-r-0' : ''}
+                          ${rowIndex === 4 ? 'border-b-0' : ''}
+                        `}
+                      >
+                        <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
+                          <Skeleton className="h-[20px] w-full rounded" />
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ),
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+
+      return (
+        <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
+          <table className="box-border w-full table-fixed border-separate border-spacing-0">
+            {colGroupDefinition}
+            {tableHeaders}
+            <tbody>
+              {table.getRowModel().rows.map((row, rowIndex) => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map((cell, cellIndex) => (
+                    <td
+                      key={cell.id}
+                      style={{
+                        width: `${cell.column.getSize()}px`,
+                        boxSizing: 'border-box',
+                      }}
+                      className={` border-b border-r
+                        border-black/10
+                        ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
+                        ${rowIndex === table.getRowModel().rows.length - 1 ? 'border-b-0' : ''}
+                      `}
+                    >
+                      <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    },
     [],
   );
 
@@ -705,7 +760,7 @@ const ProposalDetails = ({
             CreateProjectStep.Basics,
           )}
           <div style={getAnimationStyle(expanded[CreateProjectStep.Basics])}>
-            {renderTable(basicsTable)}
+            {renderTable(basicsTable, isOverallLoading)}
           </div>
         </div>
 
@@ -716,7 +771,7 @@ const ProposalDetails = ({
             CreateProjectStep.Dates,
           )}
           <div style={getAnimationStyle(expanded[CreateProjectStep.Dates])}>
-            {renderTable(datesTable)}
+            {renderTable(datesTable, isOverallLoading)}
           </div>
         </div>
 
@@ -729,7 +784,7 @@ const ProposalDetails = ({
           <div
             style={getAnimationStyle(expanded[CreateProjectStep.Technicals])}
           >
-            {renderTable(technicalsTable)}
+            {renderTable(technicalsTable, isOverallLoading)}
           </div>
         </div>
 
@@ -742,7 +797,7 @@ const ProposalDetails = ({
           <div
             style={getAnimationStyle(expanded[CreateProjectStep.Organization])}
           >
-            {renderTable(organizationTable)}
+            {renderTable(organizationTable, isOverallLoading)}
           </div>
         </div>
       </div>
