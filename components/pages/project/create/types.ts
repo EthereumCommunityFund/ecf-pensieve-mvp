@@ -57,6 +57,11 @@ export interface ProjectFormData {
   founders: FounderInput[];
 }
 
+export interface IRef {
+  key: string;
+  value: string;
+}
+
 export interface ProjectCreatePayload {
   name: string;
   tagline: string;
@@ -78,10 +83,7 @@ export interface ProjectCreatePayload {
     name: string;
     title: string;
   }[];
-  refs?: {
-    key: string;
-    value: string;
-  }[];
+  refs?: IRef[];
 }
 
 export interface ProposalCreatePayload {

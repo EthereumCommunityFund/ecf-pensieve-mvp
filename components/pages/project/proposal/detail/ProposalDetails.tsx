@@ -13,14 +13,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import {
-  basicsFieldsConfig,
-  datesFieldsConfig,
-  organizationFieldsConfig,
-  technicalsFieldsConfig,
-} from '@/components/pages/project/create/FormData';
-import {
   CreateProjectStep,
-  stepFields,
+  IRef,
 } from '@/components/pages/project/create/types';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
@@ -33,7 +27,9 @@ import { safeGetLocalStorage } from '@/utils/localStorage';
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
+import { CATEGORIES, FIELD_LABELS } from './constants';
 import CancelVoteModal from './table/CancelVoteModal';
+import ReferenceModal from './table/ReferenceModal';
 import SwitchVoteModal from './table/SwitchVoteModal';
 import TooltipItemWeight from './table/TooltipItemWeight';
 import TooltipTh from './table/TooltipTh';
@@ -47,68 +43,7 @@ export interface ITableProposalItem {
   support: number;
 }
 
-type CategoryKey = CreateProjectStep;
-
-const CATEGORIES: Record<
-  CreateProjectStep,
-  {
-    title: string;
-    description: string;
-    items: string[];
-  }
-> = {
-  [CreateProjectStep.Basics]: {
-    title: 'Basics',
-    description: '',
-    items: [...stepFields[CreateProjectStep.Basics]],
-  },
-  [CreateProjectStep.Dates]: {
-    title: 'Dates & Statuses',
-    description: '',
-    items: [...stepFields[CreateProjectStep.Dates]],
-  },
-  [CreateProjectStep.Technicals]: {
-    title: 'Technicals',
-    description: '',
-    items: [...stepFields[CreateProjectStep.Technicals]],
-  },
-  [CreateProjectStep.Organization]: {
-    title: 'Organization',
-    description: '',
-    items: [...stepFields[CreateProjectStep.Organization]],
-  },
-};
-
-const FIELD_LABELS: Record<string, string> = {
-  ...Object.entries(basicsFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(datesFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(technicalsFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(organizationFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-};
+export type CategoryKey = CreateProjectStep;
 
 interface ProposalDetailsProps {
   proposal?: IProposal;
@@ -142,6 +77,9 @@ const ProposalDetails = ({
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
+  const [currentReferenceKey, setCurrentReferenceKey] = useState('');
+
   const [currentVoteItem, setCurrentVoteItem] =
     useState<ITableProposalItem | null>(null);
   const [sourceProposal, setSourceProposal] = useState<IProposal | null>(null);
@@ -161,7 +99,7 @@ const ProposalDetails = ({
     {
       enabled: !!proposal && !!proposal.id,
       select: (data) => {
-        devLog('getVotesByProposalId', data);
+        // devLog('getVotesByProposalId', data);
         return data;
       },
     },
@@ -177,7 +115,7 @@ const ProposalDetails = ({
     {
       enabled: !!projectId,
       select: (data) => {
-        devLog('getVotesByProjectId', data);
+        // devLog('getVotesByProjectId', data);
         return data;
       },
     },
@@ -291,12 +229,12 @@ const ProposalDetails = ({
       const payload = { proposalId: proposal!.id, key };
       switchVoteMutation.mutate(payload, {
         onSuccess: (data) => {
-          devLog('onSwitchVote success', data);
+          // devLog('onSwitchVote success', data);
           refetchVotesOfProposal();
           refetchVotesOfProject();
         },
         onError: (error) => {
-          devLog('onSwitchVote error', error);
+          // devLog('onSwitchVote error', error);
         },
       });
     },
@@ -314,12 +252,12 @@ const ProposalDetails = ({
         { id },
         {
           onSuccess: (data) => {
-            devLog('onCancelVote success', data);
+            // devLog('onCancelVote success', data);
             refetchVotesOfProposal();
             refetchVotesOfProject();
           },
           onError: (error) => {
-            devLog('onCancelVote error', error);
+            // devLog('onCancelVote error', error);
           },
         },
       );
@@ -334,7 +272,7 @@ const ProposalDetails = ({
 
   const onVoteAction = useCallback(
     async (item: ITableProposalItem) => {
-      devLog('onVoteAction item', item);
+      // devLog('onVoteAction item', item);
 
       setCurrentVoteItem(item);
       if (!isUserVotedInProject(item.key)) {
@@ -399,6 +337,11 @@ const ProposalDetails = ({
     createVoteMutation.isPending ||
     switchVoteMutation.isPending ||
     cancelVoteMutation.isPending;
+
+  const onShowReference = useCallback((key: string) => {
+    setCurrentReferenceKey(key);
+    setIsReferenceModalOpen(true);
+  }, []);
 
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
@@ -484,6 +427,7 @@ const ProposalDetails = ({
                 color="secondary"
                 size="md"
                 className="w-[104px] text-[13px] font-[400]"
+                onPress={() => onShowReference(info.row.original.key)}
               >
                 Reference
               </Button>
@@ -569,12 +513,9 @@ const ProposalDetails = ({
       }
 
       if (category) {
-        const reference = (
-          proposal.refs as Array<{
-            key: string;
-            value: string;
-          }>
-        )?.find((ref) => ref.key === key);
+        const reference = (proposal.refs as IRef[])?.find(
+          (ref) => ref.key === key,
+        );
 
         result[category].push({
           key: key,
@@ -865,6 +806,13 @@ const ProposalDetails = ({
         onConfirm={handleCancelVoteConfirm}
         isLoading={cancelVoteMutation.isPending}
         proposalItem={currentVoteItem || undefined}
+      />
+
+      <ReferenceModal
+        isOpen={isReferenceModalOpen}
+        onClose={() => setIsReferenceModalOpen(false)}
+        fieldKey={currentReferenceKey}
+        refs={(proposal?.refs || []) as IRef[]}
       />
     </div>
   );

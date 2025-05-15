@@ -11,6 +11,7 @@ import ProposalDetails from '@/components/pages/project/proposal/detail/Proposal
 import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeightCard';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
+import { devLog } from '@/utils/devLog';
 
 const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
@@ -32,6 +33,10 @@ const ProposalPage = () => {
       { id: Number(projectId) },
       {
         enabled: !!projectId,
+        select: (data) => {
+          devLog('project', data);
+          return data;
+        },
       },
     );
 
@@ -43,6 +48,10 @@ const ProposalPage = () => {
     { id: Number(proposalId) },
     {
       enabled: !!proposalId,
+      select: (data) => {
+        devLog('proposal', data);
+        return data;
+      },
     },
   );
 
