@@ -16,12 +16,10 @@ import {
   CreateProjectStep,
   IRef,
 } from '@/components/pages/project/create/types';
+import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
-import { useAuth } from '@/context/AuthContext';
-import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
-import { IProject, IProposal, IVote } from '@/types';
-import { devLog } from '@/utils/devLog';
+import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
@@ -66,8 +64,6 @@ const ProposalDetails = ({
   isFiltered,
   toggleFiltered,
 }: ProposalDetailsProps) => {
-  const { profile } = useAuth();
-
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [CreateProjectStep.Basics]: true,
     [CreateProjectStep.Dates]: true,
@@ -90,180 +86,17 @@ const ProposalDetails = ({
   const isOverallLoading = !proposal;
 
   const {
-    data: votesOfProposal,
-    isLoading: isVotesOfProposalLoading,
-    isFetched: isVotesOfProposalFetched,
-    refetch: refetchVotesOfProposal,
-  } = trpc.vote.getVotesByProposalId.useQuery(
-    { proposalId: Number(proposal?.id) },
-    {
-      enabled: !!proposal && !!proposal.id,
-      select: (data) => {
-        // devLog('getVotesByProposalId', data);
-        return data;
-      },
-    },
-  );
-
-  const {
-    data: votesOfProject,
-    isLoading: isVotesOfProjectLoading,
-    isFetched: isVotesOfProjectFetched,
-    refetch: refetchVotesOfProject,
-  } = trpc.vote.getVotesByProjectId.useQuery(
-    { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-      select: (data) => {
-        // devLog('getVotesByProjectId', data);
-        return data;
-      },
-    },
-  );
-
-  const votesOfKeyInProposalMap = useMemo(() => {
-    return (votesOfProposal || []).reduce(
-      (acc, vote) => {
-        if (!acc[vote.key]) {
-          acc[vote.key] = [];
-        }
-        acc[vote.key].push(vote);
-        return acc;
-      },
-      {} as Record<string, IVote[]>,
-    );
-  }, [votesOfProposal]);
-
-  const votedOfKeyInProjectMap = useMemo(() => {
-    return (votesOfProject || []).reduce(
-      (acc, vote) => {
-        if (!acc[vote.key]) {
-          acc[vote.key] = [];
-        }
-        acc[vote.key].push(vote);
-        return acc;
-      },
-      {} as Record<string, IVote[]>,
-    );
-  }, [votesOfProject]);
-
-  const userVotesOfProposalMap = useMemo(() => {
-    if (!profile) return {};
-    return (votesOfProposal || [])
-      .filter((vote) => vote.creator?.userId === profile?.userId)
-      .reduce(
-        (acc, vote) => {
-          acc[vote.key] = vote;
-          return acc;
-        },
-        {} as Record<string, IVote>,
-      );
-  }, [votesOfProposal, profile]);
-
-  const userVotesOfProjectMap = useMemo(() => {
-    if (!profile) return {};
-    return (votesOfProject || [])
-      .filter((vote) => vote.creator?.userId === profile?.userId)
-      .reduce(
-        (acc, vote) => {
-          acc[vote.key] = vote;
-          return acc;
-        },
-        {} as Record<string, IVote>,
-      );
-  }, [votesOfProject, profile]);
-
-  const isUserVotedInProposal = useCallback(
-    (key: string) => {
-      if (!profile) return false;
-      const votesOfKey = votesOfKeyInProposalMap[key] || [];
-      if (!votesOfKey || votesOfKey.length === 0) return false;
-      const isUserVoted = votesOfKey?.find(
-        (vote) => vote.creator?.userId === profile?.userId,
-      );
-      return !!isUserVoted;
-    },
-    [profile, votesOfKeyInProposalMap],
-  );
-
-  const isUserVotedInProject = useCallback(
-    (key: string) => {
-      if (!profile) return false;
-      const votesOfKey = votedOfKeyInProjectMap[key] || [];
-      if (!votesOfKey || votesOfKey.length === 0) return false;
-      const isUserVoted = votesOfKey?.find(
-        (vote) => vote.creator?.userId === profile?.userId,
-      );
-      return !!isUserVoted;
-    },
-    [profile, votedOfKeyInProjectMap],
-  );
-
-  const createVoteMutation = trpc.vote.createVote.useMutation();
-  const switchVoteMutation = trpc.vote.switchVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
-
-  const onCreateVote = useCallback(
-    async (key: string) => {
-      const payload = { proposalId: proposal!.id, key };
-      createVoteMutation.mutate(payload, {
-        onSuccess: (data) => {
-          refetchVotesOfProposal();
-          refetchVotesOfProject();
-        },
-        onError: (error) => {
-          devLog('onVote error', error);
-        },
-      });
-    },
-    [
-      proposal,
-      createVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
-  );
-
-  const onSwitchVote = useCallback(
-    async (key: string) => {
-      const payload = { proposalId: proposal!.id, key };
-      switchVoteMutation.mutate(payload, {
-        onSuccess: (data) => {
-          // devLog('onSwitchVote success', data);
-          refetchVotesOfProposal();
-          refetchVotesOfProject();
-        },
-        onError: (error) => {
-          // devLog('onSwitchVote error', error);
-        },
-      });
-    },
-    [
-      proposal,
-      switchVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
-  );
-
-  const onCancelVote = useCallback(
-    async (id: number) => {
-      cancelVoteMutation.mutate(
-        { id },
-        {
-          onSuccess: (data) => {
-            // devLog('onCancelVote success', data);
-            refetchVotesOfProposal();
-            refetchVotesOfProject();
-          },
-          onError: (error) => {
-            // devLog('onCancelVote error', error);
-          },
-        },
-      );
-    },
-    [cancelVoteMutation, refetchVotesOfProposal, refetchVotesOfProject],
-  );
+    votesOfKeyInProposalMap,
+    userVotesOfProposalMap,
+    isUserVotedInProposal,
+    isFetchVoteInfoLoading,
+    isVoteActionPending,
+    onCancelVote,
+    onSwitchVote,
+    handleVoteAction,
+    switchVoteMutation,
+    cancelVoteMutation,
+  } = useProposalVotes(proposal, projectId, proposals);
 
   useEffect(() => {
     const savedValue = safeGetLocalStorage(StorageKey_DoNotShowCancelModal);
@@ -272,41 +105,14 @@ const ProposalDetails = ({
 
   const onVoteAction = useCallback(
     async (item: ITableProposalItem) => {
-      // devLog('onVoteAction item', item);
-
-      setCurrentVoteItem(item);
-      if (!isUserVotedInProject(item.key)) {
-        await onCreateVote(item.key);
-        return;
-      }
-      if (isUserVotedInProposal(item.key)) {
-        if (doNotShowCancelModal) {
-          await onCancelVote(userVotesOfProposalMap[item.key].id);
-        } else {
-          setIsCancelModalOpen(true);
-        }
-        return;
-      }
-
-      if (isUserVotedInProject(item.key) && !isUserVotedInProposal(item.key)) {
-        const sourceVote = userVotesOfProjectMap[item.key];
-        // TODO confirm how to display No of proposal
-        const sourceProposalData =
-          proposals?.find((p) => p.id === sourceVote.proposalId) || null;
-        setSourceProposal(sourceProposalData);
-        setIsSwitchModalOpen(true);
-      }
+      await handleVoteAction(item, doNotShowCancelModal, {
+        setCurrentVoteItem,
+        setIsCancelModalOpen,
+        setIsSwitchModalOpen,
+        setSourceProposal,
+      });
     },
-    [
-      isUserVotedInProject,
-      isUserVotedInProposal,
-      onCreateVote,
-      onCancelVote,
-      userVotesOfProposalMap,
-      userVotesOfProjectMap,
-      doNotShowCancelModal,
-      proposals,
-    ],
+    [handleVoteAction, doNotShowCancelModal],
   );
 
   const handleCancelVoteConfirm = useCallback(async () => {
@@ -330,13 +136,6 @@ const ProposalDetails = ({
       console.error(err);
     }
   }, [currentVoteItem, onSwitchVote]);
-
-  const isFetchVoteInfoLoading =
-    isVotesOfProposalLoading || isVotesOfProjectLoading;
-  const isVoteActionPending =
-    createVoteMutation.isPending ||
-    switchVoteMutation.isPending ||
-    cancelVoteMutation.isPending;
 
   const onShowReference = useCallback((key: string) => {
     setCurrentReferenceKey(key);
