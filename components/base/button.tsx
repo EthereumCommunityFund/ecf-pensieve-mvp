@@ -65,6 +65,9 @@ export const Button = extendVariants(HButton, {
     border: {
       true: 'border border-black/10',
     },
+    isIconOnly: {
+      true: 'bg-transparent p-0 border-none min-w-0',
+    },
   },
 
   defaultVariants: {
