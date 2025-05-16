@@ -14,8 +14,8 @@ import {
   ModalBody,
   ModalContent,
 } from '@/components/base';
-import { normalizeUrl } from '@/components/pages/project/create/utils/form';
 import { devLog } from '@/utils/devLog';
+import { normalizeUrl } from '@/utils/url';
 
 import InputPrefix from './InputPrefix';
 import { ReferenceData } from './types';

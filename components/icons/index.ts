@@ -3,6 +3,7 @@ export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';
 export { default as CheckIcon } from './Check';
 export { default as CodeIcon } from './Code';
+export { CopyIcon } from './Copy';
 export { default as GaugeIcon } from './Gauge';
 export { GitPullDarkIcon, GitPullLightIcon } from './GitPull';
 export { default as InfoIcon } from './Info';

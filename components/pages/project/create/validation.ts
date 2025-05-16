@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
 import { ApplicableField } from '@/components/pages/project/create/FormData';
-import { normalizeUrl } from '@/components/pages/project/create/utils/form';
+import { normalizeUrl } from '@/utils/url';
 
 import { FounderInput, ProjectFormData } from './types';
 

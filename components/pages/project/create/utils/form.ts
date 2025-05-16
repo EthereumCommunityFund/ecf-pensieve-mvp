@@ -5,6 +5,7 @@ import {
   ProposalCreatePayload,
   ReferenceData,
 } from '@/components/pages/project/create/types';
+import { normalizeUrl } from '@/utils/url';
 
 /**
  * Transform form data to API submission format
@@ -136,26 +137,4 @@ export const transformProposalData = (
         ? references.map((ref) => ({ key: ref.key, value: ref.value }))
         : undefined,
   };
-};
-
-export const normalizeUrl = (
-  value: string | null | undefined,
-): string | null | undefined => {
-  if (!value) {
-    return value;
-  }
-
-  const trimmedValue = value.trim();
-  if (trimmedValue === '') {
-    return trimmedValue;
-  }
-
-  if (
-    trimmedValue.startsWith('http://') ||
-    trimmedValue.startsWith('https://')
-  ) {
-    return trimmedValue;
-  }
-
-  return `https://${trimmedValue}`;
 };
