@@ -18,10 +18,10 @@ import {
 } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
+import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
-import { useAuth } from '@/context/AuthContext';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -149,6 +149,25 @@ const ProposalDetails = ({
     setIsReferenceModalOpen(true);
   }, []);
 
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const expandableRowKeys = useMemo(() => {
+    return ['projectName', 'mainDescription', 'projectType'];
+  }, []);
+
+  const isRowExpandable = useCallback(
+    (key: string) => {
+      return expandableRowKeys.includes(key);
+    },
+    [expandableRowKeys],
+  );
+
+  const toggleRowExpanded = useCallback((key: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }, []);
+
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
   const columns = useMemo(() => {
@@ -162,11 +181,47 @@ const ProposalDetails = ({
       ),
       size: isPageExpanded ? 247 : 220,
       cell: (info) => {
+        const rowKey = info.row.original.key;
+        const isExpandable = isRowExpandable(rowKey);
+
         return (
           <div className="flex w-full items-center justify-between">
-            <span className="text-[14px] font-[600] leading-[20px] text-black">
-              {info.getValue()}
-            </span>
+            <div className="flex items-center">
+              {isExpandable && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRowExpanded(rowKey);
+                  }}
+                  className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-gray-100"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      transform: expandedRows[rowKey]
+                        ? 'rotate(180deg)'
+                        : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  >
+                    <path
+                      d="M2 4L6 8L10 4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+              <span className="text-[14px] font-[600] leading-[20px] text-black">
+                {info.getValue()}
+              </span>
+            </div>
             <TooltipItemWeight itemWeight={88} />
           </div>
         );
@@ -181,14 +236,11 @@ const ProposalDetails = ({
           tooltipContext="The type of the field for the project item"
         />
       ),
-      size: 220, // Size for the new column when expanded
+      size: 220,
       cell: (info) => {
         const value = info.getValue();
         return (
-          <div
-            className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
-            // style={{ maxWidth: '200px' }} // Let column size control width
-          >
+          <div className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
             {value}
           </div>
         );
@@ -208,7 +260,7 @@ const ProposalDetails = ({
         return (
           <div
             className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
-            style={{ maxWidth: isPageExpanded ? '460px' : '230px' }} // Adjusted maxWidth based on column size
+            style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
           >
             {value}
           </div>
@@ -292,6 +344,9 @@ const ProposalDetails = ({
     isVoteActionPending,
     votesOfKeyInProposalMap,
     isUserVotedInProposal,
+    isRowExpandable,
+    expandedRows,
+    toggleRowExpanded,
   ]);
 
   const tableData = useMemo(() => {
@@ -509,36 +564,58 @@ const ProposalDetails = ({
             {tableHeaders}
             <tbody>
               {table.getRowModel().rows.map((row, rowIndex) => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map((cell, cellIndex) => (
-                    <td
-                      key={cell.id}
-                      style={{
-                        width: `${cell.column.getSize()}px`,
-                        boxSizing: 'border-box',
-                      }}
-                      className={` border-b border-r
-                        border-black/10
-                        ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
-                        ${rowIndex === table.getRowModel().rows.length - 1 ? 'border-b-0' : ''}
-                      `}
-                    >
-                      <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </div>
-                    </td>
-                  ))}
-                </tr>
+                <>
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell, cellIndex) => (
+                      <td
+                        key={cell.id}
+                        style={{
+                          width: `${cell.column.getSize()}px`,
+                          boxSizing: 'border-box',
+                        }}
+                        className={` border-b border-r
+                          border-black/10
+                          ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
+                          ${rowIndex === table.getRowModel().rows.length - 1 && !expandedRows[row.original.key] ? 'border-b-0' : ''}
+                        `}
+                      >
+                        <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+
+                  {isRowExpandable(row.original.key) &&
+                    expandedRows[row.original.key] && (
+                      <tr key={`${row.id}-expanded`}>
+                        <td
+                          colSpan={row.getVisibleCells().length}
+                          className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                            rowIndex === table.getRowModel().rows.length - 1
+                              ? 'border-b-0'
+                              : ''
+                          }`}
+                        >
+                          <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                            <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                              {row.original.input}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                </>
               ))}
             </tbody>
           </table>
         </div>
       );
     },
-    [],
+    [isPageExpanded, isRowExpandable, expandedRows, toggleRowExpanded],
   );
 
   return (
