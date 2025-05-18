@@ -85,6 +85,13 @@
       "when": 1747596526942,
       "tag": "0011_blue_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1747597287069,
+      "tag": "0012_steady_the_enforcers",
+      "breakpoints": true
     }
   ]
 }
