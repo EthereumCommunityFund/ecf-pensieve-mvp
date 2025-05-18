@@ -1,5 +1,6 @@
 import { InferSelectModel } from 'drizzle-orm';
 import {
+  bigint,
   doublePrecision,
   pgSchema,
   pgTable,
@@ -27,7 +28,7 @@ export const profiles = pgTable('profiles', {
   avatarUrl: text('avatar_url'),
   address: text('address').notNull(),
   weight: doublePrecision('weight'),
-  invitationCodeId: uuid('invitation_code_id').references(
+  invitationCodeId: bigint('invitation_code_id', { mode: 'number' }).references(
     () => invitationCodes.id,
   ),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
