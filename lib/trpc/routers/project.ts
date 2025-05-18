@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { profiles, projects } from '@/lib/db/schema';
+import { projects } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
@@ -93,26 +93,17 @@ export const projectRouter = router({
         ? and(baseCondition, gt(projects.id, cursor))
         : baseCondition;
 
-      const query = ctx.db
-        .select({
-          project: projects,
-          creator: profiles,
-        })
-        .from(projects)
-        .leftJoin(profiles, eq(projects.creator, profiles.userId))
-        .where(whereCondition)
-        .orderBy(desc(projects.id))
-        .limit(limit);
-
-      const results = await query;
-
-      const items = results.map(({ project, creator }) => ({
-        ...project,
-        creator,
-      }));
+      const results = await ctx.db.query.projects.findMany({
+        with: {
+          creator: true,
+        },
+        where: whereCondition,
+        orderBy: desc(projects.id),
+        limit,
+      });
 
       const nextCursor =
-        items.length === limit ? items[items.length - 1].id : undefined;
+        results.length === limit ? results[results.length - 1].id : undefined;
 
       const totalCount = await ctx.db
         .select({ count: sql`count(*)::int` })
@@ -120,7 +111,7 @@ export const projectRouter = router({
         .then((res) => Number(res[0]?.count ?? 0));
 
       return {
-        items,
+        items: results,
         nextCursor,
         totalCount,
       };
@@ -133,27 +124,20 @@ export const projectRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const result = await ctx.db
-        .select({
-          project: projects,
-          creator: profiles,
-        })
-        .from(projects)
-        .leftJoin(profiles, eq(projects.creator, profiles.userId))
-        .where(eq(projects.id, input.id));
+      const project = await ctx.db.query.projects.findFirst({
+        with: {
+          creator: true,
+        },
+        where: eq(projects.id, input.id),
+      });
 
-      if (result.length === 0) {
+      if (!project) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Project not found',
         });
       }
 
-      const { project, creator } = result[0];
-
-      return {
-        ...project,
-        creator,
-      };
+      return project;
     }),
 });

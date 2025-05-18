@@ -252,19 +252,14 @@ export const voteRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const votes = await ctx.db
-        .select({
-          voteRecord: voteRecords,
-          creator: profiles,
-        })
-        .from(voteRecords)
-        .leftJoin(profiles, eq(voteRecords.creator, profiles.userId))
-        .where(eq(voteRecords.proposalId, input.proposalId));
+      const votes = await ctx.db.query.voteRecords.findMany({
+        with: {
+          creator: true,
+        },
+        where: eq(voteRecords.proposalId, input.proposalId),
+      });
 
-      return votes.map(({ voteRecord, creator }) => ({
-        ...voteRecord,
-        creator,
-      }));
+      return votes;
     }),
 
   getVotesByProjectId: publicProcedure

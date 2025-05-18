@@ -2,7 +2,7 @@ import { and, desc, eq, gt, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
-import { activeLogs, projects } from '@/lib/db/schema';
+import { activeLogs } from '@/lib/db/schema';
 
 import { publicProcedure, router } from '../server';
 
@@ -79,16 +79,19 @@ export const activeRouter = router({
         ? and(...conditions, gt(activeLogs.id, cursor))
         : and(...conditions);
 
-      const items = await ctx.db
-        .select({
-          activeLog: activeLogs,
-          projectName: projects.name,
-        })
-        .from(activeLogs)
-        .leftJoin(projects, eq(activeLogs.projectId, projects.id))
-        .where(whereCondition)
-        .orderBy(desc(activeLogs.createdAt))
-        .limit(limit);
+      const logs = await ctx.db.query.activeLogs.findMany({
+        with: {
+          project: true,
+        },
+        where: whereCondition,
+        orderBy: desc(activeLogs.createdAt),
+        limit,
+      });
+
+      const items = logs.map((log) => ({
+        activeLog: log,
+        projectName: log.project?.name,
+      }));
 
       const nextCursor =
         items.length === limit
