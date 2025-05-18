@@ -71,6 +71,13 @@
       "when": 1747052415821,
       "tag": "0009_mysterious_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1747578224512,
+      "tag": "0010_old_silver_fox",
+      "breakpoints": true
     }
   ]
 }
