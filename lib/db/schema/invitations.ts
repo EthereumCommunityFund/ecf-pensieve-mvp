@@ -1,18 +1,15 @@
-import { InferSelectModel, sql } from 'drizzle-orm';
+import { InferSelectModel } from 'drizzle-orm';
 import {
   bigserial,
   integer,
   pgTable,
+  text,
   timestamp,
-  uuid,
 } from 'drizzle-orm/pg-core';
 
 export const invitationCodes = pgTable('invitation_codes', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  code: uuid('code')
-    .notNull()
-    .unique()
-    .default(sql`gen_random_uuid()`),
+  code: text('code').notNull().unique(),
   maxUses: integer('max_uses').notNull().default(3),
   currentUses: integer('current_uses').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
