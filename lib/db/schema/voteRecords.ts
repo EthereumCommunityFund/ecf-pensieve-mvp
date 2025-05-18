@@ -1,6 +1,7 @@
 import {
   bigint,
   bigserial,
+  doublePrecision,
   index,
   pgTable,
   text,
@@ -25,6 +26,7 @@ export const voteRecords = pgTable(
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),
+    weight: doublePrecision('weight'),
   },
   (table) => {
     return {
