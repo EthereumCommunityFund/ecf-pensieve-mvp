@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { profiles, projects, proposals } from '@/lib/db/schema';
+import { projects, proposals } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -72,32 +72,25 @@ export const proposalRouter = router({
   getProposalsByProjectId: publicProcedure
     .input(z.object({ projectId: z.number() }))
     .query(async ({ ctx, input }) => {
-      const proposalsData = await ctx.db
-        .select({
-          proposal: proposals,
-          creator: profiles,
-        })
-        .from(proposals)
-        .leftJoin(profiles, eq(proposals.creator, profiles.userId))
-        .where(eq(proposals.projectId, input.projectId));
+      const proposalsData = await ctx.db.query.proposals.findMany({
+        with: {
+          creator: true,
+        },
+        where: eq(proposals.projectId, input.projectId),
+      });
 
-      return proposalsData.map(({ proposal, creator }) => ({
-        ...proposal,
-        creator,
-      }));
+      return proposalsData;
     }),
 
   getProposalById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const [proposal] = await ctx.db
-        .select({
-          proposal: proposals,
-          creator: profiles,
-        })
-        .from(proposals)
-        .leftJoin(profiles, eq(proposals.creator, profiles.userId))
-        .where(eq(proposals.id, input.id));
+      const proposal = await ctx.db.query.proposals.findFirst({
+        with: {
+          creator: true,
+        },
+        where: eq(proposals.id, input.id),
+      });
 
       if (!proposal) {
         throw new TRPCError({
@@ -106,9 +99,6 @@ export const proposalRouter = router({
         });
       }
 
-      return {
-        ...proposal.proposal,
-        creator: proposal.creator,
-      };
+      return proposal;
     }),
 });

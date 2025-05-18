@@ -7,10 +7,9 @@ import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 export const userRouter = router({
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
-    const [user] = await ctx.db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.userId, ctx.user.id));
+    const user = await ctx.db.query.profiles.findFirst({
+      where: eq(profiles.userId, ctx.user.id),
+    });
 
     if (!user) {
       throw new TRPCError({
@@ -25,10 +24,9 @@ export const userRouter = router({
   getUserByAddress: publicProcedure
     .input(z.object({ address: z.string() }))
     .query(async ({ ctx, input }) => {
-      const [user] = await ctx.db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.address, input.address));
+      const user = await ctx.db.query.profiles.findFirst({
+        where: eq(profiles.address, input.address),
+      });
 
       if (!user) {
         throw new TRPCError({
