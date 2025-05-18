@@ -29,10 +29,9 @@ export const proposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const project = await ctx.db
-        .select()
-        .from(projects)
-        .where(eq(projects.id, input.projectId));
+      const project = await ctx.db.query.projects.findFirst({
+        where: eq(projects.id, input.projectId),
+      });
 
       if (!project) {
         throw new TRPCError({

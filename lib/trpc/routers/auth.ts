@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
-import { count, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { ethers } from 'ethers';
 import { generateSiweNonce } from 'viem/siwe';
 import { z } from 'zod';
@@ -125,13 +125,11 @@ export const authRouter = router({
       const lowerCaseAddress = input.address.toLowerCase();
 
       try {
-        const result = await ctx.db
-          .select({ value: count() })
-          .from(profiles)
-          .where(eq(profiles.address, lowerCaseAddress));
+        const profile = await ctx.db.query.profiles.findFirst({
+          where: eq(profiles.address, lowerCaseAddress),
+        });
 
-        const registrationCount = result?.[0]?.value ?? 0;
-        return { registered: registrationCount > 0 };
+        return { registered: !!profile };
       } catch (error: unknown) {
         console.error('Check registration error:', error);
         throw new TRPCError({
@@ -168,26 +166,24 @@ export const authRouter = router({
 
       try {
         const [nonceResult, profileResult] = await Promise.all([
-          ctx.db
-            .select({
-              nonce: loginNonces.nonce,
-              expiresAt: loginNonces.expiresAt,
-            })
-            .from(loginNonces)
-            .where(eq(loginNonces.address, normalizedAddress))
-            .limit(1),
+          ctx.db.query.loginNonces.findFirst({
+            where: eq(loginNonces.address, normalizedAddress),
+            columns: {
+              nonce: true,
+              expiresAt: true,
+            },
+          }),
 
-          ctx.db
-            .select({
-              userId: profiles.userId,
-            })
-            .from(profiles)
-            .where(eq(profiles.address, normalizedAddress))
-            .limit(1),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.address, normalizedAddress),
+            columns: {
+              userId: true,
+            },
+          }),
         ]);
 
-        nonceData = nonceResult[0];
-        profileData = profileResult[0];
+        nonceData = nonceResult;
+        profileData = profileResult;
       } catch (dbError: any) {
         console.error(
           `[TRPC Verify DB] Error fetching Nonce or Profile for ${normalizedAddress}:`,
@@ -275,11 +271,9 @@ export const authRouter = router({
         }
 
         try {
-          const [codes] = await ctx.db
-            .select()
-            .from(invitationCodes)
-            .where(eq(invitationCodes.code, inviteCode))
-            .limit(1);
+          const codes = await ctx.db.query.invitationCodes.findFirst({
+            where: eq(invitationCodes.code, inviteCode),
+          });
 
           if (!codes) {
             throw new TRPCError({

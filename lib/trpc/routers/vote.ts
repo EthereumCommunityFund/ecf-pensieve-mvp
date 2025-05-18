@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { profiles, proposals, voteRecords } from '@/lib/db/schema';
+import { proposals, voteRecords } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -18,11 +18,9 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const [proposal] = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.id, proposalId))
-        .limit(1);
+      const proposal = await ctx.db.query.proposals.findFirst({
+        where: eq(proposals.id, proposalId),
+      });
 
       if (!proposal) {
         throw new TRPCError({
@@ -33,19 +31,18 @@ export const voteRouter = router({
 
       const projectId = proposal.projectId;
 
-      const projectProposals = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.projectId, projectId));
+      const projectProposals = await ctx.db.query.proposals.findMany({
+        where: eq(proposals.projectId, projectId),
+      });
 
       const projectProposalIds = projectProposals.map((p) => p.id);
 
-      const existingVotes = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(eq(voteRecords.creator, ctx.user.id), eq(voteRecords.key, key)),
-        );
+      const existingVotes = await ctx.db.query.voteRecords.findMany({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+        ),
+      });
 
       const conflictingVotes = existingVotes.filter(
         (vote) =>
@@ -61,19 +58,15 @@ export const voteRouter = router({
         });
       }
 
-      const existingVote = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.proposalId, proposalId),
-            eq(voteRecords.key, key),
-          ),
-        )
-        .limit(1);
+      const existingVote = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.proposalId, proposalId),
+          eq(voteRecords.key, key),
+        ),
+      });
 
-      if (existingVote && existingVote.length > 0) {
+      if (existingVote) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'You have already voted for this key in this proposal',
@@ -110,11 +103,9 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const [targetProposal] = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.id, proposalId))
-        .limit(1);
+      const targetProposal = await ctx.db.query.proposals.findFirst({
+        where: eq(proposals.id, proposalId),
+      });
 
       if (!targetProposal) {
         throw new TRPCError({
@@ -125,19 +116,18 @@ export const voteRouter = router({
 
       const projectId = targetProposal.projectId;
 
-      const projectProposals = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.projectId, projectId));
+      const projectProposals = await ctx.db.query.proposals.findMany({
+        where: eq(proposals.projectId, projectId),
+      });
 
       const projectProposalIds = projectProposals.map((p) => p.id);
 
-      const existingVotes = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(eq(voteRecords.creator, ctx.user.id), eq(voteRecords.key, key)),
-        );
+      const existingVotes = await ctx.db.query.voteRecords.findMany({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+        ),
+      });
 
       const conflictingVotes = existingVotes.filter(
         (vote) =>
@@ -154,19 +144,15 @@ export const voteRouter = router({
 
       const voteToSwitch = conflictingVotes[0];
 
-      const targetProposalVote = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.proposalId, proposalId),
-            eq(voteRecords.key, key),
-          ),
-        )
-        .limit(1);
+      const targetProposalVote = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.proposalId, proposalId),
+          eq(voteRecords.key, key),
+        ),
+      });
 
-      if (targetProposalVote && targetProposalVote.length > 0) {
+      if (targetProposalVote) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'You have already voted for this key in the target proposal',
@@ -207,27 +193,25 @@ export const voteRouter = router({
       );
 
       const [existingVote, voteWithProposal] = await Promise.all([
-        ctx.db.select().from(voteRecords).where(condition).limit(1),
-        ctx.db
-          .select({
-            voteRecord: voteRecords,
-            proposal: proposals,
-          })
-          .from(voteRecords)
-          .where(condition)
-          .innerJoin(proposals, eq(voteRecords.proposalId, proposals.id))
-          .limit(1),
+        ctx.db.query.voteRecords.findFirst({
+          where: condition,
+        }),
+        ctx.db.query.voteRecords.findFirst({
+          where: condition,
+          with: {
+            proposal: true,
+          },
+        }),
       ]);
 
-      if (!existingVote || existingVote.length === 0) {
+      if (!existingVote || !voteWithProposal || !voteWithProposal.proposal) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Vote record not found',
         });
       }
 
-      const { voteRecord, proposal } = voteWithProposal[0];
-      const projectId = proposal.projectId;
+      const projectId = voteWithProposal.proposal.projectId;
 
       const [deletedVote] = await ctx.db
         .delete(voteRecords)
@@ -238,8 +222,8 @@ export const voteRouter = router({
         userId: ctx.user.id,
         targetId: deletedVote.id,
         projectId,
-        items: [{ field: voteRecord.key }],
-        proposalCreatorId: proposal.creator,
+        items: [{ field: existingVote.key }],
+        proposalCreatorId: voteWithProposal.proposal.creator,
       });
 
       return deletedVote;
@@ -271,10 +255,9 @@ export const voteRouter = router({
     .query(async ({ ctx, input }) => {
       const { projectId } = input;
 
-      const projectProposals = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.projectId, projectId));
+      const projectProposals = await ctx.db.query.proposals.findMany({
+        where: eq(proposals.projectId, projectId),
+      });
 
       if (!projectProposals || projectProposals.length === 0) {
         return [];
@@ -282,18 +265,13 @@ export const voteRouter = router({
 
       const proposalIds = projectProposals.map((p) => p.id);
 
-      const votes = await ctx.db
-        .select({
-          voteRecord: voteRecords,
-          creator: profiles,
-        })
-        .from(voteRecords)
-        .leftJoin(profiles, eq(voteRecords.creator, profiles.userId))
-        .where(inArray(voteRecords.proposalId, proposalIds));
+      const votes = await ctx.db.query.voteRecords.findMany({
+        with: {
+          creator: true,
+        },
+        where: inArray(voteRecords.proposalId, proposalIds),
+      });
 
-      return votes.map(({ voteRecord, creator }) => ({
-        ...voteRecord,
-        creator,
-      }));
+      return votes;
     }),
 });
