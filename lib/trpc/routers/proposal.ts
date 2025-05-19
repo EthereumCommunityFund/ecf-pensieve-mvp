@@ -15,7 +15,7 @@ export const proposalRouter = router({
         items: z.array(
           z.object({
             key: z.string().min(1, 'Key cannot be empty'),
-            value: z.string().min(1, 'Value cannot be empty'),
+            value: z.any(),
           }),
         ),
         refs: z
