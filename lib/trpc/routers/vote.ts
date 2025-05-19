@@ -104,9 +104,21 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const targetProposal = await ctx.db.query.proposals.findFirst({
-        where: eq(proposals.id, proposalId),
-      });
+      const [targetProposal, userSpecificVotesForKey, userProfile] =
+        await Promise.all([
+          ctx.db.query.proposals.findFirst({
+            where: eq(proposals.id, proposalId),
+          }),
+          ctx.db.query.voteRecords.findMany({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.key, key),
+            ),
+          }),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+        ]);
 
       if (!targetProposal) {
         throw new TRPCError({
@@ -123,14 +135,7 @@ export const voteRouter = router({
 
       const projectProposalIds = projectProposals.map((p) => p.id);
 
-      const existingVotes = await ctx.db.query.voteRecords.findMany({
-        where: and(
-          eq(voteRecords.creator, ctx.user.id),
-          eq(voteRecords.key, key),
-        ),
-      });
-
-      const conflictingVotes = existingVotes.filter(
+      const conflictingVotes = userSpecificVotesForKey.filter(
         (vote) =>
           projectProposalIds.includes(vote.proposalId) &&
           vote.proposalId !== proposalId,
@@ -145,15 +150,11 @@ export const voteRouter = router({
 
       const voteToSwitch = conflictingVotes[0];
 
-      const targetProposalVote = await ctx.db.query.voteRecords.findFirst({
-        where: and(
-          eq(voteRecords.creator, ctx.user.id),
-          eq(voteRecords.proposalId, proposalId),
-          eq(voteRecords.key, key),
-        ),
-      });
+      const existingVoteForTargetProposal = userSpecificVotesForKey.find(
+        (vote) => vote.proposalId === proposalId,
+      );
 
-      if (targetProposalVote) {
+      if (existingVoteForTargetProposal) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'You have already voted for this key in the target proposal',
@@ -164,6 +165,7 @@ export const voteRouter = router({
         .update(voteRecords)
         .set({
           proposalId,
+          weight: userProfile?.weight ?? 0,
         })
         .where(eq(voteRecords.id, voteToSwitch.id))
         .returning();
