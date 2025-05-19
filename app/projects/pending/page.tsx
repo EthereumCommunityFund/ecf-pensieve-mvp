@@ -3,7 +3,7 @@
 import { Image } from '@heroui/react';
 import Link from 'next/link';
 
-import { ECFButton } from '@/components/base/button';
+import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import ProjectCard, {
   ProjectCardSkeleton,
@@ -49,16 +49,23 @@ const PendingProjectsPage = () => {
         />
         <div className="flex-1">
           <ECFTypography type={'title'}>Pending Projects</ECFTypography>
-          <ECFTypography type={'subtitle2'} className="mt-2.5">
+          <ECFTypography type={'subtitle2'} className="mt-[10px]">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          {profile && (
+          <div className="mt-[20px] flex items-center justify-start gap-[10px]">
             <Link href="/project/create">
-              <ECFButton onPress={handleProposeProject} className="mt-2.5">
+              <Button
+                onPress={handleProposeProject}
+                className="font-mona border-none bg-[#64C0A5] px-[20px] text-[16px] text-white hover:bg-[#6ab9a1]"
+              >
                 Propose a Project
-              </ECFButton>
+              </Button>
             </Link>
-          )}
+            {/* TODO click logic */}
+            <Button className="font-mona px-[20px] text-[16px]">
+              How it works
+            </Button>
+          </div>
         </div>
       </div>
 
