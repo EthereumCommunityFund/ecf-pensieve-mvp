@@ -16,6 +16,8 @@ interface IProps {
   onAction: () => Promise<void>;
 }
 
+const DefaultVoteQuorum = 3;
+
 const VoteItem: FC<IProps> = ({
   project,
   proposal,
@@ -26,7 +28,7 @@ const VoteItem: FC<IProps> = ({
   isLoading,
 }) => {
   // TODO quorum is empty now
-  const isValidated = votedMemberCount === 10;
+  const isValidated = votedMemberCount === DefaultVoteQuorum;
 
   return (
     <div className="flex flex-1 items-center justify-between">
@@ -37,7 +39,7 @@ const VoteItem: FC<IProps> = ({
           showValueLabel={true}
           size="sm"
           minValue={0}
-          maxValue={10}
+          maxValue={DefaultVoteQuorum}
           value={votedMemberCount}
           strokeWidth={3}
           formatOptions={{
@@ -74,7 +76,7 @@ const VoteItem: FC<IProps> = ({
             </defs>
           </svg>
           <span className="font-mona text-[14px] font-[600] leading-[19px] text-black">
-            {votedMemberCount}/10
+            {votedMemberCount}/{DefaultVoteQuorum}
           </span>
         </div>
       </div>
