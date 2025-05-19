@@ -18,8 +18,6 @@ export const proposals = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .defaultNow()
       .notNull(),
-    point: bigint('point', { mode: 'number' }),
-    quorum: bigint('quorum', { mode: 'number' }),
     items: jsonb('items').array().notNull(),
     refs: jsonb('refs').array(),
     projectId: bigint('project_id', { mode: 'number' })
