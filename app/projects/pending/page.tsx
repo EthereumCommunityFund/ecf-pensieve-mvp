@@ -5,12 +5,14 @@ import Link from 'next/link';
 
 import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import ProjectCard, {
-  ProjectCardSkeleton,
-} from '@/components/pages/project/ProjectCard';
+import PendingProjectCard, {
+  PendingProjectCardSkeleton,
+} from '@/components/pages/project/PendingProjectCard';
+import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import RewardCard from '@/components/pages/project/RewardCard';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
 
 const PendingProjectsPage = () => {
   const { profile } = useAuth();
@@ -23,6 +25,10 @@ const PendingProjectsPage = () => {
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
+        select: (data) => {
+          devLog('getProjects', data);
+          return data;
+        },
       },
     );
 
@@ -87,14 +93,14 @@ const PendingProjectsPage = () => {
           <div className="pb-2.5">
             {isLoading ? (
               <div>
-                <ProjectCardSkeleton />
-                <ProjectCardSkeleton />
-                <ProjectCardSkeleton />
+                <PendingProjectCardSkeleton />
+                <PendingProjectCardSkeleton />
+                <PendingProjectCardSkeleton />
               </div>
             ) : allProjects.length > 0 ? (
               <>
                 {allProjects.map((project) => (
-                  <ProjectCard
+                  <PendingProjectCard
                     key={project.id}
                     project={project}
                     showBorder={true}
