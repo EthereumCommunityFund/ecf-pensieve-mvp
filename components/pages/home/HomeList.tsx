@@ -6,6 +6,7 @@ import React from 'react';
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 
 import { ProjectCardSkeleton } from '../project/ProjectCard';
 
@@ -82,7 +83,7 @@ const HomeList = () => {
             <ProjectCardSkeleton />
           </div>
         ) : projects.length > 0 ? (
-          <ProjectList projectList={projects} />
+          <ProjectList projectList={projects as IProject[]} />
         ) : (
           <div className="flex justify-center py-8">
             <ECFTypography type="body1">No projects yet</ECFTypography>

@@ -18,7 +18,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
   const proposalName = useMemo(() => {
     if (!proposal) return '';
     const nameItem = proposal?.items.find(
-      (item: any) => item.key === 'projectName',
+      (item: any) => item.key === 'name',
     ) as { key: string; value: string } | undefined;
     return nameItem?.value || 'Unnamed Proposal';
   }, [proposal]);

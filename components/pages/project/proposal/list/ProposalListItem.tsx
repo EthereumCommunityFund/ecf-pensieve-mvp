@@ -12,6 +12,7 @@ import VotedLabel from '../common/VotedLabel';
 
 interface ProposalListItemProps {
   proposal: IProposal;
+  index: number;
   projectId: number;
   isLeading?: boolean;
   hasVoted?: boolean;
@@ -20,6 +21,7 @@ interface ProposalListItemProps {
 const ProposalListItem = ({
   proposal,
   projectId,
+  index,
   isLeading = false,
   hasVoted = true,
 }: ProposalListItemProps) => {
@@ -60,7 +62,7 @@ const ProposalListItem = ({
       {/* title and date */}
       <div className="flex items-center gap-[10px] border-b border-black/10 pb-[10px]">
         <p className="font-mona text-[18px] font-[700] leading-[1.6] text-black">
-          {proposalName}
+          Proposal {index + 1}
         </p>
         <span className="text-[14px] font-[400] leading-[20px] text-black">
           {formattedDate}
