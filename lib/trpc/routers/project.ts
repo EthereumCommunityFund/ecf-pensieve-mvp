@@ -93,10 +93,21 @@ export const projectRouter = router({
         ? and(baseCondition, gt(projects.id, cursor))
         : baseCondition;
 
+      const queryOptions: any = {
+        creator: true,
+      };
+
+      if (isPublished) {
+        queryOptions.proposals = {
+          with: {
+            voteRecords: true,
+            creator: true,
+          },
+        };
+      }
+
       const results = await ctx.db.query.projects.findMany({
-        with: {
-          creator: true,
-        },
+        with: queryOptions,
         where: whereCondition,
         orderBy: desc(projects.id),
         limit,
