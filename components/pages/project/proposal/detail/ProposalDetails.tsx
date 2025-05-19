@@ -9,7 +9,7 @@ import {
   Table,
   useReactTable,
 } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import {
@@ -257,12 +257,21 @@ const ProposalDetails = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const value = info.getValue();
+        const key = info.row.original.key;
+
+        const renderValue = () => {
+          if (Array.isArray(value)) {
+            return JSON.stringify(value);
+          }
+          return value;
+        };
+
         return (
           <div
             className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
             style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
           >
-            {value}
+            {renderValue()}
           </div>
         );
       },
@@ -434,6 +443,13 @@ const ProposalDetails = ({
     transitionDuration: '0.2s',
   });
 
+  const renderExpandedContent = (value: any, key: string) => {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
+    return value;
+  };
+
   const renderCategoryHeader = useCallback(
     (title: string, description: string, category: CategoryKey) => (
       <div
@@ -446,7 +462,7 @@ const ProposalDetails = ({
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
           </p>
-          {description ?? (
+          {description && (
             <p className="text-[13px] font-[600] leading-[18px] text-black/40">
               {description}
             </p>
@@ -564,8 +580,8 @@ const ProposalDetails = ({
             {tableHeaders}
             <tbody>
               {table.getRowModel().rows.map((row, rowIndex) => (
-                <>
-                  <tr key={row.id}>
+                <React.Fragment key={rowIndex}>
+                  <tr>
                     {row.getVisibleCells().map((cell, cellIndex) => (
                       <td
                         key={cell.id}
@@ -602,13 +618,16 @@ const ProposalDetails = ({
                         >
                           <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                             <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                              {row.original.input}
+                              {renderExpandedContent(
+                                row.original.input,
+                                row.original.key,
+                              )}
                             </p>
                           </div>
                         </td>
                       </tr>
                     )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

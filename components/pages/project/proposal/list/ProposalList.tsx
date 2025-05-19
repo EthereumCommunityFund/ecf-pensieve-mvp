@@ -52,9 +52,10 @@ const ProposalList = ({
 
   return (
     <div className="mt-[20px] flex flex-col gap-[20px]">
-      {proposals.map((proposal) => (
+      {proposals.map((proposal, index) => (
         <ProposalListItem
           key={proposal.id}
+          index={index}
           proposal={proposal}
           projectId={projectId}
           isLeading={proposal.id === leadingProposalId}

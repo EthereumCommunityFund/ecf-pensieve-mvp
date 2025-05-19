@@ -4,11 +4,9 @@ import {
   organizationFieldsConfig,
   technicalsFieldsConfig,
 } from '@/components/pages/project/create/FormData';
-import {
-  CreateProjectStep,
-  stepFields,
-} from '@/components/pages/project/create/types';
+import { CreateProjectStep } from '@/components/pages/project/create/types';
 
+// TODO name 和 logoUrl，在 create project 时，前端定义的字段命名不一致，需要统一
 export const CATEGORIES: Record<
   CreateProjectStep,
   {
@@ -20,22 +18,30 @@ export const CATEGORIES: Record<
   [CreateProjectStep.Basics]: {
     title: 'Basics',
     description: '',
-    items: [...stepFields[CreateProjectStep.Basics]],
+    items: [
+      'name',
+      'tagline',
+      'categories',
+      'mainDescription',
+      'logoUrl',
+      'websiteUrl',
+      'appUrl',
+    ],
   },
   [CreateProjectStep.Dates]: {
     title: 'Dates & Statuses',
     description: '',
-    items: [...stepFields[CreateProjectStep.Dates]],
+    items: ['dateFounded', 'dateLaunch', 'devStatus', 'fundingStatus'],
   },
   [CreateProjectStep.Technicals]: {
     title: 'Technicals',
     description: '',
-    items: [...stepFields[CreateProjectStep.Technicals]],
+    items: ['openSource', 'codeRepo', 'tokenContract'],
   },
   [CreateProjectStep.Organization]: {
     title: 'Organization',
     description: '',
-    items: [...stepFields[CreateProjectStep.Organization]],
+    items: ['orgStructure', 'publicGoods', 'founders'],
   },
 };
 
