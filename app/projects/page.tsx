@@ -8,7 +8,7 @@ import ECFTypography from '@/components/base/typography';
 import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
-import RewardCard from '@/components/pages/project/RewardCard';
+import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 

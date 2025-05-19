@@ -9,7 +9,7 @@ import PendingProjectCard, {
   PendingProjectCardSkeleton,
 } from '@/components/pages/project/PendingProjectCard';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
-import RewardCard from '@/components/pages/project/RewardCard';
+import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
