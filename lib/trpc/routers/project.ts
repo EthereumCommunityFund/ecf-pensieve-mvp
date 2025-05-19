@@ -7,6 +7,8 @@ import { profiles, projects } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
+import { proposalRouter } from './proposal';
+
 export const projectRouter = router({
   createProject: protectedProcedure
     .input(
@@ -65,24 +67,47 @@ export const projectRouter = router({
         });
       }
 
-      const userProfile = await ctx.db.query.profiles.findFirst({
-        where: eq(profiles.userId, ctx.user.id),
-      });
+      const caller = proposalRouter.createCaller(ctx);
+      try {
+        const proposalItems = Object.entries(input)
+          .filter(([key]) => key !== 'refs')
+          .map(([key, value]) => {
+            return { key, value };
+          });
 
-      await ctx.db
-        .update(profiles)
-        .set({
-          weight:
-            (userProfile!.weight ?? 0) +
-            ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
-        })
-        .where(eq(profiles.userId, ctx.user.id));
+        await caller.createProposal({
+          projectId: project.id,
+          items: proposalItems,
+          ...(input.refs && { refs: input.refs }),
+        });
 
-      logUserActivity.project.create({
-        userId: ctx.user.id,
-        targetId: project.id,
-        projectId: project.id,
-      });
+        const userProfile = await ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        });
+
+        await ctx.db
+          .update(profiles)
+          .set({
+            weight:
+              (userProfile!.weight ?? 0) +
+              ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+          })
+          .where(eq(profiles.userId, ctx.user.id));
+
+        logUserActivity.project.create({
+          userId: ctx.user.id,
+          targetId: project.id,
+          projectId: project.id,
+        });
+      } catch (proposalError) {
+        ctx.db.delete(projects).where(eq(projects.id, project.id));
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message:
+            'Failed to create the initial proposal for the project. The project creation has been rolled back.',
+          cause: proposalError,
+        });
+      }
 
       return project;
     }),
