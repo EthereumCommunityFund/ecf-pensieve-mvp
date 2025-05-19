@@ -2,7 +2,8 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { projects } from '@/lib/db/schema';
+import { ESSENTIAL_ITEM_WEIGHT_AMOUNT, REWARD_PERCENT } from '@/lib/constants';
+import { profiles, projects } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
@@ -63,6 +64,19 @@ export const projectRouter = router({
           message: 'project not found',
         });
       }
+
+      const userProfile = await ctx.db.query.profiles.findFirst({
+        where: eq(profiles.userId, ctx.user.id),
+      });
+
+      await ctx.db
+        .update(profiles)
+        .set({
+          weight:
+            (userProfile!.weight ?? 0) +
+            ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+        })
+        .where(eq(profiles.userId, ctx.user.id));
 
       logUserActivity.project.create({
         userId: ctx.user.id,
