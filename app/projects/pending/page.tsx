@@ -12,6 +12,7 @@ import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 const PendingProjectsPage = () => {
@@ -102,7 +103,7 @@ const PendingProjectsPage = () => {
                 {allProjects.map((project) => (
                   <PendingProjectCard
                     key={project.id}
-                    project={project}
+                    project={project as IProject}
                     showBorder={true}
                   />
                 ))}

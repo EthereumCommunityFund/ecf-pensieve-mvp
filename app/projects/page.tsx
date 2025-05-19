@@ -11,6 +11,7 @@ import ProjectCard, {
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 
 const ProjectsPage = () => {
   const { profile } = useAuth();
@@ -88,7 +89,7 @@ const ProjectsPage = () => {
                 {allProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
-                    project={project}
+                    project={project as IProject}
                     showBorder={true}
                   />
                 ))}
