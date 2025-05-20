@@ -14,7 +14,7 @@ const TooltipItemWeight: FC<IProps> = ({ itemWeight }) => {
       }}
     >
       <div className="rounded-[4px] border border-black px-[4px] py-[2px] text-[12px] font-[600] leading-[16px] text-black opacity-50">
-        00
+        {itemWeight}
       </div>
     </Tooltip>
   );

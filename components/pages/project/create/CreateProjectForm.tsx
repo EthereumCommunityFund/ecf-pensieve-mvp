@@ -214,7 +214,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 description: 'Project created successfully!',
                 color: 'success',
               });
-              router.push(redirectPath || '/projects');
+              router.push(redirectPath || '/projects/pending');
             }
           },
           onError: (error: any) => {

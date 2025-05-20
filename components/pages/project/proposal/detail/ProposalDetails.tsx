@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
+import { ItemWeightMap } from '@/constants/proposal';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -98,6 +99,7 @@ const ProposalDetails = ({
     handleVoteAction,
     switchVoteMutation,
     cancelVoteMutation,
+    inActionKeys,
   } = useProposalVotes(proposal, projectId, proposals);
 
   useEffect(() => {
@@ -125,7 +127,10 @@ const ProposalDetails = ({
   const handleCancelVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
-      await onCancelVote(userVotesOfProposalMap[currentVoteItem!.key].id);
+      await onCancelVote(
+        userVotesOfProposalMap[currentVoteItem!.key].id,
+        currentVoteItem.key,
+      );
       setIsCancelModalOpen(false);
     } catch (err) {
       // TODO toast
@@ -222,7 +227,7 @@ const ProposalDetails = ({
                 {info.getValue()}
               </span>
             </div>
-            <TooltipItemWeight itemWeight={88} />
+            <TooltipItemWeight itemWeight={ItemWeightMap[rowKey]} />
           </div>
         );
       },
@@ -318,6 +323,11 @@ const ProposalDetails = ({
       size: 220,
       cell: (info) => {
         const key = info.row.original.key;
+        const isUserVoted = isUserVotedInProposal(key);
+        const isLoading =
+          (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
+        const votedMemberCount =
+          votesOfKeyInProposalMap[info.row.original.key]?.length || 0;
         return (
           <VoteItem
             fieldKey={key}
@@ -325,11 +335,9 @@ const ProposalDetails = ({
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}
-            isLoading={isFetchVoteInfoLoading || isVoteActionPending}
-            isUserVoted={isUserVotedInProposal(info.row.original.key)}
-            votedMemberCount={
-              votesOfKeyInProposalMap[info.row.original.key]?.length || 0
-            }
+            isLoading={isLoading}
+            isUserVoted={isUserVoted}
+            votedMemberCount={votedMemberCount}
             onAction={() => onVoteAction(info.row.original)}
           />
         );
@@ -359,6 +367,7 @@ const ProposalDetails = ({
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,
+    inActionKeys,
   ]);
 
   const tableData = useMemo(() => {
