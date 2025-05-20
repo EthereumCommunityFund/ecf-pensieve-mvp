@@ -9,9 +9,11 @@ import PendingProjectCard, {
   PendingProjectCardSkeleton,
 } from '@/components/pages/project/PendingProjectCard';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
+import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 const PendingProjectsPage = () => {
@@ -83,9 +85,8 @@ const PendingProjectsPage = () => {
 
         <div className="flex-1">
           <div className="px-2.5 py-2 opacity-80">
-            <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
-            <ECFTypography type={'body2'} className="mt-[5px]">
-              Page Completion Rate (Transparency) * User Supported Votes
+            <ECFTypography type={'subtitle1'}>
+              Recent Pending Projects
             </ECFTypography>
           </div>
 
@@ -102,7 +103,7 @@ const PendingProjectsPage = () => {
                 {allProjects.map((project) => (
                   <PendingProjectCard
                     key={project.id}
-                    project={project}
+                    project={project as IProject}
                     showBorder={true}
                   />
                 ))}
@@ -139,10 +140,15 @@ const PendingProjectsPage = () => {
             </ECFButton>
           </div>
 
-          <RewardCard />
+          <div className="flex flex-col gap-[20px]">
+            <ProposalRequirements />
+
+            <RewardCard />
+          </div>
         </div>
 
-        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden">
+        <div className="mobile:flex mobile:flex-col hidden w-full gap-[20px]">
+          <ProposalRequirements />
           <RewardCard />
         </div>
       </div>

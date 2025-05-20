@@ -1,7 +1,10 @@
 export { default as BuildingIcon } from './Building';
 export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';
+export { default as CaretDownIcon } from './CaretDown';
+export { default as CaretUpIcon } from './CaretUp';
 export { default as CheckIcon } from './Check';
+export { default as CheckedGreenIcon } from './CheckedGreen';
 export { default as CodeIcon } from './Code';
 export { CopyIcon } from './Copy';
 export { default as GaugeIcon } from './Gauge';
@@ -10,5 +13,6 @@ export { default as InfoIcon } from './Info';
 export { default as LinkIcon } from './Link';
 export { default as PaperClipIcon } from './PaperClip';
 export { default as PlusIcon } from './Plus';
+export { default as UsersIcon } from './Users';
 export { default as WalletIcon } from './Wallet';
 export { default as XCircleIcon } from './XCircle';

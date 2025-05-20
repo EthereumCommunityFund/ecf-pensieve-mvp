@@ -11,6 +11,7 @@ import ProjectCard, {
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 
 const ProjectsPage = () => {
   const { profile } = useAuth();
@@ -19,6 +20,7 @@ const ProjectsPage = () => {
     trpc.project.getProjects.useInfiniteQuery(
       {
         limit: 10,
+        isPublished: true,
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -88,7 +90,7 @@ const ProjectsPage = () => {
                 {allProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
-                    project={project}
+                    project={project as IProject}
                     showBorder={true}
                   />
                 ))}
@@ -108,8 +110,10 @@ const ProjectsPage = () => {
                 )}
               </>
             ) : (
-              <div className="flex justify-center py-8">
-                <ECFTypography type="body1">No projects yet</ECFTypography>
+              <div className="flex justify-center py-[80px]">
+                <ECFTypography type="subtitle1">
+                  No Published Project Yet
+                </ECFTypography>
               </div>
             )}
           </div>

@@ -142,7 +142,11 @@ const DatesStepForm: React.FC<
               className="w-full"
             >
               {devStatusOptions.map((option) => (
-                <SelectItem key={option.value} textValue={option.label}>
+                <SelectItem
+                  key={option.value}
+                  textValue={option.label}
+                  aria-label={option.label}
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -180,7 +184,11 @@ const DatesStepForm: React.FC<
               className="w-full"
             >
               {fundingStatusOptions.map((option) => (
-                <SelectItem key={option.value} textValue={option.label}>
+                <SelectItem
+                  key={option.value}
+                  textValue={option.label}
+                  aria-label={option.label}
+                >
                   {option.label}
                 </SelectItem>
               ))}

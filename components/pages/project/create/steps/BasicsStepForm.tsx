@@ -97,9 +97,14 @@ const BasicsStepForm: React.FC<
                 onSelectionChange={(keys) => field.onChange(Array.from(keys))}
                 isInvalid={!!error}
                 errorMessage={error?.message}
+                aria-label={basicsFieldsConfig.categories.label}
               >
                 {presetCategories.map((category) => (
-                  <SelectItem key={category} textValue={category}>
+                  <SelectItem
+                    key={category}
+                    textValue={category}
+                    aria-label={category}
+                  >
                     {category}
                   </SelectItem>
                 ))}

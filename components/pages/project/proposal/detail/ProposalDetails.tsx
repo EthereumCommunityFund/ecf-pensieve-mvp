@@ -17,11 +17,13 @@ import {
   IRef,
 } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
+import { ItemWeightMap } from '@/constants/proposal';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
+import { CaretDownIcon } from '@/components/icons';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -65,7 +67,7 @@ const ProposalDetails = ({
   isFiltered,
   toggleFiltered,
 }: ProposalDetailsProps) => {
-  const { profile } = useAuth();
+  const { profile, showAuthPrompt } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [CreateProjectStep.Basics]: true,
     [CreateProjectStep.Dates]: true,
@@ -98,6 +100,7 @@ const ProposalDetails = ({
     handleVoteAction,
     switchVoteMutation,
     cancelVoteMutation,
+    inActionKeys,
   } = useProposalVotes(proposal, projectId, proposals);
 
   useEffect(() => {
@@ -109,7 +112,7 @@ const ProposalDetails = ({
     async (item: ITableProposalItem) => {
       if (!profile) {
         console.warn('not login');
-        // TODO prompt to login ?
+        showAuthPrompt();
         return;
       }
       await handleVoteAction(item, doNotShowCancelModal, {
@@ -125,7 +128,10 @@ const ProposalDetails = ({
   const handleCancelVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
-      await onCancelVote(userVotesOfProposalMap[currentVoteItem!.key].id);
+      await onCancelVote(
+        userVotesOfProposalMap[currentVoteItem!.key].id,
+        currentVoteItem.key,
+      );
       setIsCancelModalOpen(false);
     } catch (err) {
       // TODO toast
@@ -186,43 +192,10 @@ const ProposalDetails = ({
 
         return (
           <div className="flex w-full items-center justify-between">
-            <div className="flex items-center">
-              {isExpandable && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleRowExpanded(rowKey);
-                  }}
-                  className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-gray-100"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      transform: expandedRows[rowKey]
-                        ? 'rotate(180deg)'
-                        : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease',
-                    }}
-                  >
-                    <path
-                      d="M2 4L6 8L10 4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
-              <span className="text-[14px] font-[600] leading-[20px] text-black">
-                {info.getValue()}
-              </span>
+            <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
+              {info.getValue()}
             </div>
-            <TooltipItemWeight itemWeight={88} />
+            <TooltipItemWeight itemWeight={ItemWeightMap[rowKey]} />
           </div>
         );
       },
@@ -257,7 +230,9 @@ const ProposalDetails = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const value = info.getValue();
-        const key = info.row.original.key;
+        const rowKey = info.row.original.key;
+        const isExpandable = isRowExpandable(rowKey);
+        const isRowExpanded = expandedRows[rowKey];
 
         const renderValue = () => {
           if (Array.isArray(value)) {
@@ -265,13 +240,31 @@ const ProposalDetails = ({
           }
           return value;
         };
+        // TODO: render value by different type
 
         return (
           <div
-            className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
+            className="font-mona flex w-full items-center justify-between gap-[10px]"
             style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
           >
-            {renderValue()}
+            <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
+              {isExpandable ? 'Expand' : renderValue()}
+            </div>
+
+            {isExpandable && (
+              <Button
+                isIconOnly
+                className={cn(
+                  'size-[24px] shrink-0 opacity-50',
+                  isRowExpanded ? 'rotate-180' : '',
+                )}
+                onPress={() => {
+                  toggleRowExpanded(rowKey);
+                }}
+              >
+                <CaretDownIcon size={18} />
+              </Button>
+            )}
           </div>
         );
       },
@@ -317,16 +310,22 @@ const ProposalDetails = ({
       ),
       size: 220,
       cell: (info) => {
+        const key = info.row.original.key;
+        const isUserVoted = isUserVotedInProposal(key);
+        const isLoading =
+          (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
+        const votedMemberCount =
+          votesOfKeyInProposalMap[info.row.original.key]?.length || 0;
         return (
           <VoteItem
+            fieldKey={key}
+            votesOfKey={votesOfKeyInProposalMap[key] || []}
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}
-            isLoading={isFetchVoteInfoLoading || isVoteActionPending}
-            isUserVoted={isUserVotedInProposal(info.row.original.key)}
-            votedMemberCount={
-              votesOfKeyInProposalMap[info.row.original.key]?.length || 0
-            }
+            isLoading={isLoading}
+            isUserVoted={isUserVoted}
+            votedMemberCount={votedMemberCount}
             onAction={() => onVoteAction(info.row.original)}
           />
         );
@@ -356,6 +355,7 @@ const ProposalDetails = ({
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,
+    inActionKeys,
   ]);
 
   const tableData = useMemo(() => {
@@ -366,36 +366,36 @@ const ProposalDetails = ({
       [CreateProjectStep.Organization]: [],
     };
 
-    if (!proposal) {
-      return result;
-    }
+    // Iterate over each category defined in CreateProjectStep
+    for (const catKey of Object.values(CreateProjectStep)) {
+      const category = catKey as CategoryKey;
+      const categoryItems = CATEGORIES[category]?.items || [];
 
-    proposal.items.forEach((item: any) => {
-      const key = item.key;
-      const value = item.value;
+      // For each item key defined in the category's items
+      categoryItems.forEach((itemKey: string) => {
+        // Find the corresponding item from the proposal data, if it exists
+        const proposalItem = proposal?.items?.find(
+          (pItem: any) => pItem.key === itemKey,
+        ) as { key: string; value: any } | undefined;
 
-      let category: CategoryKey | null = null;
-      for (const catKey of Object.values(CreateProjectStep)) {
-        if (CATEGORIES[catKey as CategoryKey].items.includes(key)) {
-          category = catKey as CategoryKey;
-          break;
-        }
-      }
+        const value =
+          proposalItem && typeof proposalItem.value !== 'undefined'
+            ? proposalItem.value
+            : 'N/A';
 
-      if (category) {
-        const reference = (proposal.refs as IRef[])?.find(
-          (ref) => ref.key === key,
-        );
+        const refsArray = proposal?.refs as IRef[] | undefined;
+        const referenceObj = refsArray?.find((ref) => ref.key === itemKey);
+        const referenceValue = referenceObj ? referenceObj.value : '';
 
         result[category].push({
-          key: key,
-          property: FIELD_LABELS[key] || key,
+          key: itemKey,
+          property: FIELD_LABELS[itemKey] || itemKey,
           input: value,
-          reference: reference ? reference.value : '',
-          support: 1,
+          reference: referenceValue,
+          support: proposalItem ? 1 : 0,
         });
-      }
-    });
+      });
+    }
 
     return result;
   }, [proposal]);

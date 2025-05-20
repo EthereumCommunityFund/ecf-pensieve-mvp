@@ -25,7 +25,10 @@ const ActionSectionHeader: FC<IProps> = ({
         <Button
           isIconOnly
           color={isExpanded ? 'primary' : 'secondary'}
-          className={cn('p-[5px] transition-colors duration-300')}
+          className={cn(
+            'p-[5px] transition-colors duration-300',
+            isExpanded ? 'bg-black' : 'bg-transparent',
+          )}
           size="sm"
           onPress={onChangeExpand}
         >
