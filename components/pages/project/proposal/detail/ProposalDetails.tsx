@@ -254,7 +254,11 @@ const ProposalDetails = ({
             style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
           >
             <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-              {isExpandable ? 'Expand' : renderValue()}
+              {isExpandable
+                ? isRowExpanded
+                  ? 'Close'
+                  : 'Expand'
+                : renderValue()}
             </div>
 
             {isExpandable && (
