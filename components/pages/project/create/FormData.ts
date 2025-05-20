@@ -1,3 +1,4 @@
+import { ItemWeightMap } from '@/constants/proposal';
 import { IProject } from '@/types';
 
 import {
@@ -28,7 +29,7 @@ export interface FormFieldConfig<K extends keyof ProjectFormData> {
   label: string;
   description?: string;
   shortDescription?: string; // For tooltip
-  weight?: string;
+  weight?: string | number;
   type: FieldType;
   placeholder?: string;
   options?: { value: string; label: string }[]; // For select, radio
@@ -48,7 +49,7 @@ export const basicsFieldsConfig: {
     label: 'Project Name',
     description: 'type in the name of the project to propose',
     shortDescription: 'The unique identifier for the project.',
-    weight: '00',
+    weight: ItemWeightMap.name,
     type: 'text',
     placeholder: 'Type in a name',
     showReference: true,
@@ -59,7 +60,7 @@ export const basicsFieldsConfig: {
     description:
       'provide a simple short description about this project to display on its card',
     shortDescription: 'A simple and catchy slogan for the project.',
-    weight: '00',
+    weight: ItemWeightMap.tagline,
     type: 'text',
     placeholder: 'Type in a tagline',
     showReference: true,
@@ -70,7 +71,7 @@ export const basicsFieldsConfig: {
     description:
       'provide a simple short description about this project to display on its card',
     shortDescription: 'Categorize the project into relevant categories.',
-    weight: '00',
+    weight: ItemWeightMap.categories,
     type: 'selectMultiple',
     placeholder: 'Select categories',
     presetCategories: [
@@ -88,7 +89,7 @@ export const basicsFieldsConfig: {
     label: 'Main Description',
     description: 'provide a longer description about this project in detail',
     shortDescription: 'A comprehensive description of the project.',
-    weight: '00',
+    weight: ItemWeightMap.mainDescription,
     type: 'textarea',
     placeholder: 'Type in a description',
     minRows: 4,
@@ -99,6 +100,7 @@ export const basicsFieldsConfig: {
     label: 'Project Logo',
     description: 'provide a logo for this project',
     shortDescription: 'The visual logo of the project.',
+    weight: ItemWeightMap.logoUrl,
     type: 'photo',
     showReference: true,
   },
@@ -107,7 +109,7 @@ export const basicsFieldsConfig: {
     label: 'Project Website',
     description: 'provide the main website for this project',
     shortDescription: 'The main online address of the project.',
-    weight: '00',
+    weight: ItemWeightMap.websiteUrl,
     type: 'url',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -119,7 +121,7 @@ export const basicsFieldsConfig: {
     description: 'provide the main application URL for this project',
     shortDescription:
       'The direct link to the project application (if different from the website).',
-    weight: '00',
+    weight: ItemWeightMap.appUrl,
     type: 'switchableUrl',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -136,7 +138,7 @@ export const datesFieldsConfig: {
     label: 'Date Founded',
     description: 'Select the date at which the project was founded.',
     shortDescription: 'The date when the project officially began.',
-    weight: '10',
+    weight: ItemWeightMap.dateFounded,
     type: 'date',
     placeholder: 'Select date',
     showReference: true,
@@ -148,7 +150,7 @@ export const datesFieldsConfig: {
       'Select the date when the main product or service was launched (if applicable).',
     shortDescription:
       'The date when the product was first released to the public.',
-    weight: '10',
+    weight: ItemWeightMap.dateLaunch,
     type: 'switchableDate',
     placeholder: 'Select date',
     showApplicable: true,
@@ -159,7 +161,7 @@ export const datesFieldsConfig: {
     label: 'Development Status',
     description: 'Select the current status of their development',
     shortDescription: 'The most recent development status of the project.',
-    weight: '05',
+    weight: ItemWeightMap.devStatus,
     type: 'select',
     placeholder: 'Select status',
     options: [
@@ -180,7 +182,7 @@ export const datesFieldsConfig: {
     label: 'Funding Status',
     description: 'Select the current status of their funding phase',
     shortDescription: 'The sources and status of project funding.',
-    weight: '05',
+    weight: ItemWeightMap.fundingStatus,
     type: 'select',
     placeholder: 'Select funding status',
     showApplicable: true,
@@ -202,7 +204,7 @@ export const technicalsFieldsConfig: {
     description: 'Is this project now open-source?',
     shortDescription: 'Whether the project follows an open-source model.',
     placeholder: 'Select open-source status',
-    weight: '15',
+    weight: ItemWeightMap.openSource,
     type: 'radio',
     options: [
       { value: 'Yes', label: 'Yes' },
@@ -215,7 +217,7 @@ export const technicalsFieldsConfig: {
     label: 'Code Repository',
     description: 'Provide a URL to their repository',
     shortDescription: 'The repository link hosting the project source code.',
-    weight: '15',
+    weight: ItemWeightMap.codeRepo,
     type: 'switchableUrl',
     placeholder: 'https://github.com/your-org/repo',
     startContentText: 'https://',
@@ -228,7 +230,7 @@ export const technicalsFieldsConfig: {
     description: 'Input the projects token contract address',
     shortDescription:
       'The contract address of the project token on the blockchain.',
-    weight: '10',
+    weight: ItemWeightMap.tokenContract,
     type: 'switchableUrl',
     placeholder: '0x...',
     showApplicable: true,
@@ -244,7 +246,7 @@ export const organizationFieldsConfig: {
     label: 'Organization Structure',
     description: 'With what structure does this project operate?',
     shortDescription: 'The organizational and governance model of the project.',
-    weight: '10',
+    weight: ItemWeightMap.orgStructure,
     type: 'select',
     placeholder: 'Select structure',
     options: [
@@ -259,7 +261,7 @@ export const organizationFieldsConfig: {
     label: 'Public-Goods Nature',
     description: 'Is this project a public good?',
     shortDescription: 'Whether the project contributes to the public domain.',
-    weight: '10',
+    weight: ItemWeightMap.publicGoods,
     placeholder: 'Select public goods',
     type: 'radio',
     options: [
@@ -274,7 +276,7 @@ export const organizationFieldsConfig: {
     description:
       'Provide the founders of this project (minimum of 1 founder is required)',
     shortDescription: 'The list of founding team members of the project.',
-    weight: '20',
+    weight: ItemWeightMap.founders,
     type: 'founderList',
     showReference: true,
   },
