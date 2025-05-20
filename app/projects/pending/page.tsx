@@ -9,6 +9,7 @@ import PendingProjectCard, {
   PendingProjectCardSkeleton,
 } from '@/components/pages/project/PendingProjectCard';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
+import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -139,10 +140,15 @@ const PendingProjectsPage = () => {
             </ECFButton>
           </div>
 
-          <RewardCard />
+          <div className="flex flex-col gap-[20px]">
+            <ProposalRequirements />
+
+            <RewardCard />
+          </div>
         </div>
 
-        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden">
+        <div className="mobile:flex mobile:flex-col hidden w-full gap-[20px]">
+          <ProposalRequirements />
           <RewardCard />
         </div>
       </div>
