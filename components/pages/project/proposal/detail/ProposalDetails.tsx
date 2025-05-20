@@ -95,6 +95,12 @@ const ProposalDetails = ({
     isUserVotedInProposal,
     isFetchVoteInfoLoading,
     isVoteActionPending,
+    getItemPoints,
+    getItemVotedMemberCount,
+    getItemPointsNeeded,
+    isItemReachQuorum,
+    isItemReachPointsNeeded,
+    isItemValidated,
     onCancelVote,
     onSwitchVote,
     handleVoteAction,
@@ -122,7 +128,7 @@ const ProposalDetails = ({
         setSourceProposal,
       });
     },
-    [profile, handleVoteAction, doNotShowCancelModal],
+    [profile, handleVoteAction, doNotShowCancelModal, showAuthPrompt],
   );
 
   const handleCancelVoteConfirm = useCallback(async () => {
@@ -314,12 +320,20 @@ const ProposalDetails = ({
         const isUserVoted = isUserVotedInProposal(key);
         const isLoading =
           (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
-        const votedMemberCount =
-          votesOfKeyInProposalMap[info.row.original.key]?.length || 0;
+        const votedMemberCount = getItemVotedMemberCount(key);
+        const itemPoints = getItemPoints(key);
+        const itemPointsNeeded = getItemPointsNeeded(key);
+        const isReachQuorum = isItemReachQuorum(key);
+        const isReachPointsNeeded = isItemReachPointsNeeded(key);
+        const isValidated = isItemValidated(key);
         return (
           <VoteItem
             fieldKey={key}
-            votesOfKey={votesOfKeyInProposalMap[key] || []}
+            itemPoints={itemPoints}
+            itemPointsNeeded={itemPointsNeeded}
+            isReachQuorum={isReachQuorum}
+            isReachPointsNeeded={isReachPointsNeeded}
+            isValidated={isValidated}
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}
@@ -350,12 +364,18 @@ const ProposalDetails = ({
     onVoteAction,
     isFetchVoteInfoLoading,
     isVoteActionPending,
-    votesOfKeyInProposalMap,
     isUserVotedInProposal,
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,
+    getItemPoints,
+    getItemVotedMemberCount,
+    getItemPointsNeeded,
+    isItemReachQuorum,
+    isItemReachPointsNeeded,
+    isItemValidated,
     inActionKeys,
+    onShowReference,
   ]);
 
   const tableData = useMemo(() => {
@@ -649,7 +669,7 @@ const ProposalDetails = ({
         </div>
       );
     },
-    [isPageExpanded, isRowExpandable, expandedRows, toggleRowExpanded],
+    [isPageExpanded, isRowExpandable, expandedRows],
   );
 
   return (

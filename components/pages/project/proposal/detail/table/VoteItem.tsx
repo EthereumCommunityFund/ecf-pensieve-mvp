@@ -2,9 +2,9 @@ import { CircularProgress, cn } from '@heroui/react';
 import { FC } from 'react';
 
 import { Button } from '@/components/base';
-import { DefaultVoteQuorum, ItemWeightMap } from '@/constants/proposal';
-import { IProject, IProposal, IVote } from '@/types';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
+import { DefaultVoteQuorum } from '@/constants/proposal';
+import { IProject, IProposal } from '@/types';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -12,8 +12,12 @@ interface IProps {
   fieldKey: string;
   project: IProject;
   proposal: IProposal;
+  itemPoints: number;
+  itemPointsNeeded: number;
+  isReachQuorum: boolean;
+  isReachPointsNeeded: boolean;
+  isValidated: boolean;
   proposalItem: ITableProposalItem;
-  votesOfKey: IVote[];
   votedMemberCount: number;
   isUserVoted: boolean;
   isLoading: boolean;
@@ -22,25 +26,17 @@ interface IProps {
 
 const VoteItem: FC<IProps> = ({
   fieldKey,
-  project,
-  proposal,
-  proposalItem,
+  itemPoints,
   votedMemberCount,
-  votesOfKey,
+  isReachQuorum,
+  isReachPointsNeeded,
+  isValidated,
+  itemPointsNeeded,
   onAction,
   isUserVoted,
   isLoading,
 }) => {
-  const currentPoints = votesOfKey.reduce(
-    (acc, cur) => acc + Number(cur.weight),
-    0,
-  );
-  const pointsNeeded = ItemWeightMap[fieldKey];
-  const isReachQuorum = votedMemberCount >= DefaultVoteQuorum;
-  const isReachPointsNeeded = currentPoints >= pointsNeeded;
-  const isValidated = isReachQuorum && isReachPointsNeeded;
-
-  const maxValue = Math.max(currentPoints, pointsNeeded);
+  const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
   return (
     <div className="flex flex-1 items-center justify-between">
@@ -52,7 +48,7 @@ const VoteItem: FC<IProps> = ({
           size="sm"
           minValue={0}
           maxValue={maxValue}
-          value={currentPoints}
+          value={itemPoints}
           strokeWidth={3}
           formatOptions={{
             style: 'decimal',
