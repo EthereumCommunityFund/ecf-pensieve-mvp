@@ -136,7 +136,7 @@ export const projectRouter = router({
         creator: true,
       };
 
-      if (isPublished) {
+      if (!isPublished) {
         queryOptions.proposals = {
           with: {
             voteRecords: true,
@@ -194,6 +194,22 @@ export const projectRouter = router({
   scanPendingProject: publicProcedure.query(async ({ ctx }) => {
     const pendingProjects = await ctx.db.query.projects.findMany({
       where: eq(projects.isPublished, false),
+      with: {
+        proposals: {
+          with: {
+            voteRecords: true,
+            creator: true,
+          },
+        },
+      },
     });
+
+    const filteredProjects = pendingProjects.filter((project) => {
+      return project.proposals.some(
+        (proposal) => proposal.voteRecords.length > 0,
+      );
+    });
+
+    return filteredProjects;
   }),
 });

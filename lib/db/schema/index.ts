@@ -1,5 +1,6 @@
 export * from './activeLogs';
 export * from './invitations';
+export * from './itemProposals';
 export * from './nonces';
 export * from './profiles';
 export * from './projects';
