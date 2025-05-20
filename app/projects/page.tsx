@@ -20,6 +20,7 @@ const ProjectsPage = () => {
     trpc.project.getProjects.useInfiniteQuery(
       {
         limit: 10,
+        isPublished: true,
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -109,8 +110,10 @@ const ProjectsPage = () => {
                 )}
               </>
             ) : (
-              <div className="flex justify-center py-8">
-                <ECFTypography type="body1">No projects yet</ECFTypography>
+              <div className="flex justify-center py-[80px]">
+                <ECFTypography type="subtitle1">
+                  No Published Project Yet
+                </ECFTypography>
               </div>
             )}
           </div>
