@@ -2,30 +2,20 @@ import React from 'react';
 
 import { IconProps } from '@/types/common';
 
-const CaretDownIcon: React.FC<IconProps> = (props) => {
+const CaretDownIcon: React.FC<IconProps> = ({ size = 24, ...props }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
+      width={size}
+      height={size}
+      viewBox="0 0 13 7"
+      fill={props?.color || 'none'}
       {...props}
     >
-      <g opacity="0.5" clipPath="url(#clip0_866_9188)">
-        <path
-          d="M14.625 6.75L9 12.375L3.375 6.75"
-          stroke="black"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-      <defs>
-        <clipPath id="clip0_866_9188">
-          <rect width="18" height="18" fill="white" />
-        </clipPath>
-      </defs>
+      <path
+        d="M12.6623 0.99597L6.82934 6.82888C6.77517 6.88311 6.71084 6.92614 6.64003 6.95549C6.56922 6.98484 6.49332 6.99995 6.41666 6.99995C6.34001 6.99995 6.26411 6.98484 6.1933 6.95549C6.12249 6.92614 6.05816 6.88311 6.00398 6.82888L0.171072 0.99597C0.0894047 0.914394 0.0337776 0.81042 0.0112332 0.697212C-0.0113113 0.584004 0.000240604 0.466652 0.0444264 0.360013C0.0886121 0.253374 0.163445 0.162243 0.259451 0.0981562C0.355457 0.0340696 0.46832 -9.06595e-05 0.583751 1.80704e-07L12.2496 1.80704e-07C12.365 -9.06595e-05 12.4779 0.0340696 12.5739 0.0981562C12.6699 0.162243 12.7447 0.253374 12.7889 0.360013C12.8331 0.466652 12.8446 0.584004 12.8221 0.697212C12.7995 0.81042 12.7439 0.914394 12.6623 0.99597Z"
+        fill="currentColor"
+      />
     </svg>
   );
 };

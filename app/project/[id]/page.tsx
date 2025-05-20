@@ -1,59 +1,80 @@
 'use client';
 
-import { cn, Image, Skeleton } from '@heroui/react';
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { cn, Image, Skeleton, Tab, Tabs } from '@heroui/react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 
+import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
-import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
-import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
-import { trpc } from '@/lib/trpc/client';
+import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { IProject, IProposal } from '@/types';
-import { devLog } from '@/utils/devLog';
+import ContributeButton from '@/components/pages/project/detail/ContributeButton';
+import Ecosystem from '@/components/pages/project/detail/Ecosystem';
+import Profile from '@/components/pages/project/detail/Profile';
+import Review from '@/components/pages/project/detail/Review';
+import ProjectData from '@/components/pages/project/ProjectData';
+
+const tabItems = [
+  { key: 'project-data', label: 'Project Data' },
+  { key: 'ecosystem', label: 'Ecosystem' },
+  { key: 'profile', label: 'Profile' },
+  { key: 'review', label: 'Review' },
+];
+
+type TabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab');
 
+  // 使用 Context 获取项目数据
   const {
-    data: project,
-    isLoading: isProjectLoading,
-    isFetched: isProjectFetched,
-  } = trpc.project.getProjectById.useQuery(
-    { id: Number(projectId) },
-    {
-      enabled: !!projectId,
-      select: (data) => {
-        devLog('getProjectById', data);
-        return data;
-      },
-    },
+    project,
+    proposals,
+    isProjectFetched,
+    isProposalsLoading,
+    isProposalsFetched,
+  } = useProjectDetail();
+
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    initialTab === 'ecosystem' ||
+      initialTab === 'profile' ||
+      initialTab === 'review'
+      ? initialTab
+      : 'project-data',
   );
 
-  const {
-    data: proposals,
-    isLoading: isProposalsLoading,
-    isFetched: isProposalsFetched,
-  } = trpc.proposal.getProposalsByProjectId.useQuery(
-    { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-      select: (data) => {
-        devLog('getProposalsByProjectId', data);
-        return data;
-      },
-    },
-  );
+  useEffect(() => {
+    const currentTab = searchParams.get('tab');
+    if (
+      currentTab &&
+      (currentTab === 'project-data' ||
+        currentTab === 'ecosystem' ||
+        currentTab === 'profile' ||
+        currentTab === 'review')
+    ) {
+      setActiveTab(currentTab as TabKey);
+    } else if (!currentTab) {
+      router.push(`/project/${projectId}?tab=project-data`, { scroll: false });
+    }
+  }, [searchParams, projectId, router]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/${projectId}/proposal/create`);
   }, [router, projectId]);
 
+  const handleContribute = useCallback(() => {
+    // 处理贡献按钮点击事件
+    console.log('Contribute button clicked');
+  }, []);
+
   return (
     <div className="pb-[20px]">
       <BackHeader>
         <div className="flex justify-start gap-[10px]">
-          <span>Pending Projects</span>
+          <span>Projects</span>
           <span className="font-[600]">/</span>
           {isProjectFetched ? (
             <span>{project?.name}</span>
@@ -65,38 +86,60 @@ const ProjectPage = () => {
 
       <ProjectCard project={project} proposals={proposals} />
 
-      {/* Proposal list */}
-      <div
-        className={cn(
-          'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
-          'flex items-start justify-center gap-[40px] ',
-          'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
-        )}
-      >
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[800px] flex-1 ">
-          <div className="font-mona flex items-center justify-between border-b border-black/10 bg-[rgba(245,245,245,0.80)] py-[8px] backdrop-blur-[5px]">
-            <p className="text-[24px] font-[700] leading-[34px] text-black/80 ">
-              Proposals
-            </p>
-            {isProposalsFetched ? (
-              <span className="text-[20px] font-[700] leading-[28px] text-black/30">
-                {proposals?.length || 0}
-              </span>
-            ) : (
-              <Skeleton className="h-[28px] w-[40px]" />
-            )}
-          </div>
-
-          <ProposalList
-            proposals={proposals || []}
-            projectId={Number(projectId)}
-            isLoading={isProposalsLoading}
-            isFetched={isProposalsFetched}
-          />
+      <div className="tablet:px-[10px] mobile:px-[10px]  mt-[20px] px-[20px]">
+        <div className="flex items-center justify-between">
+          <Tabs
+            selectedKey={activeTab}
+            onSelectionChange={(key) => {
+              const newTab = key as TabKey;
+              setActiveTab(newTab);
+              router.push(`/project/${projectId}?tab=${newTab}`, {
+                scroll: false,
+              });
+            }}
+            variant="underlined"
+            // className="w-full"
+            classNames={{
+              tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
+              tab: 'w-fit flex justify-start items-center',
+              cursor:
+                'bg-black w-[102%] bottom-[-4px] left-[-4px] right-[-4px]',
+              tabContent: 'font-semibold',
+            }}
+          >
+            {tabItems.map(({ key, label }) => (
+              <Tab
+                key={key}
+                title={
+                  <ECFTypography
+                    type="body1"
+                    className={cn(
+                      'font-semibold',
+                      activeTab === key ? 'opacity-100' : 'opacity-60',
+                    )}
+                  >
+                    {label}
+                  </ECFTypography>
+                }
+              />
+            ))}
+          </Tabs>
+          <ContributeButton onClick={handleContribute} />
         </div>
-
-        <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
       </div>
+
+      {activeTab === 'project-data' && (
+        <ProjectData
+          projectId={Number(projectId)}
+          proposals={proposals}
+          isProposalsLoading={isProposalsLoading}
+          isProposalsFetched={isProposalsFetched}
+          onSubmitProposal={onSubmitProposal}
+        />
+      )}
+      {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
+      {activeTab === 'profile' && <Profile projectId={Number(projectId)} />}
+      {activeTab === 'review' && <Review projectId={Number(projectId)} />}
     </div>
   );
 };

@@ -5,8 +5,9 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 
 import ECFTypography from '@/components/base/typography';
-import { formatNumber, formatTimeAgo } from '@/lib/utils';
+import { formatTimeAgo } from '@/lib/utils';
 import { IProject } from '@/types';
+import { formatNumber } from '@/utils/formatters';
 
 export function ProjectCardSkeleton() {
   return (
