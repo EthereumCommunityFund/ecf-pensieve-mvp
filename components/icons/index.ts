@@ -1,6 +1,7 @@
 export { default as BuildingIcon } from './Building';
 export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';
+export { default as CaretDownIcon } from './CaretDown';
 export { default as CaretUpIcon } from './CaretUp';
 export { default as CheckIcon } from './Check';
 export { default as CheckedGreenIcon } from './CheckedGreen';

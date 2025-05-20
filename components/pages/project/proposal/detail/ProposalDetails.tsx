@@ -23,6 +23,7 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
+import { CaretDownIcon } from '@/components/icons';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -191,41 +192,8 @@ const ProposalDetails = ({
 
         return (
           <div className="flex w-full items-center justify-between">
-            <div className="flex items-center">
-              {isExpandable && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleRowExpanded(rowKey);
-                  }}
-                  className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-gray-100"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      transform: expandedRows[rowKey]
-                        ? 'rotate(180deg)'
-                        : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease',
-                    }}
-                  >
-                    <path
-                      d="M2 4L6 8L10 4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
-              <span className="text-[14px] font-[600] leading-[20px] text-black">
-                {info.getValue()}
-              </span>
+            <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
+              {info.getValue()}
             </div>
             <TooltipItemWeight itemWeight={ItemWeightMap[rowKey]} />
           </div>
@@ -262,7 +230,9 @@ const ProposalDetails = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const value = info.getValue();
-        const key = info.row.original.key;
+        const rowKey = info.row.original.key;
+        const isExpandable = isRowExpandable(rowKey);
+        const isRowExpanded = expandedRows[rowKey];
 
         const renderValue = () => {
           if (Array.isArray(value)) {
@@ -270,13 +240,31 @@ const ProposalDetails = ({
           }
           return value;
         };
+        // TODO: render value by different type
 
         return (
           <div
-            className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
+            className="font-mona flex w-full items-center justify-between gap-[10px]"
             style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
           >
-            {renderValue()}
+            <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
+              {isExpandable ? 'Expand' : renderValue()}
+            </div>
+
+            {isExpandable && (
+              <Button
+                isIconOnly
+                className={cn(
+                  'size-[24px] shrink-0 opacity-50',
+                  isRowExpanded ? 'rotate-180' : '',
+                )}
+                onPress={() => {
+                  toggleRowExpanded(rowKey);
+                }}
+              >
+                <CaretDownIcon size={18} />
+              </Button>
+            )}
           </div>
         );
       },
