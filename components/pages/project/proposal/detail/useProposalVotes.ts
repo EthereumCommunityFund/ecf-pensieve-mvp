@@ -204,6 +204,13 @@ export function useProposalVotes(
     [isItemReachQuorum, isItemReachPointsNeeded],
   );
 
+  const isProposalValidated = useMemo(() => {
+    return (
+      totalValidPointsOfProposal >= TotalEssentialItemWeightSum &&
+      totalValidQuorumOfProposal >= TotalEssentialItemQuorumSum
+    );
+  }, [totalValidPointsOfProposal, totalValidQuorumOfProposal]);
+
   const isUserVotedInProposal = useCallback(
     (key: string) => {
       if (!profile) return false;
@@ -397,6 +404,7 @@ export function useProposalVotes(
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
     percentageOfProposal,
+    isProposalValidated,
     isUserVotedInProposal,
     isUserVotedInProject,
     getItemPointsNeeded,
