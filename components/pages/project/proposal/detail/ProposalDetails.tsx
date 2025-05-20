@@ -17,12 +17,12 @@ import {
   IRef,
 } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
+import { ItemWeightMap } from '@/constants/proposal';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
-import { ItemWeightMap } from '@/constants/proposal';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -378,36 +378,36 @@ const ProposalDetails = ({
       [CreateProjectStep.Organization]: [],
     };
 
-    if (!proposal) {
-      return result;
-    }
+    // Iterate over each category defined in CreateProjectStep
+    for (const catKey of Object.values(CreateProjectStep)) {
+      const category = catKey as CategoryKey;
+      const categoryItems = CATEGORIES[category]?.items || [];
 
-    proposal.items.forEach((item: any) => {
-      const key = item.key;
-      const value = item.value;
+      // For each item key defined in the category's items
+      categoryItems.forEach((itemKey: string) => {
+        // Find the corresponding item from the proposal data, if it exists
+        const proposalItem = proposal?.items?.find(
+          (pItem: any) => pItem.key === itemKey,
+        ) as { key: string; value: any } | undefined;
 
-      let category: CategoryKey | null = null;
-      for (const catKey of Object.values(CreateProjectStep)) {
-        if (CATEGORIES[catKey as CategoryKey].items.includes(key)) {
-          category = catKey as CategoryKey;
-          break;
-        }
-      }
+        const value =
+          proposalItem && typeof proposalItem.value !== 'undefined'
+            ? proposalItem.value
+            : 'N/A';
 
-      if (category) {
-        const reference = (proposal.refs as IRef[])?.find(
-          (ref) => ref.key === key,
-        );
+        const refsArray = proposal?.refs as IRef[] | undefined;
+        const referenceObj = refsArray?.find((ref) => ref.key === itemKey);
+        const referenceValue = referenceObj ? referenceObj.value : '';
 
         result[category].push({
-          key: key,
-          property: FIELD_LABELS[key] || key,
+          key: itemKey,
+          property: FIELD_LABELS[itemKey] || itemKey,
           input: value,
-          reference: reference ? reference.value : '',
-          support: 1,
+          reference: referenceValue,
+          support: proposalItem ? 1 : 0,
         });
-      }
-    });
+      });
+    }
 
     return result;
   }, [proposal]);
