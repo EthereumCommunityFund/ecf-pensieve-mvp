@@ -87,9 +87,6 @@ const PendingProjectsPage = () => {
             <ECFTypography type={'subtitle1'}>
               Recent Pending Projects
             </ECFTypography>
-            {/* <ECFTypography type={'body2'} className="mt-[5px]">
-              Page Completion Rate (Transparency) * User Supported Votes
-            </ECFTypography> */}
           </div>
 
           {/* Project list */}

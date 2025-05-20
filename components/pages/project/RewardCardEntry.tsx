@@ -1,25 +1,24 @@
-import { ECFButton } from '@/components/base/button';
-import ECFTypography from '@/components/base/typography';
+import { Button } from '@/components/base/button';
 
 const RewardCard = () => {
   return (
-    <div className="mobile:w-full w-[300px] rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
-      <ECFTypography
-        type={'subtitle2'}
-        className="font-bold leading-[25px] text-[var(--primary-green)]"
-      >
-        ZERO-TO-ONE Rewards Promo
-      </ECFTypography>
-      <ECFTypography
-        type={'body2'}
-        className="mb-5 mt-2.5 leading-[18px] opacity-60"
-      >
+    <div className="mobile:w-full w-[300px] rounded-[10px] border border-black/10 bg-white p-[14px]">
+      <p className="text-[18px] font-[700] leading-[25px] text-black">
+        <span className="font-[800] italic text-[#64C0A5]">
+          ZERO-TO-ONE{` `}
+        </span>
+        <span>{` `}Rewards Promo</span>
+      </p>
+      <p className="mt-[10px] text-[14px] font-[400] leading-[18px] text-black/60">
         Proposing new projects will certainly received a reward even if their
         proposal does not pass.
-      </ECFTypography>
-      <ECFButton className="h-[35px] w-full text-sm text-[var(--primary-green)] hover:text-[var(--primary-green)]">
-        Start gaining rewards!
-      </ECFButton>
+      </p>
+      <div className="mt-[20px]">
+        {/* TODO learn more link */}
+        <Button className="w-full rounded-[8px] border-none bg-black/5">
+          Learn More
+        </Button>
+      </div>
     </div>
   );
 };
