@@ -9,8 +9,8 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { addToast } from '@/components/base';
 import {
   ApplicableField,
+  DEFAULT_CREATE_PROJECT_FORM_DATA,
   DEFAULT_FIELD_APPLICABILITY,
-  getInitialFormValues,
   updateFormWithProjectData,
 } from '@/components/pages/project/create/FormData';
 import {
@@ -104,10 +104,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     Record<ApplicableField, boolean>
   >(DEFAULT_FIELD_APPLICABILITY);
 
-  const initialFormValues = useCallback(() => {
-    return getInitialFormValues(formType, projectData, setReferences);
-  }, [formType, projectData, setReferences]);
-
   const methods = useForm<ProjectFormData>({
     resolver: yupResolver<
       ProjectFormData,
@@ -115,7 +111,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       ProjectFormData
     >(projectSchema, { context: fieldApplicability }),
     mode: 'all',
-    defaultValues: initialFormValues(),
+    defaultValues: DEFAULT_CREATE_PROJECT_FORM_DATA,
   });
 
   useEffect(() => {
@@ -214,7 +210,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 description: 'Project created successfully!',
                 color: 'success',
               });
-              router.push(redirectPath || '/projects');
+              router.push(redirectPath || '/projects/pending');
             }
           },
           onError: (error: any) => {

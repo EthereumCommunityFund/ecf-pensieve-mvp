@@ -9,6 +9,7 @@ import SubmitProposalCard from '@/components/pages/project/proposal/common/Submi
 import ProposalDetailCard from '@/components/pages/project/proposal/detail/ProposalDetailCard';
 import ProposalDetails from '@/components/pages/project/proposal/detail/ProposalDetails';
 import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeightCard';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 import { devLog } from '@/utils/devLog';
@@ -16,6 +17,7 @@ import { devLog } from '@/utils/devLog';
 const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
   const router = useRouter();
+  const { profile } = useAuth();
 
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
@@ -105,11 +107,14 @@ const ProposalPage = () => {
         projectId={Number(projectId)}
         isLeading={true}
         hasVoted={true}
+        proposalIndex={Number(proposalId)}
       />
 
-      <div className="tablet:block mobile:block mx-[10px] mt-[10px] hidden">
-        <UserWeightCard weight={100} />
-      </div>
+      {profile && (
+        <div className="tablet:block mobile:block mx-[10px] mt-[10px] hidden">
+          <UserWeightCard weight={Number(profile.weight)} />
+        </div>
+      )}
 
       <div
         className={cn(
@@ -143,9 +148,11 @@ const ProposalPage = () => {
             isPageExpanded ? 'hidden' : '',
           )}
         >
-          <div className="tablet:hidden mobile:hidden">
-            <UserWeightCard weight={100} />
-          </div>
+          {profile && (
+            <div className="tablet:hidden mobile:hidden">
+              <UserWeightCard weight={Number(profile.weight)} />
+            </div>
+          )}
           <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
         </div>
       </div>

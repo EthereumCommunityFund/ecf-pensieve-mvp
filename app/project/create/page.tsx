@@ -15,7 +15,7 @@ const CreateProjectPage: React.FC = () => {
 
       <CreateProjectForm
         formType={IFormTypeEnum.Project}
-        redirectPath="/projects"
+        redirectPath="/projects/pending"
       />
     </div>
   );

@@ -12,11 +12,13 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
+import { CaretDownIcon } from '@/components/icons';
 import {
   CreateProjectStep,
   IRef,
 } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
+import { ItemWeightMap } from '@/constants/proposal';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -65,7 +67,7 @@ const ProposalDetails = ({
   isFiltered,
   toggleFiltered,
 }: ProposalDetailsProps) => {
-  const { profile } = useAuth();
+  const { profile, showAuthPrompt } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [CreateProjectStep.Basics]: true,
     [CreateProjectStep.Dates]: true,
@@ -93,11 +95,18 @@ const ProposalDetails = ({
     isUserVotedInProposal,
     isFetchVoteInfoLoading,
     isVoteActionPending,
+    getItemPoints,
+    getItemVotedMemberCount,
+    getItemPointsNeeded,
+    isItemReachQuorum,
+    isItemReachPointsNeeded,
+    isItemValidated,
     onCancelVote,
     onSwitchVote,
     handleVoteAction,
     switchVoteMutation,
     cancelVoteMutation,
+    inActionKeys,
   } = useProposalVotes(proposal, projectId, proposals);
 
   useEffect(() => {
@@ -109,7 +118,7 @@ const ProposalDetails = ({
     async (item: ITableProposalItem) => {
       if (!profile) {
         console.warn('not login');
-        // TODO prompt to login ?
+        showAuthPrompt();
         return;
       }
       await handleVoteAction(item, doNotShowCancelModal, {
@@ -119,13 +128,16 @@ const ProposalDetails = ({
         setSourceProposal,
       });
     },
-    [profile, handleVoteAction, doNotShowCancelModal],
+    [profile, handleVoteAction, doNotShowCancelModal, showAuthPrompt],
   );
 
   const handleCancelVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
-      await onCancelVote(userVotesOfProposalMap[currentVoteItem!.key].id);
+      await onCancelVote(
+        userVotesOfProposalMap[currentVoteItem!.key].id,
+        currentVoteItem.key,
+      );
       setIsCancelModalOpen(false);
     } catch (err) {
       // TODO toast
@@ -186,43 +198,10 @@ const ProposalDetails = ({
 
         return (
           <div className="flex w-full items-center justify-between">
-            <div className="flex items-center">
-              {isExpandable && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleRowExpanded(rowKey);
-                  }}
-                  className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-gray-100"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      transform: expandedRows[rowKey]
-                        ? 'rotate(180deg)'
-                        : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease',
-                    }}
-                  >
-                    <path
-                      d="M2 4L6 8L10 4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
-              <span className="text-[14px] font-[600] leading-[20px] text-black">
-                {info.getValue()}
-              </span>
+            <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
+              {info.getValue()}
             </div>
-            <TooltipItemWeight itemWeight={88} />
+            <TooltipItemWeight itemWeight={ItemWeightMap[rowKey]} />
           </div>
         );
       },
@@ -257,7 +236,9 @@ const ProposalDetails = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const value = info.getValue();
-        const key = info.row.original.key;
+        const rowKey = info.row.original.key;
+        const isExpandable = isRowExpandable(rowKey);
+        const isRowExpanded = expandedRows[rowKey];
 
         const renderValue = () => {
           if (Array.isArray(value)) {
@@ -265,13 +246,35 @@ const ProposalDetails = ({
           }
           return value;
         };
+        // TODO: render value by different type
 
         return (
           <div
-            className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80"
+            className="font-mona flex w-full items-center justify-between gap-[10px]"
             style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
           >
-            {renderValue()}
+            <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
+              {isExpandable
+                ? isRowExpanded
+                  ? 'Close'
+                  : 'Expand'
+                : renderValue()}
+            </div>
+
+            {isExpandable && (
+              <Button
+                isIconOnly
+                className={cn(
+                  'size-[24px] shrink-0 opacity-50',
+                  isRowExpanded ? 'rotate-180' : '',
+                )}
+                onPress={() => {
+                  toggleRowExpanded(rowKey);
+                }}
+              >
+                <CaretDownIcon size={18} />
+              </Button>
+            )}
           </div>
         );
       },
@@ -317,16 +320,30 @@ const ProposalDetails = ({
       ),
       size: 220,
       cell: (info) => {
+        const key = info.row.original.key;
+        const isUserVoted = isUserVotedInProposal(key);
+        const isLoading =
+          (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
+        const votedMemberCount = getItemVotedMemberCount(key);
+        const itemPoints = getItemPoints(key);
+        const itemPointsNeeded = getItemPointsNeeded(key);
+        const isReachQuorum = isItemReachQuorum(key);
+        const isReachPointsNeeded = isItemReachPointsNeeded(key);
+        const isValidated = isItemValidated(key);
         return (
           <VoteItem
+            fieldKey={key}
+            itemPoints={itemPoints}
+            itemPointsNeeded={itemPointsNeeded}
+            isReachQuorum={isReachQuorum}
+            isReachPointsNeeded={isReachPointsNeeded}
+            isValidated={isValidated}
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}
-            isLoading={isFetchVoteInfoLoading || isVoteActionPending}
-            isUserVoted={isUserVotedInProposal(info.row.original.key)}
-            votedMemberCount={
-              votesOfKeyInProposalMap[info.row.original.key]?.length || 0
-            }
+            isLoading={isLoading}
+            isUserVoted={isUserVoted}
+            votedMemberCount={votedMemberCount}
             onAction={() => onVoteAction(info.row.original)}
           />
         );
@@ -351,11 +368,18 @@ const ProposalDetails = ({
     onVoteAction,
     isFetchVoteInfoLoading,
     isVoteActionPending,
-    votesOfKeyInProposalMap,
     isUserVotedInProposal,
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,
+    getItemPoints,
+    getItemVotedMemberCount,
+    getItemPointsNeeded,
+    isItemReachQuorum,
+    isItemReachPointsNeeded,
+    isItemValidated,
+    inActionKeys,
+    onShowReference,
   ]);
 
   const tableData = useMemo(() => {
@@ -366,36 +390,36 @@ const ProposalDetails = ({
       [CreateProjectStep.Organization]: [],
     };
 
-    if (!proposal) {
-      return result;
-    }
+    // Iterate over each category defined in CreateProjectStep
+    for (const catKey of Object.values(CreateProjectStep)) {
+      const category = catKey as CategoryKey;
+      const categoryItems = CATEGORIES[category]?.items || [];
 
-    proposal.items.forEach((item: any) => {
-      const key = item.key;
-      const value = item.value;
+      // For each item key defined in the category's items
+      categoryItems.forEach((itemKey: string) => {
+        // Find the corresponding item from the proposal data, if it exists
+        const proposalItem = proposal?.items?.find(
+          (pItem: any) => pItem.key === itemKey,
+        ) as { key: string; value: any } | undefined;
 
-      let category: CategoryKey | null = null;
-      for (const catKey of Object.values(CreateProjectStep)) {
-        if (CATEGORIES[catKey as CategoryKey].items.includes(key)) {
-          category = catKey as CategoryKey;
-          break;
-        }
-      }
+        const value =
+          proposalItem && typeof proposalItem.value !== 'undefined'
+            ? proposalItem.value
+            : 'N/A';
 
-      if (category) {
-        const reference = (proposal.refs as IRef[])?.find(
-          (ref) => ref.key === key,
-        );
+        const refsArray = proposal?.refs as IRef[] | undefined;
+        const referenceObj = refsArray?.find((ref) => ref.key === itemKey);
+        const referenceValue = referenceObj ? referenceObj.value : '';
 
         result[category].push({
-          key: key,
-          property: FIELD_LABELS[key] || key,
+          key: itemKey,
+          property: FIELD_LABELS[itemKey] || itemKey,
           input: value,
-          reference: reference ? reference.value : '',
-          support: 1,
+          reference: referenceValue,
+          support: proposalItem ? 1 : 0,
         });
-      }
-    });
+      });
+    }
 
     return result;
   }, [proposal]);
@@ -581,7 +605,13 @@ const ProposalDetails = ({
             <tbody>
               {table.getRowModel().rows.map((row, rowIndex) => (
                 <React.Fragment key={rowIndex}>
-                  <tr>
+                  <tr
+                    className={cn(
+                      'bg-white hover:bg-[#F5F5F5]',
+                      expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                    )}
+                  >
+                    {/* TODO: find input column cell and add expand effect */}
                     {row.getVisibleCells().map((cell, cellIndex) => (
                       <td
                         key={cell.id}
@@ -589,11 +619,16 @@ const ProposalDetails = ({
                           width: `${cell.column.getSize()}px`,
                           boxSizing: 'border-box',
                         }}
-                        className={` border-b border-r
-                          border-black/10
-                          ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
-                          ${rowIndex === table.getRowModel().rows.length - 1 && !expandedRows[row.original.key] ? 'border-b-0' : ''}
-                        `}
+                        className={cn(
+                          'border-b border-r border-black/10 hover:bg-[#EBEBEB]',
+                          cellIndex === row.getVisibleCells().length - 1
+                            ? 'border-r-0'
+                            : '',
+                          rowIndex === table.getRowModel().rows.length - 1 &&
+                            !expandedRows[row.original.key]
+                            ? 'border-b-0'
+                            : '',
+                        )}
                       >
                         <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
                           {flexRender(
@@ -605,28 +640,32 @@ const ProposalDetails = ({
                     ))}
                   </tr>
 
-                  {isRowExpandable(row.original.key) &&
-                    expandedRows[row.original.key] && (
-                      <tr key={`${row.id}-expanded`}>
-                        <td
-                          colSpan={row.getVisibleCells().length}
-                          className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                            rowIndex === table.getRowModel().rows.length - 1
-                              ? 'border-b-0'
-                              : ''
-                          }`}
-                        >
-                          <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                            <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                              {renderExpandedContent(
-                                row.original.input,
-                                row.original.key,
-                              )}
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                  {isRowExpandable(row.original.key) && (
+                    <tr
+                      key={`${row.id}-expanded`}
+                      className={cn(
+                        expandedRows[row.original.key] ? '' : 'hidden',
+                      )}
+                    >
+                      <td
+                        colSpan={row.getVisibleCells().length}
+                        className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                          rowIndex === table.getRowModel().rows.length - 1
+                            ? 'border-b-0'
+                            : ''
+                        }`}
+                      >
+                        <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                          <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                            {renderExpandedContent(
+                              row.original.input,
+                              row.original.key,
+                            )}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </React.Fragment>
               ))}
             </tbody>
@@ -634,7 +673,7 @@ const ProposalDetails = ({
         </div>
       );
     },
-    [isPageExpanded, isRowExpandable, expandedRows, toggleRowExpanded],
+    [isPageExpanded, isRowExpandable, expandedRows],
   );
 
   return (

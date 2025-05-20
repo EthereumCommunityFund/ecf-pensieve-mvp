@@ -53,7 +53,11 @@ const TechnicalsStepForm: React.FC<
               className="w-full"
             >
               {openSourceOptions.map((option) => (
-                <SelectItem key={option.value} textValue={option.label}>
+                <SelectItem
+                  key={option.value}
+                  textValue={option.label}
+                  aria-label={option.label}
+                >
                   {option.label}
                 </SelectItem>
               ))}

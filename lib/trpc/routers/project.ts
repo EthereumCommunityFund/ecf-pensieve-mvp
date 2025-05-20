@@ -190,4 +190,10 @@ export const projectRouter = router({
 
       return project;
     }),
+
+  scanPendingProject: publicProcedure.query(async ({ ctx }) => {
+    const pendingProjects = await ctx.db.query.projects.findMany({
+      where: eq(projects.isPublished, false),
+    });
+  }),
 });

@@ -1,7 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import { ITableProposalItem } from '@/components/pages/project/proposal/detail/ProposalDetails';
+import { DefaultVoteQuorum, ItemWeightMap } from '@/constants/proposal';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProposal, IVote } from '@/types';
@@ -14,18 +15,20 @@ export function useProposalVotes(
 ) {
   const { isConnected } = useAccount();
   const { profile } = useAuth();
+  const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
 
   const {
     data: votesOfProposal,
     isLoading: isVotesOfProposalLoading,
     isFetched: isVotesOfProposalFetched,
+    isFetching: isVotesOfProposalFetching,
     refetch: refetchVotesOfProposal,
   } = trpc.vote.getVotesByProposalId.useQuery(
     { proposalId: Number(proposal?.id) },
     {
       enabled: !!proposal && !!proposal.id,
       select: (data) => {
-        // devLog('getVotesByProposalId', data);
+        devLog('getVotesByProposalId', data);
         return data;
       },
     },
@@ -35,6 +38,7 @@ export function useProposalVotes(
     data: votesOfProject,
     isLoading: isVotesOfProjectLoading,
     isFetched: isVotesOfProjectFetched,
+    isFetching: isVotesOfProjectFetching,
     refetch: refetchVotesOfProject,
   } = trpc.vote.getVotesByProjectId.useQuery(
     { projectId: Number(projectId) },
@@ -99,6 +103,50 @@ export function useProposalVotes(
       );
   }, [votesOfProject, profile]);
 
+  const getItemPointsNeeded = useCallback((key: string) => {
+    return ItemWeightMap[key];
+  }, []);
+
+  const getItemPoints = useCallback(
+    (key: string) => {
+      const votesOfKey = votesOfKeyInProposalMap[key] || [];
+      return votesOfKey.reduce((acc, vote) => acc + Number(vote.weight), 0);
+    },
+    [votesOfKeyInProposalMap],
+  );
+
+  const getItemVotedMemberCount = useCallback(
+    (key: string) => {
+      const votesOfKey = votesOfKeyInProposalMap[key] || [];
+      return votesOfKey.length;
+    },
+    [votesOfKeyInProposalMap],
+  );
+
+  const isItemReachQuorum = useCallback(
+    (key: string) => {
+      const votesOfKey = votesOfKeyInProposalMap[key] || [];
+      return votesOfKey.length >= DefaultVoteQuorum;
+    },
+    [votesOfKeyInProposalMap],
+  );
+
+  const isItemReachPointsNeeded = useCallback(
+    (key: string) => {
+      const pointsNeeded = ItemWeightMap[key];
+      const currentPoints = getItemPoints(key);
+      return currentPoints >= pointsNeeded;
+    },
+    [getItemPoints],
+  );
+
+  const isItemValidated = useCallback(
+    (key: string) => {
+      return isItemReachQuorum(key) && isItemReachPointsNeeded(key);
+    },
+    [isItemReachQuorum, isItemReachPointsNeeded],
+  );
+
   const isUserVotedInProposal = useCallback(
     (key: string) => {
       if (!profile) return false;
@@ -129,17 +177,29 @@ export function useProposalVotes(
   const switchVoteMutation = trpc.vote.switchVote.useMutation();
   const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
+  const setKeyActive = (key: string, active: boolean) => {
+    setInActionKeys((pre) => ({
+      ...pre,
+      [key]: active,
+    }));
+  };
+
   const onCreateVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
       if (!profile) return;
+      setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
       createVoteMutation.mutate(payload, {
-        onSuccess: (data) => {
-          refetchVotesOfProposal();
-          refetchVotesOfProject();
+        onSuccess: async (data) => {
+          await Promise.all([
+            refetchVotesOfProposal(),
+            refetchVotesOfProject(),
+          ]);
+          setKeyActive(key, false);
         },
         onError: (error) => {
+          setKeyActive(key, false);
           devLog('onVote error', error);
         },
       });
@@ -157,14 +217,18 @@ export function useProposalVotes(
     async (key: string) => {
       if (!proposal) return;
       if (!profile) return;
+      setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
       switchVoteMutation.mutate(payload, {
-        onSuccess: (data) => {
-          // devLog('onSwitchVote success', data);
-          refetchVotesOfProposal();
-          refetchVotesOfProject();
+        onSuccess: async (data) => {
+          await Promise.all([
+            refetchVotesOfProposal(),
+            refetchVotesOfProject(),
+          ]);
+          setKeyActive(key, false);
         },
         onError: (error) => {
+          setKeyActive(key, false);
           // devLog('onSwitchVote error', error);
         },
       });
@@ -179,17 +243,21 @@ export function useProposalVotes(
   );
 
   const onCancelVote = useCallback(
-    async (id: number) => {
+    async (id: number, key: string) => {
       if (!profile) return;
+      setKeyActive(key, true);
       cancelVoteMutation.mutate(
         { id },
         {
-          onSuccess: (data) => {
-            // devLog('onCancelVote success', data);
-            refetchVotesOfProposal();
-            refetchVotesOfProject();
+          onSuccess: async (data) => {
+            await Promise.all([
+              refetchVotesOfProposal(),
+              refetchVotesOfProject(),
+            ]);
+            setKeyActive(key, false);
           },
           onError: (error) => {
+            setKeyActive(key, false);
             // devLog('onCancelVote error', error);
           },
         },
@@ -223,7 +291,7 @@ export function useProposalVotes(
         setSourceProposal: (proposal: IProposal | null) => void;
       },
     ) => {
-      // devLog('onVoteAction item', item);
+      devLog('onVoteAction item', item);
       const {
         setCurrentVoteItem,
         setIsCancelModalOpen,
@@ -238,7 +306,7 @@ export function useProposalVotes(
       }
       if (isUserVotedInProposal(item.key)) {
         if (doNotShowCancelModal) {
-          await onCancelVote(userVotesOfProposalMap[item.key].id);
+          await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
         } else {
           setIsCancelModalOpen(true);
         }
@@ -270,7 +338,14 @@ export function useProposalVotes(
     userVotesOfProjectMap,
     isUserVotedInProposal,
     isUserVotedInProject,
-    isFetchVoteInfoLoading: isVotesOfProposalLoading || isVotesOfProjectLoading,
+    getItemPointsNeeded,
+    getItemPoints,
+    getItemVotedMemberCount,
+    isItemReachQuorum,
+    isItemReachPointsNeeded,
+    isItemValidated,
+    isFetchVoteInfoLoading:
+      isVotesOfProposalFetching || isVotesOfProjectFetching,
     isVoteActionPending:
       createVoteMutation.isPending ||
       switchVoteMutation.isPending ||
@@ -278,6 +353,7 @@ export function useProposalVotes(
     createVoteMutation,
     switchVoteMutation,
     cancelVoteMutation,
+    inActionKeys,
     onCreateVote,
     onSwitchVote,
     onCancelVote,
