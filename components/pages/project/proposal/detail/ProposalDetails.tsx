@@ -12,6 +12,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
+import { CaretDownIcon } from '@/components/icons';
 import {
   CreateProjectStep,
   IRef,
@@ -23,7 +24,6 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
-import { CaretDownIcon } from '@/components/icons';
 
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
@@ -581,7 +581,13 @@ const ProposalDetails = ({
             <tbody>
               {table.getRowModel().rows.map((row, rowIndex) => (
                 <React.Fragment key={rowIndex}>
-                  <tr>
+                  <tr
+                    className={cn(
+                      'bg-white hover:bg-[#F5F5F5]',
+                      expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                    )}
+                  >
+                    {/* TODO: find input column cell and add expand effect */}
                     {row.getVisibleCells().map((cell, cellIndex) => (
                       <td
                         key={cell.id}
@@ -589,11 +595,16 @@ const ProposalDetails = ({
                           width: `${cell.column.getSize()}px`,
                           boxSizing: 'border-box',
                         }}
-                        className={` border-b border-r
-                          border-black/10
-                          ${cellIndex === row.getVisibleCells().length - 1 ? 'border-r-0' : ''}
-                          ${rowIndex === table.getRowModel().rows.length - 1 && !expandedRows[row.original.key] ? 'border-b-0' : ''}
-                        `}
+                        className={cn(
+                          'border-b border-r border-black/10 hover:bg-[#EBEBEB]',
+                          cellIndex === row.getVisibleCells().length - 1
+                            ? 'border-r-0'
+                            : '',
+                          rowIndex === table.getRowModel().rows.length - 1 &&
+                            !expandedRows[row.original.key]
+                            ? 'border-b-0'
+                            : '',
+                        )}
                       >
                         <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
                           {flexRender(
@@ -605,28 +616,32 @@ const ProposalDetails = ({
                     ))}
                   </tr>
 
-                  {isRowExpandable(row.original.key) &&
-                    expandedRows[row.original.key] && (
-                      <tr key={`${row.id}-expanded`}>
-                        <td
-                          colSpan={row.getVisibleCells().length}
-                          className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                            rowIndex === table.getRowModel().rows.length - 1
-                              ? 'border-b-0'
-                              : ''
-                          }`}
-                        >
-                          <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                            <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                              {renderExpandedContent(
-                                row.original.input,
-                                row.original.key,
-                              )}
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                  {isRowExpandable(row.original.key) && (
+                    <tr
+                      key={`${row.id}-expanded`}
+                      className={cn(
+                        expandedRows[row.original.key] ? '' : 'hidden',
+                      )}
+                    >
+                      <td
+                        colSpan={row.getVisibleCells().length}
+                        className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                          rowIndex === table.getRowModel().rows.length - 1
+                            ? 'border-b-0'
+                            : ''
+                        }`}
+                      >
+                        <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                          <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                            {renderExpandedContent(
+                              row.original.input,
+                              row.original.key,
+                            )}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </React.Fragment>
               ))}
             </tbody>
