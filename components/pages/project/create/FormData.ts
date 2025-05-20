@@ -365,32 +365,6 @@ export const convertProjectRefsToReferenceData = (
 const isLocalDev = process.env.NODE_ENV !== 'production';
 const isAutoFillForm = process.env.NEXT_PUBLIC_AUTO_FILL_FORM === 'true';
 
-export const getInitialFormValues = (
-  formType: IFormTypeEnum,
-  projectData: IProject | undefined,
-  setReferences?: (refs: ReferenceData[]) => void,
-): ProjectFormData => {
-  if (
-    formType === IFormTypeEnum.Proposal &&
-    isLocalDev &&
-    isAutoFillForm &&
-    projectData
-  ) {
-    if (setReferences && projectData.refs && Array.isArray(projectData.refs)) {
-      const referenceData = convertProjectRefsToReferenceData(projectData);
-      if (referenceData.length > 0) {
-        setTimeout(() => {
-          setReferences(referenceData);
-        }, 0);
-      }
-    }
-
-    return convertProjectToFormData(projectData);
-  }
-
-  return DEFAULT_CREATE_PROJECT_FORM_DATA;
-};
-
 export const updateFormWithProjectData = (
   formType: IFormTypeEnum,
   projectData: IProject | undefined,
