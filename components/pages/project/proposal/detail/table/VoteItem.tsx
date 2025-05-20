@@ -66,7 +66,7 @@ const VoteItem: FC<IProps> = ({
         <div
           className={cn(
             'flex items-center justify-start gap-[5px]',
-            isReachQuorum ? 'opacity-100' : 'opacity-20',
+            isReachQuorum ? 'opacity-50' : 'opacity-30',
           )}
         >
           <UsersIcon />
