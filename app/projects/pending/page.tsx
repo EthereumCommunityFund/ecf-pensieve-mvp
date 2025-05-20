@@ -84,10 +84,12 @@ const PendingProjectsPage = () => {
 
         <div className="flex-1">
           <div className="px-2.5 py-2 opacity-80">
-            <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
-            <ECFTypography type={'body2'} className="mt-[5px]">
-              Page Completion Rate (Transparency) * User Supported Votes
+            <ECFTypography type={'subtitle1'}>
+              Recent Pending Projects
             </ECFTypography>
+            {/* <ECFTypography type={'body2'} className="mt-[5px]">
+              Page Completion Rate (Transparency) * User Supported Votes
+            </ECFTypography> */}
           </div>
 
           {/* Project list */}

@@ -3,8 +3,6 @@
 import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 
-import ECFTypography from '@/components/base/typography';
-import { formatTimeAgo } from '@/lib/utils';
 import { IProject } from '@/types';
 
 export function PendingProjectCardSkeleton() {
@@ -52,70 +50,51 @@ const PendingProjectCard = ({
     >
       <Link
         href={`/project/${project.id}`}
-        className="mobile:items-start flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]"
+        className={cn(
+          'flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-[10px] transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]',
+          'mobile:flex-col mobile:items-start',
+        )}
       >
-        <div className="flex flex-1 items-start gap-[14px]">
-          {/* <div className="mobile:hidden size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)]">
-            <Image
-              src={project.logoUrl}
-              as={NextImage}
-              alt={project.name}
-              className="rounded-[10px] object-cover"
-              width={100}
-              height={100}
-            />
-          </div> */}
-
-          {/* <div className="mobile:block hidden size-[60px] overflow-hidden rounded-[5px] border border-[rgba(0,0,0,0.1)]">
-            <Image
-              src={project.logoUrl}
-              as={NextImage}
-              alt={project.name}
-              className="rounded-[5px] object-cover"
-              width={60}
-              height={60}
-            />
-          </div> */}
-
-          <div className="mobile:max-w-full max-w-[440px] flex-1">
-            <ECFTypography
-              type={'body1'}
-              className="font-semibold leading-[18px]"
-            >
+        <div className="flex flex-1 flex-col gap-[10px]">
+          <div>
+            <p className="text-[18px] font-[600] leading-[20px] text-black">
               {project.name}
-            </ECFTypography>
-            <ECFTypography
-              type={'body2'}
-              className="mt-[6px] leading-[18px] opacity-65"
-            >
-              {project.mainDescription}
-            </ECFTypography>
-            <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
-              <span className="opacity-60">by: </span>
-              <span className="mx-[6px] font-bold underline">
-                {project.creator?.name}
-              </span>{' '}
-              <span className="opacity-60">
-                {formatTimeAgo(project.createdAt.getTime())}
-              </span>
             </p>
-            <div className="mt-[10px] flex flex-wrap gap-[8px]">
-              {project.categories.map((tag) => (
-                <div
-                  key={tag}
-                  className="flex h-[22px] items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)] px-3"
-                >
-                  <span className="text-[12px] font-semibold leading-[12px] text-black">
-                    {tag}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <p className="mt-[4px] text-[14px] font-[400] leading-[18px] text-black">
+              {project.mainDescription}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-[8px]">
+            {project.categories.map((tag) => (
+              <div
+                key={tag}
+                className="flex h-[22px] items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)] px-[12px]"
+              >
+                <span className="text-[12px] font-[600] leading-[12px] text-black">
+                  {tag}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-[14px] font-[600] leading-[18px] text-black">
+            <p>
+              Total Proposals: <span className="text-black/60">3</span>
+            </p>
+            <p className="mt-[5px]">
+              Leading: <span className="text-black/60">@leo</span>
+            </p>
           </div>
         </div>
 
         {/* vote info */}
-        <div className="flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px] text-[14px] leading-[19px] text-black">
+        <div
+          className={cn(
+            'flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px] text-[14px] leading-[19px] text-black',
+            'mobile:w-full',
+          )}
+        >
           <div className="flex items-center justify-between">
             <span className="font-mona text-[16px] font-[500]">00%</span>
             <span className="text-black/60">1/3</span>
