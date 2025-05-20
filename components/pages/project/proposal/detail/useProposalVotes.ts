@@ -25,7 +25,7 @@ export function useProposalVotes(
     {
       enabled: !!proposal && !!proposal.id,
       select: (data) => {
-        // devLog('getVotesByProposalId', data);
+        devLog('getVotesByProposalId', data);
         return data;
       },
     },

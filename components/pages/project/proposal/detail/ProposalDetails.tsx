@@ -317,8 +317,11 @@ const ProposalDetails = ({
       ),
       size: 220,
       cell: (info) => {
+        const key = info.row.original.key;
         return (
           <VoteItem
+            fieldKey={key}
+            votesOfKey={votesOfKeyInProposalMap[key] || []}
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}

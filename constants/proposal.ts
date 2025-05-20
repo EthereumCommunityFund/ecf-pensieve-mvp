@@ -1,3 +1,5 @@
+export const DefaultVoteQuorum = 3;
+
 /**
  * TODO: need to confirm, get by dynamic data
  */
@@ -20,3 +22,8 @@ export const ItemWeightMap: Record<string, number> = {
   publicGoods: 10,
   founders: 10,
 };
+
+export const TotalEssentialItemWeightSum = Object.keys(ItemWeightMap).reduce(
+  (acc, key) => acc + ItemWeightMap[key],
+  0,
+);

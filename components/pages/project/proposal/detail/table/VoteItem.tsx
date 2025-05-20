@@ -2,33 +2,44 @@ import { CircularProgress, cn } from '@heroui/react';
 import { FC } from 'react';
 
 import { Button } from '@/components/base';
-import { IProject, IProposal } from '@/types';
+import { IProject, IProposal, IVote } from '@/types';
+import { DefaultVoteQuorum, ItemWeightMap } from '@/constants/proposal';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
 interface IProps {
+  fieldKey: string;
   project: IProject;
   proposal: IProposal;
   proposalItem: ITableProposalItem;
+  votesOfKey: IVote[];
   votedMemberCount: number;
   isUserVoted: boolean;
   isLoading: boolean;
   onAction: () => Promise<void>;
 }
 
-const DefaultVoteQuorum = 3;
-
 const VoteItem: FC<IProps> = ({
+  fieldKey,
   project,
   proposal,
   proposalItem,
   votedMemberCount,
+  votesOfKey,
   onAction,
   isUserVoted,
   isLoading,
 }) => {
-  // TODO quorum is empty now
-  const isValidated = votedMemberCount === DefaultVoteQuorum;
+  const currentPoints = votesOfKey.reduce(
+    (acc, cur) => acc + Number(cur.weight),
+    0,
+  );
+  const pointsNeeded = ItemWeightMap[fieldKey];
+  const isReachQuorum = votedMemberCount >= DefaultVoteQuorum;
+  const isReachPointsNeeded = currentPoints >= pointsNeeded;
+  const isValidated = isReachQuorum && isReachPointsNeeded;
+
+  const maxValue = Math.max(currentPoints, pointsNeeded);
 
   return (
     <div className="flex flex-1 items-center justify-between">
@@ -39,8 +50,8 @@ const VoteItem: FC<IProps> = ({
           showValueLabel={true}
           size="sm"
           minValue={0}
-          maxValue={DefaultVoteQuorum}
-          value={votedMemberCount}
+          maxValue={maxValue}
+          value={currentPoints}
           strokeWidth={3}
           formatOptions={{
             style: 'decimal',
@@ -55,7 +66,12 @@ const VoteItem: FC<IProps> = ({
           }}
         />
 
-        <div className="flex items-center justify-start gap-[5px] opacity-20">
+        <div
+          className={cn(
+            'flex items-center justify-start gap-[5px]',
+            isReachQuorum ? 'opacity-100' : 'opacity-20',
+          )}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
