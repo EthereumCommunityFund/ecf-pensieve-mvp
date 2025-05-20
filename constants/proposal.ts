@@ -27,3 +27,28 @@ export const TotalEssentialItemWeightSum = Object.keys(ItemWeightMap).reduce(
   (acc, key) => acc + ItemWeightMap[key],
   0,
 );
+
+export const ItemQuorumMap: Record<string, number> = {
+  name: DefaultVoteQuorum,
+  tagline: DefaultVoteQuorum,
+  categories: DefaultVoteQuorum,
+  mainDescription: DefaultVoteQuorum,
+  logoUrl: DefaultVoteQuorum,
+  websiteUrl: DefaultVoteQuorum,
+  appUrl: DefaultVoteQuorum,
+  dateFounded: DefaultVoteQuorum,
+  dateLaunch: DefaultVoteQuorum,
+  devStatus: DefaultVoteQuorum,
+  fundingStatus: DefaultVoteQuorum,
+  openSource: DefaultVoteQuorum,
+  codeRepo: DefaultVoteQuorum,
+  tokenContract: DefaultVoteQuorum,
+  orgStructure: DefaultVoteQuorum,
+  publicGoods: DefaultVoteQuorum,
+  founders: DefaultVoteQuorum,
+};
+
+export const TotalEssentialItemQuorumSum = Object.keys(ItemQuorumMap).reduce(
+  (acc, key) => acc + ItemQuorumMap[key],
+  0,
+);
