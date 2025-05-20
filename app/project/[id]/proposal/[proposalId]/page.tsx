@@ -107,6 +107,7 @@ const ProposalPage = () => {
         projectId={Number(projectId)}
         isLeading={true}
         hasVoted={true}
+        proposalIndex={Number(proposalId)}
       />
 
       {profile && (
