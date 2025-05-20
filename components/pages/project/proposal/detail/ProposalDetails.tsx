@@ -66,7 +66,7 @@ const ProposalDetails = ({
   isFiltered,
   toggleFiltered,
 }: ProposalDetailsProps) => {
-  const { profile } = useAuth();
+  const { profile, showAuthPrompt } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [CreateProjectStep.Basics]: true,
     [CreateProjectStep.Dates]: true,
@@ -111,7 +111,7 @@ const ProposalDetails = ({
     async (item: ITableProposalItem) => {
       if (!profile) {
         console.warn('not login');
-        // TODO prompt to login ?
+        showAuthPrompt();
         return;
       }
       await handleVoteAction(item, doNotShowCancelModal, {
