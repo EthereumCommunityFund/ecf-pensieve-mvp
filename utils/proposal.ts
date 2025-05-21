@@ -1,3 +1,4 @@
+import { EssentialItemKeys } from '@/components/pages/project/create/types';
 import {
   ItemQuorumMap,
   ItemWeightMap,
@@ -162,11 +163,19 @@ const ProposalVoteUtils = {
     const votesOfKeyInProposalMap =
       ProposalVoteUtils.groupVotesByKey(votesOfProposal);
 
-    const totalValidPointsOfProposal = votesOfProposal.reduce((acc, vote) => {
-      const weight = Number(vote.weight || 0);
-      const itemPointsNeeded = ItemWeightMap[vote.key] || 0;
-      const shouldAddPoints = Math.min(weight, itemPointsNeeded);
-      return acc + shouldAddPoints;
+    const totalValidPointsOfProposal = Object.entries(
+      votesOfKeyInProposalMap,
+    ).reduce((acc, [key, votes]) => {
+      const itemPointsNeeded = ItemWeightMap[key as EssentialItemKeys] || 0;
+      const totalVotesWeightForKey = votes.reduce(
+        (sum, vote) => sum + Number(vote.weight || 0),
+        0,
+      );
+      const validPointsForKey = Math.min(
+        totalVotesWeightForKey,
+        itemPointsNeeded,
+      );
+      return acc + validPointsForKey;
     }, 0);
 
     const userWeightMap = votesOfProposal.reduce(
@@ -188,7 +197,7 @@ const ProposalVoteUtils = {
     const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const quorum = ItemQuorumMap[key] || 0;
+      const quorum = ItemQuorumMap[key as EssentialItemKeys] || 0;
       return acc + Math.min(votes.length, quorum);
     }, 0);
 
