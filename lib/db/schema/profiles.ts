@@ -27,7 +27,7 @@ export const profiles = pgTable('profiles', {
   name: text('name').notNull(),
   avatarUrl: text('avatar_url'),
   address: text('address').notNull(),
-  weight: doublePrecision('weight'),
+  weight: doublePrecision('weight').default(0),
   invitationCodeId: bigint('invitation_code_id', { mode: 'number' }).references(
     () => invitationCodes.id,
   ),
