@@ -42,13 +42,19 @@ export const ItemQuorumMap: Record<string, number> = {
   logoUrl: DefaultVoteQuorum,
   websiteUrl: DefaultVoteQuorum,
   appUrl: DefaultVoteQuorum,
+  tags: DefaultVoteQuorum,
+  whitePaper: DefaultVoteQuorum,
+
   dateFounded: DefaultVoteQuorum,
   dateLaunch: DefaultVoteQuorum,
   devStatus: DefaultVoteQuorum,
   fundingStatus: DefaultVoteQuorum,
+
   openSource: DefaultVoteQuorum,
   codeRepo: DefaultVoteQuorum,
   tokenContract: DefaultVoteQuorum,
+  dappSmartContracts: DefaultVoteQuorum,
+
   orgStructure: DefaultVoteQuorum,
   publicGoods: DefaultVoteQuorum,
   founders: DefaultVoteQuorum,
