@@ -59,7 +59,10 @@ export interface IVoteResultOfProject {
   */
   voteResultOfProposalMap: Record<number, IVoteResultOfProposal>;
   leadingProposalId?: number;
-  leadingProposalResult?: IVoteResultOfProposal;
+  /**
+   * if leadingProposalId is not set, leadingProposalResult will be the default proposal result
+   */
+  leadingProposalResult: IVoteResultOfProposal;
   canBePublished: boolean;
 }
 
@@ -226,9 +229,22 @@ const ProposalVoteUtils = {
       }
     }
 
+    const defaultProposalResult: IVoteResultOfProposal = {
+      proposalId: 0,
+      votesOfKeyInProposalMap: {},
+      totalValidPointsOfProposal: 0,
+      totalSupportedUserWeightOfProposal: 0,
+      totalValidQuorumOfProposal: 0,
+      TotalEssentialItemWeightSum: TotalEssentialItemWeightSum,
+      TotalEssentialItemQuorumSum: TotalEssentialItemQuorumSum,
+      percentageOfProposal: 0,
+      formattedPercentageOfProposal: '0%',
+      isProposalValidated: false,
+    };
+
     const leadingProposalResult = leadingProposalId
       ? voteResultOfProposalMap[leadingProposalId]
-      : undefined;
+      : defaultProposalResult;
 
     return {
       projectId,

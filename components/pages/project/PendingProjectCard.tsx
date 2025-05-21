@@ -2,8 +2,10 @@
 
 import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 import { IProject } from '@/types';
+import ProposalVoteUtils from '@/utils/proposal';
 
 export function PendingProjectCardSkeleton() {
   return (
@@ -41,6 +43,26 @@ const PendingProjectCard = ({
   project,
   showBorder = false,
 }: IProjectCardProps) => {
+  const { leadingProposalId, leadingProposalResult, voteResultOfProposalMap } =
+    useMemo(() => {
+      return ProposalVoteUtils.getVoteResultOfProject({
+        projectId: project.id,
+        votesOfProject: project.proposals.flatMap(
+          (proposal) => proposal.voteRecords || [],
+        ),
+        proposals: project.proposals,
+      });
+    }, [project]);
+
+  const {
+    formattedPercentageOfProposal,
+    totalValidPointsOfProposal,
+    totalSupportedUserWeightOfProposal,
+    totalValidQuorumOfProposal,
+    TotalEssentialItemWeightSum,
+    TotalEssentialItemQuorumSum,
+  } = leadingProposalResult;
+
   return (
     <div
       className={cn(
@@ -96,21 +118,32 @@ const PendingProjectCard = ({
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="font-mona text-[16px] font-[500]">00%</span>
-            <span className="text-black/60">1/3</span>
+            <span className="font-mona text-[16px] font-[500]">
+              {formattedPercentageOfProposal}
+            </span>
+            <span className="text-black/60">
+              {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+            </span>
           </div>
 
           <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-            <div className="h-[7px] bg-black" style={{ width: `${30}%` }}></div>
+            <div
+              className="h-[7px] bg-black"
+              style={{ width: formattedPercentageOfProposal }}
+            ></div>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="font-[600]">Supported</span>
-            <span className="text-black/60">000</span>
+            <span className="text-black/60">
+              {totalSupportedUserWeightOfProposal}
+            </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-[600]">Quorum</span>
-            <span className="text-black/60">00/3</span>
+            <span className="text-black/60">
+              {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+            </span>
           </div>
         </div>
       </Link>
