@@ -6,7 +6,6 @@ import {
 } from '@/components/pages/project/create/FormData';
 import { CreateProjectStep } from '@/components/pages/project/create/types';
 
-// TODO name 和 logoUrl，在 create project 时，前端定义的字段命名不一致，需要统一
 export const CATEGORIES: Record<
   CreateProjectStep,
   {
@@ -22,10 +21,12 @@ export const CATEGORIES: Record<
       'name',
       'tagline',
       'categories',
+      'tags',
       'mainDescription',
       'logoUrl',
       'websiteUrl',
       'appUrl',
+      'whitePaper',
     ],
   },
   [CreateProjectStep.Dates]: {
@@ -36,7 +37,7 @@ export const CATEGORIES: Record<
   [CreateProjectStep.Technicals]: {
     title: 'Technicals',
     description: '',
-    items: ['openSource', 'codeRepo', 'tokenContract'],
+    items: ['openSource', 'codeRepo', 'tokenContract', 'dappSmartContracts'],
   },
   [CreateProjectStep.Organization]: {
     title: 'Organization',
