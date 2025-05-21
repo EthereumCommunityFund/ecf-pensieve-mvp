@@ -64,6 +64,7 @@ export interface IVoteResultOfProject {
   */
   voteResultOfProposalMap: Record<number, IVoteResultOfProposal>;
   leadingProposalId?: number;
+  leadingProposal?: IProposal;
   /**
    * if leadingProposalId is not set, leadingProposalResult will be the default proposal result
    */
@@ -170,10 +171,7 @@ const ProposalVoteUtils = {
 
     const userWeightMap = votesOfProposal.reduce(
       (acc, vote) => {
-        const creator = vote.creator;
-        if (!creator || !creator.userId) return acc;
-
-        const userId = creator.userId;
+        const userId = vote.creator.userId;
         // use vote.weight, not creator.weight, because vote.weight is the snapshotted weight of the user when he voted
         const userWeight = Number(vote.weight || 0);
 
@@ -251,7 +249,10 @@ const ProposalVoteUtils = {
       const currentProposalId = Number(proposalIdStr);
       const result = voteResultOfProposalMap[currentProposalId];
 
-      if (result.percentageOfProposal > maxPercentage) {
+      if (
+        result.percentageOfProposal > 0 &&
+        result.percentageOfProposal > maxPercentage
+      ) {
         maxPercentage = result.percentageOfProposal;
         leadingProposalId = currentProposalId;
       }
@@ -260,6 +261,11 @@ const ProposalVoteUtils = {
         canBePublished = true;
       }
     }
+
+    const leadingProposal =
+      leadingProposalId !== undefined
+        ? proposals.find((p) => p.id === leadingProposalId)
+        : undefined;
 
     const leadingProposalResult =
       leadingProposalId !== undefined
@@ -271,6 +277,7 @@ const ProposalVoteUtils = {
       votesOfProposalMap,
       voteResultOfProposalMap,
       leadingProposalId,
+      leadingProposal,
       leadingProposalResult,
       canBePublished,
     };
