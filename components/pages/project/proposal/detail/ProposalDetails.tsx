@@ -28,7 +28,7 @@ import { safeGetLocalStorage } from '@/utils/localStorage';
 import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
-import { CATEGORIES, FIELD_LABELS } from './constants';
+import { FIELD_LABELS, TableFieldCategory } from './constants';
 import CancelVoteModal from './table/CancelVoteModal';
 import ReferenceModal from './table/ReferenceModal';
 import SwitchVoteModal from './table/SwitchVoteModal';
@@ -382,7 +382,7 @@ const ProposalDetails = ({
     // Iterate over each category defined in CreateProjectStep
     for (const catKey of Object.values(CreateProjectStep)) {
       const category = catKey as CategoryKey;
-      const categoryItems = CATEGORIES[category]?.items || [];
+      const categoryItems = TableFieldCategory[category]?.items || [];
 
       // For each item key defined in the category's items
       categoryItems.forEach((itemKey: string) => {
@@ -679,8 +679,8 @@ const ProposalDetails = ({
       <div className="flex flex-col gap-[20px]">
         <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
-            CATEGORIES[CreateProjectStep.Basics].title,
-            CATEGORIES[CreateProjectStep.Basics].description,
+            TableFieldCategory[CreateProjectStep.Basics].title,
+            TableFieldCategory[CreateProjectStep.Basics].description,
             CreateProjectStep.Basics,
           )}
           <div style={getAnimationStyle(expanded[CreateProjectStep.Basics])}>
@@ -690,8 +690,8 @@ const ProposalDetails = ({
 
         <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
-            CATEGORIES[CreateProjectStep.Dates].title,
-            CATEGORIES[CreateProjectStep.Dates].description,
+            TableFieldCategory[CreateProjectStep.Dates].title,
+            TableFieldCategory[CreateProjectStep.Dates].description,
             CreateProjectStep.Dates,
           )}
           <div style={getAnimationStyle(expanded[CreateProjectStep.Dates])}>
@@ -701,8 +701,8 @@ const ProposalDetails = ({
 
         <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
-            CATEGORIES[CreateProjectStep.Technicals].title,
-            CATEGORIES[CreateProjectStep.Technicals].description,
+            TableFieldCategory[CreateProjectStep.Technicals].title,
+            TableFieldCategory[CreateProjectStep.Technicals].description,
             CreateProjectStep.Technicals,
           )}
           <div
@@ -714,8 +714,8 @@ const ProposalDetails = ({
 
         <div className="overflow-hidden rounded-[10px] bg-white">
           {renderCategoryHeader(
-            CATEGORIES[CreateProjectStep.Organization].title,
-            CATEGORIES[CreateProjectStep.Organization].description,
+            TableFieldCategory[CreateProjectStep.Organization].title,
+            TableFieldCategory[CreateProjectStep.Organization].description,
             CreateProjectStep.Organization,
           )}
           <div
