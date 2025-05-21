@@ -81,7 +81,7 @@ const ProjectPage = () => {
   }, [projectId, votesOfProject, proposals, userId]);
 
   const onSubmitProposal = useCallback(() => {
-    router.push(`/project/${projectId}/proposal/create`);
+    router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
   return (

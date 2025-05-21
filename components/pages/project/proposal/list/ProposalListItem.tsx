@@ -117,7 +117,7 @@ const ProposalListItem = ({
         </span>
       </div>
 
-      <Link href={`/project/${projectId}/proposal/${proposal.id}`}>
+      <Link href={`/project/pending/${projectId}/proposal/${proposal.id}`}>
         <Button color="secondary" className="w-full">
           View Proposal
         </Button>

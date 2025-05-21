@@ -89,7 +89,7 @@ const PendingProjectCard = ({
       )}
     >
       <Link
-        href={`/project/${project.id}`}
+        href={`/project/pending/${project.id}`}
         className={cn(
           'flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-[10px] transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]',
           'mobile:flex-col mobile:items-start',
