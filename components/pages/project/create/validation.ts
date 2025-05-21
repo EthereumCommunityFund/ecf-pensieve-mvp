@@ -30,6 +30,11 @@ export const basicsSchema = yup.object().shape({
     .of(yup.string().required())
     .min(1, 'Select at least one category')
     .required('Categories are required'),
+  tags: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one tag')
+    .required('Tags are required'),
   mainDescription: yup
     .string()
     .required('Main description is required')
@@ -48,6 +53,10 @@ export const basicsSchema = yup.object().shape({
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('App URL is required when applicable'),
+  whitePaper: yup
+    .string()
+    .url('Please enter a valid URL')
+    .required('Whitepaper URL is required when applicable'),
 });
 
 // Step 2: Dates & Statuses
@@ -74,6 +83,10 @@ export const technicalsSchema = yup.object().shape({
     .string()
     .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
     .required('Token contract address is required when applicable'),
+  dappSmartContracts: yup
+    .string()
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
+    .required('Dapp smart contract address is required when applicable'),
 });
 
 // Step 4: Organization
