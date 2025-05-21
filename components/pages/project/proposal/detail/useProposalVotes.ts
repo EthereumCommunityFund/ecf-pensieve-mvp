@@ -62,9 +62,10 @@ export function useProposalVotes(
         proposalId: Number(proposal?.id),
         votesOfProposal: votesOfProposal || [],
         key,
+        userId: profile?.userId,
       });
     },
-    [votesOfProposal, proposal],
+    [votesOfProposal, proposal, profile],
   );
 
   const votesOfKeyInProposalMap = useMemo(() => {
