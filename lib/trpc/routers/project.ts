@@ -3,16 +3,17 @@ import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import {
+  ESSENTIAL_ITEM_AMOUNT,
   ESSENTIAL_ITEM_WEIGHT_AMOUNT,
   QUORUM_AMOUNT,
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
 import { profiles, projects } from '@/lib/db/schema';
-import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
+import { projectLogs } from '@/lib/db/schema/projectLogs';
 
 import { proposalRouter } from './proposal';
 
@@ -225,90 +226,84 @@ export const projectRouter = router({
       },
     });
 
+    type Proposal = (typeof pendingProjects)[number]['proposals'][number];
+    type VoteRecord = Proposal['voteRecords'][number];
     type ProposalItem = { key: string; value: unknown };
-    type VoteRecord =
-      (typeof pendingProjects)[number]['proposals'][number]['voteRecords'][number];
 
-    const filteredProjects = pendingProjects.filter((project) => {
+    const isProposalValid = (proposal: Proposal): boolean => {
+      if (!proposal || !proposal.items || !proposal.voteRecords) {
+        return false;
+      }
+
+      const itemsArray = proposal.items as ProposalItem[] | null | undefined;
+
       if (
-        !project.proposals ||
-        !Array.isArray(project.proposals) ||
-        project.proposals.length === 0
+        !itemsArray ||
+        !Array.isArray(itemsArray) ||
+        itemsArray.length === 0 ||
+        proposal.voteRecords.length < QUORUM_AMOUNT * ESSENTIAL_ITEM_AMOUNT
       ) {
         return false;
       }
 
-      return project.proposals.every((proposal) => {
-        const itemsArray = proposal.items as ProposalItem[] | null | undefined;
-        if (
-          !itemsArray ||
-          !Array.isArray(itemsArray) ||
-          itemsArray.length === 0
-        ) {
+      const votesByItemKey = new Map<string, VoteRecord[]>();
+      for (const voteRecord of proposal.voteRecords) {
+        const itemKeyForVote = String(voteRecord.key);
+        if (!votesByItemKey.has(itemKeyForVote)) {
+          votesByItemKey.set(itemKeyForVote, []);
+        }
+        votesByItemKey.get(itemKeyForVote)!.push(voteRecord);
+      }
+
+      return itemsArray.every((item) => {
+        const currentItemKey = String(item.key);
+        const votesForItem = votesByItemKey.get(currentItemKey) || [];
+
+        const voterWeights = new Map<string, number>();
+        for (const vote of votesForItem) {
+          const creatorId = String(vote.creator);
+          voterWeights.set(creatorId, vote.weight ?? 0);
+        }
+
+        const distinctVotersCount = voterWeights.size;
+        if (distinctVotersCount < QUORUM_AMOUNT) {
           return false;
         }
 
-        const votesByItemKey = new Map<string, VoteRecord[]>();
-        if (proposal.voteRecords && Array.isArray(proposal.voteRecords)) {
-          for (const voteRecord of proposal.voteRecords) {
-            const itemKeyForVote = String(voteRecord.key);
-            if (!votesByItemKey.has(itemKeyForVote)) {
-              votesByItemKey.set(itemKeyForVote, []);
-            }
-            votesByItemKey.get(itemKeyForVote)!.push(voteRecord);
-          }
+        let totalWeight = 0;
+        for (const weight of voterWeights.values()) {
+          totalWeight += weight;
         }
 
-        return itemsArray.every((item) => {
-          const currentItemKey = String(item.key);
-          const votesForItem = votesByItemKey.get(currentItemKey) || [];
-
-          if (votesForItem.length < QUORUM_AMOUNT) {
-            return false;
-          }
-
-          const voterWeights = new Map<string, number>();
-
-          for (const vote of votesForItem) {
-            const creatorId = String(vote.creator);
-            if (!voterWeights.has(creatorId)) {
-              voterWeights.set(creatorId, vote.weight ?? 0);
-            }
-          }
-
-          const distinctVotersCount = voterWeights.size;
-
-          if (distinctVotersCount < QUORUM_AMOUNT) {
-            return false;
-          }
-
-          let totalWeight = 0;
-          for (const weight of voterWeights.values()) {
-            totalWeight += weight;
-          }
-
-          const pocItemConfig =
-            POC_ITEMS[currentItemKey as keyof typeof POC_ITEMS];
-          if (
-            !pocItemConfig ||
-            typeof pocItemConfig.accountability_metric !== 'number'
-          ) {
-            return false;
-          }
-
-          return totalWeight > pocItemConfig.accountability_metric * WEIGHT;
-        });
+        const pocItemConfig =
+          POC_ITEMS[currentItemKey as keyof typeof POC_ITEMS];
+        if (
+          !pocItemConfig ||
+          typeof pocItemConfig.accountability_metric !== 'number'
+        ) {
+          return false;
+        }
+        return totalWeight >= pocItemConfig.accountability_metric * WEIGHT;
       });
-    });
+    };
+
+    const filteredProjects = pendingProjects
+      .map((project) => {
+        const validProposals = (project.proposals || []).filter(
+          isProposalValid,
+        );
+        return { ...project, proposals: validProposals };
+      })
+      .filter((project) => project.proposals.length > 0);
 
     for (const project of filteredProjects) {
-      ctx.db
+      await ctx.db
         .update(projects)
         .set({ isPublished: true })
         .where(eq(projects.id, project.id));
       if (project.proposals && Array.isArray(project.proposals)) {
         for (const proposal of project.proposals) {
-          ctx.db.insert(projectLogs).values({
+          await ctx.db.insert(projectLogs).values({
             projectId: project.id,
             proposalId: proposal.id,
           });
@@ -318,7 +313,7 @@ export const projectRouter = router({
             });
 
             if (userProfile) {
-              ctx.db
+              await ctx.db
                 .update(profiles)
                 .set({
                   weight:
