@@ -191,6 +191,12 @@ export const projectRouter = router({
       const project = await ctx.db.query.projects.findFirst({
         with: {
           creator: true,
+          proposals: {
+            with: {
+              voteRecords: true,
+              creator: true,
+            },
+          },
         },
         where: eq(projects.id, input.id),
       });
