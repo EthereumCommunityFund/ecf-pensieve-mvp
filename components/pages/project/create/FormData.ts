@@ -95,8 +95,8 @@ export const basicsFieldsConfig: {
     minRows: 4,
     showReference: true,
   },
-  projectLogo: {
-    key: 'projectLogo',
+  logoUrl: {
+    key: 'logoUrl',
     label: 'Project Logo',
     description: 'provide a logo for this project',
     shortDescription: 'The visual logo of the project.',
@@ -306,7 +306,7 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
   tagline: '',
   categories: [],
   mainDescription: '',
-  projectLogo: '',
+  logoUrl: '',
   websiteUrl: '',
   appUrl: null,
   dateFounded: null,
@@ -329,7 +329,7 @@ export const convertProjectToFormData = (
     tagline: project.tagline,
     categories: project.categories,
     mainDescription: project.mainDescription,
-    projectLogo: project.logoUrl,
+    logoUrl: project.logoUrl,
     websiteUrl: project.websiteUrl,
     appUrl: project.appUrl || null,
     dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,

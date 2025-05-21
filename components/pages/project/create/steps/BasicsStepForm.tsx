@@ -140,14 +140,14 @@ const BasicsStepForm: React.FC<
 
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
-          fieldConfig: basicsFieldsConfig.projectLogo,
+          fieldConfig: basicsFieldsConfig.logoUrl,
           onAddReference: onAddReference,
           hasFieldReference,
         })}
       >
         <div className="flex items-center gap-4">
           <Controller
-            name={basicsFieldsConfig.projectLogo.key}
+            name={basicsFieldsConfig.logoUrl.key}
             control={control}
             render={({ field, fieldState: { error } }) => (
               <div>
@@ -160,13 +160,13 @@ const BasicsStepForm: React.FC<
                     size="lg"
                     icon={<ImageIcon className="size-[64px] text-gray-400" />}
                     src={field.value ?? undefined}
-                    alt={basicsFieldsConfig.projectLogo.label}
+                    alt={basicsFieldsConfig.logoUrl.label}
                     className="size-[140px] cursor-pointer border border-dashed border-gray-300 bg-black/5 hover:bg-gray-200"
                   />
                 </PhotoUpload>
-                {errors.projectLogo && (
+                {errors.logoUrl && (
                   <p className="text-danger text-[12px]">
-                    {errors.projectLogo.message}
+                    {errors.logoUrl.message}
                   </p>
                 )}
               </div>

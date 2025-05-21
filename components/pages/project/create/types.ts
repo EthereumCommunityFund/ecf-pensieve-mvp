@@ -39,7 +39,7 @@ export interface ProjectFormData {
   tagline: string;
   categories: string[];
   mainDescription: string;
-  projectLogo: string | null;
+  logoUrl: string | null;
   websiteUrl: string;
   appUrl: string | null;
 
@@ -118,7 +118,7 @@ export const stepFields = {
     'tagline',
     'categories',
     'mainDescription',
-    'projectLogo',
+    'logoUrl',
     'websiteUrl',
     'appUrl',
   ],

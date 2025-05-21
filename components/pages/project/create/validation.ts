@@ -34,7 +34,7 @@ export const basicsSchema = yup.object().shape({
     .string()
     .required('Main description is required')
     .max(250, 'Main description cannot exceed 250 characters'),
-  projectLogo: yup
+  logoUrl: yup
     .string()
     .url('Invalid Logo URL')
     .required('Project logo is required'),

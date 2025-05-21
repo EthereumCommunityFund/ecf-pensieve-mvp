@@ -20,7 +20,7 @@ export const transformProjectData = (
     tagline: formData.tagline,
     categories: formData.categories,
     mainDescription: formData.mainDescription,
-    logoUrl: formData.projectLogo || '',
+    logoUrl: formData.logoUrl || '',
     websiteUrl: normalizeUrl(formData.websiteUrl) || '',
     appUrl: fieldApplicability['appUrl']
       ? normalizeUrl(formData.appUrl) || undefined
@@ -71,7 +71,7 @@ export const transformProposalData = (
     { key: 'tagline', value: formData.tagline },
     { key: 'categories', value: JSON.stringify(formData.categories) },
     { key: 'mainDescription', value: formData.mainDescription },
-    { key: 'logoUrl', value: formData.projectLogo || '' },
+    { key: 'logoUrl', value: formData.logoUrl || '' },
     { key: 'websiteUrl', value: normalizeUrl(formData.websiteUrl) || '' },
   ];
 
