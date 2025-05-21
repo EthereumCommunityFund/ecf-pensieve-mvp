@@ -67,10 +67,8 @@ export interface IVoteResultOfProject {
 }
 
 const ProposalVoteUtils = {
-  getVoteResultOfItem: (params: IVoteResultOfItemParams): IVoteResultOfItem => {
-    const { proposalId, votesOfProposal, key } = params;
-
-    const votesOfKeyInProposalMap = (votesOfProposal || []).reduce(
+  groupVotesByKey: (votes: IVote[] = []): Record<string, IVote[]> => {
+    return votes.reduce(
       (acc, vote) => {
         if (!acc[vote.key]) {
           acc[vote.key] = [];
@@ -80,17 +78,38 @@ const ProposalVoteUtils = {
       },
       {} as Record<string, IVote[]>,
     );
+  },
+  groupVotesByProposalId: (votes: IVote[] = []): Record<number, IVote[]> => {
+    return votes.reduce(
+      (acc, vote) => {
+        if (!acc[vote.proposalId]) {
+          acc[vote.proposalId] = [];
+        }
+        acc[vote.proposalId].push(vote);
+        return acc;
+      },
+      {} as Record<number, IVote[]>,
+    );
+  },
+  getVoteResultOfItem: (params: IVoteResultOfItemParams): IVoteResultOfItem => {
+    const { proposalId, votesOfProposal = [], key } = params;
 
-    const getItemPoints = (key: string) => {
+    const votesOfKeyInProposalMap =
+      ProposalVoteUtils.groupVotesByKey(votesOfProposal);
+
+    const getItemPoints = (key: string): number => {
       const votesOfKey = votesOfKeyInProposalMap[key] || [];
-      return votesOfKey.reduce((acc, vote) => acc + Number(vote.weight), 0);
+      return votesOfKey.reduce(
+        (acc, vote) => acc + Number(vote.weight || 0),
+        0,
+      );
     };
 
-    const itemVotedMemberCount = (votesOfKeyInProposalMap[key] || []).length;
+    const itemVotedMemberCount = votesOfKeyInProposalMap[key]?.length || 0;
     const itemPoints = getItemPoints(key);
-    const itemPointsNeeded = ItemWeightMap[key];
+    const itemPointsNeeded = ItemWeightMap[key] || 0;
     const isItemReachPointsNeeded = itemPoints >= itemPointsNeeded;
-    const isItemReachQuorum = itemVotedMemberCount >= ItemQuorumMap[key];
+    const isItemReachQuorum = itemVotedMemberCount >= (ItemQuorumMap[key] || 0);
     const isItemValidated = isItemReachQuorum && isItemReachPointsNeeded;
 
     return {
@@ -107,38 +126,27 @@ const ProposalVoteUtils = {
   getVoteResultOfProposal: (
     params: IGetVoteResultOfProposalParams,
   ): IVoteResultOfProposal => {
-    const { proposalId, votesOfProposal } = params;
+    const { proposalId, votesOfProposal = [] } = params;
 
-    const votesOfKeyInProposalMap = (votesOfProposal || []).reduce(
-      (acc, vote) => {
-        if (!acc[vote.key]) {
-          acc[vote.key] = [];
-        }
-        acc[vote.key].push(vote);
-        return acc;
-      },
-      {} as Record<string, IVote[]>,
-    );
+    const votesOfKeyInProposalMap =
+      ProposalVoteUtils.groupVotesByKey(votesOfProposal);
 
-    const totalValidPointsOfProposal = (votesOfProposal || []).reduce(
-      (acc, vote) => {
-        const weight = Number(vote.weight);
-        const itemPointsNeeded = ItemWeightMap[vote.key];
-        const shouldAddPoints =
-          weight >= itemPointsNeeded ? itemPointsNeeded : weight;
-        return acc + shouldAddPoints;
-      },
-      0,
-    );
+    const totalValidPointsOfProposal = votesOfProposal.reduce((acc, vote) => {
+      const weight = Number(vote.weight || 0);
+      const itemPointsNeeded = ItemWeightMap[vote.key] || 0;
+      const shouldAddPoints = Math.min(weight, itemPointsNeeded);
+      return acc + shouldAddPoints;
+    }, 0);
 
-    const userWeightMap = (votesOfProposal || []).reduce(
+    const userWeightMap = votesOfProposal.reduce(
       (acc, vote) => {
-        const creator = vote.creator!;
-        const userWeight = Number(creator.weight);
-        acc = {
-          ...acc,
-          [creator.userId]: Math.max(acc[creator.userId] || 0, userWeight),
-        };
+        const creator = vote.creator;
+        if (!creator || !creator.userId) return acc;
+
+        const userId = creator.userId;
+        const userWeight = Number(creator.weight || 0);
+
+        acc[userId] = Math.max(acc[userId] || 0, userWeight);
         return acc;
       },
       {} as Record<string, number>,
@@ -146,14 +154,13 @@ const ProposalVoteUtils = {
 
     const totalSupportedUserWeightOfProposal = Object.values(
       userWeightMap,
-    ).reduce((acc, weight) => acc + weight, 0);
+    ).reduce((sum, weight) => sum + weight, 0);
 
-    const totalValidQuorumOfProposal = Object.keys(
+    const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
-    ).reduce((acc, key) => {
-      const votesOfKey = votesOfKeyInProposalMap[key] || [];
-      const quorum = ItemQuorumMap[key];
-      return acc + (votesOfKey.length >= quorum ? quorum : votesOfKey.length);
+    ).reduce((acc, [key, votes]) => {
+      const quorum = ItemQuorumMap[key] || 0;
+      return acc + Math.min(votes.length, quorum);
     }, 0);
 
     const percentageOfPointsNeededOfProposal =
@@ -165,7 +172,7 @@ const ProposalVoteUtils = {
     const percentageOfProposal =
       (percentageOfPointsNeededOfProposal + percentageOfQuorumOfProposal) / 2;
 
-    const formattedPercentageOfProposal = `${(percentageOfProposal * 100).toFixed(0)}%`;
+    const formattedPercentageOfProposal = `${Math.round(percentageOfProposal * 100)}%`;
 
     const isProposalValidated =
       totalValidPointsOfProposal >= TotalEssentialItemWeightSum &&
@@ -184,19 +191,13 @@ const ProposalVoteUtils = {
       isProposalValidated,
     };
   },
-  // TODO getProjects 接口, proposals -> voteRecords -> creator 的类型是userId，不是 creator
   getVoteResultOfProject: (
     params: IGetVoteResultOfProjectParams,
   ): IVoteResultOfProject => {
-    const { projectId, proposals, votesOfProject } = params;
+    const { projectId, proposals = [], votesOfProject = [] } = params;
 
-    const votesOfProposalMap = (votesOfProject || []).reduce(
-      (acc: Record<number, IVote[]>, vote: IVote) => {
-        acc[vote.proposalId] = [...(acc[vote.proposalId] || []), vote];
-        return acc;
-      },
-      {} as Record<number, IVote[]>,
-    );
+    const votesOfProposalMap =
+      ProposalVoteUtils.groupVotesByProposalId(votesOfProject);
 
     const voteResultOfProposalMap = (proposals || []).reduce(
       (acc: Record<number, IVoteResultOfProposal>, proposal: IProposal) => {
@@ -213,19 +214,17 @@ const ProposalVoteUtils = {
     let maxPercentage = -1;
     let canBePublished = false;
 
-    const proposalIds = Object.keys(voteResultOfProposalMap);
+    for (const proposalIdStr of Object.keys(voteResultOfProposalMap)) {
+      const currentProposalId = Number(proposalIdStr);
+      const result = voteResultOfProposalMap[currentProposalId];
 
-    if (proposalIds.length > 0) {
-      for (const proposalId of proposalIds) {
-        const currentProposalId = Number(proposalId);
-        const result = voteResultOfProposalMap[currentProposalId];
-        if (result && result.percentageOfProposal > maxPercentage) {
-          maxPercentage = result.percentageOfProposal;
-          leadingProposalId = currentProposalId;
-        }
-        if (result && result.isProposalValidated) {
-          canBePublished = true;
-        }
+      if (result.percentageOfProposal > maxPercentage) {
+        maxPercentage = result.percentageOfProposal;
+        leadingProposalId = currentProposalId;
+      }
+
+      if (result.isProposalValidated) {
+        canBePublished = true;
       }
     }
 
@@ -235,16 +234,17 @@ const ProposalVoteUtils = {
       totalValidPointsOfProposal: 0,
       totalSupportedUserWeightOfProposal: 0,
       totalValidQuorumOfProposal: 0,
-      TotalEssentialItemWeightSum: TotalEssentialItemWeightSum,
-      TotalEssentialItemQuorumSum: TotalEssentialItemQuorumSum,
+      TotalEssentialItemWeightSum,
+      TotalEssentialItemQuorumSum,
       percentageOfProposal: 0,
       formattedPercentageOfProposal: '0%',
       isProposalValidated: false,
     };
 
-    const leadingProposalResult = leadingProposalId
-      ? voteResultOfProposalMap[leadingProposalId]
-      : defaultProposalResult;
+    const leadingProposalResult =
+      leadingProposalId !== undefined
+        ? voteResultOfProposalMap[leadingProposalId]
+        : defaultProposalResult;
 
     return {
       projectId,
