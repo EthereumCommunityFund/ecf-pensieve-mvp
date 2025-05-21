@@ -9,11 +9,13 @@ import { IProposal, IVote } from '@/types';
 export interface IGetVoteResultOfProposalParams {
   proposalId: number;
   votesOfProposal: IVote[];
+  userId?: string;
 }
 
 export interface IVoteResultOfItemParams
   extends IGetVoteResultOfProposalParams {
   key: string;
+  userId?: string;
 }
 
 export interface IVoteResultOfProposal {
@@ -27,6 +29,7 @@ export interface IVoteResultOfProposal {
   percentageOfProposal: number;
   formattedPercentageOfProposal: string;
   isProposalValidated: boolean;
+  isUserVotedInProposal: boolean;
 }
 
 export interface IVoteResultOfItem {
@@ -38,12 +41,14 @@ export interface IVoteResultOfItem {
   isItemReachPointsNeeded: boolean;
   isItemReachQuorum: boolean;
   isItemValidated: boolean;
+  isUserVotedInItem: boolean;
 }
 
 export interface IGetVoteResultOfProjectParams {
   projectId: number;
   votesOfProject: IVote[];
   proposals: IProposal[];
+  userId?: string;
 }
 
 export interface IVoteResultOfProject {
@@ -65,6 +70,20 @@ export interface IVoteResultOfProject {
   leadingProposalResult: IVoteResultOfProposal;
   canBePublished: boolean;
 }
+
+const DefaultProposalResult: IVoteResultOfProposal = {
+  proposalId: 0,
+  votesOfKeyInProposalMap: {},
+  totalValidPointsOfProposal: 0,
+  totalSupportedUserWeightOfProposal: 0,
+  totalValidQuorumOfProposal: 0,
+  TotalEssentialItemWeightSum,
+  TotalEssentialItemQuorumSum,
+  percentageOfProposal: 0,
+  formattedPercentageOfProposal: '0%',
+  isProposalValidated: false,
+  isUserVotedInProposal: false,
+};
 
 const ProposalVoteUtils = {
   groupVotesByKey: (votes: IVote[] = []): Record<string, IVote[]> => {
@@ -92,10 +111,16 @@ const ProposalVoteUtils = {
     );
   },
   getVoteResultOfItem: (params: IVoteResultOfItemParams): IVoteResultOfItem => {
-    const { proposalId, votesOfProposal = [], key } = params;
+    const { proposalId, votesOfProposal = [], key, userId } = params;
 
     const votesOfKeyInProposalMap =
       ProposalVoteUtils.groupVotesByKey(votesOfProposal);
+
+    const isUserVotedInItem = userId
+      ? votesOfKeyInProposalMap[key]?.some(
+          (vote) => vote.creator?.userId === userId,
+        )
+      : false;
 
     const getItemPoints = (key: string): number => {
       const votesOfKey = votesOfKeyInProposalMap[key] || [];
@@ -121,12 +146,17 @@ const ProposalVoteUtils = {
       isItemReachPointsNeeded,
       isItemReachQuorum,
       isItemValidated,
+      isUserVotedInItem,
     };
   },
   getVoteResultOfProposal: (
     params: IGetVoteResultOfProposalParams,
   ): IVoteResultOfProposal => {
-    const { proposalId, votesOfProposal = [] } = params;
+    const { proposalId, votesOfProposal = [], userId } = params;
+
+    const isUserVotedInProposal = userId
+      ? votesOfProposal.some((vote) => vote.creator?.userId === userId)
+      : false;
 
     const votesOfKeyInProposalMap =
       ProposalVoteUtils.groupVotesByKey(votesOfProposal);
@@ -189,12 +219,13 @@ const ProposalVoteUtils = {
       percentageOfProposal,
       formattedPercentageOfProposal,
       isProposalValidated,
+      isUserVotedInProposal,
     };
   },
   getVoteResultOfProject: (
     params: IGetVoteResultOfProjectParams,
   ): IVoteResultOfProject => {
-    const { projectId, proposals = [], votesOfProject = [] } = params;
+    const { projectId, proposals = [], votesOfProject = [], userId } = params;
 
     const votesOfProposalMap =
       ProposalVoteUtils.groupVotesByProposalId(votesOfProject);
@@ -204,6 +235,7 @@ const ProposalVoteUtils = {
         acc[proposal.id] = ProposalVoteUtils.getVoteResultOfProposal({
           proposalId: proposal.id,
           votesOfProposal: votesOfProposalMap[proposal.id] || [],
+          userId,
         });
         return acc;
       },
@@ -228,23 +260,10 @@ const ProposalVoteUtils = {
       }
     }
 
-    const defaultProposalResult: IVoteResultOfProposal = {
-      proposalId: 0,
-      votesOfKeyInProposalMap: {},
-      totalValidPointsOfProposal: 0,
-      totalSupportedUserWeightOfProposal: 0,
-      totalValidQuorumOfProposal: 0,
-      TotalEssentialItemWeightSum,
-      TotalEssentialItemQuorumSum,
-      percentageOfProposal: 0,
-      formattedPercentageOfProposal: '0%',
-      isProposalValidated: false,
-    };
-
     const leadingProposalResult =
       leadingProposalId !== undefined
         ? voteResultOfProposalMap[leadingProposalId]
-        : defaultProposalResult;
+        : DefaultProposalResult;
 
     return {
       projectId,

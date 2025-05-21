@@ -90,9 +90,7 @@ const ProposalDetails = ({
   const isOverallLoading = !proposal;
 
   const {
-    votesOfKeyInProposalMap,
     userVotesOfProposalMap,
-    isUserVotedInProposal,
     isFetchVoteInfoLoading,
     isVoteActionPending,
     getItemVoteResult,
@@ -316,7 +314,6 @@ const ProposalDetails = ({
       size: 220,
       cell: (info) => {
         const key = info.row.original.key;
-        const isUserVoted = isUserVotedInProposal(key);
         const isLoading =
           (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
         const {
@@ -326,6 +323,7 @@ const ProposalDetails = ({
           isItemReachPointsNeeded,
           isItemReachQuorum,
           isItemValidated,
+          isUserVotedInItem,
         } = getItemVoteResult(key);
         return (
           <VoteItem
@@ -339,7 +337,7 @@ const ProposalDetails = ({
             proposal={proposal!}
             proposalItem={info.row.original}
             isLoading={isLoading}
-            isUserVoted={isUserVoted}
+            isUserVoted={isUserVotedInItem}
             votedMemberCount={itemVotedMemberCount}
             onAction={() => onVoteAction(info.row.original)}
           />
@@ -365,7 +363,6 @@ const ProposalDetails = ({
     onVoteAction,
     isFetchVoteInfoLoading,
     isVoteActionPending,
-    isUserVotedInProposal,
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,

@@ -1,7 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-
 import ECFTypography from '@/components/base/typography';
 import { IProposal } from '@/types';
 import { IVoteResultOfProposal } from '@/utils/proposal';
@@ -27,11 +25,6 @@ const ProposalList = ({
   leadingProposalResult,
   voteResultOfProposalMap,
 }: ProposalListProps) => {
-  const userVotedProposalIds = useMemo(() => {
-    // TODO  获取用户投票记录 api
-    return [] as number[];
-  }, []);
-
   if (isLoading) {
     return (
       <div className="mt-[20px] flex flex-col gap-[20px]">
@@ -61,8 +54,6 @@ const ProposalList = ({
           proposal={proposal}
           projectId={projectId}
           isLeading={proposal.id === leadingProposalId}
-          hasVoted={true}
-          // hasVoted={userVotedProposalIds.includes(proposal.id)}
           voteResultOfProposal={voteResultOfProposalMap[proposal.id]}
         />
       ))}

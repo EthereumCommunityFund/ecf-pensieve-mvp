@@ -4,6 +4,7 @@ import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { useAuth } from '@/context/AuthContext';
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
@@ -43,6 +44,9 @@ const PendingProjectCard = ({
   project,
   showBorder = false,
 }: IProjectCardProps) => {
+  const { profile } = useAuth();
+  const userId = profile?.userId;
+
   const { leadingProposalId, leadingProposalResult, voteResultOfProposalMap } =
     useMemo(() => {
       return ProposalVoteUtils.getVoteResultOfProject({
@@ -51,8 +55,9 @@ const PendingProjectCard = ({
           (proposal) => proposal.voteRecords || [],
         ),
         proposals: project.proposals,
+        userId,
       });
-    }, [project]);
+    }, [project, userId]);
 
   const {
     formattedPercentageOfProposal,
@@ -129,7 +134,6 @@ const PendingProjectCard = ({
           </div>
         </div>
 
-        {/* vote info */}
         <div
           className={cn(
             'flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px] text-[14px] leading-[19px] text-black',

@@ -7,6 +7,7 @@ import { useCallback, useMemo } from 'react';
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -14,6 +15,8 @@ import ProposalVoteUtils from '@/utils/proposal';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
+  const { profile } = useAuth();
+  const userId = profile?.userId;
   const router = useRouter();
 
   const {
@@ -69,8 +72,9 @@ const ProjectPage = () => {
         projectId: Number(projectId),
         votesOfProject: votesOfProject || [],
         proposals: proposals || [],
+        userId,
       });
-    }, [projectId, votesOfProject, proposals]);
+    }, [projectId, votesOfProject, proposals, userId]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/${projectId}/proposal/create`);
@@ -90,7 +94,7 @@ const ProjectPage = () => {
         </div>
       </BackHeader>
 
-      <ProjectCard project={project} proposals={proposals} />
+      <ProjectCard project={project as IProject} proposals={proposals} />
 
       {/* Proposal list */}
       <div

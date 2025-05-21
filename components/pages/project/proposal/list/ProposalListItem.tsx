@@ -16,7 +16,6 @@ interface ProposalListItemProps {
   index: number;
   projectId: number;
   isLeading?: boolean;
-  hasVoted?: boolean;
   voteResultOfProposal?: IVoteResultOfProposal;
 }
 
@@ -25,25 +24,16 @@ const ProposalListItem = ({
   projectId,
   index,
   isLeading = false,
-  hasVoted = true,
   voteResultOfProposal,
 }: ProposalListItemProps) => {
-  const proposalName = useMemo(() => {
-    const nameItem = proposal.items.find(
-      (item: any) => item.key === 'projectName',
-    ) as { key: string; value: string } | undefined;
-    return nameItem?.value || 'Unnamed Proposal';
-  }, [proposal.items]);
-
   const {
     totalValidPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
-    percentageOfProposal,
     formattedPercentageOfProposal,
     TotalEssentialItemWeightSum,
     TotalEssentialItemQuorumSum,
-    isProposalValidated,
+    isUserVotedInProposal,
   } = voteResultOfProposal || {};
 
   const formattedDate = useMemo(() => {
@@ -70,7 +60,7 @@ const ProposalListItem = ({
       {/* leading */}
       <div className="flex items-center gap-[10px]">
         {isLeading && <ActiveLeadingLabel />}
-        {hasVoted && <VotedLabel />}
+        {isUserVotedInProposal && <VotedLabel />}
       </div>
 
       {/* title and date */}
