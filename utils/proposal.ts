@@ -174,7 +174,8 @@ const ProposalVoteUtils = {
         if (!creator || !creator.userId) return acc;
 
         const userId = creator.userId;
-        const userWeight = Number(creator.weight || 0);
+        // use vote.weight, not creator.weight, because vote.weight is the snapshotted weight of the user when he voted
+        const userWeight = Number(vote.weight || 0);
 
         acc[userId] = Math.max(acc[userId] || 0, userWeight);
         return acc;
