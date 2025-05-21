@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 
 import { Button } from '@/components/base';
 import { IProposal } from '@/types';
+import { IVoteResultOfProposal } from '@/utils/proposal';
 
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
@@ -16,6 +17,7 @@ interface ProposalListItemProps {
   projectId: number;
   isLeading?: boolean;
   hasVoted?: boolean;
+  voteResultOfProposal?: IVoteResultOfProposal;
 }
 
 const ProposalListItem = ({
@@ -24,6 +26,7 @@ const ProposalListItem = ({
   index,
   isLeading = false,
   hasVoted = true,
+  voteResultOfProposal,
 }: ProposalListItemProps) => {
   const proposalName = useMemo(() => {
     const nameItem = proposal.items.find(
@@ -31,6 +34,17 @@ const ProposalListItem = ({
     ) as { key: string; value: string } | undefined;
     return nameItem?.value || 'Unnamed Proposal';
   }, [proposal.items]);
+
+  const {
+    totalValidPointsOfProposal,
+    totalSupportedUserWeightOfProposal,
+    totalValidQuorumOfProposal,
+    percentageOfProposal,
+    formattedPercentageOfProposal,
+    TotalEssentialItemWeightSum,
+    TotalEssentialItemQuorumSum,
+    isProposalValidated,
+  } = voteResultOfProposal || {};
 
   const formattedDate = useMemo(() => {
     const date = new Date(proposal.createdAt);
@@ -62,7 +76,7 @@ const ProposalListItem = ({
       {/* title and date */}
       <div className="flex items-center gap-[10px] border-b border-black/10 pb-[10px]">
         <p className="font-mona text-[18px] font-[700] leading-[1.6] text-black">
-          Proposal {index + 1}
+          Proposal {proposal.id}
         </p>
         <span className="text-[14px] font-[400] leading-[20px] text-black">
           {formattedDate}
@@ -72,12 +86,12 @@ const ProposalListItem = ({
       {/* progress */}
       <div className="flex items-center gap-[10px]">
         <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
-          {progressPercentage}%
+          {formattedPercentageOfProposal}
         </span>
         <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
           <div
             className="h-[7px] bg-black"
-            style={{ width: `${progressPercentage}%` }}
+            style={{ width: formattedPercentageOfProposal }}
           ></div>
         </div>
       </div>
@@ -86,15 +100,21 @@ const ProposalListItem = ({
       <div className="flex flex-col gap-[10px] text-[14px] font-[600] leading-[19px] text-black">
         <div className="flex items-center justify-between">
           <span>Points Needed</span>
-          <span className="text-black/60">00/00</span>
+          <span className="text-black/60">
+            {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <span>Supported</span>
-          <span className="text-black/60">82</span>
+          <span className="text-black/60">
+            {totalSupportedUserWeightOfProposal}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <span>quorum</span>
-          <span className="text-black/60">00/00</span>
+          <span className="text-black/60">
+            {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+          </span>
         </div>
       </div>
 

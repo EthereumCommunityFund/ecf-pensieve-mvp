@@ -1,11 +1,11 @@
 import { cn, Skeleton } from '@heroui/react';
 import { FC, useMemo } from 'react';
 
-import { IProposal } from '@/types';
 import {
   TotalEssentialItemQuorumSum,
   TotalEssentialItemWeightSum,
 } from '@/constants/proposal';
+import { IProposal } from '@/types';
 
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
@@ -23,16 +23,15 @@ interface IProposalDetailCardProps {
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
   const { proposal, projectId, isLeading, hasVoted, proposalIndex } = props;
 
+  const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
+
   const {
+    percentageOfProposal,
     totalValidPointsOfProposal,
     totalSupportedUserWeightOfProposal,
+    formattedPercentageOfProposal,
     totalValidQuorumOfProposal,
-    percentageOfProposal,
-  } = useProposalVotes(proposal, projectId);
-
-  const formattedPercentageOfProposal = useMemo(() => {
-    return `${(percentageOfProposal * 100).toFixed(0)}%`;
-  }, [percentageOfProposal]);
+  } = voteResultOfProposal;
 
   const formattedDate = useMemo(() => {
     if (!proposal) return '';
@@ -104,7 +103,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
             <div
               className="h-[7px] bg-black"
-              style={{ width: `${percentageOfProposal * 100}%` }}
+              style={{ width: formattedPercentageOfProposal }}
             ></div>
           </div>
         </div>

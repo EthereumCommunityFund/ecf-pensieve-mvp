@@ -2,7 +2,7 @@
 
 import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
@@ -10,6 +10,7 @@ import ProposalList from '@/components/pages/project/proposal/list/ProposalList'
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils from '@/utils/proposal';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
@@ -44,6 +45,32 @@ const ProjectPage = () => {
       },
     },
   );
+
+  const {
+    data: votesOfProject,
+    isLoading: isVotesOfProjectLoading,
+    isFetched: isVotesOfProjectFetched,
+    isFetching: isVotesOfProjectFetching,
+    refetch: refetchVotesOfProject,
+  } = trpc.vote.getVotesByProjectId.useQuery(
+    { projectId: Number(projectId) },
+    {
+      enabled: !!projectId,
+      select: (data) => {
+        devLog('getVotesByProjectId', data);
+        return data;
+      },
+    },
+  );
+
+  const { leadingProposalId, leadingProposalResult, voteResultOfProposalMap } =
+    useMemo(() => {
+      return ProposalVoteUtils.getVoteResultOfProject({
+        projectId: Number(projectId),
+        votesOfProject: votesOfProject || [],
+        proposals: proposals || [],
+      });
+    }, [projectId, votesOfProject, proposals]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/${projectId}/proposal/create`);
@@ -92,6 +119,9 @@ const ProjectPage = () => {
             projectId={Number(projectId)}
             isLoading={isProposalsLoading}
             isFetched={isProposalsFetched}
+            leadingProposalId={leadingProposalId}
+            leadingProposalResult={leadingProposalResult}
+            voteResultOfProposalMap={voteResultOfProposalMap}
           />
         </div>
 

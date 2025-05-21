@@ -95,12 +95,7 @@ const ProposalDetails = ({
     isUserVotedInProposal,
     isFetchVoteInfoLoading,
     isVoteActionPending,
-    getItemPoints,
-    getItemVotedMemberCount,
-    getItemPointsNeeded,
-    isItemReachQuorum,
-    isItemReachPointsNeeded,
-    isItemValidated,
+    getItemVoteResult,
     onCancelVote,
     onSwitchVote,
     handleVoteAction,
@@ -324,26 +319,28 @@ const ProposalDetails = ({
         const isUserVoted = isUserVotedInProposal(key);
         const isLoading =
           (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
-        const votedMemberCount = getItemVotedMemberCount(key);
-        const itemPoints = getItemPoints(key);
-        const itemPointsNeeded = getItemPointsNeeded(key);
-        const isReachQuorum = isItemReachQuorum(key);
-        const isReachPointsNeeded = isItemReachPointsNeeded(key);
-        const isValidated = isItemValidated(key);
+        const {
+          itemVotedMemberCount,
+          itemPoints,
+          itemPointsNeeded,
+          isItemReachPointsNeeded,
+          isItemReachQuorum,
+          isItemValidated,
+        } = getItemVoteResult(key);
         return (
           <VoteItem
             fieldKey={key}
             itemPoints={itemPoints}
             itemPointsNeeded={itemPointsNeeded}
-            isReachQuorum={isReachQuorum}
-            isReachPointsNeeded={isReachPointsNeeded}
-            isValidated={isValidated}
+            isReachQuorum={isItemReachQuorum}
+            isReachPointsNeeded={isItemReachPointsNeeded}
+            isValidated={isItemValidated}
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}
             isLoading={isLoading}
             isUserVoted={isUserVoted}
-            votedMemberCount={votedMemberCount}
+            votedMemberCount={itemVotedMemberCount}
             onAction={() => onVoteAction(info.row.original)}
           />
         );
@@ -372,12 +369,7 @@ const ProposalDetails = ({
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,
-    getItemPoints,
-    getItemVotedMemberCount,
-    getItemPointsNeeded,
-    isItemReachQuorum,
-    isItemReachPointsNeeded,
-    isItemValidated,
+    getItemVoteResult,
     inActionKeys,
     onShowReference,
   ]);
