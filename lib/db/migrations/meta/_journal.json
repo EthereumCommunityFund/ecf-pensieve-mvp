@@ -106,6 +106,13 @@
       "when": 1747732490321,
       "tag": "0014_thick_weapon_omega",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1747814515851,
+      "tag": "0015_cute_scalphunter",
+      "breakpoints": true
     }
   ]
 }

@@ -2,18 +2,21 @@
 
 import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
-// import ProjectCard from '@/components/pages/project/ProjectCard';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils from '@/utils/proposal';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
+  const { profile } = useAuth();
+  const userId = profile?.userId;
   const router = useRouter();
 
   const {
@@ -46,15 +49,46 @@ const ProjectPage = () => {
     },
   );
 
+  const {
+    data: votesOfProject,
+    isLoading: isVotesOfProjectLoading,
+    isFetched: isVotesOfProjectFetched,
+    isFetching: isVotesOfProjectFetching,
+    refetch: refetchVotesOfProject,
+  } = trpc.vote.getVotesByProjectId.useQuery(
+    { projectId: Number(projectId) },
+    {
+      enabled: !!projectId,
+      select: (data) => {
+        devLog('getVotesByProjectId', data);
+        return data;
+      },
+    },
+  );
+
+  const {
+    leadingProposalId,
+    leadingProposalResult,
+    voteResultOfProposalMap,
+    leadingProposal,
+  } = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProject({
+      projectId: Number(projectId),
+      votesOfProject: votesOfProject || [],
+      proposals: proposals || [],
+      userId,
+    });
+  }, [projectId, votesOfProject, proposals, userId]);
+
   const onSubmitProposal = useCallback(() => {
-    router.push(`/project/${projectId}/proposal/create`);
+    router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
   return (
     <div className="pb-[20px]">
       <BackHeader>
         <div className="flex justify-start gap-[10px]">
-          <span>Projects</span>
+          <span>Pending Projects</span>
           <span className="font-[600]">/</span>
           {isProjectFetched ? (
             <span>{project?.name}</span>
@@ -64,7 +98,11 @@ const ProjectPage = () => {
         </div>
       </BackHeader>
 
-      <ProjectCard project={project} proposals={proposals} />
+      <ProjectCard
+        project={project as IProject}
+        proposals={proposals}
+        leadingProposal={leadingProposal}
+      />
 
       {/* Proposal list */}
       <div
@@ -93,6 +131,9 @@ const ProjectPage = () => {
             projectId={Number(projectId)}
             isLoading={isProposalsLoading}
             isFetched={isProposalsFetched}
+            leadingProposalId={leadingProposalId}
+            leadingProposalResult={leadingProposalResult}
+            voteResultOfProposalMap={voteResultOfProposalMap}
           />
         </div>
 
@@ -107,9 +148,11 @@ export default ProjectPage;
 const ProjectCard = ({
   project,
   proposals,
+  leadingProposal,
 }: {
   project?: IProject;
   proposals?: IProposal[];
+  leadingProposal?: IProposal;
 }) => {
   if (!project) {
     return (
@@ -189,8 +232,11 @@ const ProjectCard = ({
           <span className="text-black/60">{proposals?.length || 0}</span>
           <span className="text-black/20">|</span>
           <span>Leading:</span>
-          {/* TODO leading username */}
-          <span className="text-black/60">@leo</span>
+          {leadingProposal && (
+            <span className="text-black/60">
+              @{leadingProposal.creator.name}
+            </span>
+          )}
         </div>
       </div>
     </div>

@@ -1,19 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useAccount } from 'wagmi';
 
 import { ITableProposalItem } from '@/components/pages/project/proposal/detail/ProposalDetails';
-import { DefaultVoteQuorum, ItemWeightMap } from '@/constants/proposal';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils from '@/utils/proposal';
 
 export function useProposalVotes(
   proposal: IProposal | undefined,
   projectId: number,
   proposals?: IProposal[],
 ) {
-  const { isConnected } = useAccount();
   const { profile } = useAuth();
   const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
 
@@ -45,10 +43,28 @@ export function useProposalVotes(
     {
       enabled: !!projectId,
       select: (data) => {
-        // devLog('getVotesByProjectId', data);
+        devLog('getVotesByProjectId', data);
         return data;
       },
     },
+  );
+
+  const voteResultOfProposal = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: Number(proposal?.id),
+      votesOfProposal: votesOfProposal || [],
+    });
+  }, [votesOfProposal, proposal]);
+
+  const getItemVoteResult = useCallback(
+    (key: string) => {
+      return ProposalVoteUtils.getVoteResultOfItem({
+        proposalId: Number(proposal?.id),
+        votesOfProposal: votesOfProposal || [],
+        key,
+      });
+    },
+    [votesOfProposal, proposal],
   );
 
   const votesOfKeyInProposalMap = useMemo(() => {
@@ -102,50 +118,6 @@ export function useProposalVotes(
         {} as Record<string, IVote>,
       );
   }, [votesOfProject, profile]);
-
-  const getItemPointsNeeded = useCallback((key: string) => {
-    return ItemWeightMap[key];
-  }, []);
-
-  const getItemPoints = useCallback(
-    (key: string) => {
-      const votesOfKey = votesOfKeyInProposalMap[key] || [];
-      return votesOfKey.reduce((acc, vote) => acc + Number(vote.weight), 0);
-    },
-    [votesOfKeyInProposalMap],
-  );
-
-  const getItemVotedMemberCount = useCallback(
-    (key: string) => {
-      const votesOfKey = votesOfKeyInProposalMap[key] || [];
-      return votesOfKey.length;
-    },
-    [votesOfKeyInProposalMap],
-  );
-
-  const isItemReachQuorum = useCallback(
-    (key: string) => {
-      const votesOfKey = votesOfKeyInProposalMap[key] || [];
-      return votesOfKey.length >= DefaultVoteQuorum;
-    },
-    [votesOfKeyInProposalMap],
-  );
-
-  const isItemReachPointsNeeded = useCallback(
-    (key: string) => {
-      const pointsNeeded = ItemWeightMap[key];
-      const currentPoints = getItemPoints(key);
-      return currentPoints >= pointsNeeded;
-    },
-    [getItemPoints],
-  );
-
-  const isItemValidated = useCallback(
-    (key: string) => {
-      return isItemReachQuorum(key) && isItemReachPointsNeeded(key);
-    },
-    [isItemReachQuorum, isItemReachPointsNeeded],
-  );
 
   const isUserVotedInProposal = useCallback(
     (key: string) => {
@@ -336,14 +308,10 @@ export function useProposalVotes(
     votedOfKeyInProjectMap,
     userVotesOfProposalMap,
     userVotesOfProjectMap,
+    voteResultOfProposal,
+    getItemVoteResult,
     isUserVotedInProposal,
     isUserVotedInProject,
-    getItemPointsNeeded,
-    getItemPoints,
-    getItemVotedMemberCount,
-    isItemReachQuorum,
-    isItemReachPointsNeeded,
-    isItemValidated,
     isFetchVoteInfoLoading:
       isVotesOfProposalFetching || isVotesOfProjectFetching,
     isVoteActionPending:

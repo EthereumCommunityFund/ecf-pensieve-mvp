@@ -1,28 +1,39 @@
 import { cn, Skeleton } from '@heroui/react';
 import { FC, useMemo } from 'react';
 
+import {
+  TotalEssentialItemQuorumSum,
+  TotalEssentialItemWeightSum,
+} from '@/constants/proposal';
 import { IProposal } from '@/types';
 
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
 
+import { useProposalVotes } from './useProposalVotes';
+
 interface IProposalDetailCardProps {
   proposal?: IProposal;
   projectId: number;
-  isLeading?: boolean;
-  hasVoted?: boolean;
   proposalIndex: number;
+  leadingProposalId?: number;
 }
 
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
-  const { proposal, projectId, isLeading, hasVoted, proposalIndex } = props;
-  const proposalName = useMemo(() => {
-    if (!proposal) return '';
-    const nameItem = proposal?.items.find(
-      (item: any) => item.key === 'name',
-    ) as { key: string; value: string } | undefined;
-    return nameItem?.value || 'Unnamed Proposal';
-  }, [proposal]);
+  const { proposal, projectId, proposalIndex, leadingProposalId } = props;
+
+  const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
+
+  const {
+    percentageOfProposal,
+    totalValidPointsOfProposal,
+    totalSupportedUserWeightOfProposal,
+    formattedPercentageOfProposal,
+    totalValidQuorumOfProposal,
+    isUserVotedInProposal,
+  } = voteResultOfProposal;
+
+  const isLeading = !!leadingProposalId && leadingProposalId === proposal?.id;
 
   const formattedDate = useMemo(() => {
     if (!proposal) return '';
@@ -64,7 +75,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       <div className="mobile:w-full flex flex-1 flex-col gap-[10px]">
         <div className="flex items-center gap-[10px]">
           {isLeading && <ActiveLeadingLabel />}
-          {hasVoted && <VotedLabel />}
+          {isUserVotedInProposal && <VotedLabel />}
         </div>
         {/* title and date */}
         <div className="flex items-center gap-[10px]">
@@ -89,12 +100,12 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       <div className="mobile:w-full flex w-[440px] flex-col gap-[20px] rounded-[10px] border border-black/10 p-[10px]">
         <div className="flex items-center gap-[10px]">
           <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
-            {progressPercentage}%
+            {formattedPercentageOfProposal}
           </span>
           <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
             <div
               className="h-[7px] bg-black"
-              style={{ width: `${progressPercentage}%` }}
+              style={{ width: formattedPercentageOfProposal }}
             ></div>
           </div>
         </div>
@@ -102,15 +113,21 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
         <div className="flex items-center justify-between text-[14px] font-[600] leading-[19px] text-black">
           <div className="flex items-center gap-[10px]">
             <span>Points Needed</span>
-            <span className="text-black/60">00/00</span>
+            <span className="text-black/60">
+              {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+            </span>
           </div>
           <div className="flex items-center gap-[10px]">
             <span>Supported</span>
-            <span className="text-black/60">82</span>
+            <span className="text-black/60">
+              {totalSupportedUserWeightOfProposal}
+            </span>
           </div>
           <div className="flex items-center gap-[10px]">
             <span>quorum</span>
-            <span className="text-black/60">00/00</span>
+            <span className="text-black/60">
+              {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+            </span>
           </div>
         </div>
       </div>

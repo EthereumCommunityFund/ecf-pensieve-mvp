@@ -50,7 +50,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
       )}
     >
       <Link
-        href={`/project/${project.id}`}
+        href={`/project/pending/${project.id}`}
         className="mobile:items-start flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]"
       >
         <div className="flex flex-1 items-start gap-[14px]">

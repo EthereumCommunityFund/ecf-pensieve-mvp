@@ -250,7 +250,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 description: 'Proposal created successfully!',
                 color: 'success',
               });
-              router.push(redirectPath || `/project/${projectId}`);
+              router.push(redirectPath || `/project/pending/${projectId}`);
             }
           },
           onError: (error: any) => {
@@ -468,9 +468,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     if (formType === IFormTypeEnum.Project) {
       router.push(redirectPath || '/projects');
     } else if (formType === IFormTypeEnum.Proposal && projectId) {
-      router.push(redirectPath || `/project/${projectId}`);
+      router.push(redirectPath || `/project/pending/${projectId}`);
     } else {
-      router.push(redirectPath || '/projects');
+      router.push(redirectPath || '/projects/pending');
     }
   }, [reset, router, formType, projectId, redirectPath]);
 

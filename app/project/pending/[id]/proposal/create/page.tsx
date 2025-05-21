@@ -50,7 +50,7 @@ const CreateProposalPage = () => {
       <CreateProjectForm
         formType={IFormTypeEnum.Proposal}
         projectId={Number(projectId)}
-        redirectPath={`/project/${projectId}`}
+        redirectPath={`/project/pending/${projectId}`}
         projectData={project}
       />
     </div>

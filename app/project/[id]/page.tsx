@@ -7,12 +7,13 @@ import { useCallback, useEffect, useState } from 'react';
 import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
-import { IProject, IProposal } from '@/types';
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import Profile from '@/components/pages/project/detail/Profile';
 import Review from '@/components/pages/project/detail/Review';
 import ProjectData from '@/components/pages/project/ProjectData';
+import { useAuth } from '@/context/AuthContext';
+import { IProject, IProposal } from '@/types';
 
 const tabItems = [
   { key: 'project-data', label: 'Project Data' },
@@ -25,6 +26,8 @@ type TabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
+  const { profile } = useAuth();
+  const userId = profile?.userId;
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab');
@@ -62,7 +65,7 @@ const ProjectPage = () => {
   }, [searchParams, projectId, router]);
 
   const onSubmitProposal = useCallback(() => {
-    router.push(`/project/${projectId}/proposal/create`);
+    router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
   const handleContribute = useCallback(() => {
@@ -84,7 +87,11 @@ const ProjectPage = () => {
         </div>
       </BackHeader>
 
-      <ProjectCard project={project} proposals={proposals} />
+      {/* <ProjectCard
+        project={project as IProject}
+        proposals={proposals}
+        leadingProposal={leadingProposal}
+      /> */}
 
       <div className="tablet:px-[10px] mobile:px-[10px]  mt-[20px] px-[20px]">
         <div className="flex items-center justify-between">
@@ -149,9 +156,11 @@ export default ProjectPage;
 const ProjectCard = ({
   project,
   proposals,
+  leadingProposal,
 }: {
   project?: IProject;
   proposals?: IProposal[];
+  leadingProposal?: IProposal;
 }) => {
   if (!project) {
     return (
@@ -231,8 +240,11 @@ const ProjectCard = ({
           <span className="text-black/60">{proposals?.length || 0}</span>
           <span className="text-black/20">|</span>
           <span>Leading:</span>
-          {/* TODO leading username */}
-          <span className="text-black/60">@leo</span>
+          {leadingProposal && (
+            <span className="text-black/60">
+              @{leadingProposal.creator.name}
+            </span>
+          )}
         </div>
       </div>
     </div>

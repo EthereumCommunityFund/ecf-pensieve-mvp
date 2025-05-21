@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-
 import ECFTypography from '@/components/base/typography';
 import { IProposal } from '@/types';
+import { IVoteResultOfProposal } from '@/utils/proposal';
 
 import ProposalListItem, { ProposalListItemSkeleton } from './ProposalListItem';
 
@@ -12,6 +11,9 @@ interface ProposalListProps {
   projectId: number;
   isLoading: boolean;
   isFetched: boolean;
+  leadingProposalId?: number;
+  leadingProposalResult?: IVoteResultOfProposal;
+  voteResultOfProposalMap: Record<number, IVoteResultOfProposal>;
 }
 
 const ProposalList = ({
@@ -19,17 +21,10 @@ const ProposalList = ({
   projectId,
   isLoading,
   isFetched,
+  leadingProposalId,
+  leadingProposalResult,
+  voteResultOfProposalMap,
 }: ProposalListProps) => {
-  const leadingProposalId = useMemo(() => {
-    if (!proposals || proposals.length === 0) return null;
-    return proposals[0].id;
-  }, [proposals]);
-
-  const userVotedProposalIds = useMemo(() => {
-    // TODO  获取用户投票记录 api
-    return [] as number[];
-  }, []);
-
   if (isLoading) {
     return (
       <div className="mt-[20px] flex flex-col gap-[20px]">
@@ -59,8 +54,7 @@ const ProposalList = ({
           proposal={proposal}
           projectId={projectId}
           isLeading={proposal.id === leadingProposalId}
-          hasVoted={true}
-          // hasVoted={userVotedProposalIds.includes(proposal.id)}
+          voteResultOfProposal={voteResultOfProposalMap[proposal.id]}
         />
       ))}
     </div>
