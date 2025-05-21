@@ -50,6 +50,7 @@ const DatesStepForm: React.FC<
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
+      {/* dateFounded */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.dateFounded,
@@ -81,6 +82,7 @@ const DatesStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* dateLaunch */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.dateLaunch,
@@ -116,6 +118,7 @@ const DatesStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* devStatus */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.devStatus,
@@ -155,6 +158,7 @@ const DatesStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* fundingStatus */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.fundingStatus,

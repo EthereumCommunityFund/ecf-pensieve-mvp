@@ -25,6 +25,9 @@ export const transformProjectData = (
     appUrl: fieldApplicability['appUrl']
       ? normalizeUrl(formData.appUrl) || undefined
       : undefined,
+    tags: formData.tags,
+    whitePaper: formData.whitePaper,
+
     dateFounded: formData.dateFounded
       ? new Date(formData.dateFounded)
       : new Date(),
@@ -44,6 +47,8 @@ export const transformProjectData = (
     tokenContract: fieldApplicability['tokenContract']
       ? formData.tokenContract || undefined
       : undefined,
+    dappSmartContracts: formData.dappSmartContracts,
+
     orgStructure: formData.orgStructure || 'Centralized',
     publicGoods: formData.publicGoods === 'Yes',
     founders: formData.founders.map((founder) => ({
@@ -66,6 +71,7 @@ export const transformProposalData = (
   fieldApplicability: Record<ApplicableField, boolean>,
   projectId: number,
 ): ProposalCreatePayload => {
+  // TODO: is it order important?
   const items = [
     { key: 'name', value: formData.name },
     { key: 'tagline', value: formData.tagline },
@@ -73,6 +79,8 @@ export const transformProposalData = (
     { key: 'mainDescription', value: formData.mainDescription },
     { key: 'logoUrl', value: formData.logoUrl || '' },
     { key: 'websiteUrl', value: normalizeUrl(formData.websiteUrl) || '' },
+    { key: 'tags', value: JSON.stringify(formData.tags) },
+    { key: 'whitePaper', value: formData.whitePaper },
   ];
 
   if (fieldApplicability['appUrl'] && formData.appUrl) {
@@ -110,6 +118,8 @@ export const transformProposalData = (
   if (fieldApplicability['tokenContract'] && formData.tokenContract) {
     items.push({ key: 'tokenContract', value: formData.tokenContract });
   }
+
+  items.push({ key: 'dappSmartContracts', value: formData.dappSmartContracts });
 
   if (formData.orgStructure) {
     items.push({ key: 'orgStructure', value: formData.orgStructure });

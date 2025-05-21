@@ -29,6 +29,7 @@ const TechnicalsStepForm: React.FC<
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
+      {/* openSource */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.openSource,
@@ -66,6 +67,7 @@ const TechnicalsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* codeRepo */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.codeRepo,
@@ -107,6 +109,7 @@ const TechnicalsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* tokenContract */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.tokenContract,
@@ -132,6 +135,34 @@ const TechnicalsStepForm: React.FC<
               isDisabled={!fieldApplicability.tokenContract}
               className="w-full"
               aria-label={technicalsFieldsConfig.tokenContract.label}
+            />
+          )}
+        />
+      </FormFieldContainer>
+
+      {/* dappSmartContracts */}
+      <FormFieldContainer
+        {...useCreateContainerPropsWithValue({
+          fieldConfig: technicalsFieldsConfig.dappSmartContracts,
+          onAddReference: onAddReference,
+          hasFieldReference,
+        })}
+      >
+        <Controller
+          name={technicalsFieldsConfig.dappSmartContracts.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <Input
+              {...field}
+              value={field.value || ''}
+              onChange={(e) => field.onChange(e.target.value)}
+              placeholder={
+                technicalsFieldsConfig.dappSmartContracts.placeholder
+              }
+              isInvalid={!!error}
+              errorMessage={error?.message}
+              className="w-full"
+              aria-label={technicalsFieldsConfig.dappSmartContracts.label}
             />
           )}
         />

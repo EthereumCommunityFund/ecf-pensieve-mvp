@@ -42,6 +42,8 @@ export interface ProjectFormData {
   logoUrl: string | null;
   websiteUrl: string;
   appUrl: string | null;
+  tags: string[];
+  whitePaper: string;
 
   dateFounded: Date | null;
   dateLaunch: Date | null;
@@ -51,6 +53,7 @@ export interface ProjectFormData {
   openSource: 'Yes' | 'No' | '';
   codeRepo: string | null;
   tokenContract: string | null;
+  dappSmartContracts: string;
 
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
@@ -70,6 +73,9 @@ export interface ProjectCreatePayload {
   logoUrl: string;
   websiteUrl: string;
   appUrl?: string;
+  tags: string[];
+  whitePaper: string;
+
   dateFounded: Date;
   dateLaunch?: Date;
   devStatus: string;
@@ -77,12 +83,15 @@ export interface ProjectCreatePayload {
   openSource: boolean;
   codeRepo?: string;
   tokenContract?: string;
+  dappSmartContracts: string;
+
   orgStructure: string;
   publicGoods: boolean;
   founders: {
     name: string;
     title: string;
   }[];
+
   refs?: IRef[];
 }
 
@@ -121,6 +130,8 @@ export const stepFields = {
     'logoUrl',
     'websiteUrl',
     'appUrl',
+    'tags',
+    'whitePaper',
   ],
   [CreateProjectStep.Dates]: [
     'dateFounded',
@@ -128,7 +139,12 @@ export const stepFields = {
     'devStatus',
     'fundingStatus',
   ],
-  [CreateProjectStep.Technicals]: ['openSource', 'codeRepo', 'tokenContract'],
+  [CreateProjectStep.Technicals]: [
+    'openSource',
+    'codeRepo',
+    'tokenContract',
+    'dappSmartContracts',
+  ],
   [CreateProjectStep.Organization]: ['orgStructure', 'publicGoods', 'founders'],
 } as const;
 

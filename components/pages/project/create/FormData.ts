@@ -24,6 +24,20 @@ export type FieldType =
   | 'radio'
   | 'founderList';
 
+export type ApplicableField =
+  | 'appUrl'
+  | 'dateLaunch'
+  | 'fundingStatus'
+  | 'codeRepo'
+  | 'tokenContract';
+
+export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
+  appUrl: true,
+  dateLaunch: true,
+  fundingStatus: true,
+  codeRepo: true,
+  tokenContract: true,
+};
 export interface FormFieldConfig<K extends keyof ProjectFormData> {
   key: K;
   label: string;
@@ -84,6 +98,45 @@ export const basicsFieldsConfig: {
     ],
     showReference: true,
   },
+  tags: {
+    key: 'tags',
+    label: 'Tags',
+    description: 'provide a list of tags for this project',
+    shortDescription: 'A list of tags for the project.',
+    weight: ItemWeightMap.tags,
+    type: 'selectMultiple',
+    placeholder: 'Select tags',
+    showReference: true,
+    options: [
+      { value: 'd/acc', label: 'd/acc' },
+      { value: 'Ethereum', label: 'Ethereum' },
+      { value: 'Solana', label: 'Solana' },
+      { value: 'Polygon', label: 'Polygon' },
+      { value: 'Polkadot', label: 'Polkadot' },
+      { value: 'Optimism', label: 'Optimism' },
+      { value: 'Arbitrum', label: 'Arbitrum' },
+      { value: 'ZK Rollup', label: 'ZK Rollup' },
+      { value: 'IPFS', label: 'IPFS' },
+      { value: 'DID', label: 'DID' },
+      { value: 'Wallet', label: 'Wallet' },
+      { value: 'ZK', label: 'ZK' },
+      { value: 'Privacy', label: 'Privacy' },
+      { value: 'Layer 1', label: 'Layer 1' },
+      { value: 'Layer 2', label: 'Layer 2' },
+      { value: 'AI Integration', label: 'AI Integration' },
+      { value: 'Interoperability', label: 'Interoperability' },
+      { value: 'Decentralised Storage', label: 'Decentralised Storage' },
+      { value: 'Governance', label: 'Governance' },
+      { value: 'Funding', label: 'Funding' },
+      { value: 'Social', label: 'Social' },
+      { value: 'GameFi', label: 'GameFi' },
+      { value: 'DeFi', label: 'DeFi' },
+      { value: 'NFT', label: 'NFT' },
+      { value: 'Education', label: 'Education' },
+      { value: 'Open-source', label: 'Open-source' },
+      { value: 'Public goods', label: 'Public goods' },
+    ],
+  },
   mainDescription: {
     key: 'mainDescription',
     label: 'Main Description',
@@ -126,6 +179,17 @@ export const basicsFieldsConfig: {
     placeholder: 'Type in a URL',
     startContentText: 'https://',
     showApplicable: true,
+    showReference: true,
+  },
+  whitePaper: {
+    key: 'whitePaper',
+    label: 'White Paper',
+    description: 'provide the white paper for this project',
+    shortDescription: 'The white paper of the project.',
+    weight: ItemWeightMap.whitePaper,
+    type: 'switchableUrl',
+    placeholder: 'Type in a URL',
+    startContentText: 'https://',
     showReference: true,
   },
 };
@@ -236,6 +300,16 @@ export const technicalsFieldsConfig: {
     showApplicable: true,
     showReference: true,
   },
+  dappSmartContracts: {
+    key: 'dappSmartContracts',
+    label: 'Dapp Smart Contracts',
+    description: 'Input the projects smart contracts',
+    shortDescription: 'The smart contracts of the project.',
+    weight: ItemWeightMap.dappSmartContracts,
+    type: 'switchableUrl',
+    placeholder: '0x...',
+    showReference: true,
+  },
 };
 
 export const organizationFieldsConfig: {
@@ -282,25 +356,6 @@ export const organizationFieldsConfig: {
   },
 };
 
-export type ApplicableField =
-  | 'appUrl'
-  | 'dateLaunch'
-  | 'fundingStatus'
-  | 'codeRepo'
-  | 'tokenContract';
-
-export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
-  appUrl: true,
-  dateLaunch: true,
-  fundingStatus: true,
-  codeRepo: true,
-  tokenContract: true,
-};
-
-// TODO delete: Default project logo, for test
-const DEFAULT_PROJECT_LOGO =
-  'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
-
 export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
   name: '',
   tagline: '',
@@ -319,6 +374,9 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
   orgStructure: '',
   publicGoods: '',
   founders: [{ fullName: '', titleRole: '' }],
+  tags: [],
+  whitePaper: '',
+  dappSmartContracts: '',
 };
 
 export const convertProjectToFormData = (
@@ -332,6 +390,9 @@ export const convertProjectToFormData = (
     logoUrl: project.logoUrl,
     websiteUrl: project.websiteUrl,
     appUrl: project.appUrl || null,
+    tags: project.tags,
+    whitePaper: project.whitePaper,
+    dappSmartContracts: project.dappSmartContracts,
     dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
     dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,
     devStatus: project.devStatus,
