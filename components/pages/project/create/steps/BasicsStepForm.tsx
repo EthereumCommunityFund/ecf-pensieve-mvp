@@ -33,19 +33,19 @@ const BasicsStepForm: React.FC<
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
-          fieldConfig: basicsFieldsConfig.projectName,
+          fieldConfig: basicsFieldsConfig.name,
           onAddReference: onAddReference,
           hasFieldReference,
         })}
       >
         <Controller
-          name={basicsFieldsConfig.projectName.key}
+          name={basicsFieldsConfig.name.key}
           control={control}
           render={({ field, fieldState: { error } }) => (
             <div>
               <Input
                 {...field}
-                placeholder={basicsFieldsConfig.projectName.placeholder}
+                placeholder={basicsFieldsConfig.name.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}
               />

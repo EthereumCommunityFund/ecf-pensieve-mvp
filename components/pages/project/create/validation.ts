@@ -17,7 +17,7 @@ const founderSchema: yup.ObjectSchema<FounderInput> = yup.object().shape({
 });
 
 export const basicsSchema = yup.object().shape({
-  projectName: yup
+  name: yup
     .string()
     .required('Project name is required')
     .max(250, 'Project name cannot exceed 250 characters'),

@@ -156,7 +156,7 @@ const ProposalDetails = ({
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const expandableRowKeys = useMemo(() => {
-    return ['projectName', 'mainDescription', 'projectType'];
+    return ['name', 'mainDescription', 'projectType'];
   }, []);
 
   const isRowExpandable = useCallback(

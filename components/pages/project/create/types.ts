@@ -35,7 +35,7 @@ export interface ReferenceData {
 }
 
 export interface ProjectFormData {
-  projectName: string;
+  name: string;
   tagline: string;
   categories: string[];
   mainDescription: string;
@@ -114,7 +114,7 @@ export interface StepFormProps {
 
 export const stepFields = {
   [CreateProjectStep.Basics]: [
-    'projectName',
+    'name',
     'tagline',
     'categories',
     'mainDescription',

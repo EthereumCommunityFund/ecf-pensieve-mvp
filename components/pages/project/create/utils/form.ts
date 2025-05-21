@@ -16,7 +16,7 @@ export const transformProjectData = (
   fieldApplicability: Record<ApplicableField, boolean>,
 ): ProjectCreatePayload => {
   return {
-    name: formData.projectName,
+    name: formData.name,
     tagline: formData.tagline,
     categories: formData.categories,
     mainDescription: formData.mainDescription,
@@ -67,7 +67,7 @@ export const transformProposalData = (
   projectId: number,
 ): ProposalCreatePayload => {
   const items = [
-    { key: 'projectName', value: formData.projectName },
+    { key: 'name', value: formData.name },
     { key: 'tagline', value: formData.tagline },
     { key: 'categories', value: JSON.stringify(formData.categories) },
     { key: 'mainDescription', value: formData.mainDescription },

@@ -44,8 +44,8 @@ export interface FormFieldConfig<K extends keyof ProjectFormData> {
 export const basicsFieldsConfig: {
   [K in BasicsKeys]: FormFieldConfig<K>;
 } = {
-  projectName: {
-    key: 'projectName',
+  name: {
+    key: 'name',
     label: 'Project Name',
     description: 'type in the name of the project to propose',
     shortDescription: 'The unique identifier for the project.',
@@ -302,7 +302,7 @@ const DEFAULT_PROJECT_LOGO =
   'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/2d55d07c-1616-4cd4-b929-795751a6bc30.jpeg';
 
 export const DEFAULT_CREATE_PROJECT_FORM_DATA: ProjectFormData = {
-  projectName: '',
+  name: '',
   tagline: '',
   categories: [],
   mainDescription: '',
@@ -325,7 +325,7 @@ export const convertProjectToFormData = (
   project: IProject,
 ): ProjectFormData => {
   return {
-    projectName: project.name,
+    name: project.name,
     tagline: project.tagline,
     categories: project.categories,
     mainDescription: project.mainDescription,
