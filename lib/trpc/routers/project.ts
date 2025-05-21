@@ -139,7 +139,11 @@ export const projectRouter = router({
       if (!isPublished) {
         queryOptions.proposals = {
           with: {
-            voteRecords: true,
+            voteRecords: {
+              with: {
+                creator: true,
+              },
+            },
             creator: true,
           },
         };
