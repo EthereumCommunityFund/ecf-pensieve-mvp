@@ -1,9 +1,9 @@
+import { EssentialItemKeys } from '@/components/pages/project/create/types';
 import {
-  ItemQuorumMap,
-  ItemWeightMap,
-  TotalEssentialItemQuorumSum,
-  TotalEssentialItemWeightSum,
-} from '@/constants/proposal';
+  ESSENTIAL_ITEM_MAP,
+  ESSENTIAL_ITEM_QUORUM_SUM,
+  ESSENTIAL_ITEM_WEIGHT_SUM,
+} from '@/lib/constants';
 import { IProposal, IVote } from '@/types';
 
 export interface IGetVoteResultOfProposalParams {
@@ -24,8 +24,6 @@ export interface IVoteResultOfProposal {
   totalValidPointsOfProposal: number;
   totalSupportedUserWeightOfProposal: number;
   totalValidQuorumOfProposal: number;
-  TotalEssentialItemWeightSum: number;
-  TotalEssentialItemQuorumSum: number;
   percentageOfProposal: number;
   formattedPercentageOfProposal: string;
   isProposalValidated: boolean;
@@ -78,8 +76,6 @@ const DefaultProposalResult: IVoteResultOfProposal = {
   totalValidPointsOfProposal: 0,
   totalSupportedUserWeightOfProposal: 0,
   totalValidQuorumOfProposal: 0,
-  TotalEssentialItemWeightSum,
-  TotalEssentialItemQuorumSum,
   percentageOfProposal: 0,
   formattedPercentageOfProposal: '0%',
   isProposalValidated: false,
@@ -133,9 +129,10 @@ const ProposalVoteUtils = {
 
     const itemVotedMemberCount = votesOfKeyInProposalMap[key]?.length || 0;
     const itemPoints = getItemPoints(key);
-    const itemPointsNeeded = ItemWeightMap[key] || 0;
+    const itemPointsNeeded = ESSENTIAL_ITEM_MAP[key].weight || 0;
     const isItemReachPointsNeeded = itemPoints >= itemPointsNeeded;
-    const isItemReachQuorum = itemVotedMemberCount >= (ItemQuorumMap[key] || 0);
+    const isItemReachQuorum =
+      itemVotedMemberCount >= (ESSENTIAL_ITEM_MAP[key].quorum || 0);
     const isItemValidated = isItemReachQuorum && isItemReachPointsNeeded;
 
     return {
@@ -162,11 +159,20 @@ const ProposalVoteUtils = {
     const votesOfKeyInProposalMap =
       ProposalVoteUtils.groupVotesByKey(votesOfProposal);
 
-    const totalValidPointsOfProposal = votesOfProposal.reduce((acc, vote) => {
-      const weight = Number(vote.weight || 0);
-      const itemPointsNeeded = ItemWeightMap[vote.key] || 0;
-      const shouldAddPoints = Math.min(weight, itemPointsNeeded);
-      return acc + shouldAddPoints;
+    const totalValidPointsOfProposal = Object.entries(
+      votesOfKeyInProposalMap,
+    ).reduce((acc, [key, votes]) => {
+      const itemPointsNeeded =
+        ESSENTIAL_ITEM_MAP[key as EssentialItemKeys].weight || 0;
+      const totalVotesWeightForKey = votes.reduce(
+        (sum, vote) => sum + Number(vote.weight || 0),
+        0,
+      );
+      const validPointsForKey = Math.min(
+        totalVotesWeightForKey,
+        itemPointsNeeded,
+      );
+      return acc + validPointsForKey;
     }, 0);
 
     const userWeightMap = votesOfProposal.reduce(
@@ -188,15 +194,15 @@ const ProposalVoteUtils = {
     const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const quorum = ItemQuorumMap[key] || 0;
+      const quorum = ESSENTIAL_ITEM_MAP[key as EssentialItemKeys].quorum || 0;
       return acc + Math.min(votes.length, quorum);
     }, 0);
 
     const percentageOfPointsNeededOfProposal =
-      totalValidPointsOfProposal / TotalEssentialItemWeightSum;
+      totalValidPointsOfProposal / ESSENTIAL_ITEM_WEIGHT_SUM;
 
     const percentageOfQuorumOfProposal =
-      totalValidQuorumOfProposal / TotalEssentialItemQuorumSum;
+      totalValidQuorumOfProposal / ESSENTIAL_ITEM_QUORUM_SUM;
 
     const percentageOfProposal =
       (percentageOfPointsNeededOfProposal + percentageOfQuorumOfProposal) / 2;
@@ -204,8 +210,8 @@ const ProposalVoteUtils = {
     const formattedPercentageOfProposal = `${Math.round(percentageOfProposal * 100)}%`;
 
     const isProposalValidated =
-      totalValidPointsOfProposal >= TotalEssentialItemWeightSum &&
-      totalValidQuorumOfProposal >= TotalEssentialItemQuorumSum;
+      totalValidPointsOfProposal >= ESSENTIAL_ITEM_WEIGHT_SUM &&
+      totalValidQuorumOfProposal >= ESSENTIAL_ITEM_QUORUM_SUM;
 
     return {
       proposalId,
@@ -213,8 +219,6 @@ const ProposalVoteUtils = {
       totalValidPointsOfProposal,
       totalSupportedUserWeightOfProposal,
       totalValidQuorumOfProposal,
-      TotalEssentialItemWeightSum,
-      TotalEssentialItemQuorumSum,
       percentageOfProposal,
       formattedPercentageOfProposal,
       isProposalValidated,

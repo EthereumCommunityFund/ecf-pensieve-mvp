@@ -1,6 +1,7 @@
 import {
   bigserial,
   boolean,
+  doublePrecision,
   index,
   jsonb,
   pgTable,
@@ -50,6 +51,7 @@ export const projects = pgTable(
       .references(() => profiles.userId),
     refs: jsonb('refs').array(),
     isPublished: boolean('is_published').notNull().default(false),
+    support: doublePrecision('support').default(0),
   },
   (table) => {
     return {

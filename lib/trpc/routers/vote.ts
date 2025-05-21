@@ -195,19 +195,14 @@ export const voteRouter = router({
         eq(voteRecords.creator, ctx.user.id),
       );
 
-      const [existingVote, voteWithProposal] = await Promise.all([
-        ctx.db.query.voteRecords.findFirst({
-          where: condition,
-        }),
-        ctx.db.query.voteRecords.findFirst({
-          where: condition,
-          with: {
-            proposal: true,
-          },
-        }),
-      ]);
+      const voteWithProposal = await ctx.db.query.voteRecords.findFirst({
+        where: condition,
+        with: {
+          proposal: true,
+        },
+      });
 
-      if (!existingVote || !voteWithProposal || !voteWithProposal.proposal) {
+      if (!voteWithProposal || !voteWithProposal.proposal) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Vote record not found',
@@ -225,7 +220,7 @@ export const voteRouter = router({
         userId: ctx.user.id,
         targetId: deletedVote.id,
         projectId,
-        items: [{ field: existingVote.key }],
+        items: [{ field: voteWithProposal.key }],
         proposalCreatorId: voteWithProposal.proposal.creator,
       });
 

@@ -2,9 +2,9 @@ import { cn, Skeleton } from '@heroui/react';
 import { FC, useMemo } from 'react';
 
 import {
-  TotalEssentialItemQuorumSum,
-  TotalEssentialItemWeightSum,
-} from '@/constants/proposal';
+  ESSENTIAL_ITEM_QUORUM_SUM,
+  ESSENTIAL_ITEM_WEIGHT_SUM,
+} from '@/lib/constants';
 import { IProposal } from '@/types';
 
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
@@ -114,7 +114,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           <div className="flex items-center gap-[10px]">
             <span>Points Needed</span>
             <span className="text-black/60">
-              {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+              {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
             </span>
           </div>
           <div className="flex items-center gap-[10px]">
@@ -126,7 +126,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           <div className="flex items-center gap-[10px]">
             <span>quorum</span>
             <span className="text-black/60">
-              {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+              {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
             </span>
           </div>
         </div>

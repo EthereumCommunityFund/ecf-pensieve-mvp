@@ -11,6 +11,7 @@ import {
   ApplicableField,
   DEFAULT_CREATE_PROJECT_FORM_DATA,
   DEFAULT_FIELD_APPLICABILITY,
+  getCreateProjectStepFields,
   updateFormWithProjectData,
 } from '@/components/pages/project/create/FormData';
 import {
@@ -38,7 +39,6 @@ import {
   IFormTypeEnum,
   ProjectFormData,
   ReferenceData,
-  stepFields,
   StepStatus,
 } from './types';
 import { FieldApplicabilityContext, projectSchema } from './validation';
@@ -281,7 +281,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const validateCurrentStep = useCallback(async (): Promise<boolean> => {
-    const currentStepFieldList = stepFields[currentStep];
+    const currentStepFieldList = getCreateProjectStepFields(currentStep);
     const applicableFieldsToValidate = getApplicableFields([
       ...currentStepFieldList,
     ]);
@@ -356,7 +356,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     if (currentIndex < STEPS_ORDER.length - 1) {
       const nextStep = STEPS_ORDER[currentIndex + 1];
 
-      const nextStepFields = stepFields[nextStep];
+      const nextStepFields = getCreateProjectStepFields(nextStep);
       nextStepFields.forEach((field) => {
         clearErrors(field as keyof ProjectFormData);
       });
