@@ -52,6 +52,7 @@ export const basicsSchema = yup.object().shape({
     .required('App URL is required when applicable'),
   whitePaper: yup
     .string()
+    .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Whitepaper URL is required when applicable'),
 });
