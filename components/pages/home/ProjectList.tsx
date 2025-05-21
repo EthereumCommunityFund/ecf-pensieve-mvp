@@ -1,6 +1,6 @@
 'use client';
 
-import ProjectCard from '@/components/pages/project/detail/ProjectCard';
+import ProjectCard from '@/components/pages/project/ProjectCard';
 import { IProject } from '@/types';
 
 export interface IProjectListProps {

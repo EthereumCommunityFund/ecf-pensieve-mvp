@@ -5,10 +5,10 @@ import Link from 'next/link';
 
 import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import { ProjectCardSkeleton } from '@/components/pages/project/detail/ProjectCard';
 import PendingProjectCard, {
   PendingProjectCardSkeleton,
 } from '@/components/pages/project/PendingProjectCard';
+import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';

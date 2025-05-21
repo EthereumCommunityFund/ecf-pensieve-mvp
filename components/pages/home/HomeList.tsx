@@ -8,7 +8,7 @@ import ECFTypography from '@/components/base/typography';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 
-import { ProjectCardSkeleton } from '../project/detail/ProjectCard';
+import { ProjectCardSkeleton } from '../project/ProjectCard';
 
 import ProjectList from './ProjectList';
 
