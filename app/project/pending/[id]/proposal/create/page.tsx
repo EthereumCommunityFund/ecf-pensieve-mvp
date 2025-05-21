@@ -6,6 +6,7 @@ import BackHeader from '@/components/pages/project/BackHeader';
 import CreateProjectForm from '@/components/pages/project/create/CreateProjectForm';
 import { IFormTypeEnum } from '@/components/pages/project/create/types';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 const CreateProposalPage = () => {
@@ -51,7 +52,7 @@ const CreateProposalPage = () => {
         formType={IFormTypeEnum.Proposal}
         projectId={Number(projectId)}
         redirectPath={`/project/pending/${projectId}`}
-        projectData={project}
+        projectData={project as IProject}
       />
     </div>
   );
