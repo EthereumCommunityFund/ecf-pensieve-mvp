@@ -2,8 +2,11 @@
 
 import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
-import { IProject } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { IProfile, IProject } from '@/types';
+import ProposalVoteUtils from '@/utils/proposal';
 
 export function PendingProjectCardSkeleton() {
   return (
@@ -41,6 +44,43 @@ const PendingProjectCard = ({
   project,
   showBorder = false,
 }: IProjectCardProps) => {
+  const { profile } = useAuth();
+  const userId = profile?.userId;
+
+  const { leadingProposalId, leadingProposalResult, voteResultOfProposalMap } =
+    useMemo(() => {
+      return ProposalVoteUtils.getVoteResultOfProject({
+        projectId: project.id,
+        votesOfProject: project.proposals.flatMap(
+          (proposal) => proposal.voteRecords || [],
+        ),
+        proposals: project.proposals,
+        userId,
+      });
+    }, [project, userId]);
+
+  const {
+    formattedPercentageOfProposal,
+    totalValidPointsOfProposal,
+    totalSupportedUserWeightOfProposal,
+    totalValidQuorumOfProposal,
+    TotalEssentialItemWeightSum,
+    TotalEssentialItemQuorumSum,
+  } = leadingProposalResult;
+
+  const leadingProposal = useMemo(() => {
+    if (!leadingProposalId) return null;
+    return (project.proposals || []).find(
+      (proposal) => proposal.id === leadingProposalId,
+    );
+  }, [project, leadingProposalId]);
+
+  const leadingProposalCreator = useMemo(() => {
+    if (!leadingProposal) return null;
+    const creator = leadingProposal.creator;
+    return typeof creator === 'string' ? creator : (creator as IProfile).name;
+  }, [leadingProposal]);
+
   return (
     <div
       className={cn(
@@ -49,7 +89,7 @@ const PendingProjectCard = ({
       )}
     >
       <Link
-        href={`/project/${project.id}`}
+        href={`/project/pending/${project.id}`}
         className={cn(
           'flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-[10px] transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]',
           'mobile:flex-col mobile:items-start',
@@ -80,15 +120,20 @@ const PendingProjectCard = ({
 
           <div className="text-[14px] font-[600] leading-[18px] text-black">
             <p>
-              Total Proposals: <span className="text-black/60">3</span>
+              Total Proposals:{' '}
+              <span className="text-black/60">
+                {project.proposals.length || 0}
+              </span>
             </p>
-            <p className="mt-[5px]">
-              Leading: <span className="text-black/60">@leo</span>
-            </p>
+            {project.proposals && project.proposals.length > 0 && (
+              <p className="mt-[5px]">
+                Leading:{' '}
+                <span className="text-black/60">@{leadingProposalCreator}</span>
+              </p>
+            )}
           </div>
         </div>
 
-        {/* vote info */}
         <div
           className={cn(
             'flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px] text-[14px] leading-[19px] text-black',
@@ -96,21 +141,32 @@ const PendingProjectCard = ({
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="font-mona text-[16px] font-[500]">00%</span>
-            <span className="text-black/60">1/3</span>
+            <span className="font-mona text-[16px] font-[500]">
+              {formattedPercentageOfProposal}
+            </span>
+            <span className="text-black/60">
+              {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+            </span>
           </div>
 
           <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-            <div className="h-[7px] bg-black" style={{ width: `${30}%` }}></div>
+            <div
+              className="h-[7px] bg-black"
+              style={{ width: formattedPercentageOfProposal }}
+            ></div>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="font-[600]">Supported</span>
-            <span className="text-black/60">000</span>
+            <span className="text-black/60">
+              {totalSupportedUserWeightOfProposal}
+            </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-[600]">Quorum</span>
-            <span className="text-black/60">00/3</span>
+            <span className="text-black/60">
+              {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+            </span>
           </div>
         </div>
       </Link>

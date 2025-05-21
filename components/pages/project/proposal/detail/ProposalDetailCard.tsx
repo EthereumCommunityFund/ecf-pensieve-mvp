@@ -1,11 +1,11 @@
 import { cn, Skeleton } from '@heroui/react';
 import { FC, useMemo } from 'react';
 
-import { IProposal } from '@/types';
 import {
   TotalEssentialItemQuorumSum,
   TotalEssentialItemWeightSum,
 } from '@/constants/proposal';
+import { IProposal } from '@/types';
 
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
@@ -15,24 +15,25 @@ import { useProposalVotes } from './useProposalVotes';
 interface IProposalDetailCardProps {
   proposal?: IProposal;
   projectId: number;
-  isLeading?: boolean;
-  hasVoted?: boolean;
   proposalIndex: number;
+  leadingProposalId?: number;
 }
 
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
-  const { proposal, projectId, isLeading, hasVoted, proposalIndex } = props;
+  const { proposal, projectId, proposalIndex, leadingProposalId } = props;
+
+  const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
 
   const {
+    percentageOfProposal,
     totalValidPointsOfProposal,
     totalSupportedUserWeightOfProposal,
+    formattedPercentageOfProposal,
     totalValidQuorumOfProposal,
-    percentageOfProposal,
-  } = useProposalVotes(proposal, projectId);
+    isUserVotedInProposal,
+  } = voteResultOfProposal;
 
-  const formattedPercentageOfProposal = useMemo(() => {
-    return `${(percentageOfProposal * 100).toFixed(0)}%`;
-  }, [percentageOfProposal]);
+  const isLeading = !!leadingProposalId && leadingProposalId === proposal?.id;
 
   const formattedDate = useMemo(() => {
     if (!proposal) return '';
@@ -74,7 +75,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       <div className="mobile:w-full flex flex-1 flex-col gap-[10px]">
         <div className="flex items-center gap-[10px]">
           {isLeading && <ActiveLeadingLabel />}
-          {hasVoted && <VotedLabel />}
+          {isUserVotedInProposal && <VotedLabel />}
         </div>
         {/* title and date */}
         <div className="flex items-center gap-[10px]">
@@ -104,7 +105,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
             <div
               className="h-[7px] bg-black"
-              style={{ width: `${percentageOfProposal * 100}%` }}
+              style={{ width: formattedPercentageOfProposal }}
             ></div>
           </div>
         </div>

@@ -28,24 +28,26 @@ const BasicsStepForm: React.FC<
 }) => {
   const categoriesConfig = basicsFieldsConfig.categories;
   const presetCategories = categoriesConfig?.presetCategories || [];
+  const tagsOptions = basicsFieldsConfig.tags.options || [];
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
+      {/* name */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
-          fieldConfig: basicsFieldsConfig.projectName,
+          fieldConfig: basicsFieldsConfig.name,
           onAddReference: onAddReference,
           hasFieldReference,
         })}
       >
         <Controller
-          name={basicsFieldsConfig.projectName.key}
+          name={basicsFieldsConfig.name.key}
           control={control}
           render={({ field, fieldState: { error } }) => (
             <div>
               <Input
                 {...field}
-                placeholder={basicsFieldsConfig.projectName.placeholder}
+                placeholder={basicsFieldsConfig.name.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}
               />
@@ -54,6 +56,7 @@ const BasicsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* tagline */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.tagline,
@@ -77,6 +80,7 @@ const BasicsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* categories */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.categories,
@@ -114,6 +118,45 @@ const BasicsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* tags */}
+      <FormFieldContainer
+        {...useCreateContainerPropsWithValue({
+          fieldConfig: basicsFieldsConfig.tags,
+          onAddReference: onAddReference,
+          hasFieldReference,
+        })}
+      >
+        <Controller
+          name={basicsFieldsConfig.tags.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <div>
+              <Select
+                variant="bordered"
+                placeholder={basicsFieldsConfig.tags.placeholder}
+                selectionMode="multiple"
+                selectedKeys={field.value || []}
+                onSelectionChange={(keys) => field.onChange(Array.from(keys))}
+                isInvalid={!!error}
+                errorMessage={error?.message}
+                aria-label={basicsFieldsConfig.categories.label}
+              >
+                {tagsOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    textValue={option.label}
+                    aria-label={option.label}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+          )}
+        />
+      </FormFieldContainer>
+
+      {/* mainDescription */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.mainDescription,
@@ -138,16 +181,17 @@ const BasicsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* logoUrl */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
-          fieldConfig: basicsFieldsConfig.projectLogo,
+          fieldConfig: basicsFieldsConfig.logoUrl,
           onAddReference: onAddReference,
           hasFieldReference,
         })}
       >
         <div className="flex items-center gap-4">
           <Controller
-            name={basicsFieldsConfig.projectLogo.key}
+            name={basicsFieldsConfig.logoUrl.key}
             control={control}
             render={({ field, fieldState: { error } }) => (
               <div>
@@ -160,13 +204,13 @@ const BasicsStepForm: React.FC<
                     size="lg"
                     icon={<ImageIcon className="size-[64px] text-gray-400" />}
                     src={field.value ?? undefined}
-                    alt={basicsFieldsConfig.projectLogo.label}
+                    alt={basicsFieldsConfig.logoUrl.label}
                     className="size-[140px] cursor-pointer border border-dashed border-gray-300 bg-black/5 hover:bg-gray-200"
                   />
                 </PhotoUpload>
-                {errors.projectLogo && (
+                {errors.logoUrl && (
                   <p className="text-danger text-[12px]">
-                    {errors.projectLogo.message}
+                    {errors.logoUrl.message}
                   </p>
                 )}
               </div>
@@ -175,6 +219,7 @@ const BasicsStepForm: React.FC<
         </div>
       </FormFieldContainer>
 
+      {/* websiteUrl */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.websiteUrl,
@@ -208,6 +253,7 @@ const BasicsStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* appUrl */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.appUrl,
@@ -239,6 +285,40 @@ const BasicsStepForm: React.FC<
                   )
                 }
                 placeholder={basicsFieldsConfig.appUrl.placeholder}
+                isInvalid={!!error}
+                errorMessage={error?.message}
+              />
+            </div>
+          )}
+        />
+      </FormFieldContainer>
+
+      {/* whitePaper */}
+      <FormFieldContainer
+        {...useCreateContainerPropsWithValue({
+          fieldConfig: basicsFieldsConfig.whitePaper,
+          onAddReference: onAddReference,
+          hasFieldReference,
+        })}
+      >
+        <Controller
+          name={basicsFieldsConfig.whitePaper.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <div>
+              <Input
+                {...field}
+                startContent={
+                  basicsFieldsConfig.whitePaper.startContentText && (
+                    <InputPrefix
+                      prefix={basicsFieldsConfig.whitePaper.startContentText}
+                    />
+                  )
+                }
+                classNames={{
+                  inputWrapper: 'pl-0 pr-[10px]',
+                }}
+                placeholder={basicsFieldsConfig.whitePaper.placeholder}
                 isInvalid={!!error}
                 errorMessage={error?.message}
               />

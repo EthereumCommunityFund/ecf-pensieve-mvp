@@ -90,17 +90,10 @@ const ProposalDetails = ({
   const isOverallLoading = !proposal;
 
   const {
-    votesOfKeyInProposalMap,
     userVotesOfProposalMap,
-    isUserVotedInProposal,
     isFetchVoteInfoLoading,
     isVoteActionPending,
-    getItemPoints,
-    getItemVotedMemberCount,
-    getItemPointsNeeded,
-    isItemReachQuorum,
-    isItemReachPointsNeeded,
-    isItemValidated,
+    getItemVoteResult,
     onCancelVote,
     onSwitchVote,
     handleVoteAction,
@@ -163,7 +156,7 @@ const ProposalDetails = ({
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const expandableRowKeys = useMemo(() => {
-    return ['projectName', 'mainDescription', 'projectType'];
+    return ['name', 'mainDescription', 'projectType'];
   }, []);
 
   const isRowExpandable = useCallback(
@@ -321,29 +314,31 @@ const ProposalDetails = ({
       size: 220,
       cell: (info) => {
         const key = info.row.original.key;
-        const isUserVoted = isUserVotedInProposal(key);
         const isLoading =
           (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
-        const votedMemberCount = getItemVotedMemberCount(key);
-        const itemPoints = getItemPoints(key);
-        const itemPointsNeeded = getItemPointsNeeded(key);
-        const isReachQuorum = isItemReachQuorum(key);
-        const isReachPointsNeeded = isItemReachPointsNeeded(key);
-        const isValidated = isItemValidated(key);
+        const {
+          itemVotedMemberCount,
+          itemPoints,
+          itemPointsNeeded,
+          isItemReachPointsNeeded,
+          isItemReachQuorum,
+          isItemValidated,
+          isUserVotedInItem,
+        } = getItemVoteResult(key);
         return (
           <VoteItem
             fieldKey={key}
             itemPoints={itemPoints}
             itemPointsNeeded={itemPointsNeeded}
-            isReachQuorum={isReachQuorum}
-            isReachPointsNeeded={isReachPointsNeeded}
-            isValidated={isValidated}
+            isReachQuorum={isItemReachQuorum}
+            isReachPointsNeeded={isItemReachPointsNeeded}
+            isValidated={isItemValidated}
             project={project!}
             proposal={proposal!}
             proposalItem={info.row.original}
             isLoading={isLoading}
-            isUserVoted={isUserVoted}
-            votedMemberCount={votedMemberCount}
+            isUserVoted={isUserVotedInItem}
+            votedMemberCount={itemVotedMemberCount}
             onAction={() => onVoteAction(info.row.original)}
           />
         );
@@ -368,16 +363,10 @@ const ProposalDetails = ({
     onVoteAction,
     isFetchVoteInfoLoading,
     isVoteActionPending,
-    isUserVotedInProposal,
     isRowExpandable,
     expandedRows,
     toggleRowExpanded,
-    getItemPoints,
-    getItemVotedMemberCount,
-    getItemPointsNeeded,
-    isItemReachQuorum,
-    isItemReachPointsNeeded,
-    isItemValidated,
+    getItemVoteResult,
     inActionKeys,
     onShowReference,
   ]);

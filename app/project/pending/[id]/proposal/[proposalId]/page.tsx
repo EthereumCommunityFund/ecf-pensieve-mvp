@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils from '@/utils/proposal';
 
 const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
@@ -68,18 +69,19 @@ const ProposalPage = () => {
     },
   );
 
-  const proposalName = useMemo(() => {
-    if (!proposal) return '';
-    const nameItem = proposal.items.find(
-      (item: any) => item.key === 'projectName',
-    ) as { key: string; value: string } | undefined;
-    return nameItem?.value || 'Unnamed Proposal';
-  }, [proposal]);
-
-  const progressPercentage = 48;
+  const { leadingProposalId } = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProject({
+      projectId: Number(projectId),
+      proposals: proposals || [],
+      votesOfProject: (project?.proposals || []).flatMap(
+        (proposal) => proposal.voteRecords || [],
+      ),
+      userId: profile?.userId,
+    });
+  }, [proposals, projectId, profile?.userId]);
 
   const onSubmitProposal = useCallback(() => {
-    router.push(`/project/${projectId}/proposal/create`);
+    router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
   return (
@@ -105,9 +107,8 @@ const ProposalPage = () => {
       <ProposalDetailCard
         proposal={proposal}
         projectId={Number(projectId)}
-        isLeading={true}
-        hasVoted={true}
         proposalIndex={Number(proposalId)}
+        leadingProposalId={leadingProposalId}
       />
 
       {profile && (
