@@ -3,10 +3,13 @@ import { IProject } from '@/types';
 
 import {
   BasicsKeys,
+  CreateProjectStep,
   DatesKeys,
+  EssentialItemKeys,
   IFormTypeEnum,
   OrganizationKeys,
   ProjectFormData,
+  ProjectStepFieldsMap,
   ReferenceData,
   TechnicalsKeys,
 } from './types';
@@ -38,7 +41,45 @@ export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
   codeRepo: true,
   tokenContract: true,
 };
-export interface FormFieldConfig<K extends keyof ProjectFormData> {
+
+export const CreateProjectStepFields: ProjectStepFieldsMap = {
+  [CreateProjectStep.Basics]: {
+    name: true,
+    tagline: true,
+    categories: true,
+    mainDescription: true,
+    logoUrl: true,
+    websiteUrl: true,
+    appUrl: true,
+    tags: true,
+    whitePaper: true,
+  },
+  [CreateProjectStep.Dates]: {
+    dateFounded: true,
+    dateLaunch: true,
+    devStatus: true,
+    fundingStatus: true,
+  },
+  [CreateProjectStep.Technicals]: {
+    openSource: true,
+    codeRepo: true,
+    tokenContract: true,
+    dappSmartContracts: true,
+  },
+  [CreateProjectStep.Organization]: {
+    orgStructure: true,
+    publicGoods: true,
+    founders: true,
+  },
+};
+
+export const getCreateProjectStepFields = <T extends CreateProjectStep>(
+  step: T,
+): string[] => {
+  return Object.keys(CreateProjectStepFields[step]);
+};
+
+export interface FormFieldConfig<K extends EssentialItemKeys> {
   key: K;
   label: string;
   description?: string;

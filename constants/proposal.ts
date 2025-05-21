@@ -1,9 +1,11 @@
+import { EssentialItemKeys } from '@/components/pages/project/create/types';
+
 export const DefaultVoteQuorum = 3;
 
 /**
  * TODO: need to confirm, get by dynamic data
  */
-export const ItemWeightMap: Record<string, number> = {
+export const ItemWeightMap: Record<EssentialItemKeys, number> = {
   name: 20,
   tagline: 10,
   categories: 10,
@@ -30,11 +32,11 @@ export const ItemWeightMap: Record<string, number> = {
 };
 
 export const TotalEssentialItemWeightSum = Object.keys(ItemWeightMap).reduce(
-  (acc, key) => acc + ItemWeightMap[key],
+  (acc, key) => acc + ItemWeightMap[key as keyof typeof ItemWeightMap],
   0,
 );
 
-export const ItemQuorumMap: Record<string, number> = {
+export const ItemQuorumMap: Record<EssentialItemKeys, number> = {
   name: DefaultVoteQuorum,
   tagline: DefaultVoteQuorum,
   categories: DefaultVoteQuorum,
@@ -61,6 +63,6 @@ export const ItemQuorumMap: Record<string, number> = {
 };
 
 export const TotalEssentialItemQuorumSum = Object.keys(ItemQuorumMap).reduce(
-  (acc, key) => acc + ItemQuorumMap[key],
+  (acc, key) => acc + ItemQuorumMap[key as keyof typeof ItemQuorumMap],
   0,
 );
