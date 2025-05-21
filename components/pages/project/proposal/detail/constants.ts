@@ -1,12 +1,13 @@
 import {
   basicsFieldsConfig,
   datesFieldsConfig,
+  getCreateProjectStepFields,
   organizationFieldsConfig,
   technicalsFieldsConfig,
 } from '@/components/pages/project/create/FormData';
 import { CreateProjectStep } from '@/components/pages/project/create/types';
 
-export const CATEGORIES: Record<
+export const TableFieldCategory: Record<
   CreateProjectStep,
   {
     title: string;
@@ -17,32 +18,22 @@ export const CATEGORIES: Record<
   [CreateProjectStep.Basics]: {
     title: 'Basics',
     description: '',
-    items: [
-      'name',
-      'tagline',
-      'categories',
-      'tags',
-      'mainDescription',
-      'logoUrl',
-      'websiteUrl',
-      'appUrl',
-      'whitePaper',
-    ],
+    items: getCreateProjectStepFields(CreateProjectStep.Basics),
   },
   [CreateProjectStep.Dates]: {
     title: 'Dates & Statuses',
     description: '',
-    items: ['dateFounded', 'dateLaunch', 'devStatus', 'fundingStatus'],
+    items: getCreateProjectStepFields(CreateProjectStep.Dates),
   },
   [CreateProjectStep.Technicals]: {
     title: 'Technicals',
     description: '',
-    items: ['openSource', 'codeRepo', 'tokenContract', 'dappSmartContracts'],
+    items: getCreateProjectStepFields(CreateProjectStep.Technicals),
   },
   [CreateProjectStep.Organization]: {
     title: 'Organization',
     description: '',
-    items: ['orgStructure', 'publicGoods', 'founders'],
+    items: getCreateProjectStepFields(CreateProjectStep.Organization),
   },
 };
 

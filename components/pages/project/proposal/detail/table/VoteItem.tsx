@@ -3,7 +3,7 @@ import { FC } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
-import { DefaultVoteQuorum } from '@/constants/proposal';
+import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
 
 import { ITableProposalItem } from '../ProposalDetails';
@@ -71,7 +71,7 @@ const VoteItem: FC<IProps> = ({
         >
           <UsersIcon />
           <span className="font-mona text-[14px] font-[600] leading-[19px] text-black">
-            {votedMemberCount}/{DefaultVoteQuorum}
+            {votedMemberCount}/{QUORUM_AMOUNT}
           </span>
         </div>
       </div>

@@ -1,12 +1,15 @@
-import { ItemWeightMap } from '@/constants/proposal';
+import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
 import { IProject } from '@/types';
 
 import {
   BasicsKeys,
+  CreateProjectStep,
   DatesKeys,
+  EssentialItemKeys,
   IFormTypeEnum,
   OrganizationKeys,
   ProjectFormData,
+  ProjectStepFieldsMap,
   ReferenceData,
   TechnicalsKeys,
 } from './types';
@@ -38,7 +41,45 @@ export const DEFAULT_FIELD_APPLICABILITY: Record<ApplicableField, boolean> = {
   codeRepo: true,
   tokenContract: true,
 };
-export interface FormFieldConfig<K extends keyof ProjectFormData> {
+
+export const CreateProjectStepFields: ProjectStepFieldsMap = {
+  [CreateProjectStep.Basics]: {
+    name: true,
+    tagline: true,
+    categories: true,
+    mainDescription: true,
+    logoUrl: true,
+    websiteUrl: true,
+    appUrl: true,
+    tags: true,
+    whitePaper: true,
+  },
+  [CreateProjectStep.Dates]: {
+    dateFounded: true,
+    dateLaunch: true,
+    devStatus: true,
+    fundingStatus: true,
+  },
+  [CreateProjectStep.Technicals]: {
+    openSource: true,
+    codeRepo: true,
+    tokenContract: true,
+    dappSmartContracts: true,
+  },
+  [CreateProjectStep.Organization]: {
+    orgStructure: true,
+    publicGoods: true,
+    founders: true,
+  },
+};
+
+export const getCreateProjectStepFields = <T extends CreateProjectStep>(
+  step: T,
+): string[] => {
+  return Object.keys(CreateProjectStepFields[step]);
+};
+
+export interface FormFieldConfig<K extends EssentialItemKeys> {
   key: K;
   label: string;
   description?: string;
@@ -63,7 +104,7 @@ export const basicsFieldsConfig: {
     label: 'Project Name',
     description: 'type in the name of the project to propose',
     shortDescription: 'The unique identifier for the project.',
-    weight: ItemWeightMap.name,
+    weight: ESSENTIAL_ITEM_MAP.name.weight,
     type: 'text',
     placeholder: 'Type in a name',
     showReference: true,
@@ -74,7 +115,7 @@ export const basicsFieldsConfig: {
     description:
       'provide a simple short description about this project to display on its card',
     shortDescription: 'A simple and catchy slogan for the project.',
-    weight: ItemWeightMap.tagline,
+    weight: ESSENTIAL_ITEM_MAP.tagline.weight,
     type: 'text',
     placeholder: 'Type in a tagline',
     showReference: true,
@@ -85,7 +126,7 @@ export const basicsFieldsConfig: {
     description:
       'provide a simple short description about this project to display on its card',
     shortDescription: 'Categorize the project into relevant categories.',
-    weight: ItemWeightMap.categories,
+    weight: ESSENTIAL_ITEM_MAP.categories.weight,
     type: 'selectMultiple',
     placeholder: 'Select categories',
     presetCategories: [
@@ -103,7 +144,7 @@ export const basicsFieldsConfig: {
     label: 'Tags',
     description: 'provide a list of tags for this project',
     shortDescription: 'A list of tags for the project.',
-    weight: ItemWeightMap.tags,
+    weight: ESSENTIAL_ITEM_MAP.tags.weight,
     type: 'selectMultiple',
     placeholder: 'Select tags',
     showReference: true,
@@ -142,7 +183,7 @@ export const basicsFieldsConfig: {
     label: 'Main Description',
     description: 'provide a longer description about this project in detail',
     shortDescription: 'A comprehensive description of the project.',
-    weight: ItemWeightMap.mainDescription,
+    weight: ESSENTIAL_ITEM_MAP.mainDescription.weight,
     type: 'textarea',
     placeholder: 'Type in a description',
     minRows: 4,
@@ -153,7 +194,7 @@ export const basicsFieldsConfig: {
     label: 'Project Logo',
     description: 'provide a logo for this project',
     shortDescription: 'The visual logo of the project.',
-    weight: ItemWeightMap.logoUrl,
+    weight: ESSENTIAL_ITEM_MAP.logoUrl.weight,
     type: 'photo',
     showReference: true,
   },
@@ -162,7 +203,7 @@ export const basicsFieldsConfig: {
     label: 'Project Website',
     description: 'provide the main website for this project',
     shortDescription: 'The main online address of the project.',
-    weight: ItemWeightMap.websiteUrl,
+    weight: ESSENTIAL_ITEM_MAP.websiteUrl.weight,
     type: 'url',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -174,7 +215,7 @@ export const basicsFieldsConfig: {
     description: 'provide the main application URL for this project',
     shortDescription:
       'The direct link to the project application (if different from the website).',
-    weight: ItemWeightMap.appUrl,
+    weight: ESSENTIAL_ITEM_MAP.appUrl.weight,
     type: 'switchableUrl',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -186,7 +227,7 @@ export const basicsFieldsConfig: {
     label: 'White Paper',
     description: 'provide the white paper for this project',
     shortDescription: 'The white paper of the project.',
-    weight: ItemWeightMap.whitePaper,
+    weight: ESSENTIAL_ITEM_MAP.whitePaper.weight,
     type: 'switchableUrl',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -202,7 +243,7 @@ export const datesFieldsConfig: {
     label: 'Date Founded',
     description: 'Select the date at which the project was founded.',
     shortDescription: 'The date when the project officially began.',
-    weight: ItemWeightMap.dateFounded,
+    weight: ESSENTIAL_ITEM_MAP.dateFounded.weight,
     type: 'date',
     placeholder: 'Select date',
     showReference: true,
@@ -214,7 +255,7 @@ export const datesFieldsConfig: {
       'Select the date when the main product or service was launched (if applicable).',
     shortDescription:
       'The date when the product was first released to the public.',
-    weight: ItemWeightMap.dateLaunch,
+    weight: ESSENTIAL_ITEM_MAP.dateLaunch.weight,
     type: 'switchableDate',
     placeholder: 'Select date',
     showApplicable: true,
@@ -225,7 +266,7 @@ export const datesFieldsConfig: {
     label: 'Development Status',
     description: 'Select the current status of their development',
     shortDescription: 'The most recent development status of the project.',
-    weight: ItemWeightMap.devStatus,
+    weight: ESSENTIAL_ITEM_MAP.devStatus.weight,
     type: 'select',
     placeholder: 'Select status',
     options: [
@@ -246,7 +287,7 @@ export const datesFieldsConfig: {
     label: 'Funding Status',
     description: 'Select the current status of their funding phase',
     shortDescription: 'The sources and status of project funding.',
-    weight: ItemWeightMap.fundingStatus,
+    weight: ESSENTIAL_ITEM_MAP.fundingStatus.weight,
     type: 'select',
     placeholder: 'Select funding status',
     showApplicable: true,
@@ -268,7 +309,7 @@ export const technicalsFieldsConfig: {
     description: 'Is this project now open-source?',
     shortDescription: 'Whether the project follows an open-source model.',
     placeholder: 'Select open-source status',
-    weight: ItemWeightMap.openSource,
+    weight: ESSENTIAL_ITEM_MAP.openSource.weight,
     type: 'radio',
     options: [
       { value: 'Yes', label: 'Yes' },
@@ -281,7 +322,7 @@ export const technicalsFieldsConfig: {
     label: 'Code Repository',
     description: 'Provide a URL to their repository',
     shortDescription: 'The repository link hosting the project source code.',
-    weight: ItemWeightMap.codeRepo,
+    weight: ESSENTIAL_ITEM_MAP.codeRepo.weight,
     type: 'switchableUrl',
     placeholder: 'https://github.com/your-org/repo',
     startContentText: 'https://',
@@ -294,7 +335,7 @@ export const technicalsFieldsConfig: {
     description: 'Input the projects token contract address',
     shortDescription:
       'The contract address of the project token on the blockchain.',
-    weight: ItemWeightMap.tokenContract,
+    weight: ESSENTIAL_ITEM_MAP.tokenContract.weight,
     type: 'switchableUrl',
     placeholder: '0x...',
     showApplicable: true,
@@ -305,7 +346,7 @@ export const technicalsFieldsConfig: {
     label: 'Dapp Smart Contracts',
     description: 'Input the projects smart contracts',
     shortDescription: 'The smart contracts of the project.',
-    weight: ItemWeightMap.dappSmartContracts,
+    weight: ESSENTIAL_ITEM_MAP.dappSmartContracts.weight,
     type: 'switchableUrl',
     placeholder: '0x...',
     showReference: true,
@@ -320,7 +361,7 @@ export const organizationFieldsConfig: {
     label: 'Organization Structure',
     description: 'With what structure does this project operate?',
     shortDescription: 'The organizational and governance model of the project.',
-    weight: ItemWeightMap.orgStructure,
+    weight: ESSENTIAL_ITEM_MAP.orgStructure.weight,
     type: 'select',
     placeholder: 'Select structure',
     options: [
@@ -335,7 +376,7 @@ export const organizationFieldsConfig: {
     label: 'Public-Goods Nature',
     description: 'Is this project a public good?',
     shortDescription: 'Whether the project contributes to the public domain.',
-    weight: ItemWeightMap.publicGoods,
+    weight: ESSENTIAL_ITEM_MAP.publicGoods.weight,
     placeholder: 'Select public goods',
     type: 'radio',
     options: [
@@ -350,7 +391,7 @@ export const organizationFieldsConfig: {
     description:
       'Provide the founders of this project (minimum of 1 founder is required)',
     shortDescription: 'The list of founding team members of the project.',
-    weight: ItemWeightMap.founders,
+    weight: ESSENTIAL_ITEM_MAP.founders.weight,
     type: 'founderList',
     showReference: true,
   },

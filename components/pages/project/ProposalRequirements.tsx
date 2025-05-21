@@ -1,5 +1,9 @@
 import { Button } from '@/components/base/button';
 import { InfoIcon } from '@/components/icons';
+import {
+  ESSENTIAL_ITEM_LIST,
+  ESSENTIAL_ITEM_WEIGHT_SUM,
+} from '@/lib/constants';
 
 // TODO: add tooltip，number logic
 const ProposalRequirements = () => {
@@ -27,7 +31,9 @@ const ProposalRequirements = () => {
 
           <div className="flex items-center justify-between gap-[14px]">
             <span>Essential Items</span>
-            <span className="font-mona font-[500]">00</span>
+            <span className="font-mona font-[500]">
+              {ESSENTIAL_ITEM_LIST.length}
+            </span>
           </div>
         </div>
 
@@ -48,7 +54,9 @@ const ProposalRequirements = () => {
           </div>
           <div className="flex items-center justify-between gap-[14px]">
             <span>Weight Required</span>
-            <span className="font-mona font-[500]">000</span>
+            <span className="font-mona font-[500]">
+              {ESSENTIAL_ITEM_WEIGHT_SUM}
+            </span>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import ECFTypography from '@/components/base/typography';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
-import { IProject } from '@/types';
+import { IProfile, IProject } from '@/types';
 
 export function ProjectCardSkeleton() {
   return (
@@ -91,7 +91,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
               <span className="opacity-60">by: </span>
               <span className="mx-[6px] font-bold underline">
-                {project.creator?.name}
+                {(project.creator as IProfile)?.name}
               </span>{' '}
               <span className="opacity-60">
                 {formatTimeAgo(project.createdAt.getTime())}

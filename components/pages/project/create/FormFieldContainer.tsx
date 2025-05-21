@@ -10,7 +10,7 @@ export interface FormFieldContainerProps {
   label: string;
   description?: string;
   shortDescription?: string;
-  weight?: string;
+  weight?: string | number;
   children: React.ReactNode;
 
   showApplicable?: boolean;

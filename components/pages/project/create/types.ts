@@ -34,6 +34,34 @@ export interface ReferenceData {
   value: string;
 }
 
+export type BasicsKeys =
+  | 'name'
+  | 'tagline'
+  | 'categories'
+  | 'mainDescription'
+  | 'logoUrl'
+  | 'websiteUrl'
+  | 'appUrl'
+  | 'tags'
+  | 'whitePaper';
+export type DatesKeys =
+  | 'dateFounded'
+  | 'dateLaunch'
+  | 'devStatus'
+  | 'fundingStatus';
+export type TechnicalsKeys =
+  | 'openSource'
+  | 'codeRepo'
+  | 'tokenContract'
+  | 'dappSmartContracts';
+export type OrganizationKeys = 'orgStructure' | 'publicGoods' | 'founders';
+
+export type EssentialItemKeys =
+  | BasicsKeys
+  | DatesKeys
+  | TechnicalsKeys
+  | OrganizationKeys;
+
 export interface ProjectFormData {
   name: string;
   tagline: string;
@@ -121,36 +149,9 @@ export interface StepFormProps {
   hasFieldReference: (fieldKey: string) => boolean;
 }
 
-export const stepFields = {
-  [CreateProjectStep.Basics]: [
-    'name',
-    'tagline',
-    'categories',
-    'mainDescription',
-    'logoUrl',
-    'websiteUrl',
-    'appUrl',
-    'tags',
-    'whitePaper',
-  ],
-  [CreateProjectStep.Dates]: [
-    'dateFounded',
-    'dateLaunch',
-    'devStatus',
-    'fundingStatus',
-  ],
-  [CreateProjectStep.Technicals]: [
-    'openSource',
-    'codeRepo',
-    'tokenContract',
-    'dappSmartContracts',
-  ],
-  [CreateProjectStep.Organization]: ['orgStructure', 'publicGoods', 'founders'],
-} as const;
-
-export type BasicsKeys = (typeof stepFields)[CreateProjectStep.Basics][number];
-export type DatesKeys = (typeof stepFields)[CreateProjectStep.Dates][number];
-export type TechnicalsKeys =
-  (typeof stepFields)[CreateProjectStep.Technicals][number];
-export type OrganizationKeys =
-  (typeof stepFields)[CreateProjectStep.Organization][number];
+export type ProjectStepFieldsMap = {
+  [CreateProjectStep.Basics]: { [K in BasicsKeys]: true };
+  [CreateProjectStep.Dates]: { [K in DatesKeys]: true };
+  [CreateProjectStep.Technicals]: { [K in TechnicalsKeys]: true };
+  [CreateProjectStep.Organization]: { [K in OrganizationKeys]: true };
+};

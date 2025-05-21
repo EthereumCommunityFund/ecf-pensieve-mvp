@@ -12,6 +12,7 @@ import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeigh
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
+import { IProject, IProposalWithVotes } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
 
@@ -73,9 +74,9 @@ const ProposalPage = () => {
     return ProposalVoteUtils.getVoteResultOfProject({
       projectId: Number(projectId),
       proposals: proposals || [],
-      votesOfProject: (project?.proposals || []).flatMap(
-        (proposal) => proposal.voteRecords || [],
-      ),
+      votesOfProject: (
+        (project?.proposals || []) as IProposalWithVotes[]
+      ).flatMap((proposal) => proposal.voteRecords || []),
       userId: profile?.userId,
     });
   }, [proposals, projectId, profile?.userId]);
@@ -132,7 +133,7 @@ const ProposalPage = () => {
           )}
         >
           <ProposalDetails
-            project={project}
+            project={project as IProject}
             proposal={proposal}
             proposals={proposals || []}
             projectId={Number(projectId)}
