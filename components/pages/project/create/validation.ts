@@ -35,10 +35,7 @@ export const basicsSchema = yup.object().shape({
     .of(yup.string().required())
     .min(1, 'Select at least one tag')
     .required('Tags are required'),
-  mainDescription: yup
-    .string()
-    .required('Main description is required')
-    .max(250, 'Main description cannot exceed 250 characters'),
+  mainDescription: yup.string().required('Main description is required'),
   logoUrl: yup
     .string()
     .url('Invalid Logo URL')
