@@ -9,9 +9,10 @@ import {
   WEIGHT,
 } from '@/lib/constants';
 import { profiles, projects } from '@/lib/db/schema';
+import { projectLogs } from '@/lib/db/schema/projectLogs';
+import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
-import { POC_ITEMS } from '@/lib/pocItems';
 
 import { proposalRouter } from './proposal';
 
@@ -219,7 +220,6 @@ export const projectRouter = router({
         proposals: {
           with: {
             voteRecords: true,
-            creator: true,
           },
         },
       },
@@ -263,7 +263,7 @@ export const projectRouter = router({
           const currentItemKey = String(item.key);
           const votesForItem = votesByItemKey.get(currentItemKey) || [];
 
-          if (votesForItem.length <= QUORUM_AMOUNT) {
+          if (votesForItem.length < QUORUM_AMOUNT) {
             return false;
           }
 
@@ -300,6 +300,37 @@ export const projectRouter = router({
         });
       });
     });
+
+    for (const project of filteredProjects) {
+      ctx.db
+        .update(projects)
+        .set({ isPublished: true })
+        .where(eq(projects.id, project.id));
+      if (project.proposals && Array.isArray(project.proposals)) {
+        for (const proposal of project.proposals) {
+          ctx.db.insert(projectLogs).values({
+            projectId: project.id,
+            proposalId: proposal.id,
+          });
+          if (proposal.creator) {
+            const userProfile = await ctx.db.query.profiles.findFirst({
+              where: eq(profiles.userId, proposal.creator),
+            });
+
+            if (userProfile) {
+              ctx.db
+                .update(profiles)
+                .set({
+                  weight:
+                    (userProfile.weight ?? 0) +
+                    ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+                })
+                .where(eq(profiles.userId, proposal.creator));
+            }
+          }
+        }
+      }
+    }
 
     return filteredProjects;
   }),
