@@ -4,7 +4,7 @@ import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
-import { IProject } from '@/types';
+import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
 export function PendingProjectCardSkeleton() {
@@ -63,6 +63,19 @@ const PendingProjectCard = ({
     TotalEssentialItemQuorumSum,
   } = leadingProposalResult;
 
+  const leadingProposal = useMemo(() => {
+    if (!leadingProposalId) return null;
+    return (project.proposals || []).find(
+      (proposal) => proposal.id === leadingProposalId,
+    );
+  }, [project, leadingProposalId]);
+
+  const leadingProposalCreator = useMemo(() => {
+    if (!leadingProposal) return null;
+    const creator = leadingProposal.creator;
+    return typeof creator === 'string' ? creator : (creator as IProfile).name;
+  }, [leadingProposal]);
+
   return (
     <div
       className={cn(
@@ -102,11 +115,17 @@ const PendingProjectCard = ({
 
           <div className="text-[14px] font-[600] leading-[18px] text-black">
             <p>
-              Total Proposals: <span className="text-black/60">3</span>
+              Total Proposals:{' '}
+              <span className="text-black/60">
+                {project.proposals.length || 0}
+              </span>
             </p>
-            <p className="mt-[5px]">
-              Leading: <span className="text-black/60">@leo</span>
-            </p>
+            {project.proposals && project.proposals.length > 0 && (
+              <p className="mt-[5px]">
+                Leading:{' '}
+                <span className="text-black/60">@{leadingProposalCreator}</span>
+              </p>
+            )}
           </div>
         </div>
 
