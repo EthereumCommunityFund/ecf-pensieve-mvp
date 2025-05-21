@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/scanPendingProject",
-      "schedule": "*/15 * * * *"
+      "schedule": "* * * * *"
     }
   ]
 }
