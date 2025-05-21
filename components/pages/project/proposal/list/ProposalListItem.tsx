@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { Button } from '@/components/base';
+import {
+  ESSENTIAL_ITEM_QUORUM_SUM,
+  ESSENTIAL_ITEM_WEIGHT_SUM,
+} from '@/lib/constants';
 import { IProposal } from '@/types';
 import { IVoteResultOfProposal } from '@/utils/proposal';
 
@@ -31,8 +35,6 @@ const ProposalListItem = ({
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
     formattedPercentageOfProposal,
-    TotalEssentialItemWeightSum,
-    TotalEssentialItemQuorumSum,
     isUserVotedInProposal,
   } = voteResultOfProposal || {};
 
@@ -91,7 +93,7 @@ const ProposalListItem = ({
         <div className="flex items-center justify-between">
           <span>Points Needed</span>
           <span className="text-black/60">
-            {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+            {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -103,7 +105,7 @@ const ProposalListItem = ({
         <div className="flex items-center justify-between">
           <span>quorum</span>
           <span className="text-black/60">
-            {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+            {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
           </span>
         </div>
       </div>

@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
+import {
+  ESSENTIAL_ITEM_QUORUM_SUM,
+  ESSENTIAL_ITEM_WEIGHT_SUM,
+} from '@/lib/constants';
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
@@ -64,8 +68,6 @@ const PendingProjectCard = ({
     totalValidPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
-    TotalEssentialItemWeightSum,
-    TotalEssentialItemQuorumSum,
   } = leadingProposalResult;
 
   const leadingProposal = useMemo(() => {
@@ -145,7 +147,7 @@ const PendingProjectCard = ({
               {formattedPercentageOfProposal}
             </span>
             <span className="text-black/60">
-              {totalValidPointsOfProposal}/{TotalEssentialItemWeightSum}
+              {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
             </span>
           </div>
 
@@ -165,7 +167,7 @@ const PendingProjectCard = ({
           <div className="flex items-center justify-between">
             <span className="font-[600]">Quorum</span>
             <span className="text-black/60">
-              {totalValidQuorumOfProposal}/{TotalEssentialItemQuorumSum}
+              {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
             </span>
           </div>
         </div>

@@ -18,9 +18,9 @@ import {
   IRef,
 } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
-import { ItemWeightMap } from '@/constants/proposal';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
+import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { safeGetLocalStorage } from '@/utils/localStorage';
@@ -194,7 +194,7 @@ const ProposalDetails = ({
             <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
               {info.getValue()}
             </div>
-            <TooltipItemWeight itemWeight={ItemWeightMap[rowKey]} />
+            <TooltipItemWeight itemWeight={ESSENTIAL_ITEM_MAP[rowKey].weight} />
           </div>
         );
       },
