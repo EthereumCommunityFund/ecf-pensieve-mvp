@@ -53,8 +53,9 @@ export function useProposalVotes(
     return ProposalVoteUtils.getVoteResultOfProposal({
       proposalId: Number(proposal?.id),
       votesOfProposal: votesOfProposal || [],
+      userId: profile?.userId,
     });
-  }, [votesOfProposal, proposal]);
+  }, [votesOfProposal, proposal, profile]);
 
   const getItemVoteResult = useCallback(
     (key: string) => {
@@ -120,7 +121,7 @@ export function useProposalVotes(
       );
   }, [votesOfProject, profile]);
 
-  const isUserVotedInProposal = useCallback(
+  const isUserVotedItemOfProposal = useCallback(
     (key: string) => {
       if (!profile) return false;
       const votesOfKey = votesOfKeyInProposalMap[key] || [];
@@ -133,7 +134,7 @@ export function useProposalVotes(
     [profile, votesOfKeyInProposalMap],
   );
 
-  const isUserVotedInProject = useCallback(
+  const isUserVotedItemOfProject = useCallback(
     (key: string) => {
       if (!profile) return false;
       const votesOfKey = votedOfKeyInProjectMap[key] || [];
@@ -273,11 +274,11 @@ export function useProposalVotes(
       } = callbacks;
 
       setCurrentVoteItem(item);
-      if (!isUserVotedInProject(item.key)) {
+      if (!isUserVotedItemOfProject(item.key)) {
         await onCreateVote(item.key);
         return;
       }
-      if (isUserVotedInProposal(item.key)) {
+      if (isUserVotedItemOfProposal(item.key)) {
         if (doNotShowCancelModal) {
           await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
         } else {
@@ -286,15 +287,18 @@ export function useProposalVotes(
         return;
       }
 
-      if (isUserVotedInProject(item.key) && !isUserVotedInProposal(item.key)) {
+      if (
+        isUserVotedItemOfProject(item.key) &&
+        !isUserVotedItemOfProposal(item.key)
+      ) {
         const sourceProposalData = findSourceProposal(item.key);
         setSourceProposal(sourceProposalData);
         setIsSwitchModalOpen(true);
       }
     },
     [
-      isUserVotedInProject,
-      isUserVotedInProposal,
+      isUserVotedItemOfProject,
+      isUserVotedItemOfProposal,
       onCreateVote,
       onCancelVote,
       userVotesOfProposalMap,
@@ -311,8 +315,8 @@ export function useProposalVotes(
     userVotesOfProjectMap,
     voteResultOfProposal,
     getItemVoteResult,
-    isUserVotedInProposal,
-    isUserVotedInProject,
+    isUserVotedInProposal: isUserVotedItemOfProposal,
+    isUserVotedInProject: isUserVotedItemOfProject,
     isFetchVoteInfoLoading:
       isVotesOfProposalFetching || isVotesOfProjectFetching,
     isVoteActionPending:
