@@ -2,7 +2,12 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { ESSENTIAL_ITEM_WEIGHT_AMOUNT, REWARD_PERCENT } from '@/lib/constants';
+import {
+  ESSENTIAL_ITEM_AMOUNT,
+  ESSENTIAL_ITEM_WEIGHT_AMOUNT,
+  QUORUM_AMOUNT,
+  REWARD_PERCENT,
+} from '@/lib/constants';
 import { profiles, projects } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
@@ -41,6 +46,11 @@ export const projectRouter = router({
             }),
           )
           .min(1, 'At least one founder is required'),
+        tags: z.array(z.string()).min(1, 'At least one tag is required'),
+        whitePaper: z.string().min(1, 'White paper cannot be empty'),
+        dappSmartContracts: z
+          .string()
+          .min(1, 'Dapp smart contracts cannot be empty'),
         refs: z
           .array(
             z.object({
@@ -139,11 +149,7 @@ export const projectRouter = router({
       if (!isPublished) {
         queryOptions.proposals = {
           with: {
-            voteRecords: {
-              with: {
-                creator: true,
-              },
-            },
+            voteRecords: true,
             creator: true,
           },
         };
@@ -210,7 +216,8 @@ export const projectRouter = router({
 
     const filteredProjects = pendingProjects.filter((project) => {
       return project.proposals.some(
-        (proposal) => proposal.voteRecords.length > 0,
+        (proposal) =>
+          proposal.voteRecords.length >= ESSENTIAL_ITEM_AMOUNT * QUORUM_AMOUNT,
       );
     });
 
