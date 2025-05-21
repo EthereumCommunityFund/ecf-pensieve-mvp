@@ -1,7 +1,7 @@
 'use client';
 
 import { Image } from '@heroui/react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -17,7 +17,8 @@ import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 const PendingProjectsPage = () => {
-  const { profile } = useAuth();
+  const router = useRouter();
+  const { profile, showAuthPrompt } = useAuth();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     trpc.project.getProjects.useInfiniteQuery(
@@ -41,7 +42,11 @@ const PendingProjectsPage = () => {
   };
 
   const handleProposeProject = () => {
-    console.log('Propose a Project');
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push('/project/create');
   };
 
   const allProjects = data?.pages.flatMap((page) => page.items) || [];
@@ -61,14 +66,12 @@ const PendingProjectsPage = () => {
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
           <div className="mt-[20px] flex items-center justify-start gap-[10px]">
-            <Link href="/project/create">
-              <Button
-                onPress={handleProposeProject}
-                className="font-mona border-none bg-[#64C0A5] px-[20px] text-[16px] text-white hover:bg-[#6ab9a1]"
-              >
-                Propose a Project
-              </Button>
-            </Link>
+            <Button
+              onPress={handleProposeProject}
+              className="font-mona border-none bg-[#64C0A5] px-[20px] text-[16px] text-white hover:bg-[#6ab9a1]"
+            >
+              Propose a Project
+            </Button>
             {/* TODO click logic */}
             <Button className="font-mona px-[20px] text-[16px]">
               How it works
