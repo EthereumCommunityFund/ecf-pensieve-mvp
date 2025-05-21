@@ -2,6 +2,8 @@
  * Utility functions for formatting data
  */
 
+import dayjs from '@/lib/dayjs';
+
 /**
  * Format a number to a more readable format
  *
@@ -55,4 +57,27 @@ export function formatNumber(
 
   // Add negative sign if needed
   return isNegative ? `-${formatted}` : formatted;
+}
+
+/**
+ * Format a date to a readable string format
+ *
+ * @param date - The date to format (Date object or ISO string)
+ * @param format - The format to use (default: 'MM/DD/YYYY')
+ * @param fallback - The fallback value if date is invalid (default: '')
+ * @returns Formatted date string
+ */
+export function formatDate(
+  date: Date | string | null | undefined,
+  format: string = 'MM/DD/YYYY',
+  fallback: string = '',
+): string {
+  if (!date) return fallback;
+
+  try {
+    return dayjs(date).format(format);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return fallback;
+  }
 }
