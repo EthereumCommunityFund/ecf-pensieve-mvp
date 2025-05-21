@@ -66,15 +66,19 @@ const ProjectPage = () => {
     },
   );
 
-  const { leadingProposalId, leadingProposalResult, voteResultOfProposalMap } =
-    useMemo(() => {
-      return ProposalVoteUtils.getVoteResultOfProject({
-        projectId: Number(projectId),
-        votesOfProject: votesOfProject || [],
-        proposals: proposals || [],
-        userId,
-      });
-    }, [projectId, votesOfProject, proposals, userId]);
+  const {
+    leadingProposalId,
+    leadingProposalResult,
+    voteResultOfProposalMap,
+    leadingProposal,
+  } = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProject({
+      projectId: Number(projectId),
+      votesOfProject: votesOfProject || [],
+      proposals: proposals || [],
+      userId,
+    });
+  }, [projectId, votesOfProject, proposals, userId]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/${projectId}/proposal/create`);
@@ -94,7 +98,11 @@ const ProjectPage = () => {
         </div>
       </BackHeader>
 
-      <ProjectCard project={project as IProject} proposals={proposals} />
+      <ProjectCard
+        project={project as IProject}
+        proposals={proposals}
+        leadingProposal={leadingProposal}
+      />
 
       {/* Proposal list */}
       <div
@@ -140,9 +148,11 @@ export default ProjectPage;
 const ProjectCard = ({
   project,
   proposals,
+  leadingProposal,
 }: {
   project?: IProject;
   proposals?: IProposal[];
+  leadingProposal?: IProposal;
 }) => {
   if (!project) {
     return (
@@ -222,8 +232,11 @@ const ProjectCard = ({
           <span className="text-black/60">{proposals?.length || 0}</span>
           <span className="text-black/20">|</span>
           <span>Leading:</span>
-          {/* TODO leading username */}
-          <span className="text-black/60">@leo</span>
+          {leadingProposal && (
+            <span className="text-black/60">
+              @{leadingProposal.creator.name}
+            </span>
+          )}
         </div>
       </div>
     </div>

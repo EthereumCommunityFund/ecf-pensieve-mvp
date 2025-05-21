@@ -15,13 +15,12 @@ import { useProposalVotes } from './useProposalVotes';
 interface IProposalDetailCardProps {
   proposal?: IProposal;
   projectId: number;
-  isLeading?: boolean;
-  hasVoted?: boolean;
   proposalIndex: number;
+  leadingProposalId?: number;
 }
 
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
-  const { proposal, projectId, isLeading, hasVoted, proposalIndex } = props;
+  const { proposal, projectId, proposalIndex, leadingProposalId } = props;
 
   const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
 
@@ -31,7 +30,10 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
     totalSupportedUserWeightOfProposal,
     formattedPercentageOfProposal,
     totalValidQuorumOfProposal,
+    isUserVotedInProposal,
   } = voteResultOfProposal;
+
+  const isLeading = !!leadingProposalId && leadingProposalId === proposal?.id;
 
   const formattedDate = useMemo(() => {
     if (!proposal) return '';
@@ -73,7 +75,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       <div className="mobile:w-full flex flex-1 flex-col gap-[10px]">
         <div className="flex items-center gap-[10px]">
           {isLeading && <ActiveLeadingLabel />}
-          {hasVoted && <VotedLabel />}
+          {isUserVotedInProposal && <VotedLabel />}
         </div>
         {/* title and date */}
         <div className="flex items-center gap-[10px]">
