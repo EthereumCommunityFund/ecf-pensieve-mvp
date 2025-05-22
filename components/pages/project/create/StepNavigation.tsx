@@ -94,22 +94,22 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
 
 export default StepNavigation;
 
-export const StepHeader: React.FC<{ currentStep: IItemCategoryEnum }> = ({
-  currentStep,
-}) => {
+export const StepHeader: React.FC<{
+  currentStep: IItemCategoryEnum;
+  showSuccessPage: boolean;
+}> = ({ currentStep, showSuccessPage }) => {
   return (
     <>
       <div className="mobile:hidden flex h-[50px] items-center justify-start border-b border-[rgba(0,0,0,0.1)] bg-[rgba(245,245,245,0.8)] px-[10px] backdrop-blur-[5px]">
-        {/* TODO fontFamily: Mona Sans */}
-        <span className="text-[24px] font-[700] text-black opacity-80">
-          {stepLabels[currentStep]}
+        <span className="font-mona text-[24px] font-[700] text-black opacity-80">
+          {showSuccessPage ? 'Submitting Proposal' : stepLabels[currentStep]}
         </span>
       </div>
 
       <div className="mobile:flex hidden h-[44px] items-center justify-start gap-[10px] border-b border-[rgba(0,0,0,0.2)] px-[14px] pb-[10px] pt-[6px]">
-        {getStepIcons(currentStep, 24)}
+        {showSuccessPage ? null : getStepIcons(currentStep, 24)}
         <span className="text-[16px] font-[600] leading-[26px] text-black">
-          {stepLabels[currentStep]}
+          {showSuccessPage ? 'Submitting Proposal' : stepLabels[currentStep]}
         </span>
       </div>
     </>

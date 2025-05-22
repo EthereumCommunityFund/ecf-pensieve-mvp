@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,7 @@ import DiscardConfirmModal from './DiscardConfirmModal';
 import FormActions from './FormActions';
 import StepNavigation, { StepHeader } from './StepNavigation';
 import StepWrapper from './StepWrapper';
+import SuccessDisplay from './SuccessDisplay';
 import BasicsStepForm from './steps/BasicsStepForm';
 import FinancialStepForm from './steps/FinancialStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
@@ -83,6 +85,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
 
+  const isProjectType = formType === IFormTypeEnum.Project;
+
   const [currentStep, setCurrentStep] = useState<IItemCategoryEnum>(
     IItemCategoryEnum.Basics,
   );
@@ -102,6 +106,11 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const [fieldApplicability, setFieldApplicability] = useState<
     Record<string, boolean>
   >(DefaultFieldApplicabilityMap);
+
+  const [showSuccessPage, setShowSuccessPage] = useState(false);
+  const [createdEntityId, setCreatedEntityId] = useState<number | undefined>(
+    undefined,
+  );
 
   const methods = useForm<IProjectFormData>({
     resolver: yupResolver<
@@ -200,7 +209,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         devLog('Project Payload (onSubmit)', payload);
 
         createProjectMutation.mutate(payload, {
-          onSuccess: () => {
+          onSuccess: (data) => {
             if (externalOnSuccess) {
               externalOnSuccess();
             } else {
@@ -209,7 +218,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 description: 'Project created successfully!',
                 color: 'success',
               });
-              router.push(redirectPath || '/projects/pending');
+              setCreatedEntityId(data?.id);
+              setShowSuccessPage(true);
             }
           },
           onError: (error: any) => {
@@ -240,7 +250,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         devLog('Proposal Payload (onSubmit)', payload);
 
         createProposalMutation.mutate(payload, {
-          onSuccess: () => {
+          onSuccess: (data) => {
             if (externalOnSuccess) {
               externalOnSuccess();
             } else {
@@ -249,7 +259,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 description: 'Proposal created successfully!',
                 color: 'success',
               });
-              router.push(redirectPath || `/project/pending/${projectId}`);
+              setCreatedEntityId(data?.id);
+              setShowSuccessPage(true);
             }
           },
           onError: (error: any) => {
@@ -273,8 +284,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       externalOnSubmit,
       externalOnSuccess,
       externalOnError,
-      redirectPath,
-      router,
       handleSubmissionError,
     ],
   );
@@ -552,15 +561,28 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         noValidate
         className="tablet:gap-[20px] tablet:px-[20px] mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0 flex min-h-screen gap-[40px] px-[160px] pb-[40px]"
       >
-        <StepNavigation
-          currentStep={currentStep}
-          stepStatuses={stepStatuses}
-          goToStep={handleGoToStep}
-        />
-        <div className="mobile:gap-[20px] flex flex-1 flex-col gap-[40px]">
-          <StepHeader currentStep={currentStep} />
+        {showSuccessPage && isProjectType ? null : (
+          <StepNavigation
+            currentStep={currentStep}
+            stepStatuses={stepStatuses}
+            goToStep={handleGoToStep}
+          />
+        )}
 
-          <div className="mobile:px-[14px] flex flex-col gap-[20px]">
+        <div
+          className={cn('mobile:gap-[20px] flex flex-1 flex-col gap-[40px]')}
+        >
+          <StepHeader
+            currentStep={currentStep}
+            showSuccessPage={showSuccessPage}
+          />
+
+          <div
+            className={cn(
+              'mobile:px-[14px] flex flex-col gap-[20px]',
+              showSuccessPage ? 'hidden' : '',
+            )}
+          >
             <StepWrapper
               stepId={IItemCategoryEnum.Basics}
               currentStep={currentStep}
@@ -599,6 +621,14 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
               formType={formType}
             />
           </div>
+
+          {showSuccessPage && !!createdEntityId && (
+            <SuccessDisplay
+              formType={formType}
+              entityId={createdEntityId}
+              projectId={projectData?.id}
+            />
+          )}
         </div>
       </form>
 
