@@ -2,12 +2,10 @@
 
 import React from 'react';
 
-import {
-  CreateProjectStep,
-  IRef,
-} from '@/components/pages/project/create/types';
+import { IRef } from '@/components/pages/project/create/types';
 import { cn } from '@/lib/utils';
 import { IProposal } from '@/types';
+import { IItemCategoryEnum } from '@/types/item';
 
 import { CollapseButton, FilterButton, MetricButton } from '../ActionButtons';
 import { FIELD_LABELS, TableFieldCategory } from '../constants';
@@ -17,7 +15,7 @@ import { CategoryKey, ITableProposalItem } from '../ProposalDetails';
 interface CategoryHeaderProps {
   title: string;
   description: string;
-  category: CreateProjectStep;
+  category: IItemCategoryEnum;
   isExpanded: boolean;
   onToggle: () => void;
 }
@@ -58,14 +56,14 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
 // 数据处理函数
 export const prepareTableData = (proposal?: IProposal) => {
   const result: Record<CategoryKey, ITableProposalItem[]> = {
-    [CreateProjectStep.Basics]: [],
-    [CreateProjectStep.Dates]: [],
-    [CreateProjectStep.Technicals]: [],
-    [CreateProjectStep.Organization]: [],
+    [IItemCategoryEnum.Basics]: [],
+    [IItemCategoryEnum.Dates]: [],
+    [IItemCategoryEnum.Technicals]: [],
+    [IItemCategoryEnum.Organization]: [],
   };
 
   // Iterate over each category defined in CreateProjectStep
-  for (const catKey of Object.values(CreateProjectStep)) {
+  for (const catKey of Object.values(IItemCategoryEnum)) {
     const category = catKey as CategoryKey;
     const categoryItems = TableFieldCategory[category]?.items || [];
 

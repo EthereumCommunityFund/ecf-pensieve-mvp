@@ -9,15 +9,15 @@ import { FormFieldContainer } from '@/components/pages/project/create/FormFieldC
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import FounderFormItem from '../FounderFormItem';
-import { ProjectFormData, StepFormProps } from '../types';
+import { IProjectFormData, IStepFormProps } from '../types';
 
 const OrganizationStepForm: React.FC<
   Omit<
-    StepFormProps,
+    IStepFormProps,
     'register' | 'watch' | 'setValue' | 'trigger' | 'hasFieldValue'
   >
 > = ({ control, errors, onAddReference, hasFieldReference }) => {
-  const { register } = useFormContext<ProjectFormData>();
+  const { register } = useFormContext<IProjectFormData>();
 
   const foundersConfig = organizationFieldsConfig.founders;
   const foundersKey = foundersConfig?.key;
@@ -51,7 +51,7 @@ const OrganizationStepForm: React.FC<
               selectedKeys={field.value ? [field.value] : []}
               onSelectionChange={(keys) => {
                 const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as ProjectFormData['orgStructure']);
+                field.onChange(value as IProjectFormData['orgStructure']);
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
@@ -88,7 +88,7 @@ const OrganizationStepForm: React.FC<
               selectedKeys={field.value ? [field.value] : []}
               onSelectionChange={(keys) => {
                 const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as ProjectFormData['publicGoods']);
+                field.onChange(value as IProjectFormData['publicGoods']);
               }}
               isInvalid={!!error}
               errorMessage={error?.message}

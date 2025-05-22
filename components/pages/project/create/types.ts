@@ -7,62 +7,33 @@ import {
   UseFormWatch,
 } from 'react-hook-form';
 
-import { ApplicableField } from '@/components/pages/project/create/FormData';
+import {
+  IBasicsKey,
+  IDatesKey,
+  IItemCategoryEnum,
+  IOrganizationKey,
+  ITechnicalsKey,
+} from '@/types/item';
 
 export enum IFormTypeEnum {
   Project = 'project',
   Proposal = 'proposal',
 }
 
-export enum CreateProjectStep {
-  Basics = 'basics',
-  Dates = 'dates',
-  Technicals = 'technicals',
-  Organization = 'organization',
-}
+export type IStepStatus = 'Inactive' | 'Active' | 'Finished';
 
-export type StepStatus = 'Inactive' | 'Active' | 'Finished';
-
-export interface FounderInput {
+export interface IFounderInput {
   fullName: string;
   titleRole: string;
 }
 
-export interface ReferenceData {
+export interface IReferenceData {
   key: string;
   ref: string;
   value: string;
 }
 
-export type BasicsKeys =
-  | 'name'
-  | 'tagline'
-  | 'categories'
-  | 'mainDescription'
-  | 'logoUrl'
-  | 'websiteUrl'
-  | 'appUrl'
-  | 'tags'
-  | 'whitePaper';
-export type DatesKeys =
-  | 'dateFounded'
-  | 'dateLaunch'
-  | 'devStatus'
-  | 'fundingStatus';
-export type TechnicalsKeys =
-  | 'openSource'
-  | 'codeRepo'
-  | 'tokenContract'
-  | 'dappSmartContracts';
-export type OrganizationKeys = 'orgStructure' | 'publicGoods' | 'founders';
-
-export type EssentialItemKeys =
-  | BasicsKeys
-  | DatesKeys
-  | TechnicalsKeys
-  | OrganizationKeys;
-
-export interface ProjectFormData {
+export interface IProjectFormData {
   name: string;
   tagline: string;
   categories: string[];
@@ -85,7 +56,7 @@ export interface ProjectFormData {
 
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
-  founders: FounderInput[];
+  founders: IFounderInput[];
 }
 
 export interface IRef {
@@ -93,7 +64,7 @@ export interface IRef {
   value: string;
 }
 
-export interface ProjectCreatePayload {
+export interface ICreateProjectPayload {
   name: string;
   tagline: string;
   categories: string[];
@@ -122,8 +93,7 @@ export interface ProjectCreatePayload {
 
   refs?: IRef[];
 }
-
-export interface ProposalCreatePayload {
+export interface ICreateProposalPayload {
   projectId: number;
   items: {
     key: string;
@@ -135,23 +105,23 @@ export interface ProposalCreatePayload {
   }[];
 }
 
-export interface StepFormProps {
-  control: Control<ProjectFormData>;
-  errors: FieldErrors<ProjectFormData>;
-  register: UseFormRegister<ProjectFormData>;
-  watch: UseFormWatch<ProjectFormData>;
-  setValue: UseFormSetValue<ProjectFormData>;
-  trigger: UseFormTrigger<ProjectFormData>;
+export interface IStepFormProps {
+  control: Control<IProjectFormData>;
+  errors: FieldErrors<IProjectFormData>;
+  register: UseFormRegister<IProjectFormData>;
+  watch: UseFormWatch<IProjectFormData>;
+  setValue: UseFormSetValue<IProjectFormData>;
+  trigger: UseFormTrigger<IProjectFormData>;
   onAddReference: (key: string, label?: string) => void;
   onRemoveReference?: (fieldKey: string) => void;
-  fieldApplicability: Record<ApplicableField, boolean>;
-  onChangeApplicability: (field: ApplicableField, value: boolean) => void;
+  fieldApplicability: Record<string, boolean>;
+  onChangeApplicability: (field: string, value: boolean) => void;
   hasFieldReference: (fieldKey: string) => boolean;
 }
 
-export type ProjectStepFieldsMap = {
-  [CreateProjectStep.Basics]: { [K in BasicsKeys]: true };
-  [CreateProjectStep.Dates]: { [K in DatesKeys]: true };
-  [CreateProjectStep.Technicals]: { [K in TechnicalsKeys]: true };
-  [CreateProjectStep.Organization]: { [K in OrganizationKeys]: true };
+export type IProjectStepFieldsMap = {
+  [IItemCategoryEnum.Basics]: { [K in IBasicsKey]: true };
+  [IItemCategoryEnum.Dates]: { [K in IDatesKey]: true };
+  [IItemCategoryEnum.Technicals]: { [K in ITechnicalsKey]: true };
+  [IItemCategoryEnum.Organization]: { [K in IOrganizationKey]: true };
 };

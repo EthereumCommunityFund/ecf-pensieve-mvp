@@ -5,35 +5,35 @@ import {
   organizationFieldsConfig,
   technicalsFieldsConfig,
 } from '@/components/pages/project/create/FormData';
-import { CreateProjectStep } from '@/components/pages/project/create/types';
+import { IItemCategoryEnum } from '@/types/item';
 
 export const TableFieldCategory: Record<
-  CreateProjectStep,
+  IItemCategoryEnum,
   {
     title: string;
     description: string;
     items: string[];
   }
 > = {
-  [CreateProjectStep.Basics]: {
+  [IItemCategoryEnum.Basics]: {
     title: 'Basics',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Basics),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Basics),
   },
-  [CreateProjectStep.Dates]: {
+  [IItemCategoryEnum.Dates]: {
     title: 'Dates & Statuses',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Dates),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Dates),
   },
-  [CreateProjectStep.Technicals]: {
+  [IItemCategoryEnum.Technicals]: {
     title: 'Technicals',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Technicals),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Technicals),
   },
-  [CreateProjectStep.Organization]: {
+  [IItemCategoryEnum.Organization]: {
     title: 'Organization',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Organization),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Organization),
   },
 };
 

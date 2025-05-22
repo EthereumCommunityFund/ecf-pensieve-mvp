@@ -10,10 +10,10 @@ import { FormFieldContainer } from '@/components/pages/project/create/FormFieldC
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import InputPrefix from '../InputPrefix';
-import { ProjectFormData, StepFormProps } from '../types';
+import { IProjectFormData, IStepFormProps } from '../types';
 
 const TechnicalsStepForm: React.FC<
-  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+  Omit<IStepFormProps, 'register' | 'hasFieldValue'>
 > = ({
   control,
   errors,
@@ -47,7 +47,7 @@ const TechnicalsStepForm: React.FC<
               selectedKeys={field.value ? [field.value] : []}
               onSelectionChange={(keys) => {
                 const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as ProjectFormData['openSource']);
+                field.onChange(value as IProjectFormData['openSource']);
               }}
               isInvalid={!!error}
               errorMessage={error?.message}

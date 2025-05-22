@@ -12,10 +12,10 @@ import { useCreateContainerPropsWithValue } from '@/components/pages/project/cre
 
 import InputPrefix from '../InputPrefix';
 import PhotoUpload from '../PhotoUpload';
-import { StepFormProps } from '../types';
+import { IStepFormProps } from '../types';
 
 const BasicsStepForm: React.FC<
-  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+  Omit<IStepFormProps, 'register' | 'hasFieldValue'>
 > = ({
   control,
   errors,

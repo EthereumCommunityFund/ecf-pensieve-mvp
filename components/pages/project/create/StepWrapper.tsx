@@ -3,11 +3,11 @@
 import { cn } from '@heroui/react';
 import React from 'react';
 
-import { CreateProjectStep } from './types';
+import { IItemCategoryEnum } from '@/types/item';
 
 interface StepWrapperProps {
-  stepId: CreateProjectStep;
-  currentStep: CreateProjectStep;
+  stepId: IItemCategoryEnum;
+  currentStep: IItemCategoryEnum;
   children: React.ReactNode;
   className?: string;
 }

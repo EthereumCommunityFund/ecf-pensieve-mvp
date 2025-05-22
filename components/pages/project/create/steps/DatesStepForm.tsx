@@ -11,10 +11,10 @@ import { FormFieldContainer } from '@/components/pages/project/create/FormFieldC
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 import dayjs from '@/lib/dayjs';
 
-import { ProjectFormData, StepFormProps } from '../types';
+import { IProjectFormData, IStepFormProps } from '../types';
 
 const DatesStepForm: React.FC<
-  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+  Omit<IStepFormProps, 'register' | 'hasFieldValue'>
 > = ({
   control,
   errors,
@@ -138,7 +138,7 @@ const DatesStepForm: React.FC<
                 const selectedKey = Array.from(keys)[0];
                 const valueAsString =
                   selectedKey !== undefined ? String(selectedKey) : '';
-                field.onChange(valueAsString as ProjectFormData['devStatus']);
+                field.onChange(valueAsString as IProjectFormData['devStatus']);
               }}
               isInvalid={!!error}
               errorMessage={error?.message}
@@ -180,7 +180,7 @@ const DatesStepForm: React.FC<
               selectedKeys={field.value ? [field.value] : []}
               onSelectionChange={(keys) => {
                 const value = Array.from(keys)[0] ?? null;
-                field.onChange(value as ProjectFormData['fundingStatus']);
+                field.onChange(value as IProjectFormData['fundingStatus']);
               }}
               isInvalid={!!error}
               errorMessage={error?.message}

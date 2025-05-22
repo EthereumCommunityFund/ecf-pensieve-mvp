@@ -11,37 +11,38 @@ import {
   CodeIcon,
   GaugeIcon,
 } from '@/components/icons';
+import { IItemCategoryEnum } from '@/types/item';
 
-import { CreateProjectStep, StepStatus } from './types';
+import { IStepStatus } from './types';
 
 interface StepNavigationProps {
-  currentStep: CreateProjectStep;
-  stepStatuses: Record<CreateProjectStep, StepStatus>;
-  goToStep: (step: CreateProjectStep) => void;
+  currentStep: IItemCategoryEnum;
+  stepStatuses: Record<IItemCategoryEnum, IStepStatus>;
+  goToStep: (step: IItemCategoryEnum) => void;
 }
 
-export const getStepIcons = (step: CreateProjectStep, size = 32) => {
-  const stepIcons: Record<CreateProjectStep, React.ReactNode> = {
-    [CreateProjectStep.Basics]: <CardsIcon size={size} />,
-    [CreateProjectStep.Dates]: <GaugeIcon size={size} />,
-    [CreateProjectStep.Technicals]: <CodeIcon size={size} />,
-    [CreateProjectStep.Organization]: <BuildingIcon size={size} />,
+export const getStepIcons = (step: IItemCategoryEnum, size = 32) => {
+  const stepIcons: Record<IItemCategoryEnum, React.ReactNode> = {
+    [IItemCategoryEnum.Basics]: <CardsIcon size={size} />,
+    [IItemCategoryEnum.Dates]: <GaugeIcon size={size} />,
+    [IItemCategoryEnum.Technicals]: <CodeIcon size={size} />,
+    [IItemCategoryEnum.Organization]: <BuildingIcon size={size} />,
   };
   return stepIcons[step];
 };
 
-const stepLabels: Record<CreateProjectStep, string> = {
-  [CreateProjectStep.Basics]: 'The Basics',
-  [CreateProjectStep.Dates]: 'Dates & Statuses',
-  [CreateProjectStep.Technicals]: 'Technicals',
-  [CreateProjectStep.Organization]: 'Organization',
+const stepLabels: Record<IItemCategoryEnum, string> = {
+  [IItemCategoryEnum.Basics]: 'The Basics',
+  [IItemCategoryEnum.Dates]: 'Dates & Statuses',
+  [IItemCategoryEnum.Technicals]: 'Technicals',
+  [IItemCategoryEnum.Organization]: 'Organization',
 };
 
-const stepsOrder: CreateProjectStep[] = [
-  CreateProjectStep.Basics,
-  CreateProjectStep.Dates,
-  CreateProjectStep.Technicals,
-  CreateProjectStep.Organization,
+const stepsOrder: IItemCategoryEnum[] = [
+  IItemCategoryEnum.Basics,
+  IItemCategoryEnum.Dates,
+  IItemCategoryEnum.Technicals,
+  IItemCategoryEnum.Organization,
 ];
 
 const StepNavigation: React.FC<StepNavigationProps> = ({
@@ -93,7 +94,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
 
 export default StepNavigation;
 
-export const StepHeader: React.FC<{ currentStep: CreateProjectStep }> = ({
+export const StepHeader: React.FC<{ currentStep: IItemCategoryEnum }> = ({
   currentStep,
 }) => {
   return (

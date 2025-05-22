@@ -8,11 +8,9 @@ import { FormProvider, useForm } from 'react-hook-form';
 
 import { addToast } from '@/components/base';
 import {
-  ApplicableField,
   DEFAULT_CREATE_PROJECT_FORM_DATA,
-  DEFAULT_FIELD_APPLICABILITY,
+  DefaultFieldApplicabilityMap,
   getCreateProjectStepFields,
-  updateFormWithProjectData,
 } from '@/components/pages/project/create/FormData';
 import {
   transformProjectData,
@@ -23,6 +21,7 @@ import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { IItemCategoryEnum } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 
 import AddReferenceModal from './AddReferenceModal';
@@ -35,34 +34,34 @@ import DatesStepForm from './steps/DatesStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
 import {
-  CreateProjectStep,
   IFormTypeEnum,
-  ProjectFormData,
-  ReferenceData,
-  StepStatus,
+  IProjectFormData,
+  IReferenceData,
+  IStepStatus,
 } from './types';
-import { FieldApplicabilityContext, projectSchema } from './validation';
+import { updateFormWithProjectData } from './utils/form';
+import { projectSchema } from './validation';
 
 dayjs.extend(utc);
 
-const DEFAULT_STEP_STATUSES: Record<CreateProjectStep, StepStatus> = {
-  [CreateProjectStep.Basics]: 'Active',
-  [CreateProjectStep.Dates]: 'Inactive',
-  [CreateProjectStep.Technicals]: 'Inactive',
-  [CreateProjectStep.Organization]: 'Inactive',
+const DEFAULT_STEP_STATUSES: Record<IItemCategoryEnum, IStepStatus> = {
+  [IItemCategoryEnum.Basics]: 'Active',
+  [IItemCategoryEnum.Dates]: 'Inactive',
+  [IItemCategoryEnum.Technicals]: 'Inactive',
+  [IItemCategoryEnum.Organization]: 'Inactive',
 };
 
 const STEPS_ORDER = [
-  CreateProjectStep.Basics,
-  CreateProjectStep.Dates,
-  CreateProjectStep.Technicals,
-  CreateProjectStep.Organization,
+  IItemCategoryEnum.Basics,
+  IItemCategoryEnum.Dates,
+  IItemCategoryEnum.Technicals,
+  IItemCategoryEnum.Organization,
 ];
 
 interface CreateProjectFormProps {
   formType?: IFormTypeEnum;
   projectId?: number;
-  onSubmit?: (data: ProjectFormData, references: ReferenceData[]) => void;
+  onSubmit?: (data: IProjectFormData, references: IReferenceData[]) => void;
   onSuccess?: () => void;
   onError?: (error: any) => void;
   redirectPath?: string;
@@ -84,31 +83,31 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
 
-  const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
-    CreateProjectStep.Basics,
+  const [currentStep, setCurrentStep] = useState<IItemCategoryEnum>(
+    IItemCategoryEnum.Basics,
   );
   const [stepStatuses, setStepStatuses] = useState<
-    Record<CreateProjectStep, StepStatus>
+    Record<IItemCategoryEnum, IStepStatus>
   >(DEFAULT_STEP_STATUSES);
 
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
 
-  const [references, setReferences] = useState<ReferenceData[]>([]);
+  const [references, setReferences] = useState<IReferenceData[]>([]);
   const [currentReferenceField, setCurrentReferenceField] = useState({
     key: '',
     label: '',
-    existingReference: null as ReferenceData | null,
+    existingReference: null as IReferenceData | null,
   });
   const [fieldApplicability, setFieldApplicability] = useState<
-    Record<ApplicableField, boolean>
-  >(DEFAULT_FIELD_APPLICABILITY);
+    Record<string, boolean>
+  >(DefaultFieldApplicabilityMap);
 
-  const methods = useForm<ProjectFormData>({
+  const methods = useForm<IProjectFormData>({
     resolver: yupResolver<
-      ProjectFormData,
-      FieldApplicabilityContext,
-      ProjectFormData
+      IProjectFormData,
+      Record<string, boolean>,
+      IProjectFormData
     >(projectSchema, { context: fieldApplicability }),
     mode: 'all',
     defaultValues: DEFAULT_CREATE_PROJECT_FORM_DATA,
@@ -140,10 +139,10 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     (stepFields: readonly string[]) => {
       return stepFields.filter((field) => {
         if (field in fieldApplicability) {
-          return fieldApplicability[field as ApplicableField];
+          return fieldApplicability[field];
         }
         return true;
-      }) as (keyof ProjectFormData)[];
+      }) as (keyof IProjectFormData)[];
     },
     [fieldApplicability],
   );
@@ -153,7 +152,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       if (error?.data?.zodError?.fieldErrors) {
         const fieldErrors = error.data.zodError.fieldErrors;
         Object.entries(fieldErrors).forEach(([field, messages]) => {
-          setError(field as keyof ProjectFormData, {
+          setError(field as keyof IProjectFormData, {
             type: 'server',
             message: Array.isArray(messages) ? messages[0] : String(messages),
           });
@@ -176,7 +175,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const onSubmit = useCallback(
-    async (formData: ProjectFormData) => {
+    async (formData: IProjectFormData) => {
       if (!profile?.userId) {
         addToast({
           title: 'Error',
@@ -306,8 +305,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
   const updateStepStatuses = useCallback(
     (
-      currentStep: CreateProjectStep,
-      targetStep: CreateProjectStep,
+      currentStep: IItemCategoryEnum,
+      targetStep: IItemCategoryEnum,
       isMovingForward: boolean,
     ) => {
       setStepStatuses((prev) => {
@@ -358,7 +357,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
       const nextStepFields = getCreateProjectStepFields(nextStep);
       nextStepFields.forEach((field) => {
-        clearErrors(field as keyof ProjectFormData);
+        clearErrors(field as keyof IProjectFormData);
       });
 
       updateStepStatuses(currentStep, nextStep, true);
@@ -370,10 +369,12 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       return;
     }
 
-    const allFormFields = Object.keys(getValues()) as (keyof ProjectFormData)[];
+    const allFormFields = Object.keys(
+      getValues(),
+    ) as (keyof IProjectFormData)[];
     const fieldsToValidateFinally = allFormFields.filter((field) => {
       if (field in fieldApplicability) {
-        return fieldApplicability[field as ApplicableField];
+        return fieldApplicability[field];
       }
       return true;
     });
@@ -424,7 +425,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   }, [currentStep, stepStatuses, validateCurrentStep, updateStepStatuses]);
 
   const handleGoToStep = useCallback(
-    async (targetStep: CreateProjectStep) => {
+    async (targetStep: IItemCategoryEnum) => {
       if (targetStep === currentStep) {
         return;
       }
@@ -461,7 +462,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const confirmDiscard = useCallback(() => {
     reset();
     setReferences([]);
-    setCurrentStep(CreateProjectStep.Basics);
+    setCurrentStep(IItemCategoryEnum.Basics);
     setStepStatuses(DEFAULT_STEP_STATUSES);
     setIsDiscardModalOpen(false);
 
@@ -482,7 +483,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const getFieldReference = useCallback(
-    (fieldKey: string): ReferenceData | null => {
+    (fieldKey: string): IReferenceData | null => {
       return references.find((ref) => ref.key === fieldKey) || null;
     },
     [references],
@@ -501,7 +502,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     [getFieldReference],
   );
 
-  const handleSaveReference = useCallback((reference: ReferenceData) => {
+  const handleSaveReference = useCallback((reference: IReferenceData) => {
     setReferences((prev) => {
       const existingIndex = prev.findIndex((ref) => ref.key === reference.key);
       if (existingIndex >= 0) {
@@ -518,14 +519,14 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   }, []);
 
   const handleApplicabilityChange = useCallback(
-    (field: ApplicableField, value: boolean) => {
+    (field: string, value: boolean) => {
       setFieldApplicability((prev) => ({
         ...prev,
         [field]: value,
       }));
 
       if (!value) {
-        clearErrors(field as keyof ProjectFormData);
+        clearErrors(field as keyof IProjectFormData);
       }
     },
     [clearErrors],
@@ -561,25 +562,25 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
           <div className="mobile:px-[14px] flex flex-col gap-[20px]">
             <StepWrapper
-              stepId={CreateProjectStep.Basics}
+              stepId={IItemCategoryEnum.Basics}
               currentStep={currentStep}
             >
               <BasicsStepForm {...stepProps} />
             </StepWrapper>
             <StepWrapper
-              stepId={CreateProjectStep.Dates}
+              stepId={IItemCategoryEnum.Dates}
               currentStep={currentStep}
             >
               <DatesStepForm {...stepProps} />
             </StepWrapper>
             <StepWrapper
-              stepId={CreateProjectStep.Technicals}
+              stepId={IItemCategoryEnum.Technicals}
               currentStep={currentStep}
             >
               <TechnicalsStepForm {...stepProps} />
             </StepWrapper>
             <StepWrapper
-              stepId={CreateProjectStep.Organization}
+              stepId={IItemCategoryEnum.Organization}
               currentStep={currentStep}
             >
               <OrganizationStepForm {...stepProps} />

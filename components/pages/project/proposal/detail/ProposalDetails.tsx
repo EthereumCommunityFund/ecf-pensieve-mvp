@@ -3,14 +3,12 @@
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  CreateProjectStep,
-  IRef,
-} from '@/components/pages/project/create/types';
+import { IRef } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { IProject, IProposal } from '@/types';
+import { IItemCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
@@ -31,7 +29,7 @@ export interface ITableProposalItem {
   support: number;
 }
 
-export type CategoryKey = CreateProjectStep;
+export type CategoryKey = IItemCategoryEnum;
 
 interface ProposalDetailsProps {
   proposal?: IProposal;
@@ -56,10 +54,10 @@ const ProposalDetails = ({
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
-    [CreateProjectStep.Basics]: true,
-    [CreateProjectStep.Dates]: true,
-    [CreateProjectStep.Technicals]: true,
-    [CreateProjectStep.Organization]: true,
+    [IItemCategoryEnum.Basics]: true,
+    [IItemCategoryEnum.Dates]: true,
+    [IItemCategoryEnum.Technicals]: true,
+    [IItemCategoryEnum.Organization]: true,
   });
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -193,25 +191,25 @@ const ProposalDetails = ({
   const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
 
   const basicsTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Basics],
+    data: tableData[IItemCategoryEnum.Basics],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const datesTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Dates],
+    data: tableData[IItemCategoryEnum.Dates],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const technicalsTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Technicals],
+    data: tableData[IItemCategoryEnum.Technicals],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const organizationTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Organization],
+    data: tableData[IItemCategoryEnum.Organization],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -247,7 +245,7 @@ const ProposalDetails = ({
       <TableSectionHeader title="Project Overview" description="" />
 
       <div className="flex flex-col gap-[20px]">
-        {Object.values(CreateProjectStep).map((category) => (
+        {Object.values(IItemCategoryEnum).map((category) => (
           <div
             key={category}
             className="overflow-hidden rounded-[10px] bg-white"
@@ -262,11 +260,11 @@ const ProposalDetails = ({
             <div style={getAnimationStyle(expanded[category])}>
               <ProposalTable
                 table={
-                  category === CreateProjectStep.Basics
+                  category === IItemCategoryEnum.Basics
                     ? basicsTable
-                    : category === CreateProjectStep.Dates
+                    : category === IItemCategoryEnum.Dates
                       ? datesTable
-                      : category === CreateProjectStep.Technicals
+                      : category === IItemCategoryEnum.Technicals
                         ? technicalsTable
                         : organizationTable
                 }

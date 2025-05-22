@@ -1,17 +1,10 @@
 import * as yup from 'yup';
 
-import { ApplicableField } from '@/components/pages/project/create/FormData';
 import { normalizeUrl } from '@/utils/url';
 
-import { FounderInput, ProjectFormData } from './types';
+import { IFounderInput, IProjectFormData } from './types';
 
-// Rename ValidationContext for clarity
-export type FieldApplicabilityContext = Record<ApplicableField, boolean>;
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/gif'];
-
-const founderSchema: yup.ObjectSchema<FounderInput> = yup.object().shape({
+const founderSchema: yup.ObjectSchema<IFounderInput> = yup.object().shape({
   fullName: yup.string().required('Founder name is required'),
   titleRole: yup.string().required('Founder title/role is required'),
 });
@@ -110,4 +103,4 @@ export const projectSchema = basicsSchema
   .concat(datesSchema)
   .concat(technicalsSchema)
   .concat(organizationSchema)
-  .defined() as yup.ObjectSchema<ProjectFormData>;
+  .defined() as yup.ObjectSchema<IProjectFormData>;
