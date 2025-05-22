@@ -1,6 +1,5 @@
+import { cn } from '@heroui/react';
 import { ButtonHTMLAttributes } from 'react';
-
-import { cn } from '@/lib/utils';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'signUp' | 'signIn';

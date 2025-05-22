@@ -1,12 +1,11 @@
 'use client';
 
-import { Tab, Tabs } from '@heroui/react';
+import { cn, Tab, Tabs } from '@heroui/react';
 import { GitCommit, UserSquare } from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
-import { cn } from '@/lib/utils';
 
 import Contributions from './components/contributions';
 import Setting from './components/setting';

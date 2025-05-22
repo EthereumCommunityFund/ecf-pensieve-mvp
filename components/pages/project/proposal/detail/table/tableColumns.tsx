@@ -1,12 +1,12 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
-import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { IEssentialItemKey } from '@/types/item';
 

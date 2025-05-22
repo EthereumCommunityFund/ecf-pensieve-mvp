@@ -1,11 +1,10 @@
 'use client';
 
-import { Skeleton } from '@heroui/react';
+import { Skeleton, cn } from '@heroui/react';
 import { Table, flexRender } from '@tanstack/react-table';
 import React from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
-import { cn } from '@/lib/utils';
 import { IEssentialItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
