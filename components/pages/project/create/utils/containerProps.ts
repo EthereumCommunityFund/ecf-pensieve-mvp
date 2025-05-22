@@ -1,9 +1,10 @@
-import { FormFieldConfig } from '../FormData';
+import { IItemConfig } from '@/types/item';
+
 import { FormFieldContainerProps } from '../FormFieldContainer';
-import { ProjectFormData } from '../types';
+import { IProjectFormData } from '../types';
 
 export interface ICreateContainerPropsParams {
-  fieldConfig: FormFieldConfig<keyof ProjectFormData>;
+  fieldConfig: IItemConfig<keyof IProjectFormData>;
   showApplicable?: boolean;
   isApplicable?: boolean;
   onChangeApplicability?: (val: boolean) => void;
@@ -31,7 +32,7 @@ export const createContainerProps = ({
     shortDescription: fieldConfig.shortDescription,
     weight: Number(fieldConfig.weight),
     showReference: fieldConfig.showReference,
-    showApplicable,
+    showApplicable: !!fieldConfig.showApplicable,
     isApplicable,
     onChangeApplicability,
     onAddReference:

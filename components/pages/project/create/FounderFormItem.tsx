@@ -11,14 +11,14 @@ import {
 
 import { Button, Input } from '@/components/base';
 
-import { ProjectFormData } from './types';
+import { IProjectFormData } from './types';
 
 interface FounderFormItemProps {
   index: number;
   remove: (index: number) => void;
-  register: UseFormRegister<ProjectFormData>;
+  register: UseFormRegister<IProjectFormData>;
   errors:
-    | Merge<FieldError, FieldErrorsImpl<ProjectFormData['founders'][number]>>
+    | Merge<FieldError, FieldErrorsImpl<IProjectFormData['founders'][number]>>
     | undefined;
   foundersKey: 'founders';
   isPrimary: boolean;

@@ -1,51 +1,44 @@
 import {
   basicsFieldsConfig,
-  datesFieldsConfig,
+  financialFieldsConfig,
   getCreateProjectStepFields,
   organizationFieldsConfig,
   technicalsFieldsConfig,
 } from '@/components/pages/project/create/FormData';
-import { CreateProjectStep } from '@/components/pages/project/create/types';
+import { IItemCategoryEnum } from '@/types/item';
 
 export const TableFieldCategory: Record<
-  CreateProjectStep,
+  IItemCategoryEnum,
   {
     title: string;
     description: string;
     items: string[];
   }
 > = {
-  [CreateProjectStep.Basics]: {
+  [IItemCategoryEnum.Basics]: {
     title: 'Basics',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Basics),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Basics),
   },
-  [CreateProjectStep.Dates]: {
-    title: 'Dates & Statuses',
-    description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Dates),
-  },
-  [CreateProjectStep.Technicals]: {
+  [IItemCategoryEnum.Technicals]: {
     title: 'Technicals',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Technicals),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Technicals),
   },
-  [CreateProjectStep.Organization]: {
+  [IItemCategoryEnum.Organization]: {
     title: 'Organization',
     description: '',
-    items: getCreateProjectStepFields(CreateProjectStep.Organization),
+    items: getCreateProjectStepFields(IItemCategoryEnum.Organization),
+  },
+  [IItemCategoryEnum.Financial]: {
+    title: 'Financial',
+    description: '',
+    items: getCreateProjectStepFields(IItemCategoryEnum.Financial),
   },
 };
 
 export const FIELD_LABELS: Record<string, string> = {
   ...Object.entries(basicsFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(datesFieldsConfig).reduce(
     (acc, [key, config]) => {
       acc[key] = config.label;
       return acc;
@@ -60,6 +53,13 @@ export const FIELD_LABELS: Record<string, string> = {
     {} as Record<string, string>,
   ),
   ...Object.entries(organizationFieldsConfig).reduce(
+    (acc, [key, config]) => {
+      acc[key] = config.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  ),
+  ...Object.entries(financialFieldsConfig).reduce(
     (acc, [key, config]) => {
       acc[key] = config.label;
       return acc;

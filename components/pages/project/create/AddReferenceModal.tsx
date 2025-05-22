@@ -18,16 +18,16 @@ import { devLog } from '@/utils/devLog';
 import { normalizeUrl } from '@/utils/url';
 
 import InputPrefix from './InputPrefix';
-import { ReferenceData } from './types';
+import { IReferenceData } from './types';
 
 interface AddReferenceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddReference: (reference: ReferenceData) => void;
+  onAddReference: (reference: IReferenceData) => void;
   onRemoveReference?: (fieldKey: string) => void;
   fieldKey: string;
   fieldLabel?: string;
-  existingReference?: ReferenceData | null;
+  existingReference?: IReferenceData | null;
 }
 
 interface ReferenceFormData {

@@ -4,11 +4,12 @@ import { cn } from '@heroui/react';
 import React from 'react';
 
 import { Button } from '@/components/base';
+import { IItemCategoryEnum } from '@/types/item';
 
-import { CreateProjectStep, IFormTypeEnum } from './types';
+import { IFormTypeEnum } from './types';
 
 interface FormActionsProps {
-  currentStep: CreateProjectStep;
+  currentStep: IItemCategoryEnum;
   isSubmitting: boolean;
   onBack: () => void;
   onNext: () => void;
@@ -24,8 +25,8 @@ const FormActions: React.FC<FormActionsProps> = ({
   onDiscard,
   formType = IFormTypeEnum.Project,
 }) => {
-  const isFirstStep = currentStep === CreateProjectStep.Basics;
-  const isLastStep = currentStep === CreateProjectStep.Organization;
+  const isFirstStep = currentStep === IItemCategoryEnum.Basics;
+  const isLastStep = currentStep === IItemCategoryEnum.Financial;
 
   const baseButtonClassnames = 'px-[30px] h-[40px]';
 

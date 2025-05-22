@@ -1,40 +1,26 @@
 'use client';
 
-import { Skeleton } from '@heroui/react';
-import {
-  ColumnDef,
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  Table,
-  useReactTable,
-} from '@tanstack/react-table';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@/components/base';
-import { CaretDownIcon } from '@/components/icons';
-import {
-  CreateProjectStep,
-  IRef,
-} from '@/components/pages/project/create/types';
+import { IRef } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
-import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
-import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
+import { IItemCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
-import { CollapseButton, FilterButton, MetricButton } from './ActionButtons';
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
-import { FIELD_LABELS, TableFieldCategory } from './constants';
+import { TableFieldCategory } from './constants';
 import CancelVoteModal from './table/CancelVoteModal';
+import CategoryHeader from './table/CategoryHeader';
+import ProposalTable from './table/ProposalTable';
 import ReferenceModal from './table/ReferenceModal';
 import SwitchVoteModal from './table/SwitchVoteModal';
-import TooltipItemWeight from './table/TooltipItemWeight';
-import TooltipTh from './table/TooltipTh';
-import VoteItem from './table/VoteItem';
+import { createTableColumns } from './table/tableColumns';
+import { prepareTableData } from './table/utils';
 
 export interface ITableProposalItem {
   key: string;
@@ -44,7 +30,7 @@ export interface ITableProposalItem {
   support: number;
 }
 
-export type CategoryKey = CreateProjectStep;
+export type CategoryKey = IItemCategoryEnum;
 
 interface ProposalDetailsProps {
   proposal?: IProposal;
@@ -69,10 +55,10 @@ const ProposalDetails = ({
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
-    [CreateProjectStep.Basics]: true,
-    [CreateProjectStep.Dates]: true,
-    [CreateProjectStep.Technicals]: true,
-    [CreateProjectStep.Organization]: true,
+    [IItemCategoryEnum.Basics]: true,
+    [IItemCategoryEnum.Technicals]: true,
+    [IItemCategoryEnum.Organization]: true,
+    [IItemCategoryEnum.Financial]: true,
   });
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -155,16 +141,6 @@ const ProposalDetails = ({
   }, []);
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const expandableRowKeys = useMemo(() => {
-    return ['name', 'mainDescription', 'projectType'];
-  }, []);
-
-  const isRowExpandable = useCallback(
-    (key: string) => {
-      return expandableRowKeys.includes(key);
-    },
-    [expandableRowKeys],
-  );
 
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
@@ -173,267 +149,64 @@ const ProposalDetails = ({
     }));
   }, []);
 
-  const columnHelper = createColumnHelper<ITableProposalItem>();
-
   const columns = useMemo(() => {
-    const propertyColumn = columnHelper.accessor('property', {
-      id: 'property',
-      header: () => (
-        <TooltipTh
-          title="Property"
-          tooltipContext="The property name of the project item"
-        />
-      ),
-      size: isPageExpanded ? 247 : 220,
-      cell: (info) => {
-        const rowKey = info.row.original.key;
-        const isExpandable = isRowExpandable(rowKey);
+    return createTableColumns({ isPageExpanded });
+  }, [isPageExpanded]);
 
-        return (
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
-              {info.getValue()}
-            </div>
-            <TooltipItemWeight itemWeight={ESSENTIAL_ITEM_MAP[rowKey].weight} />
-          </div>
-        );
-      },
-    });
+  const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
 
-    const fieldTypeColumn = columnHelper.accessor('property', {
-      id: 'fieldType',
-      header: () => (
-        <TooltipTh
-          title="Field Type"
-          tooltipContext="The type of the field for the project item"
-        />
-      ),
-      size: 220,
-      cell: (info) => {
-        const value = info.getValue();
-        return (
-          <div className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-            {value}
-          </div>
-        );
-      },
-    });
-
-    const inputColumn = columnHelper.accessor('input', {
-      header: () => (
-        <TooltipTh
-          title="Input"
-          tooltipContext="The input value provided by the user"
-        />
-      ),
-      size: isPageExpanded ? 480 : 250,
-      cell: (info) => {
-        const value = info.getValue();
-        const rowKey = info.row.original.key;
-        const isExpandable = isRowExpandable(rowKey);
-        const isRowExpanded = expandedRows[rowKey];
-
-        const renderValue = () => {
-          if (Array.isArray(value)) {
-            return JSON.stringify(value);
-          }
-          return value;
-        };
-        // TODO: render value by different type
-
-        return (
-          <div
-            className="font-mona flex w-full items-center justify-between gap-[10px]"
-            style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
-          >
-            <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-              {isExpandable
-                ? isRowExpanded
-                  ? 'Close'
-                  : 'Expand'
-                : renderValue()}
-            </div>
-
-            {isExpandable && (
-              <Button
-                isIconOnly
-                className={cn(
-                  'size-[24px] shrink-0 opacity-50',
-                  isRowExpanded ? 'rotate-180' : '',
-                )}
-                onPress={() => {
-                  toggleRowExpanded(rowKey);
-                }}
-              >
-                <CaretDownIcon size={18} />
-              </Button>
-            )}
-          </div>
-        );
-      },
-    });
-
-    const referenceColumn = columnHelper.accessor('reference', {
-      header: () => (
-        <TooltipTh
-          title="Reference"
-          tooltipContext="Reference information for this property"
-        />
-      ),
-      size: 124,
-      cell: (info) => {
-        const value = info.getValue();
-        return (
-          <div className="mx-auto flex justify-center">
-            {value ? (
-              <Button
-                color="secondary"
-                size="md"
-                className="w-[104px] text-[13px] font-[400]"
-                onPress={() => onShowReference(info.row.original.key)}
-              >
-                Reference
-              </Button>
-            ) : (
-              <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
-                empty
-              </div>
-            )}
-          </div>
-        );
-      },
-    });
-
-    const supportColumn = columnHelper.accessor('support', {
-      header: () => (
-        <TooltipTh
-          title="Support"
-          tooltipContext="Number of supporters for this property"
-        />
-      ),
-      size: 220,
-      cell: (info) => {
-        const key = info.row.original.key;
-        const isLoading =
-          (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
-        const {
-          itemVotedMemberCount,
-          itemPoints,
-          itemPointsNeeded,
-          isItemReachPointsNeeded,
-          isItemReachQuorum,
-          isItemValidated,
-          isUserVotedInItem,
-        } = getItemVoteResult(key);
-        return (
-          <VoteItem
-            fieldKey={key}
-            itemPoints={itemPoints}
-            itemPointsNeeded={itemPointsNeeded}
-            isReachQuorum={isItemReachQuorum}
-            isReachPointsNeeded={isItemReachPointsNeeded}
-            isValidated={isItemValidated}
-            project={project!}
-            proposal={proposal!}
-            proposalItem={info.row.original}
-            isLoading={isLoading}
-            isUserVoted={isUserVotedInItem}
-            votedMemberCount={itemVotedMemberCount}
-            onAction={() => onVoteAction(info.row.original)}
-          />
-        );
-      },
-    });
-
-    const resultColumns: ColumnDef<ITableProposalItem, any>[] = isPageExpanded
-      ? [
-          propertyColumn,
-          fieldTypeColumn,
-          inputColumn,
-          referenceColumn,
-          supportColumn,
-        ]
-      : [propertyColumn, inputColumn, referenceColumn, supportColumn];
-    return resultColumns;
-  }, [
-    isPageExpanded,
-    columnHelper,
-    project,
-    proposal,
-    onVoteAction,
-    isFetchVoteInfoLoading,
-    isVoteActionPending,
-    isRowExpandable,
-    expandedRows,
-    toggleRowExpanded,
-    getItemVoteResult,
-    inActionKeys,
-    onShowReference,
-  ]);
-
-  const tableData = useMemo(() => {
-    const result: Record<CategoryKey, ITableProposalItem[]> = {
-      [CreateProjectStep.Basics]: [],
-      [CreateProjectStep.Dates]: [],
-      [CreateProjectStep.Technicals]: [],
-      [CreateProjectStep.Organization]: [],
-    };
-
-    // Iterate over each category defined in CreateProjectStep
-    for (const catKey of Object.values(CreateProjectStep)) {
-      const category = catKey as CategoryKey;
-      const categoryItems = TableFieldCategory[category]?.items || [];
-
-      // For each item key defined in the category's items
-      categoryItems.forEach((itemKey: string) => {
-        // Find the corresponding item from the proposal data, if it exists
-        const proposalItem = proposal?.items?.find(
-          (pItem: any) => pItem.key === itemKey,
-        ) as { key: string; value: any } | undefined;
-
-        const value =
-          proposalItem && typeof proposalItem.value !== 'undefined'
-            ? proposalItem.value
-            : 'N/A';
-
-        const refsArray = proposal?.refs as IRef[] | undefined;
-        const referenceObj = refsArray?.find((ref) => ref.key === itemKey);
-        const referenceValue = referenceObj ? referenceObj.value : '';
-
-        result[category].push({
-          key: itemKey,
-          property: FIELD_LABELS[itemKey] || itemKey,
-          input: value,
-          reference: referenceValue,
-          support: proposalItem ? 1 : 0,
-        });
-      });
-    }
-
-    return result;
-  }, [proposal]);
+  const tableMeta = useMemo(
+    () => ({
+      expandedRows,
+      toggleRowExpanded,
+      onShowReference,
+      project,
+      proposal,
+      onVoteAction,
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      inActionKeys,
+      getItemVoteResult,
+    }),
+    [
+      expandedRows,
+      toggleRowExpanded,
+      onShowReference,
+      project,
+      proposal,
+      onVoteAction,
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      inActionKeys,
+      getItemVoteResult,
+    ],
+  );
 
   const basicsTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Basics],
+    data: tableData[IItemCategoryEnum.Basics],
     columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  const datesTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Dates],
-    columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const technicalsTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Technicals],
+    data: tableData[IItemCategoryEnum.Technicals],
     columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const organizationTable = useReactTable<ITableProposalItem>({
-    data: tableData[CreateProjectStep.Organization],
+    data: tableData[IItemCategoryEnum.Organization],
     columns,
+    meta: tableMeta,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const financialTable = useReactTable<ITableProposalItem>({
+    data: tableData[IItemCategoryEnum.Financial],
+    columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -456,215 +229,6 @@ const ProposalDetails = ({
     transitionDuration: '0.2s',
   });
 
-  const renderExpandedContent = (value: any, key: string) => {
-    if (Array.isArray(value)) {
-      return JSON.stringify(value);
-    }
-    return value;
-  };
-
-  const renderCategoryHeader = useCallback(
-    (title: string, description: string, category: CategoryKey) => (
-      <div
-        className={cn(
-          'flex items-center justify-between border border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]',
-          expanded[category] ? 'rounded-t-[10px]' : 'rounded-[10px]',
-        )}
-      >
-        <div className="flex flex-col gap-[5px]">
-          <p className="text-[18px] font-[700] leading-[25px] text-black/80">
-            {title}
-          </p>
-          {description && (
-            <p className="text-[13px] font-[600] leading-[18px] text-black/40">
-              {description}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center justify-end gap-[10px]">
-          <CollapseButton
-            isExpanded={expanded[category]}
-            onChange={() => toggleCategory(category)}
-          />
-          <MetricButton onClick={() => {}} />
-          <FilterButton onClick={() => {}} />
-        </div>
-      </div>
-    ),
-    [expanded, toggleCategory],
-  );
-
-  const renderTable = useCallback(
-    (table: Table<ITableProposalItem>, forceSkeleton: boolean) => {
-      const noDataForThisTable = table.options.data.length === 0;
-      const showSkeleton = forceSkeleton || noDataForThisTable;
-
-      const tableHeaders = (
-        <thead>
-          <tr className="bg-[#F5F5F5]">
-            {table.getHeaderGroups().map((headerGroup) =>
-              headerGroup.headers.map((header, index) => (
-                <th
-                  key={header.id}
-                  style={{
-                    width: `${header.getSize()}px`,
-                    boxSizing: 'border-box',
-                  }}
-                  className={`h-[30px] border-b border-r border-black/10 px-[10px] text-left
-                    text-[14px] font-[600] text-black/60
-                    ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
-                  `}
-                >
-                  <div
-                    className="flex items-center"
-                    style={{ width: '100%', overflow: 'hidden' }}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </div>
-                </th>
-              )),
-            )}
-          </tr>
-        </thead>
-      );
-
-      const colGroupDefinition = (
-        <colgroup>
-          {table.getAllColumns().map((column) => (
-            <col
-              key={column.id}
-              style={{
-                width: `${column.getSize()}px`,
-              }}
-            />
-          ))}
-        </colgroup>
-      );
-
-      if (showSkeleton) {
-        return (
-          <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
-            <table className="box-border w-full table-fixed border-separate border-spacing-0">
-              {colGroupDefinition}
-              {tableHeaders}
-              <tbody>
-                {Array.from({ length: 5 }).map((_, rowIndex) => (
-                  <tr key={`skeleton-row-${rowIndex}`}>
-                    {table.getAllColumns().map((column, cellIndex) => (
-                      <td
-                        key={`skeleton-cell-${column.id}-${rowIndex}`}
-                        style={{
-                          width: `${column.getSize()}px`,
-                          boxSizing: 'border-box',
-                        }}
-                        className={` border-b border-r
-                          border-black/10
-                          ${cellIndex === table.getAllColumns().length - 1 ? 'border-r-0' : ''}
-                          ${rowIndex === 4 ? 'border-b-0' : ''}
-                        `}
-                      >
-                        <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
-                          <Skeleton className="h-[20px] w-full rounded" />
-                        </div>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      }
-
-      return (
-        <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
-          <table
-            className={cn(
-              'box-border w-full  border-separate border-spacing-0',
-              isPageExpanded ? '' : 'table-fixed',
-            )}
-          >
-            {colGroupDefinition}
-            {tableHeaders}
-            <tbody>
-              {table.getRowModel().rows.map((row, rowIndex) => (
-                <React.Fragment key={rowIndex}>
-                  <tr
-                    className={cn(
-                      'bg-white hover:bg-[#F5F5F5]',
-                      expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
-                    )}
-                  >
-                    {/* TODO: find input column cell and add expand effect */}
-                    {row.getVisibleCells().map((cell, cellIndex) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: `${cell.column.getSize()}px`,
-                          boxSizing: 'border-box',
-                        }}
-                        className={cn(
-                          'border-b border-r border-black/10 hover:bg-[#EBEBEB]',
-                          cellIndex === row.getVisibleCells().length - 1
-                            ? 'border-r-0'
-                            : '',
-                          rowIndex === table.getRowModel().rows.length - 1 &&
-                            !expandedRows[row.original.key]
-                            ? 'border-b-0'
-                            : '',
-                        )}
-                      >
-                        <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </div>
-                      </td>
-                    ))}
-                  </tr>
-
-                  {isRowExpandable(row.original.key) && (
-                    <tr
-                      key={`${row.id}-expanded`}
-                      className={cn(
-                        expandedRows[row.original.key] ? '' : 'hidden',
-                      )}
-                    >
-                      <td
-                        colSpan={row.getVisibleCells().length}
-                        className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                          rowIndex === table.getRowModel().rows.length - 1
-                            ? 'border-b-0'
-                            : ''
-                        }`}
-                      >
-                        <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                          <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                            {renderExpandedContent(
-                              row.original.input,
-                              row.original.key,
-                            )}
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    },
-    [isPageExpanded, isRowExpandable, expandedRows],
-  );
-
   return (
     <div className="flex flex-col gap-[20px]">
       <ActionSectionHeader
@@ -677,53 +241,36 @@ const ProposalDetails = ({
       <TableSectionHeader title="Project Overview" description="" />
 
       <div className="flex flex-col gap-[20px]">
-        <div className="overflow-hidden rounded-[10px] bg-white">
-          {renderCategoryHeader(
-            TableFieldCategory[CreateProjectStep.Basics].title,
-            TableFieldCategory[CreateProjectStep.Basics].description,
-            CreateProjectStep.Basics,
-          )}
-          <div style={getAnimationStyle(expanded[CreateProjectStep.Basics])}>
-            {renderTable(basicsTable, isOverallLoading)}
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-[10px] bg-white">
-          {renderCategoryHeader(
-            TableFieldCategory[CreateProjectStep.Dates].title,
-            TableFieldCategory[CreateProjectStep.Dates].description,
-            CreateProjectStep.Dates,
-          )}
-          <div style={getAnimationStyle(expanded[CreateProjectStep.Dates])}>
-            {renderTable(datesTable, isOverallLoading)}
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-[10px] bg-white">
-          {renderCategoryHeader(
-            TableFieldCategory[CreateProjectStep.Technicals].title,
-            TableFieldCategory[CreateProjectStep.Technicals].description,
-            CreateProjectStep.Technicals,
-          )}
+        {Object.values(IItemCategoryEnum).map((category) => (
           <div
-            style={getAnimationStyle(expanded[CreateProjectStep.Technicals])}
+            key={category}
+            className="overflow-hidden rounded-[10px] bg-white"
           >
-            {renderTable(technicalsTable, isOverallLoading)}
+            <CategoryHeader
+              title={TableFieldCategory[category].title}
+              description={TableFieldCategory[category].description}
+              category={category}
+              isExpanded={expanded[category]}
+              onToggle={() => toggleCategory(category)}
+            />
+            <div style={getAnimationStyle(expanded[category])}>
+              <ProposalTable
+                table={
+                  category === IItemCategoryEnum.Basics
+                    ? basicsTable
+                    : category === IItemCategoryEnum.Financial
+                      ? financialTable
+                      : category === IItemCategoryEnum.Technicals
+                        ? technicalsTable
+                        : organizationTable
+                }
+                isLoading={isOverallLoading}
+                isPageExpanded={isPageExpanded}
+                expandedRows={expandedRows}
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="overflow-hidden rounded-[10px] bg-white">
-          {renderCategoryHeader(
-            TableFieldCategory[CreateProjectStep.Organization].title,
-            TableFieldCategory[CreateProjectStep.Organization].description,
-            CreateProjectStep.Organization,
-          )}
-          <div
-            style={getAnimationStyle(expanded[CreateProjectStep.Organization])}
-          >
-            {renderTable(organizationTable, isOverallLoading)}
-          </div>
-        </div>
+        ))}
       </div>
 
       <SwitchVoteModal

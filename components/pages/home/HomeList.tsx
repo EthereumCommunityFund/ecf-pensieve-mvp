@@ -62,10 +62,8 @@ const HomeList = () => {
     limit: 10,
   });
 
-  const { data: pendingProjectsData } =
+  const { data: scanPendingProject } =
     trpc.project.scanPendingProject.useQuery();
-
-  console.log('pendingProjectsData', pendingProjectsData);
 
   const viewAllProject = () => {
     console.log('view all project');

@@ -7,6 +7,9 @@ import { IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
 
+type VoteArrayType = IVote[] | undefined;
+const ONE_MINUTE_MS = 60 * 1000;
+
 export function useProposalVotes(
   proposal: IProposal | undefined,
   projectId: number,
@@ -15,46 +18,53 @@ export function useProposalVotes(
   const { profile } = useAuth();
   const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
 
+  const proposalQueryOptions = useMemo(
+    () => ({
+      enabled: !!proposal && !!proposal.id,
+      select: (data: VoteArrayType) => {
+        devLog('getVotesByProposalId', data);
+        return data;
+      },
+    }),
+    [proposal],
+  );
+
+  const projectQueryOptions = useMemo(
+    () => ({
+      enabled: !!projectId,
+      select: (data: VoteArrayType) => {
+        devLog('getVotesByProjectId', data);
+        return data;
+      },
+    }),
+    [projectId],
+  );
+
   const {
     data: votesOfProposal,
-    isLoading: isVotesOfProposalLoading,
-    isFetched: isVotesOfProposalFetched,
     isFetching: isVotesOfProposalFetching,
     refetch: refetchVotesOfProposal,
   } = trpc.vote.getVotesByProposalId.useQuery(
     { proposalId: Number(proposal?.id) },
-    {
-      enabled: !!proposal && !!proposal.id,
-      select: (data) => {
-        devLog('getVotesByProposalId', data);
-        return data;
-      },
-    },
+    proposalQueryOptions,
   );
 
   const {
     data: votesOfProject,
-    isLoading: isVotesOfProjectLoading,
-    isFetched: isVotesOfProjectFetched,
     isFetching: isVotesOfProjectFetching,
     refetch: refetchVotesOfProject,
   } = trpc.vote.getVotesByProjectId.useQuery(
     { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-      select: (data) => {
-        devLog('getVotesByProjectId', data);
-        return data;
-      },
-    },
+    projectQueryOptions,
   );
 
   const voteResultOfProposal = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProposal({
       proposalId: Number(proposal?.id),
       votesOfProposal: votesOfProposal || [],
+      userId: profile?.userId,
     });
-  }, [votesOfProposal, proposal]);
+  }, [votesOfProposal, proposal, profile]);
 
   const getItemVoteResult = useCallback(
     (key: string) => {
@@ -62,9 +72,10 @@ export function useProposalVotes(
         proposalId: Number(proposal?.id),
         votesOfProposal: votesOfProposal || [],
         key,
+        userId: profile?.userId,
       });
     },
-    [votesOfProposal, proposal],
+    [votesOfProposal, proposal, profile],
   );
 
   const votesOfKeyInProposalMap = useMemo(() => {
@@ -119,7 +130,7 @@ export function useProposalVotes(
       );
   }, [votesOfProject, profile]);
 
-  const isUserVotedInProposal = useCallback(
+  const isUserVotedItemOfProposal = useCallback(
     (key: string) => {
       if (!profile) return false;
       const votesOfKey = votesOfKeyInProposalMap[key] || [];
@@ -132,7 +143,7 @@ export function useProposalVotes(
     [profile, votesOfKeyInProposalMap],
   );
 
-  const isUserVotedInProject = useCallback(
+  const isUserVotedItemOfProject = useCallback(
     (key: string) => {
       if (!profile) return false;
       const votesOfKey = votedOfKeyInProjectMap[key] || [];
@@ -272,11 +283,11 @@ export function useProposalVotes(
       } = callbacks;
 
       setCurrentVoteItem(item);
-      if (!isUserVotedInProject(item.key)) {
+      if (!isUserVotedItemOfProject(item.key)) {
         await onCreateVote(item.key);
         return;
       }
-      if (isUserVotedInProposal(item.key)) {
+      if (isUserVotedItemOfProposal(item.key)) {
         if (doNotShowCancelModal) {
           await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
         } else {
@@ -285,15 +296,18 @@ export function useProposalVotes(
         return;
       }
 
-      if (isUserVotedInProject(item.key) && !isUserVotedInProposal(item.key)) {
+      if (
+        isUserVotedItemOfProject(item.key) &&
+        !isUserVotedItemOfProposal(item.key)
+      ) {
         const sourceProposalData = findSourceProposal(item.key);
         setSourceProposal(sourceProposalData);
         setIsSwitchModalOpen(true);
       }
     },
     [
-      isUserVotedInProject,
-      isUserVotedInProposal,
+      isUserVotedItemOfProject,
+      isUserVotedItemOfProposal,
       onCreateVote,
       onCancelVote,
       userVotesOfProposalMap,
@@ -310,8 +324,8 @@ export function useProposalVotes(
     userVotesOfProjectMap,
     voteResultOfProposal,
     getItemVoteResult,
-    isUserVotedInProposal,
-    isUserVotedInProject,
+    isUserVotedInProposal: isUserVotedItemOfProposal,
+    isUserVotedInProject: isUserVotedItemOfProject,
     isFetchVoteInfoLoading:
       isVotesOfProposalFetching || isVotesOfProjectFetching,
     isVoteActionPending:

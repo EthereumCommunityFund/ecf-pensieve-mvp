@@ -1,5 +1,5 @@
 import { CircularProgress, cn } from '@heroui/react';
-import { FC } from 'react';
+import { FC, memo } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
@@ -91,4 +91,4 @@ const VoteItem: FC<IProps> = ({
   );
 };
 
-export default VoteItem;
+export default memo(VoteItem);
