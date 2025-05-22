@@ -1,6 +1,6 @@
 import {
   basicsFieldsConfig,
-  datesFieldsConfig,
+  financialFieldsConfig,
   getCreateProjectStepFields,
   organizationFieldsConfig,
   technicalsFieldsConfig,
@@ -20,11 +20,6 @@ export const TableFieldCategory: Record<
     description: '',
     items: getCreateProjectStepFields(IItemCategoryEnum.Basics),
   },
-  [IItemCategoryEnum.Dates]: {
-    title: 'Dates & Statuses',
-    description: '',
-    items: getCreateProjectStepFields(IItemCategoryEnum.Dates),
-  },
   [IItemCategoryEnum.Technicals]: {
     title: 'Technicals',
     description: '',
@@ -35,17 +30,15 @@ export const TableFieldCategory: Record<
     description: '',
     items: getCreateProjectStepFields(IItemCategoryEnum.Organization),
   },
+  [IItemCategoryEnum.Financial]: {
+    title: 'Financial',
+    description: '',
+    items: getCreateProjectStepFields(IItemCategoryEnum.Financial),
+  },
 };
 
 export const FIELD_LABELS: Record<string, string> = {
   ...Object.entries(basicsFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(datesFieldsConfig).reduce(
     (acc, [key, config]) => {
       acc[key] = config.label;
       return acc;
@@ -60,6 +53,13 @@ export const FIELD_LABELS: Record<string, string> = {
     {} as Record<string, string>,
   ),
   ...Object.entries(organizationFieldsConfig).reduce(
+    (acc, [key, config]) => {
+      acc[key] = config.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  ),
+  ...Object.entries(financialFieldsConfig).reduce(
     (acc, [key, config]) => {
       acc[key] = config.label;
       return acc;

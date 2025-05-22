@@ -1,8 +1,9 @@
 export enum IItemCategoryEnum {
   Basics = 'basics',
-  Dates = 'dates',
+  // Dates = 'dates',
   Technicals = 'technicals',
   Organization = 'organization',
+  Financial = 'financial',
 }
 
 export type IBasicsKey =
@@ -14,27 +15,25 @@ export type IBasicsKey =
   | 'websiteUrl'
   | 'appUrl'
   | 'tags'
-  | 'whitePaper';
-
-export type IDatesKey =
+  | 'whitePaper'
   | 'dateFounded'
-  | 'dateLaunch'
-  | 'devStatus'
-  | 'fundingStatus';
+  | 'dateLaunch';
 
 export type ITechnicalsKey =
+  | 'devStatus'
   | 'openSource'
   | 'codeRepo'
-  | 'tokenContract'
   | 'dappSmartContracts';
 
 export type IOrganizationKey = 'orgStructure' | 'publicGoods' | 'founders';
 
+export type IFinancialKey = 'fundingStatus' | 'tokenContract';
+
 export type IEssentialItemKey =
   | IBasicsKey
-  | IDatesKey
   | ITechnicalsKey
-  | IOrganizationKey;
+  | IOrganizationKey
+  | IFinancialKey;
 
 export interface IItemConfig<K extends IEssentialItemKey> {
   key: K;

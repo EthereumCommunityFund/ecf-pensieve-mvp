@@ -34,6 +34,7 @@ const OrganizationStepForm: React.FC<
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
+      {/* orgStructure */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: organizationFieldsConfig.orgStructure,
@@ -71,6 +72,7 @@ const OrganizationStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* publicGoods */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: organizationFieldsConfig.publicGoods,
@@ -108,6 +110,7 @@ const OrganizationStepForm: React.FC<
         />
       </FormFieldContainer>
 
+      {/* founders */}
       <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[20px]">
         <FormFieldContainer
           {...useCreateContainerPropsWithValue({

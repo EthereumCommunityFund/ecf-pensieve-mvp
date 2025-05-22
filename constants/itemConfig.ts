@@ -236,7 +236,6 @@ export const AllItemConfig: Record<
     weight: ESSENTIAL_ITEM_MAP.tokenContract.weight,
     type: 'switchableUrl',
     placeholder: '0x...',
-    showApplicable: true,
     showReference: true,
   },
   dappSmartContracts: {

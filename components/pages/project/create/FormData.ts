@@ -1,7 +1,7 @@
 import { AllItemConfig } from '@/constants/itemConfig';
 import {
   IBasicsKey,
-  IDatesKey,
+  IFinancialKey,
   IItemCategoryEnum,
   IItemConfig,
   IOrganizationKey,
@@ -27,23 +27,24 @@ export const CreateProjectStepFields: IProjectStepFieldsMap = {
     appUrl: true,
     tags: true,
     whitePaper: true,
-  },
-  [IItemCategoryEnum.Dates]: {
     dateFounded: true,
     dateLaunch: true,
-    devStatus: true,
-    fundingStatus: true,
   },
   [IItemCategoryEnum.Technicals]: {
+    devStatus: true,
     openSource: true,
     codeRepo: true,
-    tokenContract: true,
+
     dappSmartContracts: true,
   },
   [IItemCategoryEnum.Organization]: {
     orgStructure: true,
     publicGoods: true,
     founders: true,
+  },
+  [IItemCategoryEnum.Financial]: {
+    fundingStatus: true,
+    tokenContract: true,
   },
 };
 
@@ -62,14 +63,6 @@ export const basicsFieldsConfig: {
     ),
   ),
 ) as { [K in IBasicsKey]: IItemConfig<K> };
-
-export const datesFieldsConfig: {
-  [K in IDatesKey]: IItemConfig<K>;
-} = Object.fromEntries(
-  Object.entries(AllItemConfig).filter(([key]) =>
-    Object.keys(CreateProjectStepFields[IItemCategoryEnum.Dates]).includes(key),
-  ),
-) as { [K in IDatesKey]: IItemConfig<K> };
 
 export const technicalsFieldsConfig: {
   [K in ITechnicalsKey]: IItemConfig<K>;
@@ -90,6 +83,16 @@ export const organizationFieldsConfig: {
     ).includes(key),
   ),
 ) as { [K in IOrganizationKey]: IItemConfig<K> };
+
+export const financialFieldsConfig: {
+  [K in IFinancialKey]: IItemConfig<K>;
+} = Object.fromEntries(
+  Object.entries(AllItemConfig).filter(([key]) =>
+    Object.keys(CreateProjectStepFields[IItemCategoryEnum.Financial]).includes(
+      key,
+    ),
+  ),
+) as { [K in IFinancialKey]: IItemConfig<K> };
 
 export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   name: '',

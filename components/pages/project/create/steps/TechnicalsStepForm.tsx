@@ -24,11 +24,50 @@ const TechnicalsStepForm: React.FC<
   onAddReference,
   hasFieldReference,
 }) => {
-  const openSourceValue = watch(technicalsFieldsConfig.openSource.key);
   const openSourceOptions = technicalsFieldsConfig.openSource?.options || [];
+  const devStatusOptions = technicalsFieldsConfig.devStatus?.options || [];
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
+      {/* devStatus */}
+      <FormFieldContainer
+        {...useCreateContainerPropsWithValue({
+          fieldConfig: technicalsFieldsConfig.devStatus,
+          onAddReference: onAddReference,
+          hasFieldReference,
+        })}
+      >
+        <Controller
+          name={technicalsFieldsConfig.devStatus.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <Select
+              aria-label={technicalsFieldsConfig.devStatus.label}
+              placeholder={technicalsFieldsConfig.devStatus.placeholder}
+              selectedKeys={field.value ? [field.value] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0];
+                const valueAsString =
+                  selectedKey !== undefined ? String(selectedKey) : '';
+                field.onChange(valueAsString as IProjectFormData['devStatus']);
+              }}
+              isInvalid={!!error}
+              errorMessage={error?.message}
+              className="w-full"
+            >
+              {devStatusOptions.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  textValue={option.label}
+                  aria-label={option.label}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </Select>
+          )}
+        />
+      </FormFieldContainer>
       {/* openSource */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
@@ -103,36 +142,6 @@ const TechnicalsStepForm: React.FC<
                 inputWrapper: 'pl-0 pr-[10px]',
               }}
               aria-label={technicalsFieldsConfig.codeRepo.label}
-            />
-          )}
-        />
-      </FormFieldContainer>
-
-      {/* tokenContract */}
-      <FormFieldContainer
-        {...useCreateContainerPropsWithValue({
-          fieldConfig: technicalsFieldsConfig.tokenContract,
-          isApplicable: fieldApplicability.tokenContract,
-          onChangeApplicability: (val) =>
-            onChangeApplicability('tokenContract', val),
-          onAddReference: onAddReference,
-          hasFieldReference,
-        })}
-      >
-        <Controller
-          name={technicalsFieldsConfig.tokenContract.key}
-          control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Input
-              {...field}
-              value={field.value || ''}
-              onChange={(e) => field.onChange(e.target.value)}
-              placeholder={technicalsFieldsConfig.tokenContract.placeholder}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              isDisabled={!fieldApplicability.tokenContract}
-              className="w-full"
-              aria-label={technicalsFieldsConfig.tokenContract.label}
             />
           )}
         />

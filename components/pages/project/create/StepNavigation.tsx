@@ -24,25 +24,25 @@ interface StepNavigationProps {
 export const getStepIcons = (step: IItemCategoryEnum, size = 32) => {
   const stepIcons: Record<IItemCategoryEnum, React.ReactNode> = {
     [IItemCategoryEnum.Basics]: <CardsIcon size={size} />,
-    [IItemCategoryEnum.Dates]: <GaugeIcon size={size} />,
     [IItemCategoryEnum.Technicals]: <CodeIcon size={size} />,
     [IItemCategoryEnum.Organization]: <BuildingIcon size={size} />,
+    [IItemCategoryEnum.Financial]: <GaugeIcon size={size} />,
   };
   return stepIcons[step];
 };
 
 const stepLabels: Record<IItemCategoryEnum, string> = {
   [IItemCategoryEnum.Basics]: 'The Basics',
-  [IItemCategoryEnum.Dates]: 'Dates & Statuses',
   [IItemCategoryEnum.Technicals]: 'Technicals',
   [IItemCategoryEnum.Organization]: 'Organization',
+  [IItemCategoryEnum.Financial]: 'Financial',
 };
 
 const stepsOrder: IItemCategoryEnum[] = [
   IItemCategoryEnum.Basics,
-  IItemCategoryEnum.Dates,
   IItemCategoryEnum.Technicals,
   IItemCategoryEnum.Organization,
+  IItemCategoryEnum.Financial,
 ];
 
 const StepNavigation: React.FC<StepNavigationProps> = ({

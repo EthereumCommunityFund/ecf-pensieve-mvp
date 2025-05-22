@@ -30,7 +30,7 @@ import FormActions from './FormActions';
 import StepNavigation, { StepHeader } from './StepNavigation';
 import StepWrapper from './StepWrapper';
 import BasicsStepForm from './steps/BasicsStepForm';
-import DatesStepForm from './steps/DatesStepForm';
+import FinancialStepForm from './steps/FinancialStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
 import {
@@ -46,16 +46,16 @@ dayjs.extend(utc);
 
 const DEFAULT_STEP_STATUSES: Record<IItemCategoryEnum, IStepStatus> = {
   [IItemCategoryEnum.Basics]: 'Active',
-  [IItemCategoryEnum.Dates]: 'Inactive',
   [IItemCategoryEnum.Technicals]: 'Inactive',
   [IItemCategoryEnum.Organization]: 'Inactive',
+  [IItemCategoryEnum.Financial]: 'Inactive',
 };
 
 const STEPS_ORDER = [
   IItemCategoryEnum.Basics,
-  IItemCategoryEnum.Dates,
   IItemCategoryEnum.Technicals,
   IItemCategoryEnum.Organization,
+  IItemCategoryEnum.Financial,
 ];
 
 interface CreateProjectFormProps {
@@ -568,12 +568,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
               <BasicsStepForm {...stepProps} />
             </StepWrapper>
             <StepWrapper
-              stepId={IItemCategoryEnum.Dates}
-              currentStep={currentStep}
-            >
-              <DatesStepForm {...stepProps} />
-            </StepWrapper>
-            <StepWrapper
               stepId={IItemCategoryEnum.Technicals}
               currentStep={currentStep}
             >
@@ -584,6 +578,12 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
               currentStep={currentStep}
             >
               <OrganizationStepForm {...stepProps} />
+            </StepWrapper>
+            <StepWrapper
+              stepId={IItemCategoryEnum.Financial}
+              currentStep={currentStep}
+            >
+              <FinancialStepForm {...stepProps} />
             </StepWrapper>
 
             <FormActions

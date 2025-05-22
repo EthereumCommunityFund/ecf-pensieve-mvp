@@ -23,11 +23,6 @@ export const basicsSchema = yup.object().shape({
     .of(yup.string().required())
     .min(1, 'Select at least one category')
     .required('Categories are required'),
-  tags: yup
-    .array()
-    .of(yup.string().required())
-    .min(1, 'Select at least one tag')
-    .required('Tags are required'),
   mainDescription: yup.string().required('Main description is required'),
   logoUrl: yup
     .string()
@@ -43,25 +38,22 @@ export const basicsSchema = yup.object().shape({
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('App URL is required when applicable'),
+  tags: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one tag')
+    .required('Tags are required'),
   whitePaper: yup
     .string()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Whitepaper URL is required when applicable'),
-});
-
-// Step 2: Dates & Statuses
-export const datesSchema = yup.object().shape({
   dateFounded: yup.date().required('Foundation date is required'),
   dateLaunch: yup.date().required('Launch date is required when applicable'),
-  devStatus: yup.string().required('Development status is required'),
-  fundingStatus: yup
-    .string()
-    .required('Funding status is required when applicable'),
 });
 
-// Step 3: Technicals
 export const technicalsSchema = yup.object().shape({
+  devStatus: yup.string().required('Development status is required'),
   openSource: yup
     .string()
     .required('Please select whether the project is open source'),
@@ -70,17 +62,12 @@ export const technicalsSchema = yup.object().shape({
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Code repository URL is required when applicable'),
-  tokenContract: yup
-    .string()
-    .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
-    .required('Token contract address is required when applicable'),
   dappSmartContracts: yup
     .string()
     .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
     .required('Dapp smart contract address is required when applicable'),
 });
 
-// Step 4: Organization
 export const organizationSchema = yup.object().shape({
   orgStructure: yup
     .string()
@@ -99,8 +86,18 @@ export const organizationSchema = yup.object().shape({
     .required('Founder information is required'),
 });
 
+export const financialSchema = yup.object().shape({
+  fundingStatus: yup
+    .string()
+    .required('Funding status is required when applicable'),
+  tokenContract: yup
+    .string()
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
+    .required('Token contract address is required when applicable'),
+});
+
 export const projectSchema = basicsSchema
-  .concat(datesSchema)
   .concat(technicalsSchema)
   .concat(organizationSchema)
+  .concat(financialSchema)
   .defined() as yup.ObjectSchema<IProjectFormData>;

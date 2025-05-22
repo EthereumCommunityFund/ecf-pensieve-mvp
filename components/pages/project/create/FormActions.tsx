@@ -26,7 +26,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   formType = IFormTypeEnum.Project,
 }) => {
   const isFirstStep = currentStep === IItemCategoryEnum.Basics;
-  const isLastStep = currentStep === IItemCategoryEnum.Organization;
+  const isLastStep = currentStep === IItemCategoryEnum.Financial;
 
   const baseButtonClassnames = 'px-[30px] h-[40px]';
 

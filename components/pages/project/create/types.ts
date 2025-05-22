@@ -9,7 +9,7 @@ import {
 
 import {
   IBasicsKey,
-  IDatesKey,
+  IFinancialKey,
   IItemCategoryEnum,
   IOrganizationKey,
   ITechnicalsKey,
@@ -43,17 +43,14 @@ export interface IProjectFormData {
   appUrl: string | null;
   tags: string[];
   whitePaper: string;
-
   dateFounded: Date | null;
   dateLaunch: Date | null;
   devStatus: string;
   fundingStatus: string | null;
-
   openSource: 'Yes' | 'No' | '';
   codeRepo: string | null;
   tokenContract: string | null;
   dappSmartContracts: string;
-
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
   founders: IFounderInput[];
@@ -74,7 +71,6 @@ export interface ICreateProjectPayload {
   appUrl?: string;
   tags: string[];
   whitePaper: string;
-
   dateFounded: Date;
   dateLaunch?: Date;
   devStatus: string;
@@ -83,7 +79,6 @@ export interface ICreateProjectPayload {
   codeRepo?: string;
   tokenContract?: string;
   dappSmartContracts: string;
-
   orgStructure: string;
   publicGoods: boolean;
   founders: {
@@ -121,7 +116,7 @@ export interface IStepFormProps {
 
 export type IProjectStepFieldsMap = {
   [IItemCategoryEnum.Basics]: { [K in IBasicsKey]: true };
-  [IItemCategoryEnum.Dates]: { [K in IDatesKey]: true };
   [IItemCategoryEnum.Technicals]: { [K in ITechnicalsKey]: true };
   [IItemCategoryEnum.Organization]: { [K in IOrganizationKey]: true };
+  [IItemCategoryEnum.Financial]: { [K in IFinancialKey]: true };
 };

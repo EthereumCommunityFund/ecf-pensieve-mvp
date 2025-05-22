@@ -57,9 +57,9 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
 export const prepareTableData = (proposal?: IProposal) => {
   const result: Record<CategoryKey, ITableProposalItem[]> = {
     [IItemCategoryEnum.Basics]: [],
-    [IItemCategoryEnum.Dates]: [],
     [IItemCategoryEnum.Technicals]: [],
     [IItemCategoryEnum.Organization]: [],
+    [IItemCategoryEnum.Financial]: [],
   };
 
   // Iterate over each category defined in CreateProjectStep

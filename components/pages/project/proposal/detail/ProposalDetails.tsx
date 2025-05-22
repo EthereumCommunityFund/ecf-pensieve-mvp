@@ -55,9 +55,9 @@ const ProposalDetails = ({
   const { profile, showAuthPrompt } = useAuth();
   const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
     [IItemCategoryEnum.Basics]: true,
-    [IItemCategoryEnum.Dates]: true,
     [IItemCategoryEnum.Technicals]: true,
     [IItemCategoryEnum.Organization]: true,
+    [IItemCategoryEnum.Financial]: true,
   });
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -196,12 +196,6 @@ const ProposalDetails = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const datesTable = useReactTable<ITableProposalItem>({
-    data: tableData[IItemCategoryEnum.Dates],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   const technicalsTable = useReactTable<ITableProposalItem>({
     data: tableData[IItemCategoryEnum.Technicals],
     columns,
@@ -210,6 +204,12 @@ const ProposalDetails = ({
 
   const organizationTable = useReactTable<ITableProposalItem>({
     data: tableData[IItemCategoryEnum.Organization],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const financialTable = useReactTable<ITableProposalItem>({
+    data: tableData[IItemCategoryEnum.Financial],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -262,8 +262,8 @@ const ProposalDetails = ({
                 table={
                   category === IItemCategoryEnum.Basics
                     ? basicsTable
-                    : category === IItemCategoryEnum.Dates
-                      ? datesTable
+                    : category === IItemCategoryEnum.Financial
+                      ? financialTable
                       : category === IItemCategoryEnum.Technicals
                         ? technicalsTable
                         : organizationTable
