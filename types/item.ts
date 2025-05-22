@@ -38,11 +38,11 @@ export type IEssentialItemKey =
 export interface IItemConfig<K extends IEssentialItemKey> {
   key: K;
   label: string;
-  description?: string;
-  shortDescription?: string; // For tooltip
-  weight?: string | number;
+  description: string;
+  shortDescription: string; // For tooltip
+  weight: string | number;
   formDisplayType: IFormDisplayType;
-  placeholder?: string;
+  placeholder: string;
   options?: { value: string; label: string }[]; // For select, radio
   showApplicable?: boolean; // Whether the applicable switch should be shown
   showReference?: boolean; // Whether the reference button should be shown
@@ -52,14 +52,11 @@ export interface IItemConfig<K extends IEssentialItemKey> {
 }
 
 export type IFormDisplayType =
-  | 'text'
-  | 'textarea'
-  | 'selectMultiple'
-  | 'photo'
-  | 'url'
-  | 'switchableUrl'
-  | 'date'
-  | 'switchableDate'
+  | 'string'
+  | 'stringMultiple' // separate by comma
   | 'select'
-  | 'radio'
+  | 'selectMultiple'
+  | 'img'
+  | 'link'
+  | 'date'
   | 'founderList';

@@ -10,6 +10,8 @@ import { IEssentialItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
+import InputContentRenderer from './InputContentRenderer';
+
 interface ProposalTableProps {
   table: Table<ITableProposalItem>;
   isLoading: boolean;
@@ -25,13 +27,6 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
 }) => {
   const noDataForThisTable = table.options.data.length === 0;
   const showSkeleton = isLoading || noDataForThisTable;
-
-  const renderExpandedContent = (value: any) => {
-    if (Array.isArray(value)) {
-      return JSON.stringify(value);
-    }
-    return value;
-  };
 
   const colGroupDefinition = (
     <colgroup>
@@ -178,7 +173,13 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                   >
                     <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                       <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                        {renderExpandedContent(row.original.input)}
+                        <InputContentRenderer
+                          value={row.original.input}
+                          displayFormType={
+                            AllItemConfig[row.original.key as IEssentialItemKey]
+                              .formDisplayType
+                          }
+                        />
                       </p>
                     </div>
                   </td>

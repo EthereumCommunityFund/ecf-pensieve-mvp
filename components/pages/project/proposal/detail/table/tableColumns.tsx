@@ -12,6 +12,7 @@ import { IEssentialItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
+import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
 import TooltipTh from './TooltipTh';
 import VoteItem from './VoteItem';
@@ -98,24 +99,26 @@ export const createTableColumns = ({
     cell: (info) => {
       const value = info.getValue();
       const rowKey = info.row.original.key as IEssentialItemKey;
-      const isExpandable = AllItemConfig[rowKey].showExpand;
+      const itemConfig = AllItemConfig[rowKey];
+      const isExpandable = itemConfig.showExpand;
+      const displayFormType = itemConfig.formDisplayType;
       const isRowExpanded = expandedRows[rowKey];
-
-      const renderValue = () => {
-        if (Array.isArray(value)) {
-          return JSON.stringify(value);
-        }
-        return value;
-      };
 
       return (
         <div className="font-mona flex w-full items-center justify-between gap-[10px]">
           <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-            {isExpandable
-              ? isRowExpanded
-                ? 'Close'
-                : 'Expand'
-              : renderValue()}
+            {isExpandable ? (
+              isRowExpanded ? (
+                'Close'
+              ) : (
+                'Expand'
+              )
+            ) : (
+              <InputContentRenderer
+                value={value}
+                displayFormType={displayFormType}
+              />
+            )}
           </div>
 
           {isExpandable && (
