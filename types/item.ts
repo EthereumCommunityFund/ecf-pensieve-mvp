@@ -44,7 +44,6 @@ export interface IItemConfig<K extends IEssentialItemKey> {
   type: IFormDisplayType;
   placeholder?: string;
   options?: { value: string; label: string }[]; // For select, radio
-  presetCategories?: string[]; // Specific for categories
   showApplicable?: boolean; // Whether the applicable switch should be shown
   showReference?: boolean; // Whether the reference button should be shown
   showExpand?: boolean; // Whether the field can be expanded in the projectDetail/proposal table

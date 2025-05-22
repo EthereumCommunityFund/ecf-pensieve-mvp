@@ -36,7 +36,7 @@ const BasicsStepForm: React.FC<
   hasFieldReference,
 }) => {
   const categoriesConfig = basicsFieldsConfig.categories;
-  const presetCategories = categoriesConfig?.presetCategories || [];
+  const categoryOptions = categoriesConfig?.options || [];
   const tagsOptions = basicsFieldsConfig.tags.options || [];
 
   const dateToDateValue = (date: Date | null | undefined): DateValue | null => {
@@ -133,13 +133,13 @@ const BasicsStepForm: React.FC<
                 errorMessage={error?.message}
                 aria-label={basicsFieldsConfig.categories.label}
               >
-                {presetCategories.map((category) => (
+                {categoryOptions.map((option) => (
                   <SelectItem
-                    key={category}
-                    textValue={category}
-                    aria-label={category}
+                    key={option.value}
+                    textValue={option.label}
+                    aria-label={option.label}
                   >
-                    {category}
+                    {option.label}
                   </SelectItem>
                 ))}
               </Select>
