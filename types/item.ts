@@ -41,7 +41,7 @@ export interface IItemConfig<K extends IEssentialItemKey> {
   description?: string;
   shortDescription?: string; // For tooltip
   weight?: string | number;
-  type: IFormDisplayType;
+  formDisplayType: IFormDisplayType;
   placeholder?: string;
   options?: { value: string; label: string }[]; // For select, radio
   showApplicable?: boolean; // Whether the applicable switch should be shown
