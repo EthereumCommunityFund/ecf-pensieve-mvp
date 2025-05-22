@@ -49,6 +49,7 @@ const VoteItem: FC<IProps> = ({
           minValue={0}
           maxValue={maxValue}
           value={itemPoints}
+          disableAnimation={true}
           strokeWidth={3}
           formatOptions={{
             style: 'decimal',
