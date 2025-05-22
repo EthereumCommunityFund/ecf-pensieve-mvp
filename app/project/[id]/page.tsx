@@ -131,7 +131,6 @@ const ProjectPage = () => {
       {activeTab === 'project-data' && (
         <ProjectData
           projectId={Number(projectId)}
-          proposals={proposals}
           isProposalsLoading={isProposalsLoading}
           isProposalsFetched={isProposalsFetched}
           onSubmitProposal={onSubmitProposal}
