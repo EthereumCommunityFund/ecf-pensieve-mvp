@@ -4,9 +4,11 @@ import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
+import { IEssentialItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -16,7 +18,6 @@ import VoteItem from './VoteItem';
 
 interface CreateColumnsProps {
   isPageExpanded: boolean;
-  isRowExpandable: (key: string) => boolean;
   expandedRows: Record<string, boolean>;
   toggleRowExpanded: (key: string) => void;
   onShowReference: (key: string) => void;
@@ -31,7 +32,6 @@ interface CreateColumnsProps {
 
 export const createTableColumns = ({
   isPageExpanded,
-  isRowExpandable,
   expandedRows,
   toggleRowExpanded,
   onShowReference,
@@ -67,6 +67,7 @@ export const createTableColumns = ({
     },
   });
 
+  // TODO 预留
   const fieldTypeColumn = columnHelper.accessor('property', {
     id: 'fieldType',
     header: () => (
@@ -96,8 +97,8 @@ export const createTableColumns = ({
     size: isPageExpanded ? 480 : 250,
     cell: (info) => {
       const value = info.getValue();
-      const rowKey = info.row.original.key;
-      const isExpandable = isRowExpandable(rowKey);
+      const rowKey = info.row.original.key as IEssentialItemKey;
+      const isExpandable = AllItemConfig[rowKey].showExpand;
       const isRowExpanded = expandedRows[rowKey];
 
       const renderValue = () => {
@@ -108,10 +109,7 @@ export const createTableColumns = ({
       };
 
       return (
-        <div
-          className="font-mona flex w-full items-center justify-between gap-[10px]"
-          style={{ maxWidth: isPageExpanded ? '460px' : '230px' }}
-        >
+        <div className="font-mona flex w-full items-center justify-between gap-[10px]">
           <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
             {isExpandable
               ? isRowExpanded
@@ -211,13 +209,5 @@ export const createTableColumns = ({
     },
   });
 
-  return isPageExpanded
-    ? [
-        propertyColumn,
-        fieldTypeColumn,
-        inputColumn,
-        referenceColumn,
-        supportColumn,
-      ]
-    : [propertyColumn, inputColumn, referenceColumn, supportColumn];
+  return [propertyColumn, inputColumn, referenceColumn, supportColumn];
 };

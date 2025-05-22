@@ -5,21 +5,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IRef } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { IProject, IProposal } from '@/types';
-import { IItemCategoryEnum } from '@/types/item';
+import { IEssentialItemKey, IItemCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
 import TableSectionHeader from './TableSectionHeader';
 import { TableFieldCategory } from './constants';
 import CancelVoteModal from './table/CancelVoteModal';
+import CategoryHeader from './table/CategoryHeader';
 import ProposalTable from './table/ProposalTable';
 import ReferenceModal from './table/ReferenceModal';
 import SwitchVoteModal from './table/SwitchVoteModal';
 import { createTableColumns } from './table/tableColumns';
-import { CategoryHeader, prepareTableData } from './table/tableUtils';
+import { prepareTableData } from './table/utils';
 
 export interface ITableProposalItem {
   key: string;
@@ -140,16 +142,10 @@ const ProposalDetails = ({
   }, []);
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const expandableRowKeys = useMemo(() => {
-    return ['name', 'mainDescription', 'projectType'];
-  }, []);
 
-  const isRowExpandable = useCallback(
-    (key: string) => {
-      return expandableRowKeys.includes(key);
-    },
-    [expandableRowKeys],
-  );
+  const isRowExpandable = useCallback((key: IEssentialItemKey) => {
+    return AllItemConfig[key].showExpand;
+  }, []);
 
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
@@ -161,7 +157,6 @@ const ProposalDetails = ({
   const columns = useMemo(() => {
     return createTableColumns({
       isPageExpanded,
-      isRowExpandable,
       expandedRows,
       toggleRowExpanded,
       onShowReference,
@@ -175,7 +170,6 @@ const ProposalDetails = ({
     });
   }, [
     isPageExpanded,
-    isRowExpandable,
     expandedRows,
     toggleRowExpanded,
     onShowReference,
@@ -271,7 +265,6 @@ const ProposalDetails = ({
                 isLoading={isOverallLoading}
                 isPageExpanded={isPageExpanded}
                 expandedRows={expandedRows}
-                isRowExpandable={isRowExpandable}
               />
             </div>
           </div>

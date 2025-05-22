@@ -4,7 +4,9 @@ import { Skeleton } from '@heroui/react';
 import { Table, flexRender } from '@tanstack/react-table';
 import React from 'react';
 
+import { AllItemConfig } from '@/constants/itemConfig';
 import { cn } from '@/lib/utils';
+import { IEssentialItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -13,7 +15,6 @@ interface ProposalTableProps {
   isLoading: boolean;
   isPageExpanded: boolean;
   expandedRows: Record<string, boolean>;
-  isRowExpandable: (key: string) => boolean;
 }
 
 const ProposalTable: React.FC<ProposalTableProps> = ({
@@ -21,7 +22,6 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
   isLoading,
   isPageExpanded,
   expandedRows,
-  isRowExpandable,
 }) => {
   const noDataForThisTable = table.options.data.length === 0;
   const showSkeleton = isLoading || noDataForThisTable;
@@ -162,7 +162,8 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                 ))}
               </tr>
 
-              {isRowExpandable(row.original.key) && (
+              {AllItemConfig[row.original.key as IEssentialItemKey]
+                .showExpand && (
                 <tr
                   key={`${row.id}-expanded`}
                   className={cn(expandedRows[row.original.key] ? '' : 'hidden')}
