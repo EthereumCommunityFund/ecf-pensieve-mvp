@@ -28,6 +28,7 @@ export interface ITableProposalItem {
   input: string;
   reference: string;
   support: number;
+  fieldType?: string;
 }
 
 export type CategoryKey = IItemCategoryEnum;
