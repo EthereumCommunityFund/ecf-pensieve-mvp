@@ -15,6 +15,10 @@ export const prepareTableData = (proposal?: IProposal) => {
     [IItemCategoryEnum.Financial]: [],
   };
 
+  if (!proposal) {
+    return result;
+  }
+
   for (const catKey of Object.values(IItemCategoryEnum)) {
     const category = catKey as CategoryKey;
     const categoryItems = TableFieldCategory[category]?.items || [];

@@ -5,11 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IRef } from '@/components/pages/project/create/types';
 import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
-import { AllItemConfig } from '@/constants/itemConfig';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { IProject, IProposal } from '@/types';
-import { IEssentialItemKey, IItemCategoryEnum } from '@/types/item';
+import { IItemCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
@@ -142,10 +141,6 @@ const ProposalDetails = ({
   }, []);
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-
-  const isRowExpandable = useCallback((key: IEssentialItemKey) => {
-    return AllItemConfig[key].showExpand;
-  }, []);
 
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
