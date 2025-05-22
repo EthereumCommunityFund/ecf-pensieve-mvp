@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { memo } from 'react';
 
 import { IFormDisplayType } from '@/types/item';
 
@@ -76,4 +76,4 @@ const InputContentRenderer: React.FC<IProps> = ({ value, displayFormType }) => {
   }
 };
 
-export default InputContentRenderer;
+export default memo(InputContentRenderer);

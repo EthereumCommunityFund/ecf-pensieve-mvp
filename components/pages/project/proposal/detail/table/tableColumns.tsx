@@ -17,8 +17,7 @@ import TooltipItemWeight from './TooltipItemWeight';
 import TooltipTh from './TooltipTh';
 import VoteItem from './VoteItem';
 
-interface CreateColumnsProps {
-  isPageExpanded: boolean;
+export interface TableCellsMeta {
   expandedRows: Record<string, boolean>;
   toggleRowExpanded: (key: string) => void;
   onShowReference: (key: string) => void;
@@ -33,17 +32,9 @@ interface CreateColumnsProps {
 
 export const createTableColumns = ({
   isPageExpanded,
-  expandedRows,
-  toggleRowExpanded,
-  onShowReference,
-  project,
-  proposal,
-  onVoteAction,
-  isFetchVoteInfoLoading,
-  isVoteActionPending,
-  inActionKeys,
-  getItemVoteResult,
-}: CreateColumnsProps): ColumnDef<ITableProposalItem, any>[] => {
+}: {
+  isPageExpanded: boolean;
+}): ColumnDef<ITableProposalItem, any>[] => {
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
   const propertyColumn = columnHelper.accessor('property', {
@@ -97,6 +88,8 @@ export const createTableColumns = ({
     ),
     size: isPageExpanded ? 480 : 250,
     cell: (info) => {
+      const { expandedRows, toggleRowExpanded } = info.table.options
+        .meta as TableCellsMeta;
       const value = info.getValue();
       const rowKey = info.row.original.key as IEssentialItemKey;
       const itemConfig = AllItemConfig[rowKey];
@@ -149,6 +142,7 @@ export const createTableColumns = ({
     ),
     size: 124,
     cell: (info) => {
+      const { onShowReference } = info.table.options.meta as TableCellsMeta;
       const value = info.getValue();
       return (
         <div className="mx-auto flex justify-center">
@@ -180,6 +174,16 @@ export const createTableColumns = ({
     ),
     size: 220,
     cell: (info) => {
+      const {
+        project,
+        proposal,
+        onVoteAction,
+        isFetchVoteInfoLoading,
+        isVoteActionPending,
+        inActionKeys,
+        getItemVoteResult,
+      } = info.table.options.meta as TableCellsMeta;
+
       const key = info.row.original.key;
       const isLoading =
         (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];

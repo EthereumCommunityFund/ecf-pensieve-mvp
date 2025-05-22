@@ -150,8 +150,13 @@ const ProposalDetails = ({
   }, []);
 
   const columns = useMemo(() => {
-    return createTableColumns({
-      isPageExpanded,
+    return createTableColumns({ isPageExpanded });
+  }, [isPageExpanded]);
+
+  const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
+
+  const tableMeta = useMemo(
+    () => ({
       expandedRows,
       toggleRowExpanded,
       onShowReference,
@@ -162,44 +167,46 @@ const ProposalDetails = ({
       isVoteActionPending,
       inActionKeys,
       getItemVoteResult,
-    });
-  }, [
-    isPageExpanded,
-    expandedRows,
-    toggleRowExpanded,
-    onShowReference,
-    project,
-    proposal,
-    onVoteAction,
-    isFetchVoteInfoLoading,
-    isVoteActionPending,
-    inActionKeys,
-    getItemVoteResult,
-  ]);
-
-  const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
+    }),
+    [
+      expandedRows,
+      toggleRowExpanded,
+      onShowReference,
+      project,
+      proposal,
+      onVoteAction,
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      inActionKeys,
+      getItemVoteResult,
+    ],
+  );
 
   const basicsTable = useReactTable<ITableProposalItem>({
     data: tableData[IItemCategoryEnum.Basics],
     columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const technicalsTable = useReactTable<ITableProposalItem>({
     data: tableData[IItemCategoryEnum.Technicals],
     columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const organizationTable = useReactTable<ITableProposalItem>({
     data: tableData[IItemCategoryEnum.Organization],
     columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const financialTable = useReactTable<ITableProposalItem>({
     data: tableData[IItemCategoryEnum.Financial],
     columns,
+    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
   });
 
