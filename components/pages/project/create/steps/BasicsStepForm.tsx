@@ -257,7 +257,6 @@ const BasicsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.appUrl,
-          showApplicable: true,
           isApplicable: fieldApplicability.appUrl,
           onChangeApplicability: (val) => onChangeApplicability('appUrl', val),
           onAddReference: onAddReference,

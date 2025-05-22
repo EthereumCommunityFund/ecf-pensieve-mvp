@@ -32,7 +32,7 @@ export const createContainerProps = ({
     shortDescription: fieldConfig.shortDescription,
     weight: Number(fieldConfig.weight),
     showReference: fieldConfig.showReference,
-    showApplicable,
+    showApplicable: !!fieldConfig.showApplicable,
     isApplicable,
     onChangeApplicability,
     onAddReference:

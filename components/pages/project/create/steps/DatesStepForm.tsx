@@ -86,7 +86,6 @@ const DatesStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.dateLaunch,
-          showApplicable: true,
           isApplicable: fieldApplicability.dateLaunch,
           onChangeApplicability: (val) =>
             onChangeApplicability('dateLaunch', val),
@@ -162,7 +161,6 @@ const DatesStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: datesFieldsConfig.fundingStatus,
-          showApplicable: true,
           isApplicable: fieldApplicability.fundingStatus,
           onChangeApplicability: (val) =>
             onChangeApplicability('fundingStatus', val),

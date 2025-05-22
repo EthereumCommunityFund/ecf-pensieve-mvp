@@ -71,7 +71,6 @@ const TechnicalsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.codeRepo,
-          showApplicable: true,
           isApplicable: fieldApplicability.codeRepo,
           onChangeApplicability: (val) =>
             onChangeApplicability('codeRepo', val),
@@ -113,7 +112,6 @@ const TechnicalsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.tokenContract,
-          showApplicable: true,
           isApplicable: fieldApplicability.tokenContract,
           onChangeApplicability: (val) =>
             onChangeApplicability('tokenContract', val),
@@ -144,6 +142,9 @@ const TechnicalsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: technicalsFieldsConfig.dappSmartContracts,
+          isApplicable: fieldApplicability.dappSmartContracts,
+          onChangeApplicability: (val) =>
+            onChangeApplicability('dappSmartContracts', val),
           onAddReference: onAddReference,
           hasFieldReference,
         })}
@@ -161,6 +162,7 @@ const TechnicalsStepForm: React.FC<
               }
               isInvalid={!!error}
               errorMessage={error?.message}
+              isDisabled={!fieldApplicability.dappSmartContracts}
               className="w-full"
               aria-label={technicalsFieldsConfig.dappSmartContracts.label}
             />
