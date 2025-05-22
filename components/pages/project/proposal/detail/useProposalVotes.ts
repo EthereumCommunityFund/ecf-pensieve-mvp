@@ -7,6 +7,9 @@ import { IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
 
+type VoteArrayType = IVote[] | undefined;
+const ONE_MINUTE_MS = 60 * 1000;
+
 export function useProposalVotes(
   proposal: IProposal | undefined,
   projectId: number,
@@ -15,38 +18,44 @@ export function useProposalVotes(
   const { profile } = useAuth();
   const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
 
+  const proposalQueryOptions = useMemo(
+    () => ({
+      enabled: !!proposal && !!proposal.id,
+      select: (data: VoteArrayType) => {
+        devLog('getVotesByProposalId', data);
+        return data;
+      },
+    }),
+    [proposal],
+  );
+
+  const projectQueryOptions = useMemo(
+    () => ({
+      enabled: !!projectId,
+      select: (data: VoteArrayType) => {
+        devLog('getVotesByProjectId', data);
+        return data;
+      },
+    }),
+    [projectId],
+  );
+
   const {
     data: votesOfProposal,
-    isLoading: isVotesOfProposalLoading,
-    isFetched: isVotesOfProposalFetched,
     isFetching: isVotesOfProposalFetching,
     refetch: refetchVotesOfProposal,
   } = trpc.vote.getVotesByProposalId.useQuery(
     { proposalId: Number(proposal?.id) },
-    {
-      enabled: !!proposal && !!proposal.id,
-      select: (data) => {
-        devLog('getVotesByProposalId', data);
-        return data;
-      },
-    },
+    proposalQueryOptions,
   );
 
   const {
     data: votesOfProject,
-    isLoading: isVotesOfProjectLoading,
-    isFetched: isVotesOfProjectFetched,
     isFetching: isVotesOfProjectFetching,
     refetch: refetchVotesOfProject,
   } = trpc.vote.getVotesByProjectId.useQuery(
     { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-      select: (data) => {
-        devLog('getVotesByProjectId', data);
-        return data;
-      },
-    },
+    projectQueryOptions,
   );
 
   const voteResultOfProposal = useMemo(() => {

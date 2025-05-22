@@ -38,37 +38,25 @@ const ProposalPage = () => {
       {
         enabled: !!projectId,
         select: (data) => {
-          devLog('project', data);
+          devLog('getProjectById', data);
           return data;
         },
       },
     );
 
-  const {
-    data: proposal,
-    isLoading: isProposalLoading,
-    isFetched: isProposalFetched,
-  } = trpc.proposal.getProposalById.useQuery(
-    { id: Number(proposalId) },
-    {
-      enabled: !!proposalId,
-      select: (data) => {
-        devLog('proposal', data);
-        return data;
+  const { data: proposal, isFetched: isProposalFetched } =
+    trpc.proposal.getProposalById.useQuery(
+      { id: Number(proposalId) },
+      {
+        enabled: !!proposalId,
+        select: (data) => {
+          devLog('proposal', data);
+          return data;
+        },
       },
-    },
-  );
+    );
 
-  const {
-    data: proposals,
-    isLoading: isProposalsLoading,
-    isFetched: isProposalsFetched,
-  } = trpc.proposal.getProposalsByProjectId.useQuery(
-    { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-    },
-  );
+  const proposals = project?.proposals || [];
 
   const { leadingProposalId } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({
