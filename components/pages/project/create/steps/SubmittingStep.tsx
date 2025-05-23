@@ -205,7 +205,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex items-center gap-[5px]"
+                className="flex items-center gap-[10px]"
               >
                 <Button
                   isIconOnly
