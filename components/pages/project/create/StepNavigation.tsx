@@ -19,6 +19,7 @@ interface StepNavigationProps {
   currentStep: IItemCategoryEnum;
   stepStatuses: Record<IItemCategoryEnum, IStepStatus>;
   goToStep: (step: IItemCategoryEnum) => void;
+  showSuccessPage: boolean;
 }
 
 export const getStepIcons = (step: IItemCategoryEnum, size = 32) => {
@@ -49,11 +50,17 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   currentStep,
   stepStatuses,
   goToStep,
+  showSuccessPage,
 }) => {
   const currentStepIndex = stepsOrder.indexOf(currentStep);
 
   return (
-    <nav className="mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start">
+    <nav
+      className={cn(
+        'mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start',
+        showSuccessPage ? 'opacity-30' : '',
+      )}
+    >
       <ul className="space-y-4">
         {stepsOrder.map((step, index) => {
           const status = stepStatuses[step];
@@ -96,20 +103,19 @@ export default StepNavigation;
 
 export const StepHeader: React.FC<{
   currentStep: IItemCategoryEnum;
-  showSuccessPage: boolean;
-}> = ({ currentStep, showSuccessPage }) => {
+}> = ({ currentStep }) => {
   return (
     <>
       <div className="mobile:hidden flex h-[50px] items-center justify-start border-b border-[rgba(0,0,0,0.1)] bg-[rgba(245,245,245,0.8)] px-[10px] backdrop-blur-[5px]">
         <span className="font-mona text-[24px] font-[700] text-black opacity-80">
-          {showSuccessPage ? 'Submitting Proposal' : stepLabels[currentStep]}
+          {stepLabels[currentStep]}
         </span>
       </div>
 
       <div className="mobile:flex hidden h-[44px] items-center justify-start gap-[10px] border-b border-[rgba(0,0,0,0.2)] px-[14px] pb-[10px] pt-[6px]">
-        {showSuccessPage ? null : getStepIcons(currentStep, 24)}
+        {getStepIcons(currentStep, 24)}
         <span className="text-[16px] font-[600] leading-[26px] text-black">
-          {showSuccessPage ? 'Submitting Proposal' : stepLabels[currentStep]}
+          {stepLabels[currentStep]}
         </span>
       </div>
     </>

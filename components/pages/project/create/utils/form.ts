@@ -45,9 +45,7 @@ export const transformProjectData = (
     codeRepo: fieldApplicability['codeRepo']
       ? normalizeUrl(formData.codeRepo) || undefined
       : undefined,
-    tokenContract: fieldApplicability['tokenContract']
-      ? formData.tokenContract || undefined
-      : undefined,
+    tokenContract: formData.tokenContract || undefined,
     dappSmartContracts: formData.dappSmartContracts,
 
     orgStructure: formData.orgStructure || 'Centralized',
@@ -116,9 +114,7 @@ export const transformProposalData = (
     });
   }
 
-  if (fieldApplicability['tokenContract'] && formData.tokenContract) {
-    items.push({ key: 'tokenContract', value: formData.tokenContract });
-  }
+  items.push({ key: 'tokenContract', value: formData.tokenContract || '' });
 
   items.push({ key: 'dappSmartContracts', value: formData.dappSmartContracts });
 

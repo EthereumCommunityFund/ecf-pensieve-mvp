@@ -391,6 +391,12 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     const isFinalValidationValid = await trigger(fieldsToValidateFinally);
 
     if (isFinalValidationValid) {
+      setStepStatuses((prev) => {
+        return {
+          ...prev,
+          [currentStep]: 'Finished',
+        };
+      });
       await onSubmit(getValues());
     } else {
       scrollToError(errors);
@@ -559,23 +565,23 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="tablet:gap-[20px] tablet:px-[20px] mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0 flex min-h-screen gap-[40px] px-[160px] pb-[40px]"
-      >
-        {showSuccessPage && isProjectType ? null : (
-          <StepNavigation
-            currentStep={currentStep}
-            stepStatuses={stepStatuses}
-            goToStep={handleGoToStep}
-          />
+        className={cn(
+          'flex min-h-screen gap-[40px] px-[160px] pb-[40px]',
+          'tablet:gap-[20px] tablet:px-[20px]',
+          'mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0',
         )}
+      >
+        <StepNavigation
+          currentStep={currentStep}
+          stepStatuses={stepStatuses}
+          goToStep={handleGoToStep}
+          showSuccessPage={showSuccessPage}
+        />
 
         <div
           className={cn('mobile:gap-[20px] flex flex-1 flex-col gap-[40px]')}
         >
-          <StepHeader
-            currentStep={currentStep}
-            showSuccessPage={showSuccessPage}
-          />
+          {showSuccessPage ? null : <StepHeader currentStep={currentStep} />}
 
           <div
             className={cn(

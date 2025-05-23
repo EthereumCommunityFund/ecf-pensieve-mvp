@@ -1,8 +1,10 @@
 import { cn } from '@heroui/react';
 import { useRouter } from 'next/navigation';
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
+import CheckedCircleIcon from '@/components/icons/CheckCircle';
+import { ESSENTIAL_ITEM_WEIGHT_SUM, REWARD_PERCENT } from '@/lib/constants';
 
 import { IFormTypeEnum } from './types';
 
@@ -12,6 +14,8 @@ interface SuccessDisplayProps {
   projectId?: number;
 }
 
+const RewardWeight = ESSENTIAL_ITEM_WEIGHT_SUM * REWARD_PERCENT;
+
 const SuccessDisplay: FC<SuccessDisplayProps> = ({
   formType,
   entityId,
@@ -19,7 +23,6 @@ const SuccessDisplay: FC<SuccessDisplayProps> = ({
 }) => {
   const router = useRouter();
   const isProject = formType === IFormTypeEnum.Project;
-  const itemType = isProject ? 'project' : 'proposal';
   const viewButtonText = isProject ? 'View Your Project' : 'View Your Proposal';
 
   const viewButtonLink = useMemo(() => {
@@ -34,95 +37,104 @@ const SuccessDisplay: FC<SuccessDisplayProps> = ({
       : `/project/pending/${projectId!}/proposal/create`;
   }, [isProject, projectId]);
 
-  const handleBackToContribute = () => {
-    router.replace(backButtonLink);
-  };
+  const handleBackToContribute = useCallback(() => {
+    location.reload();
+  }, []);
 
-  const handleViewEntity = () => {
+  const handleViewEntity = useCallback(() => {
     router.replace(viewButtonLink);
-  };
+  }, [viewButtonLink, router]);
 
   return (
     <div
       className={cn(
-        ' flex flex-col gap-[20px]',
-        isProject ? 'pc:mx-[200px]' : '',
+        ' flex flex-col gap-[20px] mobile:mx-[10px]',
+        isProject ? '' : '',
       )}
     >
-      {/* <StepHeader
-        currentStep={IItemCategoryEnum.Financial}
-        showSuccessPage={true}
-      /> */}
+      {/* Header */}
+      <div className="flex items-center border-b border-black/10 bg-[rgba(245,245,245,0.8)] px-[10px] py-[8px] backdrop-blur-[5px]">
+        <span className="font-mona text-[24px] font-[700] leading-[34px] text-black/80">
+          Submitting Proposal
+        </span>
+      </div>
 
-      <h1 className="text-[24px] font-[700] text-red-500">
-        UI & Animation not done
-      </h1>
-
-      <div className="">
-        <div className="mb-8 space-y-4 text-left sm:mb-10">
-          <div className="flex items-center text-green-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mr-2 size-6 shrink-0 sm:mr-3 sm:size-7"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-base sm:text-lg">
-              Your {itemType} is posted in the Contribute Page
+      {/* Content */}
+      {isProject ? (
+        <div className="font-mona flex flex-col gap-[20px] text-[18px] font-[500] leading-[1.6] text-black">
+          <div className="flex items-center gap-[5px]">
+            <CheckedCircleIcon />
+            <span className="">
+              Your User Weight and vote is being accounted for all items
             </span>
           </div>
-          <div className="flex items-center text-green-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mr-2 size-6 shrink-0 sm:mr-3 sm:size-7"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-base sm:text-lg">
+          <div className="flex items-center gap-[5px]">
+            <CheckedCircleIcon />
+            <span className="">
+              Your proposal is posted in the Contribute Page
+            </span>
+          </div>
+
+          <div className="flex items-start gap-[5px]">
+            <CheckedCircleIcon />
+            <div className="flex flex-col gap-[5px]">
+              <p>
+                <span className="font-open-sans mr-[5px] font-[800] italic text-[#64C0A5]">
+                  ZERO-TO-ONE
+                </span>
+                <span>reward has been added to your User Weight</span>
+              </p>
+              <p className="text-[14px] font-[400] leading-[20px] text-black/80">
+                You have gained{' '}
+                <span className="font-[700]">{RewardWeight}</span> to your User
+                Weight
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="font-mona flex flex-col gap-[20px] text-[18px] font-[500] leading-[1.6] text-black">
+          <div className="flex items-center gap-[5px]">
+            <CheckedCircleIcon />
+            <span>Your proposal is posted in the Contribute Page</span>
+          </div>
+
+          <div className="flex items-center gap-[5px]">
+            <CheckedCircleIcon />
+            <span>
               Your User Weight and vote is being accounted for all items
             </span>
           </div>
         </div>
+      )}
 
-        <p className="mb-8 text-base text-gray-600 sm:mb-10 sm:text-lg">
-          This {itemType} will now proceed with community verification. Once
-          verified, this will be published as a project page.
-        </p>
+      {/* Description */}
+      <div className="text-[16px]  leading-[1.6] text-black">
+        This proposal will now{' '}
+        <span className="font-[600] text-black/80">
+          proceed with community verification
+        </span>
+        . Once verified, this will be published as a project page.
+      </div>
 
-        <div className="mobile:flex-col flex justify-end gap-[10px]">
-          <Button
-            color="secondary"
-            onClick={handleBackToContribute}
-            type="button"
-            className="px-[20px]"
-          >
-            Back to Contribute
-          </Button>
-          <Button
-            color="primary"
-            onClick={handleViewEntity}
-            type="button"
-            className="px-[30px]"
-          >
-            {viewButtonText}
-          </Button>
-        </div>
+      {/* Actions */}
+      <div className="mobile:flex-col flex justify-end gap-[10px]">
+        <Button
+          color="secondary"
+          onClick={handleBackToContribute}
+          type="button"
+          className="px-[20px]"
+        >
+          Back to Contribute
+        </Button>
+        <Button
+          color="primary"
+          onClick={handleViewEntity}
+          type="button"
+          className="px-[30px]"
+        >
+          {viewButtonText}
+        </Button>
       </div>
     </div>
   );
