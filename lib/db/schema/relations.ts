@@ -67,6 +67,10 @@ export const voteRecordsRelations = relations(voteRecords, ({ one }) => ({
     fields: [voteRecords.proposalId],
     references: [proposals.id],
   }),
+  itemProposal: one(itemProposals, {
+    fields: [voteRecords.itemProposalId],
+    references: [itemProposals.id],
+  }),
 }));
 
 export const activeLogsRelations = relations(activeLogs, ({ one }) => ({

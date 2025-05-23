@@ -2,7 +2,12 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { profiles, proposals, voteRecords } from '@/lib/db/schema';
+import {
+  itemProposals,
+  profiles,
+  proposals,
+  voteRecords,
+} from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -50,6 +55,7 @@ export const voteRouter = router({
 
       const conflictingVotes = userSpecificVotes.filter(
         (vote) =>
+          vote.proposalId !== null &&
           projectProposalIds.includes(vote.proposalId) &&
           vote.proposalId !== proposalId,
       );
@@ -137,6 +143,7 @@ export const voteRouter = router({
 
       const conflictingVotes = userSpecificVotesForKey.filter(
         (vote) =>
+          vote.proposalId !== null &&
           projectProposalIds.includes(vote.proposalId) &&
           vote.proposalId !== proposalId,
       );
@@ -271,5 +278,113 @@ export const voteRouter = router({
       });
 
       return votes;
+    }),
+
+  createItemProposalVote: protectedProcedure
+    .input(
+      z.object({
+        itemProposalId: z.number(),
+        key: z.string().min(1, 'Key cannot be empty'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { itemProposalId, key } = input;
+
+      const [itemProposal, userProfile] = await Promise.all([
+        ctx.db.query.itemProposals.findFirst({
+          where: eq(itemProposals.id, itemProposalId),
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+      ]);
+
+      if (!itemProposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Item proposal not found',
+        });
+      }
+
+      const existingVote = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.itemProposalId, itemProposalId),
+          eq(voteRecords.key, key),
+        ),
+      });
+
+      if (existingVote) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You have already voted for this key in this item proposal',
+        });
+      }
+
+      const [vote] = await ctx.db
+        .insert(voteRecords)
+        .values({
+          key,
+          itemProposalId,
+          creator: ctx.user.id,
+          weight: userProfile?.weight ?? 0,
+        })
+        .returning();
+
+      logUserActivity.vote.create({
+        userId: ctx.user.id,
+        targetId: vote.id,
+        projectId: itemProposal.projectId,
+        items: [{ field: key }],
+        proposalCreatorId: itemProposal.creator,
+      });
+
+      return vote;
+    }),
+
+  cancelItemProposalVote: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input;
+
+      const condition = and(
+        eq(voteRecords.id, id),
+        eq(voteRecords.creator, ctx.user.id),
+      );
+
+      const voteWithItemProposal = await ctx.db.query.voteRecords.findFirst({
+        where: condition,
+        with: {
+          itemProposal: true,
+        },
+      });
+
+      if (!voteWithItemProposal || !voteWithItemProposal.itemProposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Vote record not found',
+        });
+      }
+
+      const projectId = voteWithItemProposal.itemProposal.projectId;
+
+      const [deletedVote] = await ctx.db
+        .delete(voteRecords)
+        .where(condition)
+        .returning();
+
+      logUserActivity.vote.delete({
+        userId: ctx.user.id,
+        targetId: deletedVote.id,
+        projectId,
+        items: [{ field: voteWithItemProposal.key }],
+        proposalCreatorId: voteWithItemProposal.itemProposal.creator,
+      });
+
+      return deletedVote;
     }),
 });
