@@ -206,9 +206,9 @@ const ProjectCard = ({
         alt={project.name}
         width={100}
         height={100}
-        className="overflow-hidden rounded-[10px] border border-black/10 object-cover"
+        className="shrink-0 overflow-hidden rounded-[10px] border border-black/10 object-cover"
       />
-      <div className="flex flex-col gap-[10px]">
+      <div className="flex flex-1 flex-col gap-[10px]">
         <p className="text-[20px] font-[700] leading-tight text-[#202023]">
           {project.name}
         </p>
