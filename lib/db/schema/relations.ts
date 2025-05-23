@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 
 import { activeLogs } from './activeLogs';
 import { invitationCodes } from './invitations';
+import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
 import { projects } from './projects';
 import { proposals } from './proposals';
@@ -41,6 +42,21 @@ export const proposalsRelations = relations(proposals, ({ one, many }) => ({
   }),
   voteRecords: many(voteRecords),
 }));
+
+export const itemProposalsRelations = relations(
+  itemProposals,
+  ({ one, many }) => ({
+    creator: one(profiles, {
+      fields: [itemProposals.creator],
+      references: [profiles.userId],
+    }),
+    project: one(projects, {
+      fields: [itemProposals.projectId],
+      references: [projects.id],
+    }),
+    voteRecords: many(voteRecords),
+  }),
+);
 
 export const voteRecordsRelations = relations(voteRecords, ({ one }) => ({
   creator: one(profiles, {
