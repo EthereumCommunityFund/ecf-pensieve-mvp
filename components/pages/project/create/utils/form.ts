@@ -5,6 +5,7 @@ import {
   IProjectFormData,
   IReferenceData,
 } from '@/components/pages/project/create/types';
+import { isAutoFillForm, isLocalDev } from '@/constants/env';
 import { IProject } from '@/types';
 import { normalizeUrl } from '@/utils/url';
 
@@ -189,8 +190,6 @@ export const convertProjectRefsToReferenceData = (
     value: ref.value,
   }));
 };
-const isLocalDev = process.env.NODE_ENV !== 'production';
-const isAutoFillForm = process.env.NEXT_PUBLIC_AUTO_FILL_FORM === 'true';
 
 export const updateFormWithProjectData = (
   formType: IFormTypeEnum,

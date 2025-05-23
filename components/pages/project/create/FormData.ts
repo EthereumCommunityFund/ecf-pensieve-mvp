@@ -7,6 +7,7 @@ import {
   IOrganizationKey,
   ITechnicalsKey,
 } from '@/types/item';
+import { isAutoFillForm, isLocalDev } from '@/constants/env';
 
 import { IProjectFormData, IProjectStepFieldsMap } from './types';
 
@@ -115,4 +116,35 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   tags: [],
   whitePaper: '',
   dappSmartContracts: '',
+};
+
+export const FakeProjectFormData: IProjectFormData = {
+  name: 'Fake Project',
+  tagline: 'fake tagline',
+  categories: ['Development', 'Design'],
+  mainDescription: 'fake main description',
+  logoUrl:
+    'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/a4dbec29-8f62-4e13-9722-01ef0a12de8e.jpeg',
+  websiteUrl: 'https://fake-project.com',
+  appUrl: 'https://fake-project.com',
+  dateFounded: new Date('2026-01-01'),
+  dateLaunch: new Date('2026-01-01'),
+  devStatus: 'Beta',
+  fundingStatus: 'Funded',
+  openSource: 'Yes',
+  codeRepo: 'https://github.com/fake-project',
+  tokenContract: '0x1234567890123456789012345678901234567890',
+  orgStructure: 'DAO',
+  publicGoods: 'Yes',
+  founders: [{ fullName: 'John Doe', titleRole: 'Founder' }],
+  tags: ['Optimism', 'Ethereum'],
+  whitePaper: 'https://fake-project.com/whitepaper.pdf',
+  dappSmartContracts: '0x1234567890123456789012345678901234567890',
+};
+
+export const getDefaultProjectFormData = (): IProjectFormData => {
+  if (isLocalDev && isAutoFillForm) {
+    return FakeProjectFormData;
+  }
+  return DEFAULT_CREATE_PROJECT_FORM_DATA;
 };

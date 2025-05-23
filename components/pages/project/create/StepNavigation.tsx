@@ -19,7 +19,7 @@ interface StepNavigationProps {
   currentStep: IItemCategoryEnum;
   stepStatuses: Record<IItemCategoryEnum, IStepStatus>;
   goToStep: (step: IItemCategoryEnum) => void;
-  showSuccessPage: boolean;
+  dimmed?: boolean;
 }
 
 export const getStepIcons = (step: IItemCategoryEnum, size = 32) => {
@@ -50,7 +50,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   currentStep,
   stepStatuses,
   goToStep,
-  showSuccessPage,
+  dimmed,
 }) => {
   const currentStepIndex = stepsOrder.indexOf(currentStep);
 
@@ -58,7 +58,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
     <nav
       className={cn(
         'mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start',
-        showSuccessPage ? 'opacity-30' : '',
+        dimmed ? 'opacity-30' : '',
       )}
     >
       <ul className="space-y-4">
