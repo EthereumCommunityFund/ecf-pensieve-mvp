@@ -1,3 +1,4 @@
+import { isAutoFillForm, isLocalDev } from '@/constants/env';
 import { AllItemConfig } from '@/constants/itemConfig';
 import {
   IBasicsKey,
@@ -7,7 +8,6 @@ import {
   IOrganizationKey,
   ITechnicalsKey,
 } from '@/types/item';
-import { isAutoFillForm, isLocalDev } from '@/constants/env';
 
 import { IProjectFormData, IProjectStepFieldsMap } from './types';
 
@@ -119,10 +119,11 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
 };
 
 export const FakeProjectFormData: IProjectFormData = {
-  name: 'Fake Project',
+  name: 'Fake Project for testing',
   tagline: 'fake tagline',
   categories: ['Development', 'Design'],
-  mainDescription: 'fake main description',
+  mainDescription:
+    'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology. Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
   logoUrl:
     'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/a4dbec29-8f62-4e13-9722-01ef0a12de8e.jpeg',
   websiteUrl: 'https://fake-project.com',

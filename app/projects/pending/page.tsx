@@ -86,7 +86,7 @@ const PendingProjectsPage = () => {
           <ECFButton $size="small">Filter</ECFButton>
         </div>
 
-        <div className="flex-1">
+        <div className="mobile:w-full flex-1">
           <div className="px-2.5 py-2 opacity-80">
             <ECFTypography type={'subtitle1'}>
               Recent Pending Projects
