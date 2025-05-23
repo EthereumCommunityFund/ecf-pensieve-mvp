@@ -1,7 +1,7 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { itemProposals, projectLogs, proposals } from '@/lib/db/schema';
+import { itemProposals, projectLogs } from '@/lib/db/schema';
 
 import { publicProcedure, router } from '../server';
 
@@ -15,68 +15,75 @@ export const projectLogRouter = router({
     .query(async ({ ctx, input }) => {
       const { projectId } = input;
 
-      const rankedLogsSubquery = ctx.db
-        .select({
-          id: projectLogs.id,
-          createdAt: projectLogs.createdAt,
-          projectId: projectLogs.projectId,
-          proposalId: projectLogs.proposalId,
-          itemProposalId: projectLogs.itemProposalId,
-          key: projectLogs.key,
-          rowNumber:
-            sql<number>`ROW_NUMBER() OVER (PARTITION BY ${projectLogs.key} ORDER BY ${projectLogs.createdAt} DESC)`.as(
-              'rn',
-            ),
-        })
-        .from(projectLogs)
-        .where(eq(projectLogs.projectId, projectId))
-        .as('ranked_logs');
-
-      const withoutItemProposal = await ctx.db
-        .select({
-          id: rankedLogsSubquery.id,
-          createdAt: rankedLogsSubquery.createdAt,
-          key: rankedLogsSubquery.key,
-          projectId: rankedLogsSubquery.projectId,
-          proposalId: rankedLogsSubquery.proposalId,
+      const allLogs = await ctx.db.query.projectLogs.findMany({
+        where: eq(projectLogs.projectId, projectId),
+        with: {
           proposal: {
-            id: proposals.id,
-            items: proposals.items,
-            refs: proposals.refs,
-            creator: proposals.creator,
-            createdAt: proposals.createdAt,
+            with: {
+              creator: true,
+            },
           },
-        })
-        .from(rankedLogsSubquery)
-        .leftJoin(proposals, eq(proposals.id, rankedLogsSubquery.proposalId))
-        .where(
-          sql`${rankedLogsSubquery.rowNumber} = 1 AND ${rankedLogsSubquery.itemProposalId} IS NULL`,
-        );
-
-      const withItemProposal = await ctx.db
-        .select({
-          id: rankedLogsSubquery.id,
-          createdAt: rankedLogsSubquery.createdAt,
-          key: rankedLogsSubquery.key,
-          projectId: rankedLogsSubquery.projectId,
-          itemProposalId: rankedLogsSubquery.itemProposalId,
           itemProposal: {
-            id: itemProposals.id,
-            key: itemProposals.key,
-            value: itemProposals.value,
-            ref: itemProposals.ref,
-            creator: itemProposals.creator,
-            createdAt: itemProposals.createdAt,
+            with: {
+              creator: true,
+            },
           },
-        })
-        .from(rankedLogsSubquery)
-        .leftJoin(
-          itemProposals,
-          eq(itemProposals.id, rankedLogsSubquery.itemProposalId),
-        )
-        .where(
-          sql`${rankedLogsSubquery.rowNumber} = 1 AND ${rankedLogsSubquery.itemProposalId} IS NOT NULL`,
-        );
+        },
+        orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+      });
+
+      const latestLogsByKey = new Map();
+
+      for (const log of allLogs) {
+        if (
+          !latestLogsByKey.has(log.key) ||
+          new Date(log.createdAt) >
+            new Date(latestLogsByKey.get(log.key).createdAt)
+        ) {
+          latestLogsByKey.set(log.key, log);
+        }
+      }
+
+      const latestLogs = Array.from(latestLogsByKey.values());
+
+      const withoutItemProposal = latestLogs
+        .filter((log) => log.proposalId && !log.itemProposalId)
+        .map((log) => ({
+          id: log.id,
+          createdAt: log.createdAt,
+          key: log.key,
+          projectId: log.projectId,
+          proposalId: log.proposalId,
+          proposal: log.proposal
+            ? {
+                id: log.proposal.id,
+                items: log.proposal.items,
+                refs: log.proposal.refs,
+                creator: log.proposal.creator,
+                createdAt: log.proposal.createdAt,
+              }
+            : null,
+        }));
+
+      const withItemProposal = latestLogs
+        .filter((log) => log.itemProposalId)
+        .map((log) => ({
+          id: log.id,
+          createdAt: log.createdAt,
+          key: log.key,
+          projectId: log.projectId,
+          itemProposalId: log.itemProposalId,
+          itemProposal: log.itemProposal
+            ? {
+                id: log.itemProposal.id,
+                key: log.itemProposal.key,
+                value: log.itemProposal.value,
+                ref: log.itemProposal.ref,
+                creator: log.itemProposal.creator,
+                createdAt: log.itemProposal.createdAt,
+              }
+            : null,
+        }));
 
       return {
         withoutItemProposal,
@@ -94,20 +101,44 @@ export const projectLogRouter = router({
     .query(async ({ ctx, input }) => {
       const { projectId, key } = input;
 
-      const proposals = await ctx.db.query.projectLogs.findMany({
-        where: and(
-          eq(projectLogs.projectId, projectId),
-          eq(projectLogs.key, key),
-        ),
-        with: {
-          itemProposals: {
-            with: {
-              creator: true,
+      const [leadingProposal, allItemProposals] = await Promise.all([
+        ctx.db.query.projectLogs.findFirst({
+          where: and(
+            eq(projectLogs.projectId, projectId),
+            eq(projectLogs.key, key),
+          ),
+          with: {
+            proposal: {
+              with: {
+                voteRecords: true,
+                creator: true,
+              },
+            },
+            itemProposal: {
+              with: {
+                voteRecords: true,
+                creator: true,
+              },
             },
           },
-        },
-      });
+          orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+        }),
 
-      return proposals;
+        ctx.db.query.itemProposals.findMany({
+          where: and(
+            eq(itemProposals.projectId, projectId),
+            eq(itemProposals.key, key),
+          ),
+          with: {
+            voteRecords: true,
+            creator: true,
+          },
+        }),
+      ]);
+
+      return {
+        leadingProposal,
+        allItemProposals,
+      };
     }),
 });

@@ -4,6 +4,7 @@ import { activeLogs } from './activeLogs';
 import { invitationCodes } from './invitations';
 import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
+import { projectLogs } from './projectLogs';
 import { projects } from './projects';
 import { proposals } from './proposals';
 import { voteRecords } from './voteRecords';
@@ -96,3 +97,18 @@ export const invitationCodesRelations = relations(
     profiles: many(profiles),
   }),
 );
+
+export const projectLogsRelations = relations(projectLogs, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectLogs.projectId],
+    references: [projects.id],
+  }),
+  proposal: one(proposals, {
+    fields: [projectLogs.proposalId],
+    references: [proposals.id],
+  }),
+  itemProposal: one(itemProposals, {
+    fields: [projectLogs.itemProposalId],
+    references: [itemProposals.id],
+  }),
+}));
