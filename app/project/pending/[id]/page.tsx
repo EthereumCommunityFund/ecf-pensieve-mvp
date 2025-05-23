@@ -230,12 +230,14 @@ const ProjectCard = ({
         <div className="flex items-center gap-[10px] text-[14px] font-[600] text-black">
           <span>Total Proposals: </span>
           <span className="text-black/60">{proposals?.length || 0}</span>
-          <span className="text-black/20">|</span>
-          <span>Leading:</span>
-          {leadingProposal && (
-            <span className="text-black/60">
-              @{leadingProposal.creator.name}
-            </span>
+          {!!leadingProposal && (
+            <>
+              <span className="text-black/20">|</span>
+              <span>Leading:</span>
+              <span className="text-black/60">
+                @{leadingProposal.creator.name}
+              </span>
+            </>
           )}
         </div>
       </div>
