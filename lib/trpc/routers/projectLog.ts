@@ -48,42 +48,11 @@ export const projectLogRouter = router({
 
       const withoutItemProposal = latestLogs
         .filter((log) => log.proposalId && !log.itemProposalId)
-        .map((log) => ({
-          id: log.id,
-          createdAt: log.createdAt,
-          key: log.key,
-          projectId: log.projectId,
-          proposalId: log.proposalId,
-          proposal: log.proposal
-            ? {
-                id: log.proposal.id,
-                items: log.proposal.items,
-                refs: log.proposal.refs,
-                creator: log.proposal.creator,
-                createdAt: log.proposal.createdAt,
-              }
-            : null,
-        }));
+        .map((v) => v);
 
       const withItemProposal = latestLogs
         .filter((log) => log.itemProposalId)
-        .map((log) => ({
-          id: log.id,
-          createdAt: log.createdAt,
-          key: log.key,
-          projectId: log.projectId,
-          itemProposalId: log.itemProposalId,
-          itemProposal: log.itemProposal
-            ? {
-                id: log.itemProposal.id,
-                key: log.itemProposal.key,
-                value: log.itemProposal.value,
-                ref: log.itemProposal.ref,
-                creator: log.itemProposal.creator,
-                createdAt: log.itemProposal.createdAt,
-              }
-            : null,
-        }));
+        .map((v) => v);
 
       return {
         withoutItemProposal,
