@@ -31,7 +31,7 @@ export const TableHeader = ({
       className={cn(
         'h-[30px] border-l border-b border-black/10 px-[10px] text-left',
         'text-[14px] font-[600] text-black/60',
-        isLast && 'border-r-0',
+        isLast && 'border-r',
         className,
       )}
       {...props}

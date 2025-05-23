@@ -373,8 +373,7 @@ const ActionsCell = ({ onView, onMenu }: ActionsColCellProps) => {
     <div className="flex items-center gap-[10px]">
       <Button
         color="secondary"
-        size="sm"
-        className="h-[30px] rounded-[5px] border-none bg-[#F0F0F0] text-[13px] font-[400]"
+        className="h-[30px] w-[135px] rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
         onPress={onView}
       >
         View

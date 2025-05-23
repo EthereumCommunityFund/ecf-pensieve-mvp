@@ -20,6 +20,7 @@ import { useColumns } from '@/components/pages/project/detail/table/Column';
 import { IItemCategoryEnum } from '@/types/item';
 
 // Import category components and utilities
+import { TableFooter } from '@/components/biz/table';
 import { TableFieldCategory } from '@/components/pages/project/proposal/detail/constants';
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
 
@@ -97,7 +98,11 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
   });
 
   // 渲染单个分类表格
-  const renderCategoryTable = (table: any, isLoading: boolean = false) => {
+  const renderCategoryTable = (
+    table: any,
+    isLoading: boolean = false,
+    category?: IItemCategoryEnum,
+  ) => {
     const showSkeleton = isLoading || !project;
 
     const tableHeaders = (
@@ -148,6 +153,7 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
                     ))}
                 </TableRowSkeleton>
               ))}
+              <TableFooter>Loading...</TableFooter>
             </tbody>
           </table>
         </div>
@@ -159,18 +165,17 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
         <table className="box-border w-full table-fixed border-separate border-spacing-0">
           {tableHeaders}
           <tbody>
-            {table.getRowModel().rows.map((row: any, rowIndex: number) => (
+            {table.getRowModel().rows.map((row: any) => (
               <TableRow
                 key={row.id}
-                isLastRow={rowIndex === table.getRowModel().rows.length - 1}
-                isHoverable={true}
+                isLastRow={false} // 不再是最后一行，因为有 Footer
               >
                 {row.getVisibleCells().map((cell: any, cellIndex: number) => (
                   <TableCell
                     key={cell.id}
                     width={cell.column.getSize()}
                     isLast={cellIndex === row.getVisibleCells().length - 1}
-                    isLastRow={rowIndex === table.getRowModel().rows.length - 1}
+                    isLastRow={false} // 不再是最后一行，因为有 Footer
                     minHeight={60}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -178,6 +183,9 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
                 ))}
               </TableRow>
             ))}
+            <TableFooter colSpan={table.getAllColumns().length}>
+              footer
+            </TableFooter>
           </tbody>
         </table>
       </div>
@@ -239,6 +247,7 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
                         ? technicalsTable
                         : organizationTable,
                   isProposalsLoading,
+                  category,
                 )}
               </div>
             </div>

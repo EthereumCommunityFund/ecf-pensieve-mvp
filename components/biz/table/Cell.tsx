@@ -34,7 +34,7 @@ export const TableCell = ({
     <td
       style={cellStyle}
       className={cn(
-        'border-l border-b border-black/10 bg-[#FFF] hover:bg-[#EBEBEB]',
+        'border-l border-b border-black/10 hover:bg-[#EBEBEB]',
         isLast && 'border-r',
         // isLastRow && 'border-b-0',
         className,
