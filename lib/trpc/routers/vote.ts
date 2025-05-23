@@ -2,16 +2,17 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { QUORUM_AMOUNT, WEIGHT } from '@/lib/constants';
 import {
   itemProposals,
   profiles,
+  projects,
   proposals,
   voteRecords,
 } from '@/lib/db/schema';
-import { logUserActivity } from '@/lib/services/activeLogsService';
-import { QUORUM_AMOUNT, WEIGHT } from '@/lib/constants';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
+import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -49,6 +50,17 @@ export const voteRouter = router({
       }
 
       const projectId = proposal.projectId;
+
+      const project = await ctx.db.query.projects.findFirst({
+        where: eq(projects.id, projectId),
+      });
+
+      if (project?.isPublished) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot vote on proposals for published projects',
+        });
+      }
 
       const projectProposals = await ctx.db.query.proposals.findMany({
         where: eq(proposals.projectId, projectId),
@@ -138,6 +150,17 @@ export const voteRouter = router({
 
       const projectId = targetProposal.projectId;
 
+      const project = await ctx.db.query.projects.findFirst({
+        where: eq(projects.id, projectId),
+      });
+
+      if (project?.isPublished) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot switch votes on proposals for published projects',
+        });
+      }
+
       const projectProposals = await ctx.db.query.proposals.findMany({
         where: eq(proposals.projectId, projectId),
       });
@@ -220,6 +243,17 @@ export const voteRouter = router({
       }
 
       const projectId = voteWithProposal.proposal.projectId;
+
+      const project = await ctx.db.query.projects.findFirst({
+        where: eq(projects.id, projectId),
+      });
+
+      if (project?.isPublished) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot cancel votes on proposals for published projects',
+        });
+      }
 
       const [deletedVote] = await ctx.db
         .delete(voteRecords)
