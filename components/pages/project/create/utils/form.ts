@@ -5,6 +5,7 @@ import {
   IProjectFormData,
   IReferenceData,
 } from '@/components/pages/project/create/types';
+import { isAutoFillForm, isLocalDev } from '@/constants/env';
 import { IProject } from '@/types';
 import { normalizeUrl } from '@/utils/url';
 
@@ -45,10 +46,10 @@ export const transformProjectData = (
     codeRepo: fieldApplicability['codeRepo']
       ? normalizeUrl(formData.codeRepo) || undefined
       : undefined,
-    tokenContract: fieldApplicability['tokenContract']
-      ? formData.tokenContract || undefined
-      : undefined,
-    dappSmartContracts: formData.dappSmartContracts,
+    tokenContract: formData.tokenContract || undefined,
+    dappSmartContracts: fieldApplicability['dappSmartContracts']
+      ? formData.dappSmartContracts || ''
+      : '',
 
     orgStructure: formData.orgStructure || 'Centralized',
     publicGoods: formData.publicGoods === 'Yes',
@@ -116,9 +117,7 @@ export const transformProposalData = (
     });
   }
 
-  if (fieldApplicability['tokenContract'] && formData.tokenContract) {
-    items.push({ key: 'tokenContract', value: formData.tokenContract });
-  }
+  items.push({ key: 'tokenContract', value: formData.tokenContract || '' });
 
   items.push({ key: 'dappSmartContracts', value: formData.dappSmartContracts });
 
@@ -193,8 +192,6 @@ export const convertProjectRefsToReferenceData = (
     value: ref.value,
   }));
 };
-const isLocalDev = process.env.NODE_ENV !== 'production';
-const isAutoFillForm = process.env.NEXT_PUBLIC_AUTO_FILL_FORM === 'true';
 
 export const updateFormWithProjectData = (
   formType: IFormTypeEnum,

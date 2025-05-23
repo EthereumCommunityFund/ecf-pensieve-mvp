@@ -206,9 +206,9 @@ const ProjectCard = ({
         alt={project.name}
         width={100}
         height={100}
-        className="overflow-hidden rounded-[10px] border border-black/10 object-cover"
+        className="shrink-0 overflow-hidden rounded-[10px] border border-black/10 object-cover"
       />
-      <div className="flex flex-col gap-[10px]">
+      <div className="flex flex-1 flex-col gap-[10px]">
         <p className="text-[20px] font-[700] leading-tight text-[#202023]">
           {project.name}
         </p>
@@ -230,12 +230,14 @@ const ProjectCard = ({
         <div className="flex items-center gap-[10px] text-[14px] font-[600] text-black">
           <span>Total Proposals: </span>
           <span className="text-black/60">{proposals?.length || 0}</span>
-          <span className="text-black/20">|</span>
-          <span>Leading:</span>
-          {leadingProposal && (
-            <span className="text-black/60">
-              @{leadingProposal.creator.name}
-            </span>
+          {!!leadingProposal && (
+            <>
+              <span className="text-black/20">|</span>
+              <span>Leading:</span>
+              <span className="text-black/60">
+                @{leadingProposal.creator.name}
+              </span>
+            </>
           )}
         </div>
       </div>

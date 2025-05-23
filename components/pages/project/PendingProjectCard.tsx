@@ -127,12 +127,16 @@ const PendingProjectCard = ({
                 {project.proposals.length || 0}
               </span>
             </p>
-            {project.proposals && project.proposals.length > 0 && (
-              <p className="mt-[5px]">
-                Leading:{' '}
-                <span className="text-black/60">@{leadingProposalCreator}</span>
-              </p>
-            )}
+            {project.proposals &&
+              project.proposals.length > 0 &&
+              leadingProposalId && (
+                <p className="mt-[5px]">
+                  Leading:{' '}
+                  <span className="text-black/60">
+                    @{leadingProposalCreator}
+                  </span>
+                </p>
+              )}
           </div>
         </div>
 

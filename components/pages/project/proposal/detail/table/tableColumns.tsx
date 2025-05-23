@@ -1,12 +1,12 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
-import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { IEssentialItemKey } from '@/types/item';
 
@@ -59,8 +59,8 @@ export const createTableColumns = ({
     },
   });
 
-  // TODO 预留
-  const fieldTypeColumn = columnHelper.accessor('property', {
+  // TODO 预留字段，用于显示字段类型
+  const fieldTypeColumn = columnHelper.accessor('fieldType', {
     id: 'fieldType',
     header: () => (
       <TooltipTh
@@ -70,10 +70,11 @@ export const createTableColumns = ({
     ),
     size: 220,
     cell: (info) => {
-      const value = info.getValue();
+      const key = info.row.original.key;
+      const itemConfig = AllItemConfig[key as IEssentialItemKey];
       return (
         <div className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-          {value}
+          {itemConfig.formDisplayType}
         </div>
       );
     },

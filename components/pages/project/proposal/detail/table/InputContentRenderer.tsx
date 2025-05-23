@@ -43,7 +43,7 @@ const InputContentRenderer: React.FC<IProps> = ({ value, displayFormType }) => {
           alt="img"
           width={40}
           height={40}
-          className="size-[40px] rounded-[5px]"
+          className="size-[40px] shrink-0 rounded-[5px] object-cover"
         />
       );
     case 'link':

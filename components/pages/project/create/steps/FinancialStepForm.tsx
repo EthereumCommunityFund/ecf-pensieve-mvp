@@ -91,7 +91,6 @@ const FinancialStepForm: React.FC<
               placeholder={financialFieldsConfig.tokenContract.placeholder}
               isInvalid={!!error}
               errorMessage={error?.message}
-              isDisabled={!fieldApplicability.tokenContract}
               className="w-full"
               aria-label={financialFieldsConfig.tokenContract.label}
             />

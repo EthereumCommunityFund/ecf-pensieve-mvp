@@ -4,6 +4,44 @@ import { normalizeUrl } from '@/utils/url';
 
 import { IFounderInput, IProjectFormData } from './types';
 
+// TypeScript declaration merging for custom Yup methods
+declare module 'yup' {
+  interface StringSchema<
+    TType extends yup.Maybe<string> = string | undefined,
+    TContext = yup.AnyObject,
+    TDefault = undefined,
+    TFlags extends yup.Flags = '',
+  > {
+    isContractAddressList(message?: string): this;
+  }
+}
+
+yup.addMethod(
+  yup.string,
+  'isContractAddressList',
+  function (
+    message: string = 'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas.',
+  ) {
+    return this.test({
+      name: 'is-contract-address-list',
+      message,
+      test: function (value: string | undefined | null) {
+        if (value == null || value.trim() === '') {
+          return true; // handled by required validator
+        }
+        const addresses = value
+          .split(',')
+          .map((addr) => addr.trim())
+          .filter((addr) => addr.length > 0);
+        if (addresses.length === 0) {
+          return false;
+        }
+        return addresses.every((addr) => /^0x[a-fA-F0-9]{40}$/.test(addr));
+      },
+    });
+  },
+);
+
 const founderSchema: yup.ObjectSchema<IFounderInput> = yup.object().shape({
   fullName: yup.string().required('Founder name is required'),
   titleRole: yup.string().required('Founder title/role is required'),
@@ -64,7 +102,9 @@ export const technicalsSchema = yup.object().shape({
     .required('Code repository URL is required when applicable'),
   dappSmartContracts: yup
     .string()
-    .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
+    .isContractAddressList(
+      'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas. An empty field is allowed if not applicable.',
+    )
     .required('Dapp smart contract address is required when applicable'),
 });
 
@@ -93,7 +133,7 @@ export const financialSchema = yup.object().shape({
   tokenContract: yup
     .string()
     .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
-    .required('Token contract address is required when applicable'),
+    .required('Token contract address is required'),
 });
 
 export const projectSchema = basicsSchema
