@@ -47,7 +47,9 @@ export const transformProjectData = (
       ? normalizeUrl(formData.codeRepo) || undefined
       : undefined,
     tokenContract: formData.tokenContract || undefined,
-    dappSmartContracts: formData.dappSmartContracts,
+    dappSmartContracts: fieldApplicability['dappSmartContracts']
+      ? formData.dappSmartContracts || ''
+      : '',
 
     orgStructure: formData.orgStructure || 'Centralized',
     publicGoods: formData.publicGoods === 'Yes',
