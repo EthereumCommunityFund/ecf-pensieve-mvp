@@ -9,6 +9,9 @@ import {
   voteRecords,
 } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { QUORUM_AMOUNT, WEIGHT } from '@/lib/constants';
+import { projectLogs } from '@/lib/db/schema/projectLogs';
+import { POC_ITEMS } from '@/lib/pocItems';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -330,6 +333,32 @@ export const voteRouter = router({
           weight: userProfile?.weight ?? 0,
         })
         .returning();
+
+      const votes = await ctx.db.query.voteRecords.findMany({
+        where: and(
+          eq(voteRecords.itemProposalId, itemProposalId),
+          eq(voteRecords.key, key),
+        ),
+      });
+
+      if (votes.length >= QUORUM_AMOUNT) {
+        const voteSum = votes.reduce((acc, vote) => {
+          acc += vote.weight ?? 0;
+          return acc;
+        }, 0);
+
+        if (
+          voteSum >=
+          POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
+            WEIGHT
+        ) {
+          await ctx.db.insert(projectLogs).values({
+            projectId: itemProposal.projectId,
+            itemProposalId,
+            key,
+          });
+        }
+      }
 
       logUserActivity.vote.create({
         userId: ctx.user.id,

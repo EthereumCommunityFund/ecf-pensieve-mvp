@@ -21,7 +21,7 @@ export const projectLogs = pgTable('project_logs', {
   itemProposalId: bigint('item_proposal_id', { mode: 'number' }).references(
     () => itemProposals.id,
   ),
-  item: text('item'),
+  key: text('key'),
 });
 
 export type ProjectLog = InferSelectModel<typeof projectLogs>;
