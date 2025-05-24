@@ -1,7 +1,6 @@
 import { InferSelectModel, sql } from 'drizzle-orm';
 import {
   bigint,
-  boolean,
   index,
   pgTable,
   text,
@@ -32,7 +31,6 @@ export const projectLogs = pgTable(
       () => itemProposals.id,
     ),
     key: text('key'),
-    isNotLeading: boolean('is_not_leading').default(false),
   },
   (table) => {
     return {

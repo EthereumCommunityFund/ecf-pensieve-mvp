@@ -289,7 +289,7 @@ export const projectRouter = router({
         ) {
           return false;
         }
-        return totalWeight >= pocItemConfig.accountability_metric * WEIGHT;
+        return totalWeight > pocItemConfig.accountability_metric * WEIGHT;
       });
     };
 

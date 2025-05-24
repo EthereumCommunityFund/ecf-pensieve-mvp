@@ -3,7 +3,12 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { ESSENTIAL_ITEM_LIST, REWARD_PERCENT, WEIGHT } from '@/lib/constants';
-import { itemProposals, profiles, projects } from '@/lib/db/schema';
+import {
+  itemProposals,
+  profiles,
+  projects,
+  voteRecords,
+} from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
@@ -76,6 +81,25 @@ export const itemProposalRouter = router({
               weight: finalWeight,
             })
             .where(eq(profiles.userId, ctx.user.id));
+
+          const [vote] = await ctx.db
+            .insert(voteRecords)
+            .values({
+              creator: ctx.user.id,
+              projectId: input.projectId,
+              itemProposalId: itemProposal.id,
+              key: input.key,
+              weight: finalWeight,
+            })
+            .returning();
+
+          logUserActivity.vote.create({
+            userId: ctx.user.id,
+            targetId: vote.id,
+            projectId: itemProposal.projectId,
+            items: [{ field: input.key }],
+            proposalCreatorId: itemProposal.creator,
+          });
         }
       }
 

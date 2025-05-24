@@ -169,6 +169,13 @@
       "when": 1748074240912,
       "tag": "0023_known_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1748126199508,
+      "tag": "0024_gorgeous_talon",
+      "breakpoints": true
     }
   ]
 }
