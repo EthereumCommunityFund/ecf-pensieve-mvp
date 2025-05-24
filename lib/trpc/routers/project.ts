@@ -326,35 +326,48 @@ export const projectRouter = router({
         );
         return { ...project, proposals: validProposals };
       })
-      .filter((project) => project.proposals.length > 0);
+      .filter((project) => project.proposals.length === 1);
 
     for (const project of filteredProjects) {
+      const proposal = project.proposals[0];
+      const itemsTopWeight: Record<string, number> = {};
+
+      for (const voteRecord of proposal.voteRecords) {
+        const key = String(voteRecord.key);
+        const weight = voteRecord.weight ?? 0;
+
+        if (!itemsTopWeight[key]) {
+          itemsTopWeight[key] = 0;
+        }
+        itemsTopWeight[key] += weight;
+      }
+
       await ctx.db
         .update(projects)
-        .set({ isPublished: true })
+        .set({
+          isPublished: true,
+          itemsTopWeight,
+        })
         .where(eq(projects.id, project.id));
-      if (project.proposals && Array.isArray(project.proposals)) {
-        for (const proposal of project.proposals) {
-          await ctx.db.insert(projectLogs).values({
-            projectId: project.id,
-            proposalId: proposal.id,
-          });
-          if (proposal.creator) {
-            const userProfile = await ctx.db.query.profiles.findFirst({
-              where: eq(profiles.userId, proposal.creator),
-            });
 
-            if (userProfile) {
-              await ctx.db
-                .update(profiles)
-                .set({
-                  weight:
-                    (userProfile.weight ?? 0) +
-                    ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
-                })
-                .where(eq(profiles.userId, proposal.creator));
-            }
-          }
+      await ctx.db.insert(projectLogs).values({
+        projectId: project.id,
+        proposalId: proposal.id,
+      });
+      if (proposal.creator) {
+        const userProfile = await ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, proposal.creator),
+        });
+
+        if (userProfile) {
+          await ctx.db
+            .update(profiles)
+            .set({
+              weight:
+                (userProfile.weight ?? 0) +
+                ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+            })
+            .where(eq(profiles.userId, proposal.creator));
         }
       }
     }
