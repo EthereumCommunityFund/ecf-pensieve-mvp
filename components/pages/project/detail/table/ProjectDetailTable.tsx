@@ -31,9 +31,13 @@ interface ProjectDataProps {
   isProposalsLoading: boolean;
   isProposalsFetched: boolean;
   onSubmitProposal: () => void;
+  onOpenSwitchVoteModal?: (itemKey: string) => void;
 }
 
-const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
+const ProjectData: FC<ProjectDataProps> = ({
+  isProposalsLoading,
+  onOpenSwitchVoteModal,
+}) => {
   const { project } = useProjectDetail();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -70,6 +74,7 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
     expandedRows,
     toggleRowExpanded,
     isPageExpanded: false,
+    onOpenSwitchVoteModal,
   });
 
   // 创建分类表格实例
@@ -153,7 +158,9 @@ const ProjectData: FC<ProjectDataProps> = ({ isProposalsLoading }) => {
                     ))}
                 </TableRowSkeleton>
               ))}
-              <TableFooter>Loading...</TableFooter>
+              <TableFooter colSpan={table.getAllColumns().length}>
+                Loading...
+              </TableFooter>
             </tbody>
           </table>
         </div>

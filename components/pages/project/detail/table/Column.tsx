@@ -26,6 +26,7 @@ interface UseColumnsProps {
   expandedRows: Record<string, boolean>;
   toggleRowExpanded: (key: string) => void;
   isPageExpanded?: boolean;
+  onOpenSwitchVoteModal?: (itemKey: string) => void;
 }
 
 // 定义可展开的行键
@@ -40,6 +41,7 @@ export const useColumns = ({
   expandedRows,
   toggleRowExpanded,
   isPageExpanded = false,
+  onOpenSwitchVoteModal,
 }: UseColumnsProps) => {
   // 创建列定义
   const columnHelper = createColumnHelper<IProjectDataItem>();
@@ -125,8 +127,11 @@ export const useColumns = ({
               console.log('View item:', item.key);
             }}
             onMenu={() => {
-              // TODO: 实现菜单逻辑
-              console.log('Menu for item:', item.key);
+              if (onOpenSwitchVoteModal) {
+                onOpenSwitchVoteModal(item.key);
+              } else {
+                console.log('Menu for item:', item.key);
+              }
             }}
           />
         );
@@ -140,5 +145,11 @@ export const useColumns = ({
       submitterColumn,
       actionsColumn,
     ];
-  }, [columnHelper, expandedRows, toggleRowExpanded, isPageExpanded]);
+  }, [
+    columnHelper,
+    expandedRows,
+    toggleRowExpanded,
+    isPageExpanded,
+    onOpenSwitchVoteModal,
+  ]);
 };

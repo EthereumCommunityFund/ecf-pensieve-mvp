@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
-import { CaretDownIcon } from '@/components/icons';
+import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
@@ -385,35 +385,7 @@ const ActionsCell = ({ onView, onMenu }: ActionsColCellProps) => {
         className="flex size-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#E6E6E6] opacity-50"
         onPress={onMenu}
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M16.6667 5.83333H3.33333"
-            stroke="black"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M16.6667 10H3.33333"
-            stroke="black"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M16.6667 14.1667H3.33333"
-            stroke="black"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <ChartBarIcon size={20} color="black" />
       </Button>
     </div>
   );

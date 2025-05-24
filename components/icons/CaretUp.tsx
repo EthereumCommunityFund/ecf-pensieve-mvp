@@ -2,32 +2,24 @@ import React from 'react';
 
 import { IconProps } from '@/types/common';
 
-const CaretUpIcon: React.FC<IconProps> = (props) => {
+const CaretUpIcon: React.FC<IconProps> = ({ size = 18, ...props }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="21"
-      height="20"
-      viewBox="0 0 21 20"
-      fill={props?.color || 'none'}
+      width={size}
+      height={size}
+      viewBox="0 0 18 18"
+      fill="none"
       {...props}
     >
-      <g clipPath="url(#clip0_780_1331)">
-        <path
-          d="M17.1922 12.0573L10.9422 5.80733C10.8841 5.74922 10.8152 5.70312 10.7393 5.67167C10.6635 5.64021 10.5821 5.62402 10.5 5.62402C10.4179 5.62402 10.3365 5.64021 10.2607 5.67167C10.1848 5.70312 10.1159 5.74922 10.0578 5.80733L3.80782 12.0573C3.72031 12.1447 3.6607 12.2561 3.63655 12.3774C3.61239 12.4988 3.62477 12.6245 3.67211 12.7388C3.71946 12.853 3.79964 12.9507 3.90252 13.0193C4.00539 13.088 4.12632 13.1246 4.25 13.1245H16.75C16.8737 13.1246 16.9946 13.088 17.0975 13.0193C17.2004 12.9507 17.2805 12.853 17.3279 12.7388C17.3752 12.6245 17.3876 12.4988 17.3635 12.3774C17.3393 12.2561 17.2797 12.1447 17.1922 12.0573Z"
-          fill={props?.color || 'none'}
-        />
-      </g>
-      <defs>
-        <clipPath id="clip0_780_1331">
-          <rect
-            width="20"
-            height="20"
-            fill={props?.color || 'none'}
-            transform="translate(0.5)"
-          />
-        </clipPath>
-      </defs>
+      <path
+        d="M3.375 5.625L9 11.25L14.625 5.625"
+        stroke="black"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform="rotate(180 9 8.4375)"
+      />
     </svg>
   );
 };
