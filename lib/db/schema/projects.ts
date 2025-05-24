@@ -52,6 +52,7 @@ export const projects = pgTable(
     refs: jsonb('refs').array(),
     isPublished: boolean('is_published').notNull().default(false),
     support: doublePrecision('support').default(0),
+    itemsTopWeight: jsonb('items_top_weight').notNull().default('{}'),
   },
   (table) => {
     return {
