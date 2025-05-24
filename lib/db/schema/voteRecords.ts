@@ -11,6 +11,7 @@ import {
 
 import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
+import { projects } from './projects';
 import { proposals } from './proposals';
 
 export const voteRecords = pgTable(
@@ -31,6 +32,9 @@ export const voteRecords = pgTable(
       .notNull()
       .references(() => profiles.userId),
     weight: doublePrecision('weight'),
+    projectId: bigint('project_id', { mode: 'number' })
+      .notNull()
+      .references(() => projects.id),
   },
   (table) => {
     return {

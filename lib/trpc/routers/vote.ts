@@ -101,6 +101,7 @@ export const voteRouter = router({
           proposalId,
           creator: ctx.user.id,
           weight: userProfile?.weight ?? 0,
+          projectId,
         })
         .returning();
 
@@ -383,6 +384,7 @@ export const voteRouter = router({
           itemProposalId,
           creator: ctx.user.id,
           weight: userProfile?.weight ?? 0,
+          projectId: itemProposal.projectId,
         })
         .returning();
 
@@ -421,70 +423,6 @@ export const voteRouter = router({
       });
 
       return vote;
-    }),
-
-  cancelItemProposalVote: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id } = input;
-
-      const condition = and(
-        eq(voteRecords.id, id),
-        eq(voteRecords.creator, ctx.user.id),
-      );
-
-      const voteWithItemProposal = await ctx.db.query.voteRecords.findFirst({
-        where: condition,
-        with: {
-          itemProposal: true,
-        },
-      });
-
-      if (!voteWithItemProposal || !voteWithItemProposal.itemProposal) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Vote record not found',
-        });
-      }
-
-      const projectId = voteWithItemProposal.itemProposal.projectId;
-
-      const leadingProposal = await ctx.db.query.projectLogs.findFirst({
-        where: and(
-          eq(projectLogs.projectId, projectId),
-          eq(projectLogs.key, voteWithItemProposal.key),
-        ),
-        orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-      });
-
-      if (
-        leadingProposal &&
-        leadingProposal.itemProposalId === voteWithItemProposal.itemProposal.id
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Cannot cancel vote on the leading proposal',
-        });
-      }
-
-      const [deletedVote] = await ctx.db
-        .delete(voteRecords)
-        .where(condition)
-        .returning();
-
-      logUserActivity.vote.delete({
-        userId: ctx.user.id,
-        targetId: deletedVote.id,
-        projectId,
-        items: [{ field: voteWithItemProposal.key }],
-        proposalCreatorId: voteWithItemProposal.itemProposal.creator,
-      });
-
-      return deletedVote;
     }),
 
   switchItemProposalVote: protectedProcedure
