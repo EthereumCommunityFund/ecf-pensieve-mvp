@@ -27,15 +27,9 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const [proposal, userSpecificVotes, userProfile] = await Promise.all([
+      const [proposal, userProfile] = await Promise.all([
         ctx.db.query.proposals.findFirst({
           where: eq(proposals.id, proposalId),
-        }),
-        ctx.db.query.voteRecords.findMany({
-          where: and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.key, key),
-          ),
         }),
         ctx.db.query.profiles.findFirst({
           where: eq(profiles.userId, ctx.user.id),
@@ -62,35 +56,19 @@ export const voteRouter = router({
         });
       }
 
-      const projectProposals = await ctx.db.query.proposals.findMany({
-        where: eq(proposals.projectId, projectId),
+      const otherVote = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+          eq(voteRecords.projectId, projectId),
+        ),
       });
 
-      const projectProposalIds = projectProposals.map((p) => p.id);
-
-      const conflictingVotes = userSpecificVotes.filter(
-        (vote) =>
-          vote.proposalId !== null &&
-          projectProposalIds.includes(vote.proposalId) &&
-          vote.proposalId !== proposalId,
-      );
-
-      if (conflictingVotes.length > 0) {
+      if (otherVote) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
             'You have already voted for the same key in another proposal of this project',
-        });
-      }
-
-      const existingVoteForThisProposal = userSpecificVotes.find(
-        (vote) => vote.proposalId === proposalId,
-      );
-
-      if (existingVoteForThisProposal) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'You have already voted for this key in this proposal',
         });
       }
 
@@ -126,21 +104,14 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const [targetProposal, userSpecificVotesForKey, userProfile] =
-        await Promise.all([
-          ctx.db.query.proposals.findFirst({
-            where: eq(proposals.id, proposalId),
-          }),
-          ctx.db.query.voteRecords.findMany({
-            where: and(
-              eq(voteRecords.creator, ctx.user.id),
-              eq(voteRecords.key, key),
-            ),
-          }),
-          ctx.db.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          }),
-        ]);
+      const [targetProposal, userProfile] = await Promise.all([
+        ctx.db.query.proposals.findFirst({
+          where: eq(proposals.id, proposalId),
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+      ]);
 
       if (!targetProposal) {
         throw new TRPCError({
@@ -149,10 +120,8 @@ export const voteRouter = router({
         });
       }
 
-      const projectId = targetProposal.projectId;
-
       const project = await ctx.db.query.projects.findFirst({
-        where: eq(projects.id, projectId),
+        where: eq(projects.id, targetProposal.projectId),
       });
 
       if (project?.isPublished) {
@@ -162,33 +131,29 @@ export const voteRouter = router({
         });
       }
 
-      const projectProposals = await ctx.db.query.proposals.findMany({
-        where: eq(proposals.projectId, projectId),
+      const voteToSwitch = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+          eq(voteRecords.projectId, targetProposal.projectId),
+        ),
       });
 
-      const projectProposalIds = projectProposals.map((p) => p.id);
-
-      const conflictingVotes = userSpecificVotesForKey.filter(
-        (vote) =>
-          vote.proposalId !== null &&
-          projectProposalIds.includes(vote.proposalId) &&
-          vote.proposalId !== proposalId,
-      );
-
-      if (conflictingVotes.length === 0) {
+      if (!voteToSwitch) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'No conflicting vote found to switch',
         });
       }
 
-      const voteToSwitch = conflictingVotes[0];
+      if (voteToSwitch.creator === ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot switch vote from your own proposal',
+        });
+      }
 
-      const existingVoteForTargetProposal = userSpecificVotesForKey.find(
-        (vote) => vote.proposalId === proposalId,
-      );
-
-      if (existingVoteForTargetProposal) {
+      if (voteToSwitch.proposalId === proposalId) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'You have already voted for this key in the target proposal',
@@ -207,7 +172,7 @@ export const voteRouter = router({
       logUserActivity.vote.update({
         userId: ctx.user.id,
         targetId: updatedVote.id,
-        projectId,
+        projectId: targetProposal.projectId,
         items: [{ field: key }],
         proposalCreatorId: targetProposal.creator,
       });
@@ -240,6 +205,13 @@ export const voteRouter = router({
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Vote record not found',
+        });
+      }
+
+      if (voteWithProposal.proposal.creator === ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot cancel vote on your own proposal',
         });
       }
 
