@@ -316,36 +316,18 @@ export const voteRouter = router({
         });
       }
 
-      const leadingProposal = await ctx.db.query.projectLogs.findFirst({
-        where: and(
-          eq(projectLogs.projectId, itemProposal.projectId),
-          eq(projectLogs.key, key),
-        ),
-        orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-      });
-
-      if (
-        leadingProposal &&
-        leadingProposal.itemProposalId === itemProposalId
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Cannot vote on the leading proposal',
-        });
-      }
-
-      const existingVote = await ctx.db.query.voteRecords.findFirst({
+      const existingVote = await ctx.db.query.voteRecords.findMany({
         where: and(
           eq(voteRecords.creator, ctx.user.id),
-          eq(voteRecords.itemProposalId, itemProposalId),
+          eq(voteRecords.projectId, itemProposal.projectId),
           eq(voteRecords.key, key),
         ),
       });
 
-      if (existingVote) {
+      if (existingVote.length > 0) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'You have already voted for this key in this item proposal',
+          message: 'You have already voted for this key in this project',
         });
       }
 
@@ -360,30 +342,42 @@ export const voteRouter = router({
         })
         .returning();
 
-      const votes = await ctx.db.query.voteRecords.findMany({
-        where: and(
-          eq(voteRecords.itemProposalId, itemProposalId),
-          eq(voteRecords.key, key),
-        ),
-      });
+      const [votes, project] = await Promise.all([
+        ctx.db.query.voteRecords.findMany({
+          where: and(
+            eq(voteRecords.itemProposalId, itemProposalId),
+            eq(voteRecords.key, key),
+          ),
+        }),
+        ctx.db.query.projects.findFirst({
+          where: eq(projects.id, itemProposal.projectId),
+        }),
+      ]);
 
-      if (votes.length >= QUORUM_AMOUNT) {
-        const voteSum = votes.reduce((acc, vote) => {
-          acc += vote.weight ?? 0;
-          return acc;
-        }, 0);
+      const voteSum = votes.reduce((acc, vote) => {
+        acc += vote.weight ?? 0;
+        return acc;
+      }, 0);
 
-        if (
-          voteSum >=
-          POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
-            WEIGHT
-        ) {
-          await ctx.db.insert(projectLogs).values({
+      const itemsTopWeight = project?.itemsTopWeight as
+        | Record<string, number>
+        | undefined;
+      const keyWeight = itemsTopWeight?.[key] ?? 0;
+
+      if (voteSum > keyWeight) {
+        await Promise.all([
+          ctx.db.insert(projectLogs).values({
             projectId: itemProposal.projectId,
             itemProposalId,
             key,
-          });
-        }
+          }),
+          ctx.db.update(projects).set({
+            itemsTopWeight: {
+              ...(project?.itemsTopWeight ?? {}),
+              [key]: voteSum,
+            },
+          }),
+        ]);
       }
 
       logUserActivity.vote.create({
