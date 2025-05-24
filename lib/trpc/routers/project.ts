@@ -9,7 +9,7 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { profiles, projects, proposals, voteRecords } from '@/lib/db/schema';
+import { profiles, projects } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
@@ -65,96 +65,70 @@ export const projectRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [project] = await ctx.db
-        .insert(projects)
-        .values({
-          ...input,
-          creator: ctx.user.id,
-        })
-        .returning();
-
-      if (!project) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'project not found',
-        });
-      }
-
-      const caller = proposalRouter.createCaller(ctx);
-      try {
-        const proposalItems = Object.entries(input)
-          .filter(([key]) => key !== 'refs')
-          .map(([key, value]) => {
-            return { key, value };
-          });
-
-        const proposal = await caller.createProposal({
-          projectId: project.id,
-          items: proposalItems,
-          ...(input.refs && { refs: input.refs }),
-        });
-
-        const userProfile = await ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        });
-        const finalWeight =
-          (userProfile?.weight ?? 0) +
-          ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT;
-
-        await ctx.db
-          .update(profiles)
-          .set({
-            weight: finalWeight,
+      return await ctx.db.transaction(async (tx) => {
+        const [project] = await tx
+          .insert(projects)
+          .values({
+            ...input,
+            creator: ctx.user.id,
           })
-          .where(eq(profiles.userId, ctx.user.id));
+          .returning();
 
-        const votePromises = proposalItems.map(async (item) => {
-          const [vote] = await ctx.db
-            .insert(voteRecords)
-            .values({
-              key: item.key,
-              proposalId: proposal.id,
-              creator: ctx.user.id,
-              weight: finalWeight,
-              projectId: project.id,
-            })
-            .returning();
+        if (!project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'project not found',
+          });
+        }
 
-          logUserActivity.vote.create({
-            userId: ctx.user.id,
-            targetId: vote.id,
-            projectId: project.id,
-            items: [{ field: item.key }],
-            proposalCreatorId: ctx.user.id,
+        try {
+          const caller = proposalRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
+          const proposalItems = Object.entries(input)
+            .filter(([key]) => key !== 'refs')
+            .map(([key, value]) => {
+              return { key, value };
+            });
+
+          const userProfile = await tx.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
           });
 
-          return vote;
-        });
+          const finalWeight =
+            (userProfile?.weight ?? 0) +
+            ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT;
 
-        await Promise.all(votePromises);
+          await tx
+            .update(profiles)
+            .set({
+              weight: finalWeight,
+            })
+            .where(eq(profiles.userId, ctx.user.id));
 
-        logUserActivity.project.create({
-          userId: ctx.user.id,
-          targetId: project.id,
-          projectId: project.id,
-        });
-      } catch (proposalError) {
-        await ctx.db
-          .delete(voteRecords)
-          .where(eq(voteRecords.projectId, project.id));
-        await ctx.db
-          .delete(proposals)
-          .where(eq(proposals.projectId, project.id));
-        await ctx.db.delete(projects).where(eq(projects.id, project.id));
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message:
-            'Failed to create the initial proposal for the project. The project creation has been rolled back.',
-          cause: proposalError,
-        });
-      }
+          await caller.createProposal({
+            projectId: project.id,
+            items: proposalItems,
+            ...(input.refs && { refs: input.refs }),
+          });
 
-      return project;
+          logUserActivity.project.create({
+            userId: ctx.user.id,
+            targetId: project.id,
+            projectId: project.id,
+          });
+
+          return project;
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message:
+              'Failed to create the project and its initial proposal. All changes have been rolled back.',
+            cause: error,
+          });
+        }
+      });
     }),
 
   getProjects: publicProcedure
