@@ -1,8 +1,10 @@
 import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { itemProposals, projects } from '@/lib/db/schema';
+import { ESSENTIAL_ITEM_LIST, REWARD_PERCENT, WEIGHT } from '@/lib/constants';
+import { itemProposals, profiles, projects } from '@/lib/db/schema';
+import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, router } from '../server';
@@ -42,6 +44,39 @@ export const itemProposalRouter = router({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create item proposal',
         });
+      }
+
+      const isEssentialItem = ESSENTIAL_ITEM_LIST.some(
+        (item) => item.key === input.key,
+      );
+
+      if (!isEssentialItem) {
+        const existingProposal = await ctx.db.query.itemProposals.findFirst({
+          where: and(
+            eq(itemProposals.projectId, input.projectId),
+            eq(itemProposals.key, input.key),
+          ),
+        });
+
+        if (!existingProposal) {
+          const userProfile = await ctx.db.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          });
+
+          const finalWeight =
+            (userProfile?.weight ?? 0) +
+            POC_ITEMS[input.key as keyof typeof POC_ITEMS]
+              .accountability_metric *
+              WEIGHT *
+              REWARD_PERCENT;
+
+          await ctx.db
+            .update(profiles)
+            .set({
+              weight: finalWeight,
+            })
+            .where(eq(profiles.userId, ctx.user.id));
+        }
       }
 
       logUserActivity.itemProposal.create({
