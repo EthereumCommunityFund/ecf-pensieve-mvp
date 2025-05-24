@@ -9,11 +9,11 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { profiles, projects } from '@/lib/db/schema';
+import { profiles, projects, proposals, voteRecords } from '@/lib/db/schema';
+import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
-import { projectLogs } from '@/lib/db/schema/projectLogs';
 
 import { proposalRouter } from './proposal';
 
@@ -88,7 +88,7 @@ export const projectRouter = router({
             return { key, value };
           });
 
-        await caller.createProposal({
+        const proposal = await caller.createProposal({
           projectId: project.id,
           items: proposalItems,
           ...(input.refs && { refs: input.refs }),
@@ -97,15 +97,41 @@ export const projectRouter = router({
         const userProfile = await ctx.db.query.profiles.findFirst({
           where: eq(profiles.userId, ctx.user.id),
         });
+        const finalWeight =
+          (userProfile?.weight ?? 0) +
+          ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT;
 
         await ctx.db
           .update(profiles)
           .set({
-            weight:
-              (userProfile!.weight ?? 0) +
-              ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+            weight: finalWeight,
           })
           .where(eq(profiles.userId, ctx.user.id));
+
+        const votePromises = proposalItems.map(async (item) => {
+          const [vote] = await ctx.db
+            .insert(voteRecords)
+            .values({
+              key: item.key,
+              proposalId: proposal.id,
+              creator: ctx.user.id,
+              weight: finalWeight,
+              projectId: project.id,
+            })
+            .returning();
+
+          logUserActivity.vote.create({
+            userId: ctx.user.id,
+            targetId: vote.id,
+            projectId: project.id,
+            items: [{ field: item.key }],
+            proposalCreatorId: ctx.user.id,
+          });
+
+          return vote;
+        });
+
+        await Promise.all(votePromises);
 
         logUserActivity.project.create({
           userId: ctx.user.id,
@@ -113,7 +139,13 @@ export const projectRouter = router({
           projectId: project.id,
         });
       } catch (proposalError) {
-        ctx.db.delete(projects).where(eq(projects.id, project.id));
+        await ctx.db
+          .delete(voteRecords)
+          .where(eq(voteRecords.projectId, project.id));
+        await ctx.db
+          .delete(proposals)
+          .where(eq(proposals.projectId, project.id));
+        await ctx.db.delete(projects).where(eq(projects.id, project.id));
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message:
