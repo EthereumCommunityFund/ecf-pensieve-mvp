@@ -148,6 +148,13 @@
       "when": 1747997883811,
       "tag": "0020_complete_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1748066262938,
+      "tag": "0021_abnormal_stick",
+      "breakpoints": true
     }
   ]
 }
