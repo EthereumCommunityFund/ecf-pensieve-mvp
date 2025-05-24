@@ -2,7 +2,6 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { QUORUM_AMOUNT, WEIGHT } from '@/lib/constants';
 import {
   itemProposals,
   profiles,
@@ -11,7 +10,6 @@ import {
   voteRecords,
 } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
-import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -401,21 +399,14 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { itemProposalId, key } = input;
 
-      const [targetItemProposal, userSpecificVotesForKey, userProfile] =
-        await Promise.all([
-          ctx.db.query.itemProposals.findFirst({
-            where: eq(itemProposals.id, itemProposalId),
-          }),
-          ctx.db.query.voteRecords.findMany({
-            where: and(
-              eq(voteRecords.creator, ctx.user.id),
-              eq(voteRecords.key, key),
-            ),
-          }),
-          ctx.db.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          }),
-        ]);
+      const [targetItemProposal, userProfile] = await Promise.all([
+        ctx.db.query.itemProposals.findFirst({
+          where: eq(itemProposals.id, itemProposalId),
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+      ]);
 
       if (!targetItemProposal) {
         throw new TRPCError({
@@ -426,58 +417,27 @@ export const voteRouter = router({
 
       const projectId = targetItemProposal.projectId;
 
-      const projectItemProposals = await ctx.db.query.itemProposals.findMany({
-        where: eq(itemProposals.projectId, projectId),
+      const voteToSwitch = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+          eq(voteRecords.projectId, projectId),
+        ),
       });
 
-      const projectItemProposalIds = projectItemProposals.map((p) => p.id);
-
-      const conflictingVotes = userSpecificVotesForKey.filter(
-        (vote) =>
-          vote.itemProposalId !== null &&
-          projectItemProposalIds.includes(vote.itemProposalId) &&
-          vote.itemProposalId !== itemProposalId,
-      );
-
-      if (conflictingVotes.length === 0) {
+      if (!voteToSwitch) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'No conflicting vote found to switch',
         });
       }
 
-      const voteToSwitch = conflictingVotes[0];
-
-      const existingVoteForTargetItemProposal = userSpecificVotesForKey.find(
-        (vote) => vote.itemProposalId === itemProposalId,
-      );
-
-      if (existingVoteForTargetItemProposal) {
+      if (voteToSwitch.itemProposalId === itemProposalId) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
             'You have already voted for this key in the target item proposal',
         });
-      }
-
-      if (voteToSwitch.itemProposalId) {
-        const originalLeadingCheck = await ctx.db.query.projectLogs.findFirst({
-          where: and(
-            eq(projectLogs.projectId, projectId),
-            eq(projectLogs.key, key),
-          ),
-          orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-        });
-
-        if (
-          originalLeadingCheck &&
-          originalLeadingCheck.itemProposalId === voteToSwitch.itemProposalId
-        ) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot switch vote from the leading proposal',
-          });
-        }
       }
 
       const [updatedVote] = await ctx.db
@@ -489,29 +449,68 @@ export const voteRouter = router({
         .where(eq(voteRecords.id, voteToSwitch.id))
         .returning();
 
-      const votes = await ctx.db.query.voteRecords.findMany({
-        where: and(
-          eq(voteRecords.itemProposalId, itemProposalId),
-          eq(voteRecords.key, key),
-        ),
-      });
+      const [votes, project] = await Promise.all([
+        ctx.db.query.voteRecords.findMany({
+          where: and(
+            eq(voteRecords.itemProposalId, itemProposalId),
+            eq(voteRecords.key, key),
+          ),
+        }),
+        ctx.db.query.projects.findFirst({
+          where: eq(projects.id, projectId),
+        }),
+      ]);
 
-      if (votes.length >= QUORUM_AMOUNT) {
-        const voteSum = votes.reduce((acc, vote) => {
-          acc += vote.weight ?? 0;
-          return acc;
-        }, 0);
+      const voteSum = votes.reduce((acc, vote) => {
+        acc += vote.weight ?? 0;
+        return acc;
+      }, 0);
 
-        if (
-          voteSum >=
-          POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
-            WEIGHT
-        ) {
-          await ctx.db.insert(projectLogs).values({
-            projectId: targetItemProposal.projectId,
+      const itemsTopWeight = project?.itemsTopWeight as
+        | Record<string, number>
+        | undefined;
+      const keyWeight = itemsTopWeight?.[key] ?? 0;
+
+      if (voteSum > keyWeight) {
+        await Promise.all([
+          ctx.db.insert(projectLogs).values({
+            projectId,
             itemProposalId,
             key,
+          }),
+          ctx.db.update(projects).set({
+            itemsTopWeight: {
+              ...(project?.itemsTopWeight ?? {}),
+              [key]: voteSum,
+            },
+          }),
+        ]);
+      }
+
+      if (voteToSwitch.itemProposalId) {
+        const originalLeadingCheck = await ctx.db.query.projectLogs.findFirst({
+          where: and(
+            eq(projectLogs.projectId, projectId),
+            eq(projectLogs.key, key),
+          ),
+          orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+        });
+        if (voteToSwitch.itemProposalId === originalLeadingCheck?.proposalId) {
+          const votes = await ctx.db.query.voteRecords.findMany({
+            where: and(
+              eq(voteRecords.itemProposalId, originalLeadingCheck?.proposalId),
+              eq(voteRecords.key, key),
+            ),
           });
+          const voteSum = votes.reduce((acc, vote) => {
+            acc += vote.weight ?? 0;
+            return acc;
+          }, 0);
+          if (voteSum < keyWeight) {
+            await ctx.db.update(projectLogs).set({
+              isNotLeading: true,
+            });
+          }
         }
       }
 
