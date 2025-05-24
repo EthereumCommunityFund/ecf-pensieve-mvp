@@ -426,24 +426,6 @@ export const voteRouter = router({
 
       const projectId = targetItemProposal.projectId;
 
-      const leadingProposal = await ctx.db.query.projectLogs.findFirst({
-        where: and(
-          eq(projectLogs.projectId, projectId),
-          eq(projectLogs.key, key),
-        ),
-        orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-      });
-
-      if (
-        leadingProposal &&
-        leadingProposal.itemProposalId === itemProposalId
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Cannot vote on the leading proposal',
-        });
-      }
-
       const projectItemProposals = await ctx.db.query.itemProposals.findMany({
         where: eq(itemProposals.projectId, projectId),
       });
