@@ -14,8 +14,8 @@ import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { addRewardNotification } from '@/lib/services/notiifcation';
-import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 import { updateUserWeight } from '@/lib/services/userWeightService';
+import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 import { proposalRouter } from './proposal';
 
@@ -280,7 +280,6 @@ export const projectRouter = router({
           vp.proposal_creator,
           vp.items
         FROM valid_projects vp
-        ORDER BY vp.project_id
       `;
 
       const eligibleProjects = await ctx.db.execute(eligibleProjectsQuery);
