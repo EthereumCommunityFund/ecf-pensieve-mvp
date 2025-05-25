@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { addRewardNotification } from '@/lib/services/notiifcation';
 
 import { protectedProcedure, router } from '../server';
 
@@ -77,12 +78,13 @@ export const itemProposalRouter = router({
             }),
           ]);
 
-          const finalWeight =
-            (userProfile?.weight ?? 0) +
+          const reward =
             POC_ITEMS[input.key as keyof typeof POC_ITEMS]
               .accountability_metric *
-              WEIGHT *
-              REWARD_PERCENT;
+            WEIGHT *
+            REWARD_PERCENT;
+
+          const finalWeight = (userProfile?.weight ?? 0) + reward;
 
           await ctx.db
             .update(profiles)
@@ -90,6 +92,14 @@ export const itemProposalRouter = router({
               weight: finalWeight,
             })
             .where(eq(profiles.userId, ctx.user.id));
+
+          addRewardNotification({
+            userId: ctx.user.id,
+            projectId: input.projectId,
+            proposalId: itemProposal.id,
+            reward,
+            type: 'createProposal',
+          });
 
           if (!voteRecord) {
             const [vote] = await ctx.db

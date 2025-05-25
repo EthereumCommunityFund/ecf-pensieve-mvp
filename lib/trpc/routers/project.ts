@@ -14,6 +14,7 @@ import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
+import { addRewardNotification } from '@/lib/services/notiifcation';
 
 import { proposalRouter } from './proposal';
 
@@ -107,7 +108,7 @@ export const projectRouter = router({
             })
             .where(eq(profiles.userId, ctx.user.id));
 
-          await caller.createProposal({
+          const proposal = await caller.createProposal({
             projectId: project.id,
             items: proposalItems,
             ...(input.refs && { refs: input.refs }),
@@ -117,6 +118,14 @@ export const projectRouter = router({
             userId: ctx.user.id,
             targetId: project.id,
             projectId: project.id,
+          });
+
+          addRewardNotification({
+            userId: ctx.user.id,
+            projectId: project.id,
+            proposalId: proposal.id,
+            reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+            type: 'createProposal',
           });
 
           return project;
@@ -342,6 +351,14 @@ export const projectRouter = router({
                 ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
             })
             .where(eq(profiles.userId, proposal.creator));
+
+          addRewardNotification({
+            userId: proposal.creator,
+            projectId: project.id,
+            proposalId: proposal.id,
+            reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+            type: 'proposalPass',
+          });
         }
       }
     }

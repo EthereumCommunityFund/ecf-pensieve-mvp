@@ -18,6 +18,7 @@ import {
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { addRewardNotification } from '@/lib/services/notiifcation';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -389,12 +390,12 @@ export const voteRouter = router({
         const keyWeight = itemsTopWeight?.[key] ?? 0;
 
         if (voteSum > keyWeight) {
-          const finalWeight =
-            (itemProposal.creator.weight ?? 0) +
+          const reward =
             POC_ITEMS[input.key as keyof typeof POC_ITEMS]
               .accountability_metric *
-              WEIGHT *
-              (1 - REWARD_PERCENT);
+            WEIGHT *
+            (1 - REWARD_PERCENT);
+          const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
           await Promise.all([
             ctx.db.insert(projectLogs).values({
               projectId: itemProposal.projectId,
@@ -414,6 +415,14 @@ export const voteRouter = router({
               })
               .where(eq(profiles.userId, itemProposal.creator.userId)),
           ]);
+
+          addRewardNotification({
+            userId: ctx.user.id,
+            projectId: itemProposal.projectId,
+            proposalId: itemProposal.id,
+            reward,
+            type: 'proposalPass',
+          });
         }
       } else {
         const votes = await ctx.db.query.voteRecords.findMany({
@@ -434,11 +443,10 @@ export const voteRouter = router({
           const keyWeight = itemsTopWeight?.[key] ?? 0;
 
           if (voteSum > keyWeight) {
-            const finalWeight =
-              (itemProposal.creator.weight ?? 0) +
+            const reward =
               POC_ITEMS[input.key as keyof typeof POC_ITEMS]
-                .accountability_metric *
-                WEIGHT;
+                .accountability_metric * WEIGHT;
+            const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
             await Promise.all([
               ctx.db.insert(projectLogs).values({
                 projectId: itemProposal.projectId,
@@ -458,6 +466,13 @@ export const voteRouter = router({
                 })
                 .where(eq(profiles.userId, itemProposal.creator.userId)),
             ]);
+            addRewardNotification({
+              userId: ctx.user.id,
+              projectId: itemProposal.projectId,
+              proposalId: itemProposal.id,
+              reward,
+              type: 'proposalPass',
+            });
           }
         }
       }
@@ -578,12 +593,12 @@ export const voteRouter = router({
         const keyWeight = itemsTopWeight?.[key] ?? 0;
 
         if (voteSum > keyWeight) {
-          const finalWeight =
-            (targetItemProposal.creator.weight ?? 0) +
+          const reward =
             POC_ITEMS[input.key as keyof typeof POC_ITEMS]
               .accountability_metric *
-              WEIGHT *
-              (1 - REWARD_PERCENT);
+            WEIGHT *
+            (1 - REWARD_PERCENT);
+          const finalWeight = (targetItemProposal.creator.weight ?? 0) + reward;
           await Promise.all([
             ctx.db.insert(projectLogs).values({
               projectId,
@@ -603,6 +618,13 @@ export const voteRouter = router({
               })
               .where(eq(profiles.userId, targetItemProposal.creator.userId)),
           ]);
+          addRewardNotification({
+            userId: ctx.user.id,
+            projectId,
+            proposalId: targetItemProposal.id,
+            reward,
+            type: 'proposalPass',
+          });
         }
       } else {
         if (votes.length >= QUORUM_AMOUNT) {
@@ -617,11 +639,11 @@ export const voteRouter = router({
           const keyWeight = itemsTopWeight?.[key] ?? 0;
 
           if (voteSum > keyWeight) {
-            const finalWeight =
-              (targetItemProposal.creator.weight ?? 0) +
+            const reward =
               POC_ITEMS[input.key as keyof typeof POC_ITEMS]
-                .accountability_metric *
-                WEIGHT;
+                .accountability_metric * WEIGHT;
+            const finalWeight =
+              (targetItemProposal.creator.weight ?? 0) + reward;
             await Promise.all([
               ctx.db.insert(projectLogs).values({
                 projectId,
@@ -641,6 +663,13 @@ export const voteRouter = router({
                 })
                 .where(eq(profiles.userId, targetItemProposal.creator.userId)),
             ]);
+            addRewardNotification({
+              userId: ctx.user.id,
+              projectId,
+              proposalId: targetItemProposal.id,
+              reward,
+              type: 'proposalPass',
+            });
           }
         }
       }
