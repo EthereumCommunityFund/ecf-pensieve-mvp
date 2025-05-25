@@ -2,6 +2,7 @@ import {
   bigint,
   bigserial,
   index,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -18,8 +19,9 @@ export const itemProposals = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .defaultNow()
       .notNull(),
-    item: text('item').notNull(),
-    ref: text('ref').notNull(),
+    key: text('key').notNull(),
+    value: jsonb('value'),
+    ref: text('ref'),
     projectId: bigint('project_id', { mode: 'number' })
       .notNull()
       .references(() => projects.id),
@@ -31,7 +33,7 @@ export const itemProposals = pgTable(
     return {
       projectIdIdx: index('item_proposals_project_id_idx').on(table.projectId),
       creatorIdx: index('item_proposals_creator_idx').on(table.creator),
-      itemIdx: index('item_proposals_item_idx').on(table.item),
+      keyIdx: index('item_proposals_key_idx').on(table.key),
     };
   },
 );

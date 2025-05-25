@@ -127,6 +127,62 @@
       "when": 1747828388777,
       "tag": "0017_tearful_steve_rogers",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1747992982501,
+      "tag": "0018_sweet_ultimatum",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1747993347786,
+      "tag": "0019_melted_king_cobra",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1747997883811,
+      "tag": "0020_complete_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1748066262938,
+      "tag": "0021_abnormal_stick",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1748068628960,
+      "tag": "0022_material_lockheed",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1748074240912,
+      "tag": "0023_known_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1748126199508,
+      "tag": "0024_gorgeous_talon",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1748158289775,
+      "tag": "0025_pink_bulldozer",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ export * from './invitations';
 export * from './itemProposals';
 export * from './nonces';
 export * from './profiles';
+export * from './projectLogs';
 export * from './projects';
 export * from './proposals';
 export * from './relations';

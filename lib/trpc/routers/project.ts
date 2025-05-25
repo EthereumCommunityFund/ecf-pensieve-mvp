@@ -10,10 +10,10 @@ import {
   WEIGHT,
 } from '@/lib/constants';
 import { profiles, projects } from '@/lib/db/schema';
+import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
-import { projectLogs } from '@/lib/db/schema/projectLogs';
 
 import { proposalRouter } from './proposal';
 
@@ -65,64 +65,70 @@ export const projectRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [project] = await ctx.db
-        .insert(projects)
-        .values({
-          ...input,
-          creator: ctx.user.id,
-        })
-        .returning();
+      return await ctx.db.transaction(async (tx) => {
+        const [project] = await tx
+          .insert(projects)
+          .values({
+            ...input,
+            creator: ctx.user.id,
+          })
+          .returning();
 
-      if (!project) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'project not found',
-        });
-      }
+        if (!project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'project not found',
+          });
+        }
 
-      const caller = proposalRouter.createCaller(ctx);
-      try {
-        const proposalItems = Object.entries(input)
-          .filter(([key]) => key !== 'refs')
-          .map(([key, value]) => {
-            return { key, value };
+        try {
+          const caller = proposalRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
+          const proposalItems = Object.entries(input)
+            .filter(([key]) => key !== 'refs')
+            .map(([key, value]) => {
+              return { key, value };
+            });
+
+          const userProfile = await tx.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
           });
 
-        await caller.createProposal({
-          projectId: project.id,
-          items: proposalItems,
-          ...(input.refs && { refs: input.refs }),
-        });
+          const finalWeight =
+            (userProfile?.weight ?? 0) +
+            ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT;
 
-        const userProfile = await ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        });
+          await tx
+            .update(profiles)
+            .set({
+              weight: finalWeight,
+            })
+            .where(eq(profiles.userId, ctx.user.id));
 
-        await ctx.db
-          .update(profiles)
-          .set({
-            weight:
-              (userProfile!.weight ?? 0) +
-              ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
-          })
-          .where(eq(profiles.userId, ctx.user.id));
+          await caller.createProposal({
+            projectId: project.id,
+            items: proposalItems,
+            ...(input.refs && { refs: input.refs }),
+          });
 
-        logUserActivity.project.create({
-          userId: ctx.user.id,
-          targetId: project.id,
-          projectId: project.id,
-        });
-      } catch (proposalError) {
-        ctx.db.delete(projects).where(eq(projects.id, project.id));
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message:
-            'Failed to create the initial proposal for the project. The project creation has been rolled back.',
-          cause: proposalError,
-        });
-      }
+          logUserActivity.project.create({
+            userId: ctx.user.id,
+            targetId: project.id,
+            projectId: project.id,
+          });
 
-      return project;
+          return project;
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message:
+              'Failed to create the project and its initial proposal. All changes have been rolled back.',
+            cause: error,
+          });
+        }
+      });
     }),
 
   getProjects: publicProcedure
@@ -283,7 +289,7 @@ export const projectRouter = router({
         ) {
           return false;
         }
-        return totalWeight >= pocItemConfig.accountability_metric * WEIGHT;
+        return totalWeight > pocItemConfig.accountability_metric * WEIGHT;
       });
     };
 
@@ -294,35 +300,48 @@ export const projectRouter = router({
         );
         return { ...project, proposals: validProposals };
       })
-      .filter((project) => project.proposals.length > 0);
+      .filter((project) => project.proposals.length === 1);
 
     for (const project of filteredProjects) {
+      const proposal = project.proposals[0];
+      const itemsTopWeight: Record<string, number> = {};
+
+      for (const voteRecord of proposal.voteRecords) {
+        const key = String(voteRecord.key);
+        const weight = voteRecord.weight ?? 0;
+
+        if (!itemsTopWeight[key]) {
+          itemsTopWeight[key] = 0;
+        }
+        itemsTopWeight[key] += weight;
+      }
+
       await ctx.db
         .update(projects)
-        .set({ isPublished: true })
+        .set({
+          isPublished: true,
+          itemsTopWeight,
+        })
         .where(eq(projects.id, project.id));
-      if (project.proposals && Array.isArray(project.proposals)) {
-        for (const proposal of project.proposals) {
-          await ctx.db.insert(projectLogs).values({
-            projectId: project.id,
-            proposalId: proposal.id,
-          });
-          if (proposal.creator) {
-            const userProfile = await ctx.db.query.profiles.findFirst({
-              where: eq(profiles.userId, proposal.creator),
-            });
 
-            if (userProfile) {
-              await ctx.db
-                .update(profiles)
-                .set({
-                  weight:
-                    (userProfile.weight ?? 0) +
-                    ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
-                })
-                .where(eq(profiles.userId, proposal.creator));
-            }
-          }
+      await ctx.db.insert(projectLogs).values({
+        projectId: project.id,
+        proposalId: proposal.id,
+      });
+      if (proposal.creator) {
+        const userProfile = await ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, proposal.creator),
+        });
+
+        if (userProfile) {
+          await ctx.db
+            .update(profiles)
+            .set({
+              weight:
+                (userProfile.weight ?? 0) +
+                ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+            })
+            .where(eq(profiles.userId, proposal.creator));
         }
       }
     }

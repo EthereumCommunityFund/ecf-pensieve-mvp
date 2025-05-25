@@ -2,7 +2,9 @@ import { relations } from 'drizzle-orm';
 
 import { activeLogs } from './activeLogs';
 import { invitationCodes } from './invitations';
+import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
+import { projectLogs } from './projectLogs';
 import { projects } from './projects';
 import { proposals } from './proposals';
 import { voteRecords } from './voteRecords';
@@ -42,6 +44,21 @@ export const proposalsRelations = relations(proposals, ({ one, many }) => ({
   voteRecords: many(voteRecords),
 }));
 
+export const itemProposalsRelations = relations(
+  itemProposals,
+  ({ one, many }) => ({
+    creator: one(profiles, {
+      fields: [itemProposals.creator],
+      references: [profiles.userId],
+    }),
+    project: one(projects, {
+      fields: [itemProposals.projectId],
+      references: [projects.id],
+    }),
+    voteRecords: many(voteRecords),
+  }),
+);
+
 export const voteRecordsRelations = relations(voteRecords, ({ one }) => ({
   creator: one(profiles, {
     fields: [voteRecords.creator],
@@ -50,6 +67,14 @@ export const voteRecordsRelations = relations(voteRecords, ({ one }) => ({
   proposal: one(proposals, {
     fields: [voteRecords.proposalId],
     references: [proposals.id],
+  }),
+  itemProposal: one(itemProposals, {
+    fields: [voteRecords.itemProposalId],
+    references: [itemProposals.id],
+  }),
+  project: one(projects, {
+    fields: [voteRecords.projectId],
+    references: [projects.id],
   }),
 }));
 
@@ -76,3 +101,18 @@ export const invitationCodesRelations = relations(
     profiles: many(profiles),
   }),
 );
+
+export const projectLogsRelations = relations(projectLogs, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectLogs.projectId],
+    references: [projects.id],
+  }),
+  proposal: one(proposals, {
+    fields: [projectLogs.proposalId],
+    references: [proposals.id],
+  }),
+  itemProposal: one(itemProposals, {
+    fields: [projectLogs.itemProposalId],
+    references: [itemProposals.id],
+  }),
+}));
