@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { ESSENTIAL_ITEM_LIST, QUORUM_AMOUNT } from '@/lib/constants';
 import {
   itemProposals,
   profiles,
@@ -11,7 +12,6 @@ import {
 } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { logUserActivity } from '@/lib/services/activeLogsService';
-import { ESSENTIAL_ITEM_LIST, QUORUM_AMOUNT } from '@/lib/constants';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -495,6 +495,7 @@ export const voteRouter = router({
         .update(voteRecords)
         .set({
           itemProposalId,
+          proposalId: null,
           weight: userProfile?.weight ?? 0,
         })
         .where(eq(voteRecords.id, voteToSwitch.id))
@@ -536,6 +537,33 @@ export const voteRouter = router({
             },
           }),
         ]);
+      }
+
+      if (voteToSwitch.itemProposalId) {
+        const originalLeadingCheck = await ctx.db.query.projectLogs.findFirst({
+          where: and(
+            eq(projectLogs.projectId, projectId),
+            eq(projectLogs.key, key),
+          ),
+          orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+        });
+        if (voteToSwitch.itemProposalId === originalLeadingCheck?.proposalId) {
+          const votes = await ctx.db.query.voteRecords.findMany({
+            where: and(
+              eq(voteRecords.itemProposalId, originalLeadingCheck?.proposalId),
+              eq(voteRecords.key, key),
+            ),
+          });
+          const voteSum = votes.reduce((acc, vote) => {
+            acc += vote.weight ?? 0;
+            return acc;
+          }, 0);
+          if (voteSum < keyWeight) {
+            await ctx.db.update(projectLogs).set({
+              isNotLeading: true,
+            });
+          }
+        }
       }
 
       logUserActivity.vote.update({
