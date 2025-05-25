@@ -2,7 +2,12 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { ESSENTIAL_ITEM_LIST, QUORUM_AMOUNT } from '@/lib/constants';
+import {
+  ESSENTIAL_ITEM_LIST,
+  QUORUM_AMOUNT,
+  REWARD_PERCENT,
+  WEIGHT,
+} from '@/lib/constants';
 import {
   itemProposals,
   profiles,
@@ -12,6 +17,7 @@ import {
 } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { POC_ITEMS } from '@/lib/pocItems';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -302,6 +308,9 @@ export const voteRouter = router({
       const [itemProposal, userProfile] = await Promise.all([
         ctx.db.query.itemProposals.findFirst({
           where: eq(itemProposals.id, itemProposalId),
+          with: {
+            creator: true,
+          },
         }),
         ctx.db.query.profiles.findFirst({
           where: eq(profiles.userId, ctx.user.id),
@@ -358,17 +367,17 @@ export const voteRouter = router({
       );
 
       if (!isEssentialItem) {
-        const existingProposal = await ctx.db.query.itemProposals.findFirst({
+        const hasLeadingProposal = await ctx.db.query.projectLogs.findFirst({
           where: and(
-            eq(itemProposals.projectId, itemProposal.projectId),
-            eq(itemProposals.key, input.key),
+            eq(projectLogs.projectId, itemProposal.projectId),
+            eq(projectLogs.key, input.key),
           ),
         });
-        if (existingProposal) {
+        if (!hasLeadingProposal) {
           needCheckQuorum = true;
         }
       }
-      if (needCheckQuorum) {
+      if (!needCheckQuorum) {
         const voteSum = votes.reduce((acc, vote) => {
           acc += vote.weight ?? 0;
           return acc;
@@ -380,6 +389,12 @@ export const voteRouter = router({
         const keyWeight = itemsTopWeight?.[key] ?? 0;
 
         if (voteSum > keyWeight) {
+          const finalWeight =
+            (itemProposal.creator.weight ?? 0) +
+            POC_ITEMS[input.key as keyof typeof POC_ITEMS]
+              .accountability_metric *
+              WEIGHT *
+              (1 - REWARD_PERCENT);
           await Promise.all([
             ctx.db.insert(projectLogs).values({
               projectId: itemProposal.projectId,
@@ -392,6 +407,12 @@ export const voteRouter = router({
                 [key]: voteSum,
               },
             }),
+            ctx.db
+              .update(profiles)
+              .set({
+                weight: finalWeight,
+              })
+              .where(eq(profiles.userId, itemProposal.creator.userId)),
           ]);
         }
       } else {
@@ -413,11 +434,30 @@ export const voteRouter = router({
           const keyWeight = itemsTopWeight?.[key] ?? 0;
 
           if (voteSum > keyWeight) {
-            await ctx.db.insert(projectLogs).values({
-              projectId: itemProposal.projectId,
-              itemProposalId,
-              key,
-            });
+            const finalWeight =
+              (itemProposal.creator.weight ?? 0) +
+              POC_ITEMS[input.key as keyof typeof POC_ITEMS]
+                .accountability_metric *
+                WEIGHT;
+            await Promise.all([
+              ctx.db.insert(projectLogs).values({
+                projectId: itemProposal.projectId,
+                itemProposalId,
+                key,
+              }),
+              ctx.db.update(projects).set({
+                itemsTopWeight: {
+                  ...(project?.itemsTopWeight ?? {}),
+                  [key]: voteSum,
+                },
+              }),
+              ctx.db
+                .update(profiles)
+                .set({
+                  weight: finalWeight,
+                })
+                .where(eq(profiles.userId, itemProposal.creator.userId)),
+            ]);
           }
         }
       }
