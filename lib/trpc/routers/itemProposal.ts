@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { addRewardNotification } from '@/lib/services/notiifcation';
 
 import { protectedProcedure, router } from '../server';
 
@@ -64,16 +65,26 @@ export const itemProposalRouter = router({
         });
 
         if (!existingProposal) {
-          const userProfile = await ctx.db.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          });
+          const [userProfile, voteRecord] = await Promise.all([
+            ctx.db.query.profiles.findFirst({
+              where: eq(profiles.userId, ctx.user.id),
+            }),
+            ctx.db.query.voteRecords.findFirst({
+              where: and(
+                eq(voteRecords.creator, ctx.user.id),
+                eq(voteRecords.projectId, input.projectId),
+                eq(voteRecords.key, input.key),
+              ),
+            }),
+          ]);
 
-          const finalWeight =
-            (userProfile?.weight ?? 0) +
+          const reward =
             POC_ITEMS[input.key as keyof typeof POC_ITEMS]
               .accountability_metric *
-              WEIGHT *
-              REWARD_PERCENT;
+            WEIGHT *
+            REWARD_PERCENT;
+
+          const finalWeight = (userProfile?.weight ?? 0) + reward;
 
           await ctx.db
             .update(profiles)
@@ -82,24 +93,50 @@ export const itemProposalRouter = router({
             })
             .where(eq(profiles.userId, ctx.user.id));
 
-          const [vote] = await ctx.db
-            .insert(voteRecords)
-            .values({
-              creator: ctx.user.id,
-              projectId: input.projectId,
-              itemProposalId: itemProposal.id,
-              key: input.key,
-              weight: finalWeight,
-            })
-            .returning();
-
-          logUserActivity.vote.create({
+          addRewardNotification({
             userId: ctx.user.id,
-            targetId: vote.id,
-            projectId: itemProposal.projectId,
-            items: [{ field: input.key }],
-            proposalCreatorId: itemProposal.creator,
+            projectId: input.projectId,
+            proposalId: itemProposal.id,
+            reward,
+            type: 'createProposal',
           });
+
+          if (!voteRecord) {
+            const [vote] = await ctx.db
+              .insert(voteRecords)
+              .values({
+                creator: ctx.user.id,
+                projectId: input.projectId,
+                itemProposalId: itemProposal.id,
+                key: input.key,
+                weight: finalWeight,
+              })
+              .returning();
+
+            logUserActivity.vote.create({
+              userId: ctx.user.id,
+              targetId: vote.id,
+              projectId: itemProposal.projectId,
+              items: [{ field: input.key }],
+              proposalCreatorId: itemProposal.creator,
+            });
+          } else {
+            await ctx.db
+              .update(voteRecords)
+              .set({
+                weight: finalWeight,
+                itemProposalId: itemProposal.id,
+              })
+              .where(eq(voteRecords.id, voteRecord.id));
+
+            logUserActivity.vote.update({
+              userId: ctx.user.id,
+              targetId: voteRecord.id,
+              projectId: itemProposal.projectId,
+              items: [{ field: input.key }],
+              proposalCreatorId: itemProposal.creator,
+            });
+          }
         }
       }
 

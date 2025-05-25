@@ -9,10 +9,12 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { profiles, projects } from '@/lib/db/schema';
+import { projects, voteRecords } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { addRewardNotification } from '@/lib/services/notiifcation';
+import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 import { proposalRouter } from './proposal';
@@ -92,22 +94,13 @@ export const projectRouter = router({
               return { key, value };
             });
 
-          const userProfile = await tx.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          });
+          await updateUserWeight(
+            ctx.user.id,
+            ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+            tx,
+          );
 
-          const finalWeight =
-            (userProfile?.weight ?? 0) +
-            ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT;
-
-          await tx
-            .update(profiles)
-            .set({
-              weight: finalWeight,
-            })
-            .where(eq(profiles.userId, ctx.user.id));
-
-          await caller.createProposal({
+          const proposal = await caller.createProposal({
             projectId: project.id,
             items: proposalItems,
             ...(input.refs && { refs: input.refs }),
@@ -117,6 +110,14 @@ export const projectRouter = router({
             userId: ctx.user.id,
             targetId: project.id,
             projectId: project.id,
+          });
+
+          addRewardNotification({
+            userId: ctx.user.id,
+            projectId: project.id,
+            proposalId: proposal.id,
+            reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+            type: 'createProposal',
           });
 
           return project;
@@ -168,20 +169,23 @@ export const projectRouter = router({
         };
       }
 
-      const results = await ctx.db.query.projects.findMany({
-        with: queryOptions,
-        where: whereCondition,
-        orderBy: desc(projects.id),
-        limit,
-      });
+      const [results, totalCountResult] = await Promise.all([
+        ctx.db.query.projects.findMany({
+          with: queryOptions,
+          where: whereCondition,
+          orderBy: desc(projects.id),
+          limit,
+        }),
+        ctx.db
+          .select({ count: sql`count(*)::int` })
+          .from(projects)
+          .where(eq(projects.isPublished, isPublished)),
+      ]);
 
       const nextCursor =
         results.length === limit ? results[results.length - 1].id : undefined;
 
-      const totalCount = await ctx.db
-        .select({ count: sql`count(*)::int` })
-        .from(projects)
-        .then((res) => Number(res[0]?.count ?? 0));
+      const totalCount = Number(totalCountResult[0]?.count ?? 0);
 
       return {
         items: results,
@@ -221,131 +225,147 @@ export const projectRouter = router({
     }),
 
   scanPendingProject: publicProcedure.query(async ({ ctx }) => {
-    const pendingProjects = await ctx.db.query.projects.findMany({
-      where: eq(projects.isPublished, false),
-      with: {
-        proposals: {
-          with: {
-            voteRecords: true,
-          },
-        },
-      },
-    });
+    try {
+      const pocItemsConfig = Object.entries(POC_ITEMS)
+        .filter(([_, config]) => config.isEssential)
+        .map(([key, config]) => ({
+          key,
+          required_weight: config.accountability_metric * WEIGHT,
+        }));
 
-    type Proposal = (typeof pendingProjects)[number]['proposals'][number];
-    type VoteRecord = Proposal['voteRecords'][number];
-    type ProposalItem = { key: string; value: unknown };
+      const eligibleProjectsQuery = sql`
+        WITH poc_config AS (
+          SELECT * FROM (VALUES ${sql.join(
+            pocItemsConfig.map(
+              ({ key, required_weight }) => sql`(${key}, ${required_weight})`,
+            ),
+            sql`, `,
+          )}) AS t(key, required_weight)
+        ),
+        project_proposal_votes AS (
+          SELECT 
+            p.id as project_id,
+            prop.id as proposal_id,
+            prop.creator as proposal_creator,
+            prop.items,
+            vr.key as vote_key,
+            COUNT(DISTINCT CASE WHEN vr.key = item_key.key THEN vr.creator END) as key_voters,
+            SUM(CASE WHEN vr.key = item_key.key THEN vr.weight ELSE 0 END) as key_weight,
+            pc.required_weight
+          FROM projects p
+          JOIN proposals prop ON p.id = prop.project_id
+          JOIN vote_records vr ON prop.id = vr.proposal_id
+          CROSS JOIN LATERAL (
+            SELECT jsonb_array_elements(prop.items)->>'key' as key
+          ) item_key
+          JOIN poc_config pc ON vr.key = pc.key AND item_key.key = pc.key
+          WHERE p.is_published = false
+          GROUP BY p.id, prop.id, prop.creator, prop.items, vr.key, item_key.key, pc.required_weight
+        ),
+        valid_projects AS (
+          SELECT 
+            project_id,
+            proposal_id,
+            proposal_creator,
+            items
+          FROM project_proposal_votes
+          WHERE key_voters >= ${QUORUM_AMOUNT}
+            AND key_weight > required_weight
+          GROUP BY project_id, proposal_id, proposal_creator, items
+          HAVING COUNT(*) = ${ESSENTIAL_ITEM_AMOUNT}
+        )
+        SELECT DISTINCT
+          vp.project_id,
+          vp.proposal_id,
+          vp.proposal_creator,
+          vp.items
+        FROM valid_projects vp
+      `;
 
-    const isProposalValid = (proposal: Proposal): boolean => {
-      if (!proposal || !proposal.items || !proposal.voteRecords) {
-        return false;
+      const eligibleProjects = await ctx.db.execute(eligibleProjectsQuery);
+
+      if (eligibleProjects.length === 0) {
+        return {
+          success: true,
+          processedCount: 0,
+          message: 'No projects found that meet the publishing criteria',
+        };
       }
 
-      const itemsArray = proposal.items as ProposalItem[] | null | undefined;
+      const results = await ctx.db.transaction(async (tx) => {
+        let processedCount = 0;
 
-      if (
-        !itemsArray ||
-        !Array.isArray(itemsArray) ||
-        itemsArray.length === 0 ||
-        proposal.voteRecords.length < QUORUM_AMOUNT * ESSENTIAL_ITEM_AMOUNT
-      ) {
-        return false;
-      }
+        for (const project of eligibleProjects) {
+          try {
+            const projectId = Number(project.project_id);
+            const proposalId = Number(project.proposal_id);
+            const proposalCreator = String(project.proposal_creator);
 
-      const votesByItemKey = new Map<string, VoteRecord[]>();
-      for (const voteRecord of proposal.voteRecords) {
-        const itemKeyForVote = String(voteRecord.key);
-        if (!votesByItemKey.has(itemKeyForVote)) {
-          votesByItemKey.set(itemKeyForVote, []);
-        }
-        votesByItemKey.get(itemKeyForVote)!.push(voteRecord);
-      }
+            const projectVoteRecords = await tx.query.voteRecords.findMany({
+              where: eq(voteRecords.proposalId, proposalId),
+            });
 
-      return itemsArray.every((item) => {
-        const currentItemKey = String(item.key);
-        const votesForItem = votesByItemKey.get(currentItemKey) || [];
+            const itemsTopWeight: Record<string, number> = {};
+            for (const voteRecord of projectVoteRecords) {
+              const key = String(voteRecord.key);
+              itemsTopWeight[key] =
+                (itemsTopWeight[key] || 0) + (voteRecord.weight ?? 0);
+            }
 
-        const voterWeights = new Map<string, number>();
-        for (const vote of votesForItem) {
-          const creatorId = String(vote.creator);
-          voterWeights.set(creatorId, vote.weight ?? 0);
-        }
+            await tx
+              .update(projects)
+              .set({
+                isPublished: true,
+                itemsTopWeight,
+              })
+              .where(eq(projects.id, projectId));
 
-        const distinctVotersCount = voterWeights.size;
-        if (distinctVotersCount < QUORUM_AMOUNT) {
-          return false;
-        }
+            await tx.insert(projectLogs).values({
+              projectId: projectId,
+              proposalId: proposalId,
+            });
 
-        let totalWeight = 0;
-        for (const weight of voterWeights.values()) {
-          totalWeight += weight;
-        }
-
-        const pocItemConfig =
-          POC_ITEMS[currentItemKey as keyof typeof POC_ITEMS];
-        if (
-          !pocItemConfig ||
-          typeof pocItemConfig.accountability_metric !== 'number'
-        ) {
-          return false;
-        }
-        return totalWeight > pocItemConfig.accountability_metric * WEIGHT;
-      });
-    };
-
-    const filteredProjects = pendingProjects
-      .map((project) => {
-        const validProposals = (project.proposals || []).filter(
-          isProposalValid,
-        );
-        return { ...project, proposals: validProposals };
-      })
-      .filter((project) => project.proposals.length === 1);
-
-    for (const project of filteredProjects) {
-      const proposal = project.proposals[0];
-      const itemsTopWeight: Record<string, number> = {};
-
-      for (const voteRecord of proposal.voteRecords) {
-        const key = String(voteRecord.key);
-        const weight = voteRecord.weight ?? 0;
-
-        if (!itemsTopWeight[key]) {
-          itemsTopWeight[key] = 0;
-        }
-        itemsTopWeight[key] += weight;
-      }
-
-      await ctx.db
-        .update(projects)
-        .set({
-          isPublished: true,
-          itemsTopWeight,
-        })
-        .where(eq(projects.id, project.id));
-
-      await ctx.db.insert(projectLogs).values({
-        projectId: project.id,
-        proposalId: proposal.id,
-      });
-      if (proposal.creator) {
-        const userProfile = await ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, proposal.creator),
-        });
-
-        if (userProfile) {
-          await ctx.db
-            .update(profiles)
-            .set({
-              weight:
-                (userProfile.weight ?? 0) +
+            if (proposalCreator) {
+              await updateUserWeight(
+                proposalCreator,
                 ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
-            })
-            .where(eq(profiles.userId, proposal.creator));
-        }
-      }
-    }
+                tx,
+              );
 
-    return filteredProjects;
+              addRewardNotification({
+                userId: proposalCreator,
+                projectId: projectId,
+                proposalId: proposalId,
+                reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+                type: 'proposalPass',
+              });
+            }
+
+            processedCount++;
+          } catch (error) {
+            console.error(
+              `Failed to process project ${project.project_id}:`,
+              error,
+            );
+            throw error;
+          }
+        }
+
+        return processedCount;
+      });
+
+      return {
+        success: true,
+        processedCount: results,
+        message: `Successfully processed ${results} projects`,
+      };
+    } catch (error) {
+      console.error('scanPendingProjectOptimized failed:', error);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to scan pending projects',
+        cause: error,
+      });
+    }
   }),
 });

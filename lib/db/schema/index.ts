@@ -2,6 +2,7 @@ export * from './activeLogs';
 export * from './invitations';
 export * from './itemProposals';
 export * from './nonces';
+export * from './notifications';
 export * from './profiles';
 export * from './projectLogs';
 export * from './projects';
