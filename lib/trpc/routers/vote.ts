@@ -16,8 +16,8 @@ import {
   voteRecords,
 } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
-import { logUserActivity } from '@/lib/services/activeLogsService';
 import { POC_ITEMS } from '@/lib/pocItems';
+import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -486,6 +486,9 @@ export const voteRouter = router({
       const [targetItemProposal, userProfile] = await Promise.all([
         ctx.db.query.itemProposals.findFirst({
           where: eq(itemProposals.id, itemProposalId),
+          with: {
+            creator: true,
+          },
         }),
         ctx.db.query.profiles.findFirst({
           where: eq(profiles.userId, ctx.user.id),
@@ -553,30 +556,100 @@ export const voteRouter = router({
         }),
       ]);
 
-      const voteSum = votes.reduce((acc, vote) => {
-        acc += vote.weight ?? 0;
-        return acc;
-      }, 0);
+      let needCheckQuorum = false;
+      const isEssentialItem = ESSENTIAL_ITEM_LIST.some(
+        (item) => item.key === input.key,
+      );
 
-      const itemsTopWeight = project?.itemsTopWeight as
-        | Record<string, number>
-        | undefined;
-      const keyWeight = itemsTopWeight?.[key] ?? 0;
+      if (!isEssentialItem) {
+        const hasLeadingProposal = await ctx.db.query.projectLogs.findFirst({
+          where: and(
+            eq(projectLogs.projectId, projectId),
+            eq(projectLogs.key, input.key),
+          ),
+        });
+        if (!hasLeadingProposal) {
+          needCheckQuorum = true;
+        }
+      }
 
-      if (voteSum > keyWeight) {
-        await Promise.all([
-          ctx.db.insert(projectLogs).values({
-            projectId,
-            itemProposalId,
-            key,
-          }),
-          ctx.db.update(projects).set({
-            itemsTopWeight: {
-              ...(project?.itemsTopWeight ?? {}),
-              [key]: voteSum,
-            },
-          }),
-        ]);
+      if (!needCheckQuorum) {
+        const voteSum = votes.reduce((acc, vote) => {
+          acc += vote.weight ?? 0;
+          return acc;
+        }, 0);
+
+        const itemsTopWeight = project?.itemsTopWeight as
+          | Record<string, number>
+          | undefined;
+        const keyWeight = itemsTopWeight?.[key] ?? 0;
+
+        if (voteSum > keyWeight) {
+          const finalWeight =
+            (targetItemProposal.creator.weight ?? 0) +
+            POC_ITEMS[input.key as keyof typeof POC_ITEMS]
+              .accountability_metric *
+              WEIGHT *
+              (1 - REWARD_PERCENT);
+          await Promise.all([
+            ctx.db.insert(projectLogs).values({
+              projectId,
+              itemProposalId,
+              key,
+            }),
+            ctx.db.update(projects).set({
+              itemsTopWeight: {
+                ...(project?.itemsTopWeight ?? {}),
+                [key]: voteSum,
+              },
+            }),
+            ctx.db
+              .update(profiles)
+              .set({
+                weight: finalWeight,
+              })
+              .where(eq(profiles.userId, targetItemProposal.creator.userId)),
+          ]);
+        }
+      } else {
+        if (votes.length >= QUORUM_AMOUNT) {
+          const voteSum = votes.reduce((acc, vote) => {
+            acc += vote.weight ?? 0;
+            return acc;
+          }, 0);
+
+          const itemsTopWeight = project?.itemsTopWeight as
+            | Record<string, number>
+            | undefined;
+          const keyWeight = itemsTopWeight?.[key] ?? 0;
+
+          if (voteSum > keyWeight) {
+            const finalWeight =
+              (targetItemProposal.creator.weight ?? 0) +
+              POC_ITEMS[input.key as keyof typeof POC_ITEMS]
+                .accountability_metric *
+                WEIGHT;
+            await Promise.all([
+              ctx.db.insert(projectLogs).values({
+                projectId,
+                itemProposalId,
+                key,
+              }),
+              ctx.db.update(projects).set({
+                itemsTopWeight: {
+                  ...(project?.itemsTopWeight ?? {}),
+                  [key]: voteSum,
+                },
+              }),
+              ctx.db
+                .update(profiles)
+                .set({
+                  weight: finalWeight,
+                })
+                .where(eq(profiles.userId, targetItemProposal.creator.userId)),
+            ]);
+          }
+        }
       }
 
       if (voteToSwitch.itemProposalId) {
@@ -598,6 +671,12 @@ export const voteRouter = router({
             acc += vote.weight ?? 0;
             return acc;
           }, 0);
+
+          const itemsTopWeight = project?.itemsTopWeight as
+            | Record<string, number>
+            | undefined;
+          const keyWeight = itemsTopWeight?.[key] ?? 0;
+
           if (voteSum < keyWeight) {
             await ctx.db.update(projectLogs).set({
               isNotLeading: true,
