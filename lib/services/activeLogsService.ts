@@ -6,6 +6,7 @@ export enum LogType {
   PROPOSAL = 'proposal',
   VOTE = 'vote',
   ITEM_PROPOSAL = 'item_proposal',
+  LIKE = 'like',
 }
 
 export enum LogAction {
@@ -86,4 +87,5 @@ export const logUserActivity = {
   proposal: createLogActions(LogType.PROPOSAL),
   vote: createLogActions(LogType.VOTE),
   itemProposal: createLogActions(LogType.ITEM_PROPOSAL),
+  like: createLogActions(LogType.LIKE),
 };
