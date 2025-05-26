@@ -12,20 +12,19 @@ const TabItem: FC<TabItemProps> = ({ tab, isActive, onClick, className }) => {
     <Button
       className={cn(
         'flex-1 px-5 py-2.5 border-none',
-        'hover:bg-[#EBEBEB]',
         isActive
-          ? 'bg-white border border-[rgba(0,0,0,0.1)] rounded-[10px] hover:bg-white'
-          : '',
+          ? 'bg-white border border-[rgba(0,0,0,0.1)] rounded-[10px] hover:bg-white opacity-100'
+          : 'bg-transparent rounded-[5px] opacity-80 hover:bg-transparent',
         className,
       )}
       onPress={onClick}
     >
       <div className="flex items-center gap-2.5">
-        <span className="font-sans text-[14px] font-semibold text-black">
+        <span className="font-open-sans text-[14px] font-semibold leading-[1.36] text-black">
           {tab.label}
         </span>
         {tab.count && (
-          <span className="font-sans text-[14px] font-semibold text-black opacity-30">
+          <span className="font-open-sans text-[14px] font-semibold leading-[1.36] text-black opacity-30">
             {tab.count}
           </span>
         )}

@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   formatProjectValue,
@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
+import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretDownIcon } from '@/components/icons';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { AllItemConfig } from '@/constants/itemConfig';
@@ -37,9 +38,9 @@ const accountabilityMetrics: AccountabilityMetric[] = [
 
 const web3Metrics: Web3Metric[] = [
   { label: 'Privacy:', value: '---' },
-  { label: 'Decentralization:', value: '%', isHighlighted: true },
+  { label: 'Decentralization:', value: '---' },
   { label: 'Security:', value: '---' },
-  { label: 'On-Chain Transparency:', value: '---', isHighlighted: true },
+  { label: 'On-Chain Transparency:', value: '---' },
 ];
 
 const Displayed: FC<DisplayedProps> = ({
@@ -49,6 +50,9 @@ const Displayed: FC<DisplayedProps> = ({
 }) => {
   // 获取项目数据
   const { project } = useProjectDetail();
+
+  // 展开行状态管理
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 根据 itemKey 从项目数据中获取真实数据
   const tableData: TableRowData[] = useMemo(() => {
@@ -106,6 +110,14 @@ const Displayed: FC<DisplayedProps> = ({
     ];
   }, [project, itemKey, itemWeight]);
 
+  // 切换行展开状态
+  const toggleRowExpanded = useCallback((key: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }, []);
+
   // Event handlers
   const handleReferenceClick = useCallback((rowId: string) => {
     console.log('Reference clicked for row:', rowId);
@@ -121,6 +133,8 @@ const Displayed: FC<DisplayedProps> = ({
   const columns = useDisplayedColumns({
     onReferenceClick: handleReferenceClick,
     onExpandClick: handleExpandClick,
+    expandedRows,
+    toggleRowExpanded,
   });
 
   // Create table instance
@@ -186,31 +200,79 @@ const Displayed: FC<DisplayedProps> = ({
           {/* Table Body */}
           <tbody>
             {table.getRowModel().rows.map((row, rowIndex) => (
-              <TableRow
-                key={row.id}
-                isLastRow={rowIndex === table.getRowModel().rows.length - 1}
-              >
-                {row.getVisibleCells().map((cell, cellIndex) => (
-                  <TableCell
-                    key={cell.id}
-                    width={
-                      cell.column.getSize() === 0
-                        ? undefined
-                        : cell.column.getSize()
-                    }
-                    isLast={cellIndex === row.getVisibleCells().length - 1}
-                    className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
-                    minHeight={60}
-                    style={
-                      cell.column.getSize() === 0
-                        ? { width: 'auto' }
-                        : undefined
-                    }
+              <React.Fragment key={row.id}>
+                <TableRow
+                  isLastRow={
+                    rowIndex === table.getRowModel().rows.length - 1 &&
+                    !AllItemConfig[row.original.key as IEssentialItemKey]
+                      ?.showExpand
+                  }
+                  className={cn(
+                    expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                  )}
+                >
+                  {row.getVisibleCells().map((cell, cellIndex) => (
+                    <TableCell
+                      key={cell.id}
+                      width={
+                        cell.column.getSize() === 0
+                          ? undefined
+                          : cell.column.getSize()
+                      }
+                      isLast={cellIndex === row.getVisibleCells().length - 1}
+                      isLastRow={
+                        rowIndex === table.getRowModel().rows.length - 1 &&
+                        !AllItemConfig[row.original.key as IEssentialItemKey]
+                          ?.showExpand
+                      }
+                      className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                      minHeight={60}
+                      style={
+                        cell.column.getSize() === 0
+                          ? { width: 'auto' }
+                          : undefined
+                      }
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+
+                {AllItemConfig[row.original.key as IEssentialItemKey]
+                  ?.showExpand && (
+                  <tr
+                    key={`${row.id}-expanded`}
+                    className={cn(
+                      expandedRows[row.original.key] ? '' : 'hidden',
+                    )}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
+                    <td
+                      colSpan={row.getVisibleCells().length}
+                      className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                        rowIndex === table.getRowModel().rows.length - 1
+                          ? 'border-b-0'
+                          : ''
+                      }`}
+                    >
+                      <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                        <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                          <InputContentRenderer
+                            value={row.original.input}
+                            displayFormType={
+                              AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ].formDisplayType
+                            }
+                          />
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
 
             {/* Edit Reason Row */}
@@ -228,11 +290,14 @@ const Displayed: FC<DisplayedProps> = ({
         </table>
       </div>
       {/* Accountability Metrics Section */}
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 border-t border-black/10 pt-5">
         {/* Accountability Metrics */}
         <div className="flex flex-col gap-2.5">
           <div className="font-mona text-[16px] font-semibold leading-[1.25em] text-black opacity-80">
             Accountability Metrics:
+          </div>
+          <div className="font-open-sans text-[13px] font-normal leading-[1.36em] text-black opacity-50">
+            This item falls under the following criteria,
           </div>
           <div className="flex flex-col gap-2.5">
             {accountabilityMetrics.map((metric) => (
@@ -243,7 +308,7 @@ const Displayed: FC<DisplayedProps> = ({
                   metric.isExpanded && 'bg-[#F5F5F5] px-2.5 py-2',
                 )}
               >
-                <span className="font-sans text-[16px] font-normal leading-[1.6em] text-black">
+                <span className="font-open-sans text-[16px] font-normal leading-[1.6em] text-black">
                   {metric.name}
                 </span>
                 <div className="flex size-[18px] items-center justify-center opacity-50">
@@ -255,23 +320,22 @@ const Displayed: FC<DisplayedProps> = ({
         </div>
 
         {/* Web3 Metrics */}
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 opacity-30">
           <div className="font-mona text-[16px] font-semibold leading-[1.25em] text-black opacity-80">
-            Web3 Metrics
+            Web3 Metrics (coming soon)
           </div>
-          <div className="gap-1.25 flex flex-col">
+          <div className="flex flex-col gap-[5px]">
             {web3Metrics.map((metric) => (
               <div
                 key={metric.label}
                 className={cn(
                   'flex items-center justify-between gap-2.5 px-0 py-0',
-                  metric.isHighlighted && 'bg-[#F5F5F5] px-2.5 py-2',
                 )}
               >
-                <span className="font-sans text-[14px] font-normal leading-[1.43em] text-black">
+                <span className="font-open-sans text-[14px] font-normal leading-[1.43em] text-black">
                   {metric.label}
                 </span>
-                <span className="font-sans text-[14px] font-semibold leading-[1.36em] text-black">
+                <span className="font-open-sans text-[14px] font-semibold leading-[1.36em] text-black">
                   {metric.value}
                 </span>
               </div>

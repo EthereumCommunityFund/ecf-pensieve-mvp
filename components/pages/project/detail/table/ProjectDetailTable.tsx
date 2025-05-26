@@ -6,21 +6,23 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   TableCell,
   TableCellSkeleton,
+  TableFooter,
   TableHeader,
   TableRow,
   TableRowSkeleton,
 } from '@/components/biz/table';
+import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { useColumns } from '@/components/pages/project/detail/table/Column';
-import { IItemCategoryEnum } from '@/types/item';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IEssentialItemKey, IItemCategoryEnum } from '@/types/item';
 
 // Import category components and utilities
-import { TableFooter } from '@/components/biz/table';
 import { TableFieldCategory } from '@/components/pages/project/proposal/detail/constants';
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
 
@@ -103,12 +105,22 @@ const ProjectData: FC<ProjectDataProps> = ({
   });
 
   // 渲染单个分类表格
-  const renderCategoryTable = (
-    table: any,
-    isLoading: boolean = false,
-    category?: IItemCategoryEnum,
-  ) => {
+  const renderCategoryTable = (table: any, isLoading: boolean = false) => {
     const showSkeleton = isLoading || !project;
+    const noDataForThisTable = table.options.data.length === 0;
+
+    const colGroupDefinition = (
+      <colgroup>
+        {table.getAllColumns().map((column: any) => (
+          <col
+            key={column.id}
+            style={{
+              width: `${column.getSize()}px`,
+            }}
+          />
+        ))}
+      </colgroup>
+    );
 
     const tableHeaders = (
       <thead>
@@ -133,10 +145,11 @@ const ProjectData: FC<ProjectDataProps> = ({
       </thead>
     );
 
-    if (showSkeleton) {
+    if (showSkeleton || noDataForThisTable) {
       return (
         <div className="overflow-hidden overflow-x-auto">
           <table className="box-border w-full table-fixed border-separate border-spacing-0">
+            {colGroupDefinition}
             {tableHeaders}
             <tbody>
               {Array.from({ length: 3 }).map((_, rowIndex) => (
@@ -170,25 +183,73 @@ const ProjectData: FC<ProjectDataProps> = ({
     return (
       <div className="overflow-hidden overflow-x-auto">
         <table className="box-border w-full table-fixed border-separate border-spacing-0">
+          {colGroupDefinition}
           {tableHeaders}
           <tbody>
-            {table.getRowModel().rows.map((row: any) => (
-              <TableRow
-                key={row.id}
-                isLastRow={false} // 不再是最后一行，因为有 Footer
-              >
-                {row.getVisibleCells().map((cell: any, cellIndex: number) => (
-                  <TableCell
-                    key={cell.id}
-                    width={cell.column.getSize()}
-                    isLast={cellIndex === row.getVisibleCells().length - 1}
-                    isLastRow={false} // 不再是最后一行，因为有 Footer
-                    minHeight={60}
+            {table.getRowModel().rows.map((row: any, rowIndex: number) => (
+              <React.Fragment key={rowIndex}>
+                <TableRow
+                  isLastRow={
+                    rowIndex === table.getRowModel().rows.length - 1 &&
+                    !AllItemConfig[row.original.key as IEssentialItemKey]
+                      ?.showExpand
+                  }
+                  className={cn(
+                    expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                  )}
+                >
+                  {row.getVisibleCells().map((cell: any, cellIndex: number) => (
+                    <TableCell
+                      key={cell.id}
+                      width={cell.column.getSize()}
+                      isLast={cellIndex === row.getVisibleCells().length - 1}
+                      isLastRow={
+                        rowIndex === table.getRowModel().rows.length - 1 &&
+                        !AllItemConfig[row.original.key as IEssentialItemKey]
+                          ?.showExpand
+                      }
+                      minHeight={60}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+
+                {AllItemConfig[row.original.key as IEssentialItemKey]
+                  ?.showExpand && (
+                  <tr
+                    key={`${row.id}-expanded`}
+                    className={cn(
+                      expandedRows[row.original.key] ? '' : 'hidden',
+                    )}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
+                    <td
+                      colSpan={row.getVisibleCells().length}
+                      className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                        rowIndex === table.getRowModel().rows.length - 1
+                          ? 'border-b-0'
+                          : ''
+                      }`}
+                    >
+                      <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                        <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                          <InputContentRenderer
+                            value={row.original.input}
+                            displayFormType={
+                              AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ].formDisplayType
+                            }
+                          />
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
             <TableFooter colSpan={table.getAllColumns().length}>
               footer
@@ -254,7 +315,6 @@ const ProjectData: FC<ProjectDataProps> = ({
                         ? technicalsTable
                         : organizationTable,
                   isProposalsLoading,
-                  category,
                 )}
               </div>
             </div>

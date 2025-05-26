@@ -42,3 +42,22 @@ export interface Web3Metric {
   value: string;
   isHighlighted?: boolean;
 }
+
+export interface ConsensusLogRowData {
+  id: string;
+  dateTime: {
+    date: string;
+    time: string;
+  };
+  input: string;
+  leadBy: {
+    name: string;
+    date: string;
+    avatar?: string;
+  };
+  weight: {
+    current: string;
+    change: string;
+  };
+  isExpanded?: boolean;
+}

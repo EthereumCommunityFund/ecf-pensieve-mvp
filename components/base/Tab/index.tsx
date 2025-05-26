@@ -8,7 +8,12 @@ import { TabProps } from './types';
 
 const Tab: FC<TabProps> = ({ tabs, activeTab, onTabChange, className }) => {
   return (
-    <div className={cn('flex rounded-[10px] bg-[#EBEBEB] p-[5px]', className)}>
+    <div
+      className={cn(
+        'flex rounded-[10px] bg-[#F0F0F0] border border-[rgba(0,0,0,0.1)] p-[5px]',
+        className,
+      )}
+    >
       {tabs.map((tab) => (
         <TabItem
           key={tab.key}

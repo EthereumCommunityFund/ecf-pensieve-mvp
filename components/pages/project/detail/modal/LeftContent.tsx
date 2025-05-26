@@ -5,7 +5,9 @@ import { FC, useState } from 'react';
 import Tab from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
 
+import ConsensusLog from './ConsensusLog';
 import Displayed from './Displayed';
+import SubmissionQueue from './SubmissionQueue';
 
 interface LeftContentProps {
   itemName?: string;
@@ -38,15 +40,19 @@ const LeftContent: FC<LeftContentProps> = ({
         );
       case 'submission-queue':
         return (
-          <div className="flex h-40 items-center justify-center text-gray-500">
-            Submission Queue content coming soon...
-          </div>
+          <SubmissionQueue
+            itemName={itemName}
+            itemWeight={itemWeight}
+            itemKey={itemKey}
+          />
         );
       case 'consensus-log':
         return (
-          <div className="flex h-40 items-center justify-center text-gray-500">
-            Consensus Log content coming soon...
-          </div>
+          <ConsensusLog
+            itemName={itemName}
+            itemWeight={itemWeight}
+            itemKey={itemKey}
+          />
         );
       default:
         return (
@@ -63,7 +69,6 @@ const LeftContent: FC<LeftContentProps> = ({
     <div className="flex flex-col gap-5 p-5">
       {/* Tab Navigation */}
       <Tab tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-
       {/* Tab Content */}
       {renderTabContent()}
     </div>

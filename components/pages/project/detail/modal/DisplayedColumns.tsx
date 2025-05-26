@@ -11,11 +11,15 @@ import { TableRowData } from './types';
 interface UseDisplayedColumnsProps {
   onReferenceClick?: (rowId: string) => void;
   onExpandClick?: (rowId: string) => void;
+  expandedRows?: Record<string, boolean>;
+  toggleRowExpanded?: (key: string) => void;
 }
 
 export const useDisplayedColumns = ({
   onReferenceClick,
   onExpandClick,
+  expandedRows = {},
+  toggleRowExpanded,
 }: UseDisplayedColumnsProps = {}) => {
   const columnHelper = useMemo(() => createColumnHelper<TableRowData>(), []);
 
@@ -27,11 +31,17 @@ export const useDisplayedColumns = ({
       size: 480,
       cell: (info) => {
         const item = info.row.original;
-        // const rowIsExpandable = isRowExpandable(item.key);
-        // const isRowExpanded = expandedRows[item.key];
+        const isRowExpanded = expandedRows[item.key];
 
         return (
-          <InputCol.Cell value={info.getValue()} itemKey={item.key as any} />
+          <InputCol.Cell
+            value={info.getValue()}
+            itemKey={item.key as any}
+            isExpanded={isRowExpanded}
+            onToggleExpand={
+              toggleRowExpanded ? () => toggleRowExpanded(item.key) : undefined
+            }
+          />
         );
       },
     });
@@ -108,5 +118,11 @@ export const useDisplayedColumns = ({
     });
 
     return [inputColumn, referenceColumn, submitterColumn, supportColumn];
-  }, [columnHelper, onReferenceClick, onExpandClick]);
+  }, [
+    columnHelper,
+    onReferenceClick,
+    onExpandClick,
+    expandedRows,
+    toggleRowExpanded,
+  ]);
 };

@@ -16,3 +16,10 @@ export type IProposalWithVotes = IProposal & {
 export type IProject = RouterOutputs['project']['getProjects']['items'][0] & {
   proposals: IProposalWithVotes[];
 };
+
+export type ILeadingProposals =
+  RouterOutputs['projectLog']['getLeadingProposalsByProjectId'];
+export type IProposalsByProjectIdAndKey =
+  RouterOutputs['projectLog']['getProposalsByProjectIdAndKey'];
+export type ILeadingProposalHistory =
+  RouterOutputs['projectLog']['getLeadingProposalHistoryByProjectIdAndKey'];

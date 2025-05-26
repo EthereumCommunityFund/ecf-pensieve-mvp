@@ -4,6 +4,7 @@ export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';
 export { default as CaretDownIcon } from './CaretDown';
 export { default as CaretUpIcon } from './CaretUp';
+export { default as CaretUpDownIcon } from './CaretUpDown';
 export { default as ChartBarIcon } from './ChartBar';
 export { default as CheckIcon } from './Check';
 export { default as CheckCircleIcon } from './CheckCircle';

@@ -158,7 +158,7 @@ const ProjectPage = () => {
       {activeTab === 'profile' && <Profile projectId={Number(projectId)} />}
       {activeTab === 'review' && <Review projectId={Number(projectId)} />}
       <SwitchVoteModal
-        isOpen={isSwitchVoteModalOpen}
+        isOpen={isSwitchVoteModalOpen && !!selectedItemKey}
         onClose={handleCloseSwitchVoteModal}
         onSubmitEntry={() => {
           // TODO: 实现提交逻辑
@@ -166,7 +166,7 @@ const ProjectPage = () => {
           handleCloseSwitchVoteModal();
         }}
         itemName={selectedItemKey || 'Unknown Item'}
-        itemKey={selectedItemKey || undefined}
+        itemKey={selectedItemKey || ''}
       />
     </div>
   );

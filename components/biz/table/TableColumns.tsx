@@ -165,7 +165,7 @@ const InputCell = ({
         )}
       </div>
 
-      {finalIsExpandable && onToggleExpand && (
+      {finalIsExpandable && (
         <Button
           isIconOnly
           className={cn(

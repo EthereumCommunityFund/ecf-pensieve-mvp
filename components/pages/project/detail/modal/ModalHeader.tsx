@@ -40,13 +40,13 @@ const ModalHeader: FC<ModalHeaderProps> = ({
 
         {/* Breadcrumbs */}
         <div className="flex items-center gap-[5px]">
-          <span className="font-sans text-[16px] font-semibold leading-[1.6] text-black opacity-50">
+          <span className="font-open-sans text-[16px] font-semibold leading-[1.6] text-black opacity-50">
             {breadcrumbs.section}
           </span>
-          <span className="font-sans text-[16px] font-semibold leading-[1.6] text-black opacity-50">
+          <span className="font-open-sans text-[16px] font-semibold leading-[1.6] text-black opacity-50">
             /
           </span>
-          <span className="font-sans text-[16px] font-semibold leading-[1.6] text-black">
+          <span className="font-open-sans text-[16px] font-semibold leading-[1.6] text-black">
             {breadcrumbs.item}
           </span>
         </div>

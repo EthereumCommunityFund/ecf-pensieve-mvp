@@ -57,11 +57,13 @@ const MyComponent = () => {
 
 ## Design Specifications
 
-- **Container**: `#EBEBEB` background with `10px` border radius and `5px` padding
-- **Active Tab**: White background with `rgba(0,0,0,0.1)` border and `10px` border radius
-- **Inactive Tab**: `rgba(0,0,0,0.05)` background with `5px` border radius
-- **Typography**: `14px` font size, `600` font weight, Open Sans font family
+- **Container**: `#F0F0F0` background with `rgba(0,0,0,0.1)` border, `10px` border radius and `5px` padding
+- **Active Tab**: White background with `rgba(0,0,0,0.1)` border and `10px` border radius, `100%` opacity
+- **Inactive Tab**: `rgba(0,0,0,0.05)` background with `5px` border radius and `80%` opacity
+- **Typography**: `14px` font size, `600` font weight, Open Sans font family, `1.36` line height
 - **Count Badge**: `30%` opacity for count numbers
+- **Padding**: `10px 20px` for tab items
+- **Gap**: `10px` between label and count
 
 ## File Structure
 

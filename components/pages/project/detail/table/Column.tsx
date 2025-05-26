@@ -124,7 +124,11 @@ export const useColumns = ({
           <ActionsCol.Cell
             onView={() => {
               // TODO: 实现查看逻辑
-              console.log('View item:', item.key);
+              if (onOpenSwitchVoteModal) {
+                onOpenSwitchVoteModal(item.key);
+              } else {
+                console.log('Menu for item:', item.key);
+              }
             }}
             onMenu={() => {
               if (onOpenSwitchVoteModal) {
