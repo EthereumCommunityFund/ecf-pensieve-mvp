@@ -325,6 +325,7 @@ export const SupportColumnExample: Story = {
               onVoteAction={async () => {
                 alert('Vote action triggered');
               }}
+              isProposalCreator={false}
               isLast
               isLastRow
             />

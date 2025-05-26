@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { cn } from '@heroui/react';
+import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
@@ -254,6 +254,7 @@ export interface SupportColCellProps extends BaseCellProps {
   votedMemberCount: number;
   isUserVoted: boolean;
   isLoading: boolean;
+  isProposalCreator: boolean;
   onVoteAction: () => Promise<void>;
 }
 
@@ -279,6 +280,7 @@ const SupportCell = ({
   votedMemberCount,
   isUserVoted,
   isLoading,
+  isProposalCreator,
   onVoteAction,
 }: SupportColCellProps) => {
   return (
@@ -294,6 +296,7 @@ const SupportCell = ({
       proposalItem={proposalItem}
       isLoading={isLoading}
       isUserVoted={isUserVoted}
+      isProposalCreator={isProposalCreator}
       votedMemberCount={votedMemberCount}
       onAction={onVoteAction}
     />
