@@ -18,7 +18,10 @@ import {
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
-import { addRewardNotification } from '@/lib/services/notiifcation';
+import {
+  addRewardNotification,
+  createRewardNotification,
+} from '@/lib/services/notification';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -416,13 +419,14 @@ export const voteRouter = router({
               .where(eq(profiles.userId, itemProposal.creator.userId)),
           ]);
 
-          addRewardNotification({
-            userId: ctx.user.id,
-            projectId: itemProposal.projectId,
-            proposalId: itemProposal.id,
-            reward,
-            type: 'proposalPass',
-          });
+          await addRewardNotification(
+            createRewardNotification.proposalPass(
+              ctx.user.id,
+              itemProposal.projectId,
+              itemProposal.id,
+              reward,
+            ),
+          );
         }
       } else {
         const votes = await ctx.db.query.voteRecords.findMany({
@@ -466,13 +470,14 @@ export const voteRouter = router({
                 })
                 .where(eq(profiles.userId, itemProposal.creator.userId)),
             ]);
-            addRewardNotification({
-              userId: ctx.user.id,
-              projectId: itemProposal.projectId,
-              proposalId: itemProposal.id,
-              reward,
-              type: 'proposalPass',
-            });
+            await addRewardNotification(
+              createRewardNotification.proposalPass(
+                ctx.user.id,
+                itemProposal.projectId,
+                itemProposal.id,
+                reward,
+              ),
+            );
           }
         }
       }
@@ -618,13 +623,14 @@ export const voteRouter = router({
               })
               .where(eq(profiles.userId, targetItemProposal.creator.userId)),
           ]);
-          addRewardNotification({
-            userId: ctx.user.id,
-            projectId,
-            proposalId: targetItemProposal.id,
-            reward,
-            type: 'proposalPass',
-          });
+          await addRewardNotification(
+            createRewardNotification.proposalPass(
+              ctx.user.id,
+              targetItemProposal.projectId,
+              targetItemProposal.id,
+              reward,
+            ),
+          );
         }
       } else {
         if (votes.length >= QUORUM_AMOUNT) {
@@ -663,13 +669,14 @@ export const voteRouter = router({
                 })
                 .where(eq(profiles.userId, targetItemProposal.creator.userId)),
             ]);
-            addRewardNotification({
-              userId: ctx.user.id,
-              projectId,
-              proposalId: targetItemProposal.id,
-              reward,
-              type: 'proposalPass',
-            });
+            await addRewardNotification(
+              createRewardNotification.proposalPass(
+                ctx.user.id,
+                targetItemProposal.projectId,
+                targetItemProposal.id,
+                reward,
+              ),
+            );
           }
         }
       }
