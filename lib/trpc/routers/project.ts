@@ -13,7 +13,10 @@ import { projects, voteRecords } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
-import { addRewardNotification } from '@/lib/services/notiifcation';
+import {
+  addRewardNotification,
+  createRewardNotification,
+} from '@/lib/services/notification';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
@@ -112,13 +115,15 @@ export const projectRouter = router({
             projectId: project.id,
           });
 
-          addRewardNotification({
-            userId: ctx.user.id,
-            projectId: project.id,
-            proposalId: proposal.id,
-            reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
-            type: 'createProposal',
-          });
+          await addRewardNotification(
+            createRewardNotification.createProposal(
+              ctx.user.id,
+              project.id,
+              proposal.id,
+              ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+            ),
+            tx,
+          );
 
           return project;
         } catch (error) {
@@ -333,13 +338,15 @@ export const projectRouter = router({
                 tx,
               );
 
-              addRewardNotification({
-                userId: proposalCreator,
-                projectId: projectId,
-                proposalId: proposalId,
-                reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
-                type: 'proposalPass',
-              });
+              await addRewardNotification(
+                createRewardNotification.proposalPass(
+                  proposalCreator,
+                  projectId,
+                  proposalId,
+                  ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+                ),
+                tx,
+              );
             }
 
             processedCount++;

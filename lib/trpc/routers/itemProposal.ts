@@ -11,7 +11,10 @@ import {
 } from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
-import { addRewardNotification } from '@/lib/services/notiifcation';
+import {
+  addRewardNotification,
+  createRewardNotification,
+} from '@/lib/services/notification';
 
 import { protectedProcedure, router } from '../server';
 
@@ -93,13 +96,14 @@ export const itemProposalRouter = router({
             })
             .where(eq(profiles.userId, ctx.user.id));
 
-          addRewardNotification({
-            userId: ctx.user.id,
-            projectId: input.projectId,
-            proposalId: itemProposal.id,
-            reward,
-            type: 'createProposal',
-          });
+          await addRewardNotification(
+            createRewardNotification.createProposal(
+              ctx.user.id,
+              input.projectId,
+              itemProposal.id,
+              reward,
+            ),
+          );
 
           if (!voteRecord) {
             const [vote] = await ctx.db
