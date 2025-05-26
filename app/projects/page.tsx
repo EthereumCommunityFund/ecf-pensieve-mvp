@@ -2,7 +2,9 @@
 
 import { Image } from '@heroui/react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
+import { devLog } from '@/utils/devLog';
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import ProjectCard, {
@@ -38,6 +40,12 @@ const ProjectsPage = () => {
   };
 
   const allProjects = data?.pages.flatMap((page) => page.items) || [];
+
+  useEffect(() => {
+    if (allProjects.length > 0) {
+      devLog('allProjects', allProjects);
+    }
+  }, [allProjects]);
 
   return (
     <div className="pb-10">

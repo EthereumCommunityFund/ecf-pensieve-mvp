@@ -5,8 +5,10 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 
 import ECFTypography from '@/components/base/typography';
+import { useAuth } from '@/context/AuthContext';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
+import ProposalVoteUtils from '@/utils/proposal';
 
 export function ProjectCardSkeleton() {
   return (
@@ -41,6 +43,18 @@ interface IProjectCardProps {
 }
 
 const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
+  const { profile } = useAuth();
+
+  const { leadingProposalId, leadingProposalResult } =
+    ProposalVoteUtils.getVoteResultOfProject({
+      projectId: project.id,
+      proposals: project.proposals || [],
+      votesOfProject:
+        project.proposals?.flatMap((proposal) => proposal.voteRecords || []) ||
+        [],
+      userId: profile?.userId,
+    });
+
   return (
     <div
       className={cn(
@@ -127,11 +141,16 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
               height={24}
             />
           </div>
+          {/* TODO： need confirm the number */}
           <p className="font-saria text-[13px] font-semibold leading-[20px] text-black opacity-60">
-            {formatNumber(0)}
+            {formatNumber(
+              leadingProposalResult?.totalSupportedUserWeightOfProposal || 0,
+            )}
           </p>
           <p className="font-saria text-[11px] font-semibold leading-[17px] text-[rgba(0,0,0,0.7)] opacity-60">
-            {formatNumber(0)}
+            {formatNumber(
+              leadingProposalResult?.totalValidQuorumOfProposal || 0,
+            )}
           </p>
         </div>
       </Link>
