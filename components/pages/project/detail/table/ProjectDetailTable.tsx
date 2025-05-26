@@ -20,13 +20,25 @@ import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { useColumns } from '@/components/pages/project/detail/table/Column';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey, IItemCategoryEnum } from '@/types/item';
+import { IEssentialItemKey, IItemSubCategoryEnum } from '@/types/item';
 
 // Import category components and utilities
 import { TableFieldCategory } from '@/components/pages/project/proposal/detail/constants';
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
 
+import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
+
 import { prepareProjectTableData } from './utils';
+
+const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
+  [IItemSubCategoryEnum.Organization]: true,
+  [IItemSubCategoryEnum.Team]: true,
+  [IItemSubCategoryEnum.BasicProfile]: true,
+  [IItemSubCategoryEnum.Development]: true,
+  [IItemSubCategoryEnum.Finances]: true,
+  [IItemSubCategoryEnum.Token]: true,
+  [IItemSubCategoryEnum.Governance]: true,
+};
 
 interface ProjectDataProps {
   projectId: number;
@@ -44,12 +56,7 @@ const ProjectData: FC<ProjectDataProps> = ({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 分类展开状态管理
-  const [expanded, setExpanded] = useState<Record<IItemCategoryEnum, boolean>>({
-    [IItemCategoryEnum.Basics]: true,
-    [IItemCategoryEnum.Technicals]: true,
-    [IItemCategoryEnum.Organization]: true,
-    [IItemCategoryEnum.Financial]: true,
-  });
+  const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
@@ -60,7 +67,7 @@ const ProjectData: FC<ProjectDataProps> = ({
   }, []);
 
   // 切换分类展开状态
-  const toggleCategory = useCallback((category: IItemCategoryEnum) => {
+  const toggleCategory = useCallback((category: IItemSubCategoryEnum) => {
     setExpanded((prev) => {
       const newExpanded = { ...prev };
       newExpanded[category] = !newExpanded[category];
@@ -71,7 +78,16 @@ const ProjectData: FC<ProjectDataProps> = ({
   // 创建分类表格数据
   const tableData = useMemo(() => prepareProjectTableData(project), [project]);
 
-  // 使用抽离出来的 columns
+  const coreTableMeta = useMemo(
+    () => ({
+      expandedRows,
+      toggleRowExpanded,
+      project,
+    }),
+    [expandedRows, toggleRowExpanded, project],
+  );
+
+  // TODO：可变数据优先用coreTableMeta来传递，避免columns重新创建与重新渲染table
   const columns = useColumns({
     expandedRows,
     toggleRowExpanded,
@@ -79,30 +95,74 @@ const ProjectData: FC<ProjectDataProps> = ({
     onOpenSwitchVoteModal,
   });
 
-  // 创建分类表格实例
-  const basicsTable = useReactTable({
-    data: tableData[IItemCategoryEnum.Basics],
+  const basicProfileTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.BasicProfile],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
-  const technicalsTable = useReactTable({
-    data: tableData[IItemCategoryEnum.Technicals],
+  const technicalDevelopmentTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Development],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
   const organizationTable = useReactTable({
-    data: tableData[IItemCategoryEnum.Organization],
+    data: tableData[IItemSubCategoryEnum.Organization],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
+  });
+
+  const teamTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Team],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
   const financialTable = useReactTable({
-    data: tableData[IItemCategoryEnum.Financial],
+    data: tableData[IItemSubCategoryEnum.Finances],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
+
+  const tokenTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Token],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
+  });
+
+  const governanceTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Governance],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
+  });
+
+  const tables = useMemo(() => {
+    return {
+      [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
+      [IItemSubCategoryEnum.Development]: technicalDevelopmentTable,
+      [IItemSubCategoryEnum.Organization]: organizationTable,
+      [IItemSubCategoryEnum.Team]: teamTable,
+      [IItemSubCategoryEnum.Finances]: financialTable,
+      [IItemSubCategoryEnum.Token]: tokenTable,
+      [IItemSubCategoryEnum.Governance]: governanceTable,
+    };
+  }, [
+    basicProfileTable,
+    technicalDevelopmentTable,
+    organizationTable,
+    teamTable,
+    financialTable,
+    tokenTable,
+    governanceTable,
+  ]);
 
   // 渲染单个分类表格
   const renderCategoryTable = (table: any, isLoading: boolean = false) => {
@@ -293,30 +353,29 @@ const ProjectData: FC<ProjectDataProps> = ({
 
         {/* 分类表格 */}
         <div className="flex flex-col gap-[20px]">
-          {Object.values(IItemCategoryEnum).map((category) => (
-            <div
-              key={category}
-              className="overflow-hidden rounded-[10px] bg-white"
-            >
-              <CategoryHeader
-                title={TableFieldCategory[category].title}
-                description={TableFieldCategory[category].description}
-                category={category}
-                isExpanded={expanded[category]}
-                onToggle={() => toggleCategory(category)}
+          {TableFieldCategory.map((cat) => (
+            <div key={cat.key} className="flex flex-col gap-[20px]">
+              <TableSectionHeader
+                title={cat.title}
+                description={cat.description}
               />
-              <div style={getAnimationStyle(expanded[category])}>
-                {renderCategoryTable(
-                  category === IItemCategoryEnum.Basics
-                    ? basicsTable
-                    : category === IItemCategoryEnum.Financial
-                      ? financialTable
-                      : category === IItemCategoryEnum.Technicals
-                        ? technicalsTable
-                        : organizationTable,
-                  isProposalsLoading,
-                )}
-              </div>
+              {cat.subCategories.map((subCat) => (
+                <div key={subCat.key}>
+                  <CategoryHeader
+                    title={subCat.title}
+                    description={subCat.description}
+                    category={subCat.key}
+                    isExpanded={expanded[subCat.key]}
+                    onToggle={() => toggleCategory(subCat.key)}
+                  />
+                  <div style={getAnimationStyle(expanded[subCat.key])}>
+                    {renderCategoryTable(
+                      tables[subCat.key],
+                      isProposalsLoading,
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
