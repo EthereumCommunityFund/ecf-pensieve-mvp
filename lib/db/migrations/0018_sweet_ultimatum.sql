@@ -1,0 +1,1 @@
+ALTER TABLE "item_proposals" ALTER COLUMN "ref" DROP NOT NULL;

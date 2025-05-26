@@ -1,7 +1,6 @@
 import {
   bigserial,
   boolean,
-  doublePrecision,
   index,
   jsonb,
   pgTable,
@@ -51,12 +50,17 @@ export const projects = pgTable(
       .references(() => profiles.userId),
     refs: jsonb('refs').array(),
     isPublished: boolean('is_published').notNull().default(false),
-    support: doublePrecision('support').default(0),
+    itemsTopWeight: jsonb('items_top_weight').notNull().default('{}'),
   },
   (table) => {
     return {
       creatorIdx: index('projects_creator_idx').on(table.creator),
       isPublishedIdx: index('projects_is_published_idx').on(table.isPublished),
+      paginationIdx: index('projects_pagination_idx').on(
+        table.isPublished,
+        table.id.desc(),
+      ),
+      createdAtIdx: index('projects_created_at_idx').on(table.createdAt.desc()),
     };
   },
 );

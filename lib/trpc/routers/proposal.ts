@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { projects, proposals } from '@/lib/db/schema';
+import { profiles, projects, proposals, voteRecords } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
@@ -29,9 +29,14 @@ export const proposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const project = await ctx.db.query.projects.findFirst({
-        where: eq(projects.id, input.projectId),
-      });
+      const [project, userProfile] = await Promise.all([
+        ctx.db.query.projects.findFirst({
+          where: eq(projects.id, input.projectId),
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+      ]);
 
       if (!project) {
         throw new TRPCError({
@@ -43,7 +48,9 @@ export const proposalRouter = router({
       const [proposal] = await ctx.db
         .insert(proposals)
         .values({
-          ...input,
+          projectId: input.projectId,
+          items: input.items,
+          refs: input.refs,
           creator: ctx.user.id,
         })
         .returning();
@@ -54,6 +61,31 @@ export const proposalRouter = router({
           message: 'Proposal not found',
         });
       }
+
+      const votePromises = input.items.map(async (item) => {
+        const [vote] = await ctx.db
+          .insert(voteRecords)
+          .values({
+            key: item.key,
+            proposalId: proposal.id,
+            creator: ctx.user.id,
+            weight: userProfile?.weight ?? 0,
+            projectId: input.projectId,
+          })
+          .returning();
+
+        logUserActivity.vote.create({
+          userId: ctx.user.id,
+          targetId: vote.id,
+          projectId: input.projectId,
+          items: [{ field: item.key }],
+          proposalCreatorId: ctx.user.id,
+        });
+
+        return vote;
+      });
+
+      await Promise.all(votePromises);
 
       logUserActivity.proposal.create({
         userId: ctx.user.id,

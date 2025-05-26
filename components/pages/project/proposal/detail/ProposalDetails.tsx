@@ -76,6 +76,12 @@ const ProposalDetails = ({
 
   const isOverallLoading = !proposal;
 
+  const isProposalCreator = useMemo(() => {
+    if (!proposal || !proposal.creator) return false;
+    if (!profile || !profile.userId) return false;
+    return proposal.creator.userId === profile.userId;
+  }, [proposal, profile]);
+
   const {
     userVotesOfProposalMap,
     isFetchVoteInfoLoading,
@@ -101,6 +107,12 @@ const ProposalDetails = ({
         showAuthPrompt();
         return;
       }
+      if (isProposalCreator) {
+        console.warn(
+          'is proposal creator, cannot vote/switch vote/cancel vote',
+        );
+        return;
+      }
       await handleVoteAction(item, doNotShowCancelModal, {
         setCurrentVoteItem,
         setIsCancelModalOpen,
@@ -108,7 +120,13 @@ const ProposalDetails = ({
         setSourceProposal,
       });
     },
-    [profile, handleVoteAction, doNotShowCancelModal, showAuthPrompt],
+    [
+      profile,
+      handleVoteAction,
+      doNotShowCancelModal,
+      showAuthPrompt,
+      isProposalCreator,
+    ],
   );
 
   const handleCancelVoteConfirm = useCallback(async () => {
@@ -151,8 +169,8 @@ const ProposalDetails = ({
   }, []);
 
   const columns = useMemo(() => {
-    return createTableColumns({ isPageExpanded });
-  }, [isPageExpanded]);
+    return createTableColumns({ isPageExpanded, isProposalCreator });
+  }, [isPageExpanded, isProposalCreator]);
 
   const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
 
@@ -164,6 +182,7 @@ const ProposalDetails = ({
       project,
       proposal,
       onVoteAction,
+      isProposalCreator,
       isFetchVoteInfoLoading,
       isVoteActionPending,
       inActionKeys,
@@ -176,6 +195,7 @@ const ProposalDetails = ({
       project,
       proposal,
       onVoteAction,
+      isProposalCreator,
       isFetchVoteInfoLoading,
       isVoteActionPending,
       inActionKeys,

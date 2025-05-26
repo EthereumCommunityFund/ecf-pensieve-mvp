@@ -98,10 +98,12 @@ const ProposalVoteUtils = {
   groupVotesByProposalId: (votes: IVote[] = []): Record<number, IVote[]> => {
     return votes.reduce(
       (acc, vote) => {
-        if (!acc[vote.proposalId]) {
+        if (vote.proposalId !== null && !acc[vote.proposalId]) {
           acc[vote.proposalId] = [];
         }
-        acc[vote.proposalId].push(vote);
+        if (vote.proposalId !== null) {
+          acc[vote.proposalId].push(vote);
+        }
         return acc;
       },
       {} as Record<number, IVote[]>,
