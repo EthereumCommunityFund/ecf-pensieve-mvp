@@ -135,14 +135,12 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const [targetProposal, userProfile] = await Promise.all([
-        ctx.db.query.proposals.findFirst({
-          where: eq(proposals.id, proposalId),
-        }),
-        ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        }),
-      ]);
+      const targetProposal = await ctx.db.query.proposals.findFirst({
+        where: eq(proposals.id, proposalId),
+        with: {
+          project: true,
+        },
+      });
 
       if (!targetProposal) {
         throw new TRPCError({
@@ -151,24 +149,35 @@ export const voteRouter = router({
         });
       }
 
-      const project = await ctx.db.query.projects.findFirst({
-        where: eq(projects.id, targetProposal.projectId),
-      });
+      if (!targetProposal.project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Associated project not found',
+        });
+      }
 
-      if (project?.isPublished) {
+      if (targetProposal.project.isPublished) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Cannot switch votes on proposals for published projects',
         });
       }
 
-      const voteToSwitch = await ctx.db.query.voteRecords.findFirst({
-        where: and(
-          eq(voteRecords.creator, ctx.user.id),
-          eq(voteRecords.key, key),
-          eq(voteRecords.projectId, targetProposal.projectId),
-        ),
-      });
+      const [userProfile, voteToSwitch] = await Promise.all([
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+        ctx.db.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.key, key),
+            eq(voteRecords.projectId, targetProposal.projectId),
+          ),
+          with: {
+            proposal: true,
+          },
+        }),
+      ]);
 
       if (!voteToSwitch) {
         throw new TRPCError({
@@ -177,7 +186,10 @@ export const voteRouter = router({
         });
       }
 
-      if (voteToSwitch.creator === ctx.user.id) {
+      if (
+        voteToSwitch.proposal &&
+        voteToSwitch.proposal.creator === ctx.user.id
+      ) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Cannot switch vote from your own proposal',
