@@ -28,7 +28,10 @@ import { devLog } from '@/utils/devLog';
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
 import FormActions from './FormActions';
-import StepNavigation, { StepHeader } from './StepNavigation';
+import StepNavigation, {
+  IItemCategoryEnumWithoutGovernance,
+  StepHeader,
+} from './StepNavigation';
 import StepWrapper from './StepWrapper';
 import BasicsStepForm from './steps/BasicsStepForm';
 import FinancialStepForm from './steps/FinancialStepForm';
@@ -46,14 +49,17 @@ import { projectSchema } from './validation';
 
 dayjs.extend(utc);
 
-const DEFAULT_STEP_STATUSES: Record<IItemCategoryEnum, IStepStatus> = {
+const DEFAULT_STEP_STATUSES: Record<
+  IItemCategoryEnumWithoutGovernance,
+  IStepStatus
+> = {
   [IItemCategoryEnum.Basics]: 'Active',
   [IItemCategoryEnum.Technicals]: 'Inactive',
   [IItemCategoryEnum.Organization]: 'Inactive',
   [IItemCategoryEnum.Financial]: 'Inactive',
 };
 
-const STEPS_ORDER = [
+const STEPS_ORDER: IItemCategoryEnumWithoutGovernance[] = [
   IItemCategoryEnum.Basics,
   IItemCategoryEnum.Technicals,
   IItemCategoryEnum.Organization,
@@ -91,11 +97,10 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
   const isProjectType = formType === IFormTypeEnum.Project;
 
-  const [currentStep, setCurrentStep] = useState<IItemCategoryEnum>(
-    IItemCategoryEnum.Basics,
-  );
+  const [currentStep, setCurrentStep] =
+    useState<IItemCategoryEnumWithoutGovernance>(IItemCategoryEnum.Basics);
   const [stepStatuses, setStepStatuses] = useState<
-    Record<IItemCategoryEnum, IStepStatus>
+    Record<IItemCategoryEnumWithoutGovernance, IStepStatus>
   >(DEFAULT_STEP_STATUSES);
 
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
@@ -322,8 +327,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
   const updateStepStatuses = useCallback(
     (
-      currentStep: IItemCategoryEnum,
-      targetStep: IItemCategoryEnum,
+      currentStep: IItemCategoryEnumWithoutGovernance,
+      targetStep: IItemCategoryEnumWithoutGovernance,
       isMovingForward: boolean,
     ) => {
       setStepStatuses((prev) => {
@@ -435,7 +440,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   }, [currentStep, stepStatuses, validateCurrentStep, updateStepStatuses]);
 
   const handleGoToStep = useCallback(
-    async (targetStep: IItemCategoryEnum) => {
+    async (targetStep: IItemCategoryEnumWithoutGovernance) => {
       if (targetStep === currentStep) {
         return;
       }

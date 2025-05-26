@@ -9,6 +9,7 @@ import {
   ITechnicalsKey,
 } from '@/types/item';
 
+import { IItemCategoryEnumWithoutGovernance } from './StepNavigation';
 import { IProjectFormData, IProjectStepFieldsMap } from './types';
 
 export const DefaultFieldApplicabilityMap = Object.fromEntries(
@@ -47,10 +48,11 @@ export const CreateProjectStepFields: IProjectStepFieldsMap = {
     fundingStatus: true,
     tokenContract: true,
   },
-  [IItemCategoryEnum.Governance]: {},
 };
 
-export const getCreateProjectStepFields = <T extends IItemCategoryEnum>(
+export const getCreateProjectStepFields = <
+  T extends IItemCategoryEnumWithoutGovernance,
+>(
   step: T,
 ): string[] => {
   return Object.keys(CreateProjectStepFields[step]);
