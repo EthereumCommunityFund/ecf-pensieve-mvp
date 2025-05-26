@@ -3,6 +3,7 @@ import {
   boolean,
   doublePrecision,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -53,6 +54,7 @@ export const projects = pgTable(
     isPublished: boolean('is_published').notNull().default(false),
     itemsTopWeight: jsonb('items_top_weight').notNull().default('{}'),
     support: doublePrecision('support').notNull().default(0),
+    likeCount: integer('like_count').notNull().default(0),
   },
   (table) => {
     return {
