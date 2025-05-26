@@ -3,18 +3,14 @@
 import { IRef } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IProposal } from '@/types';
-import { IEssentialItemKey, IItemSubCategoryEnum } from '@/types/item';
+import {
+  IEssentialItemKey,
+  IItemSubCategoryEnum,
+  IProposalItem,
+} from '@/types/item';
 
 import { TableFieldCategory } from '../constants';
 import { ITableProposalItem } from '../ProposalDetails';
-
-// Local interface as a temporary solution if IProposalItem is not exported from @/types
-interface ProposalItem {
-  key: string;
-  value: any; // Or a more specific type for value if known
-}
-
-export const SKELETON_INPUT_VALUE = 'SKELETON_LOADING'; // Export for use in rendering components
 
 export const prepareTableData = (
   proposal?: IProposal,
@@ -30,12 +26,12 @@ export const prepareTableData = (
       {} as Record<IItemSubCategoryEnum, ITableProposalItem[]>,
     );
 
-  const proposalItemMap = ((proposal?.items || []) as ProposalItem[]).reduce(
+  const proposalItemMap = ((proposal?.items || []) as IProposalItem[]).reduce(
     (acc, item) => {
       acc[item.key] = item;
       return acc;
     },
-    {} as Record<string, ProposalItem>,
+    {} as Record<string, IProposalItem>,
   );
 
   TableFieldCategory.forEach((categoryConfig) => {
@@ -60,8 +56,6 @@ export const prepareTableData = (
       });
     });
   });
-
-  console.log('prepareTableData', result);
 
   return result;
 };
