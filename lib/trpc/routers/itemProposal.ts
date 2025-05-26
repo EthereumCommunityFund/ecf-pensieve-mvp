@@ -2,19 +2,22 @@ import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { ESSENTIAL_ITEM_LIST, REWARD_PERCENT, WEIGHT } from '@/lib/constants';
 import {
   itemProposals,
   profiles,
   projects,
   voteRecords,
 } from '@/lib/db/schema';
-import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
   addRewardNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import {
+  calculateReward,
+  handleVoteRecord,
+  isEssentialItem,
+} from '@/lib/utils/itemProposalUtils';
 
 import { protectedProcedure, router } from '../server';
 
@@ -40,121 +43,84 @@ export const itemProposalRouter = router({
         });
       }
 
-      const [itemProposal] = await ctx.db
-        .insert(itemProposals)
-        .values({
-          ...input,
-          creator: ctx.user.id,
-        })
-        .returning();
+      return await ctx.db.transaction(async (tx) => {
+        const [itemProposal] = await tx
+          .insert(itemProposals)
+          .values({
+            ...input,
+            creator: ctx.user.id,
+          })
+          .returning();
 
-      if (!itemProposal) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create item proposal',
+        if (!itemProposal) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to create item proposal',
+          });
+        }
+
+        logUserActivity.itemProposal.create({
+          userId: ctx.user.id,
+          targetId: itemProposal.id,
+          projectId: itemProposal.projectId,
+          items: [{ field: input.key }],
         });
-      }
 
-      const isEssentialItem = ESSENTIAL_ITEM_LIST.some(
-        (item) => item.key === input.key,
-      );
+        if (isEssentialItem(input.key)) {
+          return itemProposal;
+        }
 
-      if (!isEssentialItem) {
-        const existingProposal = await ctx.db.query.itemProposals.findFirst({
-          where: and(
-            eq(itemProposals.projectId, input.projectId),
-            eq(itemProposals.key, input.key),
-          ),
-        });
+        const [existingProposal, userProfile, voteRecord] = await Promise.all([
+          tx.query.itemProposals.findFirst({
+            where: and(
+              eq(itemProposals.projectId, input.projectId),
+              eq(itemProposals.key, input.key),
+            ),
+          }),
+          tx.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+          tx.query.voteRecords.findFirst({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.projectId, input.projectId),
+              eq(voteRecords.key, input.key),
+            ),
+          }),
+        ]);
 
         if (!existingProposal) {
-          const [userProfile, voteRecord] = await Promise.all([
-            ctx.db.query.profiles.findFirst({
-              where: eq(profiles.userId, ctx.user.id),
-            }),
-            ctx.db.query.voteRecords.findFirst({
-              where: and(
-                eq(voteRecords.creator, ctx.user.id),
-                eq(voteRecords.projectId, input.projectId),
-                eq(voteRecords.key, input.key),
-              ),
-            }),
-          ]);
-
-          const reward =
-            POC_ITEMS[input.key as keyof typeof POC_ITEMS]
-              .accountability_metric *
-            WEIGHT *
-            REWARD_PERCENT;
-
+          const reward = calculateReward(input.key);
           const finalWeight = (userProfile?.weight ?? 0) + reward;
 
-          await ctx.db
-            .update(profiles)
-            .set({
-              weight: finalWeight,
-            })
-            .where(eq(profiles.userId, ctx.user.id));
+          await Promise.all([
+            tx
+              .update(profiles)
+              .set({ weight: finalWeight })
+              .where(eq(profiles.userId, ctx.user.id)),
 
-          await addRewardNotification(
-            createRewardNotification.createProposal(
-              ctx.user.id,
-              input.projectId,
-              itemProposal.id,
-              reward,
+            addRewardNotification(
+              createRewardNotification.createProposal(
+                ctx.user.id,
+                input.projectId,
+                itemProposal.id,
+                reward,
+              ),
+              tx,
             ),
-          );
 
-          if (!voteRecord) {
-            const [vote] = await ctx.db
-              .insert(voteRecords)
-              .values({
-                creator: ctx.user.id,
-                projectId: input.projectId,
-                itemProposalId: itemProposal.id,
-                key: input.key,
-                weight: finalWeight,
-              })
-              .returning();
-
-            logUserActivity.vote.create({
+            handleVoteRecord(tx, {
               userId: ctx.user.id,
-              targetId: vote.id,
-              projectId: itemProposal.projectId,
-              items: [{ field: input.key }],
-              proposalCreatorId: itemProposal.creator,
-            });
-          } else {
-            await ctx.db
-              .update(voteRecords)
-              .set({
-                weight: finalWeight,
-                itemProposalId: itemProposal.id,
-              })
-              .where(eq(voteRecords.id, voteRecord.id));
-
-            logUserActivity.vote.update({
-              userId: ctx.user.id,
-              targetId: voteRecord.id,
-              projectId: itemProposal.projectId,
-              items: [{ field: input.key }],
-              proposalCreatorId: itemProposal.creator,
-            });
-          }
+              projectId: input.projectId,
+              itemProposalId: itemProposal.id,
+              key: input.key,
+              weight: finalWeight,
+              existingVoteRecord: voteRecord,
+            }),
+          ]);
         }
-      }
 
-      logUserActivity.itemProposal.create({
-        userId: ctx.user.id,
-        targetId: itemProposal.id,
-        projectId: itemProposal.projectId,
-        items: [
-          {
-            field: input.key,
-          },
-        ],
+        return itemProposal;
       });
-
-      return itemProposal;
     }),
 });
