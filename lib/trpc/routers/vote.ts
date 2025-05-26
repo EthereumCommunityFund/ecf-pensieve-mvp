@@ -237,54 +237,61 @@ export const voteRouter = router({
         eq(voteRecords.creator, ctx.user.id),
       );
 
-      const voteWithProposal = await ctx.db.query.voteRecords.findFirst({
+      const voteWithDetails = await ctx.db.query.voteRecords.findFirst({
         where: condition,
         with: {
-          proposal: true,
+          proposal: {
+            with: {
+              project: true,
+            },
+          },
         },
       });
 
-      if (!voteWithProposal || !voteWithProposal.proposal) {
+      if (!voteWithDetails || !voteWithDetails.proposal) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Vote record not found',
         });
       }
 
-      if (voteWithProposal.proposal.creator === ctx.user.id) {
+      if (!voteWithDetails.proposal.project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Associated project not found',
+        });
+      }
+
+      if (voteWithDetails.proposal.creator === ctx.user.id) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Cannot cancel vote on your own proposal',
         });
       }
 
-      const projectId = voteWithProposal.proposal.projectId;
-
-      const project = await ctx.db.query.projects.findFirst({
-        where: eq(projects.id, projectId),
-      });
-
-      if (project?.isPublished) {
+      if (voteWithDetails.proposal.project.isPublished) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Cannot cancel votes on proposals for published projects',
         });
       }
 
-      const [deletedVote] = await ctx.db
-        .delete(voteRecords)
-        .where(condition)
-        .returning();
+      return await ctx.db.transaction(async (tx) => {
+        const [deletedVote] = await tx
+          .delete(voteRecords)
+          .where(condition)
+          .returning();
 
-      logUserActivity.vote.delete({
-        userId: ctx.user.id,
-        targetId: deletedVote.id,
-        projectId,
-        items: [{ field: voteWithProposal.key }],
-        proposalCreatorId: voteWithProposal.proposal.creator,
+        logUserActivity.vote.delete({
+          userId: ctx.user.id,
+          targetId: deletedVote.id,
+          projectId: voteWithDetails.proposal!.projectId,
+          items: [{ field: voteWithDetails.key }],
+          proposalCreatorId: voteWithDetails.proposal!.creator,
+        });
+
+        return deletedVote;
       });
-
-      return deletedVote;
     }),
 
   getVotesByProposalId: publicProcedure
