@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
 import {
@@ -36,32 +36,53 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const [proposal, userProfile] = await Promise.all([
-        ctx.db.query.proposals.findFirst({
-          where: eq(proposals.id, proposalId),
-        }),
-        ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        }),
-      ]);
+      const [proposalWithProject, userProfile, existingVote] =
+        await Promise.all([
+          ctx.db.query.proposals.findFirst({
+            where: eq(proposals.id, proposalId),
+            with: {
+              project: true,
+            },
+          }),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+          ctx.db.query.voteRecords.findFirst({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.key, key),
+              eq(voteRecords.proposalId, proposalId),
+            ),
+          }),
+        ]);
 
-      if (!proposal) {
+      if (!proposalWithProject) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Proposal not found',
         });
       }
 
-      const projectId = proposal.projectId;
+      if (!proposalWithProject.project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Associated project not found',
+        });
+      }
 
-      const project = await ctx.db.query.projects.findFirst({
-        where: eq(projects.id, projectId),
-      });
+      const projectId = proposalWithProject.projectId;
 
-      if (project?.isPublished) {
+      if (proposalWithProject.project.isPublished) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Cannot vote on proposals for published projects',
+        });
+      }
+
+      if (existingVote) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You have already voted for this key in this proposal',
         });
       }
 
@@ -70,6 +91,7 @@ export const voteRouter = router({
           eq(voteRecords.creator, ctx.user.id),
           eq(voteRecords.key, key),
           eq(voteRecords.projectId, projectId),
+          ne(voteRecords.proposalId, proposalId),
         ),
       });
 
@@ -97,7 +119,7 @@ export const voteRouter = router({
         targetId: vote.id,
         projectId,
         items: [{ field: key }],
-        proposalCreatorId: proposal.creator,
+        proposalCreatorId: proposalWithProject.creator,
       });
 
       return vote;
