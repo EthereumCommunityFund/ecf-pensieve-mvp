@@ -6,6 +6,7 @@ import { fileRouter } from './file';
 import { itemProposalRouter } from './itemProposal';
 import { notificationRouter } from './notification';
 import { projectRouter } from './project';
+import { projectLogRouter } from './projectLog';
 import { proposalRouter } from './proposal';
 import { userRouter } from './user';
 import { voteRouter } from './vote';
@@ -20,6 +21,7 @@ export const appRouter = router({
   notification: notificationRouter,
   active: activeRouter,
   vote: voteRouter,
+  projectLog: projectLogRouter,
 });
 
 export type AppRouter = typeof appRouter;

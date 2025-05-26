@@ -117,8 +117,10 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
               </p>
               <p className="text-[14px] font-[400] leading-[20px] text-black/80">
                 You have gained{' '}
-                <span className="font-[700]">{RewardWeight}</span> to your User
-                Weight
+                <span className="font-[700]">
+                  {isProject ? RewardWeight : '0'}
+                </span>{' '}
+                to your User Weight
               </p>
             </div>
           </div>
@@ -165,7 +167,14 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
     ];
 
     return items;
-  }, [entityId, viewButtonLink, viewButtonText, RewardWeight]);
+  }, [
+    entityId,
+    viewButtonLink,
+    viewButtonText,
+    handleBackToContribute,
+    handleViewEntity,
+    isProject,
+  ]);
 
   if (apiStatus === 'idle' || apiStatus === 'error') {
     return null;
