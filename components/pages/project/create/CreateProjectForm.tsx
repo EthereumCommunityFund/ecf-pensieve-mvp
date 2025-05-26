@@ -290,7 +290,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       createProjectMutation,
       createProposalMutation,
       externalOnSubmit,
-      externalOnSuccess,
       externalOnError,
       handleSubmissionError,
       currentStep,
@@ -403,6 +402,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       });
     }
   }, [
+    handleSubmit,
     currentStep,
     validateCurrentStep,
     updateStepStatuses,

@@ -47,6 +47,7 @@ export const CreateProjectStepFields: IProjectStepFieldsMap = {
     fundingStatus: true,
     tokenContract: true,
   },
+  [IItemCategoryEnum.Governance]: {},
 };
 
 export const getCreateProjectStepFields = <T extends IItemCategoryEnum>(

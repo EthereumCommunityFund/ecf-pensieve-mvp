@@ -1,14 +1,14 @@
 import { cn } from '@heroui/react';
 import { FC } from 'react';
 
-import { IItemCategoryEnum } from '@/types/item';
+import { IItemSubCategoryEnum } from '@/types/item';
 
 import { CollapseButton, FilterButton, MetricButton } from '../ActionButtons';
 
 interface CategoryHeaderProps {
   title: string;
   description: string;
-  category: IItemCategoryEnum;
+  category: IItemSubCategoryEnum;
   isExpanded: boolean;
   onToggle: () => void;
 }

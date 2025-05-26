@@ -11,10 +11,11 @@ import {
   ModalContent,
 } from '@/components/base';
 import { CopyIcon } from '@/components/icons';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IEssentialItemKey } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
 
 import { IRef } from '../../../create/types';
-import { FIELD_LABELS } from '../constants';
 
 interface IReferenceModalProps {
   isOpen: boolean;
@@ -76,7 +77,7 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
           <p className="border-b border-dashed border-black/10 pb-[10px] text-[14px] text-black">
             <span>item:</span>
             <span className="ml-[10px] font-semibold">
-              {FIELD_LABELS[fieldKey] || fieldKey}
+              {AllItemConfig[fieldKey as IEssentialItemKey]?.label || fieldKey}
             </span>{' '}
           </p>
 

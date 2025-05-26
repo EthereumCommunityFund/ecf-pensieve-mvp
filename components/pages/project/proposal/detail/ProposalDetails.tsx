@@ -4,15 +4,14 @@ import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IRef } from '@/components/pages/project/create/types';
-import { useProposalVotes } from '@/components/pages/project/proposal/detail/useProposalVotes';
+import { useProposalVotes as useProposalVotesHook } from '@/components/pages/project/proposal/detail/useProposalVotes';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { useAuth } from '@/context/AuthContext';
 import { IProject, IProposal } from '@/types';
-import { IItemCategoryEnum } from '@/types/item';
+import { IItemSubCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
-import TableSectionHeader from './TableSectionHeader';
 import { TableFieldCategory } from './constants';
 import CancelVoteModal from './table/CancelVoteModal';
 import CategoryHeader from './table/CategoryHeader';
@@ -21,6 +20,7 @@ import ReferenceModal from './table/ReferenceModal';
 import SwitchVoteModal from './table/SwitchVoteModal';
 import { createTableColumns } from './table/tableColumns';
 import { prepareTableData } from './table/utils';
+import TableSectionHeader from './TableSectionHeader';
 
 export interface ITableProposalItem {
   key: string;
@@ -30,8 +30,6 @@ export interface ITableProposalItem {
   support: number;
   fieldType?: string;
 }
-
-export type CategoryKey = IItemCategoryEnum;
 
 interface ProposalDetailsProps {
   proposal?: IProposal;
@@ -55,11 +53,16 @@ const ProposalDetails = ({
   toggleFiltered,
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
-  const [expanded, setExpanded] = useState<Record<CategoryKey, boolean>>({
-    [IItemCategoryEnum.Basics]: true,
-    [IItemCategoryEnum.Technicals]: true,
-    [IItemCategoryEnum.Organization]: true,
-    [IItemCategoryEnum.Financial]: true,
+  const [expandedSubCat, setExpandedSubCat] = useState<
+    Record<IItemSubCategoryEnum, boolean>
+  >({
+    [IItemSubCategoryEnum.Organization]: true,
+    [IItemSubCategoryEnum.Team]: true,
+    [IItemSubCategoryEnum.BasicProfile]: true,
+    [IItemSubCategoryEnum.Development]: true,
+    [IItemSubCategoryEnum.Finances]: true,
+    [IItemSubCategoryEnum.Token]: true,
+    [IItemSubCategoryEnum.Governance]: true,
   });
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -93,11 +96,20 @@ const ProposalDetails = ({
     switchVoteMutation,
     cancelVoteMutation,
     inActionKeys,
-  } = useProposalVotes(proposal, projectId, proposals);
+  } = useProposalVotesHook(proposal, projectId, proposals);
 
   useEffect(() => {
     const savedValue = safeGetLocalStorage(StorageKey_DoNotShowCancelModal);
     setDoNotShowCancelModal(savedValue === 'true');
+  }, []);
+
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  const toggleRowExpanded = useCallback((key: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   }, []);
 
   const onVoteAction = useCallback(
@@ -159,22 +171,9 @@ const ProposalDetails = ({
     setIsReferenceModalOpen(true);
   }, []);
 
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-
-  const toggleRowExpanded = useCallback((key: string) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  }, []);
-
-  const columns = useMemo(() => {
-    return createTableColumns({ isPageExpanded, isProposalCreator });
-  }, [isPageExpanded, isProposalCreator]);
-
   const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
 
-  const tableMeta = useMemo(
+  const coreTableMeta = useMemo(
     () => ({
       expandedRows,
       toggleRowExpanded,
@@ -203,36 +202,81 @@ const ProposalDetails = ({
     ],
   );
 
-  const basicsTable = useReactTable<ITableProposalItem>({
-    data: tableData[IItemCategoryEnum.Basics],
+  const columns = useMemo(() => {
+    return createTableColumns({ isPageExpanded, isProposalCreator });
+  }, [isPageExpanded, isProposalCreator]);
+
+  const basicProfileTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.BasicProfile],
     columns,
-    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
-  const technicalsTable = useReactTable<ITableProposalItem>({
-    data: tableData[IItemCategoryEnum.Technicals],
+  const technicalDevelopmentTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Development],
     columns,
-    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
-  const organizationTable = useReactTable<ITableProposalItem>({
-    data: tableData[IItemCategoryEnum.Organization],
+  const organizationTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Organization],
     columns,
-    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
-  const financialTable = useReactTable<ITableProposalItem>({
-    data: tableData[IItemCategoryEnum.Financial],
+  const teamTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Team],
     columns,
-    meta: tableMeta,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
-  const toggleCategory = useCallback((category: CategoryKey) => {
-    setExpanded((prev) => {
+  const financialTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Finances],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
+  });
+
+  const tokenTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Token],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
+  });
+
+  const governanceTable = useReactTable({
+    data: tableData[IItemSubCategoryEnum.Governance],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
+  });
+
+  const tables = useMemo(() => {
+    return {
+      [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
+      [IItemSubCategoryEnum.Development]: technicalDevelopmentTable,
+      [IItemSubCategoryEnum.Organization]: organizationTable,
+      [IItemSubCategoryEnum.Team]: teamTable,
+      [IItemSubCategoryEnum.Finances]: financialTable,
+      [IItemSubCategoryEnum.Token]: tokenTable,
+      [IItemSubCategoryEnum.Governance]: governanceTable,
+    };
+  }, [
+    basicProfileTable,
+    technicalDevelopmentTable,
+    organizationTable,
+    teamTable,
+    financialTable,
+    tokenTable,
+    governanceTable,
+  ]);
+
+  const toggleCategory = useCallback((category: IItemSubCategoryEnum) => {
+    setExpandedSubCat((prev) => {
       const newExpanded = { ...prev };
       newExpanded[category] = !newExpanded[category];
       return newExpanded;
@@ -259,37 +303,32 @@ const ProposalDetails = ({
         onChangeFilter={toggleFiltered}
       />
 
-      <TableSectionHeader title="Project Overview" description="" />
-
-      <div className="flex flex-col gap-[20px]">
-        {Object.values(IItemCategoryEnum).map((category) => (
-          <div
-            key={category}
-            className="overflow-hidden rounded-[10px] bg-white"
-          >
-            <CategoryHeader
-              title={TableFieldCategory[category].title}
-              description={TableFieldCategory[category].description}
-              category={category}
-              isExpanded={expanded[category]}
-              onToggle={() => toggleCategory(category)}
+      <div className="flex flex-col gap-[40px]">
+        {TableFieldCategory.map((cat) => (
+          <div key={cat.key} className="flex flex-col gap-[20px]">
+            <TableSectionHeader
+              title={cat.title}
+              description={cat.description}
             />
-            <div style={getAnimationStyle(expanded[category])}>
-              <ProposalTable
-                table={
-                  category === IItemCategoryEnum.Basics
-                    ? basicsTable
-                    : category === IItemCategoryEnum.Financial
-                      ? financialTable
-                      : category === IItemCategoryEnum.Technicals
-                        ? technicalsTable
-                        : organizationTable
-                }
-                isLoading={isOverallLoading}
-                isPageExpanded={isPageExpanded}
-                expandedRows={expandedRows}
-              />
-            </div>
+            {cat.subCategories.map((subCat) => (
+              <div key={subCat.key}>
+                <CategoryHeader
+                  title={subCat.title}
+                  description={subCat.description}
+                  category={subCat.key}
+                  isExpanded={expandedSubCat[subCat.key]}
+                  onToggle={() => toggleCategory(subCat.key)}
+                />
+                <div style={getAnimationStyle(expandedSubCat[subCat.key])}>
+                  <ProposalTable
+                    table={tables[subCat.key]}
+                    isLoading={isOverallLoading}
+                    expandedRows={expandedRows}
+                    isPageExpanded={isPageExpanded}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>

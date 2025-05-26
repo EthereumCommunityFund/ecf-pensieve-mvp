@@ -1,5 +1,11 @@
 import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
-import { IEssentialItemKey, IItemConfig } from '@/types/item';
+import { POC_ITEMS } from '@/lib/pocItems';
+import {
+  IEssentialItemKey,
+  IItemCategoryEnum,
+  IItemConfig,
+  IItemSubCategoryEnum,
+} from '@/types/item';
 
 export const AllItemConfig: Record<
   IEssentialItemKey,
@@ -7,6 +13,9 @@ export const AllItemConfig: Record<
 > = {
   name: {
     key: 'name',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.name.isEssential,
     label: 'Project Name',
     description: 'type in the name of the project to propose',
     shortDescription: 'The unique identifier for the project.',
@@ -17,6 +26,9 @@ export const AllItemConfig: Record<
   },
   tagline: {
     key: 'tagline',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.tagline.isEssential,
     label: 'Tagline',
     description:
       'provide a simple short description about this project to display on its card',
@@ -29,6 +41,9 @@ export const AllItemConfig: Record<
   },
   categories: {
     key: 'categories',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.categories.isEssential,
     label: 'Categories',
     description:
       'provide a simple short description about this project to display on its card',
@@ -48,6 +63,9 @@ export const AllItemConfig: Record<
   },
   tags: {
     key: 'tags',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.tags.isEssential,
     label: 'Tags',
     description: 'provide a list of tags for this project',
     shortDescription: 'A list of tags for the project.',
@@ -87,6 +105,9 @@ export const AllItemConfig: Record<
   },
   mainDescription: {
     key: 'mainDescription',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.mainDescription.isEssential,
     label: 'Main Description',
     description: 'provide a longer description about this project in detail',
     shortDescription: 'A comprehensive description of the project.',
@@ -99,6 +120,9 @@ export const AllItemConfig: Record<
   },
   logoUrl: {
     key: 'logoUrl',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.logoUrl.isEssential,
     label: 'Project Logo',
     description: 'provide a logo for this project',
     shortDescription: 'The visual logo of the project.',
@@ -109,6 +133,9 @@ export const AllItemConfig: Record<
   },
   websiteUrl: {
     key: 'websiteUrl',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.websiteUrl.isEssential,
     label: 'Project Website',
     description: 'provide the main website for this project',
     shortDescription: 'The main online address of the project.',
@@ -120,6 +147,9 @@ export const AllItemConfig: Record<
   },
   appUrl: {
     key: 'appUrl',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.appUrl.isEssential,
     label: 'App URL',
     description: 'provide the main application URL for this project',
     shortDescription:
@@ -133,6 +163,9 @@ export const AllItemConfig: Record<
   },
   whitePaper: {
     key: 'whitePaper',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.whitePaper.isEssential,
     label: 'White Paper',
     description: 'provide the white paper for this project',
     shortDescription: 'The white paper of the project.',
@@ -144,6 +177,9 @@ export const AllItemConfig: Record<
   },
   dateFounded: {
     key: 'dateFounded',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.dateFounded.isEssential,
     label: 'Date Founded',
     description: 'Select the date at which the project was founded.',
     shortDescription: 'The date when the project officially began.',
@@ -154,6 +190,9 @@ export const AllItemConfig: Record<
   },
   dateLaunch: {
     key: 'dateLaunch',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.dateLaunch.isEssential,
     label: 'Product Launch Date',
     description:
       'Select the date when the main product or service was launched (if applicable).',
@@ -167,6 +206,9 @@ export const AllItemConfig: Record<
   },
   devStatus: {
     key: 'devStatus',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.devStatus.isEssential,
     label: 'Development Status',
     description: 'Select the current status of their development',
     shortDescription: 'The most recent development status of the project.',
@@ -186,24 +228,11 @@ export const AllItemConfig: Record<
     ],
     showReference: true,
   },
-  fundingStatus: {
-    key: 'fundingStatus',
-    label: 'Funding Status',
-    description: 'Select the current status of their funding phase',
-    shortDescription: 'The sources and status of project funding.',
-    weight: ESSENTIAL_ITEM_MAP.fundingStatus.weight,
-    formDisplayType: 'select',
-    placeholder: 'Select funding status',
-    showApplicable: true,
-    options: [
-      { value: 'Funded', label: 'Funded' },
-      { value: 'VC Invested', label: 'VC Invested' },
-      { value: 'No Funding', label: 'No Funding' },
-    ],
-    showReference: true,
-  },
   openSource: {
     key: 'openSource',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.openSource.isEssential,
     label: 'Open-Source?',
     description: 'Is this project now open-source?',
     shortDescription: 'Whether the project follows an open-source model.',
@@ -218,6 +247,9 @@ export const AllItemConfig: Record<
   },
   codeRepo: {
     key: 'codeRepo',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.codeRepo.isEssential,
     label: 'Code Repository',
     description: 'Provide a URL to their repository',
     shortDescription: 'The repository link hosting the project source code.',
@@ -228,19 +260,11 @@ export const AllItemConfig: Record<
     showApplicable: true,
     showReference: true,
   },
-  tokenContract: {
-    key: 'tokenContract',
-    label: 'Token Contract',
-    description: 'Input the projects token contract address',
-    shortDescription:
-      'The contract address of the project token on the blockchain.',
-    weight: ESSENTIAL_ITEM_MAP.tokenContract.weight,
-    formDisplayType: 'string',
-    placeholder: '0x...',
-    showReference: true,
-  },
   dappSmartContracts: {
     key: 'dappSmartContracts',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.dappSmartContracts.isEssential,
     label: 'Dapp Smart Contracts',
     description: 'Input the projects smart contracts',
     shortDescription: 'The smart contracts of the project.',
@@ -253,6 +277,9 @@ export const AllItemConfig: Record<
   },
   orgStructure: {
     key: 'orgStructure',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Organization,
+    isEssential: POC_ITEMS.orgStructure.isEssential,
     label: 'Organization Structure',
     description: 'With what structure does this project operate?',
     shortDescription: 'The organizational and governance model of the project.',
@@ -268,6 +295,9 @@ export const AllItemConfig: Record<
   },
   publicGoods: {
     key: 'publicGoods',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Organization,
+    isEssential: POC_ITEMS.publicGoods.isEssential,
     label: 'Public-Goods Nature',
     description: 'Is this project a public good?',
     shortDescription: 'Whether the project contributes to the public domain.',
@@ -282,6 +312,9 @@ export const AllItemConfig: Record<
   },
   founders: {
     key: 'founders',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
+    isEssential: POC_ITEMS.founders.isEssential,
     label: 'Founders',
     description:
       'Provide the founders of this project (minimum of 1 founder is required)',
@@ -291,5 +324,38 @@ export const AllItemConfig: Record<
     formDisplayType: 'founderList',
     showReference: true,
     showExpand: true,
+  },
+  fundingStatus: {
+    key: 'fundingStatus',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.fundingStatus.isEssential,
+    label: 'Funding Status',
+    description: 'Select the current status of their funding phase',
+    shortDescription: 'The sources and status of project funding.',
+    weight: ESSENTIAL_ITEM_MAP.fundingStatus.weight,
+    formDisplayType: 'select',
+    placeholder: 'Select funding status',
+    showApplicable: true,
+    options: [
+      { value: 'Funded', label: 'Funded' },
+      { value: 'VC Invested', label: 'VC Invested' },
+      { value: 'No Funding', label: 'No Funding' },
+    ],
+    showReference: true,
+  },
+  tokenContract: {
+    key: 'tokenContract',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Token,
+    isEssential: POC_ITEMS.tokenContract.isEssential,
+    label: 'Token Contract',
+    description: 'Input the projects token contract address',
+    shortDescription:
+      'The contract address of the project token on the blockchain.',
+    weight: ESSENTIAL_ITEM_MAP.tokenContract.weight,
+    formDisplayType: 'string',
+    placeholder: '0x...',
+    showReference: true,
   },
 };

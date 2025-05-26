@@ -1,69 +1,112 @@
 import {
-  basicsFieldsConfig,
-  financialFieldsConfig,
-  getCreateProjectStepFields,
-  organizationFieldsConfig,
-  technicalsFieldsConfig,
-} from '@/components/pages/project/create/FormData';
-import { IItemCategoryEnum } from '@/types/item';
-
-export const TableFieldCategory: Record<
+  ICategoryConfig,
   IItemCategoryEnum,
+  IItemGroupEnum,
+  IItemSubCategoryEnum,
+} from '@/types/item';
+
+export const TableFieldCategory: ICategoryConfig[] = [
   {
-    title: string;
-    description: string;
-    items: string[];
-  }
-> = {
-  [IItemCategoryEnum.Basics]: {
-    title: 'Basics',
+    key: IItemCategoryEnum.Basics,
+    title: 'Project Overview',
     description: '',
-    items: getCreateProjectStepFields(IItemCategoryEnum.Basics),
+    subCategories: [
+      {
+        key: IItemSubCategoryEnum.BasicProfile,
+        title: 'Basic Profile',
+        description: 'These are the basic information about the project',
+        items: [
+          'name',
+          'tagline',
+          'categories',
+          'mainDescription',
+          'logoUrl',
+          'websiteUrl',
+          'appUrl',
+          'tags',
+          'whitePaper',
+          'dateFounded',
+          'dateLaunch',
+        ],
+        groups: [],
+      },
+    ],
   },
-  [IItemCategoryEnum.Technicals]: {
+  {
+    key: IItemCategoryEnum.Technicals,
     title: 'Technicals',
     description: '',
-    items: getCreateProjectStepFields(IItemCategoryEnum.Technicals),
+    subCategories: [
+      {
+        key: IItemSubCategoryEnum.Development,
+        title: 'Development',
+        description: '',
+        items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
+        groups: [
+          {
+            key: IItemGroupEnum.CodeAudits,
+            title: 'Code Audits',
+            description: '',
+            items: ['auditStatus', 'reports'],
+          },
+        ],
+      },
+    ],
   },
-  [IItemCategoryEnum.Organization]: {
-    title: 'Organization',
+  {
+    key: IItemCategoryEnum.Organization,
+    title: 'Organization & Team',
     description: '',
-    items: getCreateProjectStepFields(IItemCategoryEnum.Organization),
+    subCategories: [
+      {
+        key: IItemSubCategoryEnum.Organization,
+        title: 'Organization',
+        description: '',
+        items: ['orgStructure', 'publicGoods'],
+        groups: [],
+      },
+      {
+        key: IItemSubCategoryEnum.Team,
+        title: 'Team',
+        description: '',
+        items: ['founders'],
+        groups: [],
+      },
+    ],
   },
-  [IItemCategoryEnum.Financial]: {
-    title: 'Financial',
+  {
+    key: IItemCategoryEnum.Financial,
+    title: 'Project Financials',
     description: '',
-    items: getCreateProjectStepFields(IItemCategoryEnum.Financial),
+    subCategories: [
+      {
+        key: IItemSubCategoryEnum.Finances,
+        title: 'Finances',
+        description: '',
+        items: ['fundingStatus'],
+        groups: [],
+      },
+      {
+        key: IItemSubCategoryEnum.Token,
+        title: 'Token',
+        description: '',
+        items: ['tokenContract'],
+        groups: [],
+      },
+    ],
   },
-};
-
-export const FIELD_LABELS: Record<string, string> = {
-  ...Object.entries(basicsFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(technicalsFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(organizationFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-  ...Object.entries(financialFieldsConfig).reduce(
-    (acc, [key, config]) => {
-      acc[key] = config.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  ),
-};
+  // {
+  //   key: IItemCategoryEnum.Governance,
+  //   title: 'Governance & Legal',
+  //   description: '',
+  //   subCategories: [
+  //     {
+  //       key: IItemSubCategoryEnum.Governance,
+  //       title: 'Governance',
+  //       description: '',
+  //       items: [],
+  //       groups: [],
+  //     },
+  //   ],
+  // },
+];
