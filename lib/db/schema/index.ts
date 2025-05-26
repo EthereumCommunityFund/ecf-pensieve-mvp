@@ -1,6 +1,7 @@
 export * from './activeLogs';
 export * from './invitations';
 export * from './itemProposals';
+export * from './likeRecord';
 export * from './nonces';
 export * from './notifications';
 export * from './profiles';
