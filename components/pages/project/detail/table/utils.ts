@@ -1,11 +1,10 @@
 'use client';
 
-import { TableFieldCategory } from '@/components/pages/project/proposal/detail/constants';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IProject } from '@/types';
 import {
   IEssentialItemKey,
-  IItemCategoryEnum,
   IItemSubCategoryEnum,
   IProposalItem,
 } from '@/types/item';
@@ -13,15 +12,9 @@ import { formatDate } from '@/utils/formatters';
 
 import { IProjectDataItem } from './Column';
 
-export type CategoryKey = IItemCategoryEnum;
-
-/**
- * Prepare project data for categorized table display
- * Similar to prepareTableData but for project data instead of proposal data
- */
 export const prepareProjectTableData = (project: IProject | undefined) => {
   const result: Record<IItemSubCategoryEnum, IProjectDataItem[]> =
-    TableFieldCategory.reduce(
+    ProjectTableFieldCategory.reduce(
       (acc, catConfig) => {
         catConfig.subCategories.forEach((subCatConfig) => {
           acc[subCatConfig.key] = [];
@@ -43,7 +36,7 @@ export const prepareProjectTableData = (project: IProject | undefined) => {
     return ref?.value || '';
   };
 
-  TableFieldCategory.forEach((categoryConfig) => {
+  ProjectTableFieldCategory.forEach((categoryConfig) => {
     categoryConfig.subCategories.forEach((subCategoryConfig) => {
       subCategoryConfig.items.forEach((itemKey) => {
         const proposalItem = proposalItemMap[itemKey];

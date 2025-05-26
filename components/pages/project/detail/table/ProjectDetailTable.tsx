@@ -23,8 +23,8 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IItemSubCategoryEnum } from '@/types/item';
 
 // Import category components and utilities
-import { TableFieldCategory } from '@/components/pages/project/proposal/detail/constants';
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
+import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 
 import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
 
@@ -353,7 +353,7 @@ const ProjectData: FC<ProjectDataProps> = ({
 
         {/* 分类表格 */}
         <div className="flex flex-col gap-[20px]">
-          {TableFieldCategory.map((cat) => (
+          {ProjectTableFieldCategory.map((cat) => (
             <div key={cat.key} className="flex flex-col gap-[20px]">
               <TableSectionHeader
                 title={cat.title}

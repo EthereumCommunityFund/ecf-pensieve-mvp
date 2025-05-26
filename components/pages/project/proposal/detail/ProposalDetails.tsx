@@ -6,20 +6,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IRef } from '@/components/pages/project/create/types';
 import { useProposalVotes as useProposalVotesHook } from '@/components/pages/project/proposal/detail/useProposalVotes';
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
+import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IProject, IProposal } from '@/types';
 import { IItemSubCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
-import { TableFieldCategory } from './constants';
 import CancelVoteModal from './table/CancelVoteModal';
 import CategoryHeader from './table/CategoryHeader';
 import ProposalTable from './table/ProposalTable';
 import ReferenceModal from './table/ReferenceModal';
 import SwitchVoteModal from './table/SwitchVoteModal';
 import { createTableColumns } from './table/tableColumns';
-import { prepareTableData } from './table/utils';
+import { prepareProposalTableData } from './table/utils';
 import TableSectionHeader from './TableSectionHeader';
 
 export interface ITableProposalItem {
@@ -171,7 +171,10 @@ const ProposalDetails = ({
     setIsReferenceModalOpen(true);
   }, []);
 
-  const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
+  const tableData = useMemo(
+    () => prepareProposalTableData(proposal),
+    [proposal],
+  );
 
   const coreTableMeta = useMemo(
     () => ({
@@ -304,7 +307,7 @@ const ProposalDetails = ({
       />
 
       <div className="flex flex-col gap-[40px]">
-        {TableFieldCategory.map((cat) => (
+        {ProposalTableFieldCategory.map((cat) => (
           <div key={cat.key} className="flex flex-col gap-[20px]">
             <TableSectionHeader
               title={cat.title}

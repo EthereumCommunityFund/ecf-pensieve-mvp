@@ -2,6 +2,7 @@
 
 import { IRef } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { IProposal } from '@/types';
 import {
   IEssentialItemKey,
@@ -9,14 +10,13 @@ import {
   IProposalItem,
 } from '@/types/item';
 
-import { TableFieldCategory } from '../constants';
 import { ITableProposalItem } from '../ProposalDetails';
 
-export const prepareTableData = (
+export const prepareProposalTableData = (
   proposal?: IProposal,
 ): Record<IItemSubCategoryEnum, ITableProposalItem[]> => {
   const result: Record<IItemSubCategoryEnum, ITableProposalItem[]> =
-    TableFieldCategory.reduce(
+    ProposalTableFieldCategory.reduce(
       (acc, catConfig) => {
         catConfig.subCategories.forEach((subCatConfig) => {
           acc[subCatConfig.key] = [];
@@ -34,7 +34,7 @@ export const prepareTableData = (
     {} as Record<string, IProposalItem>,
   );
 
-  TableFieldCategory.forEach((categoryConfig) => {
+  ProposalTableFieldCategory.forEach((categoryConfig) => {
     categoryConfig.subCategories.forEach((subCategoryConfig) => {
       subCategoryConfig.items.forEach((itemKey) => {
         const proposalItem = proposalItemMap[itemKey];
@@ -62,7 +62,9 @@ export const prepareTableData = (
 
 export const getCategoryByItemKey = (key: string) => {
   const { category, subCategory } = AllItemConfig[key as IEssentialItemKey];
-  const categoryConfig = TableFieldCategory.find((cat) => cat.key === category);
+  const categoryConfig = ProposalTableFieldCategory.find(
+    (cat) => cat.key === category,
+  );
   const subCategoryConfig = categoryConfig?.subCategories.find(
     (subCat) => subCat.key === subCategory,
   );
