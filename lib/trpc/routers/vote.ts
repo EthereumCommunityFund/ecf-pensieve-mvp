@@ -276,22 +276,20 @@ export const voteRouter = router({
         });
       }
 
-      return await ctx.db.transaction(async (tx) => {
-        const [deletedVote] = await tx
-          .delete(voteRecords)
-          .where(condition)
-          .returning();
+      const [deletedVote] = await ctx.db
+        .delete(voteRecords)
+        .where(condition)
+        .returning();
 
-        logUserActivity.vote.delete({
-          userId: ctx.user.id,
-          targetId: deletedVote.id,
-          projectId: voteWithDetails.proposal!.projectId,
-          items: [{ field: voteWithDetails.key }],
-          proposalCreatorId: voteWithDetails.proposal!.creator,
-        });
-
-        return deletedVote;
+      logUserActivity.vote.delete({
+        userId: ctx.user.id,
+        targetId: deletedVote.id,
+        projectId: voteWithDetails.proposal!.projectId,
+        items: [{ field: voteWithDetails.key }],
+        proposalCreatorId: voteWithDetails.proposal!.creator,
       });
+
+      return deletedVote;
     }),
 
   getVotesByProposalId: publicProcedure
