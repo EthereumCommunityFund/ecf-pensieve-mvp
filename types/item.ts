@@ -104,3 +104,8 @@ export interface ICategoryConfig {
   description: string;
   subCategories: ISubCategoryConfig[];
 }
+
+export interface IProposalItem {
+  key: string;
+  value: any;
+}

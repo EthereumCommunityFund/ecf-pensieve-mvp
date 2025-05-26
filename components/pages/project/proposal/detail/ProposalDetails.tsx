@@ -31,7 +31,7 @@ export interface ITableProposalItem {
   fieldType?: string;
 }
 
-interface ProposalDetailsProps {
+export interface ProposalDetailsProps {
   proposal?: IProposal;
   proposals: IProposal[];
   project?: IProject;
@@ -41,6 +41,16 @@ interface ProposalDetailsProps {
   isPageExpanded: boolean;
   toggleExpanded: () => void;
 }
+
+const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
+  [IItemSubCategoryEnum.Organization]: true,
+  [IItemSubCategoryEnum.Team]: true,
+  [IItemSubCategoryEnum.BasicProfile]: true,
+  [IItemSubCategoryEnum.Development]: true,
+  [IItemSubCategoryEnum.Finances]: true,
+  [IItemSubCategoryEnum.Token]: true,
+  [IItemSubCategoryEnum.Governance]: true,
+};
 
 const ProposalDetails = ({
   proposal,
@@ -53,17 +63,9 @@ const ProposalDetails = ({
   toggleFiltered,
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
-  const [expandedSubCat, setExpandedSubCat] = useState<
-    Record<IItemSubCategoryEnum, boolean>
-  >({
-    [IItemSubCategoryEnum.Organization]: true,
-    [IItemSubCategoryEnum.Team]: true,
-    [IItemSubCategoryEnum.BasicProfile]: true,
-    [IItemSubCategoryEnum.Development]: true,
-    [IItemSubCategoryEnum.Finances]: true,
-    [IItemSubCategoryEnum.Token]: true,
-    [IItemSubCategoryEnum.Governance]: true,
-  });
+
+  const [expandedSubCat, setExpandedSubCat] = useState(DefaultExpandedSubCat);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -102,8 +104,6 @@ const ProposalDetails = ({
     const savedValue = safeGetLocalStorage(StorageKey_DoNotShowCancelModal);
     setDoNotShowCancelModal(savedValue === 'true');
   }, []);
-
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
