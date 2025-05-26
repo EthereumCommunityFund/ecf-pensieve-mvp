@@ -37,7 +37,9 @@ const InputContentRenderer: React.FC<IProps> = ({ value, displayFormType }) => {
     case 'selectMultiple':
       return <>{Array.isArray(value) ? value.join(', ') : value}</>;
     case 'img':
-      return (
+      return !value || value.toLowerCase() === 'n/a' ? (
+        <>n/a</>
+      ) : (
         <Image
           src={value}
           alt="img"

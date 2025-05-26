@@ -1,9 +1,23 @@
 export enum IItemCategoryEnum {
   Basics = 'basics',
-  // Dates = 'dates',
   Technicals = 'technicals',
   Organization = 'organization',
   Financial = 'financial',
+  Governance = 'governance',
+}
+
+export enum IItemSubCategoryEnum {
+  BasicProfile = 'BasicProfile',
+  Development = 'Development',
+  Organization = 'Organization',
+  Team = 'Team',
+  Finances = 'Finances',
+  Token = 'Token',
+  Governance = 'Governance',
+}
+
+export enum IItemGroupEnum {
+  CodeAudits = 'Code Audits',
 }
 
 export type IBasicsKey =
@@ -37,6 +51,10 @@ export type IEssentialItemKey =
 
 export interface IItemConfig<K extends IEssentialItemKey> {
   key: K;
+  category: IItemCategoryEnum;
+  subCategory: IItemSubCategoryEnum;
+  group?: IItemGroupEnum;
+  isEssential?: boolean;
   label: string;
   description: string;
   shortDescription: string; // For tooltip
@@ -60,3 +78,29 @@ export type IFormDisplayType =
   | 'link'
   | 'date'
   | 'founderList';
+
+export interface IGroupConfig {
+  key: IItemGroupEnum;
+  title: string;
+  description: string;
+  items: (IEssentialItemKey | string)[];
+}
+
+export interface ISubCategoryConfig {
+  key: IItemSubCategoryEnum;
+  title: string;
+  description: string;
+  items: IEssentialItemKey[];
+  groups?: IGroupConfig[];
+  /**
+   * not essential items that should be shown in the table even if they are not selected
+   */
+  emptyItems?: string[];
+}
+
+export interface ICategoryConfig {
+  key: IItemCategoryEnum;
+  title: string;
+  description: string;
+  subCategories: ISubCategoryConfig[];
+}

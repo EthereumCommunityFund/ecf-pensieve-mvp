@@ -16,30 +16,42 @@ import { IItemCategoryEnum } from '@/types/item';
 import { IStepStatus } from './types';
 
 interface StepNavigationProps {
-  currentStep: IItemCategoryEnum;
-  stepStatuses: Record<IItemCategoryEnum, IStepStatus>;
-  goToStep: (step: IItemCategoryEnum) => void;
+  currentStep: IItemCategoryEnumWithoutGovernance;
+  stepStatuses: Record<IItemCategoryEnumWithoutGovernance, IStepStatus>;
+  goToStep: (step: IItemCategoryEnumWithoutGovernance) => void;
   dimmed?: boolean;
 }
 
-export const getStepIcons = (step: IItemCategoryEnum, size = 32) => {
-  const stepIcons: Record<IItemCategoryEnum, React.ReactNode> = {
-    [IItemCategoryEnum.Basics]: <CardsIcon size={size} />,
-    [IItemCategoryEnum.Technicals]: <CodeIcon size={size} />,
-    [IItemCategoryEnum.Organization]: <BuildingIcon size={size} />,
-    [IItemCategoryEnum.Financial]: <GaugeIcon size={size} />,
-  };
+/**
+ * Exclude the Governance category from the IItemCategoryEnum, Governance category has no essential items
+ */
+export type IItemCategoryEnumWithoutGovernance = Exclude<
+  IItemCategoryEnum,
+  IItemCategoryEnum.Governance
+>;
+
+export const getStepIcons = (
+  step: IItemCategoryEnumWithoutGovernance,
+  size = 32,
+) => {
+  const stepIcons: Record<IItemCategoryEnumWithoutGovernance, React.ReactNode> =
+    {
+      [IItemCategoryEnum.Basics]: <CardsIcon size={size} />,
+      [IItemCategoryEnum.Technicals]: <CodeIcon size={size} />,
+      [IItemCategoryEnum.Organization]: <BuildingIcon size={size} />,
+      [IItemCategoryEnum.Financial]: <GaugeIcon size={size} />,
+    };
   return stepIcons[step];
 };
 
-const stepLabels: Record<IItemCategoryEnum, string> = {
+const stepLabels: Record<IItemCategoryEnumWithoutGovernance, string> = {
   [IItemCategoryEnum.Basics]: 'The Basics',
   [IItemCategoryEnum.Technicals]: 'Technicals',
   [IItemCategoryEnum.Organization]: 'Organization',
   [IItemCategoryEnum.Financial]: 'Financial',
 };
 
-const stepsOrder: IItemCategoryEnum[] = [
+const stepsOrder: IItemCategoryEnumWithoutGovernance[] = [
   IItemCategoryEnum.Basics,
   IItemCategoryEnum.Technicals,
   IItemCategoryEnum.Organization,
@@ -102,7 +114,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
 export default StepNavigation;
 
 export const StepHeader: React.FC<{
-  currentStep: IItemCategoryEnum;
+  currentStep: IItemCategoryEnumWithoutGovernance;
 }> = ({ currentStep }) => {
   return (
     <>
