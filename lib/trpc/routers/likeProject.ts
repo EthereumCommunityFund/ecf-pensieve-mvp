@@ -2,8 +2,8 @@ import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { logUserActivity } from '@/lib/services/activeLogsService';
 import { likeRecords, profiles, projects } from '@/lib/db/schema';
+import { logUserActivity } from '@/lib/services/activeLogsService';
 
 import { protectedProcedure, router } from '../server';
 
@@ -59,6 +59,7 @@ export const likeProjectRouter = router({
           .update(projects)
           .set({
             support: project.support + (userProfile?.weight ?? 0),
+            likeCount: project.likeCount + 1,
           })
           .where(eq(projects.id, projectId));
 
