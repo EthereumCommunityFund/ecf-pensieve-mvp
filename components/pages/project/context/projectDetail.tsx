@@ -72,7 +72,7 @@ export const ProjectDetailProvider = ({
 
   // Context value
   const value: ProjectDetailContextType = {
-    project,
+    project: project as IProject,
     proposals,
     isProjectLoading,
     isProjectFetched,
