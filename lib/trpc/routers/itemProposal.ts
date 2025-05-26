@@ -116,6 +116,7 @@ export const itemProposalRouter = router({
               key: input.key,
               weight: finalWeight,
               existingVoteRecord: voteRecord,
+              proposalCreatorId: itemProposal.creator,
             }),
           ]);
         }
