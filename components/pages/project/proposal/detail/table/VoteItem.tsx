@@ -21,6 +21,7 @@ interface IProps {
   votedMemberCount: number;
   isUserVoted: boolean;
   isLoading: boolean;
+  isProposalCreator: boolean;
   onAction: () => Promise<void>;
 }
 
@@ -35,6 +36,7 @@ const VoteItem: FC<IProps> = ({
   onAction,
   isUserVoted,
   isLoading,
+  isProposalCreator,
 }) => {
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
@@ -81,9 +83,13 @@ const VoteItem: FC<IProps> = ({
         size="sm"
         isIconOnly
         isLoading={isLoading}
-        disabled={isLoading}
+        disabled={isLoading || isProposalCreator}
         onPress={onAction}
-        className={cn('px-[5px] border-none', isUserVoted ? '' : 'opacity-30')}
+        className={cn(
+          'px-[5px] border-none',
+          isUserVoted ? '' : 'opacity-30',
+          isProposalCreator ? 'cursor-not-allowed' : '',
+        )}
       >
         {isUserVoted ? <CheckedGreenIcon /> : <CaretUpIcon />}
       </Button>

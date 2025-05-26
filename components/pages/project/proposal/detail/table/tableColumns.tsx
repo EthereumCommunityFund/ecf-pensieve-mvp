@@ -32,8 +32,10 @@ export interface TableCellsMeta {
 
 export const createTableColumns = ({
   isPageExpanded,
+  isProposalCreator,
 }: {
   isPageExpanded: boolean;
+  isProposalCreator: boolean;
 }): ColumnDef<ITableProposalItem, any>[] => {
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
@@ -197,6 +199,7 @@ export const createTableColumns = ({
         isItemValidated,
         isUserVotedInItem,
       } = getItemVoteResult(key);
+
       return (
         <VoteItem
           fieldKey={key}
@@ -205,6 +208,7 @@ export const createTableColumns = ({
           isReachQuorum={isItemReachQuorum}
           isReachPointsNeeded={isItemReachPointsNeeded}
           isValidated={isItemValidated}
+          isProposalCreator={isProposalCreator}
           project={project!}
           proposal={proposal!}
           proposalItem={info.row.original}
