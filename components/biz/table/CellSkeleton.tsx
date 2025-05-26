@@ -2,8 +2,7 @@
 
 import { Skeleton } from '@heroui/react';
 import { ReactNode } from 'react';
-
-import { cn } from '@/lib/utils';
+import { cn } from '@heroui/react';
 
 export interface TableCellSkeletonProps {
   width?: number | string;

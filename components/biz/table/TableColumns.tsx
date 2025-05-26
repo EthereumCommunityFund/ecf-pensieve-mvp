@@ -1,13 +1,13 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { cn } from '@heroui/react';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
-import { cn } from '@/lib/utils';
 import { IProject, IProposal } from '@/types';
 import { IEssentialItemKey, IFormDisplayType } from '@/types/item';
 

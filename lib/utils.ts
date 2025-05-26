@@ -1,13 +1,7 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { isAddress } from 'viem';
 
 import dayjs from '@/lib/dayjs';
 import { formatNumber as formatNumberUtil } from '@/utils/formatters';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 /**
  * @deprecated Use the formatNumber function from @/utils/formatters instead
