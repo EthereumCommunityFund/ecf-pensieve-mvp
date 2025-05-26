@@ -66,7 +66,7 @@ const ProposalPage = () => {
       ).flatMap((proposal) => proposal.voteRecords || []),
       userId: profile?.userId,
     });
-  }, [proposals, projectId, profile?.userId]);
+  }, [proposals, projectId, profile?.userId, project?.proposals]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/pending/${projectId}/proposal/create`);

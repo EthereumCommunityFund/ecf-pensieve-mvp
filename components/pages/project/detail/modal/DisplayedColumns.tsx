@@ -118,11 +118,5 @@ export const useDisplayedColumns = ({
     });
 
     return [inputColumn, referenceColumn, submitterColumn, supportColumn];
-  }, [
-    columnHelper,
-    onReferenceClick,
-    onExpandClick,
-    expandedRows,
-    toggleRowExpanded,
-  ]);
+  }, [columnHelper, expandedRows, toggleRowExpanded]);
 };
