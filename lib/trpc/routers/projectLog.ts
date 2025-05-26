@@ -110,4 +110,39 @@ export const projectLogRouter = router({
         allItemProposals,
       };
     }),
+
+  getLeadingProposalHistoryByProjectIdAndKey: publicProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        key: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { projectId, key } = input;
+
+      const leadingProposal = await ctx.db.query.projectLogs.findMany({
+        where: and(
+          eq(projectLogs.projectId, projectId),
+          eq(projectLogs.key, key),
+        ),
+        with: {
+          proposal: {
+            with: {
+              voteRecords: true,
+              creator: true,
+            },
+          },
+          itemProposal: {
+            with: {
+              voteRecords: true,
+              creator: true,
+            },
+          },
+        },
+        orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+      });
+
+      return leadingProposal;
+    }),
 });

@@ -237,7 +237,8 @@ export const projectRouter = router({
         WITH poc_config AS (
           SELECT * FROM (VALUES ${sql.join(
             pocItemsConfig.map(
-              ({ key, required_weight }) => sql`(${key}, ${required_weight})`,
+              ({ key, required_weight }) =>
+                sql`(${key}, ${required_weight}::numeric)`,
             ),
             sql`, `,
           )}) AS t(key, required_weight)
@@ -256,7 +257,7 @@ export const projectRouter = router({
           JOIN proposals prop ON p.id = prop.project_id
           JOIN vote_records vr ON prop.id = vr.proposal_id
           CROSS JOIN LATERAL (
-            SELECT jsonb_array_elements(prop.items)->>'key' as key
+            SELECT (unnest(prop.items)->>'key') as key
           ) item_key
           JOIN poc_config pc ON vr.key = pc.key AND item_key.key = pc.key
           WHERE p.is_published = false
