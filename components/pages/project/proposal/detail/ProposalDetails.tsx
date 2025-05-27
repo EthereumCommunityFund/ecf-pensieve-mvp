@@ -13,11 +13,11 @@ import { IItemSubCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
-import CancelVoteModal from './table/CancelVoteModal';
+import CancelVoteModal from './modal/CancelVoteModal';
+import ReferenceModal from './modal/ReferenceModal';
+import SwitchVoteModal from './modal/SwitchVoteModal';
 import CategoryHeader from './table/CategoryHeader';
 import ProposalTable from './table/ProposalTable';
-import ReferenceModal from './table/ReferenceModal';
-import SwitchVoteModal from './table/SwitchVoteModal';
 import { createTableColumns } from './table/tableColumns';
 import { prepareProposalTableData } from './table/utils';
 import TableSectionHeader from './TableSectionHeader';
