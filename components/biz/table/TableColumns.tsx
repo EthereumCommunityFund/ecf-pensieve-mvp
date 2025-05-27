@@ -383,7 +383,7 @@ export type ActionsColHeaderProps = BaseHeaderProps;
 export interface ActionsColCellProps extends BaseCellProps {
   item: IProjectDataItem;
   itemConfig: IItemConfig<IPocItemKey>;
-  onView?: () => void;
+  onView?: (contentType?: 'viewItemProposal' | 'submitPropose') => void;
   onMenu?: () => void;
 }
 
@@ -411,7 +411,7 @@ const ActionsCell = ({
       <Button
         size="sm"
         className="w-full border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
-        onPress={onView}
+        onPress={() => onView?.('submitPropose')}
       >
         Propose
       </Button>
@@ -423,7 +423,7 @@ const ActionsCell = ({
       <Button
         color="secondary"
         className="h-[30px] w-[135px] rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-        onPress={onView}
+        onPress={() => onView?.('viewItemProposal')}
       >
         View
       </Button>

@@ -1,4 +1,4 @@
-export interface SwitchVoteModalProps {
+export interface IProjectDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmitEntry?: () => void;
@@ -7,6 +7,7 @@ export interface SwitchVoteModalProps {
   itemWeight?: number;
   currentWeight?: number;
   userWeight?: number;
+  contentType: 'viewItemProposal' | 'submitPropose';
 }
 
 // TODO 跟IProjectDataItem统一参数类型

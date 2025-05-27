@@ -10,9 +10,10 @@ import { ModalProvider } from './Context';
 import LeftContent from './LeftContent';
 import ModalHeader from './ModalHeader';
 import RightContent from './RightContent';
-import { SwitchVoteModalProps } from './types';
+import SubmitItemProposal from './SubmitItemProposal';
+import { IProjectDetailModalProps } from './types';
 
-const SwitchVoteModal: FC<SwitchVoteModalProps> = ({
+const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   isOpen,
   onClose,
   onSubmitEntry,
@@ -21,6 +22,7 @@ const SwitchVoteModal: FC<SwitchVoteModalProps> = ({
   itemWeight = 22,
   currentWeight = 0,
   userWeight = 0,
+  contentType = 'viewItemProposal',
 }) => {
   // 获取项目数据
   const { projectId } = useProjectDetail();
@@ -50,25 +52,29 @@ const SwitchVoteModal: FC<SwitchVoteModalProps> = ({
       />
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto overflow-x-hidden">
-        {/* Left Content */}
-        <div className="flex-1 border-r border-[rgba(0,0,0,0.1)] ">
-          <LeftContent
-            itemName={itemName}
-            itemWeight={itemWeight}
-            itemKey={itemKey}
-          />
-        </div>
+      {contentType === 'viewItemProposal' ? (
+        <div className="flex flex-1 overflow-y-auto overflow-x-hidden">
+          {/* Left Content */}
+          <div className="flex-1 border-r border-[rgba(0,0,0,0.1)] ">
+            <LeftContent
+              itemName={itemName}
+              itemWeight={itemWeight}
+              itemKey={itemKey}
+            />
+          </div>
 
-        {/* Right Content */}
-        <div className="w-[300px]">
-          <RightContent
-            userWeight={userWeight}
-            currentItemWeight={currentWeight}
-            onSubmitEntry={onSubmitEntry}
-          />
+          {/* Right Content */}
+          <div className="w-[300px]">
+            <RightContent
+              userWeight={userWeight}
+              currentItemWeight={currentWeight}
+              onSubmitEntry={onSubmitEntry}
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <SubmitItemProposal />
+      )}
     </ModalContent>
   );
 
@@ -92,4 +98,4 @@ const SwitchVoteModal: FC<SwitchVoteModalProps> = ({
   );
 };
 
-export default SwitchVoteModal;
+export default ProjectDetailMainModal;

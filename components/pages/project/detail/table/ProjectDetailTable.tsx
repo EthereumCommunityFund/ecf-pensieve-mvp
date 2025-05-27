@@ -49,12 +49,15 @@ interface ProjectDataProps {
   isProposalsLoading: boolean;
   isProposalsFetched: boolean;
   onSubmitProposal: () => void;
-  onOpenSwitchVoteModal?: (itemKey: string) => void;
+  onOpenModal?: (
+    itemKey: string,
+    contentType?: 'viewItemProposal' | 'submitPropose',
+  ) => void;
 }
 
 const ProjectData: FC<ProjectDataProps> = ({
   isProposalsLoading,
-  onOpenSwitchVoteModal,
+  onOpenModal,
 }) => {
   const { project } = useProjectDetail();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -96,7 +99,7 @@ const ProjectData: FC<ProjectDataProps> = ({
     expandedRows,
     toggleRowExpanded,
     isPageExpanded: false,
-    onOpenSwitchVoteModal,
+    onOpenModal,
   });
 
   const basicProfileTable = useReactTable({

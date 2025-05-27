@@ -9,7 +9,7 @@ import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
-import SwitchVoteModal from '@/components/pages/project/detail/modal';
+import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
@@ -39,6 +39,9 @@ const ProjectPage = () => {
     isProposalsFetched,
   } = useProjectDetail();
 
+  const [contentType, setContentType] = useState<
+    'viewItemProposal' | 'submitPropose'
+  >('viewItemProposal');
   const [activeTab, setActiveTab] = useState<TabKey>(
     initialTab === 'ecosystem' ||
       initialTab === 'profile' ||
@@ -48,7 +51,7 @@ const ProjectPage = () => {
   );
 
   // SwitchVoteModal 状态管理
-  const [isSwitchVoteModalOpen, setIsSwitchVoteModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemKey, setSelectedItemKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,15 +79,20 @@ const ProjectPage = () => {
   }, []);
 
   // 处理 SwitchVoteModal 打开
-  const handleOpenSwitchVoteModal = useCallback((itemKey: string) => {
-    setSelectedItemKey(itemKey);
-    setIsSwitchVoteModalOpen(true);
-  }, []);
+  const handleOpenModal = useCallback(
+    (itemKey: string, contentType?: 'viewItemProposal' | 'submitPropose') => {
+      setSelectedItemKey(itemKey);
+      setIsModalOpen(true);
+      setContentType(contentType || 'viewItemProposal');
+    },
+    [],
+  );
 
   // 处理 SwitchVoteModal 关闭
-  const handleCloseSwitchVoteModal = useCallback(() => {
-    setIsSwitchVoteModalOpen(false);
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
     setSelectedItemKey(null);
+    setContentType('viewItemProposal');
   }, []);
 
   return (
@@ -151,19 +159,20 @@ const ProjectPage = () => {
           isProposalsLoading={isProposalsLoading}
           isProposalsFetched={isProposalsFetched}
           onSubmitProposal={onSubmitProposal}
-          onOpenSwitchVoteModal={handleOpenSwitchVoteModal}
+          onOpenModal={handleOpenModal}
         />
       )}
       {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
       {activeTab === 'profile' && <Profile projectId={Number(projectId)} />}
       {activeTab === 'review' && <Review projectId={Number(projectId)} />}
-      <SwitchVoteModal
-        isOpen={isSwitchVoteModalOpen && !!selectedItemKey}
-        onClose={handleCloseSwitchVoteModal}
+
+      <ProjectDetailMainModal
+        isOpen={isModalOpen && !!selectedItemKey}
+        onClose={handleCloseModal}
+        contentType={contentType}
         onSubmitEntry={() => {
-          // TODO: 实现提交逻辑
           console.log('Submit entry for item:', selectedItemKey);
-          handleCloseSwitchVoteModal();
+          setContentType('submitPropose');
         }}
         itemName={selectedItemKey || 'Unknown Item'}
         itemKey={selectedItemKey || ''}
