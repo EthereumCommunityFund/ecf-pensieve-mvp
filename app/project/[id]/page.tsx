@@ -14,6 +14,7 @@ import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
 import ProjectData from '@/components/pages/project/detail/table/ProjectDetailTable';
+import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
   { key: 'project-data', label: 'Project Data' },
@@ -52,7 +53,9 @@ const ProjectPage = () => {
 
   // SwitchVoteModal 状态管理
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedItemKey, setSelectedItemKey] = useState<string | null>(null);
+  const [selectedItemKey, setSelectedItemKey] = useState<IPocItemKey | null>(
+    null,
+  );
 
   useEffect(() => {
     const currentTab = searchParams.get('tab');
@@ -80,7 +83,10 @@ const ProjectPage = () => {
 
   // 处理 SwitchVoteModal 打开
   const handleOpenModal = useCallback(
-    (itemKey: string, contentType?: 'viewItemProposal' | 'submitPropose') => {
+    (
+      itemKey: IPocItemKey,
+      contentType?: 'viewItemProposal' | 'submitPropose',
+    ) => {
       setSelectedItemKey(itemKey);
       setIsModalOpen(true);
       setContentType(contentType || 'viewItemProposal');
@@ -175,7 +181,7 @@ const ProjectPage = () => {
           setContentType('submitPropose');
         }}
         itemName={selectedItemKey || 'Unknown Item'}
-        itemKey={selectedItemKey || ''}
+        itemKey={selectedItemKey as IPocItemKey}
       />
     </div>
   );

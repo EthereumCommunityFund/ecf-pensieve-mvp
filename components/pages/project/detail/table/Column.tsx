@@ -29,7 +29,7 @@ interface UseColumnsProps {
   toggleRowExpanded: (key: string) => void;
   isPageExpanded?: boolean;
   onOpenModal?: (
-    itemKey: string,
+    itemKey: IPocItemKey,
     contentType?: 'viewItemProposal' | 'submitPropose',
   ) => void;
 }
@@ -141,14 +141,14 @@ export const useColumns = ({
             onView={(contentType) => {
               // TODO 查看逻辑, 类型优化
               if (onOpenModal) {
-                onOpenModal(item.key, contentType);
+                onOpenModal(item.key as IPocItemKey, contentType);
               } else {
                 console.log('Menu for item:', item.key);
               }
             }}
             onMenu={() => {
               if (onOpenModal) {
-                onOpenModal(item.key);
+                onOpenModal(item.key as IPocItemKey);
               } else {
                 console.log('Menu for item:', item.key);
               }

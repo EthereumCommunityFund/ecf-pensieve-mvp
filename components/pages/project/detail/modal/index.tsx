@@ -73,7 +73,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
           </div>
         </div>
       ) : (
-        <SubmitItemProposal />
+        <SubmitItemProposal itemKey={itemKey} />
       )}
     </ModalContent>
   );

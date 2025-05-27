@@ -50,7 +50,7 @@ interface ProjectDataProps {
   isProposalsFetched: boolean;
   onSubmitProposal: () => void;
   onOpenModal?: (
-    itemKey: string,
+    itemKey: IPocItemKey,
     contentType?: 'viewItemProposal' | 'submitPropose',
   ) => void;
 }

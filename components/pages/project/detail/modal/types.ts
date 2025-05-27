@@ -1,9 +1,11 @@
+import { IPocItemKey } from '@/types/item';
+
 export interface IProjectDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmitEntry?: () => void;
   itemName?: string;
-  itemKey?: string; // 添加 itemKey 以便获取具体的项目数据
+  itemKey: IPocItemKey;
   itemWeight?: number;
   currentWeight?: number;
   userWeight?: number;
