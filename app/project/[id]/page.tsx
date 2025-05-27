@@ -14,7 +14,7 @@ import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
-import ProjectData from '@/components/pages/project/detail/table/ProjectDetailTable';
+import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
 import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
@@ -41,8 +41,11 @@ const ProjectPage = () => {
     isProposalsFetched,
   } = useProjectDetailContext();
 
-  const { triggerGetProposalsByProjectIdAndKey, proposalsByProjectIdAndKey } =
-    useProjectLogContext();
+  const {
+    triggerGetProposalsByProjectIdAndKey,
+    proposalsByProjectIdAndKey,
+    displayProposalData,
+  } = useProjectLogContext();
 
   const [contentType, setContentType] = useState<
     'viewItemProposal' | 'submitPropose'
@@ -165,7 +168,7 @@ const ProjectPage = () => {
       </div>
 
       {activeTab === 'project-data' && (
-        <ProjectData
+        <ProjectDetailTable
           projectId={Number(projectId)}
           isProposalsLoading={isProposalsLoading}
           isProposalsFetched={isProposalsFetched}

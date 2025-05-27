@@ -6,11 +6,16 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
-import { ILeadingProposals, IProposalsByProjectIdAndKey } from '@/types';
+import {
+  ILeadingProposals,
+  IProposal,
+  IProposalsByProjectIdAndKey,
+} from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 
@@ -20,6 +25,7 @@ interface ProjectLogContextType {
   isLeadingProposalsLoading: boolean;
   isLeadingProposalsFetched: boolean;
   projectId: number;
+  displayProposalData?: IProposal;
   proposalsByProjectIdAndKey?: IProposalsByProjectIdAndKey;
   triggerGetProposalsByProjectIdAndKey: (itemKey: IPocItemKey) => void;
 }
@@ -30,6 +36,7 @@ export const ProjectLogContext = createContext<ProjectLogContextType>({
   isLeadingProposalsLoading: true,
   isLeadingProposalsFetched: false,
   projectId: 0,
+  displayProposalData: undefined,
   proposalsByProjectIdAndKey: undefined,
   triggerGetProposalsByProjectIdAndKey: () => {},
 });
@@ -45,7 +52,7 @@ export const ProjectLogProvider = ({ children }: { children: ReactNode }) => {
 
   // Fetch leading proposals data
   const {
-    data: leadingProposals,
+    data: proposalsByProject,
     isLoading: isLeadingProposalsLoading,
     isFetched: isLeadingProposalsFetched,
   } = trpc.projectLog.getLeadingProposalsByProjectId.useQuery(
@@ -73,6 +80,15 @@ export const ProjectLogProvider = ({ children }: { children: ReactNode }) => {
     },
   );
 
+  const displayProposalData = useMemo(() => {
+    if (!proposalsByProject) return null;
+    const { withoutItemProposal, withItemProposal } = proposalsByProject;
+    // TODO 优先取withItemProposal里的 item 的最新
+    // 暂时看不到item proposal 的数据，先处理投票后再来处理这里
+    const originProposal = withoutItemProposal[0].proposal as IProposal;
+    return originProposal;
+  }, [proposalsByProject]);
+
   const triggerGetProposalsByProjectIdAndKey = useCallback(
     (itemKey: IPocItemKey) => {
       setCurrentItemKey(itemKey);
@@ -83,10 +99,11 @@ export const ProjectLogProvider = ({ children }: { children: ReactNode }) => {
 
   // Context value
   const value: ProjectLogContextType = {
-    leadingProposals,
+    leadingProposals: proposalsByProject,
     isLeadingProposalsLoading,
     isLeadingProposalsFetched,
     projectId,
+    displayProposalData,
     proposalsByProjectIdAndKey,
     triggerGetProposalsByProjectIdAndKey,
   };

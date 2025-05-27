@@ -30,6 +30,7 @@ import {
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 
+import { useProjectLogContext } from '../../context/projectLogContext';
 import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
 
 import { prepareProjectTableData } from './utils';
@@ -55,12 +56,18 @@ interface ProjectDataProps {
   ) => void;
 }
 
-const ProjectData: FC<ProjectDataProps> = ({
+const ProjectDetailTable: FC<ProjectDataProps> = ({
   isProposalsLoading,
   onOpenModal,
 }) => {
   const { project } = useProjectDetailContext();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  const {
+    triggerGetProposalsByProjectIdAndKey,
+    proposalsByProjectIdAndKey,
+    displayProposalData,
+  } = useProjectLogContext();
 
   // 分类展开状态管理
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
@@ -83,7 +90,10 @@ const ProjectData: FC<ProjectDataProps> = ({
   }, []);
 
   // 创建分类表格数据
-  const tableData = useMemo(() => prepareProjectTableData(project), [project]);
+  const tableData = useMemo(
+    () => prepareProjectTableData({ project, displayProposalData }),
+    [project, displayProposalData],
+  );
 
   const coreTableMeta = useMemo(
     () => ({
@@ -397,4 +407,4 @@ const ProjectData: FC<ProjectDataProps> = ({
   );
 };
 
-export default ProjectData;
+export default ProjectDetailTable;

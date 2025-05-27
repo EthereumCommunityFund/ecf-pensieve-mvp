@@ -2,13 +2,22 @@
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
-import { IProject } from '@/types';
+import { IProject, IProposal } from '@/types';
 import { IItemSubCategoryEnum, IPocItemKey, IProposalItem } from '@/types/item';
+import { devLog } from '@/utils/devLog';
 import { formatDate } from '@/utils/formatters';
 
 import { IProjectDataItem } from './Column';
 
-export const prepareProjectTableData = (project: IProject | undefined) => {
+export interface IPrepareProjectTableDataParams {
+  project?: IProject;
+  displayProposalData?: IProposal;
+}
+
+export const prepareProjectTableData = ({
+  project,
+  displayProposalData,
+}: IPrepareProjectTableDataParams) => {
   const result: Record<IItemSubCategoryEnum, IProjectDataItem[]> =
     ProjectTableFieldCategory.reduce(
       (acc, catConfig) => {
@@ -20,8 +29,15 @@ export const prepareProjectTableData = (project: IProject | undefined) => {
       {} as Record<IItemSubCategoryEnum, IProjectDataItem[]>,
     );
 
-  // TODO 用每个project里的 leading item proposal 的 items 来填充
-  const proposalItemMap = {} as Record<string, IProposalItem>;
+  const displayItemMap = (
+    (displayProposalData?.items as IProposalItem[]) || []
+  ).reduce(
+    (acc, curr) => {
+      acc[curr.key as IPocItemKey] = curr.value;
+      return acc;
+    },
+    {} as Record<IPocItemKey, IProposalItem>,
+  );
 
   // Helper function to get reference value
   const getReference = (key: string): string => {
@@ -38,13 +54,11 @@ export const prepareProjectTableData = (project: IProject | undefined) => {
       const { items, itemsNotEssential = [], groups } = subCategoryConfig;
       const itemsToShow = [...items, ...itemsNotEssential];
       itemsToShow.forEach((itemKey) => {
-        const proposalItem = proposalItemMap[itemKey];
         const itemConfig = AllItemConfig[itemKey as IPocItemKey];
-
         const tableRowItem: IProjectDataItem = {
           key: itemKey,
           property: itemConfig?.label || itemKey,
-          input: proposalItem?.value ?? '',
+          input: displayItemMap[itemKey as IPocItemKey] ?? '',
           reference: getReference(itemKey),
           submitter: {
             name: 'Project Creator', // Could be enhanced to show actual creator info
@@ -56,5 +70,6 @@ export const prepareProjectTableData = (project: IProject | undefined) => {
     });
   });
 
+  devLog('prepareProjectTableData', result);
   return result;
 };
