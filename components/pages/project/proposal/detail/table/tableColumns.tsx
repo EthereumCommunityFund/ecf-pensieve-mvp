@@ -97,7 +97,7 @@ export const createTableColumns = ({
         .meta as TableCellsMeta;
       const value = info.getValue();
       const rowKey = info.row.original.key as IEssentialItemKey;
-      const itemConfig = AllItemConfig[rowKey];
+      const itemConfig = AllItemConfig[rowKey]!;
       const isExpandable = itemConfig.showExpand;
       const displayFormType = itemConfig.formDisplayType;
       const isRowExpanded = expandedRows[rowKey];
@@ -113,8 +113,10 @@ export const createTableColumns = ({
               )
             ) : (
               <InputContentRenderer
+                itemKey={rowKey as IPocItemKey}
                 value={value}
                 displayFormType={displayFormType}
+                isEssential={itemConfig.isEssential}
               />
             )}
           </div>

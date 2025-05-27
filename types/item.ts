@@ -81,7 +81,7 @@ export interface IItemConfig<K extends IItemKey> {
   category: IItemCategoryEnum;
   subCategory: IItemSubCategoryEnum;
   group?: IItemGroupEnum;
-  isEssential?: boolean;
+  isEssential: boolean;
   label: string;
   description: string;
   shortDescription: string; // For tooltip

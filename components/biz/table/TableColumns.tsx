@@ -167,7 +167,7 @@ const InputCell = ({
           )
         ) : (
           <InputContentRenderer
-            key={itemKey}
+            itemKey={itemKey}
             value={value}
             displayFormType={finalDisplayFormType}
             isEssential={itemConfig?.isEssential || false}
@@ -348,7 +348,7 @@ const SubmitterCell = ({
   itemConfig,
 }: SubmitterColCellProps) => {
   const isNonEssential = !itemConfig?.isEssential;
-  const isValueEmpty = !item.input || item.input.toLowerCase() === 'n/a';
+  const isValueEmpty = !item?.input || item?.input.toLowerCase() === 'n/a';
 
   if (isNonEssential && isValueEmpty) {
     return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;

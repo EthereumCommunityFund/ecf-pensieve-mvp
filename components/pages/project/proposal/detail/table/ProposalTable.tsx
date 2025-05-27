@@ -5,7 +5,7 @@ import { Table, flexRender } from '@tanstack/react-table';
 import React from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey } from '@/types/item';
+import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -173,10 +173,17 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                     <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                       <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
                         <InputContentRenderer
+                          itemKey={row.original.key as IPocItemKey}
                           value={row.original.input}
                           displayFormType={
-                            AllItemConfig[row.original.key as IEssentialItemKey]
-                              .formDisplayType
+                            AllItemConfig[
+                              row.original.key as IEssentialItemKey
+                            ]!.formDisplayType
+                          }
+                          isEssential={
+                            AllItemConfig[
+                              row.original.key as IEssentialItemKey
+                            ]!.isEssential
                           }
                         />
                       </p>

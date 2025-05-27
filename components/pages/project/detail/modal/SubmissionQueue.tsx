@@ -18,7 +18,7 @@ import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretUpDownIcon } from '@/components/icons';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey } from '@/types/item';
+import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
 
 import {
@@ -319,10 +319,16 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                           <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
                             <InputContentRenderer
                               value={row.original.input}
+                              itemKey={row.original.key as IPocItemKey}
                               displayFormType={
                                 AllItemConfig[
                                   row.original.key as IEssentialItemKey
-                                ].formDisplayType
+                                ]!.formDisplayType
+                              }
+                              isEssential={
+                                AllItemConfig[
+                                  row.original.key as IEssentialItemKey
+                                ]!.isEssential
                               }
                             />
                           </p>
@@ -463,10 +469,16 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                         <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
                           <InputContentRenderer
                             value={row.original.input}
+                            itemKey={row.original.key as IPocItemKey}
                             displayFormType={
                               AllItemConfig[
                                 row.original.key as IEssentialItemKey
-                              ].formDisplayType
+                              ]!.formDisplayType
+                            }
+                            isEssential={
+                              AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]!.isEssential
                             }
                           />
                         </p>

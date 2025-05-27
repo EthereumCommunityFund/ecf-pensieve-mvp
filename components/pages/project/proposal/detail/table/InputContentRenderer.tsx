@@ -6,7 +6,7 @@ import React, { memo } from 'react';
 import { IFormDisplayType, IPocItemKey } from '@/types/item';
 
 interface IProps {
-  key: IPocItemKey;
+  itemKey: IPocItemKey;
   isEssential: boolean;
   value: any;
   displayFormType?: IFormDisplayType;
@@ -14,7 +14,7 @@ interface IProps {
 
 const InputContentRenderer: React.FC<IProps> = ({
   value,
-  key,
+  itemKey,
   isEssential,
   displayFormType,
 }) => {

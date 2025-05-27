@@ -19,7 +19,7 @@ import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretDownIcon } from '@/components/icons';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey } from '@/types/item';
+import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
 
 import { useDisplayedColumns } from './DisplayedColumns';
@@ -260,11 +260,17 @@ const Displayed: FC<DisplayedProps> = ({
                       <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                         <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
                           <InputContentRenderer
+                            itemKey={row.original.key as IPocItemKey}
                             value={row.original.input}
                             displayFormType={
                               AllItemConfig[
                                 row.original.key as IEssentialItemKey
-                              ].formDisplayType
+                              ]!.formDisplayType
+                            }
+                            isEssential={
+                              AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]!.isEssential
                             }
                           />
                         </p>

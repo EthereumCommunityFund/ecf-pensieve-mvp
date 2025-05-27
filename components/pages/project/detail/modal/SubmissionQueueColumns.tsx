@@ -5,6 +5,8 @@ import { useMemo } from 'react';
 
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
 import { CaretUpIcon, QuestionIcon, UsersIcon } from '@/components/icons';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IPocItemKey } from '@/types/item';
 
 import { TableRowData } from './types';
 
@@ -215,7 +217,13 @@ export const useDisplayedColumns = ({
       header: () => <SubmitterCol.Header />,
       size: 183,
       cell: (info) => {
-        return <SubmitterCol.Cell submitter={info.getValue()} />;
+        return (
+          <SubmitterCol.Cell
+            item={info.row.original}
+            itemConfig={AllItemConfig[info.row.original.key as IPocItemKey]!}
+            submitter={info.getValue()}
+          />
+        );
       },
     });
 

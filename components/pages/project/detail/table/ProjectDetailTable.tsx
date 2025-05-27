@@ -20,7 +20,11 @@ import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
 import { useColumns } from '@/components/pages/project/detail/table/Column';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey, IItemSubCategoryEnum } from '@/types/item';
+import {
+  IEssentialItemKey,
+  IItemSubCategoryEnum,
+  IPocItemKey,
+} from '@/types/item';
 
 // Import category components and utilities
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
@@ -297,11 +301,17 @@ const ProjectData: FC<ProjectDataProps> = ({
                       <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                         <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
                           <InputContentRenderer
+                            itemKey={row.original.key as IPocItemKey}
                             value={row.original.input}
                             displayFormType={
                               AllItemConfig[
                                 row.original.key as IEssentialItemKey
-                              ].formDisplayType
+                              ]!.formDisplayType
+                            }
+                            isEssential={
+                              AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]!.isEssential
                             }
                           />
                         </p>
