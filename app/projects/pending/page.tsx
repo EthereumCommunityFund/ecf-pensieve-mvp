@@ -35,6 +35,12 @@ const PendingProjectsPage = () => {
       },
     );
 
+  // TODO remove this in prod env
+  const { data: scanPendingProjectData } =
+    trpc.project.scanPendingProject.useQuery(undefined, {
+      enabled: true,
+    });
+
   const handleLoadMore = () => {
     if (!isFetchingNextPage) {
       fetchNextPage();
