@@ -21,6 +21,8 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
 
+import { useProjectLogContext } from '../../context/projectLogContext';
+
 import {
   useDisplayedColumns,
   useSubmissionQueueColumns,
@@ -46,7 +48,10 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   // 获取项目数据
   const { project } = useProjectDetailContext();
 
-  // 根据 itemKey 从项目数据中获取 Displayed Table 的真实数据
+  const { displayProposalData, proposalsByProjectIdAndKey } =
+    useProjectLogContext();
+
+  // TODO 从useProjectLogContext里面取，还没算好
   const displayedTableData: TableRowData[] = useMemo(() => {
     if (!project || !itemKey) {
       console.log('SubmissionQueue Displayed: Missing project or itemKey', {
@@ -56,12 +61,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       return [];
     }
 
-    console.log(
-      'SubmissionQueue Displayed: Processing data for itemKey:',
-      itemKey,
-      'project:',
-      project.name,
-    );
+    // proposalsByProjectIdAndKey里如果没有 leadingProposal 数据，从 displayProposalData 获取
 
     // 获取项目中对应 key 的值
     const value = project[itemKey as keyof typeof project];
@@ -104,54 +104,29 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
   // 使用模拟数据创建 submission queue 数据
   const tableData: TableRowData[] = useMemo(() => {
-    // 创建模拟的 submission queue 数据
-    const mockSubmissionData: TableRowData[] = [
-      {
-        id: 'submission-1',
-        input: 'Mock submission value 1',
-        key: itemKey || 'mockKey',
-        reference: 'https://example.com/ref1',
+    if (!proposalsByProjectIdAndKey) return [];
+    const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
+    const list = allItemProposals.map((item) => {
+      const { creator } = item;
+      return {
+        id: `${item.projectId}-${item.id}`,
+        input: item.value || '',
+        key: item.key,
+        reference: item.ref ?? '',
         submitter: {
-          name: 'Longusern..',
-          date: '12/15/2024',
+          name: creator.name,
+          date: formatDate(creator.createdAt),
         },
+        // TODO 需要根据投票数据来计算支持数，排除重复的
         support: {
-          count: 22,
-          voters: 3,
+          count: item.voteRecords.length,
+          voters: item.voteRecords.length,
         },
-      },
-      {
-        id: 'submission-2',
-        input: 'Mock submission value 2',
-        key: itemKey || 'mockKey',
-        reference: '',
-        submitter: {
-          name: 'Username',
-          date: '12/14/2024',
-        },
-        support: {
-          count: 18,
-          voters: 2,
-        },
-      },
-      {
-        id: 'submission-3',
-        input: 'Mock submission value 3',
-        key: itemKey || 'mockKey',
-        reference: 'https://example.com/ref3',
-        submitter: {
-          name: 'AnotherUser',
-          date: '12/13/2024',
-        },
-        support: {
-          count: 15,
-          voters: 4,
-        },
-      },
-    ];
+      };
+    });
 
-    return mockSubmissionData;
-  }, [itemKey]);
+    return list;
+  }, [proposalsByProjectIdAndKey]);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {

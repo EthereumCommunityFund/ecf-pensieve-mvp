@@ -16,7 +16,7 @@ import {
   IProposal,
   IProposalsByProjectIdAndKey,
 } from '@/types';
-import { IPocItemKey } from '@/types/item';
+import { IPocItemKey, IProposalItem } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 
 // Define the context type
@@ -88,6 +88,32 @@ export const ProjectLogProvider = ({ children }: { children: ReactNode }) => {
     const originProposal = withoutItemProposal[0].proposal as IProposal;
     return originProposal;
   }, [proposalsByProject]);
+
+  // TODO 类型待统一
+  const getLeadingItemProposal = useCallback(() => {
+    if (proposalsByProjectIdAndKey?.leadingProposal) {
+      return proposalsByProjectIdAndKey.leadingProposal;
+    }
+    if (!proposalsByProject) return null;
+    const { withoutItemProposal, withItemProposal } = proposalsByProject;
+    if (withItemProposal.length === 0) {
+      const matchedItemProposal = withoutItemProposal.find(
+        (item) => item.key === currentItemKey,
+      );
+      if (matchedItemProposal) {
+        return matchedItemProposal.proposal as IProposal;
+      }
+    }
+    const originProposal = withoutItemProposal[0].proposal as IProposal;
+    const keyItem = (originProposal.items as IProposalItem[]).find(
+      (item) => item.key === currentItemKey,
+    );
+    return {
+      ...originProposal,
+      key: keyItem?.key,
+      value: keyItem?.value,
+    };
+  }, [proposalsByProjectIdAndKey, displayProposalData]);
 
   const triggerGetProposalsByProjectIdAndKey = useCallback(
     (itemKey: IPocItemKey) => {

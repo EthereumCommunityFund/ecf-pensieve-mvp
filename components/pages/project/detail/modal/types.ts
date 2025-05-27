@@ -15,7 +15,7 @@ export interface IProjectDetailModalProps {
 // TODO 跟IProjectDataItem统一参数类型
 export interface TableRowData {
   id: string;
-  input: string;
+  input: any;
   reference: string;
   key: string;
   submitter: {
