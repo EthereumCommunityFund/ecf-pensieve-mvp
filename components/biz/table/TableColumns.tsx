@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { Avatar, cn } from '@heroui/react';
 import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
@@ -9,7 +9,7 @@ import { IProjectDataItem } from '@/components/pages/project/detail/table/Column
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
-import { IProject, IProposal } from '@/types';
+import { IProfileCreator, IProject, IProposal } from '@/types';
 import {
   IEssentialItemKey,
   IFormDisplayType,
@@ -327,10 +327,8 @@ export type SubmitterColHeaderProps = BaseHeaderProps;
 export interface SubmitterColCellProps extends BaseCellProps {
   item: IProjectDataItem;
   itemConfig: IItemConfig<IPocItemKey>;
-  submitter: {
-    name: string;
-    date: string;
-  };
+  submitter: IProfileCreator;
+  data: Date;
 }
 
 const SubmitterHeader = (_props: SubmitterColHeaderProps) => {
@@ -353,16 +351,24 @@ const SubmitterCell = ({
   if (isNonEssential && isValueEmpty) {
     return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
   }
-
+  const data = item?.createdAt;
   return (
     <div className="flex items-center gap-[5px]">
-      <div className="size-[24px] rounded-full bg-[#D9D9D9]"></div>
+      <div className="size-[24px] rounded-full bg-[#D9D9D9]">
+        <Avatar
+          src={submitter.avatarUrl ?? '/images/user/avatar_p.png'}
+          alt="avatar"
+          className="size-[24px] rounded-full"
+        />
+      </div>
       <div className="flex flex-col">
         <span className="text-[14px] font-[400] leading-[20px] text-black">
           {submitter.name}
         </span>
         <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
-          {submitter.date}
+          {data
+            ? `${data.getDate()}/${data.getMonth()}/${data.getFullYear()}`
+            : '00/00/0000'}
         </span>
       </div>
     </div>

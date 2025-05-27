@@ -2,8 +2,8 @@
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
-import { IProject, IProposal } from '@/types';
-import { IItemSubCategoryEnum, IPocItemKey, IProposalItem } from '@/types/item';
+import { IProject } from '@/types';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { formatDate } from '@/utils/formatters';
 
@@ -11,7 +11,7 @@ import { IProjectDataItem } from './Column';
 
 export interface IPrepareProjectTableDataParams {
   project?: IProject;
-  displayProposalData?: IProposal;
+  displayProposalData?: IProjectDataItem[];
 }
 
 export const prepareProjectTableData = ({
@@ -29,42 +29,37 @@ export const prepareProjectTableData = ({
       {} as Record<IItemSubCategoryEnum, IProjectDataItem[]>,
     );
 
-  const displayItemMap = (
-    (displayProposalData?.items as IProposalItem[]) || []
-  ).reduce(
+  // Create a map from displayProposalData for quick lookup
+  const displayItemMap = (displayProposalData || []).reduce(
     (acc, curr) => {
-      acc[curr.key as IPocItemKey] = curr.value;
+      acc[curr.key as IPocItemKey] = curr;
       return acc;
     },
-    {} as Record<IPocItemKey, IProposalItem>,
+    {} as Record<IPocItemKey, IProjectDataItem>,
   );
-
-  // Helper function to get reference value
-  const getReference = (key: string): string => {
-    if (!project?.refs || !Array.isArray(project.refs)) return '';
-    const ref = project.refs.find(
-      (r) => typeof r === 'object' && r !== null && 'key' in r && r.key === key,
-    ) as { key: string; value: string } | undefined;
-    return ref?.value || '';
-  };
 
   ProjectTableFieldCategory.forEach((categoryConfig) => {
     categoryConfig.subCategories.forEach((subCategoryConfig) => {
       // TODO groups 待处理
-      const { items, itemsNotEssential = [], groups } = subCategoryConfig;
+      const { items, itemsNotEssential = [] } = subCategoryConfig;
       const itemsToShow = [...items, ...itemsNotEssential];
       itemsToShow.forEach((itemKey) => {
         const itemConfig = AllItemConfig[itemKey as IPocItemKey];
-        const tableRowItem: IProjectDataItem = {
+
+        // Use data from displayProposalData if available, otherwise create default entry
+        const existingData = displayItemMap[itemKey as IPocItemKey];
+
+        const tableRowItem: IProjectDataItem = existingData || {
           key: itemKey,
           property: itemConfig?.label || itemKey,
-          input: displayItemMap[itemKey as IPocItemKey] ?? '',
-          reference: getReference(itemKey),
+          input: '',
+          reference: null,
           submitter: {
-            name: 'Project Creator', // Could be enhanced to show actual creator info
+            name: 'Project Creator',
             date: formatDate(project?.createdAt || ''),
           },
         };
+
         result[subCategoryConfig.key].push(tableRowItem);
       });
     });

@@ -157,7 +157,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
               </tr>
 
               {AllItemConfig[row.original.key as IEssentialItemKey]
-                .showExpand && (
+                ?.showExpand && (
                 <tr
                   key={`${row.id}-expanded`}
                   className={cn(expandedRows[row.original.key] ? '' : 'hidden')}

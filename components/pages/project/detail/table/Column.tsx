@@ -11,17 +11,20 @@ import {
   SubmitterCol,
 } from '@/components/biz/table';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { IProfileCreator } from '@/types';
 import { IPocItemKey } from '@/types/item';
+
+import { IRef } from '../../create/types';
 
 export interface IProjectDataItem {
   key: string; // 项目属性的键名
   property: string; // 显示的属性名称
   input: any; // 项目属性的值
-  reference: string; // 引用信息，基于 IRef.value
-  submitter: {
-    name: string; // 提交者名称
-    date: string; // 提交日期
-  };
+  reference: IRef | null; // 引用信息，基于 IRef.value
+  submitter: IProfileCreator;
+  createdAt: Date;
+  projectId: number;
+  proposalId: number;
 }
 
 interface UseColumnsProps {
@@ -116,11 +119,13 @@ export const useColumns = ({
       cell: (info) => {
         const item = info.row.original;
         const itemConfig = AllItemConfig[item.key as IPocItemKey];
+        const submitterData = info.getValue();
         return (
           <SubmitterCol.Cell
             item={info.row.original}
             itemConfig={itemConfig!}
-            submitter={info.getValue()}
+            submitter={submitterData}
+            data={item.createdAt}
           />
         );
       },

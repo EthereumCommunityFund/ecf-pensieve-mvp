@@ -17,8 +17,10 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
-import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
-import { useColumns } from '@/components/pages/project/detail/table/Column';
+import {
+  IProjectDataItem,
+  useColumns,
+} from '@/components/pages/project/detail/table/Column';
 import { AllItemConfig } from '@/constants/itemConfig';
 import {
   IEssentialItemKey,
@@ -30,7 +32,7 @@ import {
 import CategoryHeader from '@/components/pages/project/proposal/detail/table/CategoryHeader';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 
-import { useProjectLogContext } from '../../context/projectLogContext';
+import { useProjectDetailContext } from '../../context/projectDetailContext';
 import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
 
 import { prepareProjectTableData } from './utils';
@@ -60,14 +62,8 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
   isProposalsLoading,
   onOpenModal,
 }) => {
-  const { project } = useProjectDetailContext();
+  const { project, displayProposalData } = useProjectDetailContext();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-
-  const {
-    triggerGetProposalsByProjectIdAndKey,
-    proposalsByProjectIdAndKey,
-    displayProposalData,
-  } = useProjectLogContext();
 
   // 分类展开状态管理
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
@@ -90,10 +86,44 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
   }, []);
 
   // 创建分类表格数据
-  const tableData = useMemo(
-    () => prepareProjectTableData({ project, displayProposalData }),
-    [project, displayProposalData],
-  );
+  const tableData = useMemo(() => {
+    if (!displayProposalData) {
+      // 如果没有 displayProposalData，使用 prepareProjectTableData 创建默认数据
+      return prepareProjectTableData({
+        project,
+        displayProposalData: undefined,
+      });
+    }
+
+    // 如果有 displayProposalData，按分类组织数据
+    const result: Record<IItemSubCategoryEnum, IProjectDataItem[]> =
+      ProjectTableFieldCategory.reduce(
+        (acc, catConfig) => {
+          catConfig.subCategories.forEach((subCatConfig) => {
+            acc[subCatConfig.key] = [];
+          });
+          return acc;
+        },
+        {} as Record<IItemSubCategoryEnum, IProjectDataItem[]>,
+      );
+
+    // 将 displayProposalData 按分类分组
+    displayProposalData.forEach((item) => {
+      // 找到该 item 属于哪个分类
+      for (const categoryConfig of ProjectTableFieldCategory) {
+        for (const subCategoryConfig of categoryConfig.subCategories) {
+          const { items, itemsNotEssential = [] } = subCategoryConfig;
+          const itemsToShow = [...items, ...itemsNotEssential];
+          if (itemsToShow.includes(item.key as IPocItemKey)) {
+            result[subCategoryConfig.key].push(item);
+            return; // 找到分类后跳出循环
+          }
+        }
+      }
+    });
+
+    return result;
+  }, [project, displayProposalData]);
 
   const coreTableMeta = useMemo(
     () => ({

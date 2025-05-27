@@ -9,7 +9,6 @@ import {
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import {
-  formatProjectValue,
   TableCell,
   TableFooter,
   TableHeader,
@@ -20,7 +19,6 @@ import { CaretDownIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
-import { formatDate } from '@/utils/formatters';
 
 import { useDisplayedColumns } from './DisplayedColumns';
 import { AccountabilityMetric, TableRowData, Web3Metric } from './types';
@@ -49,41 +47,36 @@ const Displayed: FC<DisplayedProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { project } = useProjectDetailContext();
+  const { displayProposalData } = useProjectDetailContext();
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // 根据 itemKey 从项目数据中获取真实数据
+  // 根据 itemKey 从 displayProposalData 中获取真实数据
   const tableData: TableRowData[] = useMemo(() => {
-    if (!project || !itemKey) {
-      console.log('Displayed: Missing project or itemKey', {
-        project: !!project,
+    if (!displayProposalData || !itemKey) {
+      console.log('Displayed: Missing displayProposalData or itemKey', {
+        displayProposalData: !!displayProposalData,
         itemKey,
       });
       return [];
     }
 
-    console.log(
-      'Displayed: Processing data for itemKey:',
-      itemKey,
-      'project:',
-      project.name,
+    // 从 displayProposalData 中找到对应 itemKey 的数据
+    const proposalItem = displayProposalData.find(
+      (item) => item.key === itemKey,
     );
 
-    // 获取项目中对应 key 的值
-    const value = project[itemKey as keyof typeof project];
-    const formattedValue = formatProjectValue(itemKey, value);
+    if (!proposalItem) {
+      console.log('Displayed: No data found for itemKey:', itemKey);
+      return [];
+    }
 
-    // 获取引用信息
-    const getReference = (key: string): string => {
-      if (!project.refs || !Array.isArray(project.refs)) return '';
-      const ref = project.refs.find(
-        (r) =>
-          typeof r === 'object' && r !== null && 'key' in r && r.key === key,
-      ) as { key: string; value: string } | undefined;
-      return ref?.value || '';
-    };
+    console.log(
+      'Displayed: Found proposal item for itemKey:',
+      itemKey,
+      proposalItem,
+    );
 
     // 获取字段配置信息
     const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
@@ -91,14 +84,30 @@ const Displayed: FC<DisplayedProps> = ({
 
     return [
       {
-        id: '1',
-        input: formattedValue,
+        id: proposalItem.proposalId.toString(),
+        input: proposalItem.input,
         key: itemKey,
-        reference: getReference(itemKey),
+        reference: proposalItem.reference
+          ? {
+              key: proposalItem.reference.key,
+              value: proposalItem.reference.value,
+            }
+          : null,
         submitter: {
-          name: 'Project Creator',
-          date: formatDate(project.createdAt),
+          userId: proposalItem.submitter?.userId || '',
+          name: proposalItem.submitter?.name || 'Unknown',
+          avatarUrl: proposalItem.submitter?.avatarUrl || null,
+          address: proposalItem.submitter?.address || '',
+          weight: proposalItem.submitter?.weight || null,
+          invitationCodeId: proposalItem.submitter?.invitationCodeId || null,
+          createdAt:
+            proposalItem.submitter?.createdAt || proposalItem.createdAt,
+          updatedAt:
+            proposalItem.submitter?.updatedAt || proposalItem.createdAt,
         },
+        createdAt: proposalItem.createdAt,
+        projectId: proposalItem.projectId,
+        proposalId: proposalItem.proposalId,
         support: {
           count:
             typeof weight === 'number'
@@ -108,7 +117,7 @@ const Displayed: FC<DisplayedProps> = ({
         },
       },
     ];
-  }, [project, itemKey, itemWeight]);
+  }, [displayProposalData, itemKey, itemWeight]);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {

@@ -8,25 +8,16 @@ import {
 } from '@tanstack/react-table';
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  formatProjectValue,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from '@/components/biz/table';
+import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretUpDownIcon } from '@/components/icons';
-import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
-import { formatDate } from '@/utils/formatters';
 
-import { useProjectLogContext } from '../../context/projectLogContext';
+import { useProjectDetailContext } from '../../context/projectDetailContext';
 
-import {
-  useDisplayedColumns,
-  useSubmissionQueueColumns,
-} from './SubmissionQueueColumns';
+import { useModalContext } from './Context';
+import { useDisplayedColumns } from './SubmissionQueueColumns';
 import { TableRowData } from './types';
 
 interface SubmissionQueueProps {
@@ -46,51 +37,74 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 获取项目数据
-  const { project } = useProjectDetailContext();
+  const { displayProposalData } = useProjectDetailContext();
 
-  const { displayProposalData, proposalsByProjectIdAndKey } =
-    useProjectLogContext();
+  // 获取 Modal 数据
+  const { proposalsByKey } = useModalContext();
 
-  // TODO 从useProjectLogContext里面取，还没算好
+  // 根据 itemKey 从 displayProposalData 中获取真实数据
   const displayedTableData: TableRowData[] = useMemo(() => {
-    if (!project || !itemKey) {
-      console.log('SubmissionQueue Displayed: Missing project or itemKey', {
-        project: !!project,
-        itemKey,
-      });
+    if (!displayProposalData || !itemKey) {
+      console.log(
+        'SubmissionQueue Displayed: Missing displayProposalData or itemKey',
+        {
+          displayProposalData: !!displayProposalData,
+          itemKey,
+        },
+      );
       return [];
     }
 
-    // proposalsByProjectIdAndKey里如果没有 leadingProposal 数据，从 displayProposalData 获取
+    // 从 displayProposalData 中找到对应 itemKey 的数据
+    const proposalItem = displayProposalData.find(
+      (item) => item.key === itemKey,
+    );
 
-    // 获取项目中对应 key 的值
-    const value = project[itemKey as keyof typeof project];
-    const formattedValue = formatProjectValue(itemKey, value);
+    if (!proposalItem) {
+      console.log(
+        'SubmissionQueue Displayed: No data found for itemKey:',
+        itemKey,
+      );
+      return [];
+    }
 
-    // 获取引用信息
-    const getReference = (key: string): string => {
-      if (!project.refs || !Array.isArray(project.refs)) return '';
-      const ref = project.refs.find(
-        (r) =>
-          typeof r === 'object' && r !== null && 'key' in r && r.key === key,
-      ) as { key: string; value: string } | undefined;
-      return ref?.value || '';
-    };
+    console.log(
+      'SubmissionQueue Displayed: Found proposal item for itemKey:',
+      itemKey,
+      proposalItem,
+    );
 
     // 获取字段配置信息
     const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
     const weight = itemConfig?.weight || itemWeight;
 
+    // 返回单个数据项的数组，因为表格需要数组格式
     return [
       {
         id: 'displayed-1',
-        input: formattedValue,
+        input: proposalItem.input,
         key: itemKey,
-        reference: getReference(itemKey),
+        reference: proposalItem.reference
+          ? {
+              key: proposalItem.reference.key,
+              value: proposalItem.reference.value,
+            }
+          : null,
         submitter: {
-          name: 'Project Creator',
-          date: formatDate(project.createdAt),
+          userId: proposalItem.submitter?.userId || '',
+          name: proposalItem.submitter?.name || 'Unknown',
+          avatarUrl: proposalItem.submitter?.avatarUrl || null,
+          address: proposalItem.submitter?.address || '',
+          weight: proposalItem.submitter?.weight || null,
+          invitationCodeId: proposalItem.submitter?.invitationCodeId || null,
+          createdAt:
+            proposalItem.submitter?.createdAt || proposalItem.createdAt,
+          updatedAt:
+            proposalItem.submitter?.updatedAt || proposalItem.createdAt,
         },
+        createdAt: proposalItem.createdAt,
+        projectId: proposalItem.projectId,
+        proposalId: proposalItem.proposalId,
         support: {
           count:
             typeof weight === 'number'
@@ -100,23 +114,37 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
         },
       },
     ];
-  }, [project, itemKey, itemWeight]);
+  }, [displayProposalData, itemKey, itemWeight]);
 
   // 使用模拟数据创建 submission queue 数据
   const tableData: TableRowData[] = useMemo(() => {
-    if (!proposalsByProjectIdAndKey) return [];
-    const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
+    if (!proposalsByKey) return [];
+    const { allItemProposals } = proposalsByKey;
     const list = allItemProposals.map((item) => {
       const { creator } = item;
       return {
         id: `${item.projectId}-${item.id}`,
         input: item.value || '',
         key: item.key,
-        reference: item.ref ?? '',
+        reference: item.ref
+          ? {
+              key: item.key,
+              value: item.ref,
+            }
+          : null,
         submitter: {
+          userId: creator.userId,
           name: creator.name,
-          date: formatDate(creator.createdAt),
+          avatarUrl: creator.avatarUrl,
+          address: creator.address,
+          weight: creator.weight,
+          invitationCodeId: creator.invitationCodeId,
+          createdAt: creator.createdAt,
+          updatedAt: creator.updatedAt,
         },
+        createdAt: item.createdAt,
+        projectId: item.projectId,
+        proposalId: item.id,
         // TODO 需要根据投票数据来计算支持数，排除重复的
         support: {
           count: item.voteRecords.length,
@@ -126,7 +154,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     });
 
     return list;
-  }, [proposalsByProjectIdAndKey]);
+  }, [proposalsByKey]);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
@@ -153,15 +181,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   }, []);
 
   // Create columns for Displayed Table
-  const displayedColumns = useDisplayedColumns({
-    onReferenceClick: handleReferenceClick,
-    onExpandClick: handleExpandClick,
-    expandedRows,
-    toggleRowExpanded,
-  });
-
-  // Create columns for Submission Queue Table
-  const submissionColumns = useSubmissionQueueColumns({
+  const columns = useDisplayedColumns({
     onReferenceClick: handleReferenceClick,
     onExpandClick: handleExpandClick,
     expandedRows,
@@ -171,14 +191,14 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   // Create table instances
   const displayedTable = useReactTable({
     data: displayedTableData,
-    columns: displayedColumns,
+    columns: columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   // Create Submission Queue table instance
   const submissionTable = useReactTable({
     data: tableData,
-    columns: submissionColumns,
+    columns: columns,
     getCoreRowModel: getCoreRowModel(),
   });
 

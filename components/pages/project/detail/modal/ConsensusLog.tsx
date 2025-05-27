@@ -89,7 +89,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
           },
           input: `Vote action ${index + 1}`,
           leadBy: {
-            name: creator?.username || 'Unknown User',
+            name: creator?.name || 'Unknown User',
             date: formatDate(createdAt),
           },
           weight: {

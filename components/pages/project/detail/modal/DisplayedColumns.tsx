@@ -56,12 +56,14 @@ export const useDisplayedColumns = ({
       cell: (info) => {
         const item = info.row.original;
 
+        const referenceValue = info.getValue();
+
         return (
           <ReferenceCol.Cell
-            hasReference={!!info.getValue()}
+            hasReference={!!referenceValue}
             onShowReference={() => {
               // TODO: 实现引用显示逻辑
-              console.log('Show reference for:', item.key);
+              console.log('Show reference for:', item.key, referenceValue);
             }}
           />
         );
@@ -74,11 +76,27 @@ export const useDisplayedColumns = ({
       header: () => <SubmitterCol.Header />,
       size: 183,
       cell: (info) => {
+        const rowData = info.row.original;
+        const submitterData = info.getValue();
+
+        // Create IProjectDataItem using real data structure
+        const item = {
+          key: rowData.key,
+          property: rowData.key,
+          input: rowData.input,
+          reference: rowData.reference,
+          submitter: submitterData,
+          createdAt: submitterData.createdAt,
+          projectId: Number(rowData.id.split('-')[0]) || 0, // 尝试从 id 中提取 projectId
+          proposalId: Number(rowData.id.split('-')[1]) || 0, // 尝试从 id 中提取 proposalId
+        };
+
         return (
           <SubmitterCol.Cell
-            item={info.row.original}
-            itemConfig={AllItemConfig[info.row.original.key as IPocItemKey]!}
-            submitter={info.getValue()}
+            item={item}
+            itemConfig={AllItemConfig[rowData.key as IPocItemKey]!}
+            submitter={item.submitter}
+            data={item.createdAt}
           />
         );
       },

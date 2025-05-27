@@ -78,7 +78,7 @@ export const createTableColumns = ({
       const itemConfig = AllItemConfig[key as IEssentialItemKey];
       return (
         <div className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-          {itemConfig.formDisplayType}
+          {itemConfig?.formDisplayType}
         </div>
       );
     },

@@ -1,3 +1,5 @@
+import { IRef } from '@/components/pages/project/create/types';
+import { IProfileCreator } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 export interface IProjectDetailModalProps {
@@ -16,13 +18,12 @@ export interface IProjectDetailModalProps {
 export interface TableRowData {
   id: string;
   input: any;
-  reference: string;
   key: string;
-  submitter: {
-    name: string;
-    date: string;
-    avatar?: string;
-  };
+  reference: IRef | null; // 引用信息，基于 IRef.value
+  submitter: IProfileCreator;
+  createdAt: Date;
+  projectId: number;
+  proposalId: number;
   support: {
     count: number;
     voters: number;
