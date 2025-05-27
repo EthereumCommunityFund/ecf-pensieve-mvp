@@ -1,16 +1,13 @@
-import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
+import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
-  IEssentialItemKey,
   IItemCategoryEnum,
   IItemConfig,
+  IItemKey,
   IItemSubCategoryEnum,
 } from '@/types/item';
 
-export const AllItemConfig: Record<
-  IEssentialItemKey,
-  IItemConfig<IEssentialItemKey>
-> = {
+export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
   name: {
     key: 'name',
     category: IItemCategoryEnum.Basics,
@@ -19,7 +16,7 @@ export const AllItemConfig: Record<
     label: 'Project Name',
     description: 'type in the name of the project to propose',
     shortDescription: 'The unique identifier for the project.',
-    weight: ESSENTIAL_ITEM_MAP.name.weight,
+    weight: ALL_POC_ITEM_MAP.name.weight,
     formDisplayType: 'string',
     placeholder: 'Type in a name',
     showReference: true,
@@ -33,7 +30,7 @@ export const AllItemConfig: Record<
     description:
       'provide a simple short description about this project to display on its card',
     shortDescription: 'A simple and catchy slogan for the project.',
-    weight: ESSENTIAL_ITEM_MAP.tagline.weight,
+    weight: ALL_POC_ITEM_MAP.tagline.weight,
     formDisplayType: 'string',
     placeholder: 'Type in a tagline',
     showReference: true,
@@ -48,7 +45,7 @@ export const AllItemConfig: Record<
     description:
       'provide a simple short description about this project to display on its card',
     shortDescription: 'Categorize the project into relevant categories.',
-    weight: ESSENTIAL_ITEM_MAP.categories.weight,
+    weight: ALL_POC_ITEM_MAP.categories.weight,
     formDisplayType: 'selectMultiple',
     placeholder: 'Select categories',
     options: [
@@ -69,7 +66,7 @@ export const AllItemConfig: Record<
     label: 'Tags',
     description: 'provide a list of tags for this project',
     shortDescription: 'A list of tags for the project.',
-    weight: ESSENTIAL_ITEM_MAP.tags.weight,
+    weight: ALL_POC_ITEM_MAP.tags.weight,
     formDisplayType: 'selectMultiple',
     placeholder: 'Select tags',
     showReference: true,
@@ -111,7 +108,7 @@ export const AllItemConfig: Record<
     label: 'Main Description',
     description: 'provide a longer description about this project in detail',
     shortDescription: 'A comprehensive description of the project.',
-    weight: ESSENTIAL_ITEM_MAP.mainDescription.weight,
+    weight: ALL_POC_ITEM_MAP.mainDescription.weight,
     formDisplayType: 'string',
     placeholder: 'Type in a description',
     minRows: 4,
@@ -126,7 +123,7 @@ export const AllItemConfig: Record<
     label: 'Project Logo',
     description: 'provide a logo for this project',
     shortDescription: 'The visual logo of the project.',
-    weight: ESSENTIAL_ITEM_MAP.logoUrl.weight,
+    weight: ALL_POC_ITEM_MAP.logoUrl.weight,
     placeholder: '',
     formDisplayType: 'img',
     showReference: true,
@@ -139,7 +136,7 @@ export const AllItemConfig: Record<
     label: 'Project Website',
     description: 'provide the main website for this project',
     shortDescription: 'The main online address of the project.',
-    weight: ESSENTIAL_ITEM_MAP.websiteUrl.weight,
+    weight: ALL_POC_ITEM_MAP.websiteUrl.weight,
     formDisplayType: 'link',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -154,7 +151,7 @@ export const AllItemConfig: Record<
     description: 'provide the main application URL for this project',
     shortDescription:
       'The direct link to the project application (if different from the website).',
-    weight: ESSENTIAL_ITEM_MAP.appUrl.weight,
+    weight: ALL_POC_ITEM_MAP.appUrl.weight,
     formDisplayType: 'link',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -169,7 +166,7 @@ export const AllItemConfig: Record<
     label: 'White Paper',
     description: 'provide the white paper for this project',
     shortDescription: 'The white paper of the project.',
-    weight: ESSENTIAL_ITEM_MAP.whitePaper.weight,
+    weight: ALL_POC_ITEM_MAP.whitePaper.weight,
     formDisplayType: 'link',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
@@ -183,7 +180,7 @@ export const AllItemConfig: Record<
     label: 'Date Founded',
     description: 'Select the date at which the project was founded.',
     shortDescription: 'The date when the project officially began.',
-    weight: ESSENTIAL_ITEM_MAP.dateFounded.weight,
+    weight: ALL_POC_ITEM_MAP.dateFounded.weight,
     formDisplayType: 'date',
     placeholder: 'Select date',
     showReference: true,
@@ -198,7 +195,7 @@ export const AllItemConfig: Record<
       'Select the date when the main product or service was launched (if applicable).',
     shortDescription:
       'The date when the product was first released to the public.',
-    weight: ESSENTIAL_ITEM_MAP.dateLaunch.weight,
+    weight: ALL_POC_ITEM_MAP.dateLaunch.weight,
     formDisplayType: 'date',
     placeholder: 'Select date',
     showApplicable: true,
@@ -212,7 +209,7 @@ export const AllItemConfig: Record<
     label: 'Development Status',
     description: 'Select the current status of their development',
     shortDescription: 'The most recent development status of the project.',
-    weight: ESSENTIAL_ITEM_MAP.devStatus.weight,
+    weight: ALL_POC_ITEM_MAP.devStatus.weight,
     formDisplayType: 'select',
     placeholder: 'Select status',
     options: [
@@ -237,7 +234,7 @@ export const AllItemConfig: Record<
     description: 'Is this project now open-source?',
     shortDescription: 'Whether the project follows an open-source model.',
     placeholder: 'Select open-source status',
-    weight: ESSENTIAL_ITEM_MAP.openSource.weight,
+    weight: ALL_POC_ITEM_MAP.openSource.weight,
     formDisplayType: 'select',
     options: [
       { value: 'Yes', label: 'Yes' },
@@ -253,7 +250,7 @@ export const AllItemConfig: Record<
     label: 'Code Repository',
     description: 'Provide a URL to their repository',
     shortDescription: 'The repository link hosting the project source code.',
-    weight: ESSENTIAL_ITEM_MAP.codeRepo.weight,
+    weight: ALL_POC_ITEM_MAP.codeRepo.weight,
     formDisplayType: 'link',
     placeholder: 'https://github.com/your-org/repo',
     startContentText: 'https://',
@@ -268,7 +265,7 @@ export const AllItemConfig: Record<
     label: 'Dapp Smart Contracts',
     description: 'Input the projects smart contracts',
     shortDescription: 'The smart contracts of the project.',
-    weight: ESSENTIAL_ITEM_MAP.dappSmartContracts.weight,
+    weight: ALL_POC_ITEM_MAP.dappSmartContracts.weight,
     formDisplayType: 'stringMultiple',
     placeholder: '0x...',
     showReference: true,
@@ -283,7 +280,7 @@ export const AllItemConfig: Record<
     label: 'Organization Structure',
     description: 'With what structure does this project operate?',
     shortDescription: 'The organizational and governance model of the project.',
-    weight: ESSENTIAL_ITEM_MAP.orgStructure.weight,
+    weight: ALL_POC_ITEM_MAP.orgStructure.weight,
     formDisplayType: 'select',
     placeholder: 'Select structure',
     options: [
@@ -301,7 +298,7 @@ export const AllItemConfig: Record<
     label: 'Public-Goods Nature',
     description: 'Is this project a public good?',
     shortDescription: 'Whether the project contributes to the public domain.',
-    weight: ESSENTIAL_ITEM_MAP.publicGoods.weight,
+    weight: ALL_POC_ITEM_MAP.publicGoods.weight,
     placeholder: 'Select public goods',
     formDisplayType: 'select',
     options: [
@@ -320,7 +317,7 @@ export const AllItemConfig: Record<
       'Provide the founders of this project (minimum of 1 founder is required)',
     shortDescription: 'The list of founding team members of the project.',
     placeholder: 'Add a founder',
-    weight: ESSENTIAL_ITEM_MAP.founders.weight,
+    weight: ALL_POC_ITEM_MAP.founders.weight,
     formDisplayType: 'founderList',
     showReference: true,
     showExpand: true,
@@ -333,7 +330,7 @@ export const AllItemConfig: Record<
     label: 'Funding Status',
     description: 'Select the current status of their funding phase',
     shortDescription: 'The sources and status of project funding.',
-    weight: ESSENTIAL_ITEM_MAP.fundingStatus.weight,
+    weight: ALL_POC_ITEM_MAP.fundingStatus.weight,
     formDisplayType: 'select',
     placeholder: 'Select funding status',
     showApplicable: true,
@@ -353,9 +350,54 @@ export const AllItemConfig: Record<
     description: 'Input the projects token contract address',
     shortDescription:
       'The contract address of the project token on the blockchain.',
-    weight: ESSENTIAL_ITEM_MAP.tokenContract.weight,
+    weight: ALL_POC_ITEM_MAP.tokenContract.weight,
     formDisplayType: 'string',
     placeholder: '0x...',
+    showReference: true,
+  },
+
+  adoption_plan: {
+    key: 'adoption_plan',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.adoption_plan.isEssential,
+    label: 'Adoption Plan',
+    description: 'Provide the adoption plan for this project',
+    shortDescription:
+      'The plan for the project to be adopted by the community.',
+    weight: ALL_POC_ITEM_MAP.adoption_plan.weight,
+    formDisplayType: 'textarea',
+    placeholder: 'Type in a plan',
+    showReference: true,
+    showExpand: true,
+  },
+  launch_plan: {
+    key: 'launch_plan',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.launch_plan.isEssential,
+    label: 'Launch Plan',
+    description: 'Provide the launch plan for this project',
+    shortDescription:
+      'The plan for the project to be launched by the community.',
+    weight: ALL_POC_ITEM_MAP.launch_plan.weight,
+    formDisplayType: 'textarea',
+    placeholder: 'Type in a plan',
+    showReference: true,
+    showExpand: true,
+  },
+  roadmap: {
+    key: 'roadmap',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.roadmap.isEssential,
+    label: 'Roadmap',
+    description: 'Provide the roadmap for this project',
+    shortDescription:
+      'The roadmap for the project to be adopted by the community.',
+    weight: ALL_POC_ITEM_MAP.roadmap.weight,
+    formDisplayType: 'roadmap',
+    placeholder: 'Type in a roadmap',
     showReference: true,
   },
 };

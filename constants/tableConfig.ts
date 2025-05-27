@@ -134,6 +134,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'dateFounded',
           'dateLaunch',
         ],
+        itemsNotEssential: ['adoption_plan', 'launch_plan', 'roadmap'],
         groups: [],
       },
     ],

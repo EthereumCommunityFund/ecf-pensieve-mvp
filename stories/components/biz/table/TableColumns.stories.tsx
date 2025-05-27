@@ -356,7 +356,7 @@ export const MigrationExample: Story = {
     return (
       <div className="flex w-full items-center justify-between">
         <div>{info.getValue()}</div>
-        <TooltipItemWeight itemWeight={ESSENTIAL_ITEM_MAP[rowKey].weight} />
+        <TooltipItemWeight itemWeight={ALL_POC_ITEM_MAP[rowKey].weight} />
       </div>
     );
   },

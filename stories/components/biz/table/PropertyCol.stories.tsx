@@ -21,7 +21,7 @@ It includes built-in support for tooltips and weight indicators.
 - Pure UI components without business logic
 - Consistent styling with other table components
 - Built-in tooltip support for property names
-- Optional weight indicators from ESSENTIAL_ITEM_MAP
+- Optional weight indicators from ALL_POC_ITEM_MAP
 - Responsive width and spacing
         `,
       },

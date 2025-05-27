@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 
 import {
-  ESSENTIAL_ITEM_LIST,
+  ALL_POC_ITEM_MAP,
   QUORUM_AMOUNT,
   REWARD_PERCENT,
   WEIGHT,
@@ -13,6 +13,7 @@ import {
   addRewardNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import { IPocItemKey } from '@/types/item';
 
 export const calculateReward = (key: string): number => {
   const item = POC_ITEMS[key as keyof typeof POC_ITEMS];
@@ -23,7 +24,7 @@ export const calculateReward = (key: string): number => {
 };
 
 export const isEssentialItem = (key: string): boolean => {
-  return ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
+  return ALL_POC_ITEM_MAP[key as IPocItemKey].isEssential;
 };
 
 export const handleVoteRecord = async (
@@ -92,7 +93,7 @@ export const checkNeedQuorum = async (
   tx: any,
   { projectId, key }: { projectId: number; key: string },
 ) => {
-  const isEssentialItem = ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
+  const isEssentialItem = ALL_POC_ITEM_MAP[key as IPocItemKey].isEssential;
   if (isEssentialItem) return false;
 
   const hasLeadingProposal = await tx.query.projectLogs.findFirst({

@@ -6,9 +6,9 @@ import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
+import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
-import { IEssentialItemKey } from '@/types/item';
+import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -55,7 +55,9 @@ export const createTableColumns = ({
           <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
             {info.getValue()}
           </div>
-          <TooltipItemWeight itemWeight={ESSENTIAL_ITEM_MAP[rowKey].weight} />
+          <TooltipItemWeight
+            itemWeight={ALL_POC_ITEM_MAP[rowKey as IPocItemKey].weight}
+          />
         </div>
       );
     },

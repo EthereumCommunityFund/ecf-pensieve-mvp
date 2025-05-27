@@ -7,9 +7,9 @@ import { Button } from '@/components/base';
 import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { ESSENTIAL_ITEM_MAP } from '@/lib/constants';
+import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
-import { IEssentialItemKey, IFormDisplayType } from '@/types/item';
+import { IEssentialItemKey, IFormDisplayType, IPocItemKey } from '@/types/item';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
@@ -40,7 +40,7 @@ export type PropertyColHeaderProps = BaseHeaderProps;
 
 export interface PropertyColCellProps extends BaseCellProps {
   children: ReactNode;
-  itemKey?: string; // The key to look up weight in ESSENTIAL_ITEM_MAP
+  itemKey?: string; // The key to look up weight in ALL_POC_ITEM_MAP
   showWeight?: boolean; // Whether to show the weight tooltip
 }
 
@@ -59,7 +59,7 @@ const PropertyCell = ({
   showWeight = true,
 }: PropertyColCellProps) => {
   const shouldShowWeight =
-    showWeight && itemKey && ESSENTIAL_ITEM_MAP[itemKey]?.weight;
+    showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -67,7 +67,9 @@ const PropertyCell = ({
         {children}
       </div>
       {shouldShowWeight && (
-        <TooltipItemWeight itemWeight={ESSENTIAL_ITEM_MAP[itemKey!].weight} />
+        <TooltipItemWeight
+          itemWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
+        />
       )}
     </div>
   );
