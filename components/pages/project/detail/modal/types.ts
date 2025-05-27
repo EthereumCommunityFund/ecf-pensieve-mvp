@@ -1,5 +1,4 @@
-import { IRef } from '@/components/pages/project/create/types';
-import { IProfileCreator } from '@/types';
+import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
 import { IPocItemKey } from '@/types/item';
 
 export interface IProjectDetailModalProps {
@@ -14,16 +13,8 @@ export interface IProjectDetailModalProps {
   contentType: 'viewItemProposal' | 'submitPropose';
 }
 
-// TODO 跟IProjectDataItem统一参数类型
-export interface TableRowData {
-  id: string;
-  input: any;
-  key: string;
-  reference: IRef | null; // 引用信息，基于 IRef.value
-  submitter: IProfileCreator;
-  createdAt: Date;
-  projectId: number;
-  proposalId: number;
+// Use IProjectDataItem as base and extend with modal-specific fields
+export interface TableRowData extends IProjectDataItem {
   support: {
     count: number;
     voters: number;

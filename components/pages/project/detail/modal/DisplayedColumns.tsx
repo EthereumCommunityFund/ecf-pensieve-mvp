@@ -79,24 +79,12 @@ export const useDisplayedColumns = ({
         const rowData = info.row.original;
         const submitterData = info.getValue();
 
-        // Create IProjectDataItem using real data structure
-        const item = {
-          key: rowData.key,
-          property: rowData.key,
-          input: rowData.input,
-          reference: rowData.reference,
-          submitter: submitterData,
-          createdAt: submitterData.createdAt,
-          projectId: Number(rowData.id.split('-')[0]) || 0, // 尝试从 id 中提取 projectId
-          proposalId: Number(rowData.id.split('-')[1]) || 0, // 尝试从 id 中提取 proposalId
-        };
-
         return (
           <SubmitterCol.Cell
-            item={item}
+            item={rowData}
             itemConfig={AllItemConfig[rowData.key as IPocItemKey]!}
-            submitter={item.submitter}
-            data={item.createdAt}
+            submitter={submitterData}
+            data={rowData.createdAt}
           />
         );
       },

@@ -78,77 +78,47 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
     const weight = itemConfig?.weight || itemWeight;
 
-    // 返回单个数据项的数组，因为表格需要数组格式
-    return [
-      {
-        id: 'displayed-1',
-        input: proposalItem.input,
-        key: itemKey,
-        reference: proposalItem.reference
-          ? {
-              key: proposalItem.reference.key,
-              value: proposalItem.reference.value,
-            }
-          : null,
-        submitter: {
-          userId: proposalItem.submitter?.userId || '',
-          name: proposalItem.submitter?.name || 'Unknown',
-          avatarUrl: proposalItem.submitter?.avatarUrl || null,
-          address: proposalItem.submitter?.address || '',
-          weight: proposalItem.submitter?.weight || null,
-          invitationCodeId: proposalItem.submitter?.invitationCodeId || null,
-          createdAt:
-            proposalItem.submitter?.createdAt || proposalItem.createdAt,
-          updatedAt:
-            proposalItem.submitter?.updatedAt || proposalItem.createdAt,
-        },
-        createdAt: proposalItem.createdAt,
-        projectId: proposalItem.projectId,
-        proposalId: proposalItem.proposalId,
-        support: {
-          count:
-            typeof weight === 'number'
-              ? weight
-              : parseInt(weight?.toString() || '0', 10),
-          voters: 1, // 可以根据实际投票数据调整
-        },
+    // 直接使用 IProjectDataItem 结构并添加 support 字段
+    const tableRowData: TableRowData = {
+      ...proposalItem, // 继承所有 IProjectDataItem 字段
+      support: {
+        count:
+          typeof weight === 'number'
+            ? weight
+            : parseInt(weight?.toString() || '0', 10),
+        voters: 1, // 可以根据实际投票数据调整
       },
-    ];
+    };
+
+    return [tableRowData];
   }, [displayProposalData, itemKey, itemWeight]);
 
-  // 使用模拟数据创建 submission queue 数据
+  // 使用真实数据创建 submission queue 数据
   const tableData: TableRowData[] = useMemo(() => {
     if (!proposalsByKey) return [];
     const { allItemProposals } = proposalsByKey;
-    const list = allItemProposals.map((item) => {
+
+    const list: TableRowData[] = allItemProposals.map((item) => {
       const { creator } = item;
-      return {
-        id: `${item.projectId}-${item.id}`,
-        input: item.value || '',
+
+      // 构建符合 IProjectDataItem 结构的数据
+      const baseData = {
         key: item.key,
-        reference: item.ref
-          ? {
-              key: item.key,
-              value: item.ref,
-            }
-          : null,
-        submitter: {
-          userId: creator.userId,
-          name: creator.name,
-          avatarUrl: creator.avatarUrl,
-          address: creator.address,
-          weight: creator.weight,
-          invitationCodeId: creator.invitationCodeId,
-          createdAt: creator.createdAt,
-          updatedAt: creator.updatedAt,
-        },
+        property: item.key,
+        input: item.value || '',
+        reference: item.ref ? { key: item.key, value: item.ref } : null,
+        submitter: creator,
         createdAt: item.createdAt,
         projectId: item.projectId,
         proposalId: item.id,
-        // TODO 需要根据投票数据来计算支持数，排除重复的
+      };
+
+      // 添加 support 字段
+      return {
+        ...baseData,
         support: {
-          count: item.voteRecords.length,
-          voters: item.voteRecords.length,
+          count: item.voteRecords?.length || 0,
+          voters: item.voteRecords?.length || 0,
         },
       };
     });
@@ -295,20 +265,23 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
                   {AllItemConfig[row.original.key as IEssentialItemKey]
                     ?.showExpand && (
-                    <tr
+                    <TableRow
                       key={`${row.id}-expanded`}
                       className={cn(
                         expandedRows[row.original.key] ? '' : 'hidden',
                       )}
                     >
-                      <td
-                        colSpan={row.getVisibleCells().length}
+                      <TableCell
                         className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
                           rowIndex ===
                           displayedTable.getRowModel().rows.length - 1
                             ? 'border-b-0'
                             : ''
                         }`}
+                        style={{
+                          width: '100%',
+                          gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
+                        }}
                       >
                         <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                           <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
@@ -328,8 +301,8 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                             />
                           </p>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
                 </React.Fragment>
               ))}
@@ -445,20 +418,23 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
                 {AllItemConfig[row.original.key as IEssentialItemKey]
                   ?.showExpand && (
-                  <tr
+                  <TableRow
                     key={`${row.id}-expanded`}
                     className={cn(
                       expandedRows[row.original.key] ? '' : 'hidden',
                     )}
                   >
-                    <td
-                      colSpan={row.getVisibleCells().length}
+                    <TableCell
                       className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
                         rowIndex ===
                         submissionTable.getRowModel().rows.length - 1
                           ? 'border-b-0'
                           : ''
                       }`}
+                      style={{
+                        width: '100%',
+                        gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
+                      }}
                     >
                       <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                         <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
@@ -478,8 +454,8 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                           />
                         </p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
               </React.Fragment>
             ))}

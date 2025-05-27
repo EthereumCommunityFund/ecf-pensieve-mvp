@@ -82,41 +82,19 @@ const Displayed: FC<DisplayedProps> = ({
     const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
     const weight = itemConfig?.weight || itemWeight;
 
-    return [
-      {
-        id: proposalItem.proposalId.toString(),
-        input: proposalItem.input,
-        key: itemKey,
-        reference: proposalItem.reference
-          ? {
-              key: proposalItem.reference.key,
-              value: proposalItem.reference.value,
-            }
-          : null,
-        submitter: {
-          userId: proposalItem.submitter?.userId || '',
-          name: proposalItem.submitter?.name || 'Unknown',
-          avatarUrl: proposalItem.submitter?.avatarUrl || null,
-          address: proposalItem.submitter?.address || '',
-          weight: proposalItem.submitter?.weight || null,
-          invitationCodeId: proposalItem.submitter?.invitationCodeId || null,
-          createdAt:
-            proposalItem.submitter?.createdAt || proposalItem.createdAt,
-          updatedAt:
-            proposalItem.submitter?.updatedAt || proposalItem.createdAt,
-        },
-        createdAt: proposalItem.createdAt,
-        projectId: proposalItem.projectId,
-        proposalId: proposalItem.proposalId,
-        support: {
-          count:
-            typeof weight === 'number'
-              ? weight
-              : parseInt(weight?.toString() || '0', 10),
-          voters: 1, // 可以根据实际投票数据调整
-        },
+    // 直接使用 IProjectDataItem 结构并添加 support 字段
+    const tableRowData: TableRowData = {
+      ...proposalItem, // 继承所有 IProjectDataItem 字段
+      support: {
+        count:
+          typeof weight === 'number'
+            ? weight
+            : parseInt(weight?.toString() || '0', 10),
+        voters: 1, // 可以根据实际投票数据调整
       },
-    ];
+    };
+
+    return [tableRowData];
   }, [displayProposalData, itemKey, itemWeight]);
 
   // 切换行展开状态
@@ -252,19 +230,22 @@ const Displayed: FC<DisplayedProps> = ({
 
                 {AllItemConfig[row.original.key as IEssentialItemKey]
                   ?.showExpand && (
-                  <tr
+                  <TableRow
                     key={`${row.id}-expanded`}
                     className={cn(
                       expandedRows[row.original.key] ? '' : 'hidden',
                     )}
                   >
-                    <td
-                      colSpan={row.getVisibleCells().length}
+                    <TableCell
                       className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
                         rowIndex === table.getRowModel().rows.length - 1
                           ? 'border-b-0'
                           : ''
                       }`}
+                      style={{
+                        width: '100%',
+                        gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
+                      }}
                     >
                       <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                         <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
@@ -284,8 +265,8 @@ const Displayed: FC<DisplayedProps> = ({
                           />
                         </p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
               </React.Fragment>
             ))}

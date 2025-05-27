@@ -56,12 +56,14 @@ export const useDisplayedColumns = ({
       size: 124,
       cell: (info) => {
         const item = info.row.original;
+        const referenceValue = info.getValue();
+
         return (
           <ReferenceCol.Cell
-            hasReference={!!info.getValue()}
+            hasReference={!!referenceValue}
             onShowReference={() => {
-              onReferenceClick?.(item.id);
-              console.log('Show reference for:', item.key);
+              onReferenceClick?.(item.key);
+              console.log('Show reference for:', item.key, referenceValue);
             }}
           />
         );
@@ -77,24 +79,12 @@ export const useDisplayedColumns = ({
         const rowData = info.row.original;
         const submitterData = info.getValue();
 
-        // Create IProjectDataItem using real data structure
-        const item = {
-          key: rowData.key,
-          property: rowData.key,
-          input: rowData.input,
-          reference: rowData.reference,
-          submitter: submitterData,
-          createdAt: submitterData.createdAt,
-          projectId: Number(rowData.projectId) || 0, // 尝试从 id 中提取 projectId
-          proposalId: Number(rowData.proposalId) || 0, // 尝试从 id 中提取 proposalId
-        };
-
         return (
           <SubmitterCol.Cell
-            item={item}
+            item={rowData}
             itemConfig={AllItemConfig[rowData.key as IPocItemKey]!}
-            submitter={item.submitter}
-            data={item.createdAt}
+            submitter={submitterData}
+            data={rowData.createdAt}
           />
         );
       },
