@@ -29,6 +29,7 @@ export const itemProposalRouter = router({
         key: z.string().min(1, 'Key cannot be empty'),
         value: z.any(),
         ref: z.string().optional(),
+        reason: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

@@ -28,6 +28,7 @@ export const itemProposals = pgTable(
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),
+    reason: text('reason'),
   },
   (table) => {
     return {
