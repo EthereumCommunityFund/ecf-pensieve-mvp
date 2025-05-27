@@ -25,7 +25,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     return <>{value}</>;
   }
 
-  const isValueEmpty = !value || value.toLowerCase() === 'n/a';
+  const isValueEmpty =
+    !value || (typeof value === 'string' && value?.toLowerCase() === 'n/a');
 
   if (!isEssential && isValueEmpty) {
     return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
