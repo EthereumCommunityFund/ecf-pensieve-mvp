@@ -17,7 +17,7 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
-import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { useColumns } from '@/components/pages/project/detail/table/Column';
 import { AllItemConfig } from '@/constants/itemConfig';
 import {
@@ -59,7 +59,7 @@ const ProjectData: FC<ProjectDataProps> = ({
   isProposalsLoading,
   onOpenModal,
 }) => {
-  const { project } = useProjectDetail();
+  const { project } = useProjectDetailContext();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 分类展开状态管理

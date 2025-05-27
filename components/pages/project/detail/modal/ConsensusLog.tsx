@@ -8,7 +8,7 @@ import {
 import { FC, useCallback, useMemo } from 'react';
 
 import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
-import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { formatDate } from '@/utils/formatters';
 
 import { useConsensusLogColumns } from './ConsensusLogColumns';
@@ -27,7 +27,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { project } = useProjectDetail();
+  const { project } = useProjectDetailContext();
 
   // 尝试使用 Modal Context 获取数据，如果不可用则回退到直接调用
   let proposalHistory;

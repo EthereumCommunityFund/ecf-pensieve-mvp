@@ -1,7 +1,7 @@
 'use client';
 
-import { ProjectDetailProvider } from '@/components/pages/project/context/projectDetail';
-import { ProjectLogProvider } from '@/components/pages/project/context/projectLog';
+import { ProjectDetailProvider } from '@/components/pages/project/context/projectDetailContext';
+import { ProjectLogProvider } from '@/components/pages/project/context/projectLogContext';
 
 const ProjectLayout = ({ children }: { children: React.ReactNode }) => {
   return (

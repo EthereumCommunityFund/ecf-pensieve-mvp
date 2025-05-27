@@ -6,7 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
-import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
+import { useProjectLogContext } from '@/components/pages/project/context/projectLogContext';
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
@@ -38,7 +39,10 @@ const ProjectPage = () => {
     isProjectFetched,
     isProposalsLoading,
     isProposalsFetched,
-  } = useProjectDetail();
+  } = useProjectDetailContext();
+
+  const { triggerGetProposalsByProjectIdAndKey, proposalsByProjectIdAndKey } =
+    useProjectLogContext();
 
   const [contentType, setContentType] = useState<
     'viewItemProposal' | 'submitPropose'
@@ -90,8 +94,9 @@ const ProjectPage = () => {
       setSelectedItemKey(itemKey);
       setIsModalOpen(true);
       setContentType(contentType || 'viewItemProposal');
+      triggerGetProposalsByProjectIdAndKey(itemKey);
     },
-    [],
+    [triggerGetProposalsByProjectIdAndKey],
   );
 
   // 处理 SwitchVoteModal 关闭

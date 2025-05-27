@@ -4,7 +4,7 @@ import { cn } from '@heroui/react';
 import { FC } from 'react';
 
 import { Modal, ModalContent } from '@/components/base/modal';
-import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 
 import { ModalProvider } from './Context';
 import LeftContent from './LeftContent';
@@ -25,7 +25,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   contentType = 'viewItemProposal',
 }) => {
   // 获取项目数据
-  const { projectId } = useProjectDetail();
+  const { projectId } = useProjectDetailContext();
   const handleShare = () => {
     // TODO: Implement share functionality
     console.log('Share clicked');

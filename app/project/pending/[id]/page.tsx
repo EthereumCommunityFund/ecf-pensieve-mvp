@@ -43,7 +43,7 @@ const ProjectPage = () => {
     {
       enabled: !!projectId,
       select: (data) => {
-        devLog('getProposalsByProjectId', data);
+        // devLog('getProposalsByProjectId', data);
         return data;
       },
     },

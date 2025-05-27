@@ -16,7 +16,7 @@ import {
 } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretUpDownIcon } from '@/components/icons';
-import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
@@ -44,7 +44,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 获取项目数据
-  const { project } = useProjectDetail();
+  const { project } = useProjectDetailContext();
 
   // 根据 itemKey 从项目数据中获取 Displayed Table 的真实数据
   const displayedTableData: TableRowData[] = useMemo(() => {

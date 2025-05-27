@@ -17,7 +17,7 @@ import {
 } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretDownIcon } from '@/components/icons';
-import { useProjectDetail } from '@/components/pages/project/context/projectDetail';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
@@ -49,7 +49,7 @@ const Displayed: FC<DisplayedProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { project } = useProjectDetail();
+  const { project } = useProjectDetailContext();
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});

@@ -64,7 +64,7 @@ export const ProjectDetailProvider = ({
     {
       enabled: !!projectId,
       select: (data) => {
-        devLog('getProposalsByProjectId', data);
+        // devLog('getProposalsByProjectId', data);
         return data;
       },
     },
@@ -89,7 +89,7 @@ export const ProjectDetailProvider = ({
 };
 
 // Custom hook to use the context
-export const useProjectDetail = () => {
+export const useProjectDetailContext = () => {
   const context = useContext(ProjectDetailContext);
   if (context === undefined) {
     throw new Error(
