@@ -3,19 +3,32 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { memo } from 'react';
 
-import { IFormDisplayType } from '@/types/item';
+import { IFormDisplayType, IPocItemKey } from '@/types/item';
 
 interface IProps {
+  key: IPocItemKey;
+  isEssential: boolean;
   value: any;
   displayFormType?: IFormDisplayType;
 }
 
-const InputContentRenderer: React.FC<IProps> = ({ value, displayFormType }) => {
+const InputContentRenderer: React.FC<IProps> = ({
+  value,
+  key,
+  isEssential,
+  displayFormType,
+}) => {
   if (!displayFormType) {
     if (Array.isArray(value)) {
       return <>{JSON.stringify(value)}</>;
     }
     return <>{value}</>;
+  }
+
+  const isValueEmpty = !value || value.toLowerCase() === 'n/a';
+
+  if (!isEssential && isValueEmpty) {
+    return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
   }
 
   const formatValue =

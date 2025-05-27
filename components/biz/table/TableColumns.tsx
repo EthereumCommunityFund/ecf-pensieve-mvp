@@ -5,11 +5,17 @@ import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
+import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
-import { IEssentialItemKey, IFormDisplayType, IPocItemKey } from '@/types/item';
+import {
+  IEssentialItemKey,
+  IFormDisplayType,
+  IItemConfig,
+  IPocItemKey,
+} from '@/types/item';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
@@ -161,8 +167,10 @@ const InputCell = ({
           )
         ) : (
           <InputContentRenderer
+            key={itemKey}
             value={value}
             displayFormType={finalDisplayFormType}
+            isEssential={itemConfig?.isEssential || false}
           />
         )}
       </div>
@@ -317,6 +325,8 @@ export const SupportCol = {
 export type SubmitterColHeaderProps = BaseHeaderProps;
 
 export interface SubmitterColCellProps extends BaseCellProps {
+  item: IProjectDataItem;
+  itemConfig: IItemConfig<IPocItemKey>;
   submitter: {
     name: string;
     date: string;
@@ -332,7 +342,18 @@ const SubmitterHeader = (_props: SubmitterColHeaderProps) => {
   );
 };
 
-const SubmitterCell = ({ submitter }: SubmitterColCellProps) => {
+const SubmitterCell = ({
+  submitter,
+  item,
+  itemConfig,
+}: SubmitterColCellProps) => {
+  const isNonEssential = !itemConfig?.isEssential;
+  const isValueEmpty = !item.input || item.input.toLowerCase() === 'n/a';
+
+  if (isNonEssential && isValueEmpty) {
+    return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
+  }
+
   return (
     <div className="flex items-center gap-[5px]">
       <div className="size-[24px] rounded-full bg-[#D9D9D9]"></div>
@@ -360,6 +381,8 @@ export const SubmitterCol = {
 export type ActionsColHeaderProps = BaseHeaderProps;
 
 export interface ActionsColCellProps extends BaseCellProps {
+  item: IProjectDataItem;
+  itemConfig: IItemConfig<IPocItemKey>;
   onView?: () => void;
   onMenu?: () => void;
 }
@@ -373,7 +396,28 @@ const ActionsHeader = (_props: ActionsColHeaderProps) => {
   );
 };
 
-const ActionsCell = ({ onView, onMenu }: ActionsColCellProps) => {
+const ActionsCell = ({
+  onView,
+  onMenu,
+  item,
+  itemConfig,
+}: ActionsColCellProps) => {
+  const isEssential = itemConfig?.isEssential;
+  const value = item.input;
+  const isValueEmpty = !value || value.toLowerCase() === 'n/a';
+
+  if (!isEssential && isValueEmpty) {
+    return (
+      <Button
+        size="sm"
+        className="w-full border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
+        onPress={onView}
+      >
+        Propose
+      </Button>
+    );
+  }
+
   return (
     <div className="flex items-center gap-[10px]">
       <Button

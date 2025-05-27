@@ -10,6 +10,8 @@ import {
   ReferenceCol,
   SubmitterCol,
 } from '@/components/biz/table';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IPocItemKey } from '@/types/item';
 
 export interface IProjectDataItem {
   key: string; // 项目属性的键名
@@ -109,7 +111,15 @@ export const useColumns = ({
       header: () => <SubmitterCol.Header />,
       size: 183,
       cell: (info) => {
-        return <SubmitterCol.Cell submitter={info.getValue()} />;
+        const item = info.row.original;
+        const itemConfig = AllItemConfig[item.key as IPocItemKey];
+        return (
+          <SubmitterCol.Cell
+            item={info.row.original}
+            itemConfig={itemConfig!}
+            submitter={info.getValue()}
+          />
+        );
       },
     });
 
@@ -119,9 +129,12 @@ export const useColumns = ({
       size: 195,
       cell: (info) => {
         const item = info.row.original;
+        const itemConfig = AllItemConfig[item.key as IPocItemKey];
 
         return (
           <ActionsCol.Cell
+            item={item}
+            itemConfig={itemConfig!}
             onView={() => {
               // TODO: 实现查看逻辑
               if (onOpenSwitchVoteModal) {
