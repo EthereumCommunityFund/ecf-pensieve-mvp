@@ -9,7 +9,7 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
 import SupportColumnItem from './SupportColumnItem';
-import { TableRowData } from './types';
+import { ITableMeta, TableRowData } from './types';
 
 // Displayed Table Columns Hook
 interface UseDisplayedColumnsProps {
@@ -105,17 +105,34 @@ export const useDisplayedColumns = ({
       size: 150,
       cell: (info) => {
         const support = info.getValue();
+        const {
+          onCreateVote,
+          onSwitchVote,
+          onCancelVote,
+          displayProposalData,
+          proposalsByKey,
+          project,
+        } = info.table.options.meta as ITableMeta;
+        const itemTopWeight =
+          (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
+            info.row.original.key as IPocItemKey
+          ] || 0;
         return (
           <SupportColumnItem
+            proposalId={info.row.original.proposalId}
             itemKey={info.row.original.key as IPocItemKey}
             itemPoints={support.count}
-            itemPointsNeeded={10}
+            itemPointsNeeded={itemTopWeight}
             votedMemberCount={support.voters}
             isReachQuorum={false}
             isUserVoted={false}
             isLoading={false}
             isProposalCreator={false}
-            onAction={() => Promise.resolve()}
+            onCreateVote={onCreateVote}
+            onSwitchVote={onSwitchVote}
+            onCancelVote={onCancelVote}
+            displayProposalData={displayProposalData}
+            proposalsByKey={proposalsByKey}
           />
         );
       },

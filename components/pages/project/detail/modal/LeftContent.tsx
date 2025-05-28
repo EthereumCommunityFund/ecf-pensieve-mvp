@@ -20,7 +20,7 @@ const LeftContent: FC<LeftContentProps> = ({
   itemWeight = 22,
   itemKey,
 }) => {
-  const [activeTab, setActiveTab] = useState('displayed');
+  const [activeTab, setActiveTab] = useState('submission-queue');
 
   const tabs: TabItem[] = [
     { key: 'displayed', label: 'Displayed' },

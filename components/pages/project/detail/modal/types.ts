@@ -1,4 +1,5 @@
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
+import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 export interface IProjectDetailModalProps {
@@ -13,7 +14,15 @@ export interface IProjectDetailModalProps {
   contentType: 'viewItemProposal' | 'submitPropose';
 }
 
-// Use IProjectDataItem as base and extend with modal-specific fields
+export interface ITableMeta {
+  displayProposalData: IProjectDataItem[];
+  proposalsByKey: Record<IPocItemKey, IProjectDataItem[]>;
+  onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+  project?: IProject;
+}
+
 export interface TableRowData extends IProjectDataItem {
   support: {
     count: number;

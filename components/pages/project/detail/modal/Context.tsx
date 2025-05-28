@@ -40,7 +40,6 @@ export const ModalProvider = ({
   projectId: number;
   itemKey: string;
 }) => {
-  // Fetch proposals by project ID and key
   const {
     data: proposalsByKey,
     isLoading: isProposalsByKeyLoading,
@@ -50,13 +49,12 @@ export const ModalProvider = ({
     {
       enabled: !!projectId && !!itemKey,
       select: (data) => {
-        devLog('getProposalsByProjectIdAndKey', data);
+        devLog('getProposalsByProjectIdAndKey', itemKey, data);
         return data;
       },
     },
   );
 
-  // Fetch leading proposal history by project ID and key
   const {
     data: proposalHistory,
     isLoading: isProposalHistoryLoading,
@@ -66,7 +64,7 @@ export const ModalProvider = ({
     {
       enabled: !!projectId && !!itemKey,
       select: (data) => {
-        devLog('getLeadingProposalHistoryByProjectIdAndKey', data);
+        // devLog('getLeadingProposalHistoryByProjectIdAndKey', data);
         return data;
       },
     },

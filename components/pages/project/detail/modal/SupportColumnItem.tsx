@@ -1,10 +1,12 @@
 import { CircularProgress, cn } from '@heroui/react';
-import { FC, memo } from 'react';
+import { FC, memo, useCallback } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IPocItemKey } from '@/types/item';
+
+import { IProjectDataItem } from '../../table/Column';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -15,7 +17,12 @@ interface IProps {
   isUserVoted: boolean;
   isLoading: boolean;
   isProposalCreator: boolean;
-  onAction: () => Promise<void>;
+  onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+  onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  proposalId: number;
+  displayProposalData: IProjectDataItem[];
+  proposalsByKey: Record<IPocItemKey, IProjectDataItem[]>;
 }
 
 const SupportColumnItem: FC<IProps> = ({
@@ -27,9 +34,23 @@ const SupportColumnItem: FC<IProps> = ({
   isUserVoted,
   isLoading,
   isProposalCreator,
-  onAction,
+  onCreateVote,
+  onCancelVote,
+  onSwitchVote,
+  proposalId,
+  displayProposalData,
+  proposalsByKey,
 }) => {
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
+
+  const handleAction = useCallback(() => {
+    // TODO switch vote
+    if (isUserVoted) {
+      onCancelVote(itemKey, proposalId);
+    } else {
+      onCreateVote(itemKey, proposalId);
+    }
+  }, [isUserVoted, itemKey, proposalId, onCreateVote, onCancelVote]);
 
   return (
     <div className="flex flex-1 items-center justify-between">
@@ -75,7 +96,7 @@ const SupportColumnItem: FC<IProps> = ({
         isIconOnly
         isLoading={isLoading}
         disabled={isLoading || isProposalCreator}
-        onPress={onAction}
+        onPress={handleAction}
         className={cn(
           'px-[5px] border-none',
           isUserVoted ? '' : 'opacity-30',

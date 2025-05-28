@@ -12,6 +12,7 @@ import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretUpDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { IProfileCreator } from '@/types';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
@@ -37,13 +38,20 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 获取项目数据
-  const { displayProposalData } = useProjectDetailContext();
+  const {
+    displayProposalData,
+    onCreateVote,
+    onSwitchVote,
+    onCancelVote,
+    project,
+    getItemTopWeight,
+  } = useProjectDetailContext();
 
   // 获取 Modal 数据
   const { proposalsByKey } = useModalContext();
 
   // 根据 itemKey 从 displayProposalData 中获取真实数据
-  const displayedTableData: TableRowData[] = useMemo(() => {
+  const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
     if (!displayProposalData || !itemKey) {
       return [];
     }
@@ -57,59 +65,81 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       return [];
     }
 
-    const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
-    const weight = itemConfig?.weight || itemWeight;
+    // TODO Fake data 需要根据实际投票数据调整
+    const sumOfWeight = 5;
+    const voterMemberCount = 3;
 
-    // 直接使用 IProjectDataItem 结构并添加 support 字段
     const tableRowData: TableRowData = {
       ...proposalItem, // 继承所有 IProjectDataItem 字段
-      // TODO 这里需要根据 itemKey 获取对应的 weight和 vote count
       support: {
-        count:
-          typeof weight === 'number'
-            ? weight
-            : parseInt(weight?.toString() || '0', 10),
-        voters: 1, // 可以根据实际投票数据调整
+        count: sumOfWeight,
+        voters: voterMemberCount,
       },
     };
 
     return [tableRowData];
-  }, [displayProposalData, itemKey, itemWeight]);
+  }, [displayProposalData, itemKey]);
 
-  // 使用真实数据创建 submission queue 数据
-  const tableData: TableRowData[] = useMemo(() => {
+  const tableDataOfSubmissionQueue: TableRowData[] = useMemo(() => {
     if (!proposalsByKey) return [];
     const { allItemProposals } = proposalsByKey;
 
-    const list: TableRowData[] = allItemProposals.map((item) => {
-      const { creator } = item;
+    const list: TableRowData[] = allItemProposals.map((itemProposal) => {
+      const {
+        creator,
+        key,
+        value = '',
+        reason = '',
+        projectId,
+        createdAt,
+        id,
+        voteRecords = [],
+        ref = '',
+      } = itemProposal;
 
       // 构建符合 IProjectDataItem 结构的数据
       const baseData = {
-        key: item.key,
-        property: item.key,
-        input: item.value || '',
-        reference: item.ref ? { key: item.key, value: item.ref } : null,
+        key,
+        property: key,
+        input: value,
+        reference: ref ? { key, value: ref } : null,
         submitter: creator,
-        createdAt: item.createdAt,
-        projectId: item.projectId,
-        proposalId: item.id,
+        createdAt: createdAt,
+        projectId: projectId,
+        proposalId: id,
+        itemTopWeight: getItemTopWeight(key as IPocItemKey),
       };
 
-      // 添加 support 字段
+      // 对于单个item，每人只能投一票, 不需要根据用户去重
+      const sumOfWeight = voteRecords.reduce((acc, vote) => {
+        return acc + Number(vote.weight);
+      }, 0);
+
+      const voterMap = new Map<string, number>();
+
+      voteRecords.forEach((voteRecord) => {
+        const userId =
+          typeof voteRecord.creator === 'string'
+            ? voteRecord.creator
+            : (voteRecord.creator as IProfileCreator).userId;
+        voterMap.set(
+          userId,
+          (voterMap.get(userId) || 0) + Number(voteRecord.weight),
+        );
+      });
+
       return {
         ...baseData,
         support: {
-          count: item.voteRecords?.length || 0,
-          voters: item.voteRecords?.length || 0,
+          count: sumOfWeight,
+          voters: voterMap.size,
         },
       };
     });
 
     return list;
-  }, [proposalsByKey]);
+  }, [proposalsByKey, getItemTopWeight]);
 
-  // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
       ...prev,
@@ -117,7 +147,6 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     }));
   }, []);
 
-  // Event handlers
   const handleReferenceClick = useCallback((rowId: string) => {
     console.log('Reference clicked for row:', rowId);
     // TODO: Implement reference modal or action
@@ -142,20 +171,31 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
   const tableMeta = useMemo(() => {
     return {
+      project,
       displayProposalData,
       proposalsByKey,
+      onCreateVote,
+      onSwitchVote,
+      onCancelVote,
     };
-  }, [displayProposalData, proposalsByKey]);
+  }, [
+    project,
+    displayProposalData,
+    proposalsByKey,
+    onCreateVote,
+    onSwitchVote,
+    onCancelVote,
+  ]);
 
   const displayedTable = useReactTable({
-    data: displayedTableData,
+    data: tableDataOfDisplayed,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
     meta: tableMeta,
   });
 
   const submissionQueueTable = useReactTable({
-    data: tableData,
+    data: tableDataOfSubmissionQueue,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
     meta: tableMeta,

@@ -55,7 +55,8 @@ export const prepareProjectTableData = ({
           input: '',
           reference: null,
           submitter: {
-            name: 'Project Creator',
+            // TODO 用当前的 leading proposal 的 creator，不是project的creator, 需要从 proposal 中获取
+            name: 'Creator',
             date: formatDate(project?.createdAt || ''),
           },
         };

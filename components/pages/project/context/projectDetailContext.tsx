@@ -38,6 +38,7 @@ interface ProjectDetailContextType {
   onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
   onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+  getItemTopWeight: (key: IPocItemKey) => number;
 }
 
 // Create the context with default values
@@ -57,6 +58,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   onCreateVote: async () => {},
   onSwitchVote: async () => {},
   onCancelVote: async () => {},
+  getItemTopWeight: () => 0,
 });
 
 // Provider component
@@ -68,6 +70,14 @@ export const ProjectDetailProvider = ({
   const { id } = useParams();
   const { profile } = useAuth();
   const projectId = Number(id);
+
+  const [inActionKeyMap, setInActionKeyMap] = useState<
+    Partial<Record<IPocItemKey, boolean>>
+  >({});
+
+  const createVoteMutation = trpc.vote.createVote.useMutation();
+  const switchVoteMutation = trpc.vote.switchVote.useMutation();
+  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
   const {
     data: project,
@@ -93,7 +103,7 @@ export const ProjectDetailProvider = ({
     {
       enabled: !!projectId,
       select: (data) => {
-        // devLog('getProposalsByProjectId', data);
+        devLog('getProposalsByProjectId', data);
         return data;
       },
     },
@@ -114,12 +124,67 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  const [inActionKeyMap, setInActionKeyMap] = useState<
-    Partial<Record<IPocItemKey, boolean>>
-  >({});
-  const createVoteMutation = trpc.vote.createVote.useMutation();
-  const switchVoteMutation = trpc.vote.switchVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
+  const getItemTopWeight = useCallback(
+    (itemKey: IPocItemKey) => {
+      return (
+        (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
+          itemKey as IPocItemKey
+        ] || 0
+      );
+    },
+    [project],
+  );
+
+  const displayProposalData = useMemo(() => {
+    if (!proposalsByProject) return undefined;
+    const itemsTopWeight = (project?.itemsTopWeight || {}) as Record<
+      IPocItemKey,
+      number
+    >;
+    const { withoutItemProposal, withItemProposal } =
+      proposalsByProject as ILeadingProposalsTyped;
+    // 1. 优先取withItemProposal里的item proposal数据
+    // 2. 其次取withoutItemProposal里的proposal维度(leading proposal)的item数据
+    // TODO  暂时看不到item proposal 的数据，先处理投票后再来处理这里
+    const DataMap = new Map<string, IProjectDataItem>();
+    withoutItemProposal.forEach((project) => {
+      project.proposal.items.forEach((item) => {
+        const row = {
+          key: item.key,
+          property: item.key,
+          input: item.value,
+          reference:
+            project.proposal.refs?.find((ref) => ref.key === item.key) || null,
+          submitter: project.proposal.creator,
+          createdAt: project.proposal.createdAt,
+          projectId: project.proposal.projectId,
+          proposalId: project.proposal.id,
+          itemTopWeight: itemsTopWeight[item.key as IPocItemKey] || 0,
+        };
+        DataMap.set(item.key, row);
+      });
+    });
+    const proposal = withItemProposal?.[0]?.proposal;
+    if (proposal) {
+      proposal.items.forEach((item) => {
+        if (DataMap.has(item.key)) return;
+        const row: IProjectDataItem = {
+          key: item.key,
+          property: item.key,
+          input: item.value,
+          reference: proposal.refs?.find((ref) => ref.key === item.key) || null,
+          submitter: proposal.creator,
+          createdAt: proposal.createdAt,
+          projectId: proposal.projectId,
+          proposalId: proposal.id,
+          itemTopWeight: itemsTopWeight[item.key as IPocItemKey] || 0,
+        };
+        DataMap.set(item.key, row);
+      });
+    }
+    devLog('displayProposalData', Array.from(DataMap.values()));
+    return Array.from(DataMap.values());
+  }, [proposalsByProject, project]);
 
   const setKeyActive = (key: IPocItemKey, active: boolean) => {
     setInActionKeyMap((pre) => ({
@@ -131,6 +196,7 @@ export const ProjectDetailProvider = ({
   const onCreateVote = useCallback(
     async (key: IPocItemKey, proposalId: number) => {
       setKeyActive(key, true);
+      console.log('onCreateVote', key, proposalId);
       createVoteMutation.mutate(
         { proposalId, key },
         {
@@ -151,6 +217,7 @@ export const ProjectDetailProvider = ({
   const onSwitchVote = useCallback(
     async (key: IPocItemKey, proposalId: number) => {
       setKeyActive(key, true);
+      console.log('onSwitchVote', key, proposalId);
       switchVoteMutation.mutate(
         { proposalId, key },
         {
@@ -171,6 +238,7 @@ export const ProjectDetailProvider = ({
   const onCancelVote = useCallback(
     async (key: IPocItemKey, voteRecordId: number) => {
       setKeyActive(key, true);
+      console.log('onCancelVote', key, voteRecordId);
       cancelVoteMutation.mutate(
         { id: voteRecordId },
         {
@@ -186,51 +254,6 @@ export const ProjectDetailProvider = ({
     },
     [cancelVoteMutation],
   );
-
-  const displayProposalData = useMemo(() => {
-    if (!proposalsByProject) return undefined;
-    const { withoutItemProposal, withItemProposal } =
-      proposalsByProject as ILeadingProposalsTyped;
-    // 1. 优先取withItemProposal里的item proposal数据
-    // 2. 其次取withoutItemProposal里的proposal维度(leading proposal)的item数据
-    // TODO  暂时看不到item proposal 的数据，先处理投票后再来处理这里
-    const DataMap = new Map<string, IProjectDataItem>();
-    withoutItemProposal.forEach((project) => {
-      project.proposal.items.forEach((item) => {
-        const row = {
-          key: item.key,
-          property: item.key,
-          input: item.value,
-          reference:
-            project.proposal.refs?.find((ref) => ref.key === item.key) || null,
-          submitter: project.proposal.creator,
-          createdAt: project.proposal.createdAt,
-          projectId: project.proposal.projectId,
-          proposalId: project.proposal.id,
-        };
-        DataMap.set(item.key, row);
-      });
-    });
-    const proposal = withItemProposal?.[0]?.proposal;
-    if (proposal) {
-      proposal.items.forEach((item) => {
-        if (DataMap.has(item.key)) return;
-        const row: IProjectDataItem = {
-          key: item.key,
-          property: item.key,
-          input: item.value,
-          reference: proposal.refs?.find((ref) => ref.key === item.key) || null,
-          submitter: proposal.creator,
-          createdAt: proposal.createdAt,
-          projectId: proposal.projectId,
-          proposalId: proposal.id,
-        };
-        DataMap.set(item.key, row);
-      });
-    }
-    devLog('displayProposalData', Array.from(DataMap.values()));
-    return Array.from(DataMap.values());
-  }, [proposalsByProject]);
 
   // Context value
   const value: ProjectDetailContextType = {
@@ -249,6 +272,7 @@ export const ProjectDetailProvider = ({
     onCreateVote,
     onSwitchVote,
     onCancelVote,
+    getItemTopWeight,
   };
 
   return (

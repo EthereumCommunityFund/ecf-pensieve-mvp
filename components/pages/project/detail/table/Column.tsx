@@ -25,6 +25,7 @@ export interface IProjectDataItem {
   createdAt: Date;
   projectId: number;
   proposalId: number;
+  itemTopWeight: number;
 }
 
 interface UseColumnsProps {
