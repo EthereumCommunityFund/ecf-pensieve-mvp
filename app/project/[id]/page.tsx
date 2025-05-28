@@ -83,8 +83,10 @@ const ProjectPage = () => {
       contentType?: 'viewItemProposal' | 'submitPropose',
     ) => {
       setSelectedItemKey(itemKey);
-      setIsModalOpen(true);
       setContentType(contentType || 'viewItemProposal');
+      requestAnimationFrame(() => {
+        setIsModalOpen(true);
+      });
     },
     [],
   );
@@ -175,7 +177,6 @@ const ProjectPage = () => {
           console.log('Submit entry for item:', selectedItemKey);
           setContentType('submitPropose');
         }}
-        itemName={selectedItemKey || 'Unknown Item'}
         itemKey={selectedItemKey as IPocItemKey}
       />
     </div>

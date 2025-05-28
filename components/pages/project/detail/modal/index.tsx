@@ -5,6 +5,7 @@ import { FC } from 'react';
 
 import { Modal, ModalContent } from '@/components/base/modal';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
+import { AllItemConfig } from '@/constants/itemConfig';
 
 import { ModalProvider } from './Context';
 import LeftContent from './LeftContent';
@@ -17,7 +18,6 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   isOpen,
   onClose,
   onSubmitEntry,
-  itemName = 'ItemName',
   itemKey,
   itemWeight = 22,
   currentWeight = 0,
@@ -31,6 +31,9 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
     console.log('Share clicked');
   };
 
+  const itemName =
+    AllItemConfig[itemKey]?.label || itemKey?.replace('_', ' ').toUpperCase();
+
   // Modal content component
   const ModalContentComponent = () => (
     <ModalContent
@@ -38,7 +41,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
         'p-0 m-0',
         'bg-[#FAFAFA] border border-[rgba(0,0,0,0.2)]',
         'rounded-[10px] shadow-none',
-        'w-[1080px] h-[585px]',
+        'w-[1080px] max-h-[calc(100vh-200px)]',
       )}
     >
       {/* Header */}
