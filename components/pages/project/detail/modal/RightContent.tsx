@@ -10,12 +10,14 @@ interface RightContentProps {
   userWeight?: number;
   currentItemWeight?: number;
   onSubmitEntry?: () => void;
+  hideSubmitEntry?: boolean;
 }
 
 const RightContent: FC<RightContentProps> = ({
   userWeight = 0,
   currentItemWeight = 0,
   onSubmitEntry,
+  hideSubmitEntry,
 }) => {
   return (
     <div className="flex flex-col gap-2.5 p-5">
@@ -48,33 +50,37 @@ const RightContent: FC<RightContentProps> = ({
         </div>
       </div>
 
-      {/* Contribute Section */}
-      <div className="flex flex-col gap-3.5 rounded-[10px]  p-2.5">
-        {/* Content */}
-        <div className="flex flex-col gap-[5px]">
-          <span className="font-mona text-[14px] font-semibold leading-[1.41] tracking-[1.79%] text-black">
-            Contribute
-          </span>
-          <span className="font-sans text-[14px] leading-[1.43] text-black opacity-80">
-            You can vote or participate in submissions.
-          </span>
-        </div>
+      {!hideSubmitEntry && (
+        <>
+          {/* Contribute Section */}
+          <div className="flex flex-col gap-3.5 rounded-[10px]  p-2.5">
+            {/* Content */}
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mona text-[14px] font-semibold leading-[1.41] tracking-[1.79%] text-black">
+                Contribute
+              </span>
+              <span className="font-sans text-[14px] leading-[1.43] text-black opacity-80">
+                You can vote or participate in submissions.
+              </span>
+            </div>
 
-        {/* Submit Entry Button */}
-        <Button
-          className={cn(
-            'flex items-center justify-center gap-2.5 rounded-[5px] border border-[rgba(0,0,0,0.1)]',
-            'bg-transparent px-[30px] py-2.5',
-            'hover:bg-[rgba(0,0,0,0.1)] transition-colors duration-200',
-            'h-auto min-w-0',
-          )}
-          onPress={onSubmitEntry}
-        >
-          <span className="font-sans text-[14px] font-semibold leading-[1.36] text-black">
-            Submit an Entry
-          </span>
-        </Button>
-      </div>
+            {/* Submit Entry Button */}
+            <Button
+              className={cn(
+                'flex items-center justify-center gap-2.5 rounded-[5px] border border-[rgba(0,0,0,0.1)]',
+                'bg-transparent px-[30px] py-2.5',
+                'hover:bg-[rgba(0,0,0,0.1)] transition-colors duration-200',
+                'h-auto min-w-0',
+              )}
+              onPress={onSubmitEntry}
+            >
+              <span className="font-sans text-[14px] font-semibold leading-[1.36] text-black">
+                Submit an Entry
+              </span>
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

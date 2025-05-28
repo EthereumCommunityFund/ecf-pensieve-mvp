@@ -7,11 +7,12 @@ import { Modal, ModalContent } from '@/components/base/modal';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 
+import SubmitItemProposal from '../submit/SubmitItemProposal';
+
 import { ModalProvider } from './Context';
 import LeftContent from './LeftContent';
 import ModalHeader from './ModalHeader';
 import RightContent from './RightContent';
-import SubmitItemProposal from './SubmitItemProposal';
 import { IProjectDetailModalProps } from './types';
 
 const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
@@ -34,6 +35,8 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   const itemName =
     AllItemConfig[itemKey]?.label || itemKey?.replace('_', ' ').toUpperCase();
 
+  const showSubmit = contentType === 'submitPropose';
+
   // Modal content component
   const ModalContentComponent = () => (
     <ModalContent
@@ -41,7 +44,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
         'p-0 m-0',
         'bg-[#FAFAFA] border border-[rgba(0,0,0,0.2)]',
         'rounded-[10px] shadow-none',
-        'w-[1080px] max-h-[calc(100vh-200px)]',
+        'w-[1080px] min-h-[520px] max-h-[calc(100vh-200px)]',
       )}
     >
       {/* Header */}
@@ -55,29 +58,30 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
       />
 
       {/* Content */}
-      {contentType === 'viewItemProposal' ? (
-        <div className="flex flex-1 overflow-y-auto overflow-x-hidden">
-          {/* Left Content */}
-          <div className="flex-1 border-r border-[rgba(0,0,0,0.1)] ">
+      <div className="flex flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Left Content */}
+        <div className="flex-1 border-r border-[rgba(0,0,0,0.1)] ">
+          {contentType === 'viewItemProposal' ? (
             <LeftContent
               itemName={itemName}
               itemWeight={itemWeight}
               itemKey={itemKey}
             />
-          </div>
-
-          {/* Right Content */}
-          <div className="w-[300px]">
-            <RightContent
-              userWeight={userWeight}
-              currentItemWeight={currentWeight}
-              onSubmitEntry={onSubmitEntry}
-            />
-          </div>
+          ) : (
+            <SubmitItemProposal itemKey={itemKey} />
+          )}
         </div>
-      ) : (
-        <SubmitItemProposal itemKey={itemKey} />
-      )}
+
+        {/* Right Content */}
+        <div className="w-[300px]">
+          <RightContent
+            userWeight={userWeight}
+            currentItemWeight={currentWeight}
+            onSubmitEntry={onSubmitEntry}
+            hideSubmitEntry={contentType === 'submitPropose'}
+          />
+        </div>
+      </div>
     </ModalContent>
   );
 
