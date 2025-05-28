@@ -114,6 +114,7 @@ export const useDisplayedColumns = ({
           proposalsByKey,
           project,
           profile,
+          voteResultOfLeadingProposal,
         } = info.table.options.meta as ITableMeta;
         const itemTopWeight =
           (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
@@ -128,10 +129,19 @@ export const useDisplayedColumns = ({
         const userVotedItemProposal = allItemProposalVoteRecords.find(
           (item) => item.creator === profile?.userId,
         );
-        // 1、是否在proposal中投过票、是否在item proposal中投过票、是否投了当前这一条
-        const isUserVotedKey = !!userVotedItemProposal;
-        const isUserVotedItemProposal =
-          isUserVotedKey &&
+
+        const { isUserVotedInProposal, votesOfKeyInProposalMap = {} } =
+          voteResultOfLeadingProposal || {};
+        const voteResultOfKey = votesOfKeyInProposalMap[info.row.original.key];
+        // 1、是否在project leading proposal中投过这个 key 的票
+        const isUserVotedKeyInLeadingProposal = !!voteResultOfKey?.find(
+          (vote) => vote.creator.userId === profile?.userId,
+        );
+        // 2、是否在item proposals中投过这个 key 票
+        const isUserVotedKeyInItemProposals = !!userVotedItemProposal;
+        // 3、是否投了当前这一条
+        const isUserVotedCurrentItemProposal =
+          isUserVotedKeyInItemProposals &&
           userVotedItemProposal?.itemProposalId ===
             info.row.original.proposalId;
         return (
@@ -150,8 +160,10 @@ export const useDisplayedColumns = ({
             onCancelVote={onCancelVote}
             displayProposalData={displayProposalData}
             proposalsByKey={proposalsByKey}
-            isUserVotedKey={isUserVotedKey}
-            isUserVotedItemProposal={isUserVotedItemProposal}
+            isUserVotedInProposalOrItemProposals={
+              isUserVotedKeyInLeadingProposal || isUserVotedKeyInItemProposals
+            }
+            isUserVotedCurrentItemProposal={isUserVotedCurrentItemProposal}
             userVotedItemProposal={
               userVotedItemProposal as IItemProposalVoteRecord
             }

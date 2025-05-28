@@ -23,6 +23,7 @@ import {
 } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils, { IVoteResultOfProposal } from '@/utils/proposal';
 
 // Define the context type
 interface ProjectDetailContextType {
@@ -60,6 +61,8 @@ interface ProjectDetailContextType {
     itemProposalId: number,
   ) => Promise<void>;
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+
+  voteResultOfLeadingProposal?: IVoteResultOfProposal;
 }
 
 // Create the context with default values
@@ -92,6 +95,8 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   onCreateItemProposalVote: () => Promise.resolve(),
   onSwitchItemProposalVote: () => Promise.resolve(),
   onCancelVote: () => Promise.resolve(),
+
+  voteResultOfLeadingProposal: undefined,
 });
 
 // Provider component
@@ -136,6 +141,24 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // TODO 如果 project detail 里的 voteRecords 的 creator 是IProfile 类型，那就不用重复请求这里了
+  const {
+    data: votesOfProject,
+    isLoading: isVotesOfProjectLoading,
+    isFetched: isVotesOfProjectFetched,
+    isFetching: isVotesOfProjectFetching,
+    refetch: refetchVotesOfProject,
+  } = trpc.vote.getVotesByProjectId.useQuery(
+    { projectId: Number(projectId) },
+    {
+      enabled: !!projectId,
+      select: (data) => {
+        devLog('getVotesByProjectId', data);
+        return data;
+      },
+    },
+  );
+
   const {
     data: proposalsByProject,
     isLoading: isLeadingProposalsLoading,
@@ -151,7 +174,25 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  // Logic from ModalProvider starts here
+  const voteResultOfLeadingProposal = useMemo(() => {
+    const leadingProposalId =
+      proposalsByProject?.withoutItemProposal[0]?.proposalId;
+    if (!leadingProposalId) return undefined; // 理论上这不会出现
+    const leadingProposal = project?.proposals?.find(
+      (p) => p.id === leadingProposalId,
+    );
+    if (!leadingProposal) return undefined;
+
+    const votesOfLeadingProposal = ProposalVoteUtils.groupVotesByProposalId(
+      votesOfProject || [],
+    )[leadingProposalId];
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: leadingProposalId,
+      votesOfProposal: votesOfLeadingProposal,
+      userId: profile?.userId,
+    });
+  }, [project, proposals, profile?.userId, proposalsByProject]);
+
   const {
     data: proposalsByKey,
     isLoading: isProposalsByKeyLoading,
@@ -349,6 +390,7 @@ export const ProjectDetailProvider = ({
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,
+    voteResultOfLeadingProposal,
   };
 
   return (

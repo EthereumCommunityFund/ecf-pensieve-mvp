@@ -1,6 +1,7 @@
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
 import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
+import { IVoteResultOfProposal } from '@/utils/proposal';
 
 export interface IProjectDetailModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export interface ITableMeta {
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
   project?: IProject;
   profile?: IProfile;
+  voteResultOfLeadingProposal?: IVoteResultOfProposal;
 }
 
 export interface TableRowData extends IProjectDataItem {

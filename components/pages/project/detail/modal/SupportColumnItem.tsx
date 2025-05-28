@@ -31,8 +31,8 @@ interface IProps {
   displayProposalData: IProjectDataItem[];
   proposalsByKey: IProposalsByProjectIdAndKey;
   userVotedItemProposal?: IItemProposalVoteRecord;
-  isUserVotedKey: boolean;
-  isUserVotedItemProposal: boolean;
+  isUserVotedInProposalOrItemProposals: boolean;
+  isUserVotedCurrentItemProposal: boolean;
 }
 
 const SupportColumnItem: FC<IProps> = ({
@@ -48,31 +48,33 @@ const SupportColumnItem: FC<IProps> = ({
   onCancelVote,
   onSwitchItemProposalVote,
   proposalId,
-  isUserVotedKey,
-  isUserVotedItemProposal,
   userVotedItemProposal,
+  isUserVotedInProposalOrItemProposals,
+  isUserVotedCurrentItemProposal,
 }) => {
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
   const handleAction = useCallback(() => {
-    if (isUserVotedItemProposal && userVotedItemProposal) {
-      console.log('onCancelVote', itemKey, userVotedItemProposal.id);
-      onCancelVote(itemKey, userVotedItemProposal.id);
-    } else if (isUserVotedKey) {
-      console.log('switchItemProposalVote', itemKey, proposalId);
-      onSwitchItemProposalVote(itemKey, proposalId);
+    if (isUserVotedCurrentItemProposal) {
+      // 不能取消 item proposal 的投票
+      console.log('can not cancel item proposal vote');
     } else {
-      console.log('onCreateItemProposalVote', itemKey, proposalId);
-      onCreateItemProposalVote(itemKey, proposalId);
+      if (isUserVotedInProposalOrItemProposals) {
+        // 在proposal中投过这个key的票，或者在item proposals中投过这个key的票
+        console.log('switch item proposal vote');
+        onSwitchItemProposalVote(itemKey, proposalId);
+      } else {
+        // 在proposal中没有投过这个key的票，也没有在item proposals中投过这个key的票
+        console.log('create item proposal vote');
+        onCreateItemProposalVote(itemKey, proposalId);
+      }
     }
   }, [
     itemKey,
     proposalId,
     onCreateItemProposalVote,
-    onCancelVote,
-    isUserVotedKey,
-    isUserVotedItemProposal,
-    userVotedItemProposal,
+    isUserVotedInProposalOrItemProposals,
+    isUserVotedCurrentItemProposal,
     onSwitchItemProposalVote,
   ]);
 

@@ -49,6 +49,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     onSwitchItemProposalVote,
     onCancelVote,
     proposalsByKey,
+    voteResultOfLeadingProposal,
   } = useProjectDetailContext();
 
   // 根据 itemKey 从 displayProposalData 中获取真实数据
@@ -179,6 +180,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       onSwitchItemProposalVote,
       onCancelVote,
       profile,
+      voteResultOfLeadingProposal,
     } as ITableMeta;
   }, [
     project,
@@ -188,6 +190,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     onSwitchItemProposalVote,
     onCancelVote,
     profile,
+    voteResultOfLeadingProposal,
   ]);
 
   const displayedTable = useReactTable({
