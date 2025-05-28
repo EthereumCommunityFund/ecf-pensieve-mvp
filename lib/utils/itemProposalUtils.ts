@@ -164,7 +164,7 @@ export const processItemProposalVoteResult = async (
     ]);
 
     await addRewardNotification(
-      createRewardNotification.proposalPass(
+      createRewardNotification.itemProposalPass(
         userId,
         itemProposal.projectId,
         itemProposal.id,
