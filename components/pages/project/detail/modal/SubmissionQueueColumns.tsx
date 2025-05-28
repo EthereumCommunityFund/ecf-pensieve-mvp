@@ -110,7 +110,7 @@ export const useDisplayedColumns = ({
           onCreateItemProposalVote,
           onSwitchItemProposalVote,
           onCancelVote,
-          displayProposalData,
+          displayProposalDataListOfProject,
           proposalsByKey,
           project,
           profile,
@@ -158,7 +158,7 @@ export const useDisplayedColumns = ({
             onCreateItemProposalVote={onCreateItemProposalVote}
             onSwitchItemProposalVote={onSwitchItemProposalVote}
             onCancelVote={onCancelVote}
-            displayProposalData={displayProposalData}
+            displayProposalDataListOfProject={displayProposalDataListOfProject}
             proposalsByKey={proposalsByKey}
             isUserVotedInProposalOrItemProposals={
               isUserVotedKeyInLeadingProposal || isUserVotedKeyInItemProposals

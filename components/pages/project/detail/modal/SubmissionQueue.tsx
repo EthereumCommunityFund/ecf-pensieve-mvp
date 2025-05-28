@@ -41,7 +41,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
   // 获取项目数据
   const {
-    displayProposalData,
+    displayProposalDataListOfProject,
     project,
     getItemTopWeight,
     inActionKeyMap,
@@ -52,14 +52,14 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     voteResultOfLeadingProposal,
   } = useProjectDetailContext();
 
-  // 根据 itemKey 从 displayProposalData 中获取真实数据
+  // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
-    if (!displayProposalData || !itemKey) {
+    if (!displayProposalDataListOfProject || !itemKey) {
       return [];
     }
 
-    // 从 displayProposalData 中找到对应 itemKey 的数据
-    const proposalItem = displayProposalData.find(
+    // 从 displayProposalDataListOfProject 中找到对应 itemKey 的数据
+    const proposalItem = displayProposalDataListOfProject.find(
       (item) => item.key === itemKey,
     );
 
@@ -80,7 +80,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     };
 
     return [tableRowData];
-  }, [displayProposalData, itemKey]);
+  }, [displayProposalDataListOfProject, itemKey]);
 
   const tableDataOfSubmissionQueue: TableRowData[] = useMemo(() => {
     if (!proposalsByKey) return [];
@@ -174,7 +174,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   const tableMeta = useMemo(() => {
     return {
       project,
-      displayProposalData,
+      displayProposalDataListOfProject,
       proposalsByKey,
       onCreateItemProposalVote,
       onSwitchItemProposalVote,
@@ -184,7 +184,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     } as ITableMeta;
   }, [
     project,
-    displayProposalData,
+    displayProposalDataListOfProject,
     proposalsByKey,
     onCreateItemProposalVote,
     onSwitchItemProposalVote,

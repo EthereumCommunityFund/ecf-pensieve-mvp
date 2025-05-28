@@ -47,23 +47,26 @@ const Displayed: FC<DisplayedProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { displayProposalData } = useProjectDetailContext();
+  const { displayProposalDataListOfProject } = useProjectDetailContext();
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // 根据 itemKey 从 displayProposalData 中获取真实数据
+  // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableData: TableRowData[] = useMemo(() => {
-    if (!displayProposalData || !itemKey) {
-      console.log('Displayed: Missing displayProposalData or itemKey', {
-        displayProposalData: !!displayProposalData,
-        itemKey,
-      });
+    if (!displayProposalDataListOfProject || !itemKey) {
+      console.log(
+        'Displayed: Missing displayProposalDataListOfProject or itemKey',
+        {
+          displayProposalDataListOfProject: !!displayProposalDataListOfProject,
+          itemKey,
+        },
+      );
       return [];
     }
 
-    // 从 displayProposalData 中找到对应 itemKey 的数据
-    const proposalItem = displayProposalData.find(
+    // 从 displayProposalDataListOfProject 中找到对应 itemKey 的数据
+    const proposalItem = displayProposalDataListOfProject.find(
       (item) => item.key === itemKey,
     );
 
@@ -95,7 +98,7 @@ const Displayed: FC<DisplayedProps> = ({
     };
 
     return [tableRowData];
-  }, [displayProposalData, itemKey, itemWeight]);
+  }, [displayProposalDataListOfProject, itemKey, itemWeight]);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {

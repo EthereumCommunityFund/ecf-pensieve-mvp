@@ -64,7 +64,8 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
   isProposalsLoading,
   onOpenModal,
 }) => {
-  const { project, displayProposalData } = useProjectDetailContext();
+  const { project, displayProposalDataListOfProject } =
+    useProjectDetailContext();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 分类展开状态管理
@@ -110,11 +111,11 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
 
   // 创建分类表格数据（包含空数据项目）
   const { tableData, emptyItemsCounts } = useMemo(() => {
-    if (!displayProposalData) {
+    if (!displayProposalDataListOfProject) {
       // 如果没有 displayProposalData，使用 prepareProjectTableData 创建默认数据
       const defaultData = prepareProjectTableData({
         project,
-        displayProposalData: undefined,
+        displayProposalDataListOfProject: undefined,
       });
       return {
         tableData: defaultData,
@@ -146,8 +147,8 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
         {} as Record<IItemSubCategoryEnum, number>,
       );
 
-    // 创建 displayProposalData 的映射以便快速查找
-    const displayItemMap = displayProposalData.reduce(
+    // 创建 displayProposalDataListOfProject 的映射以便快速查找
+    const displayItemMap = displayProposalDataListOfProject.reduce(
       (acc, curr) => {
         acc[curr.key as IPocItemKey] = curr;
         return acc;
@@ -231,7 +232,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
     });
 
     return { tableData: result, emptyItemsCounts: emptyCounts };
-  }, [project, displayProposalData]);
+  }, [project, displayProposalDataListOfProject]);
 
   const coreTableMeta = useMemo(
     () => ({

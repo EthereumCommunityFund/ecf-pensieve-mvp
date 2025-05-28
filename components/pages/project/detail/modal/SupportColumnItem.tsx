@@ -28,7 +28,7 @@ interface IProps {
     itemProposalId: number,
   ) => Promise<void>;
   proposalId: number;
-  displayProposalData: IProjectDataItem[];
+  displayProposalDataListOfProject: IProjectDataItem[];
   proposalsByKey: IProposalsByProjectIdAndKey;
   userVotedItemProposal?: IItemProposalVoteRecord;
   isUserVotedInProposalOrItemProposals: boolean;

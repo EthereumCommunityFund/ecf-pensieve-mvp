@@ -37,7 +37,7 @@ interface ProjectDetailContextType {
   leadingProposals?: ILeadingProposals;
   isLeadingProposalsLoading: boolean;
   isLeadingProposalsFetched: boolean;
-  displayProposalData?: IProjectDataItem[];
+  displayProposalDataListOfProject?: IProjectDataItem[];
   getItemTopWeight: (key: IPocItemKey) => number;
 
   // Merged from ModalContextType
@@ -77,7 +77,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   leadingProposals: undefined,
   isLeadingProposalsLoading: true,
   isLeadingProposalsFetched: false,
-  displayProposalData: undefined,
+  displayProposalDataListOfProject: undefined,
   getItemTopWeight: () => 0,
 
   // Merged defaults
@@ -173,7 +173,7 @@ export const ProjectDetailProvider = ({
       votesOfProposal: votesOfLeadingProposal,
       userId: profile?.userId,
     });
-  }, [project, proposals, profile?.userId, proposalsByProject]);
+  }, [project, profile?.userId, proposalsByProject]);
 
   const {
     data: proposalsByKey,
@@ -294,7 +294,7 @@ export const ProjectDetailProvider = ({
     [project],
   );
 
-  const displayProposalData = useMemo(() => {
+  const displayProposalDataListOfProject = useMemo(() => {
     if (!proposalsByProject) return undefined;
     const itemsTopWeight = (project?.itemsTopWeight || {}) as Record<
       IPocItemKey,
@@ -338,7 +338,7 @@ export const ProjectDetailProvider = ({
       };
       DataMap.set(key, row);
     });
-    devLog('displayProposalData', Array.from(DataMap.values()));
+    devLog('displayProposalDataListOfProject', Array.from(DataMap.values()));
     return Array.from(DataMap.values());
   }, [proposalsByProject, project]);
 
@@ -353,7 +353,7 @@ export const ProjectDetailProvider = ({
     leadingProposals: proposalsByProject,
     isLeadingProposalsLoading,
     isLeadingProposalsFetched,
-    displayProposalData,
+    displayProposalDataListOfProject,
     getItemTopWeight,
 
     // Merged values
