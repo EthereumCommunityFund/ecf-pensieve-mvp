@@ -141,24 +141,6 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  // TODO 如果 project detail 里的 voteRecords 的 creator 是IProfile 类型，那就不用重复请求这里了
-  const {
-    data: votesOfProject,
-    isLoading: isVotesOfProjectLoading,
-    isFetched: isVotesOfProjectFetched,
-    isFetching: isVotesOfProjectFetching,
-    refetch: refetchVotesOfProject,
-  } = trpc.vote.getVotesByProjectId.useQuery(
-    { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-      select: (data) => {
-        devLog('getVotesByProjectId', data);
-        return data;
-      },
-    },
-  );
-
   const {
     data: proposalsByProject,
     isLoading: isLeadingProposalsLoading,
@@ -182,7 +164,7 @@ export const ProjectDetailProvider = ({
       (p) => p.id === leadingProposalId,
     );
     if (!leadingProposal) return undefined;
-
+    const votesOfProject = project?.proposals.flatMap((p) => p.voteRecords);
     const votesOfLeadingProposal = ProposalVoteUtils.groupVotesByProposalId(
       votesOfProject || [],
     )[leadingProposalId];
@@ -318,6 +300,8 @@ export const ProjectDetailProvider = ({
       IPocItemKey,
       number
     >;
+    // withoutItemProposal： proposal 维度
+    // withItemProposal： item proposal 维度，有则覆盖 proposal 维度
     const { withoutItemProposal, withItemProposal } =
       proposalsByProject as ILeadingProposalsTyped;
     const DataMap = new Map<string, IProjectDataItem>();
@@ -338,25 +322,22 @@ export const ProjectDetailProvider = ({
         DataMap.set(item.key, row);
       });
     });
-    const proposalData = withItemProposal?.[0]?.proposal;
-    if (proposalData) {
-      proposalData.items.forEach((item) => {
-        if (DataMap.has(item.key)) return;
-        const row: IProjectDataItem = {
-          key: item.key,
-          property: item.key,
-          input: item.value,
-          reference:
-            proposalData.refs?.find((ref) => ref.key === item.key) || null,
-          submitter: proposalData.creator,
-          createdAt: proposalData.createdAt,
-          projectId: proposalData.projectId,
-          proposalId: proposalData.id,
-          itemTopWeight: itemsTopWeight[item.key as IPocItemKey] || 0,
-        };
-        DataMap.set(item.key, row);
-      });
-    }
+    withItemProposal.forEach((proposal) => {
+      const { projectId, itemProposal } = proposal;
+      const { key, createdAt, value, ref, creator, id } = itemProposal;
+      const row: IProjectDataItem = {
+        key: key!,
+        property: key!,
+        input: value,
+        reference: ref ? { key, value: ref } : null,
+        submitter: creator,
+        createdAt: createdAt,
+        projectId: projectId!,
+        proposalId: Number(id),
+        itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
+      };
+      DataMap.set(key, row);
+    });
     devLog('displayProposalData', Array.from(DataMap.values()));
     return Array.from(DataMap.values());
   }, [proposalsByProject, project]);
