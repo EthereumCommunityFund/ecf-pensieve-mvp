@@ -1,9 +1,17 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { createContext, ReactNode, useContext, useMemo } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import {
   ILeadingProposals,
@@ -11,8 +19,8 @@ import {
   IProject,
   IProposal,
 } from '@/types';
+import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
-
 // Define the context type
 interface ProjectDetailContextType {
   project?: IProject;
@@ -22,11 +30,14 @@ interface ProjectDetailContextType {
   isProposalsLoading: boolean;
   isProposalsFetched: boolean;
   projectId: number;
-  // Leading proposals data from projectLog
   leadingProposals?: ILeadingProposals;
   isLeadingProposalsLoading: boolean;
   isLeadingProposalsFetched: boolean;
   displayProposalData?: IProjectDataItem[];
+  inActionKeyMap: Partial<Record<IPocItemKey, boolean>>;
+  onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
 }
 
 // Create the context with default values
@@ -42,6 +53,10 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   isLeadingProposalsLoading: true,
   isLeadingProposalsFetched: false,
   displayProposalData: undefined,
+  inActionKeyMap: {},
+  onCreateVote: async () => {},
+  onSwitchVote: async () => {},
+  onCancelVote: async () => {},
 });
 
 // Provider component
@@ -51,9 +66,9 @@ export const ProjectDetailProvider = ({
   children: ReactNode;
 }) => {
   const { id } = useParams();
+  const { profile } = useAuth();
   const projectId = Number(id);
 
-  // Fetch project data
   const {
     data: project,
     isLoading: isProjectLoading,
@@ -69,7 +84,6 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  // Fetch proposals data
   const {
     data: proposals,
     isLoading: isProposalsLoading,
@@ -85,7 +99,6 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  // Fetch leading proposals data
   const {
     data: proposalsByProject,
     isLoading: isLeadingProposalsLoading,
@@ -101,13 +114,86 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  // Calculate displayProposalData from leading proposals
+  const [inActionKeyMap, setInActionKeyMap] = useState<
+    Partial<Record<IPocItemKey, boolean>>
+  >({});
+  const createVoteMutation = trpc.vote.createVote.useMutation();
+  const switchVoteMutation = trpc.vote.switchVote.useMutation();
+  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
+
+  const setKeyActive = (key: IPocItemKey, active: boolean) => {
+    setInActionKeyMap((pre) => ({
+      ...pre,
+      [key]: active,
+    }));
+  };
+
+  const onCreateVote = useCallback(
+    async (key: IPocItemKey, proposalId: number) => {
+      setKeyActive(key, true);
+      createVoteMutation.mutate(
+        { proposalId, key },
+        {
+          onSuccess: async (data) => {
+            // TODO refetch proposal and votes
+            setKeyActive(key, false);
+          },
+          onError: (error) => {
+            setKeyActive(key, false);
+            devLog('onVote error', error);
+          },
+        },
+      );
+    },
+    [createVoteMutation],
+  );
+
+  const onSwitchVote = useCallback(
+    async (key: IPocItemKey, proposalId: number) => {
+      setKeyActive(key, true);
+      switchVoteMutation.mutate(
+        { proposalId, key },
+        {
+          onSuccess: async (data) => {
+            // TODO refetch proposal and votes
+            setKeyActive(key, false);
+          },
+          onError: (error) => {
+            setKeyActive(key, false);
+            // devLog('onSwitchVote error', error);
+          },
+        },
+      );
+    },
+    [switchVoteMutation],
+  );
+
+  const onCancelVote = useCallback(
+    async (key: IPocItemKey, voteRecordId: number) => {
+      setKeyActive(key, true);
+      cancelVoteMutation.mutate(
+        { id: voteRecordId },
+        {
+          onSuccess: async (data) => {
+            // TODO refetch proposal and votes
+            setKeyActive(key, false);
+          },
+          onError: (error) => {
+            setKeyActive(key, false);
+          },
+        },
+      );
+    },
+    [cancelVoteMutation],
+  );
+
   const displayProposalData = useMemo(() => {
     if (!proposalsByProject) return undefined;
     const { withoutItemProposal, withItemProposal } =
       proposalsByProject as ILeadingProposalsTyped;
-    // TODO 优先取withItemProposal里的 item 的最新
-    // 暂时看不到item proposal 的数据，先处理投票后再来处理这里
+    // 1. 优先取withItemProposal里的item proposal数据
+    // 2. 其次取withoutItemProposal里的proposal维度(leading proposal)的item数据
+    // TODO  暂时看不到item proposal 的数据，先处理投票后再来处理这里
     const DataMap = new Map<string, IProjectDataItem>();
     withoutItemProposal.forEach((project) => {
       project.proposal.items.forEach((item) => {
@@ -159,6 +245,10 @@ export const ProjectDetailProvider = ({
     isLeadingProposalsLoading,
     isLeadingProposalsFetched,
     displayProposalData,
+    inActionKeyMap,
+    onCreateVote,
+    onSwitchVote,
+    onCancelVote,
   };
 
   return (
