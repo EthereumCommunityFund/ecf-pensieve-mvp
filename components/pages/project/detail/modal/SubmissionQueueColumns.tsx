@@ -4,10 +4,11 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
-import { CaretUpIcon, QuestionIcon, UsersIcon } from '@/components/icons';
+import { QuestionIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
+import SupportColumnItem from './SupportColumnItem';
 import { TableRowData } from './types';
 
 // Displayed Table Columns Hook
@@ -105,28 +106,17 @@ export const useDisplayedColumns = ({
       cell: (info) => {
         const support = info.getValue();
         return (
-          <div className="flex items-center gap-[19px]">
-            <div className="flex items-center gap-2.5">
-              <div className="relative size-9">
-                <div className="absolute inset-0 rounded-full border-[3px] border-[#E6E6E6]"></div>
-                <div className="absolute inset-0 rounded-full border-[3px] border-[#64C0A5] border-r-transparent border-t-transparent"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-mona text-[13px] font-semibold">
-                    {support.count}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-[5px] opacity-20">
-                <UsersIcon size={20} />
-                <span className="font-mona text-[14px] font-semibold">
-                  {support.voters}
-                </span>
-              </div>
-            </div>
-            <div className="flex h-auto w-[35px] items-center justify-center bg-transparent opacity-30">
-              <CaretUpIcon size={20} />
-            </div>
-          </div>
+          <SupportColumnItem
+            itemKey={info.row.original.key as IPocItemKey}
+            itemPoints={support.count}
+            itemPointsNeeded={10}
+            votedMemberCount={support.voters}
+            isReachQuorum={false}
+            isUserVoted={false}
+            isLoading={false}
+            isProposalCreator={false}
+            onAction={() => Promise.resolve()}
+          />
         );
       },
     });

@@ -45,13 +45,6 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   // 根据 itemKey 从 displayProposalData 中获取真实数据
   const displayedTableData: TableRowData[] = useMemo(() => {
     if (!displayProposalData || !itemKey) {
-      console.log(
-        'SubmissionQueue Displayed: Missing displayProposalData or itemKey',
-        {
-          displayProposalData: !!displayProposalData,
-          itemKey,
-        },
-      );
       return [];
     }
 
@@ -61,26 +54,16 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     );
 
     if (!proposalItem) {
-      console.log(
-        'SubmissionQueue Displayed: No data found for itemKey:',
-        itemKey,
-      );
       return [];
     }
 
-    console.log(
-      'SubmissionQueue Displayed: Found proposal item for itemKey:',
-      itemKey,
-      proposalItem,
-    );
-
-    // 获取字段配置信息
     const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
     const weight = itemConfig?.weight || itemWeight;
 
     // 直接使用 IProjectDataItem 结构并添加 support 字段
     const tableRowData: TableRowData = {
       ...proposalItem, // 继承所有 IProjectDataItem 字段
+      // TODO 这里需要根据 itemKey 获取对应的 weight和 vote count
       support: {
         count:
           typeof weight === 'number'
@@ -150,7 +133,6 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     // TODO: Implement expand/collapse functionality
   }, []);
 
-  // Create columns for Displayed Table
   const columns = useDisplayedColumns({
     onReferenceClick: handleReferenceClick,
     onExpandClick: handleExpandClick,
@@ -158,18 +140,25 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     toggleRowExpanded,
   });
 
-  // Create table instances
+  const tableMeta = useMemo(() => {
+    return {
+      displayProposalData,
+      proposalsByKey,
+    };
+  }, [displayProposalData, proposalsByKey]);
+
   const displayedTable = useReactTable({
     data: displayedTableData,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: tableMeta,
   });
 
-  // Create Submission Queue table instance
-  const submissionTable = useReactTable({
+  const submissionQueueTable = useReactTable({
     data: tableData,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: tableMeta,
   });
 
   return (
@@ -344,7 +333,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
         <table className="w-full border-separate border-spacing-0">
           {/* Table Header */}
           <thead>
-            {submissionTable.getHeaderGroups().map((headerGroup) => (
+            {submissionQueueTable.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="bg-[#F5F5F5]">
                 {headerGroup.headers.map((header, index) => (
                   <TableHeader
@@ -372,12 +361,12 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
           {/* Table Body */}
           <tbody>
-            {submissionTable.getRowModel().rows.map((row, rowIndex) => (
+            {submissionQueueTable.getRowModel().rows.map((row, rowIndex) => (
               <React.Fragment key={row.id}>
                 <TableRow
                   isLastRow={
                     rowIndex ===
-                      submissionTable.getRowModel().rows.length - 1 &&
+                      submissionQueueTable.getRowModel().rows.length - 1 &&
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
@@ -396,7 +385,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                       isLast={cellIndex === row.getVisibleCells().length - 1}
                       isLastRow={
                         rowIndex ===
-                          submissionTable.getRowModel().rows.length - 1 &&
+                          submissionQueueTable.getRowModel().rows.length - 1 &&
                         !AllItemConfig[row.original.key as IEssentialItemKey]
                           ?.showExpand
                       }
@@ -427,7 +416,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                     <TableCell
                       className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
                         rowIndex ===
-                        submissionTable.getRowModel().rows.length - 1
+                        submissionQueueTable.getRowModel().rows.length - 1
                           ? 'border-b-0'
                           : ''
                       }`}
