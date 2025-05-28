@@ -54,25 +54,55 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
 
   // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
-    if (!displayProposalDataListOfProject || !itemKey) {
-      return [];
-    }
+    if (!proposalsByKey) return [];
 
-    // 从 displayProposalDataListOfProject 中找到对应 itemKey 的数据
-    const proposalItem = displayProposalDataListOfProject.find(
+    const { leadingProposal, allItemProposals } = proposalsByKey;
+    // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
+    if (leadingProposal && leadingProposal.itemProposal) {
+      const { key, value, ref, creator, createdAt, projectId, id } =
+        leadingProposal.itemProposal;
+      const weight = leadingProposal.itemProposal.voteRecords.reduce(
+        (acc, vote) => acc + Number(vote.weight),
+        0,
+      );
+      const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
+      const tableRowData: TableRowData = {
+        key,
+        property: key,
+        input: value,
+        reference: ref ? { key, value: ref } : null,
+        submitter: creator,
+        createdAt: createdAt,
+        projectId: projectId,
+        proposalId: id,
+        itemTopWeight: getItemTopWeight(key as IPocItemKey),
+        support: {
+          count: weight,
+          voters: voterMemberCount,
+        },
+      };
+      return [tableRowData];
+    }
+    // 2. 没有 item proposal 胜出，取published proposal 胜出的数据 -> displayProposalDataListOfProject 的数据
+    const proposalItem = (displayProposalDataListOfProject || []).find(
       (item) => item.key === itemKey,
     );
 
     if (!proposalItem) {
-      return [];
+      return []; // 没有找到对应 itemKey 的数据 -> non essential item
     }
 
-    // TODO Fake data 需要根据实际投票数据调整
-    const sumOfWeight = 5;
-    const voterMemberCount = 3;
+    const { votesOfKeyInProposalMap } = voteResultOfLeadingProposal || {};
+    const votesOfKey = votesOfKeyInProposalMap?.[itemKey as IPocItemKey];
+
+    const sumOfWeight =
+      votesOfKey?.reduce((acc, vote) => {
+        return acc + Number(vote.weight);
+      }, 0) || 0;
+    const voterMemberCount = votesOfKey?.length || 0;
 
     const tableRowData: TableRowData = {
-      ...proposalItem, // 继承所有 IProjectDataItem 字段
+      ...proposalItem,
       support: {
         count: sumOfWeight,
         voters: voterMemberCount,
@@ -80,7 +110,13 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     };
 
     return [tableRowData];
-  }, [displayProposalDataListOfProject, itemKey]);
+  }, [
+    displayProposalDataListOfProject,
+    itemKey,
+    voteResultOfLeadingProposal,
+    getItemTopWeight,
+    proposalsByKey,
+  ]);
 
   const tableDataOfSubmissionQueue: TableRowData[] = useMemo(() => {
     if (!proposalsByKey) return [];

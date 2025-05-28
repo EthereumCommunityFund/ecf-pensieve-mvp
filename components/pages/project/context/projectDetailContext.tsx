@@ -155,7 +155,9 @@ export const ProjectDetailProvider = ({
       },
     },
   );
-
+  /**
+   * published proposal 胜出的数据，不含 item proposal 胜出的数据
+   */
   const voteResultOfLeadingProposal = useMemo(() => {
     const leadingProposalId =
       proposalsByProject?.withoutItemProposal[0]?.proposalId;
