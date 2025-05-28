@@ -129,6 +129,7 @@ export default [
       '**/.vscode/**',
       '**/README.md',
       '**/LICENSE',
+      '**/stories/**',
     ],
   },
 ];

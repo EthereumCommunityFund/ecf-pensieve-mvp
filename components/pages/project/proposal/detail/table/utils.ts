@@ -7,6 +7,7 @@ import { IProposal } from '@/types';
 import {
   IEssentialItemKey,
   IItemSubCategoryEnum,
+  IPocItemKey,
   IProposalItem,
 } from '@/types/item';
 
@@ -60,8 +61,8 @@ export const prepareProposalTableData = (
   return result;
 };
 
-export const getCategoryByItemKey = (key: string) => {
-  const { category, subCategory } = AllItemConfig[key as IEssentialItemKey];
+export const getCategoryByItemKey = (key: IPocItemKey) => {
+  const { category, subCategory } = AllItemConfig[key]!;
   const categoryConfig = ProposalTableFieldCategory.find(
     (cat) => cat.key === category,
   );
