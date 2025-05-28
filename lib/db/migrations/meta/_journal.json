@@ -211,6 +211,13 @@
       "when": 1748334775232,
       "tag": "0029_curious_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1748433169354,
+      "tag": "0030_narrow_venus",
+      "breakpoints": true
     }
   ]
 }
