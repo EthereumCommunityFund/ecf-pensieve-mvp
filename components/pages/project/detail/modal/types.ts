@@ -1,5 +1,5 @@
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
-import { IProject } from '@/types';
+import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 export interface IProjectDetailModalProps {
@@ -16,11 +16,18 @@ export interface IProjectDetailModalProps {
 
 export interface ITableMeta {
   displayProposalData: IProjectDataItem[];
-  proposalsByKey: Record<IPocItemKey, IProjectDataItem[]>;
-  onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
-  onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  proposalsByKey: IProposalsByProjectIdAndKey;
+  onCreateItemProposalVote: (
+    key: IPocItemKey,
+    itemProposalId: number,
+  ) => Promise<void>;
+  onSwitchItemProposalVote: (
+    key: IPocItemKey,
+    itemProposalId: number,
+  ) => Promise<void>;
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
   project?: IProject;
+  profile?: IProfile;
 }
 
 export interface TableRowData extends IProjectDataItem {

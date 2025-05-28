@@ -12,6 +12,13 @@ interface IProps {
   displayFormType?: IFormDisplayType;
 }
 
+export const isInputValueEmpty = (value: any) => {
+  // TODO 完善这个逻辑
+  return (
+    !value || (typeof value === 'string' && value?.toLowerCase() === 'n/a')
+  );
+};
+
 const InputContentRenderer: React.FC<IProps> = ({
   value,
   itemKey,
@@ -25,8 +32,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     return <>{value}</>;
   }
 
-  const isValueEmpty =
-    !value || (typeof value === 'string' && value?.toLowerCase() === 'n/a');
+  const isValueEmpty = isInputValueEmpty(value);
 
   if (!isEssential && isValueEmpty) {
     return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;

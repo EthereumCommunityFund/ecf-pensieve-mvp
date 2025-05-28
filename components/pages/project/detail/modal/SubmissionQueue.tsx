@@ -12,14 +12,15 @@ import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretUpDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
 import { IProfileCreator } from '@/types';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
-import { useModalContext } from './Context';
+import { useModalContext } from './ModalContext';
 import { useDisplayedColumns } from './SubmissionQueueColumns';
-import { TableRowData } from './types';
+import { ITableMeta, TableRowData } from './types';
 
 interface SubmissionQueueProps {
   itemName?: string;
@@ -32,23 +33,24 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   itemWeight = 22,
   itemKey,
 }) => {
+  const { profile } = useAuth();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 获取项目数据
-  const {
-    displayProposalData,
-    onCreateVote,
-    onSwitchVote,
-    onCancelVote,
-    project,
-    getItemTopWeight,
-  } = useProjectDetailContext();
+  const { displayProposalData, project, getItemTopWeight } =
+    useProjectDetailContext();
 
-  // 获取 Modal 数据
-  const { proposalsByKey } = useModalContext();
+  const {
+    inActionKeyMap,
+    onCreateItemProposalVote,
+    onSwitchItemProposalVote,
+    onCancelVote,
+    proposalsByKey,
+  } = useModalContext();
 
   // 根据 itemKey 从 displayProposalData 中获取真实数据
   const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
@@ -174,17 +176,19 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       project,
       displayProposalData,
       proposalsByKey,
-      onCreateVote,
-      onSwitchVote,
+      onCreateItemProposalVote,
+      onSwitchItemProposalVote,
       onCancelVote,
-    };
+      profile,
+    } as ITableMeta;
   }, [
     project,
     displayProposalData,
     proposalsByKey,
-    onCreateVote,
-    onSwitchVote,
+    onCreateItemProposalVote,
+    onSwitchItemProposalVote,
     onCancelVote,
+    profile,
   ]);
 
   const displayedTable = useReactTable({

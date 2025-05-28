@@ -2,7 +2,7 @@ import { inferRouterOutputs } from '@trpc/server';
 
 import { IRef } from '@/components/pages/project/create/types';
 import { AppRouter } from '@/lib/trpc/routers';
-import { IProposalItem } from '@/types/item';
+import { IPocItemKey, IProposalItem } from '@/types/item';
 
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
@@ -51,6 +51,17 @@ export type IItemProposalWithCreator = {
   projectId: number;
   creator: IProfileCreator;
   reason: string | null;
+};
+
+export type IItemProposalVoteRecord = {
+  id: number;
+  itemProposalId: number;
+  projectId: number;
+  proposalId: number;
+  key: IPocItemKey;
+  createdAt: Date;
+  creator: string;
+  weight: number;
 };
 
 // Project log base structure

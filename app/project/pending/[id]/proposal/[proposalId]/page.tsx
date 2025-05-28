@@ -55,7 +55,9 @@ const ProposalPage = () => {
       },
     );
 
-  const proposals = project?.proposals || [];
+  const proposals = useMemo(() => {
+    return project?.proposals || [];
+  }, [project?.proposals]);
 
   const { leadingProposalId } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({

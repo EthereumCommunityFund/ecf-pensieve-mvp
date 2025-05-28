@@ -4,9 +4,10 @@ import { FC, memo, useCallback } from 'react';
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
 import { QUORUM_AMOUNT } from '@/lib/constants';
+import { IItemProposalVoteRecord, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
-import { IProjectDataItem } from '../../table/Column';
+import { IProjectDataItem } from '../table/Column';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -17,12 +18,21 @@ interface IProps {
   isUserVoted: boolean;
   isLoading: boolean;
   isProposalCreator: boolean;
-  onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onCreateItemProposalVote: (
+    key: IPocItemKey,
+    itemProposalId: number,
+  ) => Promise<void>;
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
-  onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
+  onSwitchItemProposalVote: (
+    key: IPocItemKey,
+    itemProposalId: number,
+  ) => Promise<void>;
   proposalId: number;
   displayProposalData: IProjectDataItem[];
-  proposalsByKey: Record<IPocItemKey, IProjectDataItem[]>;
+  proposalsByKey: IProposalsByProjectIdAndKey;
+  userVotedItemProposal?: IItemProposalVoteRecord;
+  isUserVotedKey: boolean;
+  isUserVotedItemProposal: boolean;
 }
 
 const SupportColumnItem: FC<IProps> = ({
@@ -34,23 +44,37 @@ const SupportColumnItem: FC<IProps> = ({
   isUserVoted,
   isLoading,
   isProposalCreator,
-  onCreateVote,
+  onCreateItemProposalVote,
   onCancelVote,
-  onSwitchVote,
+  onSwitchItemProposalVote,
   proposalId,
-  displayProposalData,
-  proposalsByKey,
+  isUserVotedKey,
+  isUserVotedItemProposal,
+  userVotedItemProposal,
 }) => {
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
   const handleAction = useCallback(() => {
-    // TODO switch vote
-    if (isUserVoted) {
-      onCancelVote(itemKey, proposalId);
+    if (isUserVotedItemProposal && userVotedItemProposal) {
+      console.log('onCancelVote', itemKey, userVotedItemProposal.id);
+      onCancelVote(itemKey, userVotedItemProposal.id);
+    } else if (isUserVotedKey) {
+      console.log('switchItemProposalVote', itemKey, proposalId);
+      onSwitchItemProposalVote(itemKey, proposalId);
     } else {
-      onCreateVote(itemKey, proposalId);
+      console.log('onCreateItemProposalVote', itemKey, proposalId);
+      onCreateItemProposalVote(itemKey, proposalId);
     }
-  }, [isUserVoted, itemKey, proposalId, onCreateVote, onCancelVote]);
+  }, [
+    itemKey,
+    proposalId,
+    onCreateItemProposalVote,
+    onCancelVote,
+    isUserVotedKey,
+    isUserVotedItemProposal,
+    userVotedItemProposal,
+    onSwitchItemProposalVote,
+  ]);
 
   return (
     <div className="flex flex-1 items-center justify-between">

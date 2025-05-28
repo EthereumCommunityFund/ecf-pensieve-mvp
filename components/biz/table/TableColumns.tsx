@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 import { Button } from '@/components/base';
 import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
+import { isInputValueEmpty } from '@/components/pages/project/proposal/detail/table/InputContentRenderer';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -346,7 +347,7 @@ const SubmitterCell = ({
   itemConfig,
 }: SubmitterColCellProps) => {
   const isNonEssential = !itemConfig?.isEssential;
-  const isValueEmpty = !item?.input || item?.input.toLowerCase() === 'n/a';
+  const isValueEmpty = isInputValueEmpty(item?.input);
 
   if (isNonEssential && isValueEmpty) {
     return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
@@ -409,8 +410,7 @@ const ActionsCell = ({
   itemConfig,
 }: ActionsColCellProps) => {
   const isEssential = itemConfig?.isEssential;
-  const value = item.input;
-  const isValueEmpty = !value || value.toLowerCase() === 'n/a';
+  const isValueEmpty = isInputValueEmpty(item?.input);
 
   if (!isEssential && isValueEmpty) {
     return (

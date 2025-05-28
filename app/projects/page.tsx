@@ -2,7 +2,7 @@
 
 import { Image } from '@heroui/react';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -39,7 +39,9 @@ const ProjectsPage = () => {
     console.log('Propose a Project');
   };
 
-  const allProjects = data?.pages.flatMap((page) => page.items) || [];
+  const allProjects = useMemo(() => {
+    return data?.pages.flatMap((page) => page.items) || [];
+  }, [data]);
 
   useEffect(() => {
     if (allProjects.length > 0) {

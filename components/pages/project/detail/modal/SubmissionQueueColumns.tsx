@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
 import { QuestionIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { IItemProposalVoteRecord } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 import SupportColumnItem from './SupportColumnItem';
@@ -106,17 +107,32 @@ export const useDisplayedColumns = ({
       cell: (info) => {
         const support = info.getValue();
         const {
-          onCreateVote,
-          onSwitchVote,
+          onCreateItemProposalVote,
+          onSwitchItemProposalVote,
           onCancelVote,
           displayProposalData,
           proposalsByKey,
           project,
+          profile,
         } = info.table.options.meta as ITableMeta;
         const itemTopWeight =
           (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
             info.row.original.key as IPocItemKey
           ] || 0;
+        // TODO 抽取到 context里面去
+        const { leadingProposal = null, allItemProposals = [] } =
+          proposalsByKey || {};
+        const allItemProposalVoteRecords = allItemProposals.flatMap(
+          (item) => item.voteRecords,
+        ) as IItemProposalVoteRecord[];
+        const userVotedItemProposal = allItemProposalVoteRecords.find(
+          (item) => item.creator === profile?.userId,
+        );
+        const isUserVotedKey = !!userVotedItemProposal;
+        const isUserVotedItemProposal =
+          isUserVotedKey &&
+          userVotedItemProposal?.itemProposalId ===
+            info.row.original.proposalId;
         return (
           <SupportColumnItem
             proposalId={info.row.original.proposalId}
@@ -128,11 +144,16 @@ export const useDisplayedColumns = ({
             isUserVoted={false}
             isLoading={false}
             isProposalCreator={false}
-            onCreateVote={onCreateVote}
-            onSwitchVote={onSwitchVote}
+            onCreateItemProposalVote={onCreateItemProposalVote}
+            onSwitchItemProposalVote={onSwitchItemProposalVote}
             onCancelVote={onCancelVote}
             displayProposalData={displayProposalData}
             proposalsByKey={proposalsByKey}
+            isUserVotedKey={isUserVotedKey}
+            isUserVotedItemProposal={isUserVotedItemProposal}
+            userVotedItemProposal={
+              userVotedItemProposal as IItemProposalVoteRecord
+            }
           />
         );
       },

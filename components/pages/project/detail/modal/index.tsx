@@ -6,11 +6,12 @@ import { FC } from 'react';
 import { Modal, ModalContent } from '@/components/base/modal';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
 
 import SubmitItemProposal from '../submit/SubmitItemProposal';
 
-import { ModalProvider } from './Context';
 import LeftContent from './LeftContent';
+import { ModalProvider } from './ModalContext';
 import ModalHeader from './ModalHeader';
 import RightContent from './RightContent';
 import { IProjectDetailModalProps } from './types';
@@ -25,6 +26,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   userWeight = 0,
   contentType = 'viewItemProposal',
 }) => {
+  const { profile } = useAuth();
   // 获取项目数据
   const { projectId } = useProjectDetailContext();
   const handleShare = () => {
@@ -75,7 +77,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
         {/* Right Content */}
         <div className="w-[300px]">
           <RightContent
-            userWeight={userWeight}
+            userWeight={Number(profile?.weight)}
             currentItemWeight={currentWeight}
             onSubmitEntry={onSubmitEntry}
             hideSubmitEntry={contentType === 'submitPropose'}

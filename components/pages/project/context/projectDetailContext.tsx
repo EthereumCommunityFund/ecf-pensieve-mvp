@@ -7,7 +7,6 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useState,
 } from 'react';
 
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
@@ -34,10 +33,6 @@ interface ProjectDetailContextType {
   isLeadingProposalsLoading: boolean;
   isLeadingProposalsFetched: boolean;
   displayProposalData?: IProjectDataItem[];
-  inActionKeyMap: Partial<Record<IPocItemKey, boolean>>;
-  onCreateVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
-  onSwitchVote: (key: IPocItemKey, proposalId: number) => Promise<void>;
-  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
   getItemTopWeight: (key: IPocItemKey) => number;
 }
 
@@ -54,10 +49,6 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   isLeadingProposalsLoading: true,
   isLeadingProposalsFetched: false,
   displayProposalData: undefined,
-  inActionKeyMap: {},
-  onCreateVote: async () => {},
-  onSwitchVote: async () => {},
-  onCancelVote: async () => {},
   getItemTopWeight: () => 0,
 });
 
@@ -70,14 +61,6 @@ export const ProjectDetailProvider = ({
   const { id } = useParams();
   const { profile } = useAuth();
   const projectId = Number(id);
-
-  const [inActionKeyMap, setInActionKeyMap] = useState<
-    Partial<Record<IPocItemKey, boolean>>
-  >({});
-
-  const createVoteMutation = trpc.vote.createVote.useMutation();
-  const switchVoteMutation = trpc.vote.switchVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
   const {
     data: project,
@@ -186,76 +169,6 @@ export const ProjectDetailProvider = ({
     return Array.from(DataMap.values());
   }, [proposalsByProject, project]);
 
-  const setKeyActive = (key: IPocItemKey, active: boolean) => {
-    setInActionKeyMap((pre) => ({
-      ...pre,
-      [key]: active,
-    }));
-  };
-
-  const onCreateVote = useCallback(
-    async (key: IPocItemKey, proposalId: number) => {
-      setKeyActive(key, true);
-      console.log('onCreateVote', key, proposalId);
-      createVoteMutation.mutate(
-        { proposalId, key },
-        {
-          onSuccess: async (data) => {
-            // TODO refetch proposal and votes
-            setKeyActive(key, false);
-          },
-          onError: (error) => {
-            setKeyActive(key, false);
-            devLog('onVote error', error);
-          },
-        },
-      );
-    },
-    [createVoteMutation],
-  );
-
-  const onSwitchVote = useCallback(
-    async (key: IPocItemKey, proposalId: number) => {
-      setKeyActive(key, true);
-      console.log('onSwitchVote', key, proposalId);
-      switchVoteMutation.mutate(
-        { proposalId, key },
-        {
-          onSuccess: async (data) => {
-            // TODO refetch proposal and votes
-            setKeyActive(key, false);
-          },
-          onError: (error) => {
-            setKeyActive(key, false);
-            // devLog('onSwitchVote error', error);
-          },
-        },
-      );
-    },
-    [switchVoteMutation],
-  );
-
-  const onCancelVote = useCallback(
-    async (key: IPocItemKey, voteRecordId: number) => {
-      setKeyActive(key, true);
-      console.log('onCancelVote', key, voteRecordId);
-      cancelVoteMutation.mutate(
-        { id: voteRecordId },
-        {
-          onSuccess: async (data) => {
-            // TODO refetch proposal and votes
-            setKeyActive(key, false);
-          },
-          onError: (error) => {
-            setKeyActive(key, false);
-          },
-        },
-      );
-    },
-    [cancelVoteMutation],
-  );
-
-  // Context value
   const value: ProjectDetailContextType = {
     project: project as IProject,
     proposals,
@@ -268,10 +181,6 @@ export const ProjectDetailProvider = ({
     isLeadingProposalsLoading,
     isLeadingProposalsFetched,
     displayProposalData,
-    inActionKeyMap,
-    onCreateVote,
-    onSwitchVote,
-    onCancelVote,
     getItemTopWeight,
   };
 

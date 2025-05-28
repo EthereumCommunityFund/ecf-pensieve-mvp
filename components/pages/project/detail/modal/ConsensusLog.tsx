@@ -12,7 +12,7 @@ import { useProjectDetailContext } from '@/components/pages/project/context/proj
 import { formatDate } from '@/utils/formatters';
 
 import { useConsensusLogColumns } from './ConsensusLogColumns';
-import { useModalContext } from './Context';
+import { useModalContext } from './ModalContext';
 import { ConsensusLogRowData } from './types';
 
 interface ConsensusLogProps {
