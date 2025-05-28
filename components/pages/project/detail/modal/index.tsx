@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 
 import { Modal, ModalContent } from '@/components/base/modal';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
@@ -11,7 +11,6 @@ import { useAuth } from '@/context/AuthContext';
 import SubmitItemProposal from '../submit/SubmitItemProposal';
 
 import LeftContent from './LeftContent';
-import { ModalProvider } from './ModalContext';
 import ModalHeader from './ModalHeader';
 import RightContent from './RightContent';
 import { IProjectDetailModalProps } from './types';
@@ -27,8 +26,21 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   contentType = 'viewItemProposal',
 }) => {
   const { profile } = useAuth();
-  // 获取项目数据
-  const { projectId } = useProjectDetailContext();
+  const { projectId, setCurrentItemKey } = useProjectDetailContext();
+
+  useEffect(() => {
+    if (isOpen && itemKey) {
+      setCurrentItemKey(itemKey);
+    } else if (!isOpen && itemKey) {
+      setCurrentItemKey(null);
+    }
+  }, [isOpen, itemKey, setCurrentItemKey]);
+
+  const handleClose = () => {
+    setCurrentItemKey(null);
+    onClose();
+  };
+
   const handleShare = () => {
     // TODO: Implement share functionality
     console.log('Share clicked');
@@ -51,7 +63,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
     >
       {/* Header */}
       <ModalHeader
-        onClose={onClose}
+        onClose={handleClose}
         onShare={handleShare}
         breadcrumbs={{
           section: 'Section',
@@ -77,7 +89,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
         {/* Right Content */}
         <div className="w-[300px]">
           <RightContent
-            userWeight={Number(profile?.weight)}
+            userWeight={Number(profile?.weight) || 0}
             currentItemWeight={currentWeight}
             onSubmitEntry={onSubmitEntry}
             hideSubmitEntry={contentType === 'submitPropose'}
@@ -90,19 +102,18 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   return (
     <Modal
       isOpen={isOpen}
-      onOpenChange={(open) => !open && onClose()}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
+      }}
       classNames={{
         base: 'max-w-[auto]',
         body: 'p-0',
         backdrop: 'backdrop-blur-[20px]',
       }}
     >
-      {/* Wrap content with ModalProvider if itemKey is available */}
-      {itemKey ? (
-        <ModalProvider projectId={projectId} itemKey={itemKey}>
-          <ModalContentComponent />
-        </ModalProvider>
-      ) : null}
+      {itemKey ? <ModalContentComponent /> : null}
     </Modal>
   );
 };

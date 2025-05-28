@@ -18,7 +18,6 @@ import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
-import { useModalContext } from './ModalContext';
 import { useDisplayedColumns } from './SubmissionQueueColumns';
 import { ITableMeta, TableRowData } from './types';
 
@@ -41,16 +40,16 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 获取项目数据
-  const { displayProposalData, project, getItemTopWeight } =
-    useProjectDetailContext();
-
   const {
+    displayProposalData,
+    project,
+    getItemTopWeight,
     inActionKeyMap,
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,
     proposalsByKey,
-  } = useModalContext();
+  } = useProjectDetailContext();
 
   // 根据 itemKey 从 displayProposalData 中获取真实数据
   const tableDataOfDisplayed: TableRowData[] = useMemo(() => {

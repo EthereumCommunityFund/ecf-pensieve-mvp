@@ -12,7 +12,6 @@ import { useProjectDetailContext } from '@/components/pages/project/context/proj
 import { formatDate } from '@/utils/formatters';
 
 import { useConsensusLogColumns } from './ConsensusLogColumns';
-import { useModalContext } from './ModalContext';
 import { ConsensusLogRowData } from './types';
 
 interface ConsensusLogProps {
@@ -27,21 +26,8 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { project } = useProjectDetailContext();
-
-  // 尝试使用 Modal Context 获取数据，如果不可用则回退到直接调用
-  let proposalHistory;
-  let isHistoryLoading = false;
-
-  try {
-    const modalContext = useModalContext();
-    proposalHistory = modalContext.proposalHistory;
-    isHistoryLoading = modalContext.isProposalHistoryLoading;
-  } catch (error) {
-    // Modal context 不可用，使用模拟数据或者可以添加直接的 trpc 调用作为回退
-    proposalHistory = undefined;
-    isHistoryLoading = false;
-  }
+  const { project, proposalHistory, isProposalHistoryLoading } =
+    useProjectDetailContext();
 
   // 根据 itemKey 从项目数据中获取真实数据
   const tableData: ConsensusLogRowData[] = useMemo(() => {
@@ -61,7 +47,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
       'proposalHistory:',
       proposalHistory,
       'isHistoryLoading:',
-      isHistoryLoading,
+      isProposalHistoryLoading,
     );
 
     // 如果有真实的投票历史数据，使用它们
@@ -187,7 +173,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
     ];
 
     return mockConsensusData;
-  }, [project, itemKey, proposalHistory, isHistoryLoading]);
+  }, [project, itemKey, proposalHistory, isProposalHistoryLoading]);
 
   // Event handlers
   const handleExpandClick = useCallback((rowId: string) => {

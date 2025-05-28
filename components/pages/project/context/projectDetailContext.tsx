@@ -7,19 +7,23 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useState,
 } from 'react';
 
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import {
+  ILeadingProposalHistory,
   ILeadingProposals,
   ILeadingProposalsTyped,
   IProject,
   IProposal,
+  IProposalsByProjectIdAndKey,
 } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+
 // Define the context type
 interface ProjectDetailContextType {
   project?: IProject;
@@ -34,6 +38,28 @@ interface ProjectDetailContextType {
   isLeadingProposalsFetched: boolean;
   displayProposalData?: IProjectDataItem[];
   getItemTopWeight: (key: IPocItemKey) => number;
+
+  // Merged from ModalContextType
+  currentItemKey: string | null;
+  setCurrentItemKey: (key: string | null) => void;
+  proposalsByKey?: IProposalsByProjectIdAndKey;
+  proposalHistory?: ILeadingProposalHistory;
+  isProposalsByKeyLoading: boolean;
+  isProposalsByKeyFetched: boolean;
+  isProposalHistoryLoading: boolean;
+  isProposalHistoryFetched: boolean;
+  refetchProposalsByKey: () => void;
+  refetchProposalHistory: () => void;
+  inActionKeyMap: Partial<Record<IPocItemKey, boolean>>;
+  onCreateItemProposalVote: (
+    key: IPocItemKey,
+    itemProposalId: number,
+  ) => Promise<void>;
+  onSwitchItemProposalVote: (
+    key: IPocItemKey,
+    itemProposalId: number,
+  ) => Promise<void>;
+  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
 }
 
 // Create the context with default values
@@ -50,6 +76,22 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   isLeadingProposalsFetched: false,
   displayProposalData: undefined,
   getItemTopWeight: () => 0,
+
+  // Merged defaults
+  currentItemKey: null,
+  setCurrentItemKey: () => {},
+  proposalsByKey: undefined,
+  proposalHistory: undefined,
+  isProposalsByKeyLoading: true,
+  isProposalsByKeyFetched: false,
+  isProposalHistoryLoading: true,
+  isProposalHistoryFetched: false,
+  refetchProposalsByKey: () => {},
+  refetchProposalHistory: () => {},
+  inActionKeyMap: {},
+  onCreateItemProposalVote: () => Promise.resolve(),
+  onSwitchItemProposalVote: () => Promise.resolve(),
+  onCancelVote: () => Promise.resolve(),
 });
 
 // Provider component
@@ -61,6 +103,8 @@ export const ProjectDetailProvider = ({
   const { id } = useParams();
   const { profile } = useAuth();
   const projectId = Number(id);
+
+  const [currentItemKey, setCurrentItemKey] = useState<string | null>(null);
 
   const {
     data: project,
@@ -107,12 +151,121 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // Logic from ModalProvider starts here
+  const {
+    data: proposalsByKey,
+    isLoading: isProposalsByKeyLoading,
+    isFetched: isProposalsByKeyFetched,
+    refetch: refetchProposalsByKey,
+  } = trpc.projectLog.getProposalsByProjectIdAndKey.useQuery(
+    { projectId, key: currentItemKey! },
+    {
+      enabled: !!projectId && !!currentItemKey,
+      select: (data) => {
+        devLog('getProposalsByProjectIdAndKey', currentItemKey, data);
+        return data;
+      },
+    },
+  );
+
+  const {
+    data: proposalHistory,
+    isLoading: isProposalHistoryLoading,
+    isFetched: isProposalHistoryFetched,
+    refetch: refetchProposalHistory,
+  } = trpc.projectLog.getLeadingProposalHistoryByProjectIdAndKey.useQuery(
+    { projectId, key: currentItemKey! },
+    {
+      enabled: !!projectId && !!currentItemKey,
+      select: (data) => {
+        // devLog('getLeadingProposalHistoryByProjectIdAndKey', data);
+        return data;
+      },
+    },
+  );
+
+  const [inActionKeyMap, setInActionKeyMap] = useState<
+    Partial<Record<IPocItemKey, boolean>>
+  >({});
+
+  const createItemProposalVoteMutation =
+    trpc.vote.createItemProposalVote.useMutation();
+  const switchItemProposalVoteMutation =
+    trpc.vote.switchItemProposalVote.useMutation();
+  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
+
+  const setKeyActive = (key: IPocItemKey, active: boolean) => {
+    setInActionKeyMap((pre) => ({
+      ...pre,
+      [key]: active,
+    }));
+  };
+
+  const onCreateItemProposalVote = useCallback(
+    async (key: IPocItemKey, itemProposalId: number) => {
+      setKeyActive(key, true);
+      createItemProposalVoteMutation.mutate(
+        { itemProposalId, key },
+        {
+          onSuccess: async () => {
+            refetchProposalsByKey();
+            setKeyActive(key, false);
+          },
+          onError: (error) => {
+            setKeyActive(key, false);
+            devLog('onCreateItemProposalVote error', error);
+          },
+        },
+      );
+    },
+    [createItemProposalVoteMutation, refetchProposalsByKey],
+  );
+
+  const onSwitchItemProposalVote = useCallback(
+    async (key: IPocItemKey, itemProposalId: number) => {
+      setKeyActive(key, true);
+      switchItemProposalVoteMutation.mutate(
+        { itemProposalId, key },
+        {
+          onSuccess: async () => {
+            refetchProposalsByKey();
+            setKeyActive(key, false);
+          },
+          onError: (error) => {
+            setKeyActive(key, false);
+            devLog('onSwitchItemProposalVote error', error);
+          },
+        },
+      );
+    },
+    [switchItemProposalVoteMutation, refetchProposalsByKey],
+  );
+
+  const onCancelVote = useCallback(
+    async (key: IPocItemKey, voteRecordId: number) => {
+      setKeyActive(key, true);
+      cancelVoteMutation.mutate(
+        { id: voteRecordId },
+        {
+          onSuccess: async () => {
+            refetchProposalsByKey();
+            setKeyActive(key, false);
+          },
+          onError: (error) => {
+            setKeyActive(key, false);
+            devLog('onCancelVote error', error);
+          },
+        },
+      );
+    },
+    [cancelVoteMutation, refetchProposalsByKey],
+  );
+  // Logic from ModalProvider ends here
+
   const getItemTopWeight = useCallback(
     (itemKey: IPocItemKey) => {
       return (
-        (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
-          itemKey as IPocItemKey
-        ] || 0
+        (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[itemKey] || 0
       );
     },
     [project],
@@ -126,40 +279,38 @@ export const ProjectDetailProvider = ({
     >;
     const { withoutItemProposal, withItemProposal } =
       proposalsByProject as ILeadingProposalsTyped;
-    // 1. 优先取withItemProposal里的item proposal数据
-    // 2. 其次取withoutItemProposal里的proposal维度(leading proposal)的item数据
-    // TODO  暂时看不到item proposal 的数据，先处理投票后再来处理这里
     const DataMap = new Map<string, IProjectDataItem>();
-    withoutItemProposal.forEach((project) => {
-      project.proposal.items.forEach((item) => {
+    withoutItemProposal.forEach((p) => {
+      p.proposal.items.forEach((item) => {
         const row = {
           key: item.key,
           property: item.key,
           input: item.value,
           reference:
-            project.proposal.refs?.find((ref) => ref.key === item.key) || null,
-          submitter: project.proposal.creator,
-          createdAt: project.proposal.createdAt,
-          projectId: project.proposal.projectId,
-          proposalId: project.proposal.id,
+            p.proposal.refs?.find((ref) => ref.key === item.key) || null,
+          submitter: p.proposal.creator,
+          createdAt: p.proposal.createdAt,
+          projectId: p.proposal.projectId,
+          proposalId: p.proposal.id,
           itemTopWeight: itemsTopWeight[item.key as IPocItemKey] || 0,
         };
         DataMap.set(item.key, row);
       });
     });
-    const proposal = withItemProposal?.[0]?.proposal;
-    if (proposal) {
-      proposal.items.forEach((item) => {
+    const proposalData = withItemProposal?.[0]?.proposal;
+    if (proposalData) {
+      proposalData.items.forEach((item) => {
         if (DataMap.has(item.key)) return;
         const row: IProjectDataItem = {
           key: item.key,
           property: item.key,
           input: item.value,
-          reference: proposal.refs?.find((ref) => ref.key === item.key) || null,
-          submitter: proposal.creator,
-          createdAt: proposal.createdAt,
-          projectId: proposal.projectId,
-          proposalId: proposal.id,
+          reference:
+            proposalData.refs?.find((ref) => ref.key === item.key) || null,
+          submitter: proposalData.creator,
+          createdAt: proposalData.createdAt,
+          projectId: proposalData.projectId,
+          proposalId: proposalData.id,
           itemTopWeight: itemsTopWeight[item.key as IPocItemKey] || 0,
         };
         DataMap.set(item.key, row);
@@ -182,6 +333,22 @@ export const ProjectDetailProvider = ({
     isLeadingProposalsFetched,
     displayProposalData,
     getItemTopWeight,
+
+    // Merged values
+    currentItemKey,
+    setCurrentItemKey,
+    proposalsByKey,
+    proposalHistory,
+    isProposalsByKeyLoading,
+    isProposalsByKeyFetched,
+    isProposalHistoryLoading,
+    isProposalHistoryFetched,
+    refetchProposalsByKey,
+    refetchProposalHistory,
+    inActionKeyMap,
+    onCreateItemProposalVote,
+    onSwitchItemProposalVote,
+    onCancelVote,
   };
 
   return (
@@ -196,7 +363,7 @@ export const useProjectDetailContext = () => {
   const context = useContext(ProjectDetailContext);
   if (context === undefined) {
     throw new Error(
-      'useProjectDetail must be used within a ProjectDetailProvider',
+      'useProjectDetailContext must be used within a ProjectDetailProvider',
     );
   }
   return context;

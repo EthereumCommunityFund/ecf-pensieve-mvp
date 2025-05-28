@@ -128,6 +128,7 @@ export const useDisplayedColumns = ({
         const userVotedItemProposal = allItemProposalVoteRecords.find(
           (item) => item.creator === profile?.userId,
         );
+        // 1、是否在proposal中投过票、是否在item proposal中投过票、是否投了当前这一条
         const isUserVotedKey = !!userVotedItemProposal;
         const isUserVotedItemProposal =
           isUserVotedKey &&
