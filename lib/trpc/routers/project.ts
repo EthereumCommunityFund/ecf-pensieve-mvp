@@ -211,7 +211,11 @@ export const projectRouter = router({
           creator: true,
           proposals: {
             with: {
-              voteRecords: true,
+              voteRecords: {
+                with: {
+                  creator: true,
+                },
+              },
               creator: true,
             },
           },
