@@ -35,7 +35,7 @@ const InputContentRenderer: React.FC<IProps> = ({
   const isValueEmpty = isInputValueEmpty(value);
 
   if (!isEssential && isValueEmpty) {
-    return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
+    return <span className="font-mona text-[14px] font-[600]">{`---`}</span>;
   }
 
   const formatValue =

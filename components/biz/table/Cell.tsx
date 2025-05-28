@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { cn } from '@heroui/react';
+import { ReactNode } from 'react';
 
 export interface TableCellProps {
   children: ReactNode;
@@ -11,6 +11,7 @@ export interface TableCellProps {
   className?: string;
   style?: React.CSSProperties;
   minHeight?: number;
+  colspan?: number;
 }
 
 export const TableCell = ({
@@ -21,6 +22,7 @@ export const TableCell = ({
   className,
   style,
   minHeight = 60,
+  colspan,
   ...props
 }: TableCellProps) => {
   const cellStyle = {
@@ -32,6 +34,7 @@ export const TableCell = ({
   return (
     <td
       style={cellStyle}
+      colSpan={colspan}
       className={cn(
         'border-l border-b border-black/10 hover:bg-[#EBEBEB]',
         isLast && 'border-r',
@@ -41,7 +44,7 @@ export const TableCell = ({
       {...props}
     >
       <div
-        className="line-height-[19px] flex w-full items-center overflow-hidden whitespace-normal break-words p-[10px] text-[16px]"
+        className="flex w-full items-center overflow-hidden whitespace-normal break-words p-[10px] text-[16px] leading-[19px]"
         style={{ minHeight: `${minHeight}px` }}
       >
         {children}

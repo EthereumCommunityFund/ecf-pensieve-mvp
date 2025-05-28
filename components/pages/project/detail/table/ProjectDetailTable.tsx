@@ -6,7 +6,14 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   TableCell,
@@ -37,6 +44,7 @@ import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
 
+import NavigationMenu from './NavigationMenu';
 import { prepareProjectTableData } from './utils';
 
 const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
@@ -46,7 +54,7 @@ const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Development]: true,
   [IItemSubCategoryEnum.Finances]: true,
   [IItemSubCategoryEnum.Token]: true,
-  [IItemSubCategoryEnum.Governance]: true,
+  [IItemSubCategoryEnum.Governance]: true, // 保留以防将来启用
 };
 
 interface ProjectDataProps {
@@ -71,6 +79,24 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
   // 分类展开状态管理
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
 
+  // 当前激活的分类
+  const [activeCategory, setActiveCategory] = useState<IItemSubCategoryEnum>(
+    IItemSubCategoryEnum.BasicProfile,
+  );
+
+  // 分类引用，用于滚动定位
+  const categoryRefs = useRef<
+    Record<IItemSubCategoryEnum, HTMLDivElement | null>
+  >({
+    [IItemSubCategoryEnum.BasicProfile]: null,
+    [IItemSubCategoryEnum.Development]: null,
+    [IItemSubCategoryEnum.Organization]: null,
+    [IItemSubCategoryEnum.Team]: null,
+    [IItemSubCategoryEnum.Finances]: null,
+    [IItemSubCategoryEnum.Token]: null,
+    [IItemSubCategoryEnum.Governance]: null, // 保留以防将来启用
+  });
+
   // 空数据分组展开状态管理
   const [emptyItemsExpanded, setEmptyItemsExpanded] = useState<
     Record<IItemSubCategoryEnum, boolean>
@@ -81,7 +107,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
     [IItemSubCategoryEnum.Development]: false,
     [IItemSubCategoryEnum.Finances]: false,
     [IItemSubCategoryEnum.Token]: false,
-    [IItemSubCategoryEnum.Governance]: false,
+    [IItemSubCategoryEnum.Governance]: false, // 保留以防将来启用
   });
 
   // 切换行展开状态
@@ -107,6 +133,44 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
       ...prev,
       [category]: !prev[category],
     }));
+  }, []);
+
+  // 处理导航菜单点击，滚动到对应分类
+  const handleCategoryClick = useCallback((category: IItemSubCategoryEnum) => {
+    const targetElement = categoryRefs.current[category];
+    if (targetElement) {
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      setActiveCategory(category);
+    }
+  }, []);
+
+  // 监听滚动，更新当前激活的分类
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100; // 添加偏移量
+
+      // 找到当前可见的分类
+      let currentCategory = IItemSubCategoryEnum.BasicProfile;
+
+      Object.entries(categoryRefs.current).forEach(([key, element]) => {
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const elementTop = rect.top + window.scrollY;
+
+          if (scrollPosition >= elementTop) {
+            currentCategory = key as IItemSubCategoryEnum;
+          }
+        }
+      });
+
+      setActiveCategory(currentCategory);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // 创建分类表格数据（包含空数据项目）
@@ -573,9 +637,6 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
                 </>
               );
             })()}
-            {/* <TableFooter colSpan={table.getAllColumns().length}>
-              footer
-            </TableFooter> */}
           </tbody>
         </table>
       </div>
@@ -648,21 +709,22 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
     <div
       className={cn(
         'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
-        'flex items-start justify-center gap-[40px] ',
+        'flex items-start gap-[40px] ',
         'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
       )}
     >
-      <div className="w-full max-w-[1000px]">
-        <div className="mb-[20px] flex flex-col gap-[10px]">
-          <h2 className="text-[24px] font-[700] leading-[33px] text-black/80">
-            Project Overview
-          </h2>
-          <p className="text-[16px] font-[600] leading-[22px] text-black/40">
-            This section displays items that describe the organization's
-            contributors, structure..
-          </p>
+      {/* 左侧导航菜单 - 固定定位 */}
+      <div className="tablet:hidden mobile:hidden shrink-0">
+        <div className="sticky top-[20px]">
+          <NavigationMenu
+            activeCategory={activeCategory}
+            onCategoryClick={handleCategoryClick}
+          />
         </div>
+      </div>
 
+      {/* 右侧表格内容 */}
+      <div className="w-full max-w-[1000px] flex-1">
         {/* 分类表格 */}
         <div className="flex flex-col gap-[20px]">
           {ProjectTableFieldCategory.map((cat) => (
@@ -672,7 +734,12 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
                 description={cat.description}
               />
               {cat.subCategories.map((subCat) => (
-                <div key={subCat.key}>
+                <div
+                  key={subCat.key}
+                  ref={(el) => {
+                    categoryRefs.current[subCat.key] = el;
+                  }}
+                >
                   <CategoryHeader
                     title={subCat.title}
                     description={subCat.description}

@@ -4,7 +4,7 @@ import { Avatar, cn } from '@heroui/react';
 import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
-import { CaretDownIcon, ChartBarIcon } from '@/components/icons';
+import { CaretDownIcon } from '@/components/icons';
 import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
 import { isInputValueEmpty } from '@/components/pages/project/proposal/detail/table/InputContentRenderer';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
@@ -391,7 +391,6 @@ export interface ActionsColCellProps extends BaseCellProps {
   item: IProjectDataItem;
   itemConfig: IItemConfig<IPocItemKey>;
   onView?: (contentType?: 'viewItemProposal' | 'submitPropose') => void;
-  onMenu?: () => void;
 }
 
 const ActionsHeader = (_props: ActionsColHeaderProps) => {
@@ -403,12 +402,7 @@ const ActionsHeader = (_props: ActionsColHeaderProps) => {
   );
 };
 
-const ActionsCell = ({
-  onView,
-  onMenu,
-  item,
-  itemConfig,
-}: ActionsColCellProps) => {
+const ActionsCell = ({ onView, item, itemConfig }: ActionsColCellProps) => {
   const isEssential = itemConfig?.isEssential;
   const isValueEmpty = isInputValueEmpty(item?.input);
 
@@ -425,24 +419,13 @@ const ActionsCell = ({
   }
 
   return (
-    <div className="flex items-center gap-[10px]">
-      <Button
-        color="secondary"
-        className="h-[30px] w-[135px] rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-        onPress={() => onView?.('viewItemProposal')}
-      >
-        View
-      </Button>
-      <Button
-        color="secondary"
-        isIconOnly
-        size="sm"
-        className="flex size-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#E6E6E6] opacity-50"
-        onPress={onMenu}
-      >
-        <ChartBarIcon size={20} color="black" />
-      </Button>
-    </div>
+    <Button
+      color="secondary"
+      className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+      onPress={() => onView?.('viewItemProposal')}
+    >
+      View
+    </Button>
   );
 };
 

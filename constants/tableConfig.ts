@@ -9,7 +9,7 @@ export const ProposalTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Basics,
     title: 'Project Overview',
-    description: '',
+    description: 'Section Description',
     subCategories: [
       {
         key: IItemSubCategoryEnum.BasicProfile,
@@ -115,7 +115,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Basics,
     title: 'Project Overview',
-    description: '',
+    description: 'Project Overview description',
     subCategories: [
       {
         key: IItemSubCategoryEnum.BasicProfile,
@@ -142,7 +142,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Technicals,
     title: 'Technicals',
-    description: '',
+    description: 'Technicals description',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Development,
@@ -163,7 +163,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Organization,
     title: 'Organization & Team',
-    description: '',
+    description: 'Organization & Team description',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Organization,
@@ -184,7 +184,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Financial,
     title: 'Project Financials',
-    description: '',
+    description: 'description',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Finances,

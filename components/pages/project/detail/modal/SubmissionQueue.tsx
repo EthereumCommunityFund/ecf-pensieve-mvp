@@ -353,6 +353,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                           width: '100%',
                           gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
                         }}
+                        colspan={row.getVisibleCells().length}
                       >
                         <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                           <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
@@ -506,6 +507,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
                         width: '100%',
                         gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
                       }}
+                      colspan={row.getVisibleCells().length}
                     >
                       <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
                         <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">

@@ -152,13 +152,6 @@ export const useColumns = ({
                 console.log('Menu for item:', item.key);
               }
             }}
-            onMenu={() => {
-              if (onOpenModal) {
-                onOpenModal(item.key as IPocItemKey);
-              } else {
-                console.log('Menu for item:', item.key);
-              }
-            }}
           />
         );
       },
