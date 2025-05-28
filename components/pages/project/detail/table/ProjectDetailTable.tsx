@@ -17,6 +17,8 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
+import { CaretDownIcon, CaretUpIcon } from '@/components/icons';
+import PencilCircleIcon from '@/components/icons/PencilCircle';
 import {
   IProjectDataItem,
   useColumns,
@@ -68,6 +70,19 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
   // 分类展开状态管理
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
 
+  // 空数据分组展开状态管理
+  const [emptyItemsExpanded, setEmptyItemsExpanded] = useState<
+    Record<IItemSubCategoryEnum, boolean>
+  >({
+    [IItemSubCategoryEnum.Organization]: false,
+    [IItemSubCategoryEnum.Team]: false,
+    [IItemSubCategoryEnum.BasicProfile]: false,
+    [IItemSubCategoryEnum.Development]: false,
+    [IItemSubCategoryEnum.Finances]: false,
+    [IItemSubCategoryEnum.Token]: false,
+    [IItemSubCategoryEnum.Governance]: false,
+  });
+
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
@@ -85,14 +100,26 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
     });
   }, []);
 
-  // 创建分类表格数据
-  const tableData = useMemo(() => {
+  // 切换空数据分组展开状态
+  const toggleEmptyItems = useCallback((category: IItemSubCategoryEnum) => {
+    setEmptyItemsExpanded((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  }, []);
+
+  // 创建分类表格数据（包含空数据项目）
+  const { tableData, emptyItemsCounts } = useMemo(() => {
     if (!displayProposalData) {
       // 如果没有 displayProposalData，使用 prepareProjectTableData 创建默认数据
-      return prepareProjectTableData({
+      const defaultData = prepareProjectTableData({
         project,
         displayProposalData: undefined,
       });
+      return {
+        tableData: defaultData,
+        emptyItemsCounts: {} as Record<IItemSubCategoryEnum, number>,
+      };
     }
 
     // 如果有 displayProposalData，按分类组织数据
@@ -107,22 +134,103 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
         {} as Record<IItemSubCategoryEnum, IProjectDataItem[]>,
       );
 
-    // 将 displayProposalData 按分类分组
-    displayProposalData.forEach((item) => {
-      // 找到该 item 属于哪个分类
-      for (const categoryConfig of ProjectTableFieldCategory) {
-        for (const subCategoryConfig of categoryConfig.subCategories) {
-          const { items, itemsNotEssential = [] } = subCategoryConfig;
-          const itemsToShow = [...items, ...itemsNotEssential];
-          if (itemsToShow.includes(item.key as IPocItemKey)) {
+    // 空数据项目计数
+    const emptyCounts: Record<IItemSubCategoryEnum, number> =
+      ProjectTableFieldCategory.reduce(
+        (acc, catConfig) => {
+          catConfig.subCategories.forEach((subCatConfig) => {
+            acc[subCatConfig.key] = 0;
+          });
+          return acc;
+        },
+        {} as Record<IItemSubCategoryEnum, number>,
+      );
+
+    // 创建 displayProposalData 的映射以便快速查找
+    const displayItemMap = displayProposalData.reduce(
+      (acc, curr) => {
+        acc[curr.key as IPocItemKey] = curr;
+        return acc;
+      },
+      {} as Record<IPocItemKey, IProjectDataItem>,
+    );
+
+    // 检查输入值是否为空的辅助函数
+    const isInputEmpty = (input: any): boolean => {
+      if (input === null || input === undefined || input === '') return true;
+      if (Array.isArray(input) && input.length === 0) return true;
+      if (typeof input === 'string' && input.trim() === '') return true;
+      return false;
+    };
+
+    // 按照配置的顺序组织数据
+    ProjectTableFieldCategory.forEach((categoryConfig) => {
+      categoryConfig.subCategories.forEach((subCategoryConfig) => {
+        const { items, itemsNotEssential = [] } = subCategoryConfig;
+        const emptyItems: IProjectDataItem[] = [];
+
+        // 先添加 essential items
+        items.forEach((itemKey) => {
+          const item = displayItemMap[itemKey as IPocItemKey];
+          if (item) {
             result[subCategoryConfig.key].push(item);
-            return; // 找到分类后跳出循环
           }
-        }
-      }
+        });
+
+        // 处理 itemsNotEssential
+        itemsNotEssential.forEach((itemKey) => {
+          const existingItem = displayItemMap[itemKey as IPocItemKey];
+          if (existingItem) {
+            // 如果有数据且不为空，添加到主表格
+            if (!isInputEmpty(existingItem.input)) {
+              result[subCategoryConfig.key].push(existingItem);
+            } else {
+              // 如果有数据但为空，添加到空数据列表
+              emptyItems.push({ ...existingItem, isEmptyItem: true } as any);
+            }
+          } else {
+            // 为没有 proposal 数据的 itemsNotEssential 创建默认条目并添加到空数据列表
+            const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+            if (itemConfig) {
+              const defaultItem: IProjectDataItem = {
+                key: itemKey,
+                property: itemConfig.label || itemKey,
+                input: '',
+                reference: null,
+                submitter: {
+                  userId: 'default',
+                  name: 'Creator',
+                  avatarUrl: null,
+                  address: '',
+                  weight: null,
+                  invitationCodeId: null,
+                  createdAt: project?.createdAt
+                    ? new Date(project.createdAt)
+                    : new Date(),
+                  updatedAt: project?.createdAt
+                    ? new Date(project.createdAt)
+                    : new Date(),
+                },
+                createdAt: project?.createdAt
+                  ? new Date(project.createdAt)
+                  : new Date(),
+                projectId: project?.id || 0,
+                proposalId: 0,
+                itemTopWeight: 0,
+                isEmptyItem: true,
+              } as any;
+              emptyItems.push(defaultItem);
+            }
+          }
+        });
+
+        // 将空数据项目添加到主表格数据的末尾
+        result[subCategoryConfig.key].push(...emptyItems);
+        emptyCounts[subCategoryConfig.key] = emptyItems.length;
+      });
     });
 
-    return result;
+    return { tableData: result, emptyItemsCounts: emptyCounts };
   }, [project, displayProposalData]);
 
   const coreTableMeta = useMemo(
@@ -212,7 +320,11 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
   ]);
 
   // 渲染单个分类表格
-  const renderCategoryTable = (table: any, isLoading: boolean = false) => {
+  const renderCategoryTable = (
+    table: any,
+    isLoading: boolean = false,
+    subCategoryKey?: IItemSubCategoryEnum,
+  ) => {
     const showSkeleton = isLoading || !project;
     const noDataForThisTable = table.options.data.length === 0;
 
@@ -293,83 +405,229 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
           {colGroupDefinition}
           {tableHeaders}
           <tbody>
-            {table.getRowModel().rows.map((row: any, rowIndex: number) => (
-              <React.Fragment key={rowIndex}>
-                <TableRow
-                  isLastRow={
-                    rowIndex === table.getRowModel().rows.length - 1 &&
-                    !AllItemConfig[row.original.key as IEssentialItemKey]
-                      ?.showExpand
-                  }
-                  className={cn(
-                    expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
-                  )}
-                >
-                  {row.getVisibleCells().map((cell: any, cellIndex: number) => (
-                    <TableCell
-                      key={cell.id}
-                      width={cell.column.getSize()}
-                      isLast={cellIndex === row.getVisibleCells().length - 1}
-                      isLastRow={
-                        rowIndex === table.getRowModel().rows.length - 1 &&
-                        !AllItemConfig[row.original.key as IEssentialItemKey]
-                          ?.showExpand
-                      }
-                      minHeight={60}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+            {(() => {
+              const rows = table.getRowModel().rows;
+              const nonEmptyRows = rows.filter(
+                (row: any) => !(row.original as any).isEmptyItem,
+              );
+              const emptyRows = rows.filter(
+                (row: any) => (row.original as any).isEmptyItem,
+              );
+              const isExpanded = subCategoryKey
+                ? emptyItemsExpanded[subCategoryKey]
+                : false;
 
-                {AllItemConfig[row.original.key as IEssentialItemKey]
-                  ?.showExpand && (
-                  <tr
-                    key={`${row.id}-expanded`}
-                    className={cn(
-                      expandedRows[row.original.key] ? '' : 'hidden',
-                    )}
-                  >
-                    <td
-                      colSpan={row.getVisibleCells().length}
-                      className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                        rowIndex === table.getRowModel().rows.length - 1
-                          ? 'border-b-0'
-                          : ''
-                      }`}
-                    >
-                      <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                        <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                          <InputContentRenderer
-                            itemKey={row.original.key as IPocItemKey}
-                            value={row.original.input}
-                            displayFormType={
-                              AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]!.formDisplayType
-                            }
-                            isEssential={
-                              AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]!.isEssential
-                            }
-                          />
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-            <TableFooter colSpan={table.getAllColumns().length}>
+              return (
+                <>
+                  {/* 渲染非空数据行 */}
+                  {nonEmptyRows.map((row: any, rowIndex: number) => (
+                    <React.Fragment key={rowIndex}>
+                      <TableRow
+                        isLastRow={
+                          rowIndex === nonEmptyRows.length - 1 &&
+                          emptyRows.length === 0 &&
+                          !AllItemConfig[row.original.key as IEssentialItemKey]
+                            ?.showExpand
+                        }
+                        className={cn(
+                          expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                        )}
+                      >
+                        {row
+                          .getVisibleCells()
+                          .map((cell: any, cellIndex: number) => (
+                            <TableCell
+                              key={cell.id}
+                              width={cell.column.getSize()}
+                              isLast={
+                                cellIndex === row.getVisibleCells().length - 1
+                              }
+                              isLastRow={
+                                rowIndex === nonEmptyRows.length - 1 &&
+                                emptyRows.length === 0 &&
+                                !AllItemConfig[
+                                  row.original.key as IEssentialItemKey
+                                ]?.showExpand
+                              }
+                              minHeight={60}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </TableCell>
+                          ))}
+                      </TableRow>
+
+                      {AllItemConfig[row.original.key as IEssentialItemKey]
+                        ?.showExpand && (
+                        <tr
+                          key={`${row.id}-expanded`}
+                          className={cn(
+                            expandedRows[row.original.key] ? '' : 'hidden',
+                          )}
+                        >
+                          <td
+                            colSpan={row.getVisibleCells().length}
+                            className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                              rowIndex === nonEmptyRows.length - 1 &&
+                              emptyRows.length === 0
+                                ? 'border-b-0'
+                                : ''
+                            }`}
+                          >
+                            <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                              <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                                <InputContentRenderer
+                                  itemKey={row.original.key as IPocItemKey}
+                                  value={row.original.input}
+                                  displayFormType={
+                                    AllItemConfig[
+                                      row.original.key as IEssentialItemKey
+                                    ]!.formDisplayType
+                                  }
+                                  isEssential={
+                                    AllItemConfig[
+                                      row.original.key as IEssentialItemKey
+                                    ]!.isEssential
+                                  }
+                                />
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+
+                  {/* 渲染空数据分组标题行 */}
+                  {subCategoryKey &&
+                    renderEmptyItemsGroupHeader(subCategoryKey, table)}
+
+                  {/* 渲染空数据行 */}
+                  {emptyRows.length > 0 &&
+                    isExpanded &&
+                    emptyRows.map((row: any, rowIndex: number) => (
+                      <React.Fragment key={`empty-${rowIndex}`}>
+                        <TableRow isLastRow={rowIndex === emptyRows.length - 1}>
+                          {row
+                            .getVisibleCells()
+                            .map((cell: any, cellIndex: number) => (
+                              <TableCell
+                                key={cell.id}
+                                width={cell.column.getSize()}
+                                isLast={
+                                  cellIndex === row.getVisibleCells().length - 1
+                                }
+                                isLastRow={rowIndex === emptyRows.length - 1}
+                                minHeight={60}
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </TableCell>
+                            ))}
+                        </TableRow>
+
+                        {AllItemConfig[row.original.key as IEssentialItemKey]
+                          ?.showExpand && (
+                          <tr
+                            key={`empty-${row.id}-expanded`}
+                            className={cn(
+                              expandedRows[row.original.key] ? '' : 'hidden',
+                            )}
+                          >
+                            <td
+                              colSpan={row.getVisibleCells().length}
+                              className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+                                rowIndex === emptyRows.length - 1
+                                  ? 'border-b-0'
+                                  : ''
+                              }`}
+                            >
+                              <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+                                <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+                                  <InputContentRenderer
+                                    itemKey={row.original.key as IPocItemKey}
+                                    value={row.original.input}
+                                    displayFormType={
+                                      AllItemConfig[
+                                        row.original.key as IEssentialItemKey
+                                      ]!.formDisplayType
+                                    }
+                                    isEssential={
+                                      AllItemConfig[
+                                        row.original.key as IEssentialItemKey
+                                      ]!.isEssential
+                                    }
+                                  />
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                </>
+              );
+            })()}
+            {/* <TableFooter colSpan={table.getAllColumns().length}>
               footer
-            </TableFooter>
+            </TableFooter> */}
           </tbody>
         </table>
       </div>
+    );
+  };
+
+  // 渲染空数据分组标题行
+  const renderEmptyItemsGroupHeader = (
+    subCategoryKey: IItemSubCategoryEnum,
+    table: any,
+  ) => {
+    const emptyItemsCount = emptyItemsCounts[subCategoryKey] || 0;
+    const isExpanded = emptyItemsExpanded[subCategoryKey];
+
+    return (
+      <tr
+        className="cursor-pointer "
+        onClick={() => emptyItemsCount > 0 && toggleEmptyItems(subCategoryKey)}
+      >
+        <td
+          colSpan={table.getAllColumns().length}
+          className="border-x border-b border-black/10 bg-[#F5F5F5] p-[10px_20px] hover:bg-[#F5F5F5]"
+        >
+          <div className="flex items-center justify-between gap-[20px]">
+            {/* 左侧内容 */}
+            <div className="flex items-center gap-[10px]">
+              {/* PencilCircle 图标 */}
+              <div className="opacity-50">
+                <PencilCircleIcon size={20} className="text-black" />
+              </div>
+
+              {/* 文本内容 */}
+              <div className="flex items-center gap-[10px]">
+                <span className="text-[14px] font-[600] text-black opacity-60">
+                  View Empty Items
+                </span>
+                <span className="text-[14px] font-[600] text-black opacity-30">
+                  ({emptyItemsCount})
+                </span>
+              </div>
+            </div>
+
+            {/* 右侧 CaretUp 图标 */}
+            <div className="flex items-center">
+              {isExpanded ? (
+                <CaretUpIcon size={18} className="text-black" />
+              ) : (
+                <CaretDownIcon size={18} className="text-black" />
+              )}
+            </div>
+          </div>
+        </td>
+      </tr>
     );
   };
 
@@ -425,6 +683,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
                     {renderCategoryTable(
                       tables[subCat.key],
                       isProposalsLoading,
+                      subCat.key,
                     )}
                   </div>
                 </div>
