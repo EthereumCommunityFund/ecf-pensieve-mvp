@@ -57,7 +57,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
                       isActive ? 'opacity-100' : 'opacity-50',
                     )}
                   >
-                    <div className="font-sans text-[12px] leading-[1.36181640625em] text-black">
+                    <div className="font-sans text-[12px] leading-[1.3] text-black">
                       {subCategoryConfig.title}
                     </div>
                   </div>
