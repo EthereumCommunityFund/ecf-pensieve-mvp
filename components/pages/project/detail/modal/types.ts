@@ -17,7 +17,7 @@ export interface IProjectDetailModalProps {
 
 export interface ITableMeta {
   displayProposalDataListOfProject: IProjectDataItem[];
-  proposalsByKey: IProposalsByProjectIdAndKey;
+  proposalsByProjectIdAndKey: IProposalsByProjectIdAndKey;
   onCreateItemProposalVote: (
     key: IPocItemKey,
     itemProposalId: number,

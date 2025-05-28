@@ -48,15 +48,15 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,
-    proposalsByKey,
+    proposalsByProjectIdAndKey,
     voteResultOfLeadingProposal,
   } = useProjectDetailContext();
 
   // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
-    if (!proposalsByKey) return [];
+    if (!proposalsByProjectIdAndKey) return [];
 
-    const { leadingProposal, allItemProposals } = proposalsByKey;
+    const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
     // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
     if (leadingProposal && leadingProposal.itemProposal) {
       const { key, value, ref, creator, createdAt, projectId, id } =
@@ -115,12 +115,12 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     itemKey,
     voteResultOfLeadingProposal,
     getItemTopWeight,
-    proposalsByKey,
+    proposalsByProjectIdAndKey,
   ]);
 
   const tableDataOfSubmissionQueue: TableRowData[] = useMemo(() => {
-    if (!proposalsByKey) return [];
-    const { allItemProposals } = proposalsByKey;
+    if (!proposalsByProjectIdAndKey) return [];
+    const { allItemProposals } = proposalsByProjectIdAndKey;
 
     const list: TableRowData[] = allItemProposals.map((itemProposal) => {
       const {
@@ -176,7 +176,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     });
 
     return list;
-  }, [proposalsByKey, getItemTopWeight]);
+  }, [proposalsByProjectIdAndKey, getItemTopWeight]);
 
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
@@ -211,7 +211,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     return {
       project,
       displayProposalDataListOfProject,
-      proposalsByKey,
+      proposalsByProjectIdAndKey,
       onCreateItemProposalVote,
       onSwitchItemProposalVote,
       onCancelVote,
@@ -221,7 +221,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
   }, [
     project,
     displayProposalDataListOfProject,
-    proposalsByKey,
+    proposalsByProjectIdAndKey,
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,

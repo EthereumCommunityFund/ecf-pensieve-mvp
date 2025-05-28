@@ -111,7 +111,7 @@ export const useDisplayedColumns = ({
           onSwitchItemProposalVote,
           onCancelVote,
           displayProposalDataListOfProject,
-          proposalsByKey,
+          proposalsByProjectIdAndKey,
           project,
           profile,
           voteResultOfLeadingProposal,
@@ -122,7 +122,7 @@ export const useDisplayedColumns = ({
           ] || 0;
         // TODO 抽取到 context里面去
         const { leadingProposal = null, allItemProposals = [] } =
-          proposalsByKey || {};
+          proposalsByProjectIdAndKey || {};
         const allItemProposalVoteRecords = allItemProposals.flatMap(
           (item) => item.voteRecords,
         ) as IItemProposalVoteRecord[];
@@ -159,7 +159,7 @@ export const useDisplayedColumns = ({
             onSwitchItemProposalVote={onSwitchItemProposalVote}
             onCancelVote={onCancelVote}
             displayProposalDataListOfProject={displayProposalDataListOfProject}
-            proposalsByKey={proposalsByKey}
+            proposalsByProjectIdAndKey={proposalsByProjectIdAndKey}
             isUserVotedInProposalOrItemProposals={
               isUserVotedKeyInLeadingProposal || isUserVotedKeyInItemProposals
             }

@@ -43,7 +43,7 @@ interface ProjectDetailContextType {
   // Merged from ModalContextType
   currentItemKey: string | null;
   setCurrentItemKey: (key: string | null) => void;
-  proposalsByKey?: IProposalsByProjectIdAndKey;
+  proposalsByProjectIdAndKey?: IProposalsByProjectIdAndKey;
   proposalHistory?: ILeadingProposalHistory;
   isProposalsByKeyLoading: boolean;
   isProposalsByKeyFetched: boolean;
@@ -83,7 +83,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   // Merged defaults
   currentItemKey: null,
   setCurrentItemKey: () => {},
-  proposalsByKey: undefined,
+  proposalsByProjectIdAndKey: undefined,
   proposalHistory: undefined,
   isProposalsByKeyLoading: true,
   isProposalsByKeyFetched: false,
@@ -178,7 +178,7 @@ export const ProjectDetailProvider = ({
   }, [project, profile?.userId, proposalsByProject]);
 
   const {
-    data: proposalsByKey,
+    data: proposalsByProjectIdAndKey,
     isLoading: isProposalsByKeyLoading,
     isFetched: isProposalsByKeyFetched,
     refetch: refetchProposalsByKey,
@@ -361,7 +361,7 @@ export const ProjectDetailProvider = ({
     // Merged values
     currentItemKey,
     setCurrentItemKey,
-    proposalsByKey,
+    proposalsByProjectIdAndKey,
     proposalHistory,
     isProposalsByKeyLoading,
     isProposalsByKeyFetched,
