@@ -8,6 +8,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
 import { projects } from './projects';
 import { proposals } from './proposals';
@@ -25,6 +26,9 @@ export const notifications = pgTable('notifications', {
   ),
   proposalId: bigint('proposal_id', { mode: 'number' }).references(
     () => proposals.id,
+  ),
+  itemProposalId: bigint('item_proposal_id', { mode: 'number' }).references(
+    () => itemProposals.id,
   ),
   type: text('type').notNull(),
   reward: doublePrecision('reward'),

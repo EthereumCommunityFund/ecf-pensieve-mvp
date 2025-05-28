@@ -1,12 +1,17 @@
 import { db } from '../db';
 import { notifications } from '../db/schema';
 
-export type NotificationType = 'createProposal' | 'proposalPass';
+export type NotificationType =
+  | 'createProposal'
+  | 'proposalPass'
+  | 'createItemProposal'
+  | 'itemProposalPass';
 
 export interface RewardNotificationData {
   userId: string;
   projectId: number;
-  proposalId: number;
+  proposalId?: number;
+  itemProposalId?: number;
   reward: number;
   type: NotificationType;
 }
@@ -48,6 +53,19 @@ export const createRewardNotification = {
     type: 'createProposal' as const,
   }),
 
+  createItemProposal: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+    reward: number,
+  ): RewardNotificationData => ({
+    userId,
+    projectId,
+    itemProposalId,
+    reward,
+    type: 'createItemProposal' as const,
+  }),
+
   proposalPass: (
     userId: string,
     projectId: number,
@@ -59,5 +77,18 @@ export const createRewardNotification = {
     proposalId,
     reward,
     type: 'proposalPass' as const,
+  }),
+
+  itemProposalPass: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+    reward: number,
+  ): RewardNotificationData => ({
+    userId,
+    projectId,
+    itemProposalId,
+    reward,
+    type: 'itemProposalPass' as const,
   }),
 };

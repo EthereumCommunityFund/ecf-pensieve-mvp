@@ -101,7 +101,7 @@ export const itemProposalRouter = router({
               .where(eq(profiles.userId, ctx.user.id)),
 
             addRewardNotification(
-              createRewardNotification.createProposal(
+              createRewardNotification.createItemProposal(
                 ctx.user.id,
                 input.projectId,
                 itemProposal.id,
