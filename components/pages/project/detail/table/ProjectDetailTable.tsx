@@ -27,9 +27,9 @@ import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretDownIcon, CaretUpIcon } from '@/components/icons';
 import PencilCircleIcon from '@/components/icons/PencilCircle';
 import {
-  IProjectDataItem,
-  useColumns,
-} from '@/components/pages/project/detail/table/Column';
+  IKeyItemDataForTable,
+  useProjectTableColumns,
+} from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
 import { AllItemConfig } from '@/constants/itemConfig';
 import {
   IEssentialItemKey,
@@ -57,7 +57,7 @@ const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Governance]: true, // 保留以防将来启用
 };
 
-interface ProjectDataProps {
+interface IProjectTableProps {
   projectId: number;
   isProposalsLoading: boolean;
   isProposalsFetched: boolean;
@@ -68,7 +68,7 @@ interface ProjectDataProps {
   ) => void;
 }
 
-const ProjectDetailTable: FC<ProjectDataProps> = ({
+const ProjectDetailTable: FC<IProjectTableProps> = ({
   isProposalsLoading,
   onOpenModal,
 }) => {
@@ -188,7 +188,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
     }
 
     // 如果有 displayProposalData，按分类组织数据
-    const result: Record<IItemSubCategoryEnum, IProjectDataItem[]> =
+    const result: Record<IItemSubCategoryEnum, IKeyItemDataForTable[]> =
       ProjectTableFieldCategory.reduce(
         (acc, catConfig) => {
           catConfig.subCategories.forEach((subCatConfig) => {
@@ -196,7 +196,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
           });
           return acc;
         },
-        {} as Record<IItemSubCategoryEnum, IProjectDataItem[]>,
+        {} as Record<IItemSubCategoryEnum, IKeyItemDataForTable[]>,
       );
 
     // 空数据项目计数
@@ -217,7 +217,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
         acc[curr.key as IPocItemKey] = curr;
         return acc;
       },
-      {} as Record<IPocItemKey, IProjectDataItem>,
+      {} as Record<IPocItemKey, IKeyItemDataForTable>,
     );
 
     // 检查输入值是否为空的辅助函数
@@ -232,7 +232,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
     ProjectTableFieldCategory.forEach((categoryConfig) => {
       categoryConfig.subCategories.forEach((subCategoryConfig) => {
         const { items, itemsNotEssential = [] } = subCategoryConfig;
-        const emptyItems: IProjectDataItem[] = [];
+        const emptyItems: IKeyItemDataForTable[] = [];
 
         // 先添加 essential items
         items.forEach((itemKey) => {
@@ -257,7 +257,7 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
             // 为没有 proposal 数据的 itemsNotEssential 创建默认条目并添加到空数据列表
             const itemConfig = AllItemConfig[itemKey as IPocItemKey];
             if (itemConfig) {
-              const defaultItem: IProjectDataItem = {
+              const defaultItem: IKeyItemDataForTable = {
                 key: itemKey,
                 property: itemConfig.label || itemKey,
                 input: '',
@@ -303,17 +303,14 @@ const ProjectDetailTable: FC<ProjectDataProps> = ({
       expandedRows,
       toggleRowExpanded,
       project,
+      onOpenModal,
     }),
-    [expandedRows, toggleRowExpanded, project],
+    [expandedRows, toggleRowExpanded, project, onOpenModal],
   );
 
-  // TODO：可变数据优先用coreTableMeta来传递，避免columns重新创建与重新渲染table
-  const columns = useColumns({
-    expandedRows,
-    toggleRowExpanded,
-    isPageExpanded: false,
-    onOpenModal,
-  });
+  // 可变数据优先用coreTableMeta来传递，避免columns重新创建与重新渲染table
+  // isPageExpanded
+  const columns = useProjectTableColumns({ isPageExpanded: false });
 
   const basicProfileTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.BasicProfile],

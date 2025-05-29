@@ -11,8 +11,9 @@ import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { formatDate } from '@/utils/formatters';
 
+import { IConsensusLogRowData } from '../types';
+
 import { useConsensusLogColumns } from './ConsensusLogColumns';
-import { ConsensusLogRowData } from './types';
 
 interface ConsensusLogProps {
   itemName?: string;
@@ -30,7 +31,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
     useProjectDetailContext();
 
   // 根据 itemKey 从项目数据中获取真实数据
-  const tableData: ConsensusLogRowData[] = useMemo(() => {
+  const tableData: IConsensusLogRowData[] = useMemo(() => {
     if (!project || !itemKey) {
       console.log('ConsensusLog: Missing project or itemKey', {
         project: !!project,
@@ -89,7 +90,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
     }
 
     // 如果没有真实数据，使用模拟数据
-    const mockConsensusData: ConsensusLogRowData[] = [
+    const mockConsensusData: IConsensusLogRowData[] = [
       {
         id: 'consensus-1',
         dateTime: {

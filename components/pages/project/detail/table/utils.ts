@@ -7,18 +7,18 @@ import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { formatDate } from '@/utils/formatters';
 
-import { IProjectDataItem } from './Column';
+import { IKeyItemDataForTable } from './ProjectDetailTableColumn';
 
 export interface IPrepareProjectTableDataParams {
   project?: IProject;
-  displayProposalDataListOfProject?: IProjectDataItem[];
+  displayProposalDataListOfProject?: IKeyItemDataForTable[];
 }
 
 export const prepareProjectTableData = ({
   project,
   displayProposalDataListOfProject,
 }: IPrepareProjectTableDataParams) => {
-  const result: Record<IItemSubCategoryEnum, IProjectDataItem[]> =
+  const result: Record<IItemSubCategoryEnum, IKeyItemDataForTable[]> =
     ProjectTableFieldCategory.reduce(
       (acc, catConfig) => {
         catConfig.subCategories.forEach((subCatConfig) => {
@@ -26,7 +26,7 @@ export const prepareProjectTableData = ({
         });
         return acc;
       },
-      {} as Record<IItemSubCategoryEnum, IProjectDataItem[]>,
+      {} as Record<IItemSubCategoryEnum, IKeyItemDataForTable[]>,
     );
 
   // Create a map from displayProposalDataListOfProject for quick lookup
@@ -35,7 +35,7 @@ export const prepareProjectTableData = ({
       acc[curr.key as IPocItemKey] = curr;
       return acc;
     },
-    {} as Record<IPocItemKey, IProjectDataItem>,
+    {} as Record<IPocItemKey, IKeyItemDataForTable>,
   );
 
   ProjectTableFieldCategory.forEach((categoryConfig) => {
@@ -49,7 +49,7 @@ export const prepareProjectTableData = ({
         // Use data from displayProposalDataListOfProject if available, otherwise create default entry
         const existingData = displayItemMap[itemKey as IPocItemKey];
 
-        const tableRowItem: IProjectDataItem = existingData || {
+        const tableRowItem: IKeyItemDataForTable = existingData || {
           key: itemKey,
           property: itemConfig?.label || itemKey,
           input: '',

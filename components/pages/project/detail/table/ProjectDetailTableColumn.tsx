@@ -15,12 +15,13 @@ import { IProfileCreator } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 import { IRef } from '../../create/types';
+import { ITableMetaOfProjectDetail } from '../types';
 
-export interface IProjectDataItem {
-  key: string; // 项目属性的键名
-  property: string; // 显示的属性名称
-  input: any; // 项目属性的值
-  reference: IRef | null; // 引用信息，基于 IRef.value
+export interface IKeyItemDataForTable {
+  key: string;
+  property: string;
+  input: any;
+  reference: IRef | null;
   submitter: IProfileCreator;
   createdAt: Date;
   projectId: number;
@@ -28,17 +29,11 @@ export interface IProjectDataItem {
   itemTopWeight: number;
 }
 
-interface UseColumnsProps {
-  expandedRows: Record<string, boolean>;
-  toggleRowExpanded: (key: string) => void;
+interface IUseProjectTableColumnsProps {
   isPageExpanded?: boolean;
-  onOpenModal?: (
-    itemKey: IPocItemKey,
-    contentType?: 'viewItemProposal' | 'submitPropose',
-  ) => void;
 }
 
-// 定义可展开的行键
+// TODO： 从 itemConfig 取
 const expandableRowKeys = ['tagline', 'mainDescription'];
 
 // 检查行是否可展开
@@ -46,14 +41,11 @@ const isRowExpandable = (key: string) => {
   return expandableRowKeys.includes(key);
 };
 
-export const useColumns = ({
-  expandedRows,
-  toggleRowExpanded,
+export const useProjectTableColumns = ({
   isPageExpanded = false,
-  onOpenModal,
-}: UseColumnsProps) => {
+}: IUseProjectTableColumnsProps) => {
   // 创建列定义
-  const columnHelper = createColumnHelper<IProjectDataItem>();
+  const columnHelper = createColumnHelper<IKeyItemDataForTable>();
 
   return useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
@@ -77,6 +69,9 @@ export const useColumns = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const item = info.row.original;
+        const { expandedRows, toggleRowExpanded, project, onOpenModal } = info
+          .table.options.meta as ITableMetaOfProjectDetail;
+
         const rowIsExpandable = isRowExpandable(item.key);
         const isRowExpanded = expandedRows[item.key];
 
@@ -139,6 +134,8 @@ export const useColumns = ({
       cell: (info) => {
         const item = info.row.original;
         const itemConfig = AllItemConfig[item.key as IPocItemKey];
+        const { expandedRows, toggleRowExpanded, project, onOpenModal } = info
+          .table.options.meta as ITableMetaOfProjectDetail;
 
         return (
           <ActionsCol.Cell
@@ -164,11 +161,5 @@ export const useColumns = ({
       submitterColumn,
       actionsColumn,
     ];
-  }, [
-    columnHelper,
-    expandedRows,
-    toggleRowExpanded,
-    isPageExpanded,
-    onOpenModal,
-  ]);
+  }, [columnHelper, isPageExpanded]);
 };

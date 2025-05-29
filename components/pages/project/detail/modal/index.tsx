@@ -9,11 +9,11 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 
 import SubmitItemProposal from '../submit/SubmitItemProposal';
+import { IProjectDetailModalProps } from '../types';
 
 import LeftContent from './LeftContent';
 import ModalHeader from './ModalHeader';
 import RightContent from './RightContent';
-import { IProjectDetailModalProps } from './types';
 
 const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   isOpen,

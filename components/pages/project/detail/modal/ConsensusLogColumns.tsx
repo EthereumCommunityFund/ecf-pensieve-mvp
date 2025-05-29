@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 
 import { CaretDownIcon, QuestionIcon } from '@/components/icons';
 
-import { ConsensusLogRowData } from './types';
+import { IConsensusLogRowData } from '../types';
 
 interface UseConsensusLogColumnsProps {
   onExpandClick?: (rowId: string) => void;
@@ -15,7 +15,7 @@ export const useConsensusLogColumns = ({
   onExpandClick,
 }: UseConsensusLogColumnsProps = {}) => {
   const columnHelper = useMemo(
-    () => createColumnHelper<ConsensusLogRowData>(),
+    () => createColumnHelper<IConsensusLogRowData>(),
     [],
   );
 

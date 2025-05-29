@@ -17,17 +17,17 @@ import { IProfileCreator } from '@/types';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
+import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import { useDisplayedColumns } from './SubmissionQueueColumns';
-import { ITableMeta, TableRowData } from './types';
 
-interface SubmissionQueueProps {
+interface ISubmissionQueueProps {
   itemName?: string;
   itemWeight?: number;
   itemKey?: string;
 }
 
-const SubmissionQueue: FC<SubmissionQueueProps> = ({
+const SubmissionQueue: FC<ISubmissionQueueProps> = ({
   itemName = 'ItemName',
   itemWeight = 22,
   itemKey,
@@ -52,7 +52,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     voteResultOfLeadingProposal,
   } = useProjectDetailContext();
 
-  const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
+  const tableDataOfDisplayed: IProjectTableRowData[] = useMemo(() => {
     if (!proposalsByProjectIdAndKey) return [];
 
     const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
@@ -65,7 +65,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
         0,
       );
       const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
-      const tableRowData: TableRowData = {
+      const tableRowData: IProjectTableRowData = {
         key,
         property: key,
         input: value,
@@ -100,7 +100,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       }, 0) || 0;
     const voterMemberCount = votesOfKey?.length || 0;
 
-    const tableRowData: TableRowData = {
+    const tableRowData: IProjectTableRowData = {
       ...proposalItem,
       support: {
         count: sumOfWeight,
@@ -117,62 +117,64 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     proposalsByProjectIdAndKey,
   ]);
 
-  const tableDataOfSubmissionQueue: TableRowData[] = useMemo(() => {
+  const tableDataOfSubmissionQueue: IProjectTableRowData[] = useMemo(() => {
     if (!proposalsByProjectIdAndKey) return [];
     const { allItemProposals } = proposalsByProjectIdAndKey;
 
-    const list: TableRowData[] = allItemProposals.map((itemProposal) => {
-      const {
-        creator,
-        key,
-        value = '',
-        reason = '',
-        projectId,
-        createdAt,
-        id,
-        voteRecords = [],
-        ref = '',
-      } = itemProposal;
+    const list: IProjectTableRowData[] = allItemProposals.map(
+      (itemProposal) => {
+        const {
+          creator,
+          key,
+          value = '',
+          reason = '',
+          projectId,
+          createdAt,
+          id,
+          voteRecords = [],
+          ref = '',
+        } = itemProposal;
 
-      // 构建符合 IProjectDataItem 结构的数据
-      const baseData = {
-        key,
-        property: key,
-        input: value,
-        reference: ref ? { key, value: ref } : null,
-        submitter: creator,
-        createdAt: createdAt,
-        projectId: projectId,
-        proposalId: id,
-        itemTopWeight: getItemTopWeight(key as IPocItemKey),
-      };
+        // 构建符合 IProjectDataItem 结构的数据
+        const baseData = {
+          key,
+          property: key,
+          input: value,
+          reference: ref ? { key, value: ref } : null,
+          submitter: creator,
+          createdAt: createdAt,
+          projectId: projectId,
+          proposalId: id,
+          itemTopWeight: getItemTopWeight(key as IPocItemKey),
+        };
 
-      // 对于单个item，每人只能投一票, 不需要根据用户去重
-      const sumOfWeight = voteRecords.reduce((acc, vote) => {
-        return acc + Number(vote.weight);
-      }, 0);
+        // 对于单个item，每人只能投一票, 不需要根据用户去重
+        const sumOfWeight = voteRecords.reduce((acc, vote) => {
+          return acc + Number(vote.weight);
+        }, 0);
 
-      const voterMap = new Map<string, number>();
+        const voterMap = new Map<string, number>();
 
-      voteRecords.forEach((voteRecord) => {
-        const userId =
-          typeof voteRecord.creator === 'string'
-            ? voteRecord.creator
-            : (voteRecord.creator as IProfileCreator).userId;
-        voterMap.set(
-          userId,
-          (voterMap.get(userId) || 0) + Number(voteRecord.weight),
-        );
-      });
+        voteRecords.forEach((voteRecord) => {
+          const userId =
+            typeof voteRecord.creator === 'string'
+              ? voteRecord.creator
+              : (voteRecord.creator as IProfileCreator).userId;
+          voterMap.set(
+            userId,
+            (voterMap.get(userId) || 0) + Number(voteRecord.weight),
+          );
+        });
 
-      return {
-        ...baseData,
-        support: {
-          count: sumOfWeight,
-          voters: voterMap.size,
-        },
-      };
-    });
+        return {
+          ...baseData,
+          support: {
+            count: sumOfWeight,
+            voters: voterMap.size,
+          },
+        };
+      },
+    );
 
     // 根据 weight 排序
     return list.sort((a, b) => {
@@ -219,7 +221,7 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       onCancelVote,
       profile,
       voteResultOfLeadingProposal,
-    } as ITableMeta;
+    } as ITableMetaOfSubmissionQueue;
   }, [
     project,
     displayProposalDataListOfProject,

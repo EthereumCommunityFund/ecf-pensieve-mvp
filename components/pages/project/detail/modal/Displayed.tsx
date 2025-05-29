@@ -20,21 +20,26 @@ import { useProjectDetailContext } from '@/components/pages/project/context/proj
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
+import {
+  IAccountabilityMetric,
+  IProjectTableRowData,
+  IWeb3Metric,
+} from '../types';
+
 import { useDisplayedColumns } from './DisplayedColumns';
-import { AccountabilityMetric, TableRowData, Web3Metric } from './types';
 
 interface DisplayedProps {
   itemName?: string;
   itemWeight?: number;
   itemKey?: string;
 }
-const accountabilityMetrics: AccountabilityMetric[] = [
+const accountabilityMetrics: IAccountabilityMetric[] = [
   { name: 'Transparency', isExpanded: false },
   { name: 'Participation', isExpanded: false },
   { name: 'Performance Eval', isExpanded: false },
 ];
 
-const web3Metrics: Web3Metric[] = [
+const web3Metrics: IWeb3Metric[] = [
   { label: 'Privacy:', value: '---' },
   { label: 'Decentralization:', value: '---' },
   { label: 'Security:', value: '---' },
@@ -53,7 +58,7 @@ const Displayed: FC<DisplayedProps> = ({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
-  const tableData: TableRowData[] = useMemo(() => {
+  const tableData: IProjectTableRowData[] = useMemo(() => {
     if (!displayProposalDataListOfProject || !itemKey) {
       console.log(
         'Displayed: Missing displayProposalDataListOfProject or itemKey',
@@ -86,7 +91,7 @@ const Displayed: FC<DisplayedProps> = ({
     const weight = itemConfig?.weight || itemWeight;
 
     // 直接使用 IProjectDataItem 结构并添加 support 字段
-    const tableRowData: TableRowData = {
+    const tableRowData: IProjectTableRowData = {
       ...proposalItem, // 继承所有 IProjectDataItem 字段
       support: {
         count:

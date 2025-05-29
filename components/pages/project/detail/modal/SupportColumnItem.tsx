@@ -7,7 +7,7 @@ import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
-import { IProjectDataItem } from '../table/Column';
+import { IKeyItemDataForTable } from '../table/ProjectDetailTableColumn';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -28,7 +28,7 @@ interface IProps {
     itemProposalId: number,
   ) => Promise<void>;
   proposalId: number;
-  displayProposalDataListOfProject: IProjectDataItem[];
+  displayProposalDataListOfProject: IKeyItemDataForTable[];
   proposalsByProjectIdAndKey: IProposalsByProjectIdAndKey;
   userVotedItemProposal?: IItemProposalVoteRecord;
   isUserVotedInProposalOrItemProposals: boolean;

@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 
-import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
+import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import {
@@ -37,7 +37,7 @@ interface ProjectDetailContextType {
   leadingProposals?: ILeadingProposals;
   isLeadingProposalsLoading: boolean;
   isLeadingProposalsFetched: boolean;
-  displayProposalDataListOfProject?: IProjectDataItem[];
+  displayProposalDataListOfProject?: IKeyItemDataForTable[];
   getItemTopWeight: (key: IPocItemKey) => number;
 
   // Merged from ModalContextType
@@ -306,7 +306,7 @@ export const ProjectDetailProvider = ({
     // withItemProposal： item proposal 维度，有则覆盖 proposal 维度
     const { withoutItemProposal, withItemProposal } =
       proposalsByProject as ILeadingProposalsTyped;
-    const DataMap = new Map<string, IProjectDataItem>();
+    const DataMap = new Map<string, IKeyItemDataForTable>();
     withoutItemProposal.forEach((p) => {
       p.proposal.items.forEach((item) => {
         const row = {
@@ -327,7 +327,7 @@ export const ProjectDetailProvider = ({
     withItemProposal.forEach((proposal) => {
       const { projectId, itemProposal } = proposal;
       const { key, createdAt, value, ref, creator, id } = itemProposal;
-      const row: IProjectDataItem = {
+      const row: IKeyItemDataForTable = {
         key: key!,
         property: key!,
         input: value,

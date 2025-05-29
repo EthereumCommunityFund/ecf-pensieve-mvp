@@ -1,4 +1,4 @@
-import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
+import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
 import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { IVoteResultOfProposal } from '@/utils/proposal';
@@ -15,8 +15,18 @@ export interface IProjectDetailModalProps {
   contentType: 'viewItemProposal' | 'submitPropose';
 }
 
-export interface ITableMeta {
-  displayProposalDataListOfProject: IProjectDataItem[];
+export interface ITableMetaOfProjectDetail {
+  expandedRows: Record<string, boolean>;
+  toggleRowExpanded: (key: string) => void;
+  project: IProject;
+  onOpenModal?: (
+    itemKey: IPocItemKey,
+    contentType?: 'viewItemProposal' | 'submitPropose',
+  ) => void;
+}
+
+export interface ITableMetaOfSubmissionQueue {
+  displayProposalDataListOfProject: IKeyItemDataForTable[];
   proposalsByProjectIdAndKey: IProposalsByProjectIdAndKey;
   onCreateItemProposalVote: (
     key: IPocItemKey,
@@ -32,7 +42,7 @@ export interface ITableMeta {
   voteResultOfLeadingProposal?: IVoteResultOfProposal;
 }
 
-export interface TableRowData extends IProjectDataItem {
+export interface IProjectTableRowData extends IKeyItemDataForTable {
   support: {
     count: number;
     voters: number;
@@ -40,24 +50,24 @@ export interface TableRowData extends IProjectDataItem {
   isExpanded?: boolean;
 }
 
-export interface MetricItem {
+export interface IMetricItem {
   label: string;
   value: string;
   isHighlighted?: boolean;
 }
 
-export interface AccountabilityMetric {
+export interface IAccountabilityMetric {
   name: string;
   isExpanded: boolean;
 }
 
-export interface Web3Metric {
+export interface IWeb3Metric {
   label: string;
   value: string;
   isHighlighted?: boolean;
 }
 
-export interface ConsensusLogRowData {
+export interface IConsensusLogRowData {
   id: string;
   dateTime: {
     date: string;

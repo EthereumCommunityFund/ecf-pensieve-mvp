@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
-import { IProjectDataItem } from '@/components/pages/project/detail/table/Column';
+import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
 import { isInputValueEmpty } from '@/components/pages/project/proposal/detail/table/InputContentRenderer';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
@@ -326,7 +326,7 @@ export const SupportCol = {
 export type SubmitterColHeaderProps = BaseHeaderProps;
 
 export interface SubmitterColCellProps extends BaseCellProps {
-  item: IProjectDataItem;
+  item: IKeyItemDataForTable;
   itemConfig: IItemConfig<IPocItemKey>;
   submitter: IProfileCreator;
   data: Date;
@@ -388,7 +388,7 @@ export const SubmitterCol = {
 export type ActionsColHeaderProps = BaseHeaderProps;
 
 export interface ActionsColCellProps extends BaseCellProps {
-  item: IProjectDataItem;
+  item: IKeyItemDataForTable;
   itemConfig: IItemConfig<IPocItemKey>;
   onView?: (contentType?: 'viewItemProposal' | 'submitPropose') => void;
 }

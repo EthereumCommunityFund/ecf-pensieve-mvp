@@ -9,8 +9,9 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { IItemProposalVoteRecord } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
+import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
+
 import SupportColumnItem from './SupportColumnItem';
-import { ITableMeta, TableRowData } from './types';
 
 // Displayed Table Columns Hook
 interface UseDisplayedColumnsProps {
@@ -26,7 +27,10 @@ export const useDisplayedColumns = ({
   expandedRows = {},
   toggleRowExpanded,
 }: UseDisplayedColumnsProps = {}) => {
-  const columnHelper = useMemo(() => createColumnHelper<TableRowData>(), []);
+  const columnHelper = useMemo(
+    () => createColumnHelper<IProjectTableRowData>(),
+    [],
+  );
 
   return useMemo(() => {
     // Current Input Column
@@ -115,7 +119,7 @@ export const useDisplayedColumns = ({
           project,
           profile,
           voteResultOfLeadingProposal,
-        } = info.table.options.meta as ITableMeta;
+        } = info.table.options.meta as ITableMetaOfSubmissionQueue;
         const itemTopWeight =
           (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
             info.row.original.key as IPocItemKey

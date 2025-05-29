@@ -8,7 +8,7 @@ import { CaretDownIcon, QuestionIcon, UsersIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
-import { TableRowData } from './types';
+import { IProjectTableRowData } from '../types';
 
 interface UseDisplayedColumnsProps {
   onReferenceClick?: (rowId: string) => void;
@@ -23,7 +23,10 @@ export const useDisplayedColumns = ({
   expandedRows = {},
   toggleRowExpanded,
 }: UseDisplayedColumnsProps = {}) => {
-  const columnHelper = useMemo(() => createColumnHelper<TableRowData>(), []);
+  const columnHelper = useMemo(
+    () => createColumnHelper<IProjectTableRowData>(),
+    [],
+  );
 
   return useMemo(() => {
     // Current Input Column
