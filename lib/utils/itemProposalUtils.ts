@@ -178,6 +178,59 @@ export const processItemProposalVoteResult = async (
   return null;
 };
 
+export const processItemProposalUpdate = async (
+  tx: any,
+  {
+    votes,
+    project,
+    key,
+    projectLog,
+  }: {
+    votes: any[];
+    project: any;
+    key: string;
+    projectLog: any;
+  },
+) => {
+  const voteSum = votes.reduce((acc, vote) => {
+    acc += vote.weight ?? 0;
+    return acc;
+  }, 0);
+
+  const itemsTopWeight = project?.itemsTopWeight as
+    | Record<string, number>
+    | undefined;
+  const keyWeight = itemsTopWeight?.[key] ?? 0;
+
+  if (!projectLog.isNotLeading) {
+    await tx.update(projects).set({
+      itemsTopWeight: {
+        ...(project?.itemsTopWeight ?? {}),
+        [key]: voteSum,
+      },
+    });
+    return;
+  }
+
+  if (voteSum > keyWeight && projectLog.isNotLeading) {
+    await Promise.all([
+      tx.update(projects).set({
+        itemsTopWeight: {
+          ...(project?.itemsTopWeight ?? {}),
+          [key]: voteSum,
+        },
+      }),
+      tx
+        .update(projectLogs)
+        .set({
+          isNotLeading: false,
+        })
+        .where(eq(projectLogs.id, projectLog.id)),
+    ]);
+    return;
+  }
+};
+
 export const handleOriginalProposalUpdate = async (
   tx: any,
   {

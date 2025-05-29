@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   itemProposals,
   profiles,
+  projectLogs,
   projects,
   proposals,
   voteRecords,
@@ -14,6 +15,7 @@ import {
   checkNeedQuorum,
   handleOriginalProposalUpdate,
   handleVoteRecord,
+  processItemProposalUpdate,
   processItemProposalVoteResult,
 } from '@/lib/utils/itemProposalUtils';
 
@@ -376,7 +378,7 @@ export const voteRouter = router({
           proposalCreatorId: itemProposal.creator.userId,
         });
 
-        const [votes, project] = await Promise.all([
+        const [votes, project, projectLog] = await Promise.all([
           tx.query.voteRecords.findMany({
             where: and(
               eq(voteRecords.itemProposalId, itemProposalId),
@@ -386,7 +388,23 @@ export const voteRouter = router({
           tx.query.projects.findFirst({
             where: eq(projects.id, itemProposal.projectId),
           }),
+          tx.query.projectLogs.findFirst({
+            where: and(
+              eq(projectLogs.projectId, itemProposal.projectId),
+              eq(projectLogs.itemProposalId, itemProposalId),
+            ),
+          }),
         ]);
+
+        if (projectLog) {
+          await processItemProposalUpdate(tx, {
+            votes,
+            project,
+            key,
+            projectLog,
+          });
+          return vote;
+        }
 
         const needCheckQuorum = await checkNeedQuorum(tx, {
           projectId: itemProposal.projectId,
@@ -473,7 +491,7 @@ export const voteRouter = router({
           .where(eq(voteRecords.id, voteToSwitch.id))
           .returning();
 
-        const [votes, project] = await Promise.all([
+        const [votes, project, projectLog] = await Promise.all([
           tx.query.voteRecords.findMany({
             where: and(
               eq(voteRecords.itemProposalId, itemProposalId),
@@ -483,7 +501,23 @@ export const voteRouter = router({
           tx.query.projects.findFirst({
             where: eq(projects.id, projectId),
           }),
+          tx.query.projectLogs.findFirst({
+            where: and(
+              eq(projectLogs.projectId, targetItemProposal.projectId),
+              eq(projectLogs.itemProposalId, itemProposalId),
+            ),
+          }),
         ]);
+
+        if (projectLog) {
+          await processItemProposalUpdate(tx, {
+            votes,
+            project,
+            key,
+            projectLog,
+          });
+          return updatedVote;
+        }
 
         const needCheckQuorum = await checkNeedQuorum(tx, {
           projectId,

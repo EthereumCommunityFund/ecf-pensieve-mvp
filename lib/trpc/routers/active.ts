@@ -72,9 +72,12 @@ export const activeRouter = router({
 
       const baseCondition = eq(activeLogs.userId, userId);
       const conditions = [baseCondition];
-      if (type) {
+      if (type === 'update') {
+        conditions.push(eq(activeLogs.action, 'update'));
+      } else if (type) {
         conditions.push(eq(activeLogs.type, type));
       }
+
       const whereCondition = cursor
         ? and(...conditions, gt(activeLogs.id, cursor))
         : and(...conditions);

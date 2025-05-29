@@ -1,7 +1,7 @@
 import { Button } from '@heroui/react';
-import { useMemo } from 'react';
 import { CaretCircleUp, CubeFocus, PencilCircle } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import { formatTimeAgo } from '@/lib/utils';
@@ -145,11 +145,11 @@ export default function ActivityItem({
   };
 
   return (
-    <div className="flex w-full items-start py-4">
+    <div className="flex w-full items-start">
       <div className="relative flex size-8 shrink-0 items-center justify-center">
         {getIcon()}
         {!isLast && (
-          <div className="absolute left-1/2 top-8 h-8 w-px -translate-x-1/2 border-l border-black/10" />
+          <div className="absolute left-1/2 top-8 h-[29px] w-px -translate-x-1/2 border-l border-black/10" />
         )}
       </div>
 

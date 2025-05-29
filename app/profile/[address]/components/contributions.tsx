@@ -52,6 +52,8 @@ export default function Contributions() {
       },
     );
 
+  console.log(activitiesData, isLoadingActivities);
+
   const isLoadingContributions = isLoading || !user?.userId;
 
   const contributionsAmount = useMemo(() => {
@@ -172,7 +174,7 @@ export default function Contributions() {
         </Tabs>
       </div>
 
-      <div className="flex w-full flex-col">
+      <div className="flex w-full flex-col gap-[30px]">
         {isLoadingActivities ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, index) => (
