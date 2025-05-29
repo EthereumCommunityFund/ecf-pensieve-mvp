@@ -20,6 +20,8 @@ import AddReferenceModal from '../../create/AddReferenceModal';
 import { DefaultFieldApplicabilityMap } from '../../create/form/FormData';
 import { IProjectTableRowData } from '../types';
 
+import EditReasonUIContainer from './EditReasonUIContainer';
+
 export interface ISubmitItemProposalProps {
   itemKey: IPocItemKey;
   displayProposalDataOfKey?: IProjectTableRowData;
@@ -186,21 +188,26 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
             onAddReference={handleAddReference}
             hasFieldReference={hasFieldReference}
           />
-          <div>
-            <p>Edit reason</p>
+
+          <EditReasonUIContainer
+            label="Edit Reason"
+            description="Add a reason for the edit."
+          >
             <Input
               value={editReason}
               onValueChange={setEditReason}
               placeholder="Edit reason"
             />
-          </div>
+          </EditReasonUIContainer>
+
           <div>
             <Button
               color="primary"
               type="submit"
               isLoading={createItemProposalMutation.isPending}
+              className="w-full"
             >
-              Submit
+              Next
             </Button>
           </div>
         </div>
