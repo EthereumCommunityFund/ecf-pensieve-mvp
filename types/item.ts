@@ -94,6 +94,9 @@ export interface IItemConfig<K extends IItemKey> {
   showExpand?: boolean; // Whether the field can be expanded in the projectDetail/proposal table
   startContentText?: string; // For URL inputs
   minRows?: number; // For Textarea
+  // TODO
+  accountability?: string[];
+  legitimacy?: string[];
 }
 
 export type IFormDisplayType =
