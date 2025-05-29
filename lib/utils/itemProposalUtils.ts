@@ -135,7 +135,7 @@ export const processItemProposalVoteResult = async (
   const keyWeight = itemsTopWeight?.[key] ?? 0;
 
   if (voteSum > keyWeight) {
-    const rewardMultiplier = needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
+    const rewardMultiplier = !needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
     const reward =
       POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
       WEIGHT *
