@@ -52,7 +52,6 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
     voteResultOfLeadingProposal,
   } = useProjectDetailContext();
 
-  // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableDataOfDisplayed: TableRowData[] = useMemo(() => {
     if (!proposalsByProjectIdAndKey) return [];
 
@@ -175,7 +174,10 @@ const SubmissionQueue: FC<SubmissionQueueProps> = ({
       };
     });
 
-    return list;
+    // 根据 weight 排序
+    return list.sort((a, b) => {
+      return b.support.count - a.support.count;
+    });
   }, [proposalsByProjectIdAndKey, getItemTopWeight]);
 
   const toggleRowExpanded = useCallback((key: string) => {
