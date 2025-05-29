@@ -23,7 +23,8 @@ const tabItems = [
   { key: 'review', label: 'Review' },
 ];
 
-type TabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
+export type ITabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
+export type IModalContentType = 'viewItemProposal' | 'submitPropose';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
@@ -35,10 +36,10 @@ const ProjectPage = () => {
   const { project, isProjectFetched, isProposalsLoading, isProposalsFetched } =
     useProjectDetailContext();
 
-  const [contentType, setContentType] = useState<
-    'viewItemProposal' | 'submitPropose'
-  >('viewItemProposal');
-  const [activeTab, setActiveTab] = useState<TabKey>(
+  const [modalContentType, setModalContentType] =
+    useState<IModalContentType>('viewItemProposal');
+
+  const [activeTab, setActiveTab] = useState<ITabKey>(
     initialTab === 'ecosystem' ||
       initialTab === 'profile' ||
       initialTab === 'review'
@@ -61,7 +62,7 @@ const ProjectPage = () => {
         currentTab === 'profile' ||
         currentTab === 'review')
     ) {
-      setActiveTab(currentTab as TabKey);
+      setActiveTab(currentTab as ITabKey);
     } else if (!currentTab) {
       router.push(`/project/${projectId}?tab=project-data`, { scroll: false });
     }
@@ -83,7 +84,7 @@ const ProjectPage = () => {
       contentType?: 'viewItemProposal' | 'submitPropose',
     ) => {
       setSelectedItemKey(itemKey);
-      setContentType(contentType || 'viewItemProposal');
+      setModalContentType(contentType || 'viewItemProposal');
       requestAnimationFrame(() => {
         setIsModalOpen(true);
       });
@@ -119,7 +120,7 @@ const ProjectPage = () => {
           <Tabs
             selectedKey={activeTab}
             onSelectionChange={(key) => {
-              const newTab = key as TabKey;
+              const newTab = key as ITabKey;
               setActiveTab(newTab);
               router.push(`/project/${projectId}?tab=${newTab}`, {
                 scroll: false,
@@ -172,12 +173,13 @@ const ProjectPage = () => {
       <ProjectDetailMainModal
         isOpen={isModalOpen && !!selectedItemKey}
         onClose={handleCloseModal}
-        contentType={contentType}
+        contentType={modalContentType}
         onSubmitEntry={() => {
           console.log('Submit entry for item:', selectedItemKey);
-          setContentType('submitPropose');
+          setModalContentType('submitPropose');
         }}
         itemKey={selectedItemKey as IPocItemKey}
+        setModalContentType={setModalContentType}
       />
     </div>
   );

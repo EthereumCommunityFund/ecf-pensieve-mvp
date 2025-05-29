@@ -9,6 +9,7 @@ import {
 
 import {
   IBasicsKey,
+  IEssentialItemKey,
   IFinancialKey,
   IItemCategoryEnum,
   IOrganizationKey,
@@ -33,7 +34,8 @@ export interface IReferenceData {
   value: string;
 }
 
-export interface IProjectFormData {
+export interface IProjectFormData
+  extends Partial<Record<IEssentialItemKey, any>> {
   name: string;
   tagline: string;
   categories: string[];

@@ -24,9 +24,11 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   currentWeight = 0,
   userWeight = 0,
   contentType = 'viewItemProposal',
+  setModalContentType,
 }) => {
   const { profile } = useAuth();
-  const { projectId, setCurrentItemKey } = useProjectDetailContext();
+  const { projectId, setCurrentItemKey, displayProposalDataOfKey } =
+    useProjectDetailContext();
 
   useEffect(() => {
     if (isOpen && itemKey) {
@@ -74,16 +76,30 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
       {/* Content */}
       <div className="flex flex-1 overflow-y-auto overflow-x-hidden">
         {/* Left Content */}
-        <div className="flex-1 border-r border-[rgba(0,0,0,0.1)] ">
-          {contentType === 'viewItemProposal' ? (
-            <LeftContent
-              itemName={itemName}
-              itemWeight={itemWeight}
-              itemKey={itemKey}
-            />
-          ) : (
-            <SubmitItemProposal itemKey={itemKey} />
+        <div
+          className={cn(
+            'flex-1 border-r border-[rgba(0,0,0,0.1)] ',
+            contentType === 'viewItemProposal' ? 'block' : 'hidden',
           )}
+        >
+          <LeftContent
+            itemName={itemName}
+            itemWeight={itemWeight}
+            itemKey={itemKey}
+          />
+        </div>
+
+        <div
+          className={cn(
+            'flex-1 border-r border-[rgba(0,0,0,0.1)] ',
+            contentType === 'submitPropose' ? 'block' : 'hidden',
+          )}
+        >
+          <SubmitItemProposal
+            itemKey={itemKey}
+            displayProposalDataOfKey={displayProposalDataOfKey}
+            setModalContentType={setModalContentType}
+          />
         </div>
 
         {/* Right Content */}

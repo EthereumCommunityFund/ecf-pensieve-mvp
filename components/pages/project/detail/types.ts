@@ -1,3 +1,4 @@
+import { IModalContentType } from '@/app/project/[id]/page';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
 import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
@@ -12,7 +13,8 @@ export interface IProjectDetailModalProps {
   itemWeight?: number;
   currentWeight?: number;
   userWeight?: number;
-  contentType: 'viewItemProposal' | 'submitPropose';
+  contentType: IModalContentType;
+  setModalContentType: (contentType: IModalContentType) => void;
 }
 
 export interface ITableMetaOfProjectDetail {
