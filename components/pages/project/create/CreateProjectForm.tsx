@@ -128,7 +128,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       IProjectFormData,
       Record<string, boolean>,
       IProjectFormData
-    >(projectSchema, { context: fieldApplicability }),
+    >(projectSchema),
     mode: 'all',
     defaultValues: DefaultProjectFormData,
   });
@@ -391,12 +391,15 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       return;
     }
 
-    const isFinalValidationValid = await trigger(
-      Object.keys(getValues()) as (keyof IProjectFormData)[],
-    );
+    const allFormFields = Object.keys(
+      getValues(),
+    ) as (keyof IProjectFormData)[];
+    const fieldsToValidateFinally = getApplicableFields(allFormFields);
+    const isFinalValidationValid = await trigger(fieldsToValidateFinally);
 
     if (isFinalValidationValid) {
-      handleSubmit(onSubmit)();
+      // not call handleSubmit, just call onSubmit directly, to skip the validation of keys in FieldApplicabilityMap
+      onSubmit(getValues());
     } else {
       scrollToError(errors);
       addToast({
@@ -419,6 +422,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     scrollToError,
     clearErrors,
     references,
+    getApplicableFields,
   ]);
 
   const handleBack = useCallback(async () => {
