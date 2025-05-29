@@ -1,21 +1,30 @@
 'use client';
 
 import { Avatar } from '@heroui/react';
+import { DateValue, parseDate } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
+import dayjs from 'dayjs';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
-import { Input, Select, SelectItem, Textarea } from '@/components/base';
+import {
+  DatePicker,
+  Input,
+  Select,
+  SelectItem,
+  Textarea,
+} from '@/components/base';
+import { CalendarBlankIcon } from '@/components/icons';
 import { basicsFieldsConfig } from '@/components/pages/project/create/FormData';
 import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import InputPrefix from '../InputPrefix';
 import PhotoUpload from '../PhotoUpload';
-import { StepFormProps } from '../types';
+import { IStepFormProps } from '../types';
 
 const BasicsStepForm: React.FC<
-  Omit<StepFormProps, 'register' | 'hasFieldValue'>
+  Omit<IStepFormProps, 'register' | 'hasFieldValue'>
 > = ({
   control,
   errors,
@@ -27,8 +36,29 @@ const BasicsStepForm: React.FC<
   hasFieldReference,
 }) => {
   const categoriesConfig = basicsFieldsConfig.categories;
-  const presetCategories = categoriesConfig?.presetCategories || [];
+  const categoryOptions = categoriesConfig?.options || [];
   const tagsOptions = basicsFieldsConfig.tags.options || [];
+
+  const dateToDateValue = (date: Date | null | undefined): DateValue | null => {
+    if (!date) return null;
+    try {
+      const dateString = dayjs(date).format('YYYY-MM-DD');
+      return parseDate(dateString);
+    } catch (e) {
+      console.error('Error parsing date for DatePicker:', date, e);
+      return null;
+    }
+  };
+
+  const dateValueToDate = (dateValue: DateValue | null): Date | null => {
+    if (!dateValue) return null;
+    try {
+      return dayjs(dateValue.toString()).toDate();
+    } catch (e) {
+      console.error('Error converting DateValue to Date:', dateValue, e);
+      return null;
+    }
+  };
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
@@ -103,13 +133,13 @@ const BasicsStepForm: React.FC<
                 errorMessage={error?.message}
                 aria-label={basicsFieldsConfig.categories.label}
               >
-                {presetCategories.map((category) => (
+                {categoryOptions.map((option) => (
                   <SelectItem
-                    key={category}
-                    textValue={category}
-                    aria-label={category}
+                    key={option.value}
+                    textValue={option.label}
+                    aria-label={option.label}
                   >
-                    {category}
+                    {option.label}
                   </SelectItem>
                 ))}
               </Select>
@@ -257,7 +287,6 @@ const BasicsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.appUrl,
-          showApplicable: true,
           isApplicable: fieldApplicability.appUrl,
           onChangeApplicability: (val) => onChangeApplicability('appUrl', val),
           onAddReference: onAddReference,
@@ -324,6 +353,73 @@ const BasicsStepForm: React.FC<
               />
             </div>
           )}
+        />
+      </FormFieldContainer>
+
+      {/* dateFounded */}
+      <FormFieldContainer
+        {...useCreateContainerPropsWithValue({
+          fieldConfig: basicsFieldsConfig.dateFounded,
+          onAddReference: onAddReference,
+          hasFieldReference,
+        })}
+      >
+        <Controller
+          name={basicsFieldsConfig.dateFounded.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => {
+            return (
+              <DatePicker
+                showMonthAndYearPickers={true}
+                value={dateToDateValue(field.value)}
+                onChange={(value: DateValue | null) => {
+                  field.onChange(dateValueToDate(value));
+                }}
+                isInvalid={!!error}
+                errorMessage={error?.message}
+                isRequired
+                className="w-full"
+                aria-label={basicsFieldsConfig.dateFounded.label}
+                radius="sm"
+                selectorIcon={<CalendarBlankIcon size={20} />}
+              />
+            );
+          }}
+        />
+      </FormFieldContainer>
+
+      {/* dateLaunch */}
+      <FormFieldContainer
+        {...useCreateContainerPropsWithValue({
+          fieldConfig: basicsFieldsConfig.dateLaunch,
+          isApplicable: fieldApplicability.dateLaunch,
+          onChangeApplicability: (val) =>
+            onChangeApplicability('dateLaunch', val),
+          onAddReference: onAddReference,
+          hasFieldReference,
+        })}
+      >
+        <Controller
+          name={basicsFieldsConfig.dateLaunch.key}
+          control={control}
+          render={({ field, fieldState: { error } }) => {
+            return (
+              <DatePicker
+                showMonthAndYearPickers={true}
+                value={dateToDateValue(field.value)}
+                onChange={(value: DateValue | null) => {
+                  field.onChange(dateValueToDate(value));
+                }}
+                isInvalid={!!error}
+                errorMessage={error?.message}
+                isDisabled={!fieldApplicability.dateLaunch}
+                className="w-full"
+                aria-label={basicsFieldsConfig.dateLaunch.label}
+                radius={'sm'}
+                selectorIcon={<CalendarBlankIcon size={20} />}
+              />
+            );
+          }}
         />
       </FormFieldContainer>
     </div>

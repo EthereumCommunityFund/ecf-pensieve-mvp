@@ -1,10 +1,10 @@
-import { EssentialItemKeys } from '@/components/pages/project/create/types';
 import {
   ESSENTIAL_ITEM_MAP,
   ESSENTIAL_ITEM_QUORUM_SUM,
   ESSENTIAL_ITEM_WEIGHT_SUM,
 } from '@/lib/constants';
 import { IProposal, IVote } from '@/types';
+import { IEssentialItemKey } from '@/types/item';
 
 export interface IGetVoteResultOfProposalParams {
   proposalId: number;
@@ -165,7 +165,7 @@ const ProposalVoteUtils = {
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
       const itemPointsNeeded =
-        ESSENTIAL_ITEM_MAP[key as EssentialItemKeys].weight || 0;
+        ESSENTIAL_ITEM_MAP[key as IEssentialItemKey].weight || 0;
       const totalVotesWeightForKey = votes.reduce(
         (sum, vote) => sum + Number(vote.weight || 0),
         0,
@@ -196,7 +196,7 @@ const ProposalVoteUtils = {
     const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const quorum = ESSENTIAL_ITEM_MAP[key as EssentialItemKeys].quorum || 0;
+      const quorum = ESSENTIAL_ITEM_MAP[key as IEssentialItemKey].quorum || 0;
       return acc + Math.min(votes.length, quorum);
     }, 0);
 

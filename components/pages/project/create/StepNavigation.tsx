@@ -11,48 +11,68 @@ import {
   CodeIcon,
   GaugeIcon,
 } from '@/components/icons';
+import { IItemCategoryEnum } from '@/types/item';
 
-import { CreateProjectStep, StepStatus } from './types';
+import { IStepStatus } from './types';
 
 interface StepNavigationProps {
-  currentStep: CreateProjectStep;
-  stepStatuses: Record<CreateProjectStep, StepStatus>;
-  goToStep: (step: CreateProjectStep) => void;
+  currentStep: IItemCategoryEnumWithoutGovernance;
+  stepStatuses: Record<IItemCategoryEnumWithoutGovernance, IStepStatus>;
+  goToStep: (step: IItemCategoryEnumWithoutGovernance) => void;
+  dimmed?: boolean;
 }
 
-export const getStepIcons = (step: CreateProjectStep, size = 32) => {
-  const stepIcons: Record<CreateProjectStep, React.ReactNode> = {
-    [CreateProjectStep.Basics]: <CardsIcon size={size} />,
-    [CreateProjectStep.Dates]: <GaugeIcon size={size} />,
-    [CreateProjectStep.Technicals]: <CodeIcon size={size} />,
-    [CreateProjectStep.Organization]: <BuildingIcon size={size} />,
-  };
+/**
+ * Exclude the Governance category from the IItemCategoryEnum, Governance category has no essential items
+ */
+export type IItemCategoryEnumWithoutGovernance = Exclude<
+  IItemCategoryEnum,
+  IItemCategoryEnum.Governance
+>;
+
+export const getStepIcons = (
+  step: IItemCategoryEnumWithoutGovernance,
+  size = 32,
+) => {
+  const stepIcons: Record<IItemCategoryEnumWithoutGovernance, React.ReactNode> =
+    {
+      [IItemCategoryEnum.Basics]: <CardsIcon size={size} />,
+      [IItemCategoryEnum.Technicals]: <CodeIcon size={size} />,
+      [IItemCategoryEnum.Organization]: <BuildingIcon size={size} />,
+      [IItemCategoryEnum.Financial]: <GaugeIcon size={size} />,
+    };
   return stepIcons[step];
 };
 
-const stepLabels: Record<CreateProjectStep, string> = {
-  [CreateProjectStep.Basics]: 'The Basics',
-  [CreateProjectStep.Dates]: 'Dates & Statuses',
-  [CreateProjectStep.Technicals]: 'Technicals',
-  [CreateProjectStep.Organization]: 'Organization',
+const stepLabels: Record<IItemCategoryEnumWithoutGovernance, string> = {
+  [IItemCategoryEnum.Basics]: 'The Basics',
+  [IItemCategoryEnum.Technicals]: 'Technicals',
+  [IItemCategoryEnum.Organization]: 'Organization',
+  [IItemCategoryEnum.Financial]: 'Financial',
 };
 
-const stepsOrder: CreateProjectStep[] = [
-  CreateProjectStep.Basics,
-  CreateProjectStep.Dates,
-  CreateProjectStep.Technicals,
-  CreateProjectStep.Organization,
+const stepsOrder: IItemCategoryEnumWithoutGovernance[] = [
+  IItemCategoryEnum.Basics,
+  IItemCategoryEnum.Technicals,
+  IItemCategoryEnum.Organization,
+  IItemCategoryEnum.Financial,
 ];
 
 const StepNavigation: React.FC<StepNavigationProps> = ({
   currentStep,
   stepStatuses,
   goToStep,
+  dimmed,
 }) => {
   const currentStepIndex = stepsOrder.indexOf(currentStep);
 
   return (
-    <nav className="mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start">
+    <nav
+      className={cn(
+        'mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start',
+        dimmed ? 'opacity-30' : '',
+      )}
+    >
       <ul className="space-y-4">
         {stepsOrder.map((step, index) => {
           const status = stepStatuses[step];
@@ -93,14 +113,13 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
 
 export default StepNavigation;
 
-export const StepHeader: React.FC<{ currentStep: CreateProjectStep }> = ({
-  currentStep,
-}) => {
+export const StepHeader: React.FC<{
+  currentStep: IItemCategoryEnumWithoutGovernance;
+}> = ({ currentStep }) => {
   return (
     <>
       <div className="mobile:hidden flex h-[50px] items-center justify-start border-b border-[rgba(0,0,0,0.1)] bg-[rgba(245,245,245,0.8)] px-[10px] backdrop-blur-[5px]">
-        {/* TODO fontFamily: Mona Sans */}
-        <span className="text-[24px] font-[700] text-black opacity-80">
+        <span className="font-mona text-[24px] font-[700] text-black opacity-80">
           {stepLabels[currentStep]}
         </span>
       </div>

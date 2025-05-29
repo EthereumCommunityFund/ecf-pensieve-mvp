@@ -1,20 +1,22 @@
-import { ApplicableField } from '@/components/pages/project/create/FormData';
 import {
-  ProjectCreatePayload,
-  ProjectFormData,
-  ProposalCreatePayload,
-  ReferenceData,
+  ICreateProjectPayload,
+  ICreateProposalPayload,
+  IFormTypeEnum,
+  IProjectFormData,
+  IReferenceData,
 } from '@/components/pages/project/create/types';
+import { isAutoFillForm, isLocalDev } from '@/constants/env';
+import { IProject } from '@/types';
 import { normalizeUrl } from '@/utils/url';
 
 /**
  * Transform form data to API submission format
  */
 export const transformProjectData = (
-  formData: ProjectFormData,
-  references: ReferenceData[],
-  fieldApplicability: Record<ApplicableField, boolean>,
-): ProjectCreatePayload => {
+  formData: IProjectFormData,
+  references: IReferenceData[],
+  fieldApplicability: Record<string, boolean>,
+): ICreateProjectPayload => {
   return {
     name: formData.name,
     tagline: formData.tagline,
@@ -44,10 +46,10 @@ export const transformProjectData = (
     codeRepo: fieldApplicability['codeRepo']
       ? normalizeUrl(formData.codeRepo) || undefined
       : undefined,
-    tokenContract: fieldApplicability['tokenContract']
-      ? formData.tokenContract || undefined
-      : undefined,
-    dappSmartContracts: formData.dappSmartContracts,
+    tokenContract: formData.tokenContract || undefined,
+    dappSmartContracts: fieldApplicability['dappSmartContracts']
+      ? formData.dappSmartContracts || ''
+      : '',
 
     orgStructure: formData.orgStructure || 'Centralized',
     publicGoods: formData.publicGoods === 'Yes',
@@ -66,11 +68,11 @@ export const transformProjectData = (
  * Transform form data to proposal API submission format
  */
 export const transformProposalData = (
-  formData: ProjectFormData,
-  references: ReferenceData[],
-  fieldApplicability: Record<ApplicableField, boolean>,
+  formData: IProjectFormData,
+  references: IReferenceData[],
+  fieldApplicability: Record<string, boolean>,
   projectId: number,
-): ProposalCreatePayload => {
+): ICreateProposalPayload => {
   // TODO: is it order important?
   const items = [
     { key: 'name', value: formData.name },
@@ -115,9 +117,7 @@ export const transformProposalData = (
     });
   }
 
-  if (fieldApplicability['tokenContract'] && formData.tokenContract) {
-    items.push({ key: 'tokenContract', value: formData.tokenContract });
-  }
+  items.push({ key: 'tokenContract', value: formData.tokenContract || '' });
 
   items.push({ key: 'dappSmartContracts', value: formData.dappSmartContracts });
 
@@ -147,4 +147,76 @@ export const transformProposalData = (
         ? references.map((ref) => ({ key: ref.key, value: ref.value }))
         : undefined,
   };
+};
+
+export const convertProjectToFormData = (
+  project: IProject,
+): IProjectFormData => {
+  return {
+    name: project.name,
+    tagline: project.tagline,
+    categories: project.categories,
+    mainDescription: project.mainDescription,
+    logoUrl: project.logoUrl,
+    websiteUrl: project.websiteUrl,
+    appUrl: project.appUrl || null,
+    tags: project.tags,
+    whitePaper: project.whitePaper,
+    dappSmartContracts: project.dappSmartContracts,
+    dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
+    dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,
+    devStatus: project.devStatus,
+    fundingStatus: project.fundingStatus || null,
+    openSource: project.openSource ? 'Yes' : 'No',
+    codeRepo: project.codeRepo || null,
+    tokenContract: project.tokenContract || null,
+    orgStructure: project.orgStructure,
+    publicGoods: project.publicGoods ? 'Yes' : 'No',
+    founders: project.founders.map((founder: any) => ({
+      fullName: founder.name,
+      titleRole: founder.title,
+    })),
+  };
+};
+
+export const convertProjectRefsToReferenceData = (
+  project: IProject,
+): IReferenceData[] => {
+  if (!project.refs || !Array.isArray(project.refs)) {
+    return [];
+  }
+
+  return project.refs.map((ref: any) => ({
+    key: ref.key,
+    ref: ref.value,
+    value: ref.value,
+  }));
+};
+
+export const updateFormWithProjectData = (
+  formType: IFormTypeEnum,
+  projectData: IProject | undefined,
+  setValue: (name: keyof IProjectFormData, value: any) => void,
+  setReferences?: (refs: IReferenceData[]) => void,
+): void => {
+  if (
+    formType === IFormTypeEnum.Proposal &&
+    isLocalDev &&
+    isAutoFillForm &&
+    projectData
+  ) {
+    const formData = convertProjectToFormData(projectData);
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        setValue(key as keyof IProjectFormData, value as any);
+      }
+    });
+
+    if (setReferences && projectData.refs && Array.isArray(projectData.refs)) {
+      const referenceData = convertProjectRefsToReferenceData(projectData);
+      if (referenceData.length > 0) {
+        setReferences(referenceData);
+      }
+    }
+  }
 };

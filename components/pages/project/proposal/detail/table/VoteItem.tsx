@@ -1,5 +1,5 @@
 import { CircularProgress, cn } from '@heroui/react';
-import { FC } from 'react';
+import { FC, memo } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
@@ -21,6 +21,7 @@ interface IProps {
   votedMemberCount: number;
   isUserVoted: boolean;
   isLoading: boolean;
+  isProposalCreator: boolean;
   onAction: () => Promise<void>;
 }
 
@@ -35,6 +36,7 @@ const VoteItem: FC<IProps> = ({
   onAction,
   isUserVoted,
   isLoading,
+  isProposalCreator,
 }) => {
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
@@ -81,9 +83,13 @@ const VoteItem: FC<IProps> = ({
         size="sm"
         isIconOnly
         isLoading={isLoading}
-        disabled={isLoading}
+        disabled={isLoading || isProposalCreator}
         onPress={onAction}
-        className={cn('px-[5px] border-none', isUserVoted ? '' : 'opacity-30')}
+        className={cn(
+          'px-[5px] border-none',
+          isUserVoted ? '' : 'opacity-30',
+          isProposalCreator ? 'cursor-not-allowed' : '',
+        )}
       >
         {isUserVoted ? <CheckedGreenIcon /> : <CaretUpIcon />}
       </Button>
@@ -91,4 +97,4 @@ const VoteItem: FC<IProps> = ({
   );
 };
 
-export default VoteItem;
+export default memo(VoteItem);

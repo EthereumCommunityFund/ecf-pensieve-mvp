@@ -4,6 +4,7 @@ import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { ArrowUpRightIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
@@ -51,17 +52,21 @@ const PendingProjectCard = ({
   const { profile } = useAuth();
   const userId = profile?.userId;
 
-  const { leadingProposalId, leadingProposalResult, voteResultOfProposalMap } =
-    useMemo(() => {
-      return ProposalVoteUtils.getVoteResultOfProject({
-        projectId: project.id,
-        votesOfProject: project.proposals.flatMap(
-          (proposal) => proposal.voteRecords || [],
-        ),
-        proposals: project.proposals,
-        userId,
-      });
-    }, [project, userId]);
+  const {
+    leadingProposalId,
+    leadingProposalResult,
+    voteResultOfProposalMap,
+    canBePublished,
+  } = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProject({
+      projectId: project.id,
+      votesOfProject: project.proposals.flatMap(
+        (proposal) => proposal.voteRecords || [],
+      ),
+      proposals: project.proposals,
+      userId,
+    });
+  }, [project, userId]);
 
   const {
     formattedPercentageOfProposal,
@@ -73,7 +78,7 @@ const PendingProjectCard = ({
   const leadingProposal = useMemo(() => {
     if (!leadingProposalId) return null;
     return (project.proposals || []).find(
-      (proposal) => proposal.id === leadingProposalId,
+      (proposal) => proposal?.id === leadingProposalId,
     );
   }, [project, leadingProposalId]);
 
@@ -127,53 +132,139 @@ const PendingProjectCard = ({
                 {project.proposals.length || 0}
               </span>
             </p>
-            {project.proposals && project.proposals.length > 0 && (
-              <p className="mt-[5px]">
-                Leading:{' '}
-                <span className="text-black/60">@{leadingProposalCreator}</span>
-              </p>
-            )}
+            {project.proposals &&
+              project.proposals.length > 0 &&
+              leadingProposalId && (
+                <p className="mt-[5px]">
+                  Leading:{' '}
+                  <span className="text-black/60">
+                    @{leadingProposalCreator}
+                  </span>
+                </p>
+              )}
           </div>
         </div>
 
-        <div
-          className={cn(
-            'flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px] text-[14px] leading-[19px] text-black',
-            'mobile:w-full',
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-mona text-[16px] font-[500]">
-              {formattedPercentageOfProposal}
-            </span>
-            <span className="text-black/60">
-              {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
-            </span>
-          </div>
-
-          <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-            <div
-              className="h-[7px] bg-black"
-              style={{ width: formattedPercentageOfProposal }}
-            ></div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="font-[600]">Supported</span>
-            <span className="text-black/60">
-              {totalSupportedUserWeightOfProposal}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-[600]">Quorum</span>
-            <span className="text-black/60">
-              {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
-            </span>
-          </div>
-        </div>
+        <ProgressCard
+          projectId={project.id.toString()}
+          canBePublished={canBePublished}
+          formattedPercentageOfProposal={formattedPercentageOfProposal}
+          totalValidPointsOfProposal={totalValidPointsOfProposal}
+          totalSupportedUserWeightOfProposal={
+            totalSupportedUserWeightOfProposal
+          }
+          totalValidQuorumOfProposal={totalValidQuorumOfProposal}
+        />
       </Link>
     </div>
   );
 };
 
 export default PendingProjectCard;
+
+interface IProgressCardProps {
+  canBePublished: boolean;
+  formattedPercentageOfProposal: string;
+  totalValidPointsOfProposal: number;
+  totalSupportedUserWeightOfProposal: number;
+  totalValidQuorumOfProposal: number;
+  projectId: string;
+}
+
+const ProgressCard = ({
+  canBePublished,
+  formattedPercentageOfProposal,
+  totalValidPointsOfProposal,
+  totalSupportedUserWeightOfProposal,
+  totalValidQuorumOfProposal,
+  projectId,
+}: IProgressCardProps) => {
+  return canBePublished ? (
+    <div
+      className={cn(
+        'flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 p-[10px] text-[14px] leading-[19px] text-black',
+        'mobile:w-full',
+      )}
+      style={{
+        background:
+          'linear-gradient(90deg, rgba(100, 192, 165, 0.00) -234.3%, #EFEFEF 50.04%), #EFEFEF',
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-mona text-[16px] font-[500]">Validated</span>
+        <span className="text-black/60">
+          {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
+        </span>
+      </div>
+
+      <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
+        <div
+          className="h-[7px] bg-[#64C0A5]"
+          style={{ width: formattedPercentageOfProposal }}
+        ></div>
+      </div>
+
+      <div className="flex items-center justify-between gap-[10px]">
+        <div className="flex items-center gap-[4px]">
+          <span className="font-[600]">Supported</span>
+          <span className="text-black/60">
+            {totalSupportedUserWeightOfProposal}
+          </span>
+        </div>
+        <div className="flex items-center gap-[4px]">
+          <span className="font-[600]">Quorum</span>
+          <span className="text-black/60">
+            {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
+          </span>
+        </div>
+      </div>
+
+      {/* TODO set to project page */}
+      <Link
+        href={`/project/pending/${projectId}`}
+        className="flex cursor-pointer items-center justify-between rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[10px] py-[6px] hover:bg-[rgba(0,0,0,0.1)]"
+      >
+        <span className="text-[13px] leading-[18px] text-black">
+          View Published Page
+        </span>
+        <ArrowUpRightIcon />
+      </Link>
+    </div>
+  ) : (
+    <div
+      className={cn(
+        'flex w-[235px] flex-col gap-[10px] rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px] text-[14px] leading-[19px] text-black',
+        'mobile:w-full',
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-mona text-[16px] font-[500]">
+          {formattedPercentageOfProposal}
+        </span>
+        <span className="text-black/60">
+          {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
+        </span>
+      </div>
+
+      <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
+        <div
+          className="h-[7px] bg-black"
+          style={{ width: formattedPercentageOfProposal }}
+        ></div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="font-[600]">Supported</span>
+        <span className="text-black/60">
+          {totalSupportedUserWeightOfProposal}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="font-[600]">Quorum</span>
+        <span className="text-black/60">
+          {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
+        </span>
+      </div>
+    </div>
+  );
+};

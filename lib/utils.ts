@@ -1,12 +1,6 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { isAddress } from 'viem';
 
 import dayjs from '@/lib/dayjs';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export function formatNumber(num: number): string {
   if (num >= 10000) {

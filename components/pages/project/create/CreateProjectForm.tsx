@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
@@ -8,11 +9,9 @@ import { FormProvider, useForm } from 'react-hook-form';
 
 import { addToast } from '@/components/base';
 import {
-  ApplicableField,
-  DEFAULT_CREATE_PROJECT_FORM_DATA,
-  DEFAULT_FIELD_APPLICABILITY,
+  DefaultFieldApplicabilityMap,
   getCreateProjectStepFields,
-  updateFormWithProjectData,
+  getDefaultProjectFormData,
 } from '@/components/pages/project/create/FormData';
 import {
   transformProjectData,
@@ -23,51 +22,63 @@ import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { IItemCategoryEnum } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
 import FormActions from './FormActions';
-import StepNavigation, { StepHeader } from './StepNavigation';
+import StepNavigation, {
+  IItemCategoryEnumWithoutGovernance,
+  StepHeader,
+} from './StepNavigation';
 import StepWrapper from './StepWrapper';
 import BasicsStepForm from './steps/BasicsStepForm';
-import DatesStepForm from './steps/DatesStepForm';
+import FinancialStepForm from './steps/FinancialStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
+import SubmittingStep from './steps/SubmittingStep';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
 import {
-  CreateProjectStep,
   IFormTypeEnum,
-  ProjectFormData,
-  ReferenceData,
-  StepStatus,
+  IProjectFormData,
+  IReferenceData,
+  IStepStatus,
 } from './types';
-import { FieldApplicabilityContext, projectSchema } from './validation';
+import { updateFormWithProjectData } from './utils/form';
+import { projectSchema } from './validation';
 
 dayjs.extend(utc);
 
-const DEFAULT_STEP_STATUSES: Record<CreateProjectStep, StepStatus> = {
-  [CreateProjectStep.Basics]: 'Active',
-  [CreateProjectStep.Dates]: 'Inactive',
-  [CreateProjectStep.Technicals]: 'Inactive',
-  [CreateProjectStep.Organization]: 'Inactive',
+const DEFAULT_STEP_STATUSES: Record<
+  IItemCategoryEnumWithoutGovernance,
+  IStepStatus
+> = {
+  [IItemCategoryEnum.Basics]: 'Active',
+  [IItemCategoryEnum.Technicals]: 'Inactive',
+  [IItemCategoryEnum.Organization]: 'Inactive',
+  [IItemCategoryEnum.Financial]: 'Inactive',
 };
 
-const STEPS_ORDER = [
-  CreateProjectStep.Basics,
-  CreateProjectStep.Dates,
-  CreateProjectStep.Technicals,
-  CreateProjectStep.Organization,
+const STEPS_ORDER: IItemCategoryEnumWithoutGovernance[] = [
+  IItemCategoryEnum.Basics,
+  IItemCategoryEnum.Technicals,
+  IItemCategoryEnum.Organization,
+  IItemCategoryEnum.Financial,
 ];
 
 interface CreateProjectFormProps {
   formType?: IFormTypeEnum;
   projectId?: number;
-  onSubmit?: (data: ProjectFormData, references: ReferenceData[]) => void;
+  onSubmit?: (data: IProjectFormData, references: IReferenceData[]) => void;
   onSuccess?: () => void;
   onError?: (error: any) => void;
   redirectPath?: string;
   projectData?: IProject;
 }
+
+type ApiSubmissionStatus = 'idle' | 'pending' | 'success' | 'error';
+
+const DefaultProjectFormData = getDefaultProjectFormData();
 
 const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   formType = IFormTypeEnum.Project,
@@ -84,34 +95,42 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
 
-  const [currentStep, setCurrentStep] = useState<CreateProjectStep>(
-    CreateProjectStep.Basics,
-  );
+  const isProjectType = formType === IFormTypeEnum.Project;
+
+  const [currentStep, setCurrentStep] =
+    useState<IItemCategoryEnumWithoutGovernance>(IItemCategoryEnum.Basics);
   const [stepStatuses, setStepStatuses] = useState<
-    Record<CreateProjectStep, StepStatus>
+    Record<IItemCategoryEnumWithoutGovernance, IStepStatus>
   >(DEFAULT_STEP_STATUSES);
 
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
 
-  const [references, setReferences] = useState<ReferenceData[]>([]);
+  const [references, setReferences] = useState<IReferenceData[]>([]);
   const [currentReferenceField, setCurrentReferenceField] = useState({
     key: '',
     label: '',
-    existingReference: null as ReferenceData | null,
+    existingReference: null as IReferenceData | null,
   });
   const [fieldApplicability, setFieldApplicability] = useState<
-    Record<ApplicableField, boolean>
-  >(DEFAULT_FIELD_APPLICABILITY);
+    Record<string, boolean>
+  >(DefaultFieldApplicabilityMap);
 
-  const methods = useForm<ProjectFormData>({
+  const [showSubmittingPage, setShowSubmittingPage] = useState(false);
+  const [apiSubmissionStatus, setApiSubmissionStatus] =
+    useState<ApiSubmissionStatus>('idle');
+  const [createdEntityId, setCreatedEntityId] = useState<number | undefined>(
+    undefined,
+  );
+
+  const methods = useForm<IProjectFormData>({
     resolver: yupResolver<
-      ProjectFormData,
-      FieldApplicabilityContext,
-      ProjectFormData
+      IProjectFormData,
+      Record<string, boolean>,
+      IProjectFormData
     >(projectSchema, { context: fieldApplicability }),
     mode: 'all',
-    defaultValues: DEFAULT_CREATE_PROJECT_FORM_DATA,
+    defaultValues: DefaultProjectFormData,
   });
 
   useEffect(() => {
@@ -140,10 +159,10 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     (stepFields: readonly string[]) => {
       return stepFields.filter((field) => {
         if (field in fieldApplicability) {
-          return fieldApplicability[field as ApplicableField];
+          return fieldApplicability[field];
         }
         return true;
-      }) as (keyof ProjectFormData)[];
+      }) as (keyof IProjectFormData)[];
     },
     [fieldApplicability],
   );
@@ -153,7 +172,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       if (error?.data?.zodError?.fieldErrors) {
         const fieldErrors = error.data.zodError.fieldErrors;
         Object.entries(fieldErrors).forEach(([field, messages]) => {
-          setError(field as keyof ProjectFormData, {
+          setError(field as keyof IProjectFormData, {
             type: 'server',
             message: Array.isArray(messages) ? messages[0] : String(messages),
           });
@@ -176,7 +195,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const onSubmit = useCallback(
-    async (formData: ProjectFormData) => {
+    async (formData: IProjectFormData) => {
       if (!profile?.userId) {
         addToast({
           title: 'Error',
@@ -191,77 +210,81 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         return;
       }
 
-      if (formType === IFormTypeEnum.Project) {
-        const payload = transformProjectData(
-          formData,
-          references,
-          fieldApplicability,
-        );
+      const performSubmit = async () => {
+        setApiSubmissionStatus('pending');
+        setCreatedEntityId(undefined);
 
-        devLog('Project Payload (onSubmit)', payload);
+        if (formType === IFormTypeEnum.Project) {
+          const payload = transformProjectData(
+            formData,
+            references,
+            fieldApplicability,
+          );
 
-        createProjectMutation.mutate(payload, {
-          onSuccess: () => {
-            if (externalOnSuccess) {
-              externalOnSuccess();
-            } else {
-              addToast({
-                title: 'Success',
-                description: 'Project created successfully!',
-                color: 'success',
-              });
-              router.push(redirectPath || '/projects/pending');
-            }
-          },
-          onError: (error: any) => {
-            if (externalOnError) {
-              externalOnError(error);
-            } else {
-              handleSubmissionError(error);
-            }
-          },
-        });
-      } else if (formType === IFormTypeEnum.Proposal) {
-        if (!projectId) {
-          addToast({
-            title: 'Error',
-            description: 'Project ID is required for creating a proposal',
-            color: 'danger',
+          devLog('Project Payload (onSubmit)', payload);
+
+          createProjectMutation.mutate(payload, {
+            onSuccess: (data) => {
+              setApiSubmissionStatus('success');
+              setCreatedEntityId(data?.id);
+            },
+            onError: (error: any) => {
+              setApiSubmissionStatus('error');
+              setShowSubmittingPage(false);
+              if (externalOnError) {
+                externalOnError(error);
+              } else {
+                handleSubmissionError(error);
+              }
+            },
           });
-          return;
+        } else if (formType === IFormTypeEnum.Proposal) {
+          if (!projectId) {
+            addToast({
+              title: 'Error',
+              description: 'Project ID is required for creating a proposal',
+              color: 'danger',
+            });
+            setApiSubmissionStatus('error');
+            setShowSubmittingPage(false);
+            return;
+          }
+
+          const payload = transformProposalData(
+            formData,
+            references,
+            fieldApplicability,
+            projectId,
+          );
+
+          devLog('Proposal Payload (onSubmit)', payload);
+
+          createProposalMutation.mutate(payload, {
+            onSuccess: (data) => {
+              setApiSubmissionStatus('success');
+              setCreatedEntityId(data?.id);
+            },
+            onError: (error: any) => {
+              setApiSubmissionStatus('error');
+              setShowSubmittingPage(false);
+              if (externalOnError) {
+                externalOnError(error);
+              } else {
+                handleSubmissionError(error);
+              }
+            },
+          });
         }
+      };
 
-        const payload = transformProposalData(
-          formData,
-          references,
-          fieldApplicability,
-          projectId,
-        );
-
-        devLog('Proposal Payload (onSubmit)', payload);
-
-        createProposalMutation.mutate(payload, {
-          onSuccess: () => {
-            if (externalOnSuccess) {
-              externalOnSuccess();
-            } else {
-              addToast({
-                title: 'Success',
-                description: 'Proposal created successfully!',
-                color: 'success',
-              });
-              router.push(redirectPath || `/project/pending/${projectId}`);
-            }
-          },
-          onError: (error: any) => {
-            if (externalOnError) {
-              externalOnError(error);
-            } else {
-              handleSubmissionError(error);
-            }
-          },
-        });
-      }
+      setShowSubmittingPage(true);
+      setStepStatuses((prev) => ({
+        ...prev,
+        [currentStep]: 'Finished',
+      }));
+      requestAnimationFrame(() => {
+        performSubmit();
+      });
     },
     [
       profile?.userId,
@@ -272,11 +295,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       createProjectMutation,
       createProposalMutation,
       externalOnSubmit,
-      externalOnSuccess,
       externalOnError,
-      redirectPath,
-      router,
       handleSubmissionError,
+      currentStep,
     ],
   );
 
@@ -306,8 +327,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
   const updateStepStatuses = useCallback(
     (
-      currentStep: CreateProjectStep,
-      targetStep: CreateProjectStep,
+      currentStep: IItemCategoryEnumWithoutGovernance,
+      targetStep: IItemCategoryEnumWithoutGovernance,
       isMovingForward: boolean,
     ) => {
       setStepStatuses((prev) => {
@@ -358,7 +379,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
       const nextStepFields = getCreateProjectStepFields(nextStep);
       nextStepFields.forEach((field) => {
-        clearErrors(field as keyof ProjectFormData);
+        clearErrors(field as keyof IProjectFormData);
       });
 
       updateStepStatuses(currentStep, nextStep, true);
@@ -370,18 +391,12 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       return;
     }
 
-    const allFormFields = Object.keys(getValues()) as (keyof ProjectFormData)[];
-    const fieldsToValidateFinally = allFormFields.filter((field) => {
-      if (field in fieldApplicability) {
-        return fieldApplicability[field as ApplicableField];
-      }
-      return true;
-    });
-
-    const isFinalValidationValid = await trigger(fieldsToValidateFinally);
+    const isFinalValidationValid = await trigger(
+      Object.keys(getValues()) as (keyof IProjectFormData)[],
+    );
 
     if (isFinalValidationValid) {
-      await onSubmit(getValues());
+      handleSubmit(onSubmit)();
     } else {
       scrollToError(errors);
       addToast({
@@ -392,6 +407,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       });
     }
   }, [
+    handleSubmit,
     currentStep,
     validateCurrentStep,
     updateStepStatuses,
@@ -424,7 +440,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   }, [currentStep, stepStatuses, validateCurrentStep, updateStepStatuses]);
 
   const handleGoToStep = useCallback(
-    async (targetStep: CreateProjectStep) => {
+    async (targetStep: IItemCategoryEnumWithoutGovernance) => {
       if (targetStep === currentStep) {
         return;
       }
@@ -461,7 +477,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const confirmDiscard = useCallback(() => {
     reset();
     setReferences([]);
-    setCurrentStep(CreateProjectStep.Basics);
+    setCurrentStep(IItemCategoryEnum.Basics);
     setStepStatuses(DEFAULT_STEP_STATUSES);
     setIsDiscardModalOpen(false);
 
@@ -482,7 +498,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const getFieldReference = useCallback(
-    (fieldKey: string): ReferenceData | null => {
+    (fieldKey: string): IReferenceData | null => {
       return references.find((ref) => ref.key === fieldKey) || null;
     },
     [references],
@@ -501,7 +517,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     [getFieldReference],
   );
 
-  const handleSaveReference = useCallback((reference: ReferenceData) => {
+  const handleSaveReference = useCallback((reference: IReferenceData) => {
     setReferences((prev) => {
       const existingIndex = prev.findIndex((ref) => ref.key === reference.key);
       if (existingIndex >= 0) {
@@ -518,14 +534,14 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   }, []);
 
   const handleApplicabilityChange = useCallback(
-    (field: ApplicableField, value: boolean) => {
+    (field: string, value: boolean) => {
       setFieldApplicability((prev) => ({
         ...prev,
         [field]: value,
       }));
 
       if (!value) {
-        clearErrors(field as keyof ProjectFormData);
+        clearErrors(field as keyof IProjectFormData);
       }
     },
     [clearErrors],
@@ -549,54 +565,79 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="tablet:gap-[20px] tablet:px-[20px] mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0 flex min-h-screen gap-[40px] px-[160px] pb-[40px]"
+        className={cn(
+          'flex min-h-screen gap-[40px] px-[160px] pb-[40px]',
+          'tablet:gap-[20px] tablet:px-[20px]',
+          'mobile:flex-col mobile:gap-[20px] mobile:px-0 mobile:pt-0',
+        )}
       >
         <StepNavigation
           currentStep={currentStep}
           stepStatuses={stepStatuses}
           goToStep={handleGoToStep}
+          dimmed={showSubmittingPage}
         />
-        <div className="mobile:gap-[20px] flex flex-1 flex-col gap-[40px]">
-          <StepHeader currentStep={currentStep} />
 
-          <div className="mobile:px-[14px] flex flex-col gap-[20px]">
-            <StepWrapper
-              stepId={CreateProjectStep.Basics}
-              currentStep={currentStep}
-            >
-              <BasicsStepForm {...stepProps} />
-            </StepWrapper>
-            <StepWrapper
-              stepId={CreateProjectStep.Dates}
-              currentStep={currentStep}
-            >
-              <DatesStepForm {...stepProps} />
-            </StepWrapper>
-            <StepWrapper
-              stepId={CreateProjectStep.Technicals}
-              currentStep={currentStep}
-            >
-              <TechnicalsStepForm {...stepProps} />
-            </StepWrapper>
-            <StepWrapper
-              stepId={CreateProjectStep.Organization}
-              currentStep={currentStep}
-            >
-              <OrganizationStepForm {...stepProps} />
-            </StepWrapper>
+        <div
+          className={cn('mobile:gap-[20px] flex flex-1 flex-col gap-[40px]')}
+        >
+          <div className={cn(showSubmittingPage ? 'hidden' : '')}>
+            <StepHeader currentStep={currentStep} />
+          </div>
 
-            <FormActions
-              currentStep={currentStep}
-              isSubmitting={
-                (formType === IFormTypeEnum.Project
-                  ? createProjectMutation.isPending
-                  : createProposalMutation.isPending) || isSubmitting
-              }
-              onBack={handleBack}
-              onNext={handleNext}
-              onDiscard={handleDiscard}
-              formType={formType}
-            />
+          <div className={cn('mobile:px-[14px] flex flex-col gap-[20px]')}>
+            <div className={cn(showSubmittingPage ? 'hidden' : '')}>
+              <StepWrapper
+                stepId={IItemCategoryEnum.Basics}
+                currentStep={currentStep}
+              >
+                <BasicsStepForm {...stepProps} />
+              </StepWrapper>
+              <StepWrapper
+                stepId={IItemCategoryEnum.Technicals}
+                currentStep={currentStep}
+              >
+                <TechnicalsStepForm {...stepProps} />
+              </StepWrapper>
+              <StepWrapper
+                stepId={IItemCategoryEnum.Organization}
+                currentStep={currentStep}
+              >
+                <OrganizationStepForm {...stepProps} />
+              </StepWrapper>
+              <StepWrapper
+                stepId={IItemCategoryEnum.Financial}
+                currentStep={currentStep}
+              >
+                <FinancialStepForm {...stepProps} />
+              </StepWrapper>
+
+              <FormActions
+                currentStep={currentStep}
+                isSubmitting={
+                  (formType === IFormTypeEnum.Project
+                    ? createProjectMutation.isPending
+                    : createProposalMutation.isPending) || isSubmitting
+                }
+                onBack={handleBack}
+                onNext={handleNext}
+                onDiscard={handleDiscard}
+                formType={formType}
+              />
+            </div>
+
+            <div className={cn(!showSubmittingPage ? 'hidden' : '')}>
+              <SubmittingStep
+                formType={formType}
+                entityId={createdEntityId}
+                projectId={
+                  formType === IFormTypeEnum.Proposal
+                    ? projectId
+                    : projectData?.id
+                }
+                apiStatus={apiSubmissionStatus}
+              />
+            </div>
           </div>
         </div>
       </form>

@@ -13,7 +13,8 @@ export const ESSENTIAL_ITEM_LIST = Object.keys(POC_ITEMS)
   .map((key) => ({
     key,
     weight:
-      POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric * WEIGHT,
+      Number(POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric) *
+      WEIGHT,
     quorum: QUORUM_AMOUNT,
     ...POC_ITEMS[key as keyof typeof POC_ITEMS],
   }));

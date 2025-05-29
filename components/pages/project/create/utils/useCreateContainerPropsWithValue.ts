@@ -1,5 +1,5 @@
 import { FormFieldContainerProps } from '../FormFieldContainer';
-import { ProjectFormData } from '../types';
+import { IProjectFormData } from '../types';
 
 import {
   createContainerProps,
@@ -10,9 +10,9 @@ import { useFieldHasValue } from './useFieldHasValue';
 export function useCreateContainerPropsWithValue(
   params: Omit<ICreateContainerPropsParams, 'hasFieldValue'>,
 ): Omit<FormFieldContainerProps, 'children'> {
-  const fieldKey = params.fieldConfig.key as keyof ProjectFormData;
+  const fieldKey = params.fieldConfig.key as keyof IProjectFormData;
 
-  const hasValue = useFieldHasValue<ProjectFormData>(fieldKey);
+  const hasValue = useFieldHasValue<IProjectFormData>(fieldKey);
 
   const containerProps = createContainerProps(params);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Skeleton } from '@heroui/react';
+import { cn, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -11,7 +11,6 @@ import ProposalDetails from '@/components/pages/project/proposal/detail/Proposal
 import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeightCard';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-import { cn } from '@/lib/utils';
 import { IProject, IProposalWithVotes } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
@@ -38,37 +37,25 @@ const ProposalPage = () => {
       {
         enabled: !!projectId,
         select: (data) => {
-          devLog('project', data);
+          devLog('getProjectById', data);
           return data;
         },
       },
     );
 
-  const {
-    data: proposal,
-    isLoading: isProposalLoading,
-    isFetched: isProposalFetched,
-  } = trpc.proposal.getProposalById.useQuery(
-    { id: Number(proposalId) },
-    {
-      enabled: !!proposalId,
-      select: (data) => {
-        devLog('proposal', data);
-        return data;
+  const { data: proposal, isFetched: isProposalFetched } =
+    trpc.proposal.getProposalById.useQuery(
+      { id: Number(proposalId) },
+      {
+        enabled: !!proposalId,
+        select: (data) => {
+          devLog('proposal', data);
+          return data;
+        },
       },
-    },
-  );
+    );
 
-  const {
-    data: proposals,
-    isLoading: isProposalsLoading,
-    isFetched: isProposalsFetched,
-  } = trpc.proposal.getProposalsByProjectId.useQuery(
-    { projectId: Number(projectId) },
-    {
-      enabled: !!projectId,
-    },
-  );
+  const proposals = project?.proposals || [];
 
   const { leadingProposalId } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({

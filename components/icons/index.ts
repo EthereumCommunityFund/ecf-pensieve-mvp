@@ -1,9 +1,11 @@
+export { default as ArrowUpRightIcon } from './ArrowUpRight';
 export { default as BuildingIcon } from './Building';
 export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';
 export { default as CaretDownIcon } from './CaretDown';
 export { default as CaretUpIcon } from './CaretUp';
 export { default as CheckIcon } from './Check';
+export { default as CheckCircleIcon } from './CheckCircle';
 export { default as CheckedGreenIcon } from './CheckedGreen';
 export { default as CodeIcon } from './Code';
 export { CopyIcon } from './Copy';
