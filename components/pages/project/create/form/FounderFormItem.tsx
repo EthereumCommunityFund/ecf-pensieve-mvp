@@ -11,7 +11,7 @@ import {
 
 import { Button, Input } from '@/components/base';
 
-import { IProjectFormData } from './types';
+import { IProjectFormData } from '../types';
 
 interface FounderFormItemProps {
   index: number;

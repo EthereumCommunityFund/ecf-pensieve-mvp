@@ -1,65 +1,24 @@
 'use client';
 
-import { Avatar } from '@heroui/react';
-import { DateValue, parseDate } from '@internationalized/date';
-import { Image as ImageIcon } from '@phosphor-icons/react';
-import dayjs from 'dayjs';
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
-import {
-  DatePicker,
-  Input,
-  Select,
-  SelectItem,
-  Textarea,
-} from '@/components/base';
-import { CalendarBlankIcon } from '@/components/icons';
 import { basicsFieldsConfig } from '@/components/pages/project/create/form/FormData';
+import FormItemRenderer from '@/components/pages/project/create/form/FormItemRenderer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import { FormFieldContainer } from '../form/FormFieldContainer';
-import InputPrefix from '../form/InputPrefix';
-import PhotoUpload from '../form/PhotoUpload';
 import { IStepFormProps } from '../types';
 
 const BasicsStepForm: React.FC<
   Omit<IStepFormProps, 'register' | 'hasFieldValue'>
 > = ({
   control,
-  errors,
-  setValue,
-  trigger,
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
 }) => {
-  const categoriesConfig = basicsFieldsConfig.categories;
-  const categoryOptions = categoriesConfig?.options || [];
-  const tagsOptions = basicsFieldsConfig.tags.options || [];
-
-  const dateToDateValue = (date: Date | null | undefined): DateValue | null => {
-    if (!date) return null;
-    try {
-      const dateString = dayjs(date).format('YYYY-MM-DD');
-      return parseDate(dateString);
-    } catch (e) {
-      console.error('Error parsing date for DatePicker:', date, e);
-      return null;
-    }
-  };
-
-  const dateValueToDate = (dateValue: DateValue | null): Date | null => {
-    if (!dateValue) return null;
-    try {
-      return dayjs(dateValue.toString()).toDate();
-    } catch (e) {
-      console.error('Error converting DateValue to Date:', dateValue, e);
-      return null;
-    }
-  };
-
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
       {/* name */}
@@ -73,15 +32,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.name.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Input
-                {...field}
-                placeholder={basicsFieldsConfig.name.placeholder}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-              />
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.name}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -97,15 +54,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.tagline.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Input
-                {...field}
-                placeholder={basicsFieldsConfig.tagline.placeholder}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-              />
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.tagline}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -121,29 +76,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.categories.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Select
-                variant="bordered"
-                placeholder={basicsFieldsConfig.categories.placeholder}
-                selectionMode="multiple"
-                selectedKeys={field.value || []}
-                onSelectionChange={(keys) => field.onChange(Array.from(keys))}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-                aria-label={basicsFieldsConfig.categories.label}
-              >
-                {categoryOptions.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    textValue={option.label}
-                    aria-label={option.label}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.categories}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -159,29 +98,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.tags.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Select
-                variant="bordered"
-                placeholder={basicsFieldsConfig.tags.placeholder}
-                selectionMode="multiple"
-                selectedKeys={field.value || []}
-                onSelectionChange={(keys) => field.onChange(Array.from(keys))}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-                aria-label={basicsFieldsConfig.categories.label}
-              >
-                {tagsOptions.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    textValue={option.label}
-                    aria-label={option.label}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.tags}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -197,16 +120,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.mainDescription.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Textarea
-                {...field}
-                placeholder={basicsFieldsConfig.mainDescription.placeholder}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-                minRows={basicsFieldsConfig.mainDescription.minRows}
-              />
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.mainDescription}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -219,34 +139,18 @@ const BasicsStepForm: React.FC<
           hasFieldReference,
         })}
       >
-        <div className="flex items-center gap-4">
-          <Controller
-            name={basicsFieldsConfig.logoUrl.key}
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <div>
-                <PhotoUpload
-                  initialUrl={field.value ?? undefined}
-                  onUploadSuccess={field.onChange}
-                  className="size-[140px] rounded-full bg-transparent"
-                >
-                  <Avatar
-                    size="lg"
-                    icon={<ImageIcon className="size-[64px] text-gray-400" />}
-                    src={field.value ?? undefined}
-                    alt={basicsFieldsConfig.logoUrl.label}
-                    className="size-[140px] cursor-pointer border border-dashed border-gray-300 bg-black/5 hover:bg-gray-200"
-                  />
-                </PhotoUpload>
-                {errors.logoUrl && (
-                  <p className="text-danger text-[12px]">
-                    {errors.logoUrl.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
-        </div>
+        <Controller
+          name={basicsFieldsConfig.logoUrl.key}
+          control={control}
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.logoUrl}
+              fieldApplicability={fieldApplicability}
+            />
+          )}
+        />
       </FormFieldContainer>
 
       {/* websiteUrl */}
@@ -260,25 +164,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.websiteUrl.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Input
-                {...field}
-                startContent={
-                  basicsFieldsConfig.websiteUrl.startContentText && (
-                    <InputPrefix
-                      prefix={basicsFieldsConfig.websiteUrl.startContentText}
-                    />
-                  )
-                }
-                classNames={{
-                  inputWrapper: 'pl-0 pr-[10px]',
-                }}
-                placeholder={basicsFieldsConfig.websiteUrl.placeholder}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-              />
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.websiteUrl}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -287,8 +179,9 @@ const BasicsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.appUrl,
-          isApplicable: fieldApplicability.appUrl,
-          onChangeApplicability: (val) => onChangeApplicability('appUrl', val),
+          isApplicable: fieldApplicability[basicsFieldsConfig.appUrl.key],
+          onChangeApplicability: (val: boolean) =>
+            onChangeApplicability(basicsFieldsConfig.appUrl.key, val),
           onAddReference: onAddReference,
           hasFieldReference,
         })}
@@ -296,28 +189,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.appUrl.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Input
-                {...field}
-                value={field.value || ''}
-                onChange={(e) => field.onChange(e.target.value)}
-                isDisabled={!fieldApplicability.appUrl}
-                classNames={{
-                  inputWrapper: 'pl-0 pr-[10px]',
-                }}
-                startContent={
-                  basicsFieldsConfig.appUrl.startContentText && (
-                    <InputPrefix
-                      prefix={basicsFieldsConfig.appUrl.startContentText}
-                    />
-                  )
-                }
-                placeholder={basicsFieldsConfig.appUrl.placeholder}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-              />
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.appUrl}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -333,25 +211,13 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.whitePaper.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <div>
-              <Input
-                {...field}
-                startContent={
-                  basicsFieldsConfig.whitePaper.startContentText && (
-                    <InputPrefix
-                      prefix={basicsFieldsConfig.whitePaper.startContentText}
-                    />
-                  )
-                }
-                classNames={{
-                  inputWrapper: 'pl-0 pr-[10px]',
-                }}
-                placeholder={basicsFieldsConfig.whitePaper.placeholder}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-              />
-            </div>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.whitePaper}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -367,24 +233,14 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.dateFounded.key}
           control={control}
-          render={({ field, fieldState: { error } }) => {
-            return (
-              <DatePicker
-                showMonthAndYearPickers={true}
-                value={dateToDateValue(field.value)}
-                onChange={(value: DateValue | null) => {
-                  field.onChange(dateValueToDate(value));
-                }}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-                isRequired
-                className="w-full"
-                aria-label={basicsFieldsConfig.dateFounded.label}
-                radius="sm"
-                selectorIcon={<CalendarBlankIcon size={20} />}
-              />
-            );
-          }}
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.dateFounded}
+              fieldApplicability={fieldApplicability}
+            />
+          )}
         />
       </FormFieldContainer>
 
@@ -392,9 +248,9 @@ const BasicsStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: basicsFieldsConfig.dateLaunch,
-          isApplicable: fieldApplicability.dateLaunch,
-          onChangeApplicability: (val) =>
-            onChangeApplicability('dateLaunch', val),
+          isApplicable: fieldApplicability[basicsFieldsConfig.dateLaunch.key],
+          onChangeApplicability: (val: boolean) =>
+            onChangeApplicability(basicsFieldsConfig.dateLaunch.key, val),
           onAddReference: onAddReference,
           hasFieldReference,
         })}
@@ -402,24 +258,14 @@ const BasicsStepForm: React.FC<
         <Controller
           name={basicsFieldsConfig.dateLaunch.key}
           control={control}
-          render={({ field, fieldState: { error } }) => {
-            return (
-              <DatePicker
-                showMonthAndYearPickers={true}
-                value={dateToDateValue(field.value)}
-                onChange={(value: DateValue | null) => {
-                  field.onChange(dateValueToDate(value));
-                }}
-                isInvalid={!!error}
-                errorMessage={error?.message}
-                isDisabled={!fieldApplicability.dateLaunch}
-                className="w-full"
-                aria-label={basicsFieldsConfig.dateLaunch.label}
-                radius={'sm'}
-                selectorIcon={<CalendarBlankIcon size={20} />}
-              />
-            );
-          }}
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={basicsFieldsConfig.dateLaunch}
+              fieldApplicability={fieldApplicability}
+            />
+          )}
         />
       </FormFieldContainer>
     </div>

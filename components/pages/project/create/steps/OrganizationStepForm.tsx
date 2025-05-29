@@ -3,8 +3,9 @@
 import React from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 
-import { Button, Select, SelectItem } from '@/components/base';
+import { Button } from '@/components/base';
 import { organizationFieldsConfig } from '@/components/pages/project/create/form/FormData';
+import FormItemRenderer from '@/components/pages/project/create/form/FormItemRenderer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import { FormFieldContainer } from '../form/FormFieldContainer';
@@ -16,7 +17,14 @@ const OrganizationStepForm: React.FC<
     IStepFormProps,
     'register' | 'watch' | 'setValue' | 'trigger' | 'hasFieldValue'
   >
-> = ({ control, errors, onAddReference, hasFieldReference }) => {
+> = ({
+  control,
+  errors,
+  fieldApplicability,
+  onChangeApplicability,
+  onAddReference,
+  hasFieldReference,
+}) => {
   const { register } = useFormContext<IProjectFormData>();
 
   const foundersConfig = organizationFieldsConfig.founders;
@@ -26,11 +34,6 @@ const OrganizationStepForm: React.FC<
     control,
     name: foundersKey || 'founders',
   });
-
-  const orgStructureOptions =
-    organizationFieldsConfig.orgStructure?.options || [];
-  const publicGoodsOptions =
-    organizationFieldsConfig.publicGoods?.options || [];
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
@@ -45,29 +48,13 @@ const OrganizationStepForm: React.FC<
         <Controller
           name={organizationFieldsConfig.orgStructure.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Select
-              aria-label={organizationFieldsConfig.orgStructure.label}
-              placeholder={organizationFieldsConfig.orgStructure.placeholder}
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as IProjectFormData['orgStructure']);
-              }}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              className="w-full"
-            >
-              {orgStructureOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  textValue={option.label}
-                  aria-label={option.label}
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={organizationFieldsConfig.orgStructure}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -83,29 +70,13 @@ const OrganizationStepForm: React.FC<
         <Controller
           name={organizationFieldsConfig.publicGoods.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Select
-              aria-label={organizationFieldsConfig.publicGoods.label}
-              placeholder={organizationFieldsConfig.publicGoods.placeholder}
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as IProjectFormData['publicGoods']);
-              }}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              className="w-full"
-            >
-              {publicGoodsOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  textValue={option.label}
-                  aria-label={option.label}
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={organizationFieldsConfig.publicGoods}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -115,6 +86,10 @@ const OrganizationStepForm: React.FC<
         <FormFieldContainer
           {...useCreateContainerPropsWithValue({
             fieldConfig: organizationFieldsConfig.founders,
+            isApplicable:
+              fieldApplicability[organizationFieldsConfig.founders.key],
+            onChangeApplicability: (val: boolean) =>
+              onChangeApplicability(organizationFieldsConfig.founders.key, val),
             onAddReference: onAddReference,
             hasFieldReference,
           })}

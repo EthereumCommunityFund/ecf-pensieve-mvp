@@ -3,37 +3,32 @@
 import React from 'react';
 import { Controller } from 'react-hook-form';
 
-import { Input, Select, SelectItem } from '@/components/base';
 import { financialFieldsConfig } from '@/components/pages/project/create/form/FormData';
+import FormItemRenderer from '@/components/pages/project/create/form/FormItemRenderer';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
 import { FormFieldContainer } from '../form/FormFieldContainer';
-import { IProjectFormData, IStepFormProps } from '../types';
+import { IStepFormProps } from '../types';
 
 const FinancialStepForm: React.FC<
   Omit<IStepFormProps, 'register' | 'hasFieldValue'>
 > = ({
   control,
-  errors,
-  watch,
-  setValue,
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
 }) => {
-  const fundingStatusOptions =
-    financialFieldsConfig.fundingStatus?.options || [];
-
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
       {/* fundingStatus */}
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: financialFieldsConfig.fundingStatus,
-          isApplicable: fieldApplicability.fundingStatus,
-          onChangeApplicability: (val) =>
-            onChangeApplicability('fundingStatus', val),
+          isApplicable:
+            fieldApplicability[financialFieldsConfig.fundingStatus.key],
+          onChangeApplicability: (val: boolean) =>
+            onChangeApplicability(financialFieldsConfig.fundingStatus.key, val),
           onAddReference: onAddReference,
           hasFieldReference,
         })}
@@ -41,30 +36,13 @@ const FinancialStepForm: React.FC<
         <Controller
           name={financialFieldsConfig.fundingStatus.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Select
-              aria-label={financialFieldsConfig.fundingStatus.label}
-              placeholder={financialFieldsConfig.fundingStatus.placeholder}
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] ?? null;
-                field.onChange(value as IProjectFormData['fundingStatus']);
-              }}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              isDisabled={!fieldApplicability.fundingStatus}
-              className="w-full"
-            >
-              {fundingStatusOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  textValue={option.label}
-                  aria-label={option.label}
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={financialFieldsConfig.fundingStatus}
+              fieldApplicability={fieldApplicability}
+            />
           )}
         />
       </FormFieldContainer>
@@ -73,9 +51,6 @@ const FinancialStepForm: React.FC<
       <FormFieldContainer
         {...useCreateContainerPropsWithValue({
           fieldConfig: financialFieldsConfig.tokenContract,
-          isApplicable: fieldApplicability.tokenContract,
-          onChangeApplicability: (val) =>
-            onChangeApplicability('tokenContract', val),
           onAddReference: onAddReference,
           hasFieldReference,
         })}
@@ -83,16 +58,12 @@ const FinancialStepForm: React.FC<
         <Controller
           name={financialFieldsConfig.tokenContract.key}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Input
-              {...field}
-              value={field.value || ''}
-              onChange={(e) => field.onChange(e.target.value)}
-              placeholder={financialFieldsConfig.tokenContract.placeholder}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              className="w-full"
-              aria-label={financialFieldsConfig.tokenContract.label}
+          render={({ field, fieldState }) => (
+            <FormItemRenderer
+              field={field}
+              fieldState={fieldState}
+              itemConfig={financialFieldsConfig.tokenContract}
+              fieldApplicability={fieldApplicability}
             />
           )}
         />
