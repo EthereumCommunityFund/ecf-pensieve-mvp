@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 
 import { Button } from '@/components/base';
 import { organizationFieldsConfig } from '@/components/pages/project/create/form/FormData';
-import FormItemRenderer from '@/components/pages/project/create/form/FormItemRenderer';
-import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
+import FormItemManager from '@/components/pages/project/create/form/FormItemManager';
+import { useFormPropsWithValue } from '@/components/pages/project/create/form/useFormPropsWithValue';
+import { IItemConfig } from '@/types/item';
 
-import { FormFieldContainer } from '../form/FormFieldContainer';
+import { FormItemUIContainer } from '../form/FormItemUIContainer';
 import FounderFormItem from '../form/FounderFormItem';
 import { IProjectFormData, IStepFormProps } from '../types';
 
@@ -27,69 +28,39 @@ const OrganizationStepForm: React.FC<
 }) => {
   const { register } = useFormContext<IProjectFormData>();
 
+  const standardFieldConfigs = [
+    organizationFieldsConfig.orgStructure,
+    organizationFieldsConfig.publicGoods,
+  ];
+
   const foundersConfig = organizationFieldsConfig.founders;
-  const foundersKey = foundersConfig?.key;
+  const foundersKey = foundersConfig?.key || 'founders';
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: foundersKey || 'founders',
+    name: foundersKey as 'founders',
   });
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
-      {/* orgStructure */}
-      <FormFieldContainer
-        {...useCreateContainerPropsWithValue({
-          fieldConfig: organizationFieldsConfig.orgStructure,
-          onAddReference: onAddReference,
-          hasFieldReference,
-        })}
-      >
-        <Controller
-          name={organizationFieldsConfig.orgStructure.key}
+      {standardFieldConfigs.map((itemConfig) => (
+        <FormItemManager
+          key={itemConfig.key}
+          itemConfig={itemConfig}
           control={control}
-          render={({ field, fieldState }) => (
-            <FormItemRenderer
-              field={field}
-              fieldState={fieldState}
-              itemConfig={organizationFieldsConfig.orgStructure}
-              fieldApplicability={fieldApplicability}
-            />
-          )}
+          fieldApplicability={fieldApplicability}
+          onChangeApplicability={onChangeApplicability}
+          onAddReference={onAddReference}
+          hasFieldReference={hasFieldReference}
         />
-      </FormFieldContainer>
+      ))}
 
-      {/* publicGoods */}
-      <FormFieldContainer
-        {...useCreateContainerPropsWithValue({
-          fieldConfig: organizationFieldsConfig.publicGoods,
-          onAddReference: onAddReference,
-          hasFieldReference,
-        })}
-      >
-        <Controller
-          name={organizationFieldsConfig.publicGoods.key}
-          control={control}
-          render={({ field, fieldState }) => (
-            <FormItemRenderer
-              field={field}
-              fieldState={fieldState}
-              itemConfig={organizationFieldsConfig.publicGoods}
-              fieldApplicability={fieldApplicability}
-            />
-          )}
-        />
-      </FormFieldContainer>
-
-      {/* founders */}
       <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[20px]">
-        <FormFieldContainer
-          {...useCreateContainerPropsWithValue({
-            fieldConfig: organizationFieldsConfig.founders,
-            isApplicable:
-              fieldApplicability[organizationFieldsConfig.founders.key],
-            onChangeApplicability: (val: boolean) =>
-              onChangeApplicability(organizationFieldsConfig.founders.key, val),
+        <FormItemUIContainer
+          {...useFormPropsWithValue({
+            fieldConfig: foundersConfig as IItemConfig<keyof IProjectFormData>,
+            fieldApplicabilityMap: fieldApplicability,
+            rawOnChangeApplicability: onChangeApplicability,
             onAddReference: onAddReference,
             hasFieldReference,
           })}
@@ -119,7 +90,7 @@ const OrganizationStepForm: React.FC<
               Add Entry
             </Button>
           </div>
-        </FormFieldContainer>
+        </FormItemUIContainer>
       </div>
     </div>
   );

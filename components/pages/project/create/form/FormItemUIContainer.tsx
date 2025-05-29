@@ -6,7 +6,7 @@ import { InfoIcon, PaperClipIcon, PlusIcon } from '@/components/icons';
 
 import ApplicableSwitch from './ApplicableSwitch';
 
-export interface FormFieldContainerProps {
+export interface IFormItemUIContainerProps {
   label: string;
   description?: string;
   shortDescription?: string;
@@ -23,7 +23,7 @@ export interface FormFieldContainerProps {
   hasReference?: boolean;
 }
 
-export const FormFieldContainer: React.FC<FormFieldContainerProps> = ({
+export const FormItemUIContainer: React.FC<IFormItemUIContainerProps> = ({
   label,
   description,
   shortDescription,

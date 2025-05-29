@@ -1,6 +1,6 @@
 import { IItemConfig } from '@/types/item';
 
-import { FormFieldContainerProps } from '../form/FormFieldContainer';
+import { IFormItemUIContainerProps } from '../form/FormItemUIContainer';
 import { IProjectFormData } from '../types';
 
 export interface ICreateContainerPropsParams {
@@ -14,7 +14,7 @@ export interface ICreateContainerPropsParams {
 
 export const createContainerProps = (
   params: ICreateContainerPropsParams,
-): Omit<FormFieldContainerProps, 'children' | 'hasValue'> => {
+): Omit<IFormItemUIContainerProps, 'children' | 'hasValue'> => {
   const {
     fieldConfig,
     showApplicable,

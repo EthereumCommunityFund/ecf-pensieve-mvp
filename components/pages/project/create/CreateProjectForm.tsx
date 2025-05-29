@@ -410,7 +410,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       });
     }
   }, [
-    handleSubmit,
     currentStep,
     validateCurrentStep,
     updateStepStatuses,
