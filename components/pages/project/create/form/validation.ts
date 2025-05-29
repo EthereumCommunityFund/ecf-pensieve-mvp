@@ -2,7 +2,7 @@ import * as yup from 'yup';
 
 import { normalizeUrl } from '@/utils/url';
 
-import { IFounderInput, IProjectFormData } from './types';
+import { IFounderInput, IProjectFormData } from '../types';
 
 // TypeScript declaration merging for custom Yup methods
 declare module 'yup' {

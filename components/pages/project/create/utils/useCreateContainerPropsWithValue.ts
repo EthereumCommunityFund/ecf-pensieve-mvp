@@ -1,4 +1,4 @@
-import { FormFieldContainerProps } from '../FormFieldContainer';
+import { FormFieldContainerProps } from '../form/FormFieldContainer';
 import { IProjectFormData } from '../types';
 
 import {

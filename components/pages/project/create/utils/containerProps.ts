@@ -1,6 +1,6 @@
 import { IItemConfig } from '@/types/item';
 
-import { FormFieldContainerProps } from '../FormFieldContainer';
+import { FormFieldContainerProps } from '../form/FormFieldContainer';
 import { IProjectFormData } from '../types';
 
 export interface ICreateContainerPropsParams {
@@ -12,17 +12,17 @@ export interface ICreateContainerPropsParams {
   hasFieldReference?: (fieldKey: string) => boolean;
 }
 
-export const createContainerProps = ({
-  fieldConfig,
-  showApplicable,
-  isApplicable,
-  onChangeApplicability,
-  onAddReference,
-  hasFieldReference,
-}: ICreateContainerPropsParams): Omit<
-  FormFieldContainerProps,
-  'children' | 'hasValue'
-> => {
+export const createContainerProps = (
+  params: ICreateContainerPropsParams,
+): Omit<FormFieldContainerProps, 'children' | 'hasValue'> => {
+  const {
+    fieldConfig,
+    showApplicable,
+    isApplicable,
+    onChangeApplicability,
+    onAddReference,
+    hasFieldReference,
+  } = params;
   const fieldKey = fieldConfig.key as string;
   const hasReference = hasFieldReference ? hasFieldReference(fieldKey) : false;
 

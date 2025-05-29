@@ -15,12 +15,12 @@ import {
   Textarea,
 } from '@/components/base';
 import { CalendarBlankIcon } from '@/components/icons';
-import { basicsFieldsConfig } from '@/components/pages/project/create/FormData';
-import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { basicsFieldsConfig } from '@/components/pages/project/create/form/FormData';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
-import InputPrefix from '../InputPrefix';
-import PhotoUpload from '../PhotoUpload';
+import { FormFieldContainer } from '../form/FormFieldContainer';
+import InputPrefix from '../form/InputPrefix';
+import PhotoUpload from '../form/PhotoUpload';
 import { IStepFormProps } from '../types';
 
 const BasicsStepForm: React.FC<

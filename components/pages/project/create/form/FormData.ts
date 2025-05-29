@@ -9,8 +9,8 @@ import {
   ITechnicalsKey,
 } from '@/types/item';
 
-import { IItemCategoryEnumWithoutGovernance } from './StepNavigation';
-import { IProjectFormData, IProjectStepFieldsMap } from './types';
+import { IItemCategoryEnumWithoutGovernance } from '../StepNavigation';
+import { IProjectFormData, IProjectStepFieldsMap } from '../types';
 
 export const DefaultFieldApplicabilityMap = Object.fromEntries(
   Object.entries(AllItemConfig)

@@ -12,7 +12,7 @@ import {
   DefaultFieldApplicabilityMap,
   getCreateProjectStepFields,
   getDefaultProjectFormData,
-} from '@/components/pages/project/create/FormData';
+} from '@/components/pages/project/create/form/FormData';
 import {
   transformProjectData,
   transformProposalData,
@@ -27,17 +27,18 @@ import { devLog } from '@/utils/devLog';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
-import FormActions from './FormActions';
+import FormActions from './form/FormActions';
+import { projectSchema } from './form/validation';
 import StepNavigation, {
   IItemCategoryEnumWithoutGovernance,
   StepHeader,
 } from './StepNavigation';
-import StepWrapper from './StepWrapper';
 import BasicsStepForm from './steps/BasicsStepForm';
 import FinancialStepForm from './steps/FinancialStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
 import SubmittingStep from './steps/SubmittingStep';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
+import StepWrapper from './StepWrapper';
 import {
   IFormTypeEnum,
   IProjectFormData,
@@ -45,7 +46,6 @@ import {
   IStepStatus,
 } from './types';
 import { updateFormWithProjectData } from './utils/form';
-import { projectSchema } from './validation';
 
 dayjs.extend(utc);
 

@@ -17,7 +17,7 @@ import {
 import { devLog } from '@/utils/devLog';
 import { normalizeUrl } from '@/utils/url';
 
-import InputPrefix from './InputPrefix';
+import InputPrefix from './form/InputPrefix';
 import { IReferenceData } from './types';
 
 interface AddReferenceModalProps {

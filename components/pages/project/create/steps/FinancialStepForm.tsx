@@ -4,10 +4,10 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { Input, Select, SelectItem } from '@/components/base';
-import { financialFieldsConfig } from '@/components/pages/project/create/FormData';
-import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { financialFieldsConfig } from '@/components/pages/project/create/form/FormData';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
+import { FormFieldContainer } from '../form/FormFieldContainer';
 import { IProjectFormData, IStepFormProps } from '../types';
 
 const FinancialStepForm: React.FC<

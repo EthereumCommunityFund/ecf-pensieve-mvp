@@ -5,11 +5,11 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 import { Input, Select, SelectItem } from '@/components/base';
-import { technicalsFieldsConfig } from '@/components/pages/project/create/FormData';
-import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
+import { technicalsFieldsConfig } from '@/components/pages/project/create/form/FormData';
 import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
 
-import InputPrefix from '../InputPrefix';
+import { FormFieldContainer } from '../form/FormFieldContainer';
+import InputPrefix from '../form/InputPrefix';
 import { IProjectFormData, IStepFormProps } from '../types';
 
 const TechnicalsStepForm: React.FC<

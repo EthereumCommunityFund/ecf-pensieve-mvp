@@ -6,7 +6,7 @@ import React from 'react';
 import { Button } from '@/components/base';
 import { IItemCategoryEnum } from '@/types/item';
 
-import { IFormTypeEnum } from './types';
+import { IFormTypeEnum } from '../types';
 
 interface FormActionsProps {
   currentStep: IItemCategoryEnum;

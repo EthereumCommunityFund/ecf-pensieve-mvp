@@ -15,8 +15,8 @@ import {
 import { CalendarBlankIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
 
-import InputPrefix from '../InputPrefix';
-import PhotoUpload from '../PhotoUpload';
+import InputPrefix from './InputPrefix';
+import PhotoUpload from './PhotoUpload';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
