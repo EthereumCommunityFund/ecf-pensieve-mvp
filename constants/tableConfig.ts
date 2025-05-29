@@ -135,7 +135,16 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'dateLaunch',
         ],
         itemsNotEssential: ['adoption_plan', 'launch_plan', 'roadmap'],
-        groups: [],
+        // just test
+        groups: [
+          {
+            key: IItemGroupEnum.ProjectLinks,
+            title: 'Project Links',
+            description: 'External links and resources',
+            items: ['websiteUrl', 'appUrl'],
+          },
+        ],
+        // groups: [],
       },
     ],
   },
@@ -149,12 +158,13 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         title: 'Development',
         description: '',
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
+        itemsNotEssential: ['audit_status'],
         groups: [
           {
             key: IItemGroupEnum.CodeAudits,
             title: 'Code Audits',
             description: '',
-            items: ['auditStatus', 'reports'],
+            items: ['audit_status'],
           },
         ],
       },

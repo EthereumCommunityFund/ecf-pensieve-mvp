@@ -7,7 +7,7 @@ import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { formatDate } from '@/utils/formatters';
 
-import { IKeyItemDataForTable } from './ProjectDetailTableColumn';
+import { IKeyItemDataForTable } from './ProjectDetailTableColumns';
 
 export interface IPrepareProjectTableDataParams {
   project?: IProject;
@@ -40,14 +40,28 @@ export const prepareProjectTableData = ({
 
   ProjectTableFieldCategory.forEach((categoryConfig) => {
     categoryConfig.subCategories.forEach((subCategoryConfig) => {
-      // TODO groups 待处理
-      const { items, itemsNotEssential = [] } = subCategoryConfig;
+      const { items, itemsNotEssential = [], groups = [] } = subCategoryConfig;
+
+      // Process items in correct order: items > itemsNotEssential > groups(extra items)
+
+      // Create a map to find which group each item belongs to
+      const itemToGroupMap = new Map<string, { key: string; title: string }>();
+      groups.forEach((group) => {
+        group.items.forEach((itemKey) => {
+          itemToGroupMap.set(itemKey, { key: group.key, title: group.title });
+        });
+      });
+
+      // Process items in order: items > itemsNotEssential
       const itemsToShow = [...items, ...itemsNotEssential];
       itemsToShow.forEach((itemKey) => {
         const itemConfig = AllItemConfig[itemKey as IPocItemKey];
 
         // Use data from displayProposalDataListOfProject if available, otherwise create default entry
         const existingData = displayItemMap[itemKey as IPocItemKey];
+
+        // Check if this item belongs to a group
+        const groupInfo = itemToGroupMap.get(itemKey);
 
         const tableRowItem: IKeyItemDataForTable = existingData || {
           key: itemKey,
@@ -59,6 +73,11 @@ export const prepareProjectTableData = ({
             name: 'Creator',
             date: formatDate(project?.createdAt || ''),
           },
+          // Add group information if item belongs to a group
+          ...(groupInfo && {
+            group: groupInfo.key,
+            groupTitle: groupInfo.title,
+          }),
         };
 
         result[subCategoryConfig.key].push(tableRowItem);

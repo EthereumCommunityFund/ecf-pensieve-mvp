@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
-import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
+import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { isInputValueEmpty } from '@/components/pages/project/proposal/detail/table/InputContentRenderer';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';

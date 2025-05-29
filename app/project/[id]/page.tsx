@@ -105,7 +105,7 @@ const ProjectPage = () => {
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedItemKey(null);
-    setContentType('viewItemProposal');
+    setModalContentType('viewItemProposal');
   }, []);
 
   return (

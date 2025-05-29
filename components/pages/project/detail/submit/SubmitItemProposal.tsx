@@ -106,6 +106,7 @@ export interface ISubmitItemProposalProps {
   itemKey: IPocItemKey;
   displayProposalDataOfKey?: IProjectTableRowData;
   setModalContentType: (contentType: IModalContentType) => void;
+  onClose: () => void;
 }
 
 interface IFormData extends IProjectFormData {
@@ -116,6 +117,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   itemKey,
   displayProposalDataOfKey,
   setModalContentType,
+  onClose,
 }) => {
   const { id: projectId } = useParams();
   const { refetchProposalsByKey } = useProjectDetailContext();
@@ -366,11 +368,11 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           data={dataForPreviewOrSubmit}
           itemConfig={itemConfig as IItemConfig<any>}
           onClose={() => {
-            setModalContentType(null);
+            onClose();
           }}
           onViewSubmission={() => {
             devLog('View submission clicked - closing modal');
-            setModalContentType(null);
+            onClose();
           }}
         />
       )}

@@ -22,12 +22,11 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   itemKey,
   itemWeight = 22,
   currentWeight = 0,
-  userWeight = 0,
   contentType = 'viewItemProposal',
   setModalContentType,
 }) => {
   const { profile } = useAuth();
-  const { projectId, setCurrentItemKey, displayProposalDataOfKey } =
+  const { setCurrentItemKey, displayProposalDataOfKey } =
     useProjectDetailContext();
 
   useEffect(() => {
@@ -50,8 +49,6 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
 
   const itemName =
     AllItemConfig[itemKey]?.label || itemKey?.replace('_', ' ').toUpperCase();
-
-  const showSubmit = contentType === 'submitPropose';
 
   // Modal content component
   const ModalContentComponent = () => (
@@ -100,6 +97,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
             itemKey={itemKey}
             displayProposalDataOfKey={displayProposalDataOfKey}
             setModalContentType={setModalContentType}
+            onClose={handleClose}
           />
         </div>
 

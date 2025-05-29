@@ -74,6 +74,11 @@ export enum IItemSubCategoryEnum {
 
 export enum IItemGroupEnum {
   CodeAudits = 'Code Audits',
+  ProjectLinks = 'Project Links',
+  ProjectDates = 'Project Dates',
+  TeamDetails = 'Team Details',
+  FundingDetails = 'Funding Details',
+  TokenDetails = 'Token Details',
 }
 
 export interface IItemConfig<K extends IItemKey> {

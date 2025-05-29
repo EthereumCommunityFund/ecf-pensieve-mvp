@@ -37,6 +37,16 @@ export const prepareProposalTableData = (
 
   ProposalTableFieldCategory.forEach((categoryConfig) => {
     categoryConfig.subCategories.forEach((subCategoryConfig) => {
+      const { groups = [] } = subCategoryConfig;
+
+      // Create a map to find which group each item belongs to
+      const itemToGroupMap = new Map<string, { key: string; title: string }>();
+      groups.forEach((group) => {
+        group.items.forEach((itemKey) => {
+          itemToGroupMap.set(itemKey, { key: group.key, title: group.title });
+        });
+      });
+
       subCategoryConfig.items.forEach((itemKey) => {
         const proposalItem = proposalItemMap[itemKey];
 
@@ -45,6 +55,9 @@ export const prepareProposalTableData = (
         const referenceObj = refsArray?.find((ref) => ref.key === itemKey);
         const referenceValue = referenceObj ? referenceObj.value : '';
 
+        // Check if this item belongs to a group
+        const groupInfo = itemToGroupMap.get(itemKey);
+
         const tableRowItem: ITableProposalItem = {
           key: itemKey,
           property:
@@ -52,6 +65,11 @@ export const prepareProposalTableData = (
           input: value,
           reference: referenceValue,
           support: proposalItem ? 1 : 0,
+          // Add group information if item belongs to a group
+          ...(groupInfo && {
+            group: groupInfo.key,
+            groupTitle: groupInfo.title,
+          }),
         };
         result[subCategoryConfig.key].push(tableRowItem);
       });

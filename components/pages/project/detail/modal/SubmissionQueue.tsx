@@ -28,9 +28,9 @@ interface ISubmissionQueueProps {
 }
 
 const SubmissionQueue: FC<ISubmissionQueueProps> = ({
-  itemName = 'ItemName',
-  itemWeight = 22,
-  itemKey,
+  itemName = 'ItemName', // Used for display purposes
+  itemWeight = 22, // Used for weight calculations
+  itemKey, // Used to filter data
 }) => {
   const { profile } = useAuth();
 
@@ -44,7 +44,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     displayProposalDataListOfProject,
     project,
     getItemTopWeight,
-    inActionKeyMap,
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,
@@ -69,7 +68,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           creator,
           key,
           value = '',
-          reason = '',
           projectId,
           createdAt,
           id,
@@ -131,20 +129,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }));
   }, []);
 
-  const handleReferenceClick = useCallback((rowId: string) => {
-    console.log('Reference clicked for row:', rowId);
-    // TODO: Implement reference modal or action
-  }, []);
-
   const handleCollapseAll = useCallback(() => {
     setIsCollapsed(!isCollapsed);
     console.log('Collapse all clicked:', !isCollapsed);
   }, [isCollapsed]);
-
-  const handleExpandClick = useCallback((rowId: string) => {
-    console.log('Expand clicked for row:', rowId);
-    // TODO: Implement expand/collapse functionality
-  }, []);
 
   const columns = useSubmissionQueueColumns();
 

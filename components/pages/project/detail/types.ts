@@ -1,5 +1,5 @@
 import { IModalContentType } from '@/app/project/[id]/page';
-import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
+import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { IVoteResultOfProposal } from '@/utils/proposal';

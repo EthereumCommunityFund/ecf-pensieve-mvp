@@ -27,6 +27,9 @@ export interface IKeyItemDataForTable {
   projectId: number;
   proposalId: number;
   itemTopWeight: number;
+  // Group information for visual grouping
+  group?: string;
+  groupTitle?: string;
 }
 
 interface IUseProjectTableColumnsProps {
@@ -69,8 +72,8 @@ export const useProjectTableColumns = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const item = info.row.original;
-        const { expandedRows, toggleRowExpanded, project, onOpenModal } = info
-          .table.options.meta as ITableMetaOfProjectDetail;
+        const { expandedRows, toggleRowExpanded } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
 
         const rowIsExpandable = isRowExpandable(item.key);
         const isRowExpanded = expandedRows[item.key];
@@ -136,16 +139,16 @@ export const useProjectTableColumns = ({
       cell: (info) => {
         const item = info.row.original;
         const itemConfig = AllItemConfig[item.key as IPocItemKey];
-        const { expandedRows, toggleRowExpanded, project, onOpenModal } = info
-          .table.options.meta as ITableMetaOfProjectDetail;
+        const { onOpenModal } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
 
         return (
           <ActionsCol.Cell
             item={item}
             itemConfig={itemConfig!}
-            onView={(contentType) => {
+            onView={(contentType?: 'viewItemProposal' | 'submitPropose') => {
               // TODO 查看逻辑, 类型优化
-              if (onOpenModal) {
+              if (onOpenModal && contentType) {
                 onOpenModal(item.key as IPocItemKey, contentType);
               } else {
                 console.log('Menu for item:', item.key);

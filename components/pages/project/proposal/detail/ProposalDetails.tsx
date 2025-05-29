@@ -29,6 +29,9 @@ export interface ITableProposalItem {
   reference: string;
   support: number;
   fieldType?: string;
+  // Group information for visual grouping
+  group?: string;
+  groupTitle?: string;
 }
 
 export interface ProposalDetailsProps {

@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 
-import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumn';
+import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import {
@@ -369,7 +369,7 @@ export const ProjectDetailProvider = ({
     if (!currentItemKey) return undefined;
     if (!proposalsByProjectIdAndKey) return undefined;
 
-    const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
+    const { leadingProposal } = proposalsByProjectIdAndKey;
     // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
     if (leadingProposal && leadingProposal.itemProposal) {
       const { key, value, ref, creator, createdAt, projectId, id } =

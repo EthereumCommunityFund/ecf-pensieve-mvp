@@ -7,7 +7,7 @@ import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
-import { IKeyItemDataForTable } from '../table/ProjectDetailTableColumn';
+import { IKeyItemDataForTable } from '../table/ProjectDetailTableColumns';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -41,14 +41,11 @@ const SupportColumnItem: FC<IProps> = ({
   itemPointsNeeded,
   isReachQuorum,
   votedMemberCount,
-  isUserVoted,
   isLoading,
   isProposalCreator,
   onCreateItemProposalVote,
-  onCancelVote,
   onSwitchItemProposalVote,
   proposalId,
-  userVotedItemProposal,
   isUserVotedInProposalOrItemProposals,
   isUserVotedCurrentItemProposal,
 }) => {

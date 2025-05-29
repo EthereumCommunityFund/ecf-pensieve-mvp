@@ -400,4 +400,17 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     placeholder: 'Type in a roadmap',
     showReference: true,
   },
+  audit_status: {
+    key: 'audit_status',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.audit_status.isEssential,
+    label: 'Audit Status',
+    description: 'Select the current status of their audit',
+    shortDescription: 'The most recent audit status of the project.',
+    weight: ALL_POC_ITEM_MAP.audit_status.weight,
+    formDisplayType: 'textarea',
+    placeholder: 'Type status',
+    showReference: true,
+  },
 };
