@@ -72,7 +72,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   isProposalsLoading,
   onOpenModal,
 }) => {
-  const { project, displayProposalDataListOfProject } =
+  const { project, displayProposalDataListOfProject, showReferenceModal } =
     useProjectDetailContext();
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -304,8 +304,9 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       toggleRowExpanded,
       project,
       onOpenModal,
+      showReferenceModal,
     }),
-    [expandedRows, toggleRowExpanded, project, onOpenModal],
+    [expandedRows, toggleRowExpanded, project, onOpenModal, showReferenceModal],
   );
 
   // 可变数据优先用coreTableMeta来传递，避免columns重新创建与重新渲染table

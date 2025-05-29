@@ -8,21 +8,13 @@ import { CaretDownIcon, QuestionIcon, UsersIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
-import { IProjectTableRowData } from '../types';
+import { IProjectTableRowData, ITableMetaOfDisplayed } from '../types';
 
 interface UseDisplayedColumnsProps {
-  onReferenceClick?: (rowId: string) => void;
-  onExpandClick?: (rowId: string) => void;
-  expandedRows?: Record<string, boolean>;
-  toggleRowExpanded?: (key: string) => void;
+  isPageExpanded?: boolean;
 }
 
-export const useDisplayedColumns = ({
-  onReferenceClick,
-  onExpandClick,
-  expandedRows = {},
-  toggleRowExpanded,
-}: UseDisplayedColumnsProps = {}) => {
+export const useDisplayedColumns = (props: UseDisplayedColumnsProps) => {
   const columnHelper = useMemo(
     () => createColumnHelper<IProjectTableRowData>(),
     [],
@@ -36,6 +28,9 @@ export const useDisplayedColumns = ({
       size: 480,
       cell: (info) => {
         const item = info.row.original;
+
+        const { toggleRowExpanded, expandedRows } = info.table.options
+          .meta as ITableMetaOfDisplayed;
         const isRowExpanded = expandedRows[item.key];
 
         return (
@@ -60,13 +55,17 @@ export const useDisplayedColumns = ({
         const item = info.row.original;
 
         const referenceValue = info.getValue();
+        const { showReferenceModal } = info.table.options
+          .meta as ITableMetaOfDisplayed;
 
         return (
           <ReferenceCol.Cell
             hasReference={!!referenceValue}
             onShowReference={() => {
-              // TODO: 实现引用显示逻辑
-              console.log('Show reference for:', item.key, referenceValue);
+              showReferenceModal?.(
+                referenceValue?.value || '',
+                item.key as IPocItemKey,
+              );
             }}
           />
         );
@@ -135,5 +134,5 @@ export const useDisplayedColumns = ({
     });
 
     return [inputColumn, referenceColumn, submitterColumn, supportColumn];
-  }, [columnHelper, expandedRows, toggleRowExpanded]);
+  }, [columnHelper]);
 };

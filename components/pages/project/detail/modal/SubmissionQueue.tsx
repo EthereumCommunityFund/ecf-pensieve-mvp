@@ -19,7 +19,7 @@ import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
-import { useDisplayedColumns } from './SubmissionQueueColumns';
+import { useSubmissionQueueColumns } from './SubmissionQueueColumns';
 
 interface ISubmissionQueueProps {
   itemName?: string;
@@ -51,6 +51,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     proposalsByProjectIdAndKey,
     voteResultOfLeadingProposal,
     displayProposalDataOfKey,
+    showReferenceModal,
   } = useProjectDetailContext();
 
   const tableDataOfDisplayed: IProjectTableRowData[] = useMemo(() => {
@@ -145,12 +146,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     // TODO: Implement expand/collapse functionality
   }, []);
 
-  const columns = useDisplayedColumns({
-    onReferenceClick: handleReferenceClick,
-    onExpandClick: handleExpandClick,
-    expandedRows,
-    toggleRowExpanded,
-  });
+  const columns = useSubmissionQueueColumns();
 
   const tableMeta = useMemo(() => {
     return {
@@ -162,6 +158,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       onCancelVote,
       profile,
       voteResultOfLeadingProposal,
+      showReferenceModal,
+      expandedRows,
+      toggleRowExpanded,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -172,6 +171,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     onCancelVote,
     profile,
     voteResultOfLeadingProposal,
+    showReferenceModal,
+    expandedRows,
+    toggleRowExpanded,
   ]);
 
   const displayedTable = useReactTable({

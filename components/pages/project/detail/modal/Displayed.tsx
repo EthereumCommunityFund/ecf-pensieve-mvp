@@ -52,7 +52,8 @@ const Displayed: FC<DisplayedProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { displayProposalDataListOfProject } = useProjectDetailContext();
+  const { displayProposalDataListOfProject, showReferenceModal } =
+    useProjectDetailContext();
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -113,30 +114,24 @@ const Displayed: FC<DisplayedProps> = ({
     }));
   }, []);
 
-  // Event handlers
-  const handleReferenceClick = useCallback((rowId: string) => {
-    console.log('Reference clicked for row:', rowId);
-    // TODO: Implement reference modal or action
-  }, []);
-
-  const handleExpandClick = useCallback((rowId: string) => {
-    console.log('Expand clicked for row:', rowId);
-    // TODO: Implement expand/collapse functionality
-  }, []);
+  const coreTableMeta = useMemo(
+    () => ({
+      expandedRows,
+      toggleRowExpanded,
+      showReferenceModal,
+    }),
+    [expandedRows, toggleRowExpanded, showReferenceModal],
+  );
 
   // Create columns
-  const columns = useDisplayedColumns({
-    onReferenceClick: handleReferenceClick,
-    onExpandClick: handleExpandClick,
-    expandedRows,
-    toggleRowExpanded,
-  });
+  const columns = useDisplayedColumns({});
 
   // Create table instance
   const table = useReactTable({
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
 
   return (

@@ -10,6 +10,7 @@ import { useProjectDetailContext } from '@/components/pages/project/context/proj
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
+import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
@@ -33,8 +34,16 @@ const ProjectPage = () => {
   const initialTab = searchParams.get('tab');
 
   // 使用 Context 获取项目数据
-  const { project, isProjectFetched, isProposalsLoading, isProposalsFetched } =
-    useProjectDetailContext();
+  const {
+    project,
+    isProjectFetched,
+    isProposalsLoading,
+    isProposalsFetched,
+    closeReferenceModal,
+    currentRefKey,
+    currentRefValue,
+    openReferenceModal,
+  } = useProjectDetailContext();
 
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
@@ -180,6 +189,13 @@ const ProjectPage = () => {
         }}
         itemKey={selectedItemKey as IPocItemKey}
         setModalContentType={setModalContentType}
+      />
+
+      <ReferenceModal
+        fieldKey={currentRefKey as IPocItemKey}
+        isOpen={openReferenceModal}
+        onClose={closeReferenceModal}
+        ref={currentRefValue || ''}
       />
     </div>
   );

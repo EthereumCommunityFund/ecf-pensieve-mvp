@@ -25,9 +25,19 @@ export interface ITableMetaOfProjectDetail {
     itemKey: IPocItemKey,
     contentType?: 'viewItemProposal' | 'submitPropose',
   ) => void;
+  showReferenceModal?: (ref: string, key: IPocItemKey) => void;
+}
+
+export interface ITableMetaOfDisplayed {
+  expandedRows: Record<string, boolean>;
+  toggleRowExpanded: (key: string) => void;
+  showReferenceModal?: (ref: string, key: IPocItemKey) => void;
 }
 
 export interface ITableMetaOfSubmissionQueue {
+  expandedRows: Record<string, boolean>;
+  toggleRowExpanded: (key: string) => void;
+  showReferenceModal?: (ref: string, key: IPocItemKey) => void;
   displayProposalDataListOfProject: IKeyItemDataForTable[];
   proposalsByProjectIdAndKey: IProposalsByProjectIdAndKey;
   onCreateItemProposalVote: (

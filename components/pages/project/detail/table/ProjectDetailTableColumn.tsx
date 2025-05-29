@@ -94,14 +94,16 @@ export const useProjectTableColumns = ({
       header: () => <ReferenceCol.Header />,
       size: 124,
       cell: (info) => {
-        const item = info.row.original;
+        const reference = info.getValue();
+        const key = info.row.original.key;
+        const { showReferenceModal } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
 
         return (
           <ReferenceCol.Cell
             hasReference={!!info.getValue()}
             onShowReference={() => {
-              // TODO: 实现引用显示逻辑
-              console.log('Show reference for:', item.key);
+              showReferenceModal?.(reference?.value || '', key as IPocItemKey);
             }}
           />
         );

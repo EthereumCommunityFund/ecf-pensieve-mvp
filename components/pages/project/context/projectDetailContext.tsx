@@ -66,6 +66,13 @@ interface ProjectDetailContextType {
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
 
   voteResultOfLeadingProposal?: IVoteResultOfProposal;
+
+  // utils
+  openReferenceModal: boolean;
+  showReferenceModal: (ref: string, key: IPocItemKey) => void;
+  closeReferenceModal: () => void;
+  currentRefValue: string | null;
+  currentRefKey: IPocItemKey | null;
 }
 
 // Create the context with default values
@@ -101,6 +108,12 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   onCancelVote: () => Promise.resolve(),
 
   voteResultOfLeadingProposal: undefined,
+
+  openReferenceModal: false,
+  showReferenceModal: () => {},
+  currentRefValue: null,
+  closeReferenceModal: () => {},
+  currentRefKey: null,
 });
 
 // Provider component
@@ -114,6 +127,9 @@ export const ProjectDetailProvider = ({
   const projectId = Number(id);
 
   const [currentItemKey, setCurrentItemKey] = useState<string | null>(null);
+  const [openReferenceModal, setOpenReferenceModal] = useState<boolean>(false);
+  const [currentRefValue, setCurrentRefValue] = useState<string | null>(null);
+  const [currentRefKey, setCurrentRefKey] = useState<IPocItemKey | null>(null);
 
   const {
     data: project,
@@ -412,6 +428,18 @@ export const ProjectDetailProvider = ({
     proposalsByProjectIdAndKey,
   ]);
 
+  const showReferenceModal = useCallback((ref: string, key: IPocItemKey) => {
+    setOpenReferenceModal(true);
+    setCurrentRefValue(ref);
+    setCurrentRefKey(key);
+  }, []);
+
+  const closeReferenceModal = useCallback(() => {
+    setOpenReferenceModal(false);
+    setCurrentRefValue(null);
+    setCurrentRefKey(null);
+  }, []);
+
   const value: ProjectDetailContextType = {
     project: project as IProject,
     proposals,
@@ -443,6 +471,13 @@ export const ProjectDetailProvider = ({
     onSwitchItemProposalVote,
     onCancelVote,
     voteResultOfLeadingProposal,
+
+    // utils
+    openReferenceModal,
+    showReferenceModal,
+    currentRefValue,
+    currentRefKey: currentRefKey,
+    closeReferenceModal,
   };
 
   return (

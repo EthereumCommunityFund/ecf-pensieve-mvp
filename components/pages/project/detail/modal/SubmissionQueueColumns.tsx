@@ -13,20 +13,7 @@ import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import SupportColumnItem from './SupportColumnItem';
 
-// Displayed Table Columns Hook
-interface UseDisplayedColumnsProps {
-  onReferenceClick?: (rowId: string) => void;
-  onExpandClick?: (rowId: string) => void;
-  expandedRows?: Record<string, boolean>;
-  toggleRowExpanded?: (key: string) => void;
-}
-
-export const useDisplayedColumns = ({
-  onReferenceClick,
-  onExpandClick,
-  expandedRows = {},
-  toggleRowExpanded,
-}: UseDisplayedColumnsProps = {}) => {
+export const useSubmissionQueueColumns = () => {
   const columnHelper = useMemo(
     () => createColumnHelper<IProjectTableRowData>(),
     [],
@@ -40,6 +27,8 @@ export const useDisplayedColumns = ({
       size: 480,
       cell: (info) => {
         const item = info.row.original;
+        const { toggleRowExpanded, expandedRows } = info.table.options
+          .meta as ITableMetaOfSubmissionQueue;
         const isRowExpanded = expandedRows[item.key];
 
         return (
@@ -63,13 +52,16 @@ export const useDisplayedColumns = ({
       cell: (info) => {
         const item = info.row.original;
         const referenceValue = info.getValue();
-
+        const { showReferenceModal } = info.table.options
+          .meta as ITableMetaOfSubmissionQueue;
         return (
           <ReferenceCol.Cell
             hasReference={!!referenceValue}
             onShowReference={() => {
-              onReferenceClick?.(item.key);
-              console.log('Show reference for:', item.key, referenceValue);
+              showReferenceModal?.(
+                referenceValue?.value || '',
+                item.key as IPocItemKey,
+              );
             }}
           />
         );
@@ -177,5 +169,5 @@ export const useDisplayedColumns = ({
     });
 
     return [inputColumn, referenceColumn, submitterColumn, supportColumn];
-  }, [columnHelper, onReferenceClick, expandedRows, toggleRowExpanded]);
+  }, [columnHelper]);
 };
