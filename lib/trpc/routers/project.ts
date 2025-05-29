@@ -12,7 +12,6 @@ import {
 import { projects, voteRecords } from '@/lib/db/schema';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { POC_ITEMS } from '@/lib/pocItems';
-import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
   addRewardNotification,
   createRewardNotification,
@@ -107,12 +106,6 @@ export const projectRouter = router({
             projectId: project.id,
             items: proposalItems,
             ...(input.refs && { refs: input.refs }),
-          });
-
-          logUserActivity.project.create({
-            userId: ctx.user.id,
-            targetId: project.id,
-            projectId: project.id,
           });
 
           await addRewardNotification(

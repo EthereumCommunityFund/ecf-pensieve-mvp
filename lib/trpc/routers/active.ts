@@ -82,6 +82,7 @@ export const activeRouter = router({
       const logs = await ctx.db.query.activeLogs.findMany({
         with: {
           project: true,
+          user: true,
         },
         where: whereCondition,
         orderBy: desc(activeLogs.createdAt),

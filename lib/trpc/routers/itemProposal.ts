@@ -60,14 +60,13 @@ export const itemProposalRouter = router({
           });
         }
 
-        logUserActivity.itemProposal.create({
-          userId: ctx.user.id,
-          targetId: itemProposal.id,
-          projectId: itemProposal.projectId,
-          items: [{ field: input.key }],
-        });
-
         if (isEssentialItem(input.key)) {
+          logUserActivity.itemProposal.update({
+            userId: ctx.user.id,
+            targetId: itemProposal.id,
+            projectId: itemProposal.projectId,
+            items: [{ field: input.key }],
+          });
           return itemProposal;
         }
 
@@ -119,7 +118,21 @@ export const itemProposalRouter = router({
               existingVoteRecord: voteRecord,
               proposalCreatorId: itemProposal.creator,
             }),
+
+            logUserActivity.itemProposal.create({
+              userId: ctx.user.id,
+              targetId: itemProposal.id,
+              projectId: itemProposal.projectId,
+              items: [{ field: input.key }],
+            }),
           ]);
+        } else {
+          logUserActivity.itemProposal.update({
+            userId: ctx.user.id,
+            targetId: itemProposal.id,
+            projectId: itemProposal.projectId,
+            items: [{ field: input.key }],
+          });
         }
 
         return itemProposal;

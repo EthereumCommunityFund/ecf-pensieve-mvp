@@ -45,7 +45,7 @@ export default function Contributions() {
     trpc.active.getUserActivities.useQuery(
       {
         userId: user?.userId ?? '',
-        limit: 50,
+        limit: 100,
       },
       {
         enabled: !!user?.userId,
