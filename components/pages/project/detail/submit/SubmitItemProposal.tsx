@@ -66,17 +66,6 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
   const [editReason, setEditReason] = useState('fake reason');
 
-  useEffect(() => {
-    if (displayProposalDataOfKey) {
-      devLog('displayProposalDataOfKey', displayProposalDataOfKey);
-      setValue(itemConfig.key, displayProposalDataOfKey.input);
-      const reference = getFieldReference(itemConfig.key);
-      if (reference) {
-        setReferences([reference]);
-      }
-    }
-  }, [displayProposalDataOfKey, itemConfig.key, setValue, getFieldReference]);
-
   const createItemProposalMutation =
     trpc.itemProposal.createItemProposal.useMutation();
 
@@ -173,6 +162,17 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       itemConfig.showApplicable,
     ],
   );
+
+  useEffect(() => {
+    if (displayProposalDataOfKey) {
+      devLog('displayProposalDataOfKey', displayProposalDataOfKey);
+      setValue(itemConfig.key, displayProposalDataOfKey.input);
+      const reference = getFieldReference(itemConfig.key);
+      if (reference) {
+        setReferences([reference]);
+      }
+    }
+  }, [displayProposalDataOfKey, itemConfig.key, setValue, getFieldReference]);
 
   return (
     <FormProvider {...methods}>
