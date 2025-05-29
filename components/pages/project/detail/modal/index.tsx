@@ -96,6 +96,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
           )}
         >
           <SubmitItemProposal
+            key={itemKey}
             itemKey={itemKey}
             displayProposalDataOfKey={displayProposalDataOfKey}
             setModalContentType={setModalContentType}
