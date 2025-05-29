@@ -25,6 +25,8 @@ import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils, { IVoteResultOfProposal } from '@/utils/proposal';
 
+import { IProjectTableRowData } from '../detail/types';
+
 // Define the context type
 interface ProjectDetailContextType {
   project?: IProject;
@@ -39,6 +41,7 @@ interface ProjectDetailContextType {
   isLeadingProposalsFetched: boolean;
   displayProposalDataListOfProject?: IKeyItemDataForTable[];
   getItemTopWeight: (key: IPocItemKey) => number;
+  displayProposalDataOfKey?: IProjectTableRowData;
 
   // Merged from ModalContextType
   currentItemKey: string | null;
@@ -79,6 +82,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   isLeadingProposalsFetched: false,
   displayProposalDataListOfProject: undefined,
   getItemTopWeight: () => 0,
+  displayProposalDataOfKey: undefined,
 
   // Merged defaults
   currentItemKey: null,
@@ -344,6 +348,70 @@ export const ProjectDetailProvider = ({
     return Array.from(DataMap.values());
   }, [proposalsByProject, project]);
 
+  // 当前 itemKey 的 leading proposal 数据
+  const displayProposalDataOfKey = useMemo(() => {
+    if (!currentItemKey) return undefined;
+    if (!proposalsByProjectIdAndKey) return undefined;
+
+    const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
+    // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
+    if (leadingProposal && leadingProposal.itemProposal) {
+      const { key, value, ref, creator, createdAt, projectId, id } =
+        leadingProposal.itemProposal;
+      const weight = leadingProposal.itemProposal.voteRecords.reduce(
+        (acc, vote) => acc + Number(vote.weight),
+        0,
+      );
+      const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
+      return {
+        key,
+        property: key,
+        input: value,
+        reference: ref ? { key, value: ref } : null,
+        submitter: creator,
+        createdAt: createdAt,
+        projectId: projectId,
+        proposalId: id,
+        itemTopWeight: getItemTopWeight(key as IPocItemKey),
+        support: {
+          count: weight,
+          voters: voterMemberCount,
+        },
+      };
+    }
+    // 2. 没有 item proposal 胜出，取published proposal 胜出的数据 -> displayProposalDataListOfProject 的数据
+    const proposalItem = (displayProposalDataListOfProject || []).find(
+      (item) => item.key === currentItemKey,
+    );
+
+    if (!proposalItem) {
+      return undefined; // 没有找到对应 itemKey 的数据 -> non essential item
+    }
+
+    const { votesOfKeyInProposalMap } = voteResultOfLeadingProposal || {};
+    const votesOfKey = votesOfKeyInProposalMap?.[currentItemKey as IPocItemKey];
+
+    const sumOfWeight =
+      votesOfKey?.reduce((acc, vote) => {
+        return acc + Number(vote.weight);
+      }, 0) || 0;
+    const voterMemberCount = votesOfKey?.length || 0;
+
+    return {
+      ...proposalItem,
+      support: {
+        count: sumOfWeight,
+        voters: voterMemberCount,
+      },
+    };
+  }, [
+    displayProposalDataListOfProject,
+    currentItemKey,
+    voteResultOfLeadingProposal,
+    getItemTopWeight,
+    proposalsByProjectIdAndKey,
+  ]);
+
   const value: ProjectDetailContextType = {
     project: project as IProject,
     proposals,
@@ -356,6 +424,7 @@ export const ProjectDetailProvider = ({
     isLeadingProposalsLoading,
     isLeadingProposalsFetched,
     displayProposalDataListOfProject,
+    displayProposalDataOfKey,
     getItemTopWeight,
 
     // Merged values
