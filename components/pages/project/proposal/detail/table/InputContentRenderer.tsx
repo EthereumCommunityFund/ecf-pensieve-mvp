@@ -16,18 +16,15 @@ interface IProps {
 }
 
 export const isInputValueEmpty = (value: any) => {
-  // 首先尝试解析JSON字符串，获取真实的数据类型
   let actualValue = value;
   if (typeof value === 'string' && value.trim()) {
     try {
       actualValue = JSON.parse(value);
     } catch {
-      // JSON.parse失败，使用原始值
       actualValue = value;
     }
   }
 
-  // 检查基础的空值情况
   if (
     !actualValue ||
     (typeof actualValue === 'string' && actualValue?.toLowerCase() === 'n/a')
@@ -35,7 +32,6 @@ export const isInputValueEmpty = (value: any) => {
     return true;
   }
 
-  // 检查数组类型且为空数组
   if (Array.isArray(actualValue) && actualValue.length === 0) {
     return true;
   }
@@ -43,30 +39,34 @@ export const isInputValueEmpty = (value: any) => {
   return false;
 };
 
-// 解析多值数据的公共方法
 export const parseMultipleValue = (value: any): string[] => {
-  // 如果已经是数组，直接返回
-  if (Array.isArray(value)) {
+  const parsedValue = parseValue(value);
+
+  if (Array.isArray(parsedValue)) {
+    return parsedValue;
+  }
+
+  if (typeof parsedValue === 'string' && parsedValue.trim()) {
+    return parsedValue.split(',').map((item: string) => item.trim());
+  }
+
+  return [parsedValue];
+};
+
+export const parseValue = (value: any) => {
+  if (typeof value === 'object' && value !== null) {
     return value;
   }
 
-  // 尝试解析JSON字符串
   if (typeof value === 'string' && value.trim()) {
     try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
+      return JSON.parse(value);
     } catch {
-      // JSON.parse失败，按逗号分隔处理
+      return value;
     }
-
-    // 按逗号分隔字符串处理
-    return value.split(',').map((item: string) => item.trim());
   }
 
-  // 其他情况返回原值的数组形式
-  return [value];
+  return value;
 };
 
 const InputContentRenderer: React.FC<IProps> = ({
@@ -113,16 +113,18 @@ const InputContentRenderer: React.FC<IProps> = ({
         );
       case 'date':
         return <>{dayjs(value).format('MMM, DD, YYYY')}</>;
-      case 'founderList':
+      case 'founderList': {
+        const parsedFounderList = parseValue(value);
         return (
           <>
-            {Array.isArray(value)
-              ? value
+            {Array.isArray(parsedFounderList)
+              ? parsedFounderList
                   .map((founder: any) => `${founder.name}-${founder.title}`)
                   .join(', ')
-              : value}
+              : parsedFounderList}
           </>
         );
+      }
       default:
         return <>{value}</>;
     }
@@ -145,13 +147,10 @@ const InputContentRenderer: React.FC<IProps> = ({
     );
   }
 
-  // 如果可展开且已展开，显示Close按钮
-  if (isExpandable && isRowExpanded) {
-    return <span>Close</span>;
-  }
-
-  if (isExpandable && !isRowExpanded) {
-    return (
+  if (isExpandable) {
+    return isRowExpanded ? (
+      <span>Close</span>
+    ) : (
       <div
         className="cursor-pointer overflow-hidden"
         style={{
@@ -166,7 +165,6 @@ const InputContentRenderer: React.FC<IProps> = ({
     );
   }
 
-  // 普通情况直接返回内容
   return <>{renderContent()}</>;
 };
 
