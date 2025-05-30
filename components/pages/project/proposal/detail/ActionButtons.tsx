@@ -59,7 +59,7 @@ const MetricButton: FC<IMetricButtonProps> = ({ onClick }) => {
     <Button
       color="secondary"
       size="sm"
-      className="gap-[5px] bg-black/5 px-[10px] py-[5px]"
+      className="gap-[5px] bg-black/5 px-[10px] py-[5px] text-black"
       onPress={onClick}
     >
       <svg

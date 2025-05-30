@@ -11,6 +11,8 @@ interface CategoryHeaderProps {
   category: IItemSubCategoryEnum;
   isExpanded: boolean;
   onToggle: () => void;
+  metricsVisible?: boolean;
+  onToggleMetrics?: () => void;
 }
 
 const CategoryHeader: FC<CategoryHeaderProps> = ({
@@ -19,6 +21,8 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
   category,
   isExpanded,
   onToggle,
+  metricsVisible = false,
+  onToggleMetrics,
 }) => {
   return (
     <div
@@ -39,7 +43,7 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
       </div>
       <div className="flex items-center justify-end gap-[10px]">
         <CollapseButton isExpanded={isExpanded} onChange={onToggle} />
-        <MetricButton onClick={() => {}} />
+        <MetricButton onClick={onToggleMetrics || (() => {})} />
         <FilterButton onClick={() => {}} />
       </div>
     </div>

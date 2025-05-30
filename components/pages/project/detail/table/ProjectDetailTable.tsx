@@ -45,10 +45,12 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     expanded,
     emptyItemsExpanded,
     groupExpanded,
+    metricsVisible,
     toggleRowExpanded,
     toggleCategory,
     toggleEmptyItems,
     toggleGroupExpanded,
+    toggleMetricsVisible,
   } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
@@ -66,7 +68,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   );
 
   // Column definitions
-  const columns = useProjectTableColumns({ isPageExpanded: false });
+  const columns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible,
+  });
 
   // Create table instances for each category
   const basicProfileTable = useReactTable({
@@ -137,6 +142,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       financesTable,
       tokenTable,
       governanceTable,
+      metricsVisible, // 添加 metricsVisible 依赖
     ],
   );
 
@@ -170,7 +176,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
               />
               {cat.subCategories.map((subCat) => (
                 <CategoryTableSection
-                  key={subCat.key}
+                  key={`${subCat.key}-${metricsVisible ? 'with-metrics' : 'no-metrics'}`}
                   subCategory={subCat}
                   table={tables[subCat.key]}
                   isLoading={isProposalsLoading}
@@ -186,6 +192,8 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   onToggleCategory={toggleCategory}
                   onToggleEmptyItems={toggleEmptyItems}
                   onToggleGroupExpanded={toggleGroupExpanded}
+                  metricsVisible={metricsVisible}
+                  onToggleMetrics={toggleMetricsVisible}
                 />
               ))}
             </div>

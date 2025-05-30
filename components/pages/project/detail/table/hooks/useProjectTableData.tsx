@@ -101,14 +101,17 @@ export const useProjectTableData = () => {
             // Check if this item belongs to a group
             const groupInfo = itemToGroupMap.get(itemKey);
 
-            // Add group information if item belongs to a group
-            const enhancedItem = groupInfo
-              ? {
-                  ...item,
-                  group: groupInfo.key,
-                  groupTitle: groupInfo.title,
-                }
-              : item;
+            // Add group information, accountability and legitimacy data if item belongs to a group
+            const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+            const enhancedItem = {
+              ...item,
+              ...(groupInfo && {
+                group: groupInfo.key,
+                groupTitle: groupInfo.title,
+              }),
+              accountability: itemConfig?.accountability || [],
+              legitimacy: itemConfig?.legitimacy || [],
+            };
 
             result[subCategoryConfig.key].push(enhancedItem);
           }
@@ -120,14 +123,17 @@ export const useProjectTableData = () => {
           const groupInfo = itemToGroupMap.get(itemKey);
 
           if (existingItem) {
-            // Add group information to existing item
-            const enhancedItem = groupInfo
-              ? {
-                  ...existingItem,
-                  group: groupInfo.key,
-                  groupTitle: groupInfo.title,
-                }
-              : existingItem;
+            // Add group information, accountability and legitimacy data to existing item
+            const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+            const enhancedItem = {
+              ...existingItem,
+              ...(groupInfo && {
+                group: groupInfo.key,
+                groupTitle: groupInfo.title,
+              }),
+              accountability: itemConfig?.accountability || [],
+              legitimacy: itemConfig?.legitimacy || [],
+            };
 
             // 如果有数据且不为空，添加到主表格
             if (!isInputEmpty(existingItem.input)) {
@@ -166,6 +172,8 @@ export const useProjectTableData = () => {
                 proposalId: 0,
                 itemTopWeight: 0,
                 isEmptyItem: true,
+                accountability: itemConfig?.accountability || [],
+                legitimacy: itemConfig?.legitimacy || [],
                 // Add group information if item belongs to a group
                 ...(groupInfo && {
                   group: groupInfo.key,

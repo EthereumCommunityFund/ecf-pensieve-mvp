@@ -454,3 +454,101 @@ export const ActionsCol = {
   Header: ActionsHeader,
   Cell: ActionsCell,
 };
+
+// =============================================================================
+// AccountabilityCol Components
+// =============================================================================
+
+export type AccountabilityColHeaderProps = BaseHeaderProps;
+
+export interface AccountabilityColCellProps extends BaseCellProps {
+  accountability?: string[];
+}
+
+const AccountabilityHeader = (_props: AccountabilityColHeaderProps) => {
+  return (
+    <TooltipTh
+      title="Accountability Metrics"
+      tooltipContext="The accountability metrics associated with this property"
+    />
+  );
+};
+
+const AccountabilityCell = ({ accountability }: AccountabilityColCellProps) => {
+  if (!accountability || accountability.length === 0) {
+    return (
+      <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+        empty
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex cursor-pointer flex-wrap items-center gap-[10px] py-[10px]">
+      {accountability.map((metric, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px]"
+        >
+          <span className="text-center text-[13px] font-[500] leading-[19px] text-[#333333]">
+            {metric}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const AccountabilityCol = {
+  Header: AccountabilityHeader,
+  Cell: AccountabilityCell,
+};
+
+// =============================================================================
+// LegitimacyCol Components
+// =============================================================================
+
+export type LegitimacyColHeaderProps = BaseHeaderProps;
+
+export interface LegitimacyColCellProps extends BaseCellProps {
+  legitimacy?: string[];
+}
+
+const LegitimacyHeader = (_props: LegitimacyColHeaderProps) => {
+  return (
+    <TooltipTh
+      title="Legitimacy Metrics"
+      tooltipContext="The legitimacy metrics associated with this property"
+    />
+  );
+};
+
+const LegitimacyCell = ({ legitimacy }: LegitimacyColCellProps) => {
+  if (!legitimacy || legitimacy.length === 0) {
+    return (
+      <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+        empty
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex cursor-pointer flex-wrap items-center gap-[10px] py-[10px]">
+      {legitimacy.map((metric, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px]"
+        >
+          <span className="text-center text-[13px] font-[500] leading-[19px] text-[#333333]">
+            {metric}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const LegitimacyCol = {
+  Header: LegitimacyHeader,
+  Cell: LegitimacyCell,
+};

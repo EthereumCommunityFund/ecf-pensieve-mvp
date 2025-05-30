@@ -28,6 +28,8 @@ interface CategoryTableSectionProps {
   onToggleCategory: (category: IItemSubCategoryEnum) => void;
   onToggleEmptyItems: (category: IItemSubCategoryEnum) => void;
   onToggleGroupExpanded: (groupKey: string) => void;
+  metricsVisible?: boolean;
+  onToggleMetrics?: () => void;
 }
 
 /**
@@ -48,6 +50,8 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
   onToggleCategory,
   onToggleEmptyItems,
   onToggleGroupExpanded,
+  metricsVisible,
+  onToggleMetrics,
 }) => {
   // 动画样式
   const getAnimationStyle = (isExpanded: boolean) => ({
@@ -69,6 +73,8 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
         category={subCategory.key}
         isExpanded={expanded[subCategory.key]}
         onToggle={() => onToggleCategory(subCategory.key)}
+        metricsVisible={metricsVisible}
+        onToggleMetrics={onToggleMetrics}
       />
       <div style={getAnimationStyle(expanded[subCategory.key])}>
         <CategoryTable

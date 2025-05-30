@@ -43,6 +43,9 @@ export const useTableStates = () => {
     {},
   );
 
+  // Metrics 列显示状态管理 (默认隐藏)
+  const [metricsVisible, setMetricsVisible] = useState<boolean>(false);
+
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
@@ -76,17 +79,24 @@ export const useTableStates = () => {
     }));
   }, []);
 
+  // 切换 Metrics 列显示状态
+  const toggleMetricsVisible = useCallback(() => {
+    setMetricsVisible((prev) => !prev);
+  }, []);
+
   return {
     // States
     expandedRows,
     expanded,
     emptyItemsExpanded,
     groupExpanded,
+    metricsVisible,
 
     // Actions
     toggleRowExpanded,
     toggleCategory,
     toggleEmptyItems,
     toggleGroupExpanded,
+    toggleMetricsVisible,
   };
 };

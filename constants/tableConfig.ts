@@ -135,16 +135,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'dateLaunch',
         ],
         itemsNotEssential: ['adoption_plan', 'launch_plan', 'roadmap'],
-        // just test
-        groups: [
-          {
-            key: IItemGroupEnum.ProjectLinks,
-            title: 'Project Links',
-            description: 'External links and resources',
-            items: ['websiteUrl', 'appUrl'],
-          },
-        ],
-        // groups: [],
+        groups: [],
       },
     ],
   },
@@ -158,13 +149,17 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         title: 'Development',
         description: '',
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
-        itemsNotEssential: ['audit_status'],
+        itemsNotEssential: [
+          'audit_status',
+          'dapp_category',
+          'protocol_built_on',
+        ],
         groups: [
           {
             key: IItemGroupEnum.CodeAudits,
             title: 'Code Audits',
             description: '',
-            items: ['audit_status'],
+            items: ['audit_status', 'dapp_category', 'protocol_built_on'],
           },
         ],
       },
@@ -187,6 +182,11 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         title: 'Team',
         description: '',
         items: ['founders'],
+        itemsNotEssential: [
+          'core_team',
+          'team_incentives',
+          'ownership_of_project',
+        ],
         groups: [],
       },
     ],
@@ -201,6 +201,13 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         title: 'Finances',
         description: '',
         items: ['fundingStatus'],
+        itemsNotEssential: [
+          'project_funded_date',
+          'budget_plans',
+          'expense_statements',
+          'runway',
+          'income_and_revenue_statements',
+        ],
         groups: [],
       },
       {
@@ -208,6 +215,12 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         title: 'Token',
         description: '',
         items: ['tokenContract'],
+        itemsNotEssential: [
+          'token_sales',
+          'token_type',
+          'token_specifications',
+          'token_launch_date',
+        ],
         groups: [],
       },
     ],

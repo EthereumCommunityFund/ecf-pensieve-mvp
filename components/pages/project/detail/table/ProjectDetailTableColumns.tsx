@@ -4,8 +4,10 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import {
+  AccountabilityCol,
   ActionsCol,
   InputCol,
+  LegitimacyCol,
   PropertyCol,
   ReferenceCol,
   SubmitterCol,
@@ -36,10 +38,15 @@ export interface IKeyItemDataForTable {
    * 但又还没有新的 leading proposal 出现
    */
   isNotLeading?: boolean;
+  // Accountability metrics from item config
+  accountability?: string[];
+  // Legitimacy metrics from item config
+  legitimacy?: string[];
 }
 
 interface IUseProjectTableColumnsProps {
   isPageExpanded?: boolean;
+  showMetrics?: boolean;
 }
 
 // TODO： 从 itemConfig 取
@@ -52,6 +59,7 @@ const isRowExpandable = (key: string) => {
 
 export const useProjectTableColumns = ({
   isPageExpanded = false,
+  showMetrics = false,
 }: IUseProjectTableColumnsProps) => {
   // 创建列定义
   const columnHelper = createColumnHelper<IKeyItemDataForTable>();
@@ -138,6 +146,26 @@ export const useProjectTableColumns = ({
       },
     });
 
+    const accountabilityColumn = columnHelper.accessor('accountability', {
+      id: 'accountability',
+      header: () => <AccountabilityCol.Header />,
+      size: 228,
+      cell: (info) => {
+        const accountability = info.getValue();
+        return <AccountabilityCol.Cell accountability={accountability} />;
+      },
+    });
+
+    const legitimacyColumn = columnHelper.accessor('legitimacy', {
+      id: 'legitimacy',
+      header: () => <LegitimacyCol.Header />,
+      size: 228,
+      cell: (info) => {
+        const legitimacy = info.getValue();
+        return <LegitimacyCol.Cell legitimacy={legitimacy} />;
+      },
+    });
+
     const actionsColumn = columnHelper.accessor('key', {
       id: 'actions',
       header: () => <ActionsCol.Header />,
@@ -165,12 +193,22 @@ export const useProjectTableColumns = ({
       },
     });
 
-    return [
+    // 基础列
+    const baseColumns = [
       propertyColumn,
       inputColumn,
       referenceColumn,
       submitterColumn,
-      actionsColumn,
     ];
-  }, [columnHelper, isPageExpanded]);
+
+    // Metrics 列 (条件显示)
+    const metricsColumns = showMetrics
+      ? [accountabilityColumn, legitimacyColumn]
+      : [];
+
+    // Actions 列
+    const actionColumns = [actionsColumn];
+
+    return [...baseColumns, ...metricsColumns, ...actionColumns];
+  }, [columnHelper, isPageExpanded, showMetrics]);
 };
