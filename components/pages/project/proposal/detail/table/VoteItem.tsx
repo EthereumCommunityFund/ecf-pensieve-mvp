@@ -58,7 +58,14 @@ const VoteItem: FC<IProps> = ({
           classNames={{
             base: '',
             label: '',
-            value: 'text-[14px] font-[600] font-mona',
+            value: cn(
+              'font-[600] font-mona',
+              itemPoints > 999
+                ? 'text-[10px]'
+                : itemPoints > 99
+                  ? 'text-[12px]'
+                  : 'text-[14px]',
+            ),
             svg: 'size-[36px] rotate-[180deg]',
             track: 'stroke-[#D9D9D9]',
             indicator: 'stroke-[#64C0A5]',
