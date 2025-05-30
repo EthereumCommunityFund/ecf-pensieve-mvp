@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast, Spinner } from '@heroui/react';
+import { addToast, InputOtp, Spinner } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import React, {
   useCallback,
@@ -69,6 +69,7 @@ const AuthPrompt: React.FC = () => {
   const { isConnected, address } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const [inputUsername, setInputUsername] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
   const connectionIntentRef = useRef(false);
 
@@ -104,6 +105,7 @@ const AuthPrompt: React.FC = () => {
   useEffect(() => {
     if (isAuthPromptVisible) {
       setInputUsername('');
+      setInviteCode('');
     }
   }, [isAuthPromptVisible]);
 
@@ -133,7 +135,7 @@ const AuthPrompt: React.FC = () => {
             ? inputUsername
             : ((ensName || address.slice(0, 10)) as string);
 
-          await createProfile(usernameToUse);
+          await createProfile(usernameToUse, inviteCode);
         } catch (e: any) {
           addToast({
             title: e.message || 'Fail to create profile',
@@ -145,7 +147,7 @@ const AuthPrompt: React.FC = () => {
         }
       }
     },
-    [address, ensName, inputUsername, createProfile],
+    [address, ensName, inputUsername, inviteCode, createProfile],
   );
 
   const handleSkip = useCallback(() => {
@@ -161,6 +163,7 @@ const AuthPrompt: React.FC = () => {
 
   const handleCloseAndReset = useCallback(async () => {
     setInputUsername('');
+    setInviteCode('');
     await hideAuthPrompt();
     await logout();
     await disconnectAsync();
@@ -247,6 +250,31 @@ const AuthPrompt: React.FC = () => {
             />
           </div>
 
+          <div>
+            <label
+              htmlFor="inviteCodeInput"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              Invitation Code <span className="text-red-500">*</span>
+            </label>
+            <InputOtp
+              length={6}
+              value={inviteCode}
+              onValueChange={setInviteCode}
+              placeholder="0"
+              isDisabled={isCreatingProfile}
+              variant="bordered"
+              color="primary"
+              size="md"
+              classNames={{
+                base: 'gap-2',
+                segmentWrapper: 'gap-2',
+                segment:
+                  'w-10 h-10 text-center border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+              }}
+            />
+          </div>
+
           <div className="flex justify-between gap-[10px]">
             <Button
               color="secondary"
@@ -261,7 +289,12 @@ const AuthPrompt: React.FC = () => {
               onPress={handleContinue}
               color="primary"
               className="flex-1"
-              isDisabled={!inputUsername || isAnyLoading}
+              isDisabled={
+                !inputUsername ||
+                !inviteCode ||
+                inviteCode.length !== 6 ||
+                isAnyLoading
+              }
               isLoading={loadingButton === 'continue'}
             >
               Continue
@@ -272,6 +305,7 @@ const AuthPrompt: React.FC = () => {
     );
   }, [
     inputUsername,
+    inviteCode,
     onInputChange,
     handleContinue,
     isCreatingProfile,

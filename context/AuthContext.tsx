@@ -67,7 +67,7 @@ interface IAuthContext {
 
   // Actions
   authenticate: () => Promise<void>;
-  createProfile: (username: string) => Promise<void>;
+  createProfile: (username: string, inviteCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   performFullLogoutAndReload: () => Promise<void>;
   showAuthPrompt: (source?: ConnectSource) => void;
@@ -372,7 +372,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   ]);
 
   const createProfile = useCallback(
-    async (username: string) => {
+    async (username: string, inviteCode?: string) => {
       if (!address) {
         handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
         return;
@@ -386,6 +386,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           signature: signatureDataRef.current.signature!,
           message: signatureDataRef.current.message!,
           username,
+          inviteCode,
         });
 
         await handleSupabaseLogin(verifyResult.token);
