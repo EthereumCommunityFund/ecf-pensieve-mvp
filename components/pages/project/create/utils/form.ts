@@ -7,8 +7,41 @@ import {
 } from '@/components/pages/project/create/types';
 import { isAutoFillForm, isLocalDev } from '@/constants/env';
 import { IProject } from '@/types';
+import { IPocItemKey } from '@/types/item';
 import { transformFormValue } from '@/utils/item';
 import { normalizeUrl } from '@/utils/url';
+
+/**
+ * Helper function to convert empty string to undefined for optional fields
+ */
+const emptyToUndefined = (value: string): string | undefined => {
+  return value === '' ? undefined : value;
+};
+
+/**
+ * Helper function to convert empty string to Date or undefined
+ */
+const emptyToDateOrUndefined = (value: string): Date | undefined => {
+  return value === '' ? undefined : new Date(value);
+};
+
+/**
+ * Helper function to handle array type fields - returns original array if not empty string
+ */
+const transformArrayField = <T>(
+  key: IPocItemKey,
+  originalValue: T,
+  fieldApplicability: Record<string, boolean>,
+): T | string => {
+  const transformedValue = transformFormValue(
+    key,
+    originalValue,
+    fieldApplicability,
+  );
+  // If transformFormValue returns empty string (field not applicable), return it
+  // Otherwise return the original array value
+  return transformedValue === '' ? transformedValue : originalValue;
+};
 
 /**
  * Transform form data to API submission format
@@ -18,41 +51,102 @@ export const transformProjectData = (
   references: IReferenceData[],
   fieldApplicability: Record<string, boolean>,
 ): ICreateProjectPayload => {
+  const categoriesValue = transformArrayField(
+    'categories',
+    formData.categories,
+    fieldApplicability,
+  );
+  const tagsValue = transformArrayField(
+    'tags',
+    formData.tags,
+    fieldApplicability,
+  );
+
   return {
-    name: formData.name,
-    tagline: formData.tagline,
-    categories: formData.categories,
-    mainDescription: formData.mainDescription,
-    logoUrl: formData.logoUrl || '',
-    websiteUrl: normalizeUrl(formData.websiteUrl) || '',
-    appUrl: fieldApplicability['appUrl']
-      ? normalizeUrl(formData.appUrl) || undefined
-      : undefined,
-    tags: formData.tags,
-    whitePaper: formData.whitePaper,
+    name: transformFormValue('name', formData.name, fieldApplicability),
+    tagline: transformFormValue(
+      'tagline',
+      formData.tagline,
+      fieldApplicability,
+    ),
+    categories: categoriesValue as string[],
+    mainDescription: transformFormValue(
+      'mainDescription',
+      formData.mainDescription,
+      fieldApplicability,
+    ),
+    logoUrl: transformFormValue(
+      'logoUrl',
+      formData.logoUrl || '',
+      fieldApplicability,
+    ),
+    websiteUrl: transformFormValue(
+      'websiteUrl',
+      normalizeUrl(formData.websiteUrl) || '',
+      fieldApplicability,
+    ),
+    appUrl: emptyToUndefined(
+      transformFormValue(
+        'appUrl',
+        normalizeUrl(formData.appUrl) || '',
+        fieldApplicability,
+      ),
+    ),
+    tags: tagsValue as string[],
+    whitePaper: transformFormValue(
+      'whitePaper',
+      formData.whitePaper,
+      fieldApplicability,
+    ),
 
     dateFounded: formData.dateFounded
       ? new Date(formData.dateFounded)
       : new Date(),
-    dateLaunch: fieldApplicability['dateLaunch']
-      ? formData.dateLaunch
-        ? new Date(formData.dateLaunch)
-        : undefined
-      : undefined,
-    devStatus: formData.devStatus || 'In Development',
-    fundingStatus: fieldApplicability['fundingStatus']
-      ? formData.fundingStatus || undefined
-      : undefined,
+    dateLaunch: emptyToDateOrUndefined(
+      transformFormValue(
+        'dateLaunch',
+        formData.dateLaunch?.toISOString() || '',
+        fieldApplicability,
+      ),
+    ),
+    devStatus: transformFormValue(
+      'devStatus',
+      formData.devStatus || 'In Development',
+      fieldApplicability,
+    ),
+    fundingStatus: emptyToUndefined(
+      transformFormValue(
+        'fundingStatus',
+        formData.fundingStatus || '',
+        fieldApplicability,
+      ),
+    ),
     openSource: formData.openSource === 'Yes',
-    codeRepo: fieldApplicability['codeRepo']
-      ? normalizeUrl(formData.codeRepo) || undefined
-      : undefined,
-    tokenContract: formData.tokenContract || undefined,
-    dappSmartContracts: fieldApplicability['dappSmartContracts']
-      ? formData.dappSmartContracts || ''
-      : '',
+    codeRepo: emptyToUndefined(
+      transformFormValue(
+        'codeRepo',
+        normalizeUrl(formData.codeRepo) || '',
+        fieldApplicability,
+      ),
+    ),
+    tokenContract: emptyToUndefined(
+      transformFormValue(
+        'tokenContract',
+        formData.tokenContract || '',
+        fieldApplicability,
+      ),
+    ),
+    dappSmartContracts: transformFormValue(
+      'dappSmartContracts',
+      formData.dappSmartContracts || '',
+      fieldApplicability,
+    ),
 
-    orgStructure: formData.orgStructure || 'Centralized',
+    orgStructure: transformFormValue(
+      'orgStructure',
+      formData.orgStructure || 'Centralized',
+      fieldApplicability,
+    ),
     publicGoods: formData.publicGoods === 'Yes',
     founders: formData.founders.map((founder) => ({
       name: founder.fullName,
