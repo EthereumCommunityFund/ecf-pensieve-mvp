@@ -105,20 +105,15 @@ export const createTableColumns = ({
       return (
         <div className="font-mona flex w-full items-center justify-between gap-[10px]">
           <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-            {isExpandable ? (
-              isRowExpanded ? (
-                'Close'
-              ) : (
-                'Expand'
-              )
-            ) : (
-              <InputContentRenderer
-                itemKey={rowKey as IPocItemKey}
-                value={value}
-                displayFormType={displayFormType}
-                isEssential={itemConfig.isEssential}
-              />
-            )}
+            <InputContentRenderer
+              itemKey={rowKey as IPocItemKey}
+              value={value}
+              displayFormType={displayFormType}
+              isEssential={itemConfig.isEssential}
+              isExpandable={isExpandable}
+              isRowExpanded={isRowExpanded}
+              onToggleExpanded={() => toggleRowExpanded(rowKey)}
+            />
           </div>
 
           {isExpandable && (
