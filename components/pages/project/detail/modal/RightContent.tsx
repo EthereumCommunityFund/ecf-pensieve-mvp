@@ -6,11 +6,14 @@ import { FC } from 'react';
 import { Button } from '@/components/base/button';
 import { InfoIcon } from '@/components/icons';
 
+import NewItemRewardCard from './NewItemRewardCard';
+
 interface RightContentProps {
   userWeight?: number;
   currentItemWeight?: number;
   onSubmitEntry?: () => void;
   hideSubmitEntry?: boolean;
+  showRewardCard?: boolean;
 }
 
 const RightContent: FC<RightContentProps> = ({
@@ -18,6 +21,7 @@ const RightContent: FC<RightContentProps> = ({
   currentItemWeight = 0,
   onSubmitEntry,
   hideSubmitEntry,
+  showRewardCard,
 }) => {
   return (
     <div className="flex flex-col gap-2.5 p-5">
@@ -81,6 +85,9 @@ const RightContent: FC<RightContentProps> = ({
           </div>
         </>
       )}
+
+      {/* Reward Card */}
+      {showRewardCard && <NewItemRewardCard />}
     </div>
   );
 };

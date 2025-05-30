@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 
 import { Modal, ModalContent } from '@/components/base/modal';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
@@ -26,8 +26,27 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   setModalContentType,
 }) => {
   const { profile } = useAuth();
-  const { setCurrentItemKey, displayProposalDataOfKey } =
-    useProjectDetailContext();
+  const {
+    setCurrentItemKey,
+    displayProposalDataOfKey,
+    proposalsByProjectIdAndKey,
+  } = useProjectDetailContext();
+
+  const showRewardCard = useMemo(() => {
+    const config = AllItemConfig[itemKey];
+    if (!config) return false;
+    const isNotEssentialItem = !config?.isEssential;
+    if (!proposalsByProjectIdAndKey) return false;
+    const { leadingProposal, allItemProposals } = proposalsByProjectIdAndKey;
+    if (
+      isNotEssentialItem &&
+      !leadingProposal &&
+      (!allItemProposals || allItemProposals.length === 0)
+    ) {
+      return true;
+    }
+    return false;
+  }, [proposalsByProjectIdAndKey, itemKey]);
 
   useEffect(() => {
     if (isOpen && itemKey) {
@@ -111,6 +130,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
             currentItemWeight={currentWeight}
             onSubmitEntry={onSubmitEntry}
             hideSubmitEntry={contentType === 'submitPropose'}
+            showRewardCard={showRewardCard}
           />
         </div>
       </div>
