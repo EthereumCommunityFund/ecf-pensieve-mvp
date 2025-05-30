@@ -391,17 +391,18 @@ export const voteRouter = router({
           tx.query.projectLogs.findFirst({
             where: and(
               eq(projectLogs.projectId, itemProposal.projectId),
-              eq(projectLogs.itemProposalId, itemProposalId),
+              eq(projectLogs.key, key),
+              eq(projectLogs.isNotLeading, false),
             ),
+            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
           }),
         ]);
 
-        if (projectLog) {
+        if (projectLog?.itemProposalId === itemProposalId) {
           await processItemProposalUpdate(tx, {
             votes,
             project,
             key,
-            projectLog,
           });
           return vote;
         }
@@ -504,17 +505,18 @@ export const voteRouter = router({
           tx.query.projectLogs.findFirst({
             where: and(
               eq(projectLogs.projectId, targetItemProposal.projectId),
-              eq(projectLogs.itemProposalId, itemProposalId),
+              eq(projectLogs.key, key),
+              eq(projectLogs.isNotLeading, false),
             ),
+            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
           }),
         ]);
 
-        if (projectLog) {
+        if (projectLog?.itemProposalId === itemProposalId) {
           await processItemProposalUpdate(tx, {
             votes,
             project,
             key,
-            projectLog,
           });
           return updatedVote;
         }

@@ -43,7 +43,7 @@ export const handleVoteRecord = async (
     key: string;
     weight: number;
     existingVoteRecord?: any;
-    proposalCreatorId: string;
+    proposalCreatorId?: string;
   },
 ) => {
   if (!existingVoteRecord) {
@@ -143,6 +143,32 @@ export const processItemProposalVoteResult = async (
 
     const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
 
+    const oldLog = await tx.query.projectLogs.findFirst({
+      where: and(
+        eq(projectLogs.projectId, itemProposal.projectId),
+        eq(projectLogs.itemProposalId, itemProposal.id),
+      ),
+    });
+
+    if (oldLog) {
+      await Promise.all([
+        tx
+          .update(projectLogs)
+          .set({
+            isNotLeading: false,
+            createdAt: new Date(),
+          })
+          .where(eq(projectLogs.id, oldLog.id)),
+        tx.update(projects).set({
+          itemsTopWeight: {
+            ...(project?.itemsTopWeight ?? {}),
+            [key]: voteSum,
+          },
+        }),
+      ]);
+      return;
+    }
+
     await Promise.all([
       tx.insert(projectLogs).values({
         projectId: itemProposal.projectId,
@@ -184,12 +210,10 @@ export const processItemProposalUpdate = async (
     votes,
     project,
     key,
-    projectLog,
   }: {
     votes: any[];
     project: any;
     key: string;
-    projectLog: any;
   },
 ) => {
   const voteSum = votes.reduce((acc, vote) => {
@@ -197,38 +221,12 @@ export const processItemProposalUpdate = async (
     return acc;
   }, 0);
 
-  const itemsTopWeight = project?.itemsTopWeight as
-    | Record<string, number>
-    | undefined;
-  const keyWeight = itemsTopWeight?.[key] ?? 0;
-
-  if (!projectLog.isNotLeading) {
-    await tx.update(projects).set({
-      itemsTopWeight: {
-        ...(project?.itemsTopWeight ?? {}),
-        [key]: voteSum,
-      },
-    });
-    return;
-  }
-
-  if (voteSum > keyWeight && projectLog.isNotLeading) {
-    await Promise.all([
-      tx.update(projects).set({
-        itemsTopWeight: {
-          ...(project?.itemsTopWeight ?? {}),
-          [key]: voteSum,
-        },
-      }),
-      tx
-        .update(projectLogs)
-        .set({
-          isNotLeading: false,
-        })
-        .where(eq(projectLogs.id, projectLog.id)),
-    ]);
-    return;
-  }
+  await tx.update(projects).set({
+    itemsTopWeight: {
+      ...(project?.itemsTopWeight ?? {}),
+      [key]: voteSum,
+    },
+  });
 };
 
 export const handleOriginalProposalUpdate = async (
