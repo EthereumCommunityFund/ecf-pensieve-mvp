@@ -30,6 +30,12 @@ export interface IKeyItemDataForTable {
   // Group information for visual grouping
   group?: string;
   groupTitle?: string;
+  /**
+   * 原来是 leading proposal, 但现在不再是 leading proposal
+   * 但投票用户 switch 了 proposal,导致当前item weight < itemTopWeight
+   * 但又还没有新的 leading proposal 出现
+   */
+  isNotLeading?: boolean;
 }
 
 interface IUseProjectTableColumnsProps {

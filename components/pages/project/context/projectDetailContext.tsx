@@ -345,7 +345,7 @@ export const ProjectDetailProvider = ({
       });
     });
     withItemProposal.forEach((proposal) => {
-      const { projectId, itemProposal } = proposal;
+      const { projectId, itemProposal, isNotLeading } = proposal;
       const { key, createdAt, value, ref, creator, id } = itemProposal;
       const row: IKeyItemDataForTable = {
         key: key!,
@@ -357,6 +357,10 @@ export const ProjectDetailProvider = ({
         projectId: projectId!,
         proposalId: Number(id),
         itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
+        /**
+         * 原来是 leading proposal, 但还没有新的 leading proposal出现
+         */
+        isNotLeading: isNotLeading,
       };
       DataMap.set(key, row);
     });
