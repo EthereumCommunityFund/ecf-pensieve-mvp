@@ -7,6 +7,7 @@ import {
 } from '@/components/pages/project/create/types';
 import { isAutoFillForm, isLocalDev } from '@/constants/env';
 import { IProject } from '@/types';
+import { transformFormValue } from '@/utils/item';
 import { normalizeUrl } from '@/utils/url';
 
 /**
@@ -73,71 +74,171 @@ export const transformProposalData = (
   fieldApplicability: Record<string, boolean>,
   projectId: number,
 ): ICreateProposalPayload => {
-  // TODO: is it order important?
   const items = [
-    { key: 'name', value: formData.name },
-    { key: 'tagline', value: formData.tagline },
-    { key: 'categories', value: JSON.stringify(formData.categories) },
-    { key: 'mainDescription', value: formData.mainDescription },
-    { key: 'logoUrl', value: formData.logoUrl || '' },
-    { key: 'websiteUrl', value: normalizeUrl(formData.websiteUrl) || '' },
-    { key: 'tags', value: JSON.stringify(formData.tags) },
-    { key: 'whitePaper', value: formData.whitePaper },
-  ];
-
-  if (fieldApplicability['appUrl'] && formData.appUrl) {
-    items.push({ key: 'appUrl', value: normalizeUrl(formData.appUrl) || '' });
-  }
-
-  if (formData.dateFounded) {
-    items.push({
-      key: 'dateFounded',
-      value: formData.dateFounded.toISOString(),
-    });
-  }
-
-  if (fieldApplicability['dateLaunch'] && formData.dateLaunch) {
-    items.push({ key: 'dateLaunch', value: formData.dateLaunch.toISOString() });
-  }
-
-  if (formData.devStatus) {
-    items.push({ key: 'devStatus', value: formData.devStatus });
-  }
-
-  if (fieldApplicability['fundingStatus'] && formData.fundingStatus) {
-    items.push({ key: 'fundingStatus', value: formData.fundingStatus });
-  }
-
-  items.push({ key: 'openSource', value: formData.openSource });
-
-  if (fieldApplicability['codeRepo'] && formData.codeRepo) {
-    items.push({
-      key: 'codeRepo',
-      value: normalizeUrl(formData.codeRepo) || '',
-    });
-  }
-
-  items.push({ key: 'tokenContract', value: formData.tokenContract || '' });
-
-  items.push({ key: 'dappSmartContracts', value: formData.dappSmartContracts });
-
-  if (formData.orgStructure) {
-    items.push({ key: 'orgStructure', value: formData.orgStructure });
-  }
-
-  items.push({ key: 'publicGoods', value: formData.publicGoods });
-
-  if (formData.founders && formData.founders.length > 0) {
-    items.push({
-      key: 'founders',
-      value: JSON.stringify(
-        formData.founders.map((founder) => ({
-          name: founder.fullName,
-          title: founder.titleRole,
-        })),
+    {
+      key: 'name',
+      value: transformFormValue('name', formData.name, fieldApplicability),
+    },
+    {
+      key: 'tagline',
+      value: transformFormValue(
+        'tagline',
+        formData.tagline,
+        fieldApplicability,
       ),
-    });
-  }
+    },
+    {
+      key: 'categories',
+      value: transformFormValue(
+        'categories',
+        JSON.stringify(formData.categories),
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'mainDescription',
+      value: transformFormValue(
+        'mainDescription',
+        formData.mainDescription,
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'logoUrl',
+      value: transformFormValue(
+        'logoUrl',
+        formData.logoUrl || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'websiteUrl',
+      value: transformFormValue(
+        'websiteUrl',
+        normalizeUrl(formData.websiteUrl) || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'tags',
+      value: transformFormValue(
+        'tags',
+        JSON.stringify(formData.tags),
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'whitePaper',
+      value: transformFormValue(
+        'whitePaper',
+        formData.whitePaper,
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'appUrl',
+      value: transformFormValue(
+        'appUrl',
+        normalizeUrl(formData.appUrl) || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'dateFounded',
+      value: transformFormValue(
+        'dateFounded',
+        formData.dateFounded?.toISOString() || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'dateLaunch',
+      value: transformFormValue(
+        'dateLaunch',
+        formData.dateLaunch?.toISOString() || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'devStatus',
+      value: transformFormValue(
+        'devStatus',
+        formData.devStatus || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'fundingStatus',
+      value: transformFormValue(
+        'fundingStatus',
+        formData.fundingStatus || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'openSource',
+      value: transformFormValue(
+        'openSource',
+        formData.openSource,
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'codeRepo',
+      value: transformFormValue(
+        'codeRepo',
+        normalizeUrl(formData.codeRepo) || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'tokenContract',
+      value: transformFormValue(
+        'tokenContract',
+        formData.tokenContract || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'dappSmartContracts',
+      value: transformFormValue(
+        'dappSmartContracts',
+        formData.dappSmartContracts || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'orgStructure',
+      value: transformFormValue(
+        'orgStructure',
+        formData.orgStructure || '',
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'publicGoods',
+      value: transformFormValue(
+        'publicGoods',
+        formData.publicGoods,
+        fieldApplicability,
+      ),
+    },
+    {
+      key: 'founders',
+      value: transformFormValue(
+        'founders',
+        formData.founders?.length > 0
+          ? JSON.stringify(
+              formData.founders.map((founder) => ({
+                name: founder.fullName,
+                title: founder.titleRole,
+              })),
+            )
+          : '',
+        fieldApplicability,
+      ),
+    },
+  ];
 
   return {
     projectId,
