@@ -98,6 +98,9 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
             displayProposalDataOfKey={displayProposalDataOfKey}
             setModalContentType={setModalContentType}
             onClose={handleClose}
+            onBackToSubmissionQueue={() => {
+              setModalContentType('viewItemProposal');
+            }}
           />
         </div>
 
