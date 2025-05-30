@@ -61,8 +61,7 @@ export const projectLogRouter = router({
           eq(latestLogsSubquery.itemProposalId, itemProposals.id),
         )
         .leftJoin(profiles, eq(itemProposals.creator, profiles.userId))
-        .where(eq(latestLogsSubquery.rn, 1))
-        .orderBy(sql`${latestLogsSubquery.createdAt} DESC`);
+        .where(eq(latestLogsSubquery.rn, 1));
 
       return latestLogs.map((row) => ({
         id: row.id,

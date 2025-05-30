@@ -17,7 +17,7 @@ export interface ActivityItemData {
     projectId: number | null;
     items: any;
     proposalCreatorId: string | null;
-    user: {
+    proposalCreator: {
       name: string;
     };
   };
@@ -54,7 +54,7 @@ export default function ActivityItem({
 
   const renderAction = () => {
     const parts = [];
-    const { type, action, items, user } = activity.activeLog;
+    const { type, action, items, proposalCreator } = activity.activeLog;
 
     if (action === 'create' && type === 'proposal') {
       parts.push(
@@ -64,7 +64,17 @@ export default function ActivityItem({
           <span className="font-semibold">project,</span>
         </ECFTypography>,
       );
-    } else if (action === 'create' && type === 'vote') {
+    } else if (action === 'delete' && type === 'vote') {
+      parts.push(
+        <ECFTypography key="action" type="body2">
+          <span className="font-semibold">You Retracted a Vote</span>{' '}
+          <span className="opacity-30">on</span>{' '}
+        </ECFTypography>,
+      );
+    } else if (
+      (action === 'create' || action === 'update') &&
+      type === 'vote'
+    ) {
       parts.push(
         <ECFTypography key="action" type="body2">
           <span className="font-semibold">You Voted</span>{' '}
@@ -102,7 +112,7 @@ export default function ActivityItem({
         );
       }
 
-      if (user?.name && type === 'vote') {
+      if (proposalCreator?.name && type === 'vote') {
         parts.push(
           <ECFTypography key="by" type="caption1" className="opacity-50">
             by
@@ -112,7 +122,7 @@ export default function ActivityItem({
             className="rounded-[10px] border border-black/10 px-2 py-0.5"
           >
             <ECFTypography type="caption" className="text-black">
-              {user.name}
+              {proposalCreator.name}
             </ECFTypography>
           </div>,
           <ECFTypography key="in" type="caption1" className="opacity-50">

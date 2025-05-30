@@ -16,9 +16,9 @@ const contributionsColorScale = scaleThreshold<number, string>()
 
 const tabItems = [
   { key: 'all', label: 'View All' },
-  { key: 'edits', label: 'Edits' },
-  { key: 'votes', label: 'Votes' },
-  { key: 'proposals', label: 'Proposals' },
+  { key: 'update', label: 'Edits' },
+  { key: 'vote', label: 'Votes' },
+  { key: 'proposal', label: 'Proposals' },
 ];
 
 export default function Contributions() {
@@ -45,14 +45,13 @@ export default function Contributions() {
     trpc.active.getUserActivities.useQuery(
       {
         userId: user?.userId ?? '',
-        limit: 100,
+        limit: 50,
+        type: activeTab === 'all' ? undefined : activeTab,
       },
       {
         enabled: !!user?.userId,
       },
     );
-
-  console.log(activitiesData, isLoadingActivities);
 
   const isLoadingContributions = isLoading || !user?.userId;
 
@@ -64,21 +63,8 @@ export default function Contributions() {
   }, [contributions]);
 
   const filteredActivities = useMemo(() => {
-    if (!activitiesData?.items) return [];
-
-    if (activeTab === 'all') return activitiesData.items;
-
-    const typeMap: Record<string, string[]> = {
-      edits: ['edit'],
-      votes: ['vote', 'vote_retract'],
-      proposals: ['proposal'],
-    };
-
-    const allowedTypes = typeMap[activeTab] || [];
-    return activitiesData.items.filter((item) =>
-      allowedTypes.includes(item.activeLog.type),
-    );
-  }, [activitiesData?.items, activeTab]);
+    return activitiesData?.items ?? [];
+  }, [activitiesData?.items]);
 
   return (
     <div className="flex w-full flex-col gap-[20px]">
@@ -199,7 +185,7 @@ export default function Contributions() {
           filteredActivities.map((activity, index) => (
             <ActivityItem
               key={activity.activeLog.id}
-              activity={activity}
+              activity={activity as any}
               isLast={index === filteredActivities.length - 1}
             />
           ))

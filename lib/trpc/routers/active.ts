@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
@@ -73,7 +73,18 @@ export const activeRouter = router({
       const baseCondition = eq(activeLogs.userId, userId);
       const conditions = [baseCondition];
       if (type === 'update') {
-        conditions.push(eq(activeLogs.action, 'update'));
+        conditions.push(
+          eq(activeLogs.action, 'update'),
+          eq(activeLogs.type, 'item_proposal'),
+        );
+      } else if (type === 'proposal') {
+        const proposalTypeCondition = or(
+          eq(activeLogs.type, 'proposal'),
+          eq(activeLogs.type, 'item_proposal'),
+        );
+        if (proposalTypeCondition) {
+          conditions.push(proposalTypeCondition);
+        }
       } else if (type) {
         conditions.push(eq(activeLogs.type, type));
       }
@@ -85,7 +96,7 @@ export const activeRouter = router({
       const logs = await ctx.db.query.activeLogs.findMany({
         with: {
           project: true,
-          user: true,
+          proposalCreator: true,
         },
         where: whereCondition,
         orderBy: desc(activeLogs.createdAt),
