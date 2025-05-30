@@ -134,6 +134,9 @@ const BaseTableRenderer = <TRowData extends IBaeTableRow, TValue = unknown>({
                             AllItemConfig[row.original.key as IPocItemKey]!
                               .isEssential
                           }
+                          isExpandable={false}
+                          isRowExpanded={false}
+                          onToggleExpanded={undefined}
                         />
                       </p>
                     </div>

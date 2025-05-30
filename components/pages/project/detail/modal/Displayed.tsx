@@ -266,6 +266,9 @@ const Displayed: FC<DisplayedProps> = ({
                                 row.original.key as IEssentialItemKey
                               ]!.isEssential
                             }
+                            isExpandable={false}
+                            isRowExpanded={false}
+                            onToggleExpanded={undefined}
                           />
                         </p>
                       </div>

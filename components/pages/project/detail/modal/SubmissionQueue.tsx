@@ -305,6 +305,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   row.original.key as IEssentialItemKey
                                 ]!.isEssential
                               }
+                              isExpandable={false}
+                              isRowExpanded={false}
+                              onToggleExpanded={undefined}
                             />
                           </p>
                         </div>
@@ -459,6 +462,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 row.original.key as IEssentialItemKey
                               ]!.isEssential
                             }
+                            isExpandable={false}
+                            isRowExpanded={false}
+                            onToggleExpanded={undefined}
                           />
                         </p>
                       </div>
