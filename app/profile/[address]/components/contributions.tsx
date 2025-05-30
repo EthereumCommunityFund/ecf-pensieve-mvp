@@ -3,6 +3,7 @@ import { ResponsiveCalendar } from '@nivo/calendar';
 import { scaleThreshold } from 'd3-scale';
 import { useMemo, useState } from 'react';
 
+import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
@@ -41,17 +42,23 @@ export default function Contributions() {
 
   const [activeTab, setActiveTab] = useState('all');
 
-  const { data: activitiesData, isLoading: isLoadingActivities } =
-    trpc.active.getUserActivities.useQuery(
-      {
-        userId: user?.userId ?? '',
-        limit: 50,
-        type: activeTab === 'all' ? undefined : activeTab,
-      },
-      {
-        enabled: !!user?.userId,
-      },
-    );
+  const {
+    data: activitiesData,
+    isLoading: isLoadingActivities,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = trpc.active.getUserActivities.useInfiniteQuery(
+    {
+      userId: user?.userId ?? '',
+      limit: 50,
+      type: activeTab === 'all' ? undefined : activeTab,
+    },
+    {
+      enabled: !!user?.userId,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
 
   const isLoadingContributions = isLoading || !user?.userId;
 
@@ -63,8 +70,14 @@ export default function Contributions() {
   }, [contributions]);
 
   const filteredActivities = useMemo(() => {
-    return activitiesData?.items ?? [];
-  }, [activitiesData?.items]);
+    return activitiesData?.pages.flatMap((page) => page.items) ?? [];
+  }, [activitiesData?.pages]);
+
+  const handleLoadMore = () => {
+    if (!isFetchingNextPage && hasNextPage) {
+      fetchNextPage();
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-[20px]">
@@ -182,13 +195,50 @@ export default function Contributions() {
             ))}
           </div>
         ) : filteredActivities.length > 0 ? (
-          filteredActivities.map((activity, index) => (
-            <ActivityItem
-              key={activity.activeLog.id}
-              activity={activity as any}
-              isLast={index === filteredActivities.length - 1}
-            />
-          ))
+          <>
+            {filteredActivities.map((activity, index) => (
+              <ActivityItem
+                key={activity.activeLog.id}
+                activity={activity as any}
+                isLast={index === filteredActivities.length - 1 && !hasNextPage}
+              />
+            ))}
+
+            {isFetchingNextPage && (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, index) => (
+                  <div key={index} className="flex w-full items-start py-4">
+                    <div className="relative flex size-8 shrink-0 items-center justify-center">
+                      <Skeleton className="size-8 rounded-full" />
+                      {index < 2 && (
+                        <div className="absolute left-1/2 top-8 h-8 w-px -translate-x-1/2 border-l border-black/10" />
+                      )}
+                    </div>
+                    <div className="ml-2.5 flex w-full items-center justify-between">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48 rounded" />
+                        <Skeleton className="h-3 w-32 rounded" />
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {hasNextPage && (
+              <div className="flex justify-center py-4">
+                <ECFButton
+                  $size="small"
+                  onPress={handleLoadMore}
+                  isDisabled={isFetchingNextPage}
+                  className="border border-black/10 bg-transparent text-black hover:bg-black/5"
+                >
+                  {isFetchingNextPage ? 'Loading...' : 'Load More Activities'}
+                </ECFButton>
+              </div>
+            )}
+          </>
         ) : (
           <div className="py-8 text-center">
             <ECFTypography type="body1" className="opacity-60">

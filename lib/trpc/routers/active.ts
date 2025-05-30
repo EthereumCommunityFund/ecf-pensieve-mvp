@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
@@ -63,7 +63,7 @@ export const activeRouter = router({
       z.object({
         userId: z.string(),
         limit: z.number().min(1).max(100).default(50),
-        cursor: z.string().uuid().optional(),
+        cursor: z.string().datetime().optional(),
         type: z.string().optional(),
       }),
     )
@@ -72,6 +72,7 @@ export const activeRouter = router({
 
       const baseCondition = eq(activeLogs.userId, userId);
       const conditions = [baseCondition];
+
       if (type === 'update') {
         conditions.push(
           eq(activeLogs.action, 'update'),
@@ -90,7 +91,7 @@ export const activeRouter = router({
       }
 
       const whereCondition = cursor
-        ? and(...conditions, gt(activeLogs.id, cursor))
+        ? and(...conditions, lte(activeLogs.createdAt, new Date(cursor)))
         : and(...conditions);
 
       const logs = await ctx.db.query.activeLogs.findMany({
@@ -100,18 +101,20 @@ export const activeRouter = router({
         },
         where: whereCondition,
         orderBy: desc(activeLogs.createdAt),
-        limit,
+        limit: limit + 1,
       });
 
-      const items = logs.map((log) => ({
+      const hasNextPage = logs.length > limit;
+      const items = hasNextPage ? logs.slice(0, limit) : logs;
+
+      const mappedItems = items.map((log) => ({
         activeLog: log,
         projectName: log.project?.name,
       }));
 
-      const nextCursor =
-        items.length === limit
-          ? items[items.length - 1].activeLog.id
-          : undefined;
+      const nextCursor = hasNextPage
+        ? items[items.length - 1].createdAt.toISOString()
+        : undefined;
 
       const totalCount = await ctx.db
         .select({ count: sql`count(*)::int` })
@@ -120,9 +123,10 @@ export const activeRouter = router({
         .then((res) => Number(res[0]?.count ?? 0));
 
       return {
-        items,
+        items: mappedItems,
         nextCursor,
         totalCount,
+        hasNextPage,
       };
     }),
 });
