@@ -149,3 +149,72 @@ export const GitPullLightIcon: React.FC<
     </svg>
   );
 };
+
+export const GitPullBlueIcon: React.FC<
+  React.ComponentPropsWithoutRef<'svg'>
+> = (props) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      {...props}
+    >
+      <g clipPath="url(#clip0_1765_3557)">
+        <path
+          opacity="0.2"
+          d="M5.0625 6.1875C5.99448 6.1875 6.75 5.43198 6.75 4.5C6.75 3.56802 5.99448 2.8125 5.0625 2.8125C4.13052 2.8125 3.375 3.56802 3.375 4.5C3.375 5.43198 4.13052 6.1875 5.0625 6.1875Z"
+          fill="#7EA9FF"
+        />
+        <path
+          opacity="0.2"
+          d="M14.0625 15.1875C14.9945 15.1875 15.75 14.432 15.75 13.5C15.75 12.568 14.9945 11.8125 14.0625 11.8125C13.1305 11.8125 12.375 12.568 12.375 13.5C12.375 14.432 13.1305 15.1875 14.0625 15.1875Z"
+          fill="#7EA9FF"
+        />
+        <path
+          d="M5.0625 15.1875C5.99448 15.1875 6.75 14.432 6.75 13.5C6.75 12.568 5.99448 11.8125 5.0625 11.8125C4.13052 11.8125 3.375 12.568 3.375 13.5C3.375 14.432 4.13052 15.1875 5.0625 15.1875Z"
+          stroke="#7EA9FF"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M5.0625 6.1875C5.99448 6.1875 6.75 5.43198 6.75 4.5C6.75 3.56802 5.99448 2.8125 5.0625 2.8125C4.13052 2.8125 3.375 3.56802 3.375 4.5C3.375 5.43198 4.13052 6.1875 5.0625 6.1875Z"
+          stroke="#7EA9FF"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M5.0625 6.1875V11.8125"
+          stroke="#7EA9FF"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M14.0625 15.1875C14.9945 15.1875 15.75 14.432 15.75 13.5C15.75 12.568 14.9945 11.8125 14.0625 11.8125C13.1305 11.8125 12.375 12.568 12.375 13.5C12.375 14.432 13.1305 15.1875 14.0625 15.1875Z"
+          stroke="#7EA9FF"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M14.0625 11.8125V7.77867C14.0625 7.63084 14.0334 7.48446 13.9768 7.34788C13.9202 7.21131 13.8373 7.08723 13.7327 6.98273L10.125 3.375"
+          stroke="#7EA9FF"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M10.125 6.75V3.375H13.5"
+          stroke="#7EA9FF"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_1765_3557">
+          <rect width="18" height="18" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  );
+};

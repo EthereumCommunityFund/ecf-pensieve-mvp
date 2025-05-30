@@ -4,7 +4,11 @@ import { Avatar, cn } from '@heroui/react';
 import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
-import { CaretDownIcon } from '@/components/icons';
+import {
+  CaretDownIcon,
+  ClockClockwiseIcon,
+  GitPullBlueIcon,
+} from '@/components/icons';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { isInputValueEmpty } from '@/components/pages/project/proposal/detail/table/InputContentRenderer';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
@@ -49,6 +53,8 @@ export interface PropertyColCellProps extends BaseCellProps {
   children: ReactNode;
   itemKey?: string; // The key to look up weight in ALL_POC_ITEM_MAP
   showWeight?: boolean; // Whether to show the weight tooltip
+  showConsensusProgress?: boolean; // Whether to show the consensus progress
+  showPendingValidation?: boolean; // Whether to show the pending validation
 }
 
 const PropertyHeader = (_props: PropertyColHeaderProps) => {
@@ -64,14 +70,34 @@ const PropertyCell = ({
   children,
   itemKey,
   showWeight = true,
+  showConsensusProgress = false,
+  showPendingValidation = false,
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
 
   return (
     <div className="flex w-full items-center justify-between">
-      <div className="flex items-center text-[14px] font-[600] leading-[20px] text-black">
-        {children}
+      <div className="flex flex-col gap-[5px]">
+        <span className="text-[14px] font-[600] leading-[20px] text-black">
+          {children}
+        </span>
+        {showConsensusProgress && (
+          <div className="flex items-center gap-[5px]">
+            <ClockClockwiseIcon />
+            <span className="font-mona text-[13px] leading-[20px] text-black/50">
+              Consensus in progress
+            </span>
+          </div>
+        )}
+        {showPendingValidation && (
+          <div className="flex items-center gap-[5px]">
+            <GitPullBlueIcon />
+            <span className="font-mona text-[13px] leading-[20px] text-black/50">
+              Pending validation
+            </span>
+          </div>
+        )}
       </div>
       {shouldShowWeight && (
         <TooltipItemWeight
