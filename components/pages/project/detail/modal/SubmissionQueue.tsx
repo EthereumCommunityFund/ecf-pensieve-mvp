@@ -36,8 +36,20 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // 展开行状态管理
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  // 分别管理两个表格的展开状态
+  const [displayedExpandedRows, setDisplayedExpandedRows] = useState<
+    Record<string, boolean>
+  >({});
+  const [submissionQueueExpandedRows, setSubmissionQueueExpandedRows] =
+    useState<Record<string, boolean>>({});
+
+  // 辅助函数：生成唯一标识符
+  const getRowUniqueId = useCallback((rowData: IProjectTableRowData) => {
+    // 优先使用 proposalId，如果没有则用 key + 其他标识符组合
+    return rowData.proposalId
+      ? `proposal-${rowData.proposalId}`
+      : `key-${rowData.key}`;
+  }, []);
 
   // 获取项目数据
   const {
@@ -122,21 +134,36 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     });
   }, [proposalsByProjectIdAndKey, getItemTopWeight]);
 
-  const toggleRowExpanded = useCallback((key: string) => {
-    setExpandedRows((prev) => ({
+  // 为 Displayed Table 创建独立的 toggle 函数
+  const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
+    setDisplayedExpandedRows((prev) => ({
       ...prev,
-      [key]: !prev[key],
+      [uniqueId]: !prev[uniqueId],
+    }));
+  }, []);
+
+  // 为 Submission Queue Table 创建独立的 toggle 函数
+  const toggleSubmissionQueueRowExpanded = useCallback((uniqueId: string) => {
+    setSubmissionQueueExpandedRows((prev) => ({
+      ...prev,
+      [uniqueId]: !prev[uniqueId],
     }));
   }, []);
 
   const handleCollapseAll = useCallback(() => {
     setIsCollapsed(!isCollapsed);
+    // 收起所有展开的行
+    if (!isCollapsed) {
+      setDisplayedExpandedRows({});
+      setSubmissionQueueExpandedRows({});
+    }
     console.log('Collapse all clicked:', !isCollapsed);
   }, [isCollapsed]);
 
   const columns = useSubmissionQueueColumns();
 
-  const tableMeta = useMemo(() => {
+  // 为 Displayed Table 创建独立的 tableMeta
+  const displayedTableMeta = useMemo(() => {
     return {
       project,
       displayProposalDataListOfProject,
@@ -147,8 +174,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       profile,
       voteResultOfLeadingProposal,
       showReferenceModal,
-      expandedRows,
-      toggleRowExpanded,
+      expandedRows: displayedExpandedRows,
+      toggleRowExpanded: toggleDisplayedRowExpanded,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -160,22 +187,51 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     profile,
     voteResultOfLeadingProposal,
     showReferenceModal,
-    expandedRows,
-    toggleRowExpanded,
+    displayedExpandedRows,
+    toggleDisplayedRowExpanded,
+  ]);
+
+  // 为 Submission Queue Table 创建独立的 tableMeta
+  const submissionQueueTableMeta = useMemo(() => {
+    return {
+      project,
+      displayProposalDataListOfProject,
+      proposalsByProjectIdAndKey,
+      onCreateItemProposalVote,
+      onSwitchItemProposalVote,
+      onCancelVote,
+      profile,
+      voteResultOfLeadingProposal,
+      showReferenceModal,
+      expandedRows: submissionQueueExpandedRows,
+      toggleRowExpanded: toggleSubmissionQueueRowExpanded,
+    } as ITableMetaOfSubmissionQueue;
+  }, [
+    project,
+    displayProposalDataListOfProject,
+    proposalsByProjectIdAndKey,
+    onCreateItemProposalVote,
+    onSwitchItemProposalVote,
+    onCancelVote,
+    profile,
+    voteResultOfLeadingProposal,
+    showReferenceModal,
+    submissionQueueExpandedRows,
+    toggleSubmissionQueueRowExpanded,
   ]);
 
   const displayedTable = useReactTable({
     data: tableDataOfDisplayed,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: tableMeta,
+    meta: displayedTableMeta,
   });
 
   const submissionQueueTable = useReactTable({
     data: tableDataOfSubmissionQueue,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: tableMeta,
+    meta: submissionQueueTableMeta,
   });
 
   return (
@@ -235,7 +291,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                         ?.showExpand
                     }
                     className={cn(
-                      expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                      displayedExpandedRows[getRowUniqueId(row.original)]
+                        ? 'bg-[#EBEBEB]'
+                        : '',
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => (
@@ -274,7 +332,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                     <TableRow
                       key={`${row.id}-expanded`}
                       className={cn(
-                        expandedRows[row.original.key] ? '' : 'hidden',
+                        displayedExpandedRows[getRowUniqueId(row.original)]
+                          ? ''
+                          : 'hidden',
                       )}
                     >
                       <TableCell
@@ -392,7 +452,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                       ?.showExpand
                   }
                   className={cn(
-                    expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                    submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                      ? 'bg-[#EBEBEB]'
+                      : '',
                   )}
                 >
                   {row.getVisibleCells().map((cell, cellIndex) => (
@@ -431,7 +493,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                   <TableRow
                     key={`${row.id}-expanded`}
                     className={cn(
-                      expandedRows[row.original.key] ? '' : 'hidden',
+                      submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                        ? ''
+                        : 'hidden',
                     )}
                   >
                     <TableCell

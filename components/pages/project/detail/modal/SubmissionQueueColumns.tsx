@@ -29,7 +29,12 @@ export const useSubmissionQueueColumns = () => {
         const item = info.row.original;
         const { toggleRowExpanded, expandedRows } = info.table.options
           .meta as ITableMetaOfSubmissionQueue;
-        const isRowExpanded = expandedRows[item.key];
+
+        // 生成唯一标识符 - 与SubmissionQueue组件中的逻辑保持一致
+        const uniqueId = item.proposalId
+          ? `proposal-${item.proposalId}`
+          : `key-${item.key}`;
+        const isRowExpanded = expandedRows[uniqueId];
 
         return (
           <InputCol.Cell
@@ -37,7 +42,7 @@ export const useSubmissionQueueColumns = () => {
             itemKey={item.key as any}
             isExpanded={isRowExpanded}
             onToggleExpand={
-              toggleRowExpanded ? () => toggleRowExpanded(item.key) : undefined
+              toggleRowExpanded ? () => toggleRowExpanded(uniqueId) : undefined
             }
           />
         );
