@@ -13,10 +13,29 @@ interface IProps {
 }
 
 export const isInputValueEmpty = (value: any) => {
-  // TODO 完善这个逻辑
-  return (
-    !value || (typeof value === 'string' && value?.toLowerCase() === 'n/a')
-  );
+  // 检查基础的空值情况
+  if (!value || (typeof value === 'string' && value?.toLowerCase() === 'n/a')) {
+    return true;
+  }
+
+  // 检查数组类型且为空数组
+  if (Array.isArray(value) && value.length === 0) {
+    return true;
+  }
+
+  // 检查字符串类型，尝试JSON.parse后是否为空数组
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed) && parsed.length === 0) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 };
 
 const InputContentRenderer: React.FC<IProps> = ({
@@ -34,8 +53,12 @@ const InputContentRenderer: React.FC<IProps> = ({
 
   const isValueEmpty = isInputValueEmpty(value);
 
-  if (!isEssential && isValueEmpty) {
-    return <span className="font-mona text-[14px] font-[600]">{`---`}</span>;
+  if (isValueEmpty) {
+    return !isEssential ? (
+      <span className="font-mona text-[14px] font-[600]">{`---`}</span>
+    ) : (
+      <span>n/a</span>
+    );
   }
 
   const formatValue =
@@ -57,9 +80,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     case 'selectMultiple':
       return <>{Array.isArray(value) ? value.join(', ') : value}</>;
     case 'img':
-      return !value || value.toLowerCase() === 'n/a' ? (
-        <>n/a</>
-      ) : (
+      return (
         <Image
           src={value}
           alt="img"
@@ -69,9 +90,7 @@ const InputContentRenderer: React.FC<IProps> = ({
         />
       );
     case 'link':
-      return !value || value.toLowerCase() === 'n/a' ? (
-        <>n/a</>
-      ) : (
+      return (
         <Link
           href={value}
           target="_blank"
