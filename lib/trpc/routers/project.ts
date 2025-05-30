@@ -10,7 +10,9 @@ import {
   WEIGHT,
 } from '@/lib/constants';
 import { projects, voteRecords } from '@/lib/db/schema';
+import { itemProposals } from '@/lib/db/schema/itemProposals';
 import { projectLogs } from '@/lib/db/schema/projectLogs';
+import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
   addRewardNotification,
@@ -324,9 +326,58 @@ export const projectRouter = router({
               .where(eq(projects.id, projectId));
 
             await tx.insert(projectLogs).values({
-              projectId: projectId,
-              proposalId: proposalId,
+              projectId,
+              proposalId,
             });
+
+            const originalProposal = await tx.query.proposals.findFirst({
+              where: eq(proposals.id, proposalId),
+            });
+
+            if (originalProposal && originalProposal.items) {
+              const itemProposalMap: Record<string, number> = {};
+
+              const formatRefs = (refs: any, key: string) => {
+                if (!refs || !Array.isArray(refs) || refs.length === 0) {
+                  return null;
+                }
+
+                return refs.find((ref: any) => ref.key === key)?.value || null;
+              };
+
+              for (const item of originalProposal.items as any[]) {
+                if (item.key) {
+                  const [newItemProposal] = await tx
+                    .insert(itemProposals)
+                    .values({
+                      key: item.key,
+                      value: item.value ?? '',
+                      projectId: projectId,
+                      creator: originalProposal.creator,
+                      ref: formatRefs(originalProposal.refs, item.key),
+                    })
+                    .returning();
+
+                  if (newItemProposal) {
+                    itemProposalMap[item.key] = newItemProposal.id;
+                  }
+                }
+              }
+
+              for (const voteRecord of projectVoteRecords) {
+                const itemProposalId = itemProposalMap[voteRecord.key];
+
+                if (itemProposalId) {
+                  await tx.insert(voteRecords).values({
+                    key: voteRecord.key,
+                    itemProposalId: itemProposalId,
+                    creator: voteRecord.creator,
+                    weight: voteRecord.weight,
+                    projectId: voteRecord.projectId,
+                  });
+                }
+              }
+            }
 
             if (proposalCreator) {
               await updateUserWeight(

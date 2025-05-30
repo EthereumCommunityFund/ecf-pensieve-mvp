@@ -1,7 +1,7 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { itemProposals, projectLogs } from '@/lib/db/schema';
+import { itemProposals, profiles, projectLogs } from '@/lib/db/schema';
 
 import { publicProcedure, router } from '../server';
 
@@ -15,49 +15,69 @@ export const projectLogRouter = router({
     .query(async ({ ctx, input }) => {
       const { projectId } = input;
 
-      const allLogs = await ctx.db.query.projectLogs.findMany({
-        where: eq(projectLogs.projectId, projectId),
-        with: {
-          proposal: {
-            with: {
-              creator: true,
-            },
-          },
+      const latestLogsSubquery = ctx.db
+        .select({
+          id: projectLogs.id,
+          projectId: projectLogs.projectId,
+          key: projectLogs.key,
+          proposalId: projectLogs.proposalId,
+          itemProposalId: projectLogs.itemProposalId,
+          createdAt: projectLogs.createdAt,
+          rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${projectLogs.key} ORDER BY ${projectLogs.createdAt} DESC)`.as(
+            'rn',
+          ),
+        })
+        .from(projectLogs)
+        .where(eq(projectLogs.projectId, projectId))
+        .as('latest_logs');
+
+      const latestLogs = await ctx.db
+        .select({
+          id: latestLogsSubquery.id,
+          projectId: latestLogsSubquery.projectId,
+          key: latestLogsSubquery.key,
+          proposalId: latestLogsSubquery.proposalId,
+          itemProposalId: latestLogsSubquery.itemProposalId,
+          createdAt: latestLogsSubquery.createdAt,
           itemProposal: {
-            with: {
-              creator: true,
-            },
+            id: itemProposals.id,
+            key: itemProposals.key,
+            value: itemProposals.value,
+            ref: itemProposals.ref,
+            creator: itemProposals.creator,
+            reason: itemProposals.reason,
+            createdAt: itemProposals.createdAt,
           },
-        },
-        orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-      });
+          creator: {
+            userId: profiles.userId,
+            name: profiles.name,
+            avatarUrl: profiles.avatarUrl,
+            address: profiles.address,
+          },
+        })
+        .from(latestLogsSubquery)
+        .leftJoin(
+          itemProposals,
+          eq(latestLogsSubquery.itemProposalId, itemProposals.id),
+        )
+        .leftJoin(profiles, eq(itemProposals.creator, profiles.userId))
+        .where(eq(latestLogsSubquery.rn, 1))
+        .orderBy(sql`${latestLogsSubquery.createdAt} DESC`);
 
-      const latestLogsByKey = new Map();
-
-      for (const log of allLogs) {
-        if (
-          !latestLogsByKey.has(log.key) ||
-          new Date(log.createdAt) >
-            new Date(latestLogsByKey.get(log.key).createdAt)
-        ) {
-          latestLogsByKey.set(log.key, log);
-        }
-      }
-
-      const latestLogs = Array.from(latestLogsByKey.values());
-
-      const withoutItemProposal = latestLogs
-        .filter((log) => log.proposalId && !log.itemProposalId)
-        .map((v) => v);
-
-      const withItemProposal = latestLogs
-        .filter((log) => log.itemProposalId)
-        .map((v) => v);
-
-      return {
-        withoutItemProposal,
-        withItemProposal,
-      };
+      return latestLogs.map((row) => ({
+        id: row.id,
+        projectId: row.projectId,
+        key: row.key,
+        proposalId: row.proposalId,
+        itemProposalId: row.itemProposalId,
+        createdAt: row.createdAt,
+        itemProposal: row.itemProposal?.id
+          ? {
+              ...row.itemProposal,
+              creator: row.creator?.userId ? row.creator : null,
+            }
+          : null,
+      }));
     }),
 
   getProposalsByProjectIdAndKey: publicProcedure
@@ -77,12 +97,6 @@ export const projectLogRouter = router({
             eq(projectLogs.key, key),
           ),
           with: {
-            proposal: {
-              with: {
-                voteRecords: true,
-                creator: true,
-              },
-            },
             itemProposal: {
               with: {
                 voteRecords: true,
@@ -127,12 +141,6 @@ export const projectLogRouter = router({
           eq(projectLogs.key, key),
         ),
         with: {
-          proposal: {
-            with: {
-              voteRecords: true,
-              creator: true,
-            },
-          },
           itemProposal: {
             with: {
               voteRecords: true,
