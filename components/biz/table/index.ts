@@ -2,7 +2,7 @@ export * from './Cell';
 export * from './CellSkeleton';
 export * from './Footer';
 export * from './GroupHeader';
-export * from './Hearder';
+export * from './Header';
 export * from './InputContentRenderer';
 export * from './Row';
 export * from './RowSkeleton';
