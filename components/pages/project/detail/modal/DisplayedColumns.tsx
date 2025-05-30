@@ -10,7 +10,7 @@ import { IPocItemKey } from '@/types/item';
 
 import { IProjectTableRowData, ITableMetaOfDisplayed } from '../types';
 
-interface UseDisplayedColumnsProps {
+interface UseDisplayedColumnsProps extends Record<string, any> {
   isPageExpanded?: boolean;
 }
 
