@@ -4,6 +4,8 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import Tab from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
@@ -12,16 +14,10 @@ import Displayed from './Displayed';
 import SubmissionQueue from './SubmissionQueue';
 
 interface LeftContentProps {
-  itemName?: string;
-  itemWeight?: number;
   itemKey?: string;
 }
 
-const LeftContent: FC<LeftContentProps> = ({
-  itemName = 'ItemName',
-  itemWeight = 22,
-  itemKey,
-}) => {
+const LeftContent: FC<LeftContentProps> = ({ itemKey }) => {
   const [activeTab, setActiveTab] = useState('submission-queue');
 
   // Get project detail context to access proposalsByProjectIdAndKey and displayProposalDataOfKey
@@ -62,6 +58,14 @@ const LeftContent: FC<LeftContentProps> = ({
       setActiveTab(availableTabKeys[0] || 'submission-queue');
     }
   }, [tabs, activeTab]);
+
+  const { itemName, itemWeight } = useMemo(() => {
+    const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+    return {
+      itemName: itemConfig?.label || '',
+      itemWeight: Number(itemConfig?.weight) || 0,
+    };
+  }, [itemKey]);
 
   const renderTabContent = () => {
     switch (activeTab) {

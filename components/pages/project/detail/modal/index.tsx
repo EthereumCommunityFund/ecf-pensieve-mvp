@@ -98,11 +98,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
             contentType === 'viewItemProposal' ? 'block' : 'hidden',
           )}
         >
-          <LeftContent
-            itemName={itemName}
-            itemWeight={itemWeight}
-            itemKey={itemKey}
-          />
+          <LeftContent itemKey={itemKey} />
         </div>
 
         <div

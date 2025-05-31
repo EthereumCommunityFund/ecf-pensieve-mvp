@@ -30,6 +30,7 @@ import {
 } from '../types';
 
 import { useCommonColumnsOfModal } from './CommonColumns';
+import ItemWeight from './ItemWeight';
 
 interface DisplayedProps {
   itemName?: string;
@@ -144,17 +145,7 @@ const Displayed: FC<DisplayedProps> = ({
             Item:
           </span>
         </div>
-        <div className="flex items-center gap-2.5">
-          <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-            {itemName}
-          </span>
-          <div className="flex items-center gap-[5px] rounded border border-black/10 bg-black/5 px-2 py-0.5">
-            <span className="font-sans text-[14px] font-semibold">Weight:</span>
-            <span className="font-sans text-[14px] font-semibold">
-              {itemWeight}
-            </span>
-          </div>
-        </div>
+        <ItemWeight itemName={itemName} itemWeight={itemWeight} />
       </div>
 
       {/* Table */}

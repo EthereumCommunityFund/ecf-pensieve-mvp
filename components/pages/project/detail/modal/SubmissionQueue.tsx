@@ -25,6 +25,7 @@ import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import { useCommonColumnsOfModal } from './CommonColumns';
+import ItemWeight from './ItemWeight';
 
 interface ISubmissionQueueProps {
   itemName?: string;
@@ -258,133 +259,142 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Displayed Section - Only show when displayProposalDataOfKey has value */}
+      <ItemWeight itemName={itemName} itemWeight={itemWeight} />
       {displayProposalDataOfKey && (
         <div className="flex flex-col gap-2.5">
-          <div className="flex flex-col gap-[5px]">
-            <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-              Displayed:
-            </span>
-            <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-              This is the validated submission currently shown on the project
-              page.
-            </span>
-          </div>
+          {/* Displayed Section */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+                Displayed:
+              </span>
+              <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+                This is the validated submission currently shown on the project
+                page.
+              </span>
+            </div>
 
-          {/* Displayed Table */}
-          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            <table className="w-full border-separate border-spacing-0">
-              {/* Table Header */}
-              <thead>
-                {displayedTable.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="bg-[#F5F5F5]">
-                    {headerGroup.headers.map((header, index) => (
-                      <TableHeader
-                        key={header.id}
-                        width={
-                          header.getSize() === 0 ? undefined : header.getSize()
-                        }
-                        isLast={index === headerGroup.headers.length - 1}
-                        className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
-                        style={
-                          header.getSize() === 0 ? { width: 'auto' } : undefined
-                        }
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHeader>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-
-              {/* Table Body */}
-              <tbody>
-                {displayedTable.getRowModel().rows.map((row, rowIndex) => (
-                  <React.Fragment key={row.id}>
-                    <TableRow
-                      isLastRow={
-                        rowIndex ===
-                          displayedTable.getRowModel().rows.length - 1 &&
-                        !AllItemConfig[row.original.key as IEssentialItemKey]
-                          ?.showExpand
-                      }
-                      className={
-                        cn()
-                        // displayedExpandedRows[getRowUniqueId(row.original)]
-                        //   ? 'bg-[#EBEBEB]'
-                        //   : '',
-                      }
-                    >
-                      {row.getVisibleCells().map((cell, cellIndex) => (
-                        <TableCell
-                          key={cell.id}
+            {/* Displayed Table */}
+            <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+              <table className="w-full border-separate border-spacing-0">
+                {/* Table Header */}
+                <thead>
+                  {displayedTable.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id} className="bg-[#F5F5F5]">
+                      {headerGroup.headers.map((header, index) => (
+                        <TableHeader
+                          key={header.id}
                           width={
-                            cell.column.getSize() === 0
+                            header.getSize() === 0
                               ? undefined
-                              : cell.column.getSize()
+                              : header.getSize()
                           }
-                          isLast={
-                            cellIndex === row.getVisibleCells().length - 1
-                          }
-                          isLastRow={
-                            rowIndex ===
-                              displayedTable.getRowModel().rows.length - 1 &&
-                            !AllItemConfig[
-                              row.original.key as IEssentialItemKey
-                            ]?.showExpand
-                          }
-                          className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
-                          minHeight={60}
+                          isLast={index === headerGroup.headers.length - 1}
+                          className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
                           style={
-                            cell.column.getSize() === 0
+                            header.getSize() === 0
                               ? { width: 'auto' }
                               : undefined
                           }
                         >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </TableHeader>
                       ))}
-                    </TableRow>
+                    </tr>
+                  ))}
+                </thead>
 
-                    <ExpandableRow
-                      rowId={getRowUniqueId(row.original)}
-                      itemKey={row.original.key}
-                      inputValue={row.original.input}
-                      isExpanded={
-                        displayedExpandedRows[getRowUniqueId(row.original)] ||
-                        false
-                      }
-                      colSpan={row.getVisibleCells().length}
-                      isLastRow={
-                        rowIndex ===
-                        displayedTable.getRowModel().rows.length - 1
-                      }
-                    />
-                  </React.Fragment>
-                ))}
-                {/* Edit Reason Row */}
-                {tableDataOfDisplayed[0]?.reason && (
-                  <TableFooter colSpan={displayedTable.getAllColumns().length}>
-                    <div className="flex items-center gap-[5px]">
-                      <span className="font-sans text-[13px] opacity-50">
-                        Edit Reason:
-                      </span>
-                      <span className="font-sans text-[13px]">
-                        {tableDataOfDisplayed[0]?.reason}
-                      </span>
-                    </div>
-                  </TableFooter>
-                )}
-              </tbody>
-            </table>
+                {/* Table Body */}
+                <tbody>
+                  {displayedTable.getRowModel().rows.map((row, rowIndex) => (
+                    <React.Fragment key={row.id}>
+                      <TableRow
+                        isLastRow={
+                          rowIndex ===
+                            displayedTable.getRowModel().rows.length - 1 &&
+                          !AllItemConfig[row.original.key as IEssentialItemKey]
+                            ?.showExpand
+                        }
+                        className={
+                          cn()
+                          // displayedExpandedRows[getRowUniqueId(row.original)]
+                          //   ? 'bg-[#EBEBEB]'
+                          //   : '',
+                        }
+                      >
+                        {row.getVisibleCells().map((cell, cellIndex) => (
+                          <TableCell
+                            key={cell.id}
+                            width={
+                              cell.column.getSize() === 0
+                                ? undefined
+                                : cell.column.getSize()
+                            }
+                            isLast={
+                              cellIndex === row.getVisibleCells().length - 1
+                            }
+                            isLastRow={
+                              rowIndex ===
+                                displayedTable.getRowModel().rows.length - 1 &&
+                              !AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]?.showExpand
+                            }
+                            className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                            minHeight={60}
+                            style={
+                              cell.column.getSize() === 0
+                                ? { width: 'auto' }
+                                : undefined
+                            }
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+
+                      <ExpandableRow
+                        rowId={getRowUniqueId(row.original)}
+                        itemKey={row.original.key}
+                        inputValue={row.original.input}
+                        isExpanded={
+                          displayedExpandedRows[getRowUniqueId(row.original)] ||
+                          false
+                        }
+                        colSpan={row.getVisibleCells().length}
+                        isLastRow={
+                          rowIndex ===
+                          displayedTable.getRowModel().rows.length - 1
+                        }
+                      />
+                    </React.Fragment>
+                  ))}
+                  {/* Edit Reason Row */}
+                  {tableDataOfDisplayed[0]?.reason && (
+                    <TableFooter
+                      colSpan={displayedTable.getAllColumns().length}
+                    >
+                      <div className="flex items-center gap-[5px]">
+                        <span className="font-sans text-[13px] opacity-50">
+                          Edit Reason:
+                        </span>
+                        <span className="font-sans text-[13px]">
+                          {tableDataOfDisplayed[0]?.reason}
+                        </span>
+                      </div>
+                    </TableFooter>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
