@@ -39,22 +39,18 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 }) => {
   const { profile } = useAuth();
 
-  // 分别管理两个表格的展开状态
   const [displayedExpandedRows, setDisplayedExpandedRows] = useState<
     Record<string, boolean>
   >({});
   const [submissionQueueExpandedRows, setSubmissionQueueExpandedRows] =
     useState<Record<string, boolean>>({});
 
-  // 辅助函数：生成唯一标识符
   const getRowUniqueId = useCallback((rowData: IProjectTableRowData) => {
-    // 优先使用 proposalId，如果没有则用 key + 其他标识符组合
     return rowData.proposalId
       ? `proposal-${rowData.proposalId}`
       : `key-${rowData.key}`;
   }, []);
 
-  // 获取项目数据
   const {
     displayProposalDataListOfProject,
     project,
@@ -74,10 +70,13 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   const tableDataOfSubmissionQueue: IProjectTableRowData[] = useMemo(() => {
     if (!proposalsByProjectIdAndKey) return [];
-    const { allItemProposals } = proposalsByProjectIdAndKey;
+    const { allItemProposals, leadingProposal } = proposalsByProjectIdAndKey;
 
-    const list: IProjectTableRowData[] = allItemProposals.map(
-      (itemProposal) => {
+    const list: IProjectTableRowData[] = allItemProposals
+      .filter(
+        (itemProposal) => itemProposal.id !== leadingProposal?.itemProposalId,
+      )
+      .map((itemProposal) => {
         const {
           creator,
           key,
@@ -127,8 +126,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             voters: voterMap.size,
           },
         };
-      },
-    );
+      });
 
     // 根据 weight 排序
     return list.sort((a, b) => {
@@ -136,7 +134,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     });
   }, [proposalsByProjectIdAndKey, getItemTopWeight]);
 
-  // 为 Displayed Table 创建独立的 toggle 函数
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
     setDisplayedExpandedRows((prev) => ({
       ...prev,
@@ -144,7 +141,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }));
   }, []);
 
-  // 为 Submission Queue Table 创建独立的 toggle 函数
   const toggleSubmissionQueueRowExpanded = useCallback((uniqueId: string) => {
     setSubmissionQueueExpandedRows((prev) => ({
       ...prev,
@@ -152,16 +148,13 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }));
   }, []);
 
-  // 检查 Submission Queue 表格是否有任何行已展开
   const hasSubmissionQueueExpandedRows = useMemo(() => {
     return Object.values(submissionQueueExpandedRows).some(Boolean);
   }, [submissionQueueExpandedRows]);
 
-  // 获取 Submission Queue 表格中所有可展开的行的 ID
   const getSubmissionQueueExpandableRowIds = useCallback(() => {
     const submissionQueueRowIds: string[] = [];
 
-    // 获取 Submission Queue 表格中可展开的行
     tableDataOfSubmissionQueue.forEach((rowData) => {
       const itemConfig = AllItemConfig[rowData.key as IEssentialItemKey];
       if (itemConfig?.showExpand) {
@@ -172,7 +165,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     return submissionQueueRowIds;
   }, [tableDataOfSubmissionQueue, getRowUniqueId]);
 
-  // 检查是否存在任何可展开的行
   const hasExpandableRows = useMemo(() => {
     return tableDataOfSubmissionQueue.some((rowData) => {
       const itemConfig = AllItemConfig[rowData.key as IEssentialItemKey];
@@ -184,10 +176,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     const submissionQueueRowIds = getSubmissionQueueExpandableRowIds();
 
     if (hasSubmissionQueueExpandedRows) {
-      // 如果有展开的行，则全部收起
       setSubmissionQueueExpandedRows({});
     } else {
-      // 如果没有展开的行，则全部展开
       const newSubmissionQueueExpanded: Record<string, boolean> = {};
 
       submissionQueueRowIds.forEach((id) => {
@@ -200,7 +190,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   const columns = useCommonColumnsOfModal();
 
-  // 为 Displayed Table 创建独立的 tableMeta
   const displayedTableMeta = useMemo(() => {
     return {
       project,
@@ -227,7 +216,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     toggleDisplayedRowExpanded,
   ]);
 
-  // 为 Submission Queue Table 创建独立的 tableMeta
   const submissionQueueTableMeta = useMemo(() => {
     return {
       project,
