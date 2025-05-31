@@ -25,6 +25,12 @@ import ConnectWalletButton from './ConnectWalletButton';
 
 type LoadingButtonType = 'skip' | 'continue' | null;
 
+// Format address to 0x0000...000000 pattern
+const formatDisplayedAddress = (address: string): string => {
+  if (!address || address.length < 12) return address;
+  return `${address.slice(0, 6)}...${address.slice(-6)}`;
+};
+
 const AuthButton = ({
   children,
   isLoading,
@@ -133,7 +139,7 @@ const AuthPrompt: React.FC = () => {
         try {
           const usernameToUse = useInputUsername
             ? inputUsername
-            : ((ensName || address.slice(0, 10)) as string);
+            : ((ensName || formatDisplayedAddress(address)) as string);
 
           await createProfile(usernameToUse, inviteCode);
         } catch (e: any) {
@@ -261,7 +267,8 @@ const AuthPrompt: React.FC = () => {
               length={6}
               value={inviteCode}
               onValueChange={setInviteCode}
-              placeholder="0"
+              placeholder="-"
+              allowedKeys="^.*$"
               isDisabled={isCreatingProfile}
               variant="bordered"
               color="primary"
@@ -300,6 +307,19 @@ const AuthPrompt: React.FC = () => {
               Continue
             </Button>
           </div>
+
+          <div>
+            <p className="text-[13px] font-[700] leading-[20px] text-black/80">
+              Do not have PoC Invitation Code?
+            </p>
+            <p className="mt-[10px] text-[13px] font-[400] leading-[20px] text-black/80">
+              To apply for testing, you could introduce yourself to the
+              community in our Discord Server Or speed up the process by
+              catching invitation officer's attention here (link to
+              application). Invitation code will be distributed in ECF Discord
+              in direct messages.
+            </p>
+          </div>
         </ModalBody>
       </>
     );
@@ -316,42 +336,36 @@ const AuthPrompt: React.FC = () => {
 
   const renderLoggedInContent = useMemo(() => {
     const username = profile?.name;
-    const isAddressUsername =
-      username && address && username === address.slice(0, 10);
     return (
       <>
         <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
-            You're all set!
+            Sign in
           </ModalHeader>
           <CloseButton onPress={hideAuthPrompt} />
         </div>
         <ModalBody>
-          {username && !isAddressUsername && (
-            <p className="text-center text-xl font-semibold text-gray-800">
-              Welcome,{' '}
-              <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                {username}
-              </span>
-              !
-            </p>
-          )}
-          <p className="text-center text-sm text-gray-600">
-            You are now logged in and ready to use Pensieve.
-          </p>
+          <div className="flex flex-col gap-[10px]">
+            <div className="text-[16px] leading-[1.6] text-black/80">
+              {newUser ? 'Welcome Back,' : "You're All Set"}
+            </div>
+            <span className="text-[20px] font-[700] leading-[1.2] text-[#28C196]">
+              {username}!
+            </span>
+          </div>
           <div className="mt-[10px]">
             <Button
               onPress={hideAuthPrompt}
               color="secondary"
-              className="w-full"
+              className="w-full rounded-[8px] bg-[#F5F5F5]"
             >
-              Let's Go!
+              Close
             </Button>
           </div>
         </ModalBody>
       </>
     );
-  }, [profile, hideAuthPrompt, address]);
+  }, [profile, hideAuthPrompt, address, newUser]);
 
   const renderModalContent = useCallback(() => {
     if (!isConnected) {
