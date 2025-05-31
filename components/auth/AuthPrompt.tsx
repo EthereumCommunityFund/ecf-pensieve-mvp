@@ -347,7 +347,7 @@ const AuthPrompt: React.FC = () => {
         <ModalBody>
           <div className="flex flex-col gap-[10px]">
             <div className="text-[16px] leading-[1.6] text-black/80">
-              {newUser ? 'Welcome Back,' : "You're All Set"}
+              {newUser ? `You're All Set` : 'Welcome Back,'}
             </div>
             <span className="text-[20px] font-[700] leading-[1.2] text-[#28C196]">
               {username}!
