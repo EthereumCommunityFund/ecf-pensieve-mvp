@@ -276,41 +276,42 @@ export const ProjectDetailProvider = ({
         },
       };
     }
+    return undefined;
     // 2. 没有 item proposal 胜出, 取 allItemProposals 的数据
-    const proposalItem = (
-      proposalsByProjectIdAndKey.allItemProposals || []
-    ).find((item) => item.key === currentItemKey);
+    // const proposalItem = (
+    //   proposalsByProjectIdAndKey.allItemProposals || []
+    // ).find((item) => item.key === currentItemKey);
 
-    if (!proposalItem) {
-      return undefined; // 没有找到对应 itemKey 的数据 -> non essential item (完全是新的)
-    }
+    // if (!proposalItem) {
+    //   return undefined; // 没有找到对应 itemKey 的数据 -> non essential item (完全是新的)
+    // }
 
-    const votesOfKey =
-      proposalsByProjectIdAndKey?.allItemProposals.flatMap(
-        (item) => item.voteRecords,
-      ) || [];
+    // const votesOfKey =
+    //   proposalsByProjectIdAndKey?.allItemProposals.flatMap(
+    //     (item) => item.voteRecords,
+    //   ) || [];
 
-    const sumOfWeight =
-      votesOfKey?.reduce((acc, vote) => {
-        return acc + Number(vote.weight);
-      }, 0) || 0;
-    const voterMemberCount = votesOfKey?.length || 0; // 每人只能投一票
+    // const sumOfWeight =
+    //   votesOfKey?.reduce((acc, vote) => {
+    //     return acc + Number(vote.weight);
+    //   }, 0) || 0;
+    // const voterMemberCount = votesOfKey?.length || 0; // 每人只能投一票
 
-    return {
-      ...proposalItem,
-      property: proposalItem.key,
-      input: proposalItem.value,
-      reference: proposalItem.ref
-        ? { key: proposalItem.key, value: proposalItem.ref }
-        : null,
-      submitter: proposalItem.creator,
-      proposalId: proposalItem.id,
-      itemTopWeight: getItemTopWeight(proposalItem.key as IPocItemKey),
-      support: {
-        count: sumOfWeight,
-        voters: voterMemberCount,
-      },
-    };
+    // return {
+    //   ...proposalItem,
+    //   property: proposalItem.key,
+    //   input: proposalItem.value,
+    //   reference: proposalItem.ref
+    //     ? { key: proposalItem.key, value: proposalItem.ref }
+    //     : null,
+    //   submitter: proposalItem.creator,
+    //   proposalId: proposalItem.id,
+    //   itemTopWeight: getItemTopWeight(proposalItem.key as IPocItemKey),
+    //   support: {
+    //     count: sumOfWeight,
+    //     voters: voterMemberCount,
+    //   },
+    // };
   }, [
     displayProposalDataListOfProject,
     currentItemKey,
