@@ -51,6 +51,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     toggleEmptyItems,
     toggleGroupExpanded,
     toggleMetricsVisible,
+    toggleAllRowsInCategory,
   } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
@@ -192,6 +193,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   onToggleCategory={toggleCategory}
                   onToggleEmptyItems={toggleEmptyItems}
                   onToggleGroupExpanded={toggleGroupExpanded}
+                  onToggleAllRowsInCategory={toggleAllRowsInCategory}
                   metricsVisible={metricsVisible}
                   onToggleMetrics={toggleMetricsVisible}
                 />

@@ -28,6 +28,7 @@ interface CategoryTableSectionProps {
   onToggleCategory: (category: IItemSubCategoryEnum) => void;
   onToggleEmptyItems: (category: IItemSubCategoryEnum) => void;
   onToggleGroupExpanded: (groupKey: string) => void;
+  onToggleAllRowsInCategory: (categoryRows: string[]) => void;
   metricsVisible?: boolean;
   onToggleMetrics?: () => void;
 }
@@ -50,20 +51,20 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
   onToggleCategory,
   onToggleEmptyItems,
   onToggleGroupExpanded,
+  onToggleAllRowsInCategory,
   metricsVisible,
   onToggleMetrics,
 }) => {
-  // 动画样式
-  const getAnimationStyle = (isExpanded: boolean) => ({
-    height: isExpanded ? 'auto' : '0',
-    opacity: isExpanded ? 1 : 0,
-    overflow: 'hidden',
-    transition: 'opacity 0.2s ease',
-    transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)',
-    transformOrigin: 'top',
-    transitionProperty: 'opacity, transform',
-    transitionDuration: '0.2s',
-  });
+  // 获取当前分类下所有行的 key
+  const getCategoryRowKeys = () => {
+    return table.getRowModel().rows.map((row) => row.original.key);
+  };
+
+  // 检查当前分类下是否有任何行已展开
+  const hasExpandedRows = () => {
+    const rowKeys = getCategoryRowKeys();
+    return rowKeys.some((rowKey) => expandedRows[rowKey]);
+  };
 
   return (
     <div key={subCategory.key} ref={categoryRef}>
@@ -71,12 +72,12 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
         title={subCategory.title}
         description={subCategory.description || ''}
         category={subCategory.key}
-        isExpanded={expanded[subCategory.key]}
-        onToggle={() => onToggleCategory(subCategory.key)}
+        isExpanded={hasExpandedRows()}
+        onToggle={() => onToggleAllRowsInCategory(getCategoryRowKeys())}
         metricsVisible={metricsVisible}
         onToggleMetrics={onToggleMetrics}
       />
-      <div style={getAnimationStyle(expanded[subCategory.key])}>
+      <div>
         <CategoryTable
           table={table}
           isLoading={isLoading}

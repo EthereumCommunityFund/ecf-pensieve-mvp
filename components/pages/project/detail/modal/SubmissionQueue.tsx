@@ -38,8 +38,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 }) => {
   const { profile } = useAuth();
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   // 分别管理两个表格的展开状态
   const [displayedExpandedRows, setDisplayedExpandedRows] = useState<
     Record<string, boolean>
@@ -154,15 +152,43 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }));
   }, []);
 
+  // 检查 Submission Queue 表格是否有任何行已展开
+  const hasSubmissionQueueExpandedRows = useMemo(() => {
+    return Object.values(submissionQueueExpandedRows).some(Boolean);
+  }, [submissionQueueExpandedRows]);
+
+  // 获取 Submission Queue 表格中所有可展开的行的 ID
+  const getSubmissionQueueExpandableRowIds = useCallback(() => {
+    const submissionQueueRowIds: string[] = [];
+
+    // 获取 Submission Queue 表格中可展开的行
+    tableDataOfSubmissionQueue.forEach((rowData) => {
+      const itemConfig = AllItemConfig[rowData.key as IEssentialItemKey];
+      if (itemConfig?.showExpand) {
+        submissionQueueRowIds.push(getRowUniqueId(rowData));
+      }
+    });
+
+    return submissionQueueRowIds;
+  }, [tableDataOfSubmissionQueue, getRowUniqueId]);
+
   const handleCollapseAll = useCallback(() => {
-    setIsCollapsed(!isCollapsed);
-    // 收起所有展开的行
-    if (!isCollapsed) {
-      setDisplayedExpandedRows({});
+    const submissionQueueRowIds = getSubmissionQueueExpandableRowIds();
+
+    if (hasSubmissionQueueExpandedRows) {
+      // 如果有展开的行，则全部收起
       setSubmissionQueueExpandedRows({});
+    } else {
+      // 如果没有展开的行，则全部展开
+      const newSubmissionQueueExpanded: Record<string, boolean> = {};
+
+      submissionQueueRowIds.forEach((id) => {
+        newSubmissionQueueExpanded[id] = true;
+      });
+
+      setSubmissionQueueExpandedRows(newSubmissionQueueExpanded);
     }
-    console.log('Collapse all clicked:', !isCollapsed);
-  }, [isCollapsed]);
+  }, [hasSubmissionQueueExpandedRows, getSubmissionQueueExpandableRowIds]);
 
   const columns = useSubmissionQueueColumns();
 
@@ -294,11 +320,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                       !AllItemConfig[row.original.key as IEssentialItemKey]
                         ?.showExpand
                     }
-                    className={cn(
-                      displayedExpandedRows[getRowUniqueId(row.original)]
-                        ? 'bg-[#EBEBEB]'
-                        : '',
-                    )}
+                    className={cn()
+                    // displayedExpandedRows[getRowUniqueId(row.original)]
+                    //   ? 'bg-[#EBEBEB]'
+                    //   : '',
+                    }
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => (
                       <TableCell
@@ -374,7 +400,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
         >
           <CaretUpDownIcon size={16} className="opacity-80" />
           <span className="font-sans text-[13px] font-semibold text-black opacity-80">
-            Collapse All Items
+            {hasSubmissionQueueExpandedRows
+              ? 'Collapse All Items'
+              : 'Expand All Items'}
           </span>
         </button>
       </div>
@@ -421,11 +449,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
-                  className={cn(
-                    submissionQueueExpandedRows[getRowUniqueId(row.original)]
-                      ? 'bg-[#EBEBEB]'
-                      : '',
-                  )}
+                  className={cn()
+                  // submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                  //   ? 'bg-[#EBEBEB]'
+                  //   : '',
+                  }
                 >
                   {row.getVisibleCells().map((cell, cellIndex) => (
                     <TableCell

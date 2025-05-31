@@ -181,9 +181,9 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
-                  className={cn(
-                    expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
-                  )}
+                  className={cn()
+                  // expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                  }
                 >
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => (
                     <TableCell

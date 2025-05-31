@@ -84,6 +84,24 @@ export const useTableStates = () => {
     setMetricsVisible((prev) => !prev);
   }, []);
 
+  // 批量切换某个分类下所有行的展开状态
+  const toggleAllRowsInCategory = useCallback((categoryRows: string[]) => {
+    setExpandedRows((prev) => {
+      // 检查该分类下是否有任何行已展开
+      const hasExpandedRows = categoryRows.some((rowKey) => prev[rowKey]);
+
+      // 如果有展开的行，则全部收起；如果都收起，则全部展开
+      const newExpandedState = !hasExpandedRows;
+
+      const newExpandedRows = { ...prev };
+      categoryRows.forEach((rowKey) => {
+        newExpandedRows[rowKey] = newExpandedState;
+      });
+
+      return newExpandedRows;
+    });
+  }, []);
+
   return {
     // States
     expandedRows,
@@ -98,5 +116,6 @@ export const useTableStates = () => {
     toggleEmptyItems,
     toggleGroupExpanded,
     toggleMetricsVisible,
+    toggleAllRowsInCategory,
   };
 };
