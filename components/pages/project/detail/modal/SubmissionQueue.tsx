@@ -154,7 +154,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     // 1、没有validated的 leading item proposal(仅限not essential item)
     if (!leadingProposal) return true;
-    // 2、原来有validated的leading item proposal,但由于voter switch 投票，导致它的 weight 比 submission queue 第一条的 weight(已排序，最高的 weight) 要低
     return showRowOverTaken;
   }, [showRowOverTaken]);
 
