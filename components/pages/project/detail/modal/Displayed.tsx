@@ -72,8 +72,6 @@ const Displayed: FC<DisplayedProps> = ({
     onCancelVote,
     proposalsByProjectIdAndKey,
     tableDataOfDisplayed,
-    showRowOverTaken,
-    showRowIsLeading,
     isOvertake,
   } = useProjectDetailContext();
 

@@ -60,8 +60,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     proposalsByProjectIdAndKey,
     displayProposalDataOfKey,
     showReferenceModal,
-    showRowOverTaken,
-    showRowIsLeading,
     tableDataOfDisplayed,
     tableDataOfSubmissionQueue,
     isOvertake,
