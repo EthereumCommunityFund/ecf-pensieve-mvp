@@ -172,6 +172,14 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     return submissionQueueRowIds;
   }, [tableDataOfSubmissionQueue, getRowUniqueId]);
 
+  // 检查是否存在任何可展开的行
+  const hasExpandableRows = useMemo(() => {
+    return tableDataOfSubmissionQueue.some((rowData) => {
+      const itemConfig = AllItemConfig[rowData.key as IEssentialItemKey];
+      return itemConfig?.showExpand;
+    });
+  }, [tableDataOfSubmissionQueue]);
+
   const handleCollapseAll = useCallback(() => {
     const submissionQueueRowIds = getSubmissionQueueExpandableRowIds();
 
@@ -320,10 +328,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                       !AllItemConfig[row.original.key as IEssentialItemKey]
                         ?.showExpand
                     }
-                    className={cn()
-                    // displayedExpandedRows[getRowUniqueId(row.original)]
-                    //   ? 'bg-[#EBEBEB]'
-                    //   : '',
+                    className={
+                      cn()
+                      // displayedExpandedRows[getRowUniqueId(row.original)]
+                      //   ? 'bg-[#EBEBEB]'
+                      //   : '',
                     }
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => (
@@ -393,18 +402,20 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           </div>
         </div>
 
-        {/* Collapse All Button */}
-        <button
-          onClick={handleCollapseAll}
-          className="flex items-center gap-[5px] rounded-[5px] bg-black/5 px-2.5 py-[5px] transition-colors hover:bg-black/10"
-        >
-          <CaretUpDownIcon size={16} className="opacity-80" />
-          <span className="font-sans text-[13px] font-semibold text-black opacity-80">
-            {hasSubmissionQueueExpandedRows
-              ? 'Collapse All Items'
-              : 'Expand All Items'}
-          </span>
-        </button>
+        {/* Collapse All Button - Only show when there are expandable rows */}
+        {hasExpandableRows && (
+          <button
+            onClick={handleCollapseAll}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/5 px-2.5 py-[5px] transition-colors hover:bg-black/10"
+          >
+            <CaretUpDownIcon size={16} className="opacity-80" />
+            <span className="font-sans text-[13px] font-semibold text-black opacity-80">
+              {hasSubmissionQueueExpandedRows
+                ? 'Collapse All Items'
+                : 'Expand All Items'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -449,10 +460,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
-                  className={cn()
-                  // submissionQueueExpandedRows[getRowUniqueId(row.original)]
-                  //   ? 'bg-[#EBEBEB]'
-                  //   : '',
+                  className={
+                    cn()
+                    // submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                    //   ? 'bg-[#EBEBEB]'
+                    //   : '',
                   }
                 >
                   {row.getVisibleCells().map((cell, cellIndex) => (

@@ -22,6 +22,7 @@ import { IEssentialItemKey } from '@/types/item';
 
 import {
   IAccountabilityMetric,
+  ILegitimacyMetric,
   IProjectTableRowData,
   IWeb3Metric,
 } from '../types';
@@ -37,6 +38,10 @@ const accountabilityMetrics: IAccountabilityMetric[] = [
   { name: 'Transparency', isExpanded: false },
   { name: 'Participation', isExpanded: false },
   { name: 'Performance Eval', isExpanded: false },
+];
+
+const legitimacyMetrics: ILegitimacyMetric[] = [
+  { name: 'Legitimacy by Transparency', isExpanded: false },
 ];
 
 const web3Metrics: IWeb3Metric[] = [
@@ -259,23 +264,49 @@ const Displayed: FC<DisplayedProps> = ({
       {/* Accountability Metrics Section */}
       <div className="flex flex-col gap-5 border-t border-black/10 pt-5">
         {/* Accountability Metrics */}
-        <div className="flex flex-col gap-2.5">
-          <div className="font-mona text-[16px] font-semibold leading-[1.25em] text-black opacity-80">
-            Accountability Metrics:
-          </div>
-          <div className="font-open-sans text-[13px] font-normal leading-[1.36em] text-black opacity-50">
-            This item falls under the following criteria,
+        <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
+          <div className="flex flex-col gap-[5px]">
+            <div className="font-mona text-[14px] font-semibold leading-[1.43em] text-black opacity-80">
+              Accountability Metrics:
+            </div>
+            <div className="font-sans text-[13px] font-normal leading-[1.36em] text-black opacity-50">
+              This item falls under the following criteria,
+            </div>
           </div>
           <div className="flex flex-col gap-2.5">
             {accountabilityMetrics.map((metric) => (
               <div
                 key={metric.name}
-                className={cn(
-                  'flex items-center justify-between gap-2.5 px-0 py-0',
-                  metric.isExpanded && 'bg-[#F5F5F5] px-2.5 py-2',
-                )}
+                className={cn('flex items-center justify-between gap-2.5')}
               >
-                <span className="font-open-sans text-[16px] font-normal leading-[1.6em] text-black">
+                <span className="font-sans text-[13px] font-normal leading-[1.36em] text-black">
+                  {metric.name}
+                </span>
+                <div className="flex size-[18px] items-center justify-center opacity-50">
+                  <CaretDownIcon size={18} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Legitimacy Analysis */}
+        <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
+          <div className="flex flex-col gap-[5px]">
+            <div className="font-mona text-[14px] font-semibold leading-[1.43em] text-black opacity-80">
+              Legitimacy Analysis:
+            </div>
+            <div className="font-sans text-[13px] font-normal leading-[1.36em] text-black opacity-50">
+              This item falls under the following criteria,
+            </div>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {legitimacyMetrics.map((metric) => (
+              <div
+                key={metric.name}
+                className={cn('flex items-center justify-between gap-2.5')}
+              >
+                <span className="font-sans text-[13px] font-normal leading-[1.36em] text-black">
                   {metric.name}
                 </span>
                 <div className="flex size-[18px] items-center justify-center opacity-50">
@@ -287,22 +318,20 @@ const Displayed: FC<DisplayedProps> = ({
         </div>
 
         {/* Web3 Metrics */}
-        <div className="flex flex-col gap-2.5 opacity-30">
-          <div className="font-mona text-[16px] font-semibold leading-[1.25em] text-black opacity-80">
+        <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
+          <div className="font-mona text-[14px] font-semibold leading-[1.43em] text-black opacity-80">
             Web3 Metrics (coming soon)
           </div>
-          <div className="flex flex-col gap-[5px]">
+          <div className="flex flex-col gap-2.5 opacity-30">
             {web3Metrics.map((metric) => (
               <div
                 key={metric.label}
-                className={cn(
-                  'flex items-center justify-between gap-2.5 px-0 py-0',
-                )}
+                className={cn('flex items-center justify-between gap-2.5')}
               >
-                <span className="font-open-sans text-[14px] font-normal leading-[1.43em] text-black">
+                <span className="font-sans text-[14px] font-normal leading-[1.43em] text-black">
                   {metric.label}
                 </span>
-                <span className="font-open-sans text-[14px] font-semibold leading-[1.36em] text-black">
+                <span className="font-sans text-[14px] font-semibold leading-[1.36em] text-black">
                   {metric.value}
                 </span>
               </div>

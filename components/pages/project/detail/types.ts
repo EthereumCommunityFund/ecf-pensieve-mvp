@@ -79,6 +79,11 @@ export interface IWeb3Metric {
   isHighlighted?: boolean;
 }
 
+export interface ILegitimacyMetric {
+  name: string;
+  isExpanded: boolean;
+}
+
 export interface IConsensusLogRowData {
   id: string;
   dateTime: {
