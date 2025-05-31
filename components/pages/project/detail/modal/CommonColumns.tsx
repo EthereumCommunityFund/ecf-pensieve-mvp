@@ -151,12 +151,17 @@ export const useCommonColumnsOfModal = () => {
           userVotedItemProposal?.itemProposalId ===
             info.row.original.proposalId;
 
+        const showQuorum =
+          !AllItemConfig[info.row.original.key as IPocItemKey]?.isEssential &&
+          !leadingProposal;
+
         return (
           <SupportColumnItem
             proposalId={info.row.original.proposalId}
             itemKey={info.row.original.key as IPocItemKey}
             itemPoints={support.count}
             itemPointsNeeded={itemTopWeight}
+            showQuorum={showQuorum}
             votedMemberCount={support.voters}
             isReachQuorum={false}
             isUserVoted={false}

@@ -13,6 +13,7 @@ interface IProps {
   itemKey: IPocItemKey;
   itemPoints: number;
   itemPointsNeeded: number;
+  showQuorum?: boolean;
   isReachQuorum: boolean;
   votedMemberCount: number;
   isUserVoted: boolean;
@@ -39,6 +40,7 @@ const SupportColumnItem: FC<IProps> = ({
   itemKey,
   itemPoints,
   itemPointsNeeded,
+  showQuorum = false,
   isReachQuorum,
   votedMemberCount,
   isLoading,
@@ -115,7 +117,8 @@ const SupportColumnItem: FC<IProps> = ({
         >
           <UsersIcon />
           <span className="font-mona text-[14px] font-[600] leading-[19px] text-black">
-            {votedMemberCount}/{QUORUM_AMOUNT}
+            {votedMemberCount}
+            {showQuorum && `/${QUORUM_AMOUNT}`}
           </span>
         </div>
       </div>
