@@ -27,7 +27,7 @@ import {
   IWeb3Metric,
 } from '../types';
 
-import { useDisplayedColumns } from './DisplayedColumns';
+import { useCommonColumnsOfModal } from './CommonColumns';
 
 interface DisplayedProps {
   itemName?: string;
@@ -57,59 +57,20 @@ const Displayed: FC<DisplayedProps> = ({
   itemKey,
 }) => {
   // 获取项目数据
-  const { displayProposalDataListOfProject, showReferenceModal } =
-    useProjectDetailContext();
+  const {
+    displayProposalDataListOfProject,
+    showReferenceModal,
+    displayProposalDataOfKey,
+  } = useProjectDetailContext();
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableData: IProjectTableRowData[] = useMemo(() => {
-    if (!displayProposalDataListOfProject || !itemKey) {
-      console.log(
-        'Displayed: Missing displayProposalDataListOfProject or itemKey',
-        {
-          displayProposalDataListOfProject: !!displayProposalDataListOfProject,
-          itemKey,
-        },
-      );
-      return [];
-    }
-
-    // 从 displayProposalDataListOfProject 中找到对应 itemKey 的数据
-    const proposalItem = displayProposalDataListOfProject.find(
-      (item) => item.key === itemKey,
-    );
-
-    if (!proposalItem) {
-      console.log('Displayed: No data found for itemKey:', itemKey);
-      return [];
-    }
-
-    console.log(
-      'Displayed: Found proposal item for itemKey:',
-      itemKey,
-      proposalItem,
-    );
-
-    // 获取字段配置信息
-    const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
-    const weight = itemConfig?.weight || itemWeight;
-
-    // 直接使用 IProjectDataItem 结构并添加 support 字段
-    const tableRowData: IProjectTableRowData = {
-      ...proposalItem, // 继承所有 IProjectDataItem 字段
-      support: {
-        count:
-          typeof weight === 'number'
-            ? weight
-            : parseInt(weight?.toString() || '0', 10),
-        voters: 1, // 可以根据实际投票数据调整
-      },
-    };
-
-    return [tableRowData];
-  }, [displayProposalDataListOfProject, itemKey, itemWeight]);
+    if (!displayProposalDataOfKey) return [];
+    return [displayProposalDataOfKey];
+  }, [displayProposalDataOfKey]);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
@@ -129,7 +90,7 @@ const Displayed: FC<DisplayedProps> = ({
   );
 
   // Create columns
-  const columns = useDisplayedColumns({});
+  const columns = useCommonColumnsOfModal();
 
   // Create table instance
   const table = useReactTable({
@@ -246,18 +207,18 @@ const Displayed: FC<DisplayedProps> = ({
                 />
               </React.Fragment>
             ))}
-
-            {/* Edit Reason Row */}
-            <TableFooter colSpan={table.getAllColumns().length}>
-              <div className="flex items-center gap-[5px]">
-                <span className="font-sans text-[13px] opacity-50">
-                  Edit Reason:
-                </span>
-                <span className="font-sans text-[13px]">
-                  provided reason as text here
-                </span>
-              </div>
-            </TableFooter>
+            {tableData[0]?.reason && (
+              <TableFooter colSpan={table.getAllColumns().length}>
+                <div className="flex items-center gap-[5px]">
+                  <span className="font-sans text-[13px] opacity-50">
+                    Edit Reason:
+                  </span>
+                  <span className="font-sans text-[13px]">
+                    {tableData[0]?.reason}
+                  </span>
+                </div>
+              </TableFooter>
+            )}
           </tbody>
         </table>
       </div>

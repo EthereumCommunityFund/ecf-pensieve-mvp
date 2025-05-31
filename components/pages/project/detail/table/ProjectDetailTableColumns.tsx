@@ -29,6 +29,7 @@ export interface IKeyItemDataForTable {
   projectId: number;
   proposalId: number;
   itemTopWeight: number;
+  reason?: string;
   // Group information for visual grouping
   group?: string;
   groupTitle?: string;

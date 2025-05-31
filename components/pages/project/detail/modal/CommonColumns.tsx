@@ -13,7 +13,7 @@ import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import SupportColumnItem from './SupportColumnItem';
 
-export const useSubmissionQueueColumns = () => {
+export const useCommonColumnsOfModal = () => {
   const columnHelper = useMemo(
     () => createColumnHelper<IProjectTableRowData>(),
     [],
@@ -135,7 +135,7 @@ export const useSubmissionQueueColumns = () => {
 
         // 1、是否在project leading proposal中投过这个 key 的票
         const isUserVotedKeyInLeadingProposal =
-          votesRecordsOfLeadingProposal?.find(
+          !!votesRecordsOfLeadingProposal?.find(
             (vote) => vote.creator === profile?.userId,
           );
 

@@ -11,6 +11,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import {
   ExpandableRow,
   TableCell,
+  TableFooter,
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
@@ -23,7 +24,7 @@ import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
-import { useSubmissionQueueColumns } from './SubmissionQueueColumns';
+import { useCommonColumnsOfModal } from './CommonColumns';
 
 interface ISubmissionQueueProps {
   itemName?: string;
@@ -197,7 +198,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }
   }, [hasSubmissionQueueExpandedRows, getSubmissionQueueExpandableRowIds]);
 
-  const columns = useSubmissionQueueColumns();
+  const columns = useCommonColumnsOfModal();
 
   // 为 Displayed Table 创建独立的 tableMeta
   const displayedTableMeta = useMemo(() => {
@@ -376,6 +377,19 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                   />
                 </React.Fragment>
               ))}
+              {/* Edit Reason Row */}
+              {tableDataOfDisplayed[0]?.reason && (
+                <TableFooter colSpan={displayedTable.getAllColumns().length}>
+                  <div className="flex items-center gap-[5px]">
+                    <span className="font-sans text-[13px] opacity-50">
+                      Edit Reason:
+                    </span>
+                    <span className="font-sans text-[13px]">
+                      {tableDataOfDisplayed[0]?.reason}
+                    </span>
+                  </div>
+                </TableFooter>
+              )}
             </tbody>
           </table>
         </div>
