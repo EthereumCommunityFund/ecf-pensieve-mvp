@@ -422,104 +422,114 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-        <table className="w-full border-separate border-spacing-0">
-          {/* Table Header */}
-          <thead>
-            {submissionQueueTable.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-[#F5F5F5]">
-                {headerGroup.headers.map((header, index) => (
-                  <TableHeader
-                    key={header.id}
-                    width={
-                      header.getSize() === 0 ? undefined : header.getSize()
-                    }
-                    isLast={index === headerGroup.headers.length - 1}
-                    className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
-                    style={
-                      header.getSize() === 0 ? { width: 'auto' } : undefined
-                    }
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHeader>
-                ))}
-              </tr>
-            ))}
-          </thead>
-
-          {/* Table Body */}
-          <tbody>
-            {submissionQueueTable.getRowModel().rows.map((row, rowIndex) => (
-              <React.Fragment key={row.id}>
-                <TableRow
-                  isLastRow={
-                    rowIndex ===
-                      submissionQueueTable.getRowModel().rows.length - 1 &&
-                    !AllItemConfig[row.original.key as IEssentialItemKey]
-                      ?.showExpand
-                  }
-                  className={
-                    cn()
-                    // submissionQueueExpandedRows[getRowUniqueId(row.original)]
-                    //   ? 'bg-[#EBEBEB]'
-                    //   : '',
-                  }
-                >
-                  {row.getVisibleCells().map((cell, cellIndex) => (
-                    <TableCell
-                      key={cell.id}
+      {tableDataOfSubmissionQueue.length === 0 ? (
+        <div className="flex items-center justify-center rounded-[10px] border border-black/10 bg-white py-8">
+          <span className="font-sans text-[14px] text-black opacity-60">
+            No submission queue data available for this item.
+          </span>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+          <table className="w-full border-separate border-spacing-0">
+            {/* Table Header */}
+            <thead>
+              {submissionQueueTable.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className="bg-[#F5F5F5]">
+                  {headerGroup.headers.map((header, index) => (
+                    <TableHeader
+                      key={header.id}
                       width={
-                        cell.column.getSize() === 0
-                          ? undefined
-                          : cell.column.getSize()
+                        header.getSize() === 0 ? undefined : header.getSize()
                       }
-                      isLast={cellIndex === row.getVisibleCells().length - 1}
-                      isLastRow={
-                        rowIndex ===
-                          submissionQueueTable.getRowModel().rows.length - 1 &&
-                        !AllItemConfig[row.original.key as IEssentialItemKey]
-                          ?.showExpand
-                      }
-                      className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
-                      minHeight={60}
+                      isLast={index === headerGroup.headers.length - 1}
+                      className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
                       style={
-                        cell.column.getSize() === 0
-                          ? { width: 'auto' }
-                          : undefined
+                        header.getSize() === 0 ? { width: 'auto' } : undefined
                       }
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHeader>
                   ))}
-                </TableRow>
+                </tr>
+              ))}
+            </thead>
 
-                <ExpandableRow
-                  rowId={getRowUniqueId(row.original)}
-                  itemKey={row.original.key}
-                  inputValue={row.original.input}
-                  isExpanded={
-                    submissionQueueExpandedRows[getRowUniqueId(row.original)] ||
-                    false
-                  }
-                  colSpan={row.getVisibleCells().length}
-                  isLastRow={
-                    rowIndex ===
-                    submissionQueueTable.getRowModel().rows.length - 1
-                  }
-                />
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            {/* Table Body */}
+            <tbody>
+              {submissionQueueTable.getRowModel().rows.map((row, rowIndex) => (
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    isLastRow={
+                      rowIndex ===
+                        submissionQueueTable.getRowModel().rows.length - 1 &&
+                      !AllItemConfig[row.original.key as IEssentialItemKey]
+                        ?.showExpand
+                    }
+                    className={
+                      cn()
+                      // submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                      //   ? 'bg-[#EBEBEB]'
+                      //   : '',
+                    }
+                  >
+                    {row.getVisibleCells().map((cell, cellIndex) => (
+                      <TableCell
+                        key={cell.id}
+                        width={
+                          cell.column.getSize() === 0
+                            ? undefined
+                            : cell.column.getSize()
+                        }
+                        isLast={cellIndex === row.getVisibleCells().length - 1}
+                        isLastRow={
+                          rowIndex ===
+                            submissionQueueTable.getRowModel().rows.length -
+                              1 &&
+                          !AllItemConfig[row.original.key as IEssentialItemKey]
+                            ?.showExpand
+                        }
+                        className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                        minHeight={60}
+                        style={
+                          cell.column.getSize() === 0
+                            ? { width: 'auto' }
+                            : undefined
+                        }
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+
+                  <ExpandableRow
+                    rowId={getRowUniqueId(row.original)}
+                    itemKey={row.original.key}
+                    inputValue={row.original.input}
+                    isExpanded={
+                      submissionQueueExpandedRows[
+                        getRowUniqueId(row.original)
+                      ] || false
+                    }
+                    colSpan={row.getVisibleCells().length}
+                    isLastRow={
+                      rowIndex ===
+                      submissionQueueTable.getRowModel().rows.length - 1
+                    }
+                  />
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Submit Entry Button */}
       <button className="flex w-full items-center justify-center gap-2.5 rounded-[5px] border border-black/10 bg-[#E6E6E6] px-[30px] py-2.5 transition-colors hover:bg-[#D6D6D6]">
