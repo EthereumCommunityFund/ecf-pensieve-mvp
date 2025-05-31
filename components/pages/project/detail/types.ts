@@ -90,6 +90,7 @@ export interface IConsensusLogRowData {
     name: string;
     date: string;
     avatar?: string;
+    userId?: string;
   };
   weight: {
     current: string;

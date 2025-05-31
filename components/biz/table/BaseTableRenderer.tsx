@@ -6,8 +6,8 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
 import { TableCell } from './Cell';
+import { ExpandableRow } from './ExpandableRow';
 import { TableHeader } from './Header';
-import InputContentRenderer from './InputContentRenderer';
 import { TableRow } from './Row';
 import { TableRowOfEditReason } from './RowOfEditReason';
 
@@ -100,49 +100,18 @@ const BaseTableRenderer = <TRowData extends IBaeTableRow, TValue = unknown>({
                   </TableCell>
                 ))}
               </TableRow>
-              {itemConfig?.showExpand && (
-                <TableRow
-                  key={`${row.id}-expanded`}
-                  className={cn(
-                    expandedRows[row.original.key as IPocItemKey]
-                      ? ''
-                      : 'hidden',
-                  )}
-                >
-                  <TableCell
-                    className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                      rowIndex === tableInstance.getRowModel().rows.length - 1
-                        ? 'border-b-0'
-                        : ''
-                    }`}
-                    style={{
-                      width: '100%',
-                      gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
-                    }}
-                    colspan={row.getVisibleCells().length}
-                  >
-                    <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                      <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                        <InputContentRenderer
-                          value={row.original.value}
-                          itemKey={row.original.key as IPocItemKey}
-                          displayFormType={
-                            AllItemConfig[row.original.key as IPocItemKey]!
-                              .formDisplayType
-                          }
-                          isEssential={
-                            AllItemConfig[row.original.key as IPocItemKey]!
-                              .isEssential
-                          }
-                          isExpandable={false}
-                          isRowExpanded={false}
-                          onToggleExpanded={undefined}
-                        />
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
+              <ExpandableRow
+                rowId={row.id}
+                itemKey={row.original.key as IPocItemKey}
+                inputValue={row.original.value}
+                isExpanded={
+                  expandedRows[row.original.key as IPocItemKey] || false
+                }
+                colSpan={row.getVisibleCells().length}
+                isLastRow={
+                  rowIndex === tableInstance.getRowModel().rows.length - 1
+                }
+              />
               {row.original.reason && (
                 <TableRowOfEditReason
                   reason={row.original.reason}

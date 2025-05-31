@@ -1,5 +1,6 @@
 export * from './Cell';
 export * from './CellSkeleton';
+export * from './ExpandableRow';
 export * from './Footer';
 export * from './GroupHeader';
 export * from './Header';

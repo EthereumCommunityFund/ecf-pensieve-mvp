@@ -1,9 +1,11 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 
 import Tab from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
+
+import { useProjectDetailContext } from '../../context/projectDetailContext';
 
 import ConsensusLog from './ConsensusLog';
 import Displayed from './Displayed';
@@ -22,9 +24,22 @@ const LeftContent: FC<LeftContentProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('submission-queue');
 
+  // Get project detail context to access proposalsByProjectIdAndKey
+  const { proposalsByProjectIdAndKey } = useProjectDetailContext();
+
+  // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
+  const submissionQueueCount = useMemo(() => {
+    if (!proposalsByProjectIdAndKey?.allItemProposals) return 0;
+    return proposalsByProjectIdAndKey.allItemProposals.length;
+  }, [proposalsByProjectIdAndKey?.allItemProposals]);
+
   const tabs: TabItem[] = [
     { key: 'displayed', label: 'Displayed' },
-    { key: 'submission-queue', label: 'Submission Queue', count: 3 },
+    {
+      key: 'submission-queue',
+      label: 'Submission Queue',
+      count: submissionQueueCount,
+    },
     { key: 'consensus-log', label: 'Consensus Log' },
   ];
 

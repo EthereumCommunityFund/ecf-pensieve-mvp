@@ -3,16 +3,21 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
+import { InputCol, SubmitterCol } from '@/components/biz/table';
 import { CaretDownIcon, QuestionIcon } from '@/components/icons';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IEssentialItemKey } from '@/types/item';
 
 import { IConsensusLogRowData } from '../types';
 
 interface UseConsensusLogColumnsProps {
   onExpandClick?: (rowId: string) => void;
+  itemKey?: string;
 }
 
 export const useConsensusLogColumns = ({
   onExpandClick,
+  itemKey,
 }: UseConsensusLogColumnsProps = {}) => {
   const columnHelper = useMemo(
     () => createColumnHelper<IConsensusLogRowData>(),
@@ -31,7 +36,7 @@ export const useConsensusLogColumns = ({
           <QuestionIcon size={18} className="opacity-40" />
         </div>
       ),
-      size: 124,
+      size: 130,
       cell: (info) => {
         const dateTime = info.getValue();
         return (
@@ -47,59 +52,75 @@ export const useConsensusLogColumns = ({
       },
     });
 
-    // Input Column with Expand functionality
+    // Input Column - following the same pattern as SubmissionQueueColumns.tsx
     const inputColumn = columnHelper.accessor('input', {
       id: 'input',
-      header: () => (
-        <div className="flex items-center gap-[5px]">
-          <span className="font-sans text-[14px] font-semibold text-[#333] opacity-60">
-            Input
-          </span>
-          <QuestionIcon size={18} className="opacity-40" />
-        </div>
-      ),
-      size: 0, // Auto width
+      header: () => <InputCol.Header />,
+      size: 480,
       cell: (info) => {
         const item = info.row.original;
+        const inputValue = info.getValue();
+
+        // Check if this item type supports expansion
+        const itemConfig = itemKey
+          ? AllItemConfig[itemKey as IEssentialItemKey]
+          : null;
+        const canExpand = itemConfig?.showExpand || false;
 
         return (
-          <div
-            className="flex cursor-pointer items-center justify-between gap-[5px] opacity-70"
-            onClick={() => onExpandClick?.(item.id)}
-          >
-            <span className="font-sans text-[13px] font-semibold">Expand</span>
-            <CaretDownIcon size={18} className="opacity-50" />
+          <div className="font-mona flex w-full items-center justify-between gap-[10px]">
+            <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
+              {inputValue || '---'}
+            </div>
+            {/* Show expand button only if the item type supports expansion */}
+            {canExpand && (
+              <button
+                onClick={() => onExpandClick?.(item.id)}
+                className="flex size-[24px] shrink-0 items-center justify-center opacity-50 transition-opacity hover:opacity-100"
+              >
+                <CaretDownIcon size={18} />
+              </button>
+            )}
           </div>
         );
       },
     });
 
-    // Lead By Column
+    // Lead By Column - following the same pattern as SubmitterCol from SubmissionQueueColumns.tsx
     const leadByColumn = columnHelper.accessor('leadBy', {
       id: 'leadBy',
-      header: () => (
-        <div className="flex items-center gap-[5px]">
-          <span className="font-sans text-[14px] font-semibold text-[#333] opacity-60">
-            Lead By
-          </span>
-          <QuestionIcon size={18} className="opacity-40" />
-        </div>
-      ),
-      size: 140,
+      header: () => <SubmitterCol.Header />,
+      size: 183,
       cell: (info) => {
-        const leadBy = info.getValue();
+        const leadByData = info.getValue();
+        const item = info.row.original;
+
+        // Create a mock submitter object that matches SubmitterCol.Cell props
+        const submitter = {
+          name: leadByData.name,
+          avatarUrl: leadByData.avatar || null, // Use avatar if available
+          userId: leadByData.userId || 'unknown', // Use userId if available, fallback to 'unknown'
+        };
+
+        // Create a mock item config for consistency
+        const ItemConfig = {
+          isEssential: true, // Treat consensus log items as essential
+        };
+
+        // Create a mock item with the required structure
+        const mockItem = {
+          input: item.input,
+          createdAt: new Date(item.dateTime.date),
+          key: 'consensus-log',
+        };
+
         return (
-          <div className="flex items-center gap-[5px]">
-            <div className="size-6 rounded-full bg-[#D9D9D9]"></div>
-            <div className="flex flex-col">
-              <span className="font-sans text-[14px] font-normal text-black">
-                {leadBy.name}
-              </span>
-              <span className="font-sans text-[12px] font-semibold text-black opacity-60">
-                {leadBy.date}
-              </span>
-            </div>
-          </div>
+          <SubmitterCol.Cell
+            item={mockItem as any}
+            itemConfig={ItemConfig as any}
+            submitter={submitter as any}
+            data={new Date(leadByData.date)}
+          />
         );
       },
     });
@@ -115,7 +136,7 @@ export const useConsensusLogColumns = ({
           <QuestionIcon size={18} className="opacity-40" />
         </div>
       ),
-      size: 150,
+      size: 180,
       cell: (info) => {
         const weight = info.getValue();
         const isPositive = weight.change.startsWith('+');
@@ -137,5 +158,5 @@ export const useConsensusLogColumns = ({
     });
 
     return [dateTimeColumn, inputColumn, leadByColumn, weightColumn];
-  }, [columnHelper, onExpandClick]);
+  }, [columnHelper, onExpandClick, itemKey]);
 };

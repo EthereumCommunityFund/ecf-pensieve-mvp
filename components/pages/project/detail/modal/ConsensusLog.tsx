@@ -1,14 +1,22 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 
-import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
+import {
+  ExpandableRow,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from '@/components/biz/table';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IEssentialItemKey } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
 
 import { IConsensusLogRowData } from '../types';
@@ -26,165 +34,161 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
   itemWeight = 22,
   itemKey,
 }) => {
-  // 获取项目数据
-  const { project, proposalHistory, isProposalHistoryLoading } =
-    useProjectDetailContext();
+  // 展开行状态管理
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // 根据 itemKey 从项目数据中获取真实数据
+  // 获取项目数据
+  const {
+    proposalHistory,
+    isProposalHistoryLoading,
+    isProposalHistoryFetched,
+  } = useProjectDetailContext();
+
+  // 根据 itemKey 从 proposalHistory 中获取真实数据
   const tableData: IConsensusLogRowData[] = useMemo(() => {
-    if (!project || !itemKey) {
-      console.log('ConsensusLog: Missing project or itemKey', {
-        project: !!project,
-        itemKey,
-      });
+    if (!itemKey) {
+      console.log('ConsensusLog: Missing itemKey', { itemKey });
+      return [];
+    }
+
+    if (!proposalHistory) {
+      console.log('ConsensusLog: No proposalHistory data available');
+      return [];
+    }
+
+    if (!proposalHistory || proposalHistory.length === 0) {
+      console.log('ConsensusLog: No proposalHistory data available');
       return [];
     }
 
     console.log(
-      'ConsensusLog: Processing data for itemKey:',
+      'ConsensusLog: Processing proposalHistory for itemKey:',
       itemKey,
-      'project:',
-      project.name,
       'proposalHistory:',
       proposalHistory,
-      'isHistoryLoading:',
-      isProposalHistoryLoading,
     );
 
-    // 如果有真实的投票历史数据，使用它们
-    if (proposalHistory && proposalHistory.length > 0) {
-      return proposalHistory.map((log, index) => {
-        const createdAt = new Date(log.createdAt);
-        const creator = log.proposal?.creator || log.itemProposal?.creator;
+    // 按照 createdAt 时间倒序排列
+    const sortedHistory = [...proposalHistory].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
-        // 计算权重变化（这里使用模拟数据，实际应该从投票记录中计算）
-        const baseWeight = 100;
-        const weightChange = Math.floor(Math.random() * 50) + 10;
-        const isPositive = Math.random() > 0.3; // 70% 概率为正数
+    return sortedHistory.map((historyItem, index) => {
+      const createdAt = new Date(historyItem.createdAt);
 
-        return {
-          id: `consensus-${log.id}`,
-          dateTime: {
-            date: formatDate(createdAt),
-            time:
-              createdAt.toLocaleTimeString('en-US', {
-                hour12: false,
-                timeZone: 'GMT',
-                hour: '2-digit',
-                minute: '2-digit',
-              }) + ' GMT',
-          },
-          input: `Vote action ${index + 1}`,
-          leadBy: {
-            name: creator?.name || 'Unknown User',
-            date: formatDate(createdAt),
-          },
-          weight: {
-            current: (
-              baseWeight + (isPositive ? weightChange : -weightChange)
-            ).toString(),
-            change: `${isPositive ? '+' : '-'}${weightChange}`,
-          },
-        };
-      });
-    }
+      // 获取创建者信息，可能来自 proposal 或 itemProposal
+      const creator =
+        historyItem.proposal?.creator || historyItem.itemProposal?.creator;
 
-    // 如果没有真实数据，使用模拟数据
-    const mockConsensusData: IConsensusLogRowData[] = [
-      {
-        id: 'consensus-1',
-        dateTime: {
-          date: '00/00/0000',
-          time: '00:00 GMT',
-        },
-        input: 'Vote action 1',
-        leadBy: {
-          name: 'Username',
-          date: '00/00/0000',
-        },
-        weight: {
-          current: '000',
-          change: '+00',
-        },
-      },
-      {
-        id: 'consensus-2',
-        dateTime: {
-          date: '00/00/0000',
-          time: '00:00 GMT',
-        },
-        input: 'Vote action 2',
-        leadBy: {
-          name: 'Username',
-          date: '00/00/0000',
-        },
-        weight: {
-          current: '000',
-          change: '+00',
-        },
-      },
-      {
-        id: 'consensus-3',
-        dateTime: {
-          date: '00/00/0000',
-          time: '00:00 GMT',
-        },
-        input: 'Vote action 3',
-        leadBy: {
-          name: 'Username',
-          date: '00/00/0000',
-        },
-        weight: {
-          current: '000',
-          change: '+00',
-        },
-      },
-      {
-        id: 'consensus-4',
-        dateTime: {
-          date: '00/00/0000',
-          time: '00:00 GMT',
-        },
-        input: 'Vote action 4',
-        leadBy: {
-          name: 'Username',
-          date: '00/00/0000',
-        },
-        weight: {
-          current: '000',
-          change: '+00',
-        },
-      },
-      {
-        id: 'consensus-5',
-        dateTime: {
-          date: '00/00/0000',
-          time: '00:00 GMT',
-        },
-        input: 'Vote action 5',
-        leadBy: {
-          name: 'Username',
-          date: '00/00/0000',
-        },
-        weight: {
-          current: '000',
-          change: '+00',
-        },
-      },
-    ];
+      // 获取投票记录，可能来自 proposal 或 itemProposal
+      const voteRecords =
+        historyItem.proposal?.voteRecords ||
+        historyItem.itemProposal?.voteRecords ||
+        [];
 
-    return mockConsensusData;
-  }, [project, itemKey, proposalHistory, isProposalHistoryLoading]);
+      // 计算当前权重
+      const currentWeight = voteRecords.reduce((acc: number, vote: any) => {
+        return acc + Number(vote.weight || 0);
+      }, 0);
+
+      // 计算权重变化（这里简化处理，实际可能需要更复杂的逻辑）
+      const weightChange =
+        index === sortedHistory.length - 1
+          ? currentWeight // 第一个提案，权重变化就是当前权重
+          : Math.abs(
+              currentWeight -
+                (sortedHistory[index + 1]?.proposal?.voteRecords?.reduce(
+                  (acc: number, vote: any) => acc + Number(vote.weight || 0),
+                  0,
+                ) ||
+                  sortedHistory[index + 1]?.itemProposal?.voteRecords?.reduce(
+                    (acc: number, vote: any) => acc + Number(vote.weight || 0),
+                    0,
+                  ) ||
+                  0),
+            );
+
+      const isPositive =
+        index === sortedHistory.length - 1 || currentWeight > 0;
+
+      // 获取输入值，可能来自 proposal 的 items 或 itemProposal 的 value
+      let inputValue = 'No input provided';
+      if (historyItem.itemProposal?.value) {
+        inputValue =
+          typeof historyItem.itemProposal.value === 'string'
+            ? historyItem.itemProposal.value
+            : JSON.stringify(historyItem.itemProposal.value);
+      } else if (historyItem.proposal?.items) {
+        // 从 proposal 的 items 中找到对应 key 的值
+        const item = historyItem.proposal.items.find(
+          (item: any) => item.key === itemKey,
+        );
+        if (item && (item as any).value) {
+          inputValue =
+            typeof (item as any).value === 'string'
+              ? (item as any).value
+              : JSON.stringify((item as any).value);
+        }
+      }
+
+      return {
+        id: `consensus-${historyItem.id}`,
+        dateTime: {
+          date: formatDate(createdAt),
+          time:
+            createdAt.toLocaleTimeString('en-US', {
+              hour12: false,
+              timeZone: 'GMT',
+              hour: '2-digit',
+              minute: '2-digit',
+            }) + ' GMT',
+        },
+        input: inputValue,
+        leadBy: {
+          name: creator?.name || 'Unknown User',
+          date: formatDate(createdAt),
+          avatar: creator?.avatarUrl || undefined,
+          userId: creator?.userId || undefined,
+        },
+        weight: {
+          current: currentWeight.toString(),
+          change: `${isPositive ? '+' : '-'}${weightChange}`,
+        },
+      };
+    });
+  }, [itemKey, proposalHistory]);
+
+  // 切换行展开状态
+  const toggleRowExpanded = useCallback((key: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }, []);
 
   // Event handlers
-  const handleExpandClick = useCallback((rowId: string) => {
-    console.log('Expand clicked for row:', rowId);
-    // TODO: Implement expand/collapse functionality
-  }, []);
+  const handleExpandClick = useCallback(
+    (rowId: string) => {
+      console.log('Expand clicked for row:', rowId);
+      toggleRowExpanded(rowId);
+    },
+    [toggleRowExpanded],
+  );
+
+  // Create table meta
+  const coreTableMeta = useMemo(
+    () => ({
+      expandedRows,
+      toggleRowExpanded,
+    }),
+    [expandedRows, toggleRowExpanded],
+  );
 
   // Create columns
   const columns = useConsensusLogColumns({
     onExpandClick: handleExpandClick,
+    itemKey,
   });
 
   // Create table instance
@@ -192,7 +196,43 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: coreTableMeta,
   });
+
+  // Loading state
+  if (isProposalHistoryLoading) {
+    return (
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-[5px]">
+          <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+            Vote History:
+          </span>
+          <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+            Loading consensus log data...
+          </span>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="size-8 animate-spin rounded-full border-b-2 border-black/20"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isProposalHistoryFetched && !proposalHistory) {
+    return (
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-[5px]">
+          <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+            Vote History:
+          </span>
+          <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+            Failed to load consensus log data.
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -202,73 +242,113 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
           Vote History:
         </span>
         <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-          This is the validated submission currently shown on the project page.
+          This shows the consensus log for all item proposals related to this
+          key.
         </span>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-        <table className="w-full border-separate border-spacing-0">
-          {/* Table Header */}
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-[#F5F5F5]">
-                {headerGroup.headers.map((header, index) => (
-                  <TableHeader
-                    key={header.id}
-                    width={
-                      header.getSize() === 0 ? undefined : header.getSize()
-                    }
-                    isLast={index === headerGroup.headers.length - 1}
-                    className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
-                    style={
-                      header.getSize() === 0 ? { width: 'auto' } : undefined
-                    }
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHeader>
-                ))}
-              </tr>
-            ))}
-          </thead>
+      {tableData.length === 0 ? (
+        <div className="flex items-center justify-center rounded-[10px] border border-black/10 bg-white py-8">
+          <span className="font-sans text-[14px] text-black opacity-60">
+            No consensus log data available for this item.
+          </span>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+          <table className="w-full border-separate border-spacing-0">
+            {/* Table Header */}
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className="bg-[#F5F5F5]">
+                  {headerGroup.headers.map((header, index) => (
+                    <TableHeader
+                      key={header.id}
+                      width={
+                        header.getSize() === 0 ? undefined : header.getSize()
+                      }
+                      isLast={index === headerGroup.headers.length - 1}
+                      className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
+                      style={
+                        header.getSize() === 0 ? { width: 'auto' } : undefined
+                      }
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHeader>
+                  ))}
+                </tr>
+              ))}
+            </thead>
 
-          {/* Table Body */}
-          <tbody>
-            {table.getRowModel().rows.map((row, rowIndex) => (
-              <TableRow
-                key={row.id}
-                isLastRow={rowIndex === table.getRowModel().rows.length - 1}
-              >
-                {row.getVisibleCells().map((cell, cellIndex) => (
-                  <TableCell
-                    key={cell.id}
-                    width={
-                      cell.column.getSize() === 0
-                        ? undefined
-                        : cell.column.getSize()
+            {/* Table Body */}
+            <tbody>
+              {table.getRowModel().rows.map((row, rowIndex) => (
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    isLastRow={
+                      (rowIndex === table.getRowModel().rows.length - 1 &&
+                        !itemKey) ||
+                      !AllItemConfig[itemKey as IEssentialItemKey]?.showExpand
                     }
-                    isLast={cellIndex === row.getVisibleCells().length - 1}
-                    className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
-                    minHeight={60}
-                    style={
-                      cell.column.getSize() === 0
-                        ? { width: 'auto' }
-                        : undefined
-                    }
+                    className={cn(
+                      expandedRows[row.original.id] ? 'bg-[#EBEBEB]' : '',
+                    )}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    {row.getVisibleCells().map((cell, cellIndex) => (
+                      <TableCell
+                        key={cell.id}
+                        width={
+                          cell.column.getSize() === 0
+                            ? undefined
+                            : cell.column.getSize()
+                        }
+                        isLast={cellIndex === row.getVisibleCells().length - 1}
+                        isLastRow={
+                          (rowIndex === table.getRowModel().rows.length - 1 &&
+                            !itemKey) ||
+                          !AllItemConfig[itemKey as IEssentialItemKey]
+                            ?.showExpand
+                        }
+                        className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                        minHeight={60}
+                        style={
+                          cell.column.getSize() === 0
+                            ? { width: 'auto' }
+                            : undefined
+                        }
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+
+                  {/* 可展开行 */}
+                  {itemKey && (
+                    <ExpandableRow
+                      rowId={row.original.id}
+                      itemKey={itemKey}
+                      inputValue={row.original.input}
+                      isExpanded={expandedRows[row.original.id] || false}
+                      colSpan={row.getVisibleCells().length}
+                      isLastRow={
+                        rowIndex === table.getRowModel().rows.length - 1
+                      }
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

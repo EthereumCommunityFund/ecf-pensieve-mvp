@@ -9,16 +9,16 @@ import {
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import {
+  ExpandableRow,
   TableCell,
   TableFooter,
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
-import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
 import { CaretDownIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey, IPocItemKey } from '@/types/item';
+import { IEssentialItemKey } from '@/types/item';
 
 import {
   IAccountabilityMetric,
@@ -231,50 +231,14 @@ const Displayed: FC<DisplayedProps> = ({
                   ))}
                 </TableRow>
 
-                {AllItemConfig[row.original.key as IEssentialItemKey]
-                  ?.showExpand && (
-                  <TableRow
-                    key={`${row.id}-expanded`}
-                    className={cn(
-                      expandedRows[row.original.key] ? '' : 'hidden',
-                    )}
-                  >
-                    <TableCell
-                      className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                        rowIndex === table.getRowModel().rows.length - 1
-                          ? 'border-b-0'
-                          : ''
-                      }`}
-                      style={{
-                        width: '100%',
-                        gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
-                      }}
-                      colspan={row.getVisibleCells().length}
-                    >
-                      <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                        <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                          <InputContentRenderer
-                            itemKey={row.original.key as IPocItemKey}
-                            value={row.original.input}
-                            displayFormType={
-                              AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]!.formDisplayType
-                            }
-                            isEssential={
-                              AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]!.isEssential
-                            }
-                            isExpandable={false}
-                            isRowExpanded={false}
-                            onToggleExpanded={undefined}
-                          />
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+                <ExpandableRow
+                  rowId={row.id}
+                  itemKey={row.original.key}
+                  inputValue={row.original.input}
+                  isExpanded={expandedRows[row.original.key] || false}
+                  colSpan={row.getVisibleCells().length}
+                  isLastRow={rowIndex === table.getRowModel().rows.length - 1}
+                />
               </React.Fragment>
             ))}
 

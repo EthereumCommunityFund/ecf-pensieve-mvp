@@ -8,8 +8,12 @@ import {
 } from '@tanstack/react-table';
 import React, { FC, useCallback, useMemo, useState } from 'react';
 
-import { TableCell, TableHeader, TableRow } from '@/components/biz/table';
-import InputContentRenderer from '@/components/biz/table/InputContentRenderer';
+import {
+  ExpandableRow,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from '@/components/biz/table';
 import { CaretUpDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -327,53 +331,19 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                     ))}
                   </TableRow>
 
-                  {AllItemConfig[row.original.key as IEssentialItemKey]
-                    ?.showExpand && (
-                    <TableRow
-                      key={`${row.id}-expanded`}
-                      className={cn(
-                        displayedExpandedRows[getRowUniqueId(row.original)]
-                          ? ''
-                          : 'hidden',
-                      )}
-                    >
-                      <TableCell
-                        className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                          rowIndex ===
-                          displayedTable.getRowModel().rows.length - 1
-                            ? 'border-b-0'
-                            : ''
-                        }`}
-                        style={{
-                          width: '100%',
-                          gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
-                        }}
-                        colspan={row.getVisibleCells().length}
-                      >
-                        <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                          <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                            <InputContentRenderer
-                              value={row.original.input}
-                              itemKey={row.original.key as IPocItemKey}
-                              displayFormType={
-                                AllItemConfig[
-                                  row.original.key as IEssentialItemKey
-                                ]!.formDisplayType
-                              }
-                              isEssential={
-                                AllItemConfig[
-                                  row.original.key as IEssentialItemKey
-                                ]!.isEssential
-                              }
-                              isExpandable={false}
-                              isRowExpanded={false}
-                              onToggleExpanded={undefined}
-                            />
-                          </p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                  <ExpandableRow
+                    rowId={getRowUniqueId(row.original)}
+                    itemKey={row.original.key}
+                    inputValue={row.original.input}
+                    isExpanded={
+                      displayedExpandedRows[getRowUniqueId(row.original)] ||
+                      false
+                    }
+                    colSpan={row.getVisibleCells().length}
+                    isLastRow={
+                      rowIndex === displayedTable.getRowModel().rows.length - 1
+                    }
+                  />
                 </React.Fragment>
               ))}
             </tbody>
@@ -488,53 +458,20 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                   ))}
                 </TableRow>
 
-                {AllItemConfig[row.original.key as IEssentialItemKey]
-                  ?.showExpand && (
-                  <TableRow
-                    key={`${row.id}-expanded`}
-                    className={cn(
-                      submissionQueueExpandedRows[getRowUniqueId(row.original)]
-                        ? ''
-                        : 'hidden',
-                    )}
-                  >
-                    <TableCell
-                      className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
-                        rowIndex ===
-                        submissionQueueTable.getRowModel().rows.length - 1
-                          ? 'border-b-0'
-                          : ''
-                      }`}
-                      style={{
-                        width: '100%',
-                        gridColumn: `1 / ${row.getVisibleCells().length + 1}`,
-                      }}
-                      colspan={row.getVisibleCells().length}
-                    >
-                      <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-                        <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
-                          <InputContentRenderer
-                            value={row.original.input}
-                            itemKey={row.original.key as IPocItemKey}
-                            displayFormType={
-                              AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]!.formDisplayType
-                            }
-                            isEssential={
-                              AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]!.isEssential
-                            }
-                            isExpandable={false}
-                            isRowExpanded={false}
-                            onToggleExpanded={undefined}
-                          />
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+                <ExpandableRow
+                  rowId={getRowUniqueId(row.original)}
+                  itemKey={row.original.key}
+                  inputValue={row.original.input}
+                  isExpanded={
+                    submissionQueueExpandedRows[getRowUniqueId(row.original)] ||
+                    false
+                  }
+                  colSpan={row.getVisibleCells().length}
+                  isLastRow={
+                    rowIndex ===
+                    submissionQueueTable.getRowModel().rows.length - 1
+                  }
+                />
               </React.Fragment>
             ))}
           </tbody>

@@ -223,7 +223,7 @@ export const ProjectDetailProvider = ({
     {
       enabled: !!projectId && !!currentItemKey,
       select: (data) => {
-        // devLog('getLeadingProposalHistoryByProjectIdAndKey', data);
+        devLog('getLeadingProposalHistoryByProjectIdAndKey', data);
         return data;
       },
     },
