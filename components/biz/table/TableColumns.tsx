@@ -426,11 +426,9 @@ const ActionsCell = ({ onView, item, itemConfig }: ActionsColCellProps) => {
   const isEssential = itemConfig?.isEssential;
   const isValueEmpty = isInputValueEmpty(item?.input);
 
-  // TDOO && isValueEmpty
-
   return (
     <div className="flex w-full gap-[10px]">
-      {!isEssential && (
+      {!isEssential && isValueEmpty && (
         <Button
           size="sm"
           className="flex-1 border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
