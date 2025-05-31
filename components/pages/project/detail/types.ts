@@ -2,7 +2,6 @@ import { IModalContentType } from '@/app/project/[id]/page';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
-import { IVoteResultOfProposal } from '@/utils/proposal';
 
 export interface IProjectDetailModalProps {
   isOpen: boolean;
@@ -51,7 +50,6 @@ export interface ITableMetaOfSubmissionQueue {
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
   project?: IProject;
   profile?: IProfile;
-  voteResultOfLeadingProposal?: IVoteResultOfProposal;
 }
 
 export interface IProjectTableRowData extends IKeyItemDataForTable {

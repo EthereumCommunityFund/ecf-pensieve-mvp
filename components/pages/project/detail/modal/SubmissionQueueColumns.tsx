@@ -115,7 +115,6 @@ export const useSubmissionQueueColumns = () => {
           proposalsByProjectIdAndKey,
           project,
           profile,
-          voteResultOfLeadingProposal,
         } = info.table.options.meta as ITableMetaOfSubmissionQueue;
         const itemTopWeight =
           (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
@@ -124,27 +123,34 @@ export const useSubmissionQueueColumns = () => {
         // TODO 抽取到 context里面去
         const { leadingProposal = null, allItemProposals = [] } =
           proposalsByProjectIdAndKey || {};
+
         const allItemProposalVoteRecords = allItemProposals.flatMap(
           (item) => item.voteRecords,
         ) as IItemProposalVoteRecord[];
+
+        const votesRecordsOfLeadingProposal =
+          leadingProposal && leadingProposal.itemProposal
+            ? leadingProposal.itemProposal.voteRecords
+            : [];
+
+        // 1、是否在project leading proposal中投过这个 key 的票
+        const isUserVotedKeyInLeadingProposal =
+          votesRecordsOfLeadingProposal?.find(
+            (vote) => vote.creator === profile?.userId,
+          );
+
         const userVotedItemProposal = allItemProposalVoteRecords.find(
           (item) => item.creator === profile?.userId,
         );
-
-        const { isUserVotedInProposal, votesOfKeyInProposalMap = {} } =
-          voteResultOfLeadingProposal || {};
-        const voteResultOfKey = votesOfKeyInProposalMap[info.row.original.key];
-        // 1、是否在project leading proposal中投过这个 key 的票
-        const isUserVotedKeyInLeadingProposal = !!voteResultOfKey?.find(
-          (vote) => vote.creator.userId === profile?.userId,
-        );
         // 2、是否在item proposals中投过这个 key 票
         const isUserVotedKeyInItemProposals = !!userVotedItemProposal;
+
         // 3、是否投了当前这一条
         const isUserVotedCurrentItemProposal =
           isUserVotedKeyInItemProposals &&
           userVotedItemProposal?.itemProposalId ===
             info.row.original.proposalId;
+
         return (
           <SupportColumnItem
             proposalId={info.row.original.proposalId}
