@@ -4,9 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, SubmitterCol } from '@/components/biz/table';
-import { CaretDownIcon, QuestionIcon } from '@/components/icons';
-import { AllItemConfig } from '@/constants/itemConfig';
-import { IEssentialItemKey } from '@/types/item';
+import { QuestionIcon } from '@/components/icons';
 
 import { IConsensusLogRowData } from '../types';
 
@@ -36,7 +34,7 @@ export const useConsensusLogColumns = ({
           <QuestionIcon size={18} className="opacity-40" />
         </div>
       ),
-      size: 130,
+      size: 180,
       cell: (info) => {
         const dateTime = info.getValue();
         return (
@@ -52,7 +50,7 @@ export const useConsensusLogColumns = ({
       },
     });
 
-    // Input Column - following the same pattern as SubmissionQueueColumns.tsx
+    // Input Column - using the same implementation as CommonColumns.tsx
     const inputColumn = columnHelper.accessor('input', {
       id: 'input',
       header: () => <InputCol.Header />,
@@ -61,28 +59,35 @@ export const useConsensusLogColumns = ({
         const item = info.row.original;
         const inputValue = info.getValue();
 
-        // Check if this item type supports expansion
-        const itemConfig = itemKey
-          ? AllItemConfig[itemKey as IEssentialItemKey]
-          : null;
-        const canExpand = itemConfig?.showExpand || false;
+        // Create a mock table meta for compatibility with InputCol.Cell
+        const mockTableMeta = {
+          expandedRows: { [item.id]: item.isExpanded || false },
+          toggleRowExpanded: (uniqueId: string) => {
+            if (uniqueId === item.id) {
+              onExpandClick?.(item.id);
+            }
+          },
+        };
 
-        return (
-          <div className="font-mona flex w-full items-center justify-between gap-[10px]">
-            <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-              {inputValue || '---'}
-            </div>
-            {/* Show expand button only if the item type supports expansion */}
-            {canExpand && (
-              <button
-                onClick={() => onExpandClick?.(item.id)}
-                className="flex size-[24px] shrink-0 items-center justify-center opacity-50 transition-opacity hover:opacity-100"
-              >
-                <CaretDownIcon size={18} />
-              </button>
-            )}
-          </div>
+        // Temporarily assign mock meta to table options
+        const originalMeta = info.table.options.meta;
+        info.table.options.meta = mockTableMeta as any;
+
+        const result = (
+          <InputCol.Cell
+            value={inputValue}
+            itemKey={itemKey as any}
+            isExpanded={item.isExpanded || false}
+            onToggleExpand={
+              onExpandClick ? () => onExpandClick(item.id) : undefined
+            }
+          />
         );
+
+        // Restore original meta
+        info.table.options.meta = originalMeta;
+
+        return result;
       },
     });
 

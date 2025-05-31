@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import Tab from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
@@ -24,24 +24,44 @@ const LeftContent: FC<LeftContentProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('submission-queue');
 
-  // Get project detail context to access proposalsByProjectIdAndKey
-  const { proposalsByProjectIdAndKey } = useProjectDetailContext();
+  // Get project detail context to access proposalsByProjectIdAndKey and displayProposalDataOfKey
+  const { proposalsByProjectIdAndKey, displayProposalDataOfKey } =
+    useProjectDetailContext();
 
   // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
   const submissionQueueCount = useMemo(() => {
-    if (!proposalsByProjectIdAndKey?.allItemProposals) return 0;
-    return proposalsByProjectIdAndKey.allItemProposals.length;
+    const len = proposalsByProjectIdAndKey?.allItemProposals?.length;
+    if (!len) return 0;
+    return len - 1;
   }, [proposalsByProjectIdAndKey?.allItemProposals]);
 
-  const tabs: TabItem[] = [
-    { key: 'displayed', label: 'Displayed' },
-    {
-      key: 'submission-queue',
-      label: 'Submission Queue',
-      count: submissionQueueCount,
-    },
-    { key: 'consensus-log', label: 'Consensus Log' },
-  ];
+  // Generate tabs based on whether displayProposalDataOfKey has value
+  const tabs: TabItem[] = useMemo(() => {
+    const baseTabs: TabItem[] = [
+      {
+        key: 'submission-queue',
+        label: 'Submission Queue',
+        count: submissionQueueCount,
+      },
+      { key: 'consensus-log', label: 'Consensus Log' },
+    ];
+
+    // Only show 'displayed' tab if displayProposalDataOfKey has value
+    if (displayProposalDataOfKey) {
+      return [{ key: 'displayed', label: 'Displayed' }, ...baseTabs];
+    }
+
+    return baseTabs;
+  }, [displayProposalDataOfKey, submissionQueueCount]);
+
+  // Ensure activeTab is always valid when tabs change
+  useEffect(() => {
+    const availableTabKeys = tabs.map((tab) => tab.key);
+    if (!availableTabKeys.includes(activeTab)) {
+      // If current activeTab is not available, set to the first available tab
+      setActiveTab(availableTabKeys[0] || 'submission-queue');
+    }
+  }, [tabs, activeTab]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -70,8 +90,18 @@ const LeftContent: FC<LeftContentProps> = ({
           />
         );
       default:
+        // Return the first available tab content
+        if (displayProposalDataOfKey) {
+          return (
+            <Displayed
+              itemName={itemName}
+              itemWeight={itemWeight}
+              itemKey={itemKey}
+            />
+          );
+        }
         return (
-          <Displayed
+          <SubmissionQueue
             itemName={itemName}
             itemWeight={itemWeight}
             itemKey={itemKey}

@@ -18,12 +18,14 @@ import {
 import { CaretDownIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
 import { IEssentialItemKey } from '@/types/item';
 
 import {
   IAccountabilityMetric,
   ILegitimacyMetric,
   IProjectTableRowData,
+  ITableMetaOfSubmissionQueue,
   IWeb3Metric,
 } from '../types';
 
@@ -56,15 +58,29 @@ const Displayed: FC<DisplayedProps> = ({
   itemWeight = 22,
   itemKey,
 }) => {
+  const { profile } = useAuth();
+
   // 获取项目数据
   const {
     displayProposalDataListOfProject,
     showReferenceModal,
     displayProposalDataOfKey,
+    project,
+    onCreateItemProposalVote,
+    onSwitchItemProposalVote,
+    onCancelVote,
+    proposalsByProjectIdAndKey,
   } = useProjectDetailContext();
 
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  // 生成唯一标识符的函数 - 与SubmissionQueue组件保持一致
+  const getRowUniqueId = useCallback((rowData: IProjectTableRowData) => {
+    return rowData.proposalId
+      ? `proposal-${rowData.proposalId}`
+      : `key-${rowData.key}`;
+  }, []);
 
   // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
   const tableData: IProjectTableRowData[] = useMemo(() => {
@@ -73,20 +89,39 @@ const Displayed: FC<DisplayedProps> = ({
   }, [displayProposalDataOfKey]);
 
   // 切换行展开状态
-  const toggleRowExpanded = useCallback((key: string) => {
+  const toggleRowExpanded = useCallback((uniqueId: string) => {
     setExpandedRows((prev) => ({
       ...prev,
-      [key]: !prev[key],
+      [uniqueId]: !prev[uniqueId],
     }));
   }, []);
 
   const coreTableMeta = useMemo(
-    () => ({
+    () =>
+      ({
+        project,
+        displayProposalDataListOfProject,
+        proposalsByProjectIdAndKey,
+        onCreateItemProposalVote,
+        onSwitchItemProposalVote,
+        onCancelVote,
+        profile,
+        showReferenceModal,
+        expandedRows,
+        toggleRowExpanded,
+      }) as ITableMetaOfSubmissionQueue,
+    [
+      project,
+      displayProposalDataListOfProject,
+      proposalsByProjectIdAndKey,
+      onCreateItemProposalVote,
+      onSwitchItemProposalVote,
+      onCancelVote,
+      profile,
+      showReferenceModal,
       expandedRows,
       toggleRowExpanded,
-      showReferenceModal,
-    }),
-    [expandedRows, toggleRowExpanded, showReferenceModal],
+    ],
   );
 
   // Create columns
@@ -164,7 +199,9 @@ const Displayed: FC<DisplayedProps> = ({
                       ?.showExpand
                   }
                   className={cn(
-                    expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                    expandedRows[getRowUniqueId(row.original)]
+                      ? 'bg-[#EBEBEB]'
+                      : '',
                   )}
                 >
                   {row.getVisibleCells().map((cell, cellIndex) => (
@@ -198,10 +235,12 @@ const Displayed: FC<DisplayedProps> = ({
                 </TableRow>
 
                 <ExpandableRow
-                  rowId={row.id}
+                  rowId={getRowUniqueId(row.original)}
                   itemKey={row.original.key}
                   inputValue={row.original.input}
-                  isExpanded={expandedRows[row.original.key] || false}
+                  isExpanded={
+                    expandedRows[getRowUniqueId(row.original)] || false
+                  }
                   colSpan={row.getVisibleCells().length}
                   isLastRow={rowIndex === table.getRowModel().rows.length - 1}
                 />
