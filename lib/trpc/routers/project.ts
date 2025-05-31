@@ -9,9 +9,8 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { projects, voteRecords } from '@/lib/db/schema';
+import { projectLogs, projects, voteRecords } from '@/lib/db/schema';
 import { itemProposals } from '@/lib/db/schema/itemProposals';
-import { projectLogs } from '@/lib/db/schema/projectLogs';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
@@ -325,11 +324,6 @@ export const projectRouter = router({
               })
               .where(eq(projects.id, projectId));
 
-            await tx.insert(projectLogs).values({
-              projectId,
-              proposalId,
-            });
-
             const originalProposal = await tx.query.proposals.findFirst({
               where: eq(proposals.id, proposalId),
             });
@@ -360,6 +354,11 @@ export const projectRouter = router({
 
                   if (newItemProposal) {
                     itemProposalMap[item.key] = newItemProposal.id;
+                    await tx.insert(projectLogs).values({
+                      projectId,
+                      key: item.key,
+                      itemProposalId: newItemProposal.id,
+                    });
                   }
                 }
               }

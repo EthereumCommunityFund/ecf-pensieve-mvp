@@ -20,9 +20,9 @@ export const projectLogRouter = router({
           id: projectLogs.id,
           projectId: projectLogs.projectId,
           key: projectLogs.key,
-          proposalId: projectLogs.proposalId,
           itemProposalId: projectLogs.itemProposalId,
           createdAt: projectLogs.createdAt,
+          isNotLeading: projectLogs.isNotLeading,
           rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${projectLogs.key} ORDER BY ${projectLogs.createdAt} DESC)`.as(
             'rn',
           ),
@@ -36,9 +36,9 @@ export const projectLogRouter = router({
           id: latestLogsSubquery.id,
           projectId: latestLogsSubquery.projectId,
           key: latestLogsSubquery.key,
-          proposalId: latestLogsSubquery.proposalId,
           itemProposalId: latestLogsSubquery.itemProposalId,
           createdAt: latestLogsSubquery.createdAt,
+          isNotLeading: latestLogsSubquery.isNotLeading,
           itemProposal: {
             id: itemProposals.id,
             key: itemProposals.key,
@@ -67,8 +67,8 @@ export const projectLogRouter = router({
         id: row.id,
         projectId: row.projectId,
         key: row.key,
-        proposalId: row.proposalId,
         itemProposalId: row.itemProposalId,
+        isNotLeading: row.isNotLeading,
         createdAt: row.createdAt,
         itemProposal: row.itemProposal?.id
           ? {
