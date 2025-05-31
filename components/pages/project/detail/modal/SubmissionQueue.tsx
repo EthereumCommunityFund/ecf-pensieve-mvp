@@ -135,6 +135,29 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     });
   }, [proposalsByProjectIdAndKey, getItemTopWeight]);
 
+  const showRowOverTaken = useMemo(() => {
+    // 原来有validated的leading item proposal,但由于voter switch 投票，导致它的 weight 比 submission queue 第一条的 weight(已排序，最高的 weight) 要低
+    const { leadingProposal } = proposalsByProjectIdAndKey || {};
+    if (!leadingProposal) return false;
+    const voteRecordsOfLeadingProposal =
+      leadingProposal.itemProposal?.voteRecords || [];
+    const weightOfLeadingProposal = voteRecordsOfLeadingProposal.reduce(
+      (acc, vote) => acc + Number(vote.weight),
+      0,
+    );
+    const weightOfSubmissionQueue =
+      tableDataOfSubmissionQueue[0]?.support.count || 0;
+    return weightOfLeadingProposal < weightOfSubmissionQueue;
+  }, [tableDataOfSubmissionQueue, proposalsByProjectIdAndKey]);
+
+  const showRowIsLeading = useMemo(() => {
+    const { leadingProposal } = proposalsByProjectIdAndKey || {};
+    // 1、没有validated的 leading item proposal(仅限not essential item)
+    if (!leadingProposal) return true;
+    // 2、原来有validated的leading item proposal,但由于voter switch 投票，导致它的 weight 比 submission queue 第一条的 weight(已排序，最高的 weight) 要低
+    return showRowOverTaken;
+  }, [showRowOverTaken]);
+
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
     setDisplayedExpandedRows((prev) => ({
       ...prev,
