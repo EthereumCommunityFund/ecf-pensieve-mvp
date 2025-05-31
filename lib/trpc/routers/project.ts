@@ -356,6 +356,7 @@ export const projectRouter = router({
                     itemProposalMap[item.key] = newItemProposal.id;
                     await tx.insert(projectLogs).values({
                       projectId,
+                      key: item.key,
                       itemProposalId: newItemProposal.id,
                     });
                   }
