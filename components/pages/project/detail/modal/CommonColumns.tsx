@@ -27,14 +27,25 @@ export const useCommonColumnsOfModal = () => {
       size: 480,
       cell: (info) => {
         const item = info.row.original;
-        const { toggleRowExpanded, expandedRows } = info.table.options
-          .meta as ITableMetaOfSubmissionQueue;
+        const {
+          toggleRowExpanded,
+          expandedRows,
+          showRowOverTaken,
+          showRowIsLeading,
+        } = info.table.options.meta as ITableMetaOfSubmissionQueue;
 
         // 生成唯一标识符 - 与SubmissionQueue组件中的逻辑保持一致
         const uniqueId = item.proposalId
           ? `proposal-${item.proposalId}`
           : `key-${item.key}`;
         const isRowExpanded = expandedRows[uniqueId];
+
+        // 检查当前行是否是第一行且处于 over-taken 状态
+        const isFirstRowOverTaken = showRowOverTaken && info.row.index === 0;
+
+        // 检查当前行是否是第一行且处于 leading 状态
+        const isFirstRowLeading =
+          showRowOverTaken && showRowIsLeading && info.row.index === 0;
 
         return (
           <InputCol.Cell
@@ -44,6 +55,8 @@ export const useCommonColumnsOfModal = () => {
             onToggleExpand={
               toggleRowExpanded ? () => toggleRowExpanded(uniqueId) : undefined
             }
+            showOverTakenStatus={isFirstRowOverTaken}
+            showLeadingStatus={isFirstRowLeading}
           />
         );
       },

@@ -50,6 +50,8 @@ export interface ITableMetaOfSubmissionQueue {
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
   project?: IProject;
   profile?: IProfile;
+  showRowOverTaken?: boolean;
+  showRowIsLeading?: boolean;
 }
 
 export interface IProjectTableRowData extends IKeyItemDataForTable {

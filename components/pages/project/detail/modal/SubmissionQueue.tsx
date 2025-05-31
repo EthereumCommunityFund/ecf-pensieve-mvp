@@ -63,6 +63,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     tableDataOfDisplayed,
     tableDataOfSubmissionQueue,
     showRowOverTaken,
+    showRowIsLeading,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -133,6 +134,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
+      showRowOverTaken,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -145,6 +147,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showReferenceModal,
     displayedExpandedRows,
     toggleDisplayedRowExpanded,
+    showRowOverTaken,
   ]);
 
   const submissionQueueTableMeta = useMemo(() => {
@@ -159,6 +162,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: submissionQueueExpandedRows,
       toggleRowExpanded: toggleSubmissionQueueRowExpanded,
+      showRowIsLeading,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -171,6 +175,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showReferenceModal,
     submissionQueueExpandedRows,
     toggleSubmissionQueueRowExpanded,
+    showRowIsLeading,
   ]);
 
   const displayedTable = useReactTable({
@@ -192,7 +197,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
       {showRowOverTaken && (
         <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
-          <ClockClockwiseIcon size={24} />
+          <ClockClockwiseIcon size={50} />
           <div className="flex flex-col gap-[5px]">
             <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
               Consensus in Progress
@@ -259,72 +264,78 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
                 {/* Table Body */}
                 <tbody>
-                  {displayedTable.getRowModel().rows.map((row, rowIndex) => (
-                    <React.Fragment key={row.id}>
-                      <TableRow
-                        isLastRow={
-                          rowIndex ===
-                            displayedTable.getRowModel().rows.length - 1 &&
-                          !AllItemConfig[row.original.key as IEssentialItemKey]
-                            ?.showExpand
-                        }
-                        className={
-                          cn()
-                          // displayedExpandedRows[getRowUniqueId(row.original)]
-                          //   ? 'bg-[#EBEBEB]'
-                          //   : '',
-                        }
-                      >
-                        {row.getVisibleCells().map((cell, cellIndex) => (
-                          <TableCell
-                            key={cell.id}
-                            width={
-                              cell.column.getSize() === 0
-                                ? undefined
-                                : cell.column.getSize()
-                            }
-                            isLast={
-                              cellIndex === row.getVisibleCells().length - 1
-                            }
-                            isLastRow={
-                              rowIndex ===
-                                displayedTable.getRowModel().rows.length - 1 &&
-                              !AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]?.showExpand
-                            }
-                            className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
-                            minHeight={60}
-                            style={
-                              cell.column.getSize() === 0
-                                ? { width: 'auto' }
-                                : undefined
-                            }
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
+                  {displayedTable.getRowModel().rows.map((row, rowIndex) => {
+                    return (
+                      <React.Fragment key={row.id}>
+                        <TableRow
+                          isLastRow={
+                            rowIndex ===
+                              displayedTable.getRowModel().rows.length - 1 &&
+                            !AllItemConfig[
+                              row.original.key as IEssentialItemKey
+                            ]?.showExpand
+                          }
+                          className={cn(
+                            // displayedExpandedRows[getRowUniqueId(row.original)]
+                            //   ? 'bg-[#EBEBEB]'
+                            //   : '',
+                            showRowOverTaken &&
+                              'bg-[rgba(247,153,45,0.2)] border-t border-[#F7992D] hover:bg-[rgba(247,153,45,0.2)]',
+                          )}
+                        >
+                          {row.getVisibleCells().map((cell, cellIndex) => (
+                            <TableCell
+                              key={cell.id}
+                              width={
+                                cell.column.getSize() === 0
+                                  ? undefined
+                                  : cell.column.getSize()
+                              }
+                              isLast={
+                                cellIndex === row.getVisibleCells().length - 1
+                              }
+                              isLastRow={
+                                rowIndex ===
+                                  displayedTable.getRowModel().rows.length -
+                                    1 &&
+                                !AllItemConfig[
+                                  row.original.key as IEssentialItemKey
+                                ]?.showExpand
+                              }
+                              className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                              minHeight={60}
+                              style={
+                                cell.column.getSize() === 0
+                                  ? { width: 'auto' }
+                                  : undefined
+                              }
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
 
-                      <ExpandableRow
-                        rowId={getRowUniqueId(row.original)}
-                        itemKey={row.original.key}
-                        inputValue={row.original.input}
-                        isExpanded={
-                          displayedExpandedRows[getRowUniqueId(row.original)] ||
-                          false
-                        }
-                        colSpan={row.getVisibleCells().length}
-                        isLastRow={
-                          rowIndex ===
-                          displayedTable.getRowModel().rows.length - 1
-                        }
-                      />
-                    </React.Fragment>
-                  ))}
+                        <ExpandableRow
+                          rowId={getRowUniqueId(row.original)}
+                          itemKey={row.original.key}
+                          inputValue={row.original.input}
+                          isExpanded={
+                            displayedExpandedRows[
+                              getRowUniqueId(row.original)
+                            ] || false
+                          }
+                          colSpan={row.getVisibleCells().length}
+                          isLastRow={
+                            rowIndex ===
+                            displayedTable.getRowModel().rows.length - 1
+                          }
+                        />
+                      </React.Fragment>
+                    );
+                  })}
                   {/* Edit Reason Row */}
                   {tableDataOfDisplayed[0]?.reason && (
                     <TableFooter
@@ -419,71 +430,81 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
             {/* Table Body */}
             <tbody>
-              {submissionQueueTable.getRowModel().rows.map((row, rowIndex) => (
-                <React.Fragment key={row.id}>
-                  <TableRow
-                    isLastRow={
-                      rowIndex ===
-                        submissionQueueTable.getRowModel().rows.length - 1 &&
-                      !AllItemConfig[row.original.key as IEssentialItemKey]
-                        ?.showExpand
-                    }
-                    className={
-                      cn()
-                      // submissionQueueExpandedRows[getRowUniqueId(row.original)]
-                      //   ? 'bg-[#EBEBEB]'
-                      //   : '',
-                    }
-                  >
-                    {row.getVisibleCells().map((cell, cellIndex) => (
-                      <TableCell
-                        key={cell.id}
-                        width={
-                          cell.column.getSize() === 0
-                            ? undefined
-                            : cell.column.getSize()
-                        }
-                        isLast={cellIndex === row.getVisibleCells().length - 1}
-                        isLastRow={
-                          rowIndex ===
-                            submissionQueueTable.getRowModel().rows.length -
-                              1 &&
-                          !AllItemConfig[row.original.key as IEssentialItemKey]
-                            ?.showExpand
-                        }
-                        className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
-                        minHeight={60}
-                        style={
-                          cell.column.getSize() === 0
-                            ? { width: 'auto' }
-                            : undefined
-                        }
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+              {submissionQueueTable.getRowModel().rows.map((row, rowIndex) => {
+                // 检查是否是第一行且处于 leading 状态
+                const isFirstRowLeading =
+                  showRowOverTaken && showRowIsLeading && rowIndex === 0;
 
-                  <ExpandableRow
-                    rowId={getRowUniqueId(row.original)}
-                    itemKey={row.original.key}
-                    inputValue={row.original.input}
-                    isExpanded={
-                      submissionQueueExpandedRows[
-                        getRowUniqueId(row.original)
-                      ] || false
-                    }
-                    colSpan={row.getVisibleCells().length}
-                    isLastRow={
-                      rowIndex ===
-                      submissionQueueTable.getRowModel().rows.length - 1
-                    }
-                  />
-                </React.Fragment>
-              ))}
+                return (
+                  <React.Fragment key={row.id}>
+                    <TableRow
+                      isLastRow={
+                        rowIndex ===
+                          submissionQueueTable.getRowModel().rows.length - 1 &&
+                        !AllItemConfig[row.original.key as IEssentialItemKey]
+                          ?.showExpand
+                      }
+                      className={cn(
+                        // submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                        //   ? 'bg-[#EBEBEB]'
+                        //   : '',
+                        isFirstRowLeading &&
+                          'bg-[rgba(162,208,195,0.2)] border-t border-[#46A287] hover:bg-[rgba(162,208,195,0.2)]',
+                      )}
+                    >
+                      {row.getVisibleCells().map((cell, cellIndex) => (
+                        <TableCell
+                          key={cell.id}
+                          width={
+                            cell.column.getSize() === 0
+                              ? undefined
+                              : cell.column.getSize()
+                          }
+                          isLast={
+                            cellIndex === row.getVisibleCells().length - 1
+                          }
+                          isLastRow={
+                            rowIndex ===
+                              submissionQueueTable.getRowModel().rows.length -
+                                1 &&
+                            !AllItemConfig[
+                              row.original.key as IEssentialItemKey
+                            ]?.showExpand
+                          }
+                          className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                          minHeight={60}
+                          style={
+                            cell.column.getSize() === 0
+                              ? { width: 'auto' }
+                              : undefined
+                          }
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+
+                    <ExpandableRow
+                      rowId={getRowUniqueId(row.original)}
+                      itemKey={row.original.key}
+                      inputValue={row.original.input}
+                      isExpanded={
+                        submissionQueueExpandedRows[
+                          getRowUniqueId(row.original)
+                        ] || false
+                      }
+                      colSpan={row.getVisibleCells().length}
+                      isLastRow={
+                        rowIndex ===
+                        submissionQueueTable.getRowModel().rows.length - 1
+                      }
+                    />
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

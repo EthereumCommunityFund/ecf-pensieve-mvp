@@ -411,14 +411,12 @@ export const ProjectDetailProvider = ({
       tableDataOfSubmissionQueue[0]?.support.count || 0;
     return weightOfLeadingProposal < weightOfSubmissionQueue;
   }, [tableDataOfSubmissionQueue, proposalsByProjectIdAndKey]);
-
   const showRowIsLeading = useMemo(() => {
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     // 1、没有validated的 leading item proposal(仅限not essential item)
     if (!leadingProposal) return true;
     return showRowOverTaken;
   }, [showRowOverTaken]);
-
   const createItemProposalVoteMutation =
     trpc.vote.createItemProposalVote.useMutation();
   const switchItemProposalVoteMutation =

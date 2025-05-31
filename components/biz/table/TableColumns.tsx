@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 import { Button } from '@/components/base';
 import {
   CaretDownIcon,
+  CaretUpIcon,
   ClockClockwiseIcon,
   GitPullBlueIcon,
 } from '@/components/icons';
@@ -159,6 +160,8 @@ export interface InputColCellProps extends BaseCellProps {
   isExpandable?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  showOverTakenStatus?: boolean;
+  showLeadingStatus?: boolean;
 }
 
 const InputHeader = (_props: InputColHeaderProps) => {
@@ -177,12 +180,88 @@ const InputCell = ({
   isExpandable,
   isExpanded = false,
   onToggleExpand,
+  showOverTakenStatus = false,
+  showLeadingStatus = false,
 }: InputColCellProps) => {
   // Get item config if not provided
   const itemConfig = AllItemConfig[itemKey];
   const finalDisplayFormType = displayFormType || itemConfig?.formDisplayType;
   const finalIsExpandable =
     isExpandable !== undefined ? isExpandable : itemConfig?.showExpand;
+
+  // If showing over-taken status, render special UI
+  if (showOverTakenStatus) {
+    return (
+      <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
+        <div className="flex flex-col gap-[5px]">
+          <div className="flex items-center gap-[5px]">
+            <CaretDownIcon size={16} className="text-[#C47D54]" />
+            <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#C47D54]">
+              Over-taken
+            </span>
+          </div>
+          <InputContentRenderer
+            itemKey={itemKey}
+            value={value}
+            displayFormType={finalDisplayFormType}
+            isEssential={itemConfig?.isEssential || false}
+            isExpandable={finalIsExpandable}
+            isRowExpanded={isExpanded}
+            onToggleExpanded={onToggleExpand}
+          />
+        </div>
+        {finalIsExpandable && (
+          <Button
+            isIconOnly
+            className={cn(
+              'size-[24px] shrink-0 opacity-50',
+              isExpanded ? 'rotate-180' : '',
+            )}
+            onPress={onToggleExpand}
+          >
+            <CaretDownIcon size={18} />
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // If showing leading status, render special UI
+  if (showLeadingStatus) {
+    return (
+      <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
+        <div className="flex flex-col gap-[5px]">
+          <div className="flex items-center gap-[5px]">
+            <CaretUpIcon size={16} className="text-[#408671]" />
+            <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#408671]">
+              Leading
+            </span>
+          </div>
+          <InputContentRenderer
+            itemKey={itemKey}
+            value={value}
+            displayFormType={finalDisplayFormType}
+            isEssential={itemConfig?.isEssential || false}
+            isExpandable={finalIsExpandable}
+            isRowExpanded={isExpanded}
+            onToggleExpanded={onToggleExpand}
+          />
+        </div>
+        {finalIsExpandable && (
+          <Button
+            isIconOnly
+            className={cn(
+              'size-[24px] shrink-0 opacity-50',
+              isExpanded ? 'rotate-180' : '',
+            )}
+            onPress={onToggleExpand}
+          >
+            <CaretDownIcon size={18} />
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="font-mona flex w-full items-center justify-between gap-[10px]">
