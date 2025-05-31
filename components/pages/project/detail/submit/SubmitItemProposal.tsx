@@ -52,7 +52,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   onBackToSubmissionQueue,
 }) => {
   const { id: projectId } = useParams();
-  const { refetchProposalsByKey } = useProjectDetailContext();
+  const { refetchProposalsByKey, refetchProposalHistory } =
+    useProjectDetailContext();
 
   const [fieldApplicability, setFieldApplicability] = useState<
     Record<string, boolean>
@@ -193,7 +194,9 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       onSuccess: (data) => {
         devLog('createItemProposal success', data);
         setSubmissionStep('success');
-        // TODO: 无缝刷新数据
+        // TODO : 不用屏闪，重新渲染 modal
+        refetchProposalsByKey();
+        refetchProposalHistory();
       },
       onError: (error: any) => {
         console.error('createItemProposal error', error);
@@ -314,10 +317,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         onClose={() => {
           onClose();
         }}
-        onViewSubmission={() => {
-          devLog('View submission clicked - closing modal');
-          onClose();
-        }}
+        onViewSubmission={onBackToSubmissionQueue}
         expandedRows={expandedRows}
         toggleRowExpanded={toggleRowExpanded}
       />
