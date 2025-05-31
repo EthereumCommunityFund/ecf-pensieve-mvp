@@ -16,14 +16,13 @@ import { trpc } from '@/lib/trpc/client';
 import {
   ILeadingProposalHistory,
   ILeadingProposals,
-  ILeadingProposalsTyped,
+  IProfileCreator,
   IProject,
   IProposal,
   IProposalsByProjectIdAndKey,
 } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
-import ProposalVoteUtils, { IVoteResultOfProposal } from '@/utils/proposal';
 
 import { IProjectTableRowData } from '../detail/types';
 
@@ -65,8 +64,6 @@ interface ProjectDetailContextType {
   ) => Promise<void>;
   onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
 
-  voteResultOfLeadingProposal?: IVoteResultOfProposal;
-
   // utils
   openReferenceModal: boolean;
   showReferenceModal: (ref: string, key: IPocItemKey) => void;
@@ -107,8 +104,6 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   onSwitchItemProposalVote: () => Promise.resolve(),
   onCancelVote: () => Promise.resolve(),
 
-  voteResultOfLeadingProposal: undefined,
-
   openReferenceModal: false,
   showReferenceModal: () => {},
   currentRefValue: null,
@@ -131,6 +126,10 @@ export const ProjectDetailProvider = ({
   const [currentRefValue, setCurrentRefValue] = useState<string | null>(null);
   const [currentRefKey, setCurrentRefKey] = useState<IPocItemKey | null>(null);
 
+  const [inActionKeyMap, setInActionKeyMap] = useState<
+    Partial<Record<IPocItemKey, boolean>>
+  >({});
+
   const {
     data: project,
     isLoading: isProjectLoading,
@@ -147,7 +146,7 @@ export const ProjectDetailProvider = ({
   );
 
   const {
-    data: proposals,
+    data: proposalsOfProject,
     isLoading: isProposalsLoading,
     isFetched: isProposalsFetched,
   } = trpc.proposal.getProposalsByProjectId.useQuery(
@@ -162,7 +161,7 @@ export const ProjectDetailProvider = ({
   );
 
   const {
-    data: proposalsByProject,
+    data: leadingItemProposalsByProject,
     isLoading: isLeadingProposalsLoading,
     isFetched: isLeadingProposalsFetched,
   } = trpc.projectLog.getLeadingProposalsByProjectId.useQuery(
@@ -175,27 +174,6 @@ export const ProjectDetailProvider = ({
       },
     },
   );
-  /**
-   * published proposal 胜出的数据，不含 item proposal 胜出的数据
-   */
-  const voteResultOfLeadingProposal = useMemo(() => {
-    const leadingProposalId =
-      proposalsByProject?.withoutItemProposal[0]?.proposalId;
-    if (!leadingProposalId) return undefined; // 理论上这不会出现
-    const leadingProposal = project?.proposals?.find(
-      (p) => p.id === leadingProposalId,
-    );
-    if (!leadingProposal) return undefined;
-    const votesOfProject = project?.proposals.flatMap((p) => p.voteRecords);
-    const votesOfLeadingProposal = ProposalVoteUtils.groupVotesByProposalId(
-      votesOfProject || [],
-    )[leadingProposalId];
-    return ProposalVoteUtils.getVoteResultOfProposal({
-      proposalId: leadingProposalId,
-      votesOfProposal: votesOfLeadingProposal,
-      userId: profile?.userId,
-    });
-  }, [project, profile?.userId, proposalsByProject]);
 
   const {
     data: proposalsByProjectIdAndKey,
@@ -229,9 +207,116 @@ export const ProjectDetailProvider = ({
     },
   );
 
-  const [inActionKeyMap, setInActionKeyMap] = useState<
-    Partial<Record<IPocItemKey, boolean>>
-  >({});
+  const getItemTopWeight = useCallback(
+    (itemKey: IPocItemKey) => {
+      return (
+        (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[itemKey] || 0
+      );
+    },
+    [project],
+  );
+
+  const displayProposalDataListOfProject = useMemo(() => {
+    if (!leadingItemProposalsByProject) return [];
+    const itemsTopWeight = (project?.itemsTopWeight || {}) as Record<
+      IPocItemKey,
+      number
+    >;
+    const DataMap = new Map<string, IKeyItemDataForTable>();
+
+    leadingItemProposalsByProject.forEach((proposal) => {
+      const { projectId, itemProposal, isNotLeading } = proposal;
+      const { key, createdAt, value, ref, creator, id } = itemProposal!;
+      const row: IKeyItemDataForTable = {
+        key: key!,
+        property: key!,
+        input: value,
+        reference: ref ? { key, value: ref } : null,
+        submitter: creator as IProfileCreator, // TODO: 这里的 creator 少字段
+        createdAt: createdAt,
+        projectId: projectId!,
+        proposalId: Number(id), // 这个是 itemProposal 的 proposalId
+        itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
+        isNotLeading: isNotLeading,
+      };
+      DataMap.set(key, row);
+    });
+    devLog('displayProposalDataListOfProject', Array.from(DataMap.values()));
+    return Array.from(DataMap.values());
+  }, [leadingItemProposalsByProject, project]);
+
+  // 当前 itemKey 的 leading proposal 数据
+  const displayProposalDataOfKey = useMemo(() => {
+    if (!currentItemKey) return undefined;
+    if (!proposalsByProjectIdAndKey) return undefined;
+
+    const { leadingProposal } = proposalsByProjectIdAndKey;
+    // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
+    if (leadingProposal && leadingProposal.itemProposal) {
+      const { key, value, ref, creator, createdAt, projectId, id } =
+        leadingProposal.itemProposal;
+      const weight = leadingProposal.itemProposal.voteRecords.reduce(
+        (acc, vote) => acc + Number(vote.weight),
+        0,
+      );
+      const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
+      return {
+        key,
+        property: key,
+        input: value,
+        reference: ref ? { key, value: ref } : null,
+        submitter: creator,
+        createdAt: createdAt,
+        projectId: projectId,
+        proposalId: id,
+        itemTopWeight: getItemTopWeight(key as IPocItemKey),
+        support: {
+          count: weight,
+          voters: voterMemberCount,
+        },
+      };
+    }
+    // 2. 没有 item proposal 胜出, 取 allItemProposals 的数据
+    const proposalItem = (
+      proposalsByProjectIdAndKey.allItemProposals || []
+    ).find((item) => item.key === currentItemKey);
+
+    if (!proposalItem) {
+      return undefined; // 没有找到对应 itemKey 的数据 -> non essential item (完全是新的)
+    }
+
+    const votesOfKey =
+      proposalsByProjectIdAndKey?.allItemProposals.flatMap(
+        (item) => item.voteRecords,
+      ) || [];
+
+    const sumOfWeight =
+      votesOfKey?.reduce((acc, vote) => {
+        return acc + Number(vote.weight);
+      }, 0) || 0;
+    const voterMemberCount = votesOfKey?.length || 0; // 每人只能投一票
+
+    return {
+      ...proposalItem,
+      property: proposalItem.key,
+      input: proposalItem.value,
+      reference: proposalItem.ref
+        ? { key: proposalItem.key, value: proposalItem.ref }
+        : null,
+      submitter: proposalItem.creator,
+      proposalId: proposalItem.id,
+      itemTopWeight: getItemTopWeight(proposalItem.key as IPocItemKey),
+      support: {
+        count: sumOfWeight,
+        voters: voterMemberCount,
+      },
+    };
+  }, [
+    displayProposalDataListOfProject,
+    currentItemKey,
+    getItemTopWeight,
+    proposalsByProjectIdAndKey,
+  ]);
 
   const createItemProposalVoteMutation =
     trpc.vote.createItemProposalVote.useMutation();
@@ -305,132 +390,6 @@ export const ProjectDetailProvider = ({
     },
     [cancelVoteMutation, refetchProposalsByKey],
   );
-  // Logic from ModalProvider ends here
-
-  const getItemTopWeight = useCallback(
-    (itemKey: IPocItemKey) => {
-      return (
-        (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[itemKey] || 0
-      );
-    },
-    [project],
-  );
-
-  const displayProposalDataListOfProject = useMemo(() => {
-    if (!proposalsByProject) return undefined;
-    const itemsTopWeight = (project?.itemsTopWeight || {}) as Record<
-      IPocItemKey,
-      number
-    >;
-    // withoutItemProposal： proposal 维度
-    // withItemProposal： item proposal 维度，有则覆盖 proposal 维度
-    const { withoutItemProposal, withItemProposal } =
-      proposalsByProject as ILeadingProposalsTyped;
-    const DataMap = new Map<string, IKeyItemDataForTable>();
-    withoutItemProposal.forEach((p) => {
-      p.proposal.items.forEach((item) => {
-        const row = {
-          key: item.key,
-          property: item.key,
-          input: item.value,
-          reference:
-            p.proposal.refs?.find((ref) => ref.key === item.key) || null,
-          submitter: p.proposal.creator,
-          createdAt: p.proposal.createdAt,
-          projectId: p.proposal.projectId,
-          proposalId: p.proposal.id,
-          itemTopWeight: itemsTopWeight[item.key as IPocItemKey] || 0,
-        };
-        DataMap.set(item.key, row);
-      });
-    });
-    withItemProposal.forEach((proposal) => {
-      const { projectId, itemProposal, isNotLeading } = proposal;
-      const { key, createdAt, value, ref, creator, id } = itemProposal;
-      const row: IKeyItemDataForTable = {
-        key: key!,
-        property: key!,
-        input: value,
-        reference: ref ? { key, value: ref } : null,
-        submitter: creator,
-        createdAt: createdAt,
-        projectId: projectId!,
-        proposalId: Number(id),
-        itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
-        /**
-         * 原来是 leading proposal, 但还没有新的 leading proposal出现
-         */
-        isNotLeading: isNotLeading,
-      };
-      DataMap.set(key, row);
-    });
-    devLog('displayProposalDataListOfProject', Array.from(DataMap.values()));
-    return Array.from(DataMap.values());
-  }, [proposalsByProject, project]);
-
-  // 当前 itemKey 的 leading proposal 数据
-  const displayProposalDataOfKey = useMemo(() => {
-    if (!currentItemKey) return undefined;
-    if (!proposalsByProjectIdAndKey) return undefined;
-
-    const { leadingProposal } = proposalsByProjectIdAndKey;
-    // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
-    if (leadingProposal && leadingProposal.itemProposal) {
-      const { key, value, ref, creator, createdAt, projectId, id } =
-        leadingProposal.itemProposal;
-      const weight = leadingProposal.itemProposal.voteRecords.reduce(
-        (acc, vote) => acc + Number(vote.weight),
-        0,
-      );
-      const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
-      return {
-        key,
-        property: key,
-        input: value,
-        reference: ref ? { key, value: ref } : null,
-        submitter: creator,
-        createdAt: createdAt,
-        projectId: projectId,
-        proposalId: id,
-        itemTopWeight: getItemTopWeight(key as IPocItemKey),
-        support: {
-          count: weight,
-          voters: voterMemberCount,
-        },
-      };
-    }
-    // 2. 没有 item proposal 胜出，取published proposal 胜出的数据 -> displayProposalDataListOfProject 的数据
-    const proposalItem = (displayProposalDataListOfProject || []).find(
-      (item) => item.key === currentItemKey,
-    );
-
-    if (!proposalItem) {
-      return undefined; // 没有找到对应 itemKey 的数据 -> non essential item
-    }
-
-    const { votesOfKeyInProposalMap } = voteResultOfLeadingProposal || {};
-    const votesOfKey = votesOfKeyInProposalMap?.[currentItemKey as IPocItemKey];
-
-    const sumOfWeight =
-      votesOfKey?.reduce((acc, vote) => {
-        return acc + Number(vote.weight);
-      }, 0) || 0;
-    const voterMemberCount = votesOfKey?.length || 0;
-
-    return {
-      ...proposalItem,
-      support: {
-        count: sumOfWeight,
-        voters: voterMemberCount,
-      },
-    };
-  }, [
-    displayProposalDataListOfProject,
-    currentItemKey,
-    voteResultOfLeadingProposal,
-    getItemTopWeight,
-    proposalsByProjectIdAndKey,
-  ]);
 
   const showReferenceModal = useCallback((ref: string, key: IPocItemKey) => {
     setOpenReferenceModal(true);
@@ -446,20 +405,19 @@ export const ProjectDetailProvider = ({
 
   const value: ProjectDetailContextType = {
     project: project as IProject,
-    proposals,
+    proposals: proposalsOfProject,
     isProjectLoading,
     isProjectFetched,
     isProposalsLoading,
     isProposalsFetched,
     projectId,
-    leadingProposals: proposalsByProject,
+    leadingProposals: leadingItemProposalsByProject,
     isLeadingProposalsLoading,
     isLeadingProposalsFetched,
     displayProposalDataListOfProject,
     displayProposalDataOfKey,
     getItemTopWeight,
 
-    // Merged values
     currentItemKey,
     setCurrentItemKey,
     proposalsByProjectIdAndKey,
@@ -474,7 +432,6 @@ export const ProjectDetailProvider = ({
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,
-    voteResultOfLeadingProposal,
 
     // utils
     openReferenceModal,

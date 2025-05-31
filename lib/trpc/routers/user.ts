@@ -25,7 +25,7 @@ export const userRouter = router({
     .input(z.object({ address: z.string() }))
     .query(async ({ ctx, input }) => {
       const user = await ctx.db.query.profiles.findFirst({
-        where: eq(profiles.address, input.address),
+        where: eq(profiles.address, input.address.toLowerCase()),
       });
 
       if (!user) {

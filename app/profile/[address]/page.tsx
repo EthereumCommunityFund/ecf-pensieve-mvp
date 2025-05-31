@@ -1,6 +1,6 @@
 'use client';
 
-import { cn, Tab, Tabs } from '@heroui/react';
+import { Skeleton, Tab, Tabs, cn } from '@heroui/react';
 import { GitCommit, UserSquare } from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import ECFTypography from '@/components/base/typography';
 
 import Contributions from './components/contributions';
+import { useProfileData } from './components/dataContext';
 import Setting from './components/setting';
 
 const tabItems = [
@@ -27,6 +28,7 @@ const ProfileSettingsPage = () => {
   const { address } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useProfileData();
   const initialTab = searchParams.get('tab');
 
   const [activeTab, setActiveTab] = useState<'profile' | 'contributions'>(
@@ -45,8 +47,6 @@ const ProfileSettingsPage = () => {
     }
   }, [searchParams, address, router]);
 
-  const userWeight = '80';
-
   return (
     <div className="mx-auto flex w-full max-w-[800px] flex-col items-center gap-5 pb-16 pt-8">
       <div className="flex w-full items-center justify-center gap-[10px]">
@@ -63,9 +63,11 @@ const ProfileSettingsPage = () => {
           <ECFTypography type="caption" className="opacity-50">
             Weight:
           </ECFTypography>
-          <ECFTypography type="caption" className="opacity-80">
-            {userWeight}
-          </ECFTypography>
+          <Skeleton isLoaded={!!user}>
+            <ECFTypography type="caption" className="opacity-80">
+              {user?.weight ?? 100}
+            </ECFTypography>
+          </Skeleton>
         </div>
       </div>
 

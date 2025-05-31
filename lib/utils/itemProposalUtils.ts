@@ -43,7 +43,7 @@ export const handleVoteRecord = async (
     key: string;
     weight: number;
     existingVoteRecord?: any;
-    proposalCreatorId: string;
+    proposalCreatorId?: string;
   },
 ) => {
   if (!existingVoteRecord) {
@@ -135,13 +135,39 @@ export const processItemProposalVoteResult = async (
   const keyWeight = itemsTopWeight?.[key] ?? 0;
 
   if (voteSum > keyWeight) {
-    const rewardMultiplier = needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
+    const rewardMultiplier = !needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
     const reward =
       POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
       WEIGHT *
       rewardMultiplier;
 
     const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
+
+    const oldLog = await tx.query.projectLogs.findFirst({
+      where: and(
+        eq(projectLogs.projectId, itemProposal.projectId),
+        eq(projectLogs.itemProposalId, itemProposal.id),
+      ),
+    });
+
+    if (oldLog) {
+      await Promise.all([
+        tx
+          .update(projectLogs)
+          .set({
+            isNotLeading: false,
+            createdAt: new Date(),
+          })
+          .where(eq(projectLogs.id, oldLog.id)),
+        tx.update(projects).set({
+          itemsTopWeight: {
+            ...(project?.itemsTopWeight ?? {}),
+            [key]: voteSum,
+          },
+        }),
+      ]);
+      return;
+    }
 
     await Promise.all([
       tx.insert(projectLogs).values({
@@ -176,6 +202,31 @@ export const processItemProposalVoteResult = async (
   }
 
   return null;
+};
+
+export const processItemProposalUpdate = async (
+  tx: any,
+  {
+    votes,
+    project,
+    key,
+  }: {
+    votes: any[];
+    project: any;
+    key: string;
+  },
+) => {
+  const voteSum = votes.reduce((acc, vote) => {
+    acc += vote.weight ?? 0;
+    return acc;
+  }, 0);
+
+  await tx.update(projects).set({
+    itemsTopWeight: {
+      ...(project?.itemsTopWeight ?? {}),
+      [key]: voteSum,
+    },
+  });
 };
 
 export const handleOriginalProposalUpdate = async (

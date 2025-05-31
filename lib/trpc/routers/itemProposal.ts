@@ -60,17 +60,6 @@ export const itemProposalRouter = router({
           });
         }
 
-        logUserActivity.itemProposal.create({
-          userId: ctx.user.id,
-          targetId: itemProposal.id,
-          projectId: itemProposal.projectId,
-          items: [{ field: input.key }],
-        });
-
-        if (isEssentialItem(input.key)) {
-          return itemProposal;
-        }
-
         const [existingProposal, userProfile, voteRecord] = await Promise.all([
           tx.query.itemProposals.findFirst({
             where: and(
@@ -90,7 +79,9 @@ export const itemProposalRouter = router({
           }),
         ]);
 
-        if (!existingProposal) {
+        const isEssential = isEssentialItem(input.key);
+
+        if (!existingProposal && !isEssential) {
           const reward = calculateReward(input.key);
           const finalWeight = (userProfile?.weight ?? 0) + reward;
 
@@ -119,7 +110,28 @@ export const itemProposalRouter = router({
               existingVoteRecord: voteRecord,
               proposalCreatorId: itemProposal.creator,
             }),
+
+            logUserActivity.itemProposal.create({
+              userId: ctx.user.id,
+              targetId: itemProposal.id,
+              projectId: itemProposal.projectId,
+              items: [{ field: input.key }],
+            }),
           ]);
+        } else {
+          await handleVoteRecord(tx, {
+            userId: ctx.user.id,
+            projectId: input.projectId,
+            itemProposalId: itemProposal.id,
+            key: input.key,
+            weight: userProfile?.weight ?? 0,
+          });
+          logUserActivity.itemProposal.update({
+            userId: ctx.user.id,
+            targetId: itemProposal.id,
+            projectId: itemProposal.projectId,
+            items: [{ field: input.key }],
+          });
         }
 
         return itemProposal;
