@@ -71,11 +71,20 @@ export const projectRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (tx) => {
+        const proposalItems = Object.entries(input)
+          .filter(([key]) => key !== 'refs')
+          .map(([key, value]) => {
+            return { key, value };
+          });
+
+        const hasProposalKeys = proposalItems.map((item) => item.key);
+
         const [project] = await tx
           .insert(projects)
           .values({
             ...input,
             creator: ctx.user.id,
+            hasProposalKeys,
           })
           .returning();
 
@@ -91,11 +100,6 @@ export const projectRouter = router({
             ...ctx,
             db: tx as any,
           });
-          const proposalItems = Object.entries(input)
-            .filter(([key]) => key !== 'refs')
-            .map(([key, value]) => {
-              return { key, value };
-            });
 
           await updateUserWeight(
             ctx.user.id,

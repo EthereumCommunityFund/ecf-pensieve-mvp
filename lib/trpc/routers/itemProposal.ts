@@ -84,12 +84,23 @@ export const itemProposalRouter = router({
         if (!existingProposal && !isEssential) {
           const reward = calculateReward(input.key);
           const finalWeight = (userProfile?.weight ?? 0) + reward;
+          const hasProposalKeys = new Set([
+            ...project.hasProposalKeys,
+            input.key,
+          ]);
 
           await Promise.all([
             tx
               .update(profiles)
               .set({ weight: finalWeight })
               .where(eq(profiles.userId, ctx.user.id)),
+
+            tx
+              .update(projects)
+              .set({
+                hasProposalKeys: Array.from(hasProposalKeys),
+              })
+              .where(eq(projects.id, input.projectId)),
 
             addRewardNotification(
               createRewardNotification.createItemProposal(
