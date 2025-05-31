@@ -62,7 +62,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showReferenceModal,
     tableDataOfDisplayed,
     tableDataOfSubmissionQueue,
-    isOvertake,
+    showRowOverTaken,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -189,8 +189,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Consensus in Progress Banner - Only show when isOvertake is true */}
-      {isOvertake && (
+      {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
+      {showRowOverTaken && (
         <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
           <ClockClockwiseIcon size={24} />
           <div className="flex flex-col gap-[5px]">

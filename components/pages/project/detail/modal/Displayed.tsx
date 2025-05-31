@@ -72,7 +72,7 @@ const Displayed: FC<DisplayedProps> = ({
     onCancelVote,
     proposalsByProjectIdAndKey,
     tableDataOfDisplayed,
-    isOvertake,
+    showRowOverTaken,
   } = useProjectDetailContext();
 
   // 展开行状态管理
@@ -145,7 +145,7 @@ const Displayed: FC<DisplayedProps> = ({
       </div>
 
       {/* Consensus Status Info */}
-      {isOvertake && (
+      {showRowOverTaken && (
         <div className="flex items-center gap-[5px] rounded-[10px] p-2.5">
           <ClockClockwiseIcon size={20} />
           <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black">
