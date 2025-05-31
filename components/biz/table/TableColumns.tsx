@@ -427,26 +427,27 @@ const ActionsCell = ({ onView, item, itemConfig }: ActionsColCellProps) => {
   const isEssential = itemConfig?.isEssential;
   const isValueEmpty = isInputValueEmpty(item?.input);
 
-  if (!isEssential && isValueEmpty) {
-    return (
-      <Button
-        size="sm"
-        className="w-full border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
-        onPress={() => onView?.('submitPropose')}
-      >
-        Propose
-      </Button>
-    );
-  }
+  // TDOO && isValueEmpty
 
   return (
-    <Button
-      color="secondary"
-      className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-      onPress={() => onView?.('viewItemProposal')}
-    >
-      View
-    </Button>
+    <div className="flex w-full gap-[10px]">
+      {!isEssential && (
+        <Button
+          size="sm"
+          className="flex-1 border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
+          onPress={() => onView?.('submitPropose')}
+        >
+          Propose
+        </Button>
+      )}
+      <Button
+        color="secondary"
+        className="h-[30px] flex-1 rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+        onPress={() => onView?.('viewItemProposal')}
+      >
+        View
+      </Button>
+    </div>
   );
 };
 
