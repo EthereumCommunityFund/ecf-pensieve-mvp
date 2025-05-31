@@ -1,14 +1,15 @@
+import React from 'react';
+
 import { IconProps } from '@/types/common';
 
-const ClockClockwiseIcon: React.FC<IconProps> = (props) => {
+const ClockClockwiseIcon: React.FC<IconProps> = ({ size = 20 }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
       fill="none"
-      {...props}
     >
       <g clipPath="url(#clip0_1765_3631)">
         <path
@@ -37,7 +38,7 @@ const ClockClockwiseIcon: React.FC<IconProps> = (props) => {
       </g>
       <defs>
         <clipPath id="clip0_1765_3631">
-          <rect width="18" height="18" fill="white" />
+          <rect width={size} height={size} fill="white" />
         </clipPath>
       </defs>
     </svg>

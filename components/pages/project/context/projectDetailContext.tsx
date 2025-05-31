@@ -74,6 +74,8 @@ interface ProjectDetailContextType {
   closeReferenceModal: () => void;
   currentRefValue: string | null;
   currentRefKey: IPocItemKey | null;
+  // 判断是否overtake
+  isOvertake: boolean;
 }
 
 // Create the context with default values
@@ -117,6 +119,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   currentRefValue: null,
   closeReferenceModal: () => {},
   currentRefKey: null,
+  isOvertake: false,
 });
 
 // Provider component
@@ -544,6 +547,7 @@ export const ProjectDetailProvider = ({
     currentRefValue,
     currentRefKey: currentRefKey,
     closeReferenceModal,
+    isOvertake: showRowOverTaken,
   };
 
   return (

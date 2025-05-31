@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
-import { CaretDownIcon } from '@/components/icons';
+import { CaretDownIcon, ClockClockwiseIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -74,6 +74,7 @@ const Displayed: FC<DisplayedProps> = ({
     tableDataOfDisplayed,
     showRowOverTaken,
     showRowIsLeading,
+    isOvertake,
   } = useProjectDetailContext();
 
   // 展开行状态管理
@@ -144,6 +145,16 @@ const Displayed: FC<DisplayedProps> = ({
         </div>
         <ItemWeight itemName={itemName} itemWeight={itemWeight} />
       </div>
+
+      {/* Consensus Status Info */}
+      {isOvertake && (
+        <div className="flex items-center gap-[5px] rounded-[10px] p-2.5">
+          <ClockClockwiseIcon size={20} />
+          <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black">
+            This item is current undergoing consensus. View Submissions
+          </span>
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">

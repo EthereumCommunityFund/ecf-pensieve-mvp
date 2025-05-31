@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
-import { CaretUpDownIcon } from '@/components/icons';
+import { CaretUpDownIcon, ClockClockwiseIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IEssentialItemKey } from '@/types/item';
@@ -24,7 +24,6 @@ import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import { useCommonColumnsOfModal } from './CommonColumns';
-import ItemWeight from './ItemWeight';
 
 interface ISubmissionQueueProps {
   itemName?: string;
@@ -65,6 +64,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showRowIsLeading,
     tableDataOfDisplayed,
     tableDataOfSubmissionQueue,
+    isOvertake,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -191,7 +191,25 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-5">
-      <ItemWeight itemName={itemName} itemWeight={itemWeight} />
+      {/* Consensus in Progress Banner - Only show when isOvertake is true */}
+      {isOvertake && (
+        <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
+          <ClockClockwiseIcon size={24} />
+          <div className="flex flex-col gap-[5px]">
+            <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
+              Consensus in Progress
+            </span>
+            <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
+              The displayed submission is now outpaced by a leading submission
+              with more support. To keep the displayed submission in place,
+              additional support is needed, or if the leading submission
+              surpasses the Item Weight, it will replace the displayed one.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Displayed Section - Only show when displayProposalDataOfKey has value */}
       {displayProposalDataOfKey && (
         <div className="flex flex-col gap-2.5">
           {/* Displayed Section */}
