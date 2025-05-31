@@ -41,6 +41,10 @@ interface ProjectDetailContextType {
   displayProposalDataListOfProject?: IKeyItemDataForTable[];
   getItemTopWeight: (key: IPocItemKey) => number;
   displayProposalDataOfKey?: IProjectTableRowData;
+  tableDataOfDisplayed: IProjectTableRowData[];
+  tableDataOfSubmissionQueue: IProjectTableRowData[];
+  showRowOverTaken: boolean;
+  showRowIsLeading: boolean;
 
   // Merged from ModalContextType
   currentItemKey: string | null;
@@ -87,6 +91,10 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   displayProposalDataListOfProject: undefined,
   getItemTopWeight: () => 0,
   displayProposalDataOfKey: undefined,
+  tableDataOfDisplayed: [],
+  tableDataOfSubmissionQueue: [],
+  showRowOverTaken: false,
+  showRowIsLeading: false,
 
   // Merged defaults
   currentItemKey: null,
@@ -245,7 +253,6 @@ export const ProjectDetailProvider = ({
     return Array.from(DataMap.values());
   }, [leadingItemProposalsByProject, project]);
 
-  // 当前 itemKey 的 leading proposal 数据
   const displayProposalDataOfKey = useMemo(() => {
     if (!currentItemKey) return undefined;
     if (!proposalsByProjectIdAndKey) return undefined;
@@ -318,6 +325,99 @@ export const ProjectDetailProvider = ({
     getItemTopWeight,
     proposalsByProjectIdAndKey,
   ]);
+
+  const tableDataOfDisplayed: IProjectTableRowData[] = useMemo(() => {
+    if (!displayProposalDataOfKey) return [];
+    return [displayProposalDataOfKey];
+  }, [displayProposalDataOfKey]);
+
+  const tableDataOfSubmissionQueue: IProjectTableRowData[] = useMemo(() => {
+    if (!proposalsByProjectIdAndKey) return [];
+    const { allItemProposals, leadingProposal } = proposalsByProjectIdAndKey;
+
+    const list: IProjectTableRowData[] = allItemProposals
+      .filter(
+        (itemProposal) => itemProposal.id !== leadingProposal?.itemProposalId,
+      )
+      .map((itemProposal) => {
+        const {
+          creator,
+          key,
+          value = '',
+          projectId,
+          createdAt,
+          id,
+          voteRecords = [],
+          ref = '',
+        } = itemProposal;
+
+        // 构建符合 IProjectDataItem 结构的数据
+        const baseData = {
+          key,
+          property: key,
+          input: value,
+          reference: ref ? { key, value: ref } : null,
+          submitter: creator,
+          createdAt: createdAt,
+          projectId: projectId,
+          proposalId: id,
+          itemTopWeight: getItemTopWeight(key as IPocItemKey),
+        };
+
+        // 对于单个item，每人只能投一票, 不需要根据用户去重
+        const sumOfWeight = voteRecords.reduce((acc, vote) => {
+          return acc + Number(vote.weight);
+        }, 0);
+
+        const voterMap = new Map<string, number>();
+
+        voteRecords.forEach((voteRecord) => {
+          const userId =
+            typeof voteRecord.creator === 'string'
+              ? voteRecord.creator
+              : (voteRecord.creator as IProfileCreator).userId;
+          voterMap.set(
+            userId,
+            (voterMap.get(userId) || 0) + Number(voteRecord.weight),
+          );
+        });
+
+        return {
+          ...baseData,
+          support: {
+            count: sumOfWeight,
+            voters: voterMap.size,
+          },
+        };
+      });
+
+    // 根据 weight 排序
+    return list.sort((a, b) => {
+      return b.support.count - a.support.count;
+    });
+  }, [proposalsByProjectIdAndKey, getItemTopWeight]);
+
+  const showRowOverTaken = useMemo(() => {
+    // 原来有validated的leading item proposal,但由于voter switch 投票，导致它的 weight 比 submission queue 第一条的 weight(已排序，最高的 weight) 要低
+    const { leadingProposal } = proposalsByProjectIdAndKey || {};
+    if (!leadingProposal) return false;
+    const voteRecordsOfLeadingProposal =
+      leadingProposal.itemProposal?.voteRecords || [];
+    const weightOfLeadingProposal = voteRecordsOfLeadingProposal.reduce(
+      (acc, vote) => acc + Number(vote.weight),
+      0,
+    );
+    const weightOfSubmissionQueue =
+      tableDataOfSubmissionQueue[0]?.support.count || 0;
+    return weightOfLeadingProposal < weightOfSubmissionQueue;
+  }, [tableDataOfSubmissionQueue, proposalsByProjectIdAndKey]);
+
+  const showRowIsLeading = useMemo(() => {
+    const { leadingProposal } = proposalsByProjectIdAndKey || {};
+    // 1、没有validated的 leading item proposal(仅限not essential item)
+    if (!leadingProposal) return true;
+    return showRowOverTaken;
+  }, [showRowOverTaken]);
 
   const createItemProposalVoteMutation =
     trpc.vote.createItemProposalVote.useMutation();
@@ -418,6 +518,10 @@ export const ProjectDetailProvider = ({
     displayProposalDataListOfProject,
     displayProposalDataOfKey,
     getItemTopWeight,
+    tableDataOfDisplayed,
+    tableDataOfSubmissionQueue,
+    showRowOverTaken,
+    showRowIsLeading,
 
     currentItemKey,
     setCurrentItemKey,

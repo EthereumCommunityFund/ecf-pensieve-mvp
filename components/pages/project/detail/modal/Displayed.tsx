@@ -71,6 +71,9 @@ const Displayed: FC<DisplayedProps> = ({
     onSwitchItemProposalVote,
     onCancelVote,
     proposalsByProjectIdAndKey,
+    tableDataOfDisplayed,
+    showRowOverTaken,
+    showRowIsLeading,
   } = useProjectDetailContext();
 
   // 展开行状态管理
@@ -82,12 +85,6 @@ const Displayed: FC<DisplayedProps> = ({
       ? `proposal-${rowData.proposalId}`
       : `key-${rowData.key}`;
   }, []);
-
-  // 根据 itemKey 从 displayProposalDataListOfProject 中获取真实数据
-  const tableData: IProjectTableRowData[] = useMemo(() => {
-    if (!displayProposalDataOfKey) return [];
-    return [displayProposalDataOfKey];
-  }, [displayProposalDataOfKey]);
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((uniqueId: string) => {
@@ -130,7 +127,7 @@ const Displayed: FC<DisplayedProps> = ({
 
   // Create table instance
   const table = useReactTable({
-    data: tableData,
+    data: tableDataOfDisplayed,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
@@ -237,14 +234,14 @@ const Displayed: FC<DisplayedProps> = ({
                 />
               </React.Fragment>
             ))}
-            {tableData[0]?.reason && (
+            {tableDataOfDisplayed[0]?.reason && (
               <TableFooter colSpan={table.getAllColumns().length}>
                 <div className="flex items-center gap-[5px]">
                   <span className="font-sans text-[13px] opacity-50">
                     Edit Reason:
                   </span>
                   <span className="font-sans text-[13px]">
-                    {tableData[0]?.reason}
+                    {tableDataOfDisplayed[0]?.reason}
                   </span>
                 </div>
               </TableFooter>
