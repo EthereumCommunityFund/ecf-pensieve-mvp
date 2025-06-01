@@ -16,7 +16,6 @@ import {
 import {
   calculateReward,
   handleVoteRecord,
-  isEssentialItem,
 } from '@/lib/utils/itemProposalUtils';
 
 import { protectedProcedure, router } from '../server';
@@ -45,6 +44,13 @@ export const itemProposalRouter = router({
       }
 
       return await ctx.db.transaction(async (tx) => {
+        const existingProposal = await tx.query.itemProposals.findFirst({
+          where: and(
+            eq(itemProposals.projectId, input.projectId),
+            eq(itemProposals.key, input.key),
+          ),
+        });
+
         const [itemProposal] = await tx
           .insert(itemProposals)
           .values({
@@ -60,13 +66,7 @@ export const itemProposalRouter = router({
           });
         }
 
-        const [existingProposal, userProfile, voteRecord] = await Promise.all([
-          tx.query.itemProposals.findFirst({
-            where: and(
-              eq(itemProposals.projectId, input.projectId),
-              eq(itemProposals.key, input.key),
-            ),
-          }),
+        const [userProfile, voteRecord] = await Promise.all([
           tx.query.profiles.findFirst({
             where: eq(profiles.userId, ctx.user.id),
           }),
@@ -79,9 +79,7 @@ export const itemProposalRouter = router({
           }),
         ]);
 
-        const isEssential = isEssentialItem(input.key);
-
-        if (!existingProposal && !isEssential) {
+        if (!existingProposal) {
           const reward = calculateReward(input.key);
           const finalWeight = (userProfile?.weight ?? 0) + reward;
           const hasProposalKeys = new Set([
