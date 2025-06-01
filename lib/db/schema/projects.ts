@@ -55,6 +55,7 @@ export const projects = pgTable(
     itemsTopWeight: jsonb('items_top_weight').notNull().default('{}'),
     support: doublePrecision('support').notNull().default(0),
     likeCount: integer('like_count').notNull().default(0),
+    hasProposalKeys: text('has_proposal_keys').array().notNull().default([]),
   },
   (table) => {
     return {
