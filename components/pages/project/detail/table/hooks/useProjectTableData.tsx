@@ -128,11 +128,11 @@ export const useProjectTableData = () => {
           const groupInfo = itemToGroupMap.get(itemKey);
           const itemConfig = AllItemConfig[itemKey as IPocItemKey];
 
+          // 检查是否有 proposal
+          const hasProposal = hasProposalKeys.includes(itemKey as IPocItemKey);
+
           if (existingItem) {
             // 计算状态字段
-            const hasProposal = hasProposalKeys.includes(
-              itemKey as IPocItemKey,
-            );
             const statusFields = calculateItemStatusFields(
               itemKey,
               hasProposal,
@@ -150,20 +150,18 @@ export const useProjectTableData = () => {
               ...statusFields,
             };
 
-            // 如果有数据且不为空，添加到主表格
-            if (!isInputValueEmpty(existingItem.input)) {
+            // 如果有 proposal，无论数据是否为空都提升到主表格
+            // 如果没有 proposal 但有数据且不为空，也添加到主表格
+            if (hasProposal || !isInputValueEmpty(existingItem.input)) {
               result[subCategoryConfig.key].push(enhancedItem);
             } else {
-              // 如果有数据但为空，添加到空数据列表
+              // 没有 proposal 且数据为空，添加到空数据列表
               emptyItems.push({ ...enhancedItem, isEmptyItem: true } as any);
             }
           } else {
-            // 为没有 proposal 数据的 itemsNotEssential 创建默认条目并添加到空数据列表
+            // 为没有 proposal 数据的 itemsNotEssential 创建默认条目
             if (itemConfig) {
               // 计算状态字段
-              const hasProposal = hasProposalKeys.includes(
-                itemKey as IPocItemKey,
-              );
               const statusFields = calculateItemStatusFields(
                 itemKey,
                 hasProposal,
@@ -205,7 +203,16 @@ export const useProjectTableData = () => {
                 }),
                 ...statusFields,
               } as any;
-              emptyItems.push(defaultItem);
+
+              // 如果有 proposal，即使是默认条目也提升到主表格
+              if (hasProposal) {
+                result[subCategoryConfig.key].push({
+                  ...defaultItem,
+                  isEmptyItem: false,
+                } as any);
+              } else {
+                emptyItems.push(defaultItem);
+              }
             }
           }
         });
