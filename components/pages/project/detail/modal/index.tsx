@@ -114,6 +114,8 @@ const ModalContentSection: FC<{
             'bg-[#FAFAFA] border border-[rgba(0,0,0,0.2)]',
             'rounded-[10px] shadow-none',
             'w-[1080px] min-h-[520px] max-h-[calc(100vh-200px)]',
+            'tablet:w-[calc(100vw-40px)]',
+            'mobile:w-[calc(100vw-20px)]',
           )}
         >
           {/* Header */}
@@ -127,7 +129,7 @@ const ModalContentSection: FC<{
           />
 
           {/* Content */}
-          <div className="flex flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="tablet:flex-col mobile:flex-col flex flex-1 overflow-y-auto overflow-x-hidden">
             {/* Left Content */}
             <div
               className={cn(
@@ -157,7 +159,7 @@ const ModalContentSection: FC<{
             </div>
 
             {/* Right Content */}
-            <div className="w-[300px]">
+            <div className="tablet:w-full mobile:w-full w-[300px]">
               <RightContent
                 userWeight={Number(profile?.weight) || 0}
                 currentItemWeight={currentWeight}

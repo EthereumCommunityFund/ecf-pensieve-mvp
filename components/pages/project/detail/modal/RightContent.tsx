@@ -25,9 +25,9 @@ const RightContent: FC<RightContentProps> = memo(
     showRewardCard,
   }) => {
     return (
-      <div className="flex flex-col gap-2.5 p-5">
+      <div className="tablet:pt-0 mobile:pt-0 flex flex-col gap-2.5 p-5">
         {/* Your Weight Section */}
-        <div className="flex flex-col gap-3.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-3.5">
+        <div className="tablet:hidden mobile:hidden flex flex-col gap-3.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-3.5">
           {/* Header with title and info icon */}
           <div className="flex justify-between gap-2.5 border-b border-dashed border-[rgba(0,0,0,0.1)] pb-2.5">
             <div className="flex items-center gap-[5px]">
@@ -59,9 +59,9 @@ const RightContent: FC<RightContentProps> = memo(
         {!hideSubmitEntry && (
           <>
             {/* Contribute Section */}
-            <div className="flex flex-col gap-3.5 rounded-[10px]  p-2.5">
+            <div className="tablet:p-0 mobile:p-0 flex flex-col gap-3.5 rounded-[10px] p-2.5">
               {/* Content */}
-              <div className="flex flex-col gap-[5px]">
+              <div className="tablet:hidden mobile:hidden flex flex-col gap-[5px]">
                 <span className="font-mona text-[14px] font-semibold leading-[1.41] tracking-[1.79%] text-black">
                   Contribute
                 </span>

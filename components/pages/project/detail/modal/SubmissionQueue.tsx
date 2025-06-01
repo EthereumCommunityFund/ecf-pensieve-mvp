@@ -540,13 +540,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           </table>
         </ModalTableContainer>
       )}
-
-      {/* Submit Entry Button */}
-      <button className="flex w-full items-center justify-center gap-2.5 rounded-[5px] border border-black/10 bg-[#E6E6E6] px-[30px] py-2.5 transition-colors hover:bg-[#D6D6D6]">
-        <span className="font-sans text-[14px] font-semibold text-black">
-          Submit an Entry
-        </span>
-      </button>
     </div>
   );
 };
