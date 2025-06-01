@@ -239,7 +239,7 @@ export const ProjectDetailProvider = ({
 
     leadingItemProposalsByProject.forEach((proposal) => {
       const { projectId, itemProposal, isNotLeading } = proposal;
-      const { key, createdAt, value, ref, creator, id } = itemProposal!;
+      const { key, createdAt, value, ref, creator, id, reason } = itemProposal!;
 
       // 计算状态字段
       const hasProposal = (project?.hasProposalKeys || []).includes(
@@ -259,6 +259,7 @@ export const ProjectDetailProvider = ({
         projectId: projectId!,
         proposalId: Number(id), // 这个是 itemProposal 的 proposalId
         itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
+        reason: reason || undefined,
         isNotLeading: isNotLeading,
         accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
         legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
