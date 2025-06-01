@@ -407,7 +407,7 @@ export const ProjectDetailProvider = ({
     // 比 submission queue某一条的 weight(已排序，最高的 weight) 要低
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     if (!leadingProposal) return false;
-    return !leadingProposal.isNotLeading;
+    return !!leadingProposal.isNotLeading;
   }, [proposalsByProjectIdAndKey]);
 
   const showRowIsLeading = useMemo(() => {
