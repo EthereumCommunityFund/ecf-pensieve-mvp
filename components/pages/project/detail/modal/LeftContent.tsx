@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, memo, useEffect, useMemo, useState } from 'react';
 
 import Tab from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
@@ -17,7 +17,7 @@ interface LeftContentProps {
   itemKey?: string;
 }
 
-const LeftContent: FC<LeftContentProps> = ({ itemKey }) => {
+const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   const [activeTab, setActiveTab] = useState('submission-queue');
 
   // Get project detail context to access proposalsByProjectIdAndKey and displayProposalDataOfKey
@@ -122,6 +122,8 @@ const LeftContent: FC<LeftContentProps> = ({ itemKey }) => {
       {renderTabContent()}
     </div>
   );
-};
+});
+
+LeftContent.displayName = 'LeftContent';
 
 export default LeftContent;
