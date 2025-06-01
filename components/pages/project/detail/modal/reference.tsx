@@ -49,7 +49,7 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       classNames={{
-        base: 'w-[600px] max-w-[600px] m-0 p-0',
+        base: 'w-[600px] max-w-[600px] m-0 p-0 bg-white',
         header: 'p-[20px]',
       }}
     >
