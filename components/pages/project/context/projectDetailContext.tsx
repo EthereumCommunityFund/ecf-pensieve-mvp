@@ -402,25 +402,21 @@ export const ProjectDetailProvider = ({
   }, [proposalsByProjectIdAndKey, getItemTopWeight, calculateItemStatusFields]);
 
   const showRowOverTaken = useMemo(() => {
-    // 原来有validated的leading item proposal,但由于voter switch 投票，导致它的 weight 比 submission queue 第一条的 weight(已排序，最高的 weight) 要低
+    // 原来有validated的leading item proposal,由于voter switch 投票，导致它的 weight不再是最高(后端已计算到 isNotLeading 字段)
+    // 比 submission queue某一条的 weight(已排序，最高的 weight) 要低
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     if (!leadingProposal) return false;
-    const voteRecordsOfLeadingProposal =
-      leadingProposal.itemProposal?.voteRecords || [];
-    const weightOfLeadingProposal = voteRecordsOfLeadingProposal.reduce(
-      (acc, vote) => acc + Number(vote.weight),
-      0,
-    );
-    const weightOfSubmissionQueue =
-      tableDataOfSubmissionQueue[0]?.support.count || 0;
-    return weightOfLeadingProposal < weightOfSubmissionQueue;
-  }, [tableDataOfSubmissionQueue, proposalsByProjectIdAndKey]);
+    return !leadingProposal.isNotLeading;
+  }, [proposalsByProjectIdAndKey]);
+
   const showRowIsLeading = useMemo(() => {
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     // 1、没有validated的 leading item proposal(仅限not essential item)
     if (!leadingProposal) return true;
+    // 2、要展示showRowOverTaken时也需要展示showRowIsLeading
     return showRowOverTaken;
   }, [showRowOverTaken]);
+
   const createItemProposalVoteMutation =
     trpc.vote.createItemProposalVote.useMutation();
   const switchItemProposalVoteMutation =

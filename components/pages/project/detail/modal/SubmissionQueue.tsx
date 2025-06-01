@@ -67,7 +67,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showRowOverTaken,
     showRowIsLeading,
     isProposalsByKeyLoading,
-    isProposalsByKeyFetched,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -138,7 +137,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
-      showRowOverTaken,
+      showRowOverTaken, // 只有 displayed 的 table 需要考虑 showRowOverTaken
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -166,7 +165,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: submissionQueueExpandedRows,
       toggleRowExpanded: toggleSubmissionQueueRowExpanded,
-      showRowIsLeading,
+      showRowIsLeading, // 只有 submission queue 的 table 需要考虑 showRowIsLeading
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
