@@ -182,16 +182,6 @@ export const voteRouter = router({
         });
       }
 
-      if (
-        voteToSwitch.proposal &&
-        voteToSwitch.proposal.creator === ctx.user.id
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Cannot switch vote from your own proposal',
-        });
-      }
-
       if (voteToSwitch.proposalId === proposalId) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
