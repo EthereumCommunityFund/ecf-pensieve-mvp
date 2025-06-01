@@ -73,7 +73,9 @@ export const useProjectTableData = () => {
       itemKey: string,
       existingItem: IKeyItemDataForTable | undefined,
     ) => {
-      const hasProposal = hasProposalKeys.includes(itemKey as IPocItemKey);
+      const hasProposal = (project?.hasProposalKeys || []).includes(
+        itemKey as IPocItemKey,
+      );
       const hasValidatedLeadingProposal =
         existingItem && !isInputValueEmpty(existingItem.input);
       const isNotLeading = existingItem?.isNotLeading === true;
@@ -226,7 +228,7 @@ export const useProjectTableData = () => {
     console.log('useProjectTableData result', result);
 
     return { tableData: result, emptyItemsCounts: emptyCounts };
-  }, [project, displayProposalDataListOfProject, hasProposalKeys]);
+  }, [project, displayProposalDataListOfProject]);
 
   return {
     tableData,
