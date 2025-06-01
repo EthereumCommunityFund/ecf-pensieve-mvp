@@ -61,7 +61,7 @@ const VoteItem: FC<IProps> = ({
             value: cn(
               'font-[600] font-mona',
               itemPoints > 999
-                ? 'text-[10px]'
+                ? 'text-[9px]'
                 : itemPoints > 99
                   ? 'text-[12px]'
                   : 'text-[14px]',
