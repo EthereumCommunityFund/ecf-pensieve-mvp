@@ -406,7 +406,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription:
       'The plan for the project to be adopted by the community.',
     weight: ALL_POC_ITEM_MAP.adoption_plan.weight,
-    formDisplayType: 'textarea',
+    formDisplayType: 'string',
     placeholder: 'Type in a plan',
     showReference: true,
     showExpand: true,
@@ -423,7 +423,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription:
       'The plan for the project to be launched by the community.',
     weight: ALL_POC_ITEM_MAP.launch_plan.weight,
-    formDisplayType: 'textarea',
+    formDisplayType: 'string',
     placeholder: 'Type in a plan',
     showReference: true,
     showExpand: true,
@@ -440,7 +440,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription:
       'The roadmap for the project to be adopted by the community.',
     weight: ALL_POC_ITEM_MAP.roadmap.weight,
-    formDisplayType: 'roadmap',
+    formDisplayType: 'textarea',
     placeholder: 'Type in a roadmap',
     showReference: true,
     accountability: ['Transparency'],
