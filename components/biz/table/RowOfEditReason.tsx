@@ -7,7 +7,7 @@ export const TableRowOfEditReason = ({
 }) => {
   return (
     <tr className="bg-[#EBEBEB]">
-      <td colSpan={colspan} className="min-h-auto border-0 px-[10px] py-[8px]">
+      <td colSpan={colspan} className="min-h-0 border-0 px-[10px] py-[8px]">
         <p className="text-[13px] text-black">
           <span className="text-black/50">Edit Reason:</span> {reason}
         </p>

@@ -45,7 +45,7 @@ const AnimationSection: FC<ISubmittingStepProps> = ({ itemKey }) => {
 
   const rewardWeight = useMemo(() => {
     return AllItemConfig[itemKey]?.weight;
-  }, []);
+  }, [itemKey]);
 
   const subsequentSuccessContent: ContentItem[] = useMemo(() => {
     const items: ContentItem[] = [

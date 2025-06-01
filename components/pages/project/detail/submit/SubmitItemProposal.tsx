@@ -208,6 +208,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     itemKey,
     projectId,
     refetchProposalsByKey,
+    refetchProposalHistory,
   ]);
 
   useEffect(() => {

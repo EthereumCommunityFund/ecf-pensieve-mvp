@@ -315,10 +315,10 @@ export const ProjectDetailProvider = ({
     }
     return undefined;
   }, [
-    displayProposalDataListOfProject,
     currentItemKey,
     getItemTopWeight,
     proposalsByProjectIdAndKey,
+    project?.hasProposalKeys,
   ]);
 
   const tableDataOfDisplayed: IProjectTableRowData[] = useMemo(() => {
@@ -399,7 +399,7 @@ export const ProjectDetailProvider = ({
     return list.sort((a, b) => {
       return b.support.count - a.support.count;
     });
-  }, [proposalsByProjectIdAndKey, getItemTopWeight, calculateItemStatusFields]);
+  }, [proposalsByProjectIdAndKey, getItemTopWeight, project?.hasProposalKeys]);
 
   const showRowOverTaken = useMemo(() => {
     // 原来有validated的leading item proposal,由于voter switch 投票，导致它的 weight不再是最高(后端已计算到 isNotLeading 字段)
@@ -415,7 +415,7 @@ export const ProjectDetailProvider = ({
     if (!leadingProposal) return true;
     // 2、要展示showRowOverTaken时也需要展示showRowIsLeading
     return showRowOverTaken;
-  }, [showRowOverTaken]);
+  }, [showRowOverTaken, proposalsByProjectIdAndKey]);
 
   const createItemProposalVoteMutation =
     trpc.vote.createItemProposalVote.useMutation();

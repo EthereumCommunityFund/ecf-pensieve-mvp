@@ -219,7 +219,7 @@ export const useProjectTableData = () => {
     console.log('useProjectTableData result', result);
 
     return { tableData: result, emptyItemsCounts: emptyCounts };
-  }, [project, displayProposalDataListOfProject]);
+  }, [project, displayProposalDataListOfProject, hasProposalKeys]);
 
   return {
     tableData,

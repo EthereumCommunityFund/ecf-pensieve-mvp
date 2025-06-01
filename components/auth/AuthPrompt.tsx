@@ -365,7 +365,7 @@ const AuthPrompt: React.FC = () => {
         </ModalBody>
       </>
     );
-  }, [profile, hideAuthPrompt, address, newUser]);
+  }, [profile, hideAuthPrompt, newUser]);
 
   const renderModalContent = useCallback(() => {
     if (!isConnected) {
