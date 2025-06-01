@@ -12,6 +12,8 @@ export interface TableCellProps {
   style?: React.CSSProperties;
   minHeight?: number;
   colspan?: number;
+  /** Whether this table is inside a bordered container */
+  isContainerBordered?: boolean;
 }
 
 export const TableCell = ({
@@ -23,6 +25,7 @@ export const TableCell = ({
   style,
   minHeight = 60,
   colspan,
+  isContainerBordered = false,
   ...props
 }: TableCellProps) => {
   const cellStyle = {
@@ -31,16 +34,30 @@ export const TableCell = ({
     ...style,
   };
 
+  // Smart border logic based on container type
+  const getBorderClasses = () => {
+    if (isContainerBordered) {
+      // For bordered containers: no left border, conditional right border, keep bottom border for row separation
+      return cn(
+        'border-l-0',
+        isLast ? 'border-r-0' : 'border-r border-black/10',
+        isLastRow ? 'border-b-0' : 'border-b border-black/10',
+      );
+    } else {
+      // For non-bordered containers: default behavior
+      return cn(
+        'border-l border-b border-black/10',
+        isLast && 'border-r',
+        // isLastRow && 'border-b-0',
+      );
+    }
+  };
+
   return (
     <td
       style={cellStyle}
       colSpan={colspan}
-      className={cn(
-        'border-l border-b border-black/10 hover:bg-[#EBEBEB]',
-        isLast && 'border-r',
-        // isLastRow && 'border-b-0',
-        className,
-      )}
+      className={cn('hover:bg-[#EBEBEB]', getBorderClasses(), className)}
       {...props}
     >
       <div

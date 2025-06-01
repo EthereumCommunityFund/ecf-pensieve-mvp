@@ -10,6 +10,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   ExpandableRow,
+  ModalTableContainer,
   TableCell,
   TableFooter,
   TableHeader,
@@ -155,7 +156,7 @@ const Displayed: FC<DisplayedProps> = ({
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+      <ModalTableContainer>
         <table className="w-full border-separate border-spacing-0">
           {/* Table Header */}
           <thead>
@@ -168,7 +169,8 @@ const Displayed: FC<DisplayedProps> = ({
                       header.getSize() === 0 ? undefined : header.getSize()
                     }
                     isLast={index === headerGroup.headers.length - 1}
-                    className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
+                    isContainerBordered={true}
+                    className="h-auto bg-[#F5F5F5] px-2.5 py-4"
                     style={
                       header.getSize() === 0 ? { width: 'auto' } : undefined
                     }
@@ -215,7 +217,8 @@ const Displayed: FC<DisplayedProps> = ({
                         !AllItemConfig[row.original.key as IEssentialItemKey]
                           ?.showExpand
                       }
-                      className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                      isContainerBordered={true}
+                      className="px-2.5"
                       minHeight={60}
                       style={
                         cell.column.getSize() === 0
@@ -257,7 +260,7 @@ const Displayed: FC<DisplayedProps> = ({
             )}
           </tbody>
         </table>
-      </div>
+      </ModalTableContainer>
       {/* Accountability Metrics Section */}
       <div className="flex flex-col gap-5 border-t border-black/10 pt-5">
         {/* Accountability Metrics */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { FC } from 'react';
+import { cn } from '@heroui/react';
 
 import { CaretDownIcon, CaretUpIcon } from '@/components/icons';
 import PencilCircleIcon from '@/components/icons/PencilCircle';
@@ -33,7 +34,10 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
     <tr className="cursor-pointer" onClick={() => onToggle(subCategoryKey)}>
       <td
         colSpan={colSpan}
-        className="border-x border-b border-black/10 bg-[#F5F5F5] p-[10px_20px] hover:bg-[#F5F5F5]"
+        className={cn(
+          'border-x border-b border-black/10 bg-[#F5F5F5] p-[10px_20px] hover:bg-[#F5F5F5]',
+          isExpanded ? '' : 'rounded-b-[10px]',
+        )}
       >
         <div className="flex items-center justify-between gap-[20px]">
           {/* 左侧内容 */}

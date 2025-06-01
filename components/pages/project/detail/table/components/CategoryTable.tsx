@@ -8,6 +8,7 @@ import {
   ExpandableRow,
   GroupHeader,
   groupTableRows,
+  PageTableContainer,
   TableCell,
   TableCellSkeleton,
   TableFooter,
@@ -92,7 +93,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   if (showSkeleton || noDataForThisTable) {
     return (
-      <div className="overflow-hidden overflow-x-auto">
+      <PageTableContainer className="overflow-x-auto">
         <table className="box-border w-full table-fixed border-separate border-spacing-0">
           {colGroupDefinition}
           {tableHeaders}
@@ -119,7 +120,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             </TableFooter>
           </tbody>
         </table>
-      </div>
+      </PageTableContainer>
     );
   }
 
@@ -145,7 +146,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   );
 
   return (
-    <div className="overflow-hidden overflow-x-auto">
+    <PageTableContainer className="overflow-x-auto">
       <table className="box-border w-full table-fixed border-separate border-spacing-0">
         {colGroupDefinition}
         {tableHeaders}
@@ -181,8 +182,9 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
-                  className={cn()
-                  // expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
+                  className={
+                    cn()
+                    // expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
                   }
                 >
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => (
@@ -266,6 +268,6 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             ))}
         </tbody>
       </table>
-    </div>
+    </PageTableContainer>
   );
 };

@@ -141,7 +141,7 @@ export const useConsensusLogColumns = ({
           <QuestionIcon size={18} className="opacity-40" />
         </div>
       ),
-      size: 180,
+      size: 200,
       cell: (info) => {
         const weight = info.getValue();
         const isPositive = weight.change.startsWith('+');

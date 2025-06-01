@@ -134,16 +134,16 @@ export const TableExample: Story = {
       <table className="w-full border-separate border-spacing-0">
         <thead>
           <tr className="bg-[#F5F5F5]">
-            <th className="h-[30px] border-b border-r border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
+            <th className="h-[30px] border-b border-l border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
               Property
             </th>
-            <th className="h-[30px] border-b border-r border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
+            <th className="h-[30px] border-b border-l border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
               Input
             </th>
-            <th className="h-[30px] border-b border-r border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
+            <th className="h-[30px] border-b border-l border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
               Reference
             </th>
-            <th className="h-[30px] border-b border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
+            <th className="h-[30px] border-x border-b border-black/10 px-[10px] text-left text-[14px] font-[600] text-black/60">
               Actions
             </th>
           </tr>

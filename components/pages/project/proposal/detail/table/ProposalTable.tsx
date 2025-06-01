@@ -4,7 +4,7 @@ import { Skeleton, cn } from '@heroui/react';
 import { Table, flexRender } from '@tanstack/react-table';
 import React from 'react';
 
-import { ExpandableRow } from '@/components/biz/table';
+import { ExpandableRow, TableContainer } from '@/components/biz/table';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -48,10 +48,12 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                 width: `${header.getSize()}px`,
                 boxSizing: 'border-box',
               }}
-              className={`h-[30px] border-b border-r border-black/10 px-[10px] text-left
-                text-[14px] font-[600] text-black/60
-                ${index === headerGroup.headers.length - 1 ? 'border-r-0' : ''}
-              `}
+              className={cn(
+                'h-[30px] border-b-0 border-l-0 px-[10px] text-left text-[14px] font-[600] text-black/60',
+                index === headerGroup.headers.length - 1
+                  ? 'border-r-0'
+                  : 'border-r border-black/10',
+              )}
             >
               <div
                 className="flex items-center"
@@ -73,7 +75,11 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
 
   if (showSkeleton) {
     return (
-      <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
+      <TableContainer
+        bordered
+        background="white"
+        className="overflow-x-auto rounded-b-[10px] border-t-0"
+      >
         <table className="box-border w-full table-fixed border-separate border-spacing-0">
           {colGroupDefinition}
           {tableHeaders}
@@ -87,11 +93,12 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                       width: `${column.getSize()}px`,
                       boxSizing: 'border-box',
                     }}
-                    className={` border-b border-r
-                      border-black/10
-                      ${cellIndex === table.getAllColumns().length - 1 ? 'border-r-0' : ''}
-                      ${rowIndex === 4 ? 'border-b-0' : ''}
-                    `}
+                    className={cn(
+                      'border-b-0 border-l-0',
+                      cellIndex === table.getAllColumns().length - 1
+                        ? 'border-r-0'
+                        : 'border-r border-black/10',
+                    )}
                   >
                     <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
                       <Skeleton className="h-[20px] w-full rounded" />
@@ -102,12 +109,16 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
             ))}
           </tbody>
         </table>
-      </div>
+      </TableContainer>
     );
   }
 
   return (
-    <div className="overflow-hidden overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
+    <TableContainer
+      bordered
+      background="white"
+      className="overflow-x-auto rounded-b-[10px] border-t-0"
+    >
       <table
         className={cn(
           'box-border w-full  border-separate border-spacing-0',
@@ -133,14 +144,10 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                       boxSizing: 'border-box',
                     }}
                     className={cn(
-                      'border-b border-r border-black/10 hover:bg-[#EBEBEB]',
+                      'border-b-0 border-l-0 hover:bg-[#EBEBEB]',
                       cellIndex === row.getVisibleCells().length - 1
                         ? 'border-r-0'
-                        : '',
-                      rowIndex === table.getRowModel().rows.length - 1 &&
-                        !expandedRows[row.original.key]
-                        ? 'border-b-0'
-                        : '',
+                        : 'border-r border-black/10',
                     )}
                   >
                     <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
@@ -165,7 +172,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
           ))}
         </tbody>
       </table>
-    </div>
+    </TableContainer>
   );
 };
 

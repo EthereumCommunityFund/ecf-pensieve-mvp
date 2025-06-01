@@ -36,13 +36,15 @@ type Story = StoryObj<typeof LegitimacyCol.Header>;
 // Header Stories
 export const Header: Story = {
   render: () => (
-    <table className="border-separate border-spacing-0">
-      <thead>
-        <tr className="bg-[#F5F5F5]">
-          <LegitimacyCol.Header width={228} />
-        </tr>
-      </thead>
-    </table>
+    <div className="w-full max-w-md">
+      <table className="w-full border-separate border-spacing-0">
+        <thead>
+          <tr className="bg-[#F5F5F5]">
+            <LegitimacyCol.Header width={228} />
+          </tr>
+        </thead>
+      </table>
+    </div>
   ),
 };
 

@@ -10,6 +10,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   ExpandableRow,
+  ModalTableContainer,
   TableCell,
   TableHeader,
   TableRow,
@@ -255,7 +256,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
           </span>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <ModalTableContainer>
           <table className="w-full border-separate border-spacing-0">
             {/* Table Header */}
             <thead>
@@ -268,7 +269,8 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
                         header.getSize() === 0 ? undefined : header.getSize()
                       }
                       isLast={index === headerGroup.headers.length - 1}
-                      className="h-auto border-b-0 border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-4"
+                      isContainerBordered={true}
+                      className="h-auto bg-[#F5F5F5] px-2.5 py-4"
                       style={
                         header.getSize() === 0 ? { width: 'auto' } : undefined
                       }
@@ -314,7 +316,8 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
                           !AllItemConfig[itemKey as IEssentialItemKey]
                             ?.showExpand
                         }
-                        className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                        isContainerBordered={true}
+                        className="px-2.5"
                         minHeight={60}
                         style={
                           cell.column.getSize() === 0
@@ -347,7 +350,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
               ))}
             </tbody>
           </table>
-        </div>
+        </ModalTableContainer>
       )}
     </div>
   );

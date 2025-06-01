@@ -42,7 +42,7 @@ const BaseTableRenderer = <TRowData extends IBaeTableRow, TValue = unknown>({
                 key={header.id}
                 width={header.getSize()}
                 isLast={index === headerGroup.headers.length - 1}
-                className="h-auto border-b border-l-0 border-r border-black/10 bg-[#F5F5F5] px-2.5 py-3"
+                className="h-auto bg-[#F5F5F5] px-2.5 py-3"
               >
                 {header.isPlaceholder
                   ? null
@@ -88,7 +88,7 @@ const BaseTableRenderer = <TRowData extends IBaeTableRow, TValue = unknown>({
                       !itemConfig?.showExpand &&
                       !reason
                     }
-                    className="border-b-0 border-l-0 border-r border-black/10 px-2.5"
+                    className="px-2.5"
                     minHeight={60}
                     style={
                       cell.column.getSize() === 0

@@ -9,6 +9,8 @@ export interface TableHeaderProps {
   isLast?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  /** Whether this table is inside a bordered container */
+  isContainerBordered?: boolean;
 }
 
 export const TableHeader = ({
@@ -17,6 +19,7 @@ export const TableHeader = ({
   isLast = false,
   className,
   style,
+  isContainerBordered = false,
   ...props
 }: TableHeaderProps) => {
   const headerStyle = {
@@ -25,13 +28,27 @@ export const TableHeader = ({
     ...style,
   };
 
+  // Smart border logic based on container type
+  const getBorderClasses = () => {
+    if (isContainerBordered) {
+      // For bordered containers: no left border, conditional right border
+      return cn(
+        'border-b-0 border-l-0',
+        isLast ? 'border-r-0' : 'border-r border-black/10',
+      );
+    } else {
+      // For non-bordered containers: default behavior
+      return cn('border-l border-b border-black/10', isLast && 'border-r');
+    }
+  };
+
   return (
     <th
       style={headerStyle}
       className={cn(
-        'h-[30px] border-l border-b border-black/10 px-[10px] text-left',
+        'h-[30px] px-[10px] text-left',
         'text-[14px] font-[600] text-black/60',
-        isLast && 'border-r',
+        getBorderClasses(),
         className,
       )}
       {...props}
