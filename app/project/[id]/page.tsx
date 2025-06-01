@@ -42,6 +42,7 @@ const ProjectPage = () => {
     closeReferenceModal,
     currentRefKey,
     currentRefValue,
+    currentItemReason,
     openReferenceModal,
   } = useProjectDetailContext();
 
@@ -196,6 +197,7 @@ const ProjectPage = () => {
         isOpen={openReferenceModal}
         onClose={closeReferenceModal}
         ref={currentRefValue || ''}
+        reason={currentItemReason}
       />
     </div>
   );

@@ -79,6 +79,7 @@ export const useCommonColumnsOfModal = () => {
               showReferenceModal?.(
                 referenceValue?.value || '',
                 item.key as IPocItemKey,
+                item.reason || '',
               );
             }}
           />

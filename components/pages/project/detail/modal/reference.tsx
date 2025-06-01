@@ -20,6 +20,7 @@ interface IReferenceModalProps {
   onClose: () => void;
   fieldKey: IPocItemKey;
   ref: string;
+  reason?: string;
 }
 
 const ReferenceModal: FC<IReferenceModalProps> = ({
@@ -27,6 +28,7 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
   onClose,
   fieldKey,
   ref,
+  reason = '',
 }) => {
   const link = useMemo(() => {
     return normalizeUrl(ref);
@@ -63,7 +65,7 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
           }}
           closeIcon={<X size={20} />}
         />
-        <ModalBody className="flex-col gap-[20px] p-[20px]">
+        <ModalBody className="flex-col gap-[14px] p-[20px]">
           <p className="border-b border-dashed border-black/10 pb-[10px] text-[14px] text-black">
             <span>item:</span>
             <span className="ml-[10px] font-semibold">{itemKeyLabel}</span>{' '}
@@ -82,6 +84,17 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
               </Button>
             </CopyToClipboard>
           </div>
+
+          {reason && (
+            <div className="flex flex-col gap-[5px]">
+              <p className="text-[14px] font-[600] leading-[20px] text-black">
+                Edit Reason:
+              </p>
+              <p className="text-[14px] leading-[20px] text-black/80">
+                {reason}
+              </p>
+            </div>
+          )}
 
           <p className="text-[13px] leading-[1.2] text-black/80">
             References serve as documented sources that substantiate the

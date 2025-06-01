@@ -127,7 +127,11 @@ export const useProjectTableColumns = ({
           <ReferenceCol.Cell
             hasReference={!!info.getValue()}
             onShowReference={() => {
-              showReferenceModal?.(reference?.value || '', key as IPocItemKey);
+              showReferenceModal?.(
+                reference?.value || '',
+                key as IPocItemKey,
+                info.row.original.reason || '',
+              );
             }}
           />
         );

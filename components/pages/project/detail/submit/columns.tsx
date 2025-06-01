@@ -27,7 +27,7 @@ export const itemDataToTableRows = (
 };
 
 export interface ITableMetaOfShared {
-  showReferenceModal: (value: string, key: IPocItemKey) => void;
+  showReferenceModal: (value: string, key: IPocItemKey, reason: string) => void;
   toggleRowExpanded: (key: IPocItemKey) => void;
   expandedRows: Partial<Record<IPocItemKey, boolean>>;
 }
@@ -75,7 +75,11 @@ export const useSharedColumns = () => {
           <ReferenceCol.Cell
             hasReference={!!referenceValue}
             onShowReference={() => {
-              showReferenceModal(referenceValue || '', item.key as IPocItemKey);
+              showReferenceModal(
+                referenceValue || '',
+                item.key as IPocItemKey,
+                item.reason || '',
+              );
             }}
           />
         );

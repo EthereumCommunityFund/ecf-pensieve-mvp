@@ -70,10 +70,11 @@ interface ProjectDetailContextType {
 
   // utils
   openReferenceModal: boolean;
-  showReferenceModal: (ref: string, key: IPocItemKey) => void;
+  showReferenceModal: (ref: string, key: IPocItemKey, reason: string) => void;
   closeReferenceModal: () => void;
   currentRefValue: string | null;
   currentRefKey: IPocItemKey | null;
+  currentItemReason: string;
 }
 
 // Create the context with default values
@@ -117,6 +118,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   currentRefValue: null,
   closeReferenceModal: () => {},
   currentRefKey: null,
+  currentItemReason: '',
 });
 
 // Provider component
@@ -133,6 +135,7 @@ export const ProjectDetailProvider = ({
   const [openReferenceModal, setOpenReferenceModal] = useState<boolean>(false);
   const [currentRefValue, setCurrentRefValue] = useState<string | null>(null);
   const [currentRefKey, setCurrentRefKey] = useState<IPocItemKey | null>(null);
+  const [currentItemReason, setCurrentItemReason] = useState<string>('');
 
   const [inActionKeyMap, setInActionKeyMap] = useState<
     Partial<Record<IPocItemKey, boolean>>
@@ -260,7 +263,7 @@ export const ProjectDetailProvider = ({
     const { leadingProposal } = proposalsByProjectIdAndKey;
     // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
     if (leadingProposal && leadingProposal.itemProposal) {
-      const { key, value, ref, creator, createdAt, projectId, id } =
+      const { key, value, ref, creator, createdAt, projectId, id, reason } =
         leadingProposal.itemProposal;
       const weight = leadingProposal.itemProposal.voteRecords.reduce(
         (acc, vote) => acc + Number(vote.weight),
@@ -281,6 +284,7 @@ export const ProjectDetailProvider = ({
           count: weight,
           voters: voterMemberCount,
         },
+        reason,
       };
     }
     return undefined;
@@ -384,6 +388,7 @@ export const ProjectDetailProvider = ({
 
         return {
           ...baseData,
+          reason: itemProposal.reason,
           support: {
             count: sumOfWeight,
             voters: voterMap.size,
@@ -490,11 +495,15 @@ export const ProjectDetailProvider = ({
     [cancelVoteMutation, refetchProposalsByKey],
   );
 
-  const showReferenceModal = useCallback((ref: string, key: IPocItemKey) => {
-    setOpenReferenceModal(true);
-    setCurrentRefValue(ref);
-    setCurrentRefKey(key);
-  }, []);
+  const showReferenceModal = useCallback(
+    (ref: string, key: IPocItemKey, reason: string) => {
+      setOpenReferenceModal(true);
+      setCurrentRefValue(ref);
+      setCurrentRefKey(key);
+      setCurrentItemReason(reason);
+    },
+    [],
+  );
 
   const closeReferenceModal = useCallback(() => {
     setOpenReferenceModal(false);
@@ -541,6 +550,7 @@ export const ProjectDetailProvider = ({
     showReferenceModal,
     currentRefValue,
     currentRefKey: currentRefKey,
+    currentItemReason,
     closeReferenceModal,
   };
 

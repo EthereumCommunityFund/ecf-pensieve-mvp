@@ -65,6 +65,7 @@ export const useDisplayedColumns = (props: UseDisplayedColumnsProps) => {
               showReferenceModal?.(
                 referenceValue?.value || '',
                 item.key as IPocItemKey,
+                item.reason || '',
               );
             }}
           />
