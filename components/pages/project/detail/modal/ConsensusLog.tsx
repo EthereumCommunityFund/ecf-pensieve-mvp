@@ -23,6 +23,7 @@ import { formatDate } from '@/utils/formatters';
 import { IConsensusLogRowData } from '../types';
 
 import { useConsensusLogColumns } from './ConsensusLogColumns';
+import { ModalTableSkeleton } from './ModalTableSkeleton';
 
 interface ConsensusLogProps {
   itemName?: string;
@@ -212,9 +213,15 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
             Loading consensus log data...
           </span>
         </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="size-8 animate-spin rounded-full border-b-2 border-black/20"></div>
-        </div>
+        <ModalTableSkeleton
+          rowCount={4}
+          columns={[
+            { header: 'Date / Time', width: 180 },
+            { header: 'Input', width: 480 },
+            { header: 'Submitter', width: 183 },
+            { header: 'Weight-at-time', width: 200, isLast: true },
+          ]}
+        />
       </div>
     );
   }

@@ -32,6 +32,7 @@ import {
 
 import { useCommonColumnsOfModal } from './CommonColumns';
 import ItemWeight from './ItemWeight';
+import { ModalTableSkeleton } from './ModalTableSkeleton';
 
 interface DisplayedProps {
   itemName?: string;
@@ -74,6 +75,8 @@ const Displayed: FC<DisplayedProps> = ({
     proposalsByProjectIdAndKey,
     tableDataOfDisplayed,
     showRowOverTaken,
+    isProposalsByKeyLoading,
+    isProposalsByKeyFetched,
   } = useProjectDetailContext();
 
   // 展开行状态管理
@@ -156,111 +159,123 @@ const Displayed: FC<DisplayedProps> = ({
       )}
 
       {/* Table */}
-      <ModalTableContainer>
-        <table className="w-full border-separate border-spacing-0">
-          {/* Table Header */}
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-[#F5F5F5]">
-                {headerGroup.headers.map((header, index) => (
-                  <TableHeader
-                    key={header.id}
-                    width={
-                      header.getSize() === 0 ? undefined : header.getSize()
-                    }
-                    isLast={index === headerGroup.headers.length - 1}
-                    isContainerBordered={true}
-                    className="h-auto bg-[#F5F5F5] px-2.5 py-4"
-                    style={
-                      header.getSize() === 0 ? { width: 'auto' } : undefined
-                    }
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHeader>
-                ))}
-              </tr>
-            ))}
-          </thead>
-
-          {/* Table Body */}
-          <tbody>
-            {table.getRowModel().rows.map((row, rowIndex) => (
-              <React.Fragment key={row.id}>
-                <TableRow
-                  isLastRow={
-                    rowIndex === table.getRowModel().rows.length - 1 &&
-                    !AllItemConfig[row.original.key as IEssentialItemKey]
-                      ?.showExpand
-                  }
-                  className={cn(
-                    expandedRows[getRowUniqueId(row.original)]
-                      ? 'bg-[#EBEBEB]'
-                      : '',
-                  )}
-                >
-                  {row.getVisibleCells().map((cell, cellIndex) => (
-                    <TableCell
-                      key={cell.id}
+      {isProposalsByKeyLoading ? (
+        <ModalTableSkeleton
+          rowCount={1}
+          columns={[
+            { header: 'Input', width: 480 },
+            { header: 'Reference', width: 124 },
+            { header: 'Submitter', width: 183 },
+            { header: 'Support', width: 150, isLast: true },
+          ]}
+        />
+      ) : (
+        <ModalTableContainer>
+          <table className="w-full border-separate border-spacing-0">
+            {/* Table Header */}
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className="bg-[#F5F5F5]">
+                  {headerGroup.headers.map((header, index) => (
+                    <TableHeader
+                      key={header.id}
                       width={
-                        cell.column.getSize() === 0
-                          ? undefined
-                          : cell.column.getSize()
+                        header.getSize() === 0 ? undefined : header.getSize()
                       }
-                      isLast={cellIndex === row.getVisibleCells().length - 1}
-                      isLastRow={
-                        rowIndex === table.getRowModel().rows.length - 1 &&
-                        !AllItemConfig[row.original.key as IEssentialItemKey]
-                          ?.showExpand
-                      }
+                      isLast={index === headerGroup.headers.length - 1}
                       isContainerBordered={true}
-                      className="px-2.5"
-                      minHeight={60}
+                      className="h-auto bg-[#F5F5F5] px-2.5 py-4"
                       style={
-                        cell.column.getSize() === 0
-                          ? { width: 'auto' }
-                          : undefined
+                        header.getSize() === 0 ? { width: 'auto' } : undefined
                       }
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHeader>
                   ))}
-                </TableRow>
+                </tr>
+              ))}
+            </thead>
 
-                <ExpandableRow
-                  rowId={getRowUniqueId(row.original)}
-                  itemKey={row.original.key}
-                  inputValue={row.original.input}
-                  isExpanded={
-                    expandedRows[getRowUniqueId(row.original)] || false
-                  }
-                  colSpan={row.getVisibleCells().length}
-                  isLastRow={rowIndex === table.getRowModel().rows.length - 1}
-                />
-              </React.Fragment>
-            ))}
-            {tableDataOfDisplayed[0]?.reason && (
-              <TableFooter colSpan={table.getAllColumns().length}>
-                <div className="flex items-center gap-[5px]">
-                  <span className="font-sans text-[13px] opacity-50">
-                    Edit Reason:
-                  </span>
-                  <span className="font-sans text-[13px]">
-                    {tableDataOfDisplayed[0]?.reason}
-                  </span>
-                </div>
-              </TableFooter>
-            )}
-          </tbody>
-        </table>
-      </ModalTableContainer>
+            {/* Table Body */}
+            <tbody>
+              {table.getRowModel().rows.map((row, rowIndex) => (
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    isLastRow={
+                      rowIndex === table.getRowModel().rows.length - 1 &&
+                      !AllItemConfig[row.original.key as IEssentialItemKey]
+                        ?.showExpand
+                    }
+                    className={cn(
+                      expandedRows[getRowUniqueId(row.original)]
+                        ? 'bg-[#EBEBEB]'
+                        : '',
+                    )}
+                  >
+                    {row.getVisibleCells().map((cell, cellIndex) => (
+                      <TableCell
+                        key={cell.id}
+                        width={
+                          cell.column.getSize() === 0
+                            ? undefined
+                            : cell.column.getSize()
+                        }
+                        isLast={cellIndex === row.getVisibleCells().length - 1}
+                        isLastRow={
+                          rowIndex === table.getRowModel().rows.length - 1 &&
+                          !AllItemConfig[row.original.key as IEssentialItemKey]
+                            ?.showExpand
+                        }
+                        isContainerBordered={true}
+                        className="px-2.5"
+                        minHeight={60}
+                        style={
+                          cell.column.getSize() === 0
+                            ? { width: 'auto' }
+                            : undefined
+                        }
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+
+                  <ExpandableRow
+                    rowId={getRowUniqueId(row.original)}
+                    itemKey={row.original.key}
+                    inputValue={row.original.input}
+                    isExpanded={
+                      expandedRows[getRowUniqueId(row.original)] || false
+                    }
+                    colSpan={row.getVisibleCells().length}
+                    isLastRow={rowIndex === table.getRowModel().rows.length - 1}
+                  />
+                </React.Fragment>
+              ))}
+              {tableDataOfDisplayed[0]?.reason && (
+                <TableFooter colSpan={table.getAllColumns().length}>
+                  <div className="flex items-center gap-[5px]">
+                    <span className="font-sans text-[13px] opacity-50">
+                      Edit Reason:
+                    </span>
+                    <span className="font-sans text-[13px]">
+                      {tableDataOfDisplayed[0]?.reason}
+                    </span>
+                  </div>
+                </TableFooter>
+              )}
+            </tbody>
+          </table>
+        </ModalTableContainer>
+      )}
       {/* Accountability Metrics Section */}
       <div className="flex flex-col gap-5 border-t border-black/10 pt-5">
         {/* Accountability Metrics */}

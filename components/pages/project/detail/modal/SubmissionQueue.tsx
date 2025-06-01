@@ -25,6 +25,7 @@ import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import { useCommonColumnsOfModal } from './CommonColumns';
+import { ModalTableSkeleton } from './ModalTableSkeleton';
 
 interface ISubmissionQueueProps {
   itemName?: string;
@@ -65,6 +66,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     tableDataOfSubmissionQueue,
     showRowOverTaken,
     showRowIsLeading,
+    isProposalsByKeyLoading,
+    isProposalsByKeyFetched,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -213,8 +216,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
         </div>
       )}
 
-      {/* Displayed Section - Only show when displayProposalDataOfKey has value */}
-      {displayProposalDataOfKey && (
+      {/* Displayed Section - Show when displayProposalDataOfKey has value or is loading */}
+      {(displayProposalDataOfKey || isProposalsByKeyLoading) && (
         <div className="flex flex-col gap-2.5">
           {/* Displayed Section */}
           <div className="flex flex-col gap-2.5">
@@ -223,140 +226,153 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                 Displayed:
               </span>
               <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-                This is the validated submission currently shown on the project
-                page.
+                {isProposalsByKeyLoading
+                  ? 'Loading displayed submission...'
+                  : 'This is the validated submission currently shown on the project page.'}
               </span>
             </div>
 
             {/* Displayed Table */}
-            <ModalTableContainer>
-              <table className="w-full border-separate border-spacing-0">
-                {/* Table Header */}
-                <thead>
-                  {displayedTable.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id} className="bg-[#F5F5F5]">
-                      {headerGroup.headers.map((header, index) => (
-                        <TableHeader
-                          key={header.id}
-                          width={
-                            header.getSize() === 0
-                              ? undefined
-                              : header.getSize()
-                          }
-                          isLast={index === headerGroup.headers.length - 1}
-                          isContainerBordered={true}
-                          className="h-auto bg-[#F5F5F5] px-2.5 py-4"
-                          style={
-                            header.getSize() === 0
-                              ? { width: 'auto' }
-                              : undefined
-                          }
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHeader>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
+            {isProposalsByKeyLoading ? (
+              <ModalTableSkeleton
+                rowCount={1}
+                columns={[
+                  { header: 'Input', width: 480 },
+                  { header: 'Reference', width: 124 },
+                  { header: 'Submitter', width: 183 },
+                  { header: 'Support', width: 150, isLast: true },
+                ]}
+              />
+            ) : (
+              <ModalTableContainer>
+                <table className="w-full border-separate border-spacing-0">
+                  {/* Table Header */}
+                  <thead>
+                    {displayedTable.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id} className="bg-[#F5F5F5]">
+                        {headerGroup.headers.map((header, index) => (
+                          <TableHeader
+                            key={header.id}
+                            width={
+                              header.getSize() === 0
+                                ? undefined
+                                : header.getSize()
+                            }
+                            isLast={index === headerGroup.headers.length - 1}
+                            isContainerBordered={true}
+                            className="h-auto bg-[#F5F5F5] px-2.5 py-4"
+                            style={
+                              header.getSize() === 0
+                                ? { width: 'auto' }
+                                : undefined
+                            }
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                          </TableHeader>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
 
-                {/* Table Body */}
-                <tbody>
-                  {displayedTable.getRowModel().rows.map((row, rowIndex) => {
-                    return (
-                      <React.Fragment key={row.id}>
-                        <TableRow
-                          isLastRow={
-                            rowIndex ===
-                              displayedTable.getRowModel().rows.length - 1 &&
-                            !AllItemConfig[
-                              row.original.key as IEssentialItemKey
-                            ]?.showExpand
-                          }
-                          className={cn(
-                            // displayedExpandedRows[getRowUniqueId(row.original)]
-                            //   ? 'bg-[#EBEBEB]'
-                            //   : '',
-                            showRowOverTaken &&
-                              'bg-[rgba(247,153,45,0.2)] border-t border-[#F7992D] hover:bg-[rgba(247,153,45,0.2)]',
-                          )}
-                        >
-                          {row.getVisibleCells().map((cell, cellIndex) => (
-                            <TableCell
-                              key={cell.id}
-                              width={
-                                cell.column.getSize() === 0
-                                  ? undefined
-                                  : cell.column.getSize()
-                              }
-                              isLast={
-                                cellIndex === row.getVisibleCells().length - 1
-                              }
-                              isLastRow={
-                                rowIndex ===
-                                  displayedTable.getRowModel().rows.length -
-                                    1 &&
-                                !AllItemConfig[
-                                  row.original.key as IEssentialItemKey
-                                ]?.showExpand
-                              }
-                              isContainerBordered={true}
-                              className="px-2.5"
-                              minHeight={60}
-                              style={
-                                cell.column.getSize() === 0
-                                  ? { width: 'auto' }
-                                  : undefined
-                              }
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
+                  {/* Table Body */}
+                  <tbody>
+                    {displayedTable.getRowModel().rows.map((row, rowIndex) => {
+                      return (
+                        <React.Fragment key={row.id}>
+                          <TableRow
+                            isLastRow={
+                              rowIndex ===
+                                displayedTable.getRowModel().rows.length - 1 &&
+                              !AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]?.showExpand
+                            }
+                            className={cn(
+                              // displayedExpandedRows[getRowUniqueId(row.original)]
+                              //   ? 'bg-[#EBEBEB]'
+                              //   : '',
+                              showRowOverTaken &&
+                                'bg-[rgba(247,153,45,0.2)] border-t border-[#F7992D] hover:bg-[rgba(247,153,45,0.2)]',
+                            )}
+                          >
+                            {row.getVisibleCells().map((cell, cellIndex) => (
+                              <TableCell
+                                key={cell.id}
+                                width={
+                                  cell.column.getSize() === 0
+                                    ? undefined
+                                    : cell.column.getSize()
+                                }
+                                isLast={
+                                  cellIndex === row.getVisibleCells().length - 1
+                                }
+                                isLastRow={
+                                  rowIndex ===
+                                    displayedTable.getRowModel().rows.length -
+                                      1 &&
+                                  !AllItemConfig[
+                                    row.original.key as IEssentialItemKey
+                                  ]?.showExpand
+                                }
+                                isContainerBordered={true}
+                                className="px-2.5"
+                                minHeight={60}
+                                style={
+                                  cell.column.getSize() === 0
+                                    ? { width: 'auto' }
+                                    : undefined
+                                }
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
 
-                        <ExpandableRow
-                          rowId={getRowUniqueId(row.original)}
-                          itemKey={row.original.key}
-                          inputValue={row.original.input}
-                          isExpanded={
-                            displayedExpandedRows[
-                              getRowUniqueId(row.original)
-                            ] || false
-                          }
-                          colSpan={row.getVisibleCells().length}
-                          isLastRow={
-                            rowIndex ===
-                            displayedTable.getRowModel().rows.length - 1
-                          }
-                        />
-                      </React.Fragment>
-                    );
-                  })}
-                  {/* Edit Reason Row */}
-                  {tableDataOfDisplayed[0]?.reason && (
-                    <TableFooter
-                      colSpan={displayedTable.getAllColumns().length}
-                    >
-                      <div className="flex items-center gap-[5px]">
-                        <span className="font-sans text-[13px] opacity-50">
-                          Edit Reason:
-                        </span>
-                        <span className="font-sans text-[13px]">
-                          {tableDataOfDisplayed[0]?.reason}
-                        </span>
-                      </div>
-                    </TableFooter>
-                  )}
-                </tbody>
-              </table>
-            </ModalTableContainer>
+                          <ExpandableRow
+                            rowId={getRowUniqueId(row.original)}
+                            itemKey={row.original.key}
+                            inputValue={row.original.input}
+                            isExpanded={
+                              displayedExpandedRows[
+                                getRowUniqueId(row.original)
+                              ] || false
+                            }
+                            colSpan={row.getVisibleCells().length}
+                            isLastRow={
+                              rowIndex ===
+                              displayedTable.getRowModel().rows.length - 1
+                            }
+                          />
+                        </React.Fragment>
+                      );
+                    })}
+                    {/* Edit Reason Row */}
+                    {tableDataOfDisplayed[0]?.reason && (
+                      <TableFooter
+                        colSpan={displayedTable.getAllColumns().length}
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span className="font-sans text-[13px] opacity-50">
+                            Edit Reason:
+                          </span>
+                          <span className="font-sans text-[13px]">
+                            {tableDataOfDisplayed[0]?.reason}
+                          </span>
+                        </div>
+                      </TableFooter>
+                    )}
+                  </tbody>
+                </table>
+              </ModalTableContainer>
+            )}
           </div>
         </div>
       )}
@@ -394,7 +410,17 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       </div>
 
       {/* Table */}
-      {tableDataOfSubmissionQueue.length === 0 ? (
+      {isProposalsByKeyLoading ? (
+        <ModalTableSkeleton
+          rowCount={3}
+          columns={[
+            { header: 'Input', width: 480 },
+            { header: 'Reference', width: 124 },
+            { header: 'Submitter', width: 183 },
+            { header: 'Support', width: 150, isLast: true },
+          ]}
+        />
+      ) : tableDataOfSubmissionQueue.length === 0 ? (
         <div className="flex items-center justify-center rounded-[10px] border border-black/10 bg-white py-8">
           <span className="font-sans text-[14px] text-black opacity-60">
             No submission queue data available for this item.
