@@ -25,6 +25,7 @@ import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import { useCommonColumnsOfModal } from './CommonColumns';
+import ItemWeight from './ItemWeight';
 import { ModalTableSkeleton } from './ModalTableSkeleton';
 
 interface ISubmissionQueueProps {
@@ -197,6 +198,15 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Item Info */}
+      <div className="flex flex-col gap-[5px] border-b border-black/10 pb-5">
+        <div className="flex items-center gap-2">
+          <span className="font-mona text-[14px] leading-[1.43] text-black opacity-80">
+            Item:
+          </span>
+        </div>
+        <ItemWeight itemName={itemName} itemWeight={itemWeight} />
+      </div>
       {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
       {showRowOverTaken && (
         <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
