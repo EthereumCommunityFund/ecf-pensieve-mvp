@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { profiles, projects, proposals, voteRecords } from '@/lib/db/schema';
@@ -63,24 +63,52 @@ export const proposalRouter = router({
       }
 
       const votePromises = input.items.map(async (item) => {
-        const [vote] = await ctx.db
-          .insert(voteRecords)
-          .values({
-            key: item.key,
-            proposalId: proposal.id,
-            creator: ctx.user.id,
-            weight: userProfile?.weight ?? 0,
-            projectId: input.projectId,
-          })
-          .returning();
-
-        logUserActivity.vote.create({
-          userId: ctx.user.id,
-          targetId: vote.id,
-          projectId: input.projectId,
-          items: [{ field: item.key }],
-          proposalCreatorId: ctx.user.id,
+        const otherVote = await ctx.db.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.key, item.key),
+            eq(voteRecords.projectId, input.projectId),
+          ),
         });
+
+        let vote;
+        if (otherVote) {
+          [vote] = await ctx.db
+            .update(voteRecords)
+            .set({
+              proposalId: proposal.id,
+              weight: userProfile?.weight ?? 0,
+            })
+            .where(eq(voteRecords.id, otherVote.id))
+            .returning();
+
+          logUserActivity.vote.update({
+            userId: ctx.user.id,
+            targetId: vote.id,
+            projectId: input.projectId,
+            items: [{ field: item.key }],
+            proposalCreatorId: ctx.user.id,
+          });
+        } else {
+          [vote] = await ctx.db
+            .insert(voteRecords)
+            .values({
+              key: item.key,
+              proposalId: proposal.id,
+              creator: ctx.user.id,
+              weight: userProfile?.weight ?? 0,
+              projectId: input.projectId,
+            })
+            .returning();
+
+          logUserActivity.vote.create({
+            userId: ctx.user.id,
+            targetId: vote.id,
+            projectId: input.projectId,
+            items: [{ field: item.key }],
+            proposalCreatorId: ctx.user.id,
+          });
+        }
 
         return vote;
       });
