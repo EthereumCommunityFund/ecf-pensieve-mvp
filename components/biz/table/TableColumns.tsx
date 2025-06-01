@@ -154,6 +154,7 @@ export type InputColHeaderProps = BaseHeaderProps;
 
 export interface InputColCellProps extends BaseCellProps {
   value: any;
+  item: IKeyItemDataForTable;
   itemKey: IEssentialItemKey;
   displayFormType?: IFormDisplayType;
   isExpandable?: boolean;
@@ -161,6 +162,8 @@ export interface InputColCellProps extends BaseCellProps {
   onToggleExpand?: () => void;
   showOverTakenStatus?: boolean;
   showLeadingStatus?: boolean;
+  onPropose?: () => void;
+  onViewProposals?: () => void;
 }
 
 const InputHeader = (_props: InputColHeaderProps) => {
@@ -175,18 +178,43 @@ const InputHeader = (_props: InputColHeaderProps) => {
 const InputCell = ({
   value,
   itemKey,
+  item,
   displayFormType,
   isExpandable,
   isExpanded = false,
   onToggleExpand,
   showOverTakenStatus = false,
   showLeadingStatus = false,
+  onPropose,
+  onViewProposals,
 }: InputColCellProps) => {
-  // Get item config if not provided
   const itemConfig = AllItemConfig[itemKey];
+  const { canBePropose, isPendingValidation } = item || {};
   const finalDisplayFormType = displayFormType || itemConfig?.formDisplayType;
   const finalIsExpandable =
     isExpandable !== undefined ? isExpandable : itemConfig?.showExpand;
+
+  if (isPendingValidation) {
+    return (
+      <div
+        className="font-mona flex-1 cursor-pointer text-[13px] font-[600] leading-[20px] text-black"
+        onClick={onViewProposals}
+      >
+        View Proposals
+      </div>
+    );
+  }
+
+  if (canBePropose) {
+    return (
+      <div
+        className="font-mona flex-1 cursor-pointer text-[13px] font-[600] leading-[19px] text-[#64C0A5]"
+        onClick={onPropose}
+      >
+        propose a value
+      </div>
+    );
+  }
 
   // If showing over-taken status, render special UI
   if (showOverTakenStatus) {
@@ -450,7 +478,11 @@ const SubmitterCell = ({
   const isValueEmpty = isInputValueEmpty(item?.input);
 
   if (isNonEssential && isValueEmpty) {
-    return <div className="font-mona text-[14px] font-[600]">{`---`}</div>;
+    return (
+      <div className="font-mona flex-1 text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+        empty
+      </div>
+    );
   }
   const data = item?.createdAt;
   return (

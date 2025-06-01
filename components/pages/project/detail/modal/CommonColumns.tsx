@@ -50,6 +50,7 @@ export const useCommonColumnsOfModal = () => {
         return (
           <InputCol.Cell
             value={info.getValue()}
+            item={item}
             itemKey={item.key as any}
             isExpanded={isRowExpanded}
             onToggleExpand={

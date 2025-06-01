@@ -93,8 +93,8 @@ export const useProjectTableColumns = ({
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const item = info.row.original;
-        const { expandedRows, toggleRowExpanded } = info.table.options
-          .meta as ITableMetaOfProjectDetail;
+        const { expandedRows, toggleRowExpanded, onOpenModal } = info.table
+          .options.meta as ITableMetaOfProjectDetail;
 
         const rowIsExpandable = isRowExpandable(item.key);
         const isRowExpanded = expandedRows[item.key];
@@ -102,12 +102,19 @@ export const useProjectTableColumns = ({
         return (
           <InputCol.Cell
             value={info.getValue()}
+            item={item}
             itemKey={item.key as any}
             isExpandable={rowIsExpandable}
             isExpanded={isRowExpanded}
             onToggleExpand={
               rowIsExpandable ? () => toggleRowExpanded(item.key) : undefined
             }
+            onPropose={() => {
+              onOpenModal?.(item.key as IPocItemKey, 'submitPropose');
+            }}
+            onViewProposals={() => {
+              onOpenModal?.(item.key as IPocItemKey, 'viewItemProposal');
+            }}
           />
         );
       },
