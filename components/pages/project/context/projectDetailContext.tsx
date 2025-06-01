@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import {
@@ -23,6 +24,7 @@ import {
 } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+import { calculateItemStatusFields } from '@/utils/item';
 
 import { IProjectTableRowData } from '../detail/types';
 
@@ -238,6 +240,15 @@ export const ProjectDetailProvider = ({
     leadingItemProposalsByProject.forEach((proposal) => {
       const { projectId, itemProposal, isNotLeading } = proposal;
       const { key, createdAt, value, ref, creator, id } = itemProposal!;
+
+      // 计算状态字段
+      const hasProposal = (project?.hasProposalKeys || []).includes(
+        key as IPocItemKey,
+      );
+      const statusFields = calculateItemStatusFields(key, hasProposal, {
+        input: value,
+      });
+
       const row: IKeyItemDataForTable = {
         key: key!,
         property: key!,
@@ -249,6 +260,9 @@ export const ProjectDetailProvider = ({
         proposalId: Number(id), // 这个是 itemProposal 的 proposalId
         itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
         isNotLeading: isNotLeading,
+        accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
+        legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+        ...statusFields,
       };
       DataMap.set(key, row);
     });
@@ -270,6 +284,15 @@ export const ProjectDetailProvider = ({
         0,
       );
       const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
+
+      // 计算状态字段
+      const hasProposal = (project?.hasProposalKeys || []).includes(
+        key as IPocItemKey,
+      );
+      const statusFields = calculateItemStatusFields(key, hasProposal, {
+        input: value,
+      });
+
       return {
         key,
         property: key,
@@ -280,49 +303,17 @@ export const ProjectDetailProvider = ({
         projectId: projectId,
         proposalId: id,
         itemTopWeight: getItemTopWeight(key as IPocItemKey),
+        accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
+        legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
         support: {
           count: weight,
           voters: voterMemberCount,
         },
-        reason,
+        reason: reason || undefined,
+        ...statusFields,
       };
     }
     return undefined;
-    // 2. 没有 item proposal 胜出, 取 allItemProposals 的数据
-    // const proposalItem = (
-    //   proposalsByProjectIdAndKey.allItemProposals || []
-    // ).find((item) => item.key === currentItemKey);
-
-    // if (!proposalItem) {
-    //   return undefined; // 没有找到对应 itemKey 的数据 -> non essential item (完全是新的)
-    // }
-
-    // const votesOfKey =
-    //   proposalsByProjectIdAndKey?.allItemProposals.flatMap(
-    //     (item) => item.voteRecords,
-    //   ) || [];
-
-    // const sumOfWeight =
-    //   votesOfKey?.reduce((acc, vote) => {
-    //     return acc + Number(vote.weight);
-    //   }, 0) || 0;
-    // const voterMemberCount = votesOfKey?.length || 0; // 每人只能投一票
-
-    // return {
-    //   ...proposalItem,
-    //   property: proposalItem.key,
-    //   input: proposalItem.value,
-    //   reference: proposalItem.ref
-    //     ? { key: proposalItem.key, value: proposalItem.ref }
-    //     : null,
-    //   submitter: proposalItem.creator,
-    //   proposalId: proposalItem.id,
-    //   itemTopWeight: getItemTopWeight(proposalItem.key as IPocItemKey),
-    //   support: {
-    //     count: sumOfWeight,
-    //     voters: voterMemberCount,
-    //   },
-    // };
   }, [
     displayProposalDataListOfProject,
     currentItemKey,
@@ -388,11 +379,19 @@ export const ProjectDetailProvider = ({
 
         return {
           ...baseData,
-          reason: itemProposal.reason,
+          reason: itemProposal.reason || undefined,
           support: {
             count: sumOfWeight,
             voters: voterMap.size,
           },
+          accountability:
+            AllItemConfig[key as IPocItemKey]?.accountability || [],
+          legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+          ...calculateItemStatusFields(
+            key,
+            (project?.hasProposalKeys || []).includes(key as IPocItemKey),
+            { input: value },
+          ),
         };
       });
 
@@ -400,7 +399,7 @@ export const ProjectDetailProvider = ({
     return list.sort((a, b) => {
       return b.support.count - a.support.count;
     });
-  }, [proposalsByProjectIdAndKey, getItemTopWeight]);
+  }, [proposalsByProjectIdAndKey, getItemTopWeight, calculateItemStatusFields]);
 
   const showRowOverTaken = useMemo(() => {
     // 原来有validated的leading item proposal,但由于voter switch 投票，导致它的 weight 比 submission queue 第一条的 weight(已排序，最高的 weight) 要低

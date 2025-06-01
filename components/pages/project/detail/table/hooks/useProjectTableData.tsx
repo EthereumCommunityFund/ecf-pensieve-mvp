@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
-import { isInputValueEmpty } from '@/utils/item';
+import { calculateItemStatusFields, isInputValueEmpty } from '@/utils/item';
 
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
 import { IKeyItemDataForTable } from '../ProjectDetailTableColumns';
@@ -68,36 +68,6 @@ export const useProjectTableData = () => {
       {} as Record<IPocItemKey, IKeyItemDataForTable>,
     );
 
-    // 辅助函数：计算状态字段
-    const calculateStatusFields = (
-      itemKey: string,
-      existingItem: IKeyItemDataForTable | undefined,
-    ) => {
-      const hasProposal = (project?.hasProposalKeys || []).includes(
-        itemKey as IPocItemKey,
-      );
-      const hasValidatedLeadingProposal =
-        existingItem && !isInputValueEmpty(existingItem.input);
-      const isNotLeading = existingItem?.isNotLeading === true;
-      const isNotEssential =
-        !AllItemConfig[itemKey as IPocItemKey]?.isEssential;
-
-      return {
-        // 非核心字段且目前没有 proposal
-        canBePropose: isNotEssential && !hasProposal,
-
-        // 有 validated leading proposal 但不是 leading（权重不够高）
-        isConsensusInProgress: Boolean(
-          hasValidatedLeadingProposal && isNotLeading,
-        ),
-
-        // 有 proposal 但还没有 validated leading proposal
-        isPendingValidation: Boolean(
-          isNotEssential && hasProposal && !hasValidatedLeadingProposal,
-        ),
-      };
-    };
-
     // 按照配置的顺序组织数据
     ProjectTableFieldCategory.forEach((categoryConfig) => {
       categoryConfig.subCategories.forEach((subCategoryConfig) => {
@@ -128,7 +98,14 @@ export const useProjectTableData = () => {
             const itemConfig = AllItemConfig[itemKey as IPocItemKey];
 
             // 计算状态字段
-            const statusFields = calculateStatusFields(itemKey, item);
+            const hasProposal = hasProposalKeys.includes(
+              itemKey as IPocItemKey,
+            );
+            const statusFields = calculateItemStatusFields(
+              itemKey,
+              hasProposal,
+              item,
+            );
 
             const enhancedItem = {
               ...item,
@@ -153,7 +130,14 @@ export const useProjectTableData = () => {
 
           if (existingItem) {
             // 计算状态字段
-            const statusFields = calculateStatusFields(itemKey, existingItem);
+            const hasProposal = hasProposalKeys.includes(
+              itemKey as IPocItemKey,
+            );
+            const statusFields = calculateItemStatusFields(
+              itemKey,
+              hasProposal,
+              existingItem,
+            );
 
             const enhancedItem = {
               ...existingItem,
@@ -177,7 +161,14 @@ export const useProjectTableData = () => {
             // 为没有 proposal 数据的 itemsNotEssential 创建默认条目并添加到空数据列表
             if (itemConfig) {
               // 计算状态字段
-              const statusFields = calculateStatusFields(itemKey, undefined);
+              const hasProposal = hasProposalKeys.includes(
+                itemKey as IPocItemKey,
+              );
+              const statusFields = calculateItemStatusFields(
+                itemKey,
+                hasProposal,
+                undefined,
+              );
 
               const defaultItem: IKeyItemDataForTable = {
                 key: itemKey,
