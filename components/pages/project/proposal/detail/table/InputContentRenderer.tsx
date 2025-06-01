@@ -4,6 +4,12 @@ import Link from 'next/link';
 import React, { memo, useCallback } from 'react';
 
 import { IFormDisplayType, IPocItemKey } from '@/types/item';
+import {
+  isInputValueEmpty,
+  isInputValueNA,
+  parseMultipleValue,
+  parseValue,
+} from '@/utils/item';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -14,60 +20,6 @@ interface IProps {
   isRowExpanded?: boolean;
   onToggleExpanded?: () => void;
 }
-
-export const isInputValueEmpty = (value: any) => {
-  let actualValue = value;
-  if (typeof value === 'string' && value.trim()) {
-    try {
-      actualValue = JSON.parse(value);
-    } catch {
-      actualValue = value;
-    }
-  }
-
-  if (
-    !actualValue ||
-    (typeof actualValue === 'string' && actualValue?.toLowerCase() === 'n/a')
-  ) {
-    return true;
-  }
-
-  if (Array.isArray(actualValue) && actualValue.length === 0) {
-    return true;
-  }
-
-  return false;
-};
-
-export const parseMultipleValue = (value: any): string[] => {
-  const parsedValue = parseValue(value);
-
-  if (Array.isArray(parsedValue)) {
-    return parsedValue;
-  }
-
-  if (typeof parsedValue === 'string' && parsedValue.trim()) {
-    return parsedValue.split(',').map((item: string) => item.trim());
-  }
-
-  return [parsedValue];
-};
-
-export const parseValue = (value: any) => {
-  if (typeof value === 'object' && value !== null) {
-    return value;
-  }
-
-  if (typeof value === 'string' && value.trim()) {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return value;
-    }
-  }
-
-  return value;
-};
 
 const InputContentRenderer: React.FC<IProps> = ({
   value,
@@ -139,7 +91,8 @@ const InputContentRenderer: React.FC<IProps> = ({
 
   const isValueEmpty = isInputValueEmpty(value);
 
-  if (isValueEmpty) {
+  // TODO 确认NA的判断
+  if (isValueEmpty || isInputValueNA(value)) {
     return !isEssential ? (
       <span className="font-mona text-[14px] font-[600]">{`---`}</span>
     ) : (

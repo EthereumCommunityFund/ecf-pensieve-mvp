@@ -11,7 +11,6 @@ import {
   GitPullBlueIcon,
 } from '@/components/icons';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
-import { isInputValueEmpty } from '@/components/pages/project/proposal/detail/table/InputContentRenderer';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -23,6 +22,7 @@ import {
   IPocItemKey,
 } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
+import { isInputValueEmpty } from '@/utils/item';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
@@ -55,8 +55,7 @@ export interface PropertyColCellProps extends BaseCellProps {
   children: ReactNode;
   itemKey?: string; // The key to look up weight in ALL_POC_ITEM_MAP
   showWeight?: boolean; // Whether to show the weight tooltip
-  showConsensusProgress?: boolean; // Whether to show the consensus progress
-  showPendingValidation?: boolean; // Whether to show the pending validation
+  rowData: IKeyItemDataForTable;
 }
 
 const PropertyHeader = (_props: PropertyColHeaderProps) => {
@@ -72,11 +71,11 @@ const PropertyCell = ({
   children,
   itemKey,
   showWeight = true,
-  showConsensusProgress = false,
-  showPendingValidation = false,
+  rowData,
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
+  const { isConsensusInProgress, isPendingValidation } = rowData;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -84,7 +83,7 @@ const PropertyCell = ({
         <span className="text-[14px] font-[600] leading-[20px] text-black">
           {children}
         </span>
-        {showConsensusProgress && (
+        {isConsensusInProgress && (
           <div className="flex items-center gap-[5px]">
             <ClockClockwiseIcon />
             <span className="font-mona text-[13px] leading-[20px] text-black/50">
@@ -92,7 +91,7 @@ const PropertyCell = ({
             </span>
           </div>
         )}
-        {showPendingValidation && (
+        {isPendingValidation && (
           <div className="flex items-center gap-[5px]">
             <GitPullBlueIcon />
             <span className="font-mona text-[13px] leading-[20px] text-black/50">
@@ -488,7 +487,6 @@ export type ActionsColHeaderProps = BaseHeaderProps;
 
 export interface ActionsColCellProps extends BaseCellProps {
   item: IKeyItemDataForTable;
-  itemConfig: IItemConfig<IPocItemKey>;
   onView?: (contentType?: 'viewItemProposal' | 'submitPropose') => void;
 }
 
@@ -501,13 +499,12 @@ const ActionsHeader = (_props: ActionsColHeaderProps) => {
   );
 };
 
-const ActionsCell = ({ onView, item, itemConfig }: ActionsColCellProps) => {
-  const isEssential = itemConfig?.isEssential;
-  const isValueEmpty = isInputValueEmpty(item?.input);
+const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
+  const { canBePropose } = item;
 
   return (
     <div className="flex w-full gap-[10px]">
-      {!isEssential && isValueEmpty && (
+      {canBePropose ? (
         <Button
           size="sm"
           className="flex-1 border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
@@ -515,14 +512,15 @@ const ActionsCell = ({ onView, item, itemConfig }: ActionsColCellProps) => {
         >
           Propose
         </Button>
+      ) : (
+        <Button
+          color="secondary"
+          className="h-[30px] flex-1 rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+          onPress={() => onView?.('viewItemProposal')}
+        >
+          View
+        </Button>
       )}
-      <Button
-        color="secondary"
-        className="h-[30px] flex-1 rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-        onPress={() => onView?.('viewItemProposal')}
-      >
-        View
-      </Button>
     </div>
   );
 };

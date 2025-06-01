@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
+import { isInputValueEmpty } from '@/utils/item';
 
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
 import { IKeyItemDataForTable } from '../ProjectDetailTableColumns';
@@ -17,6 +18,8 @@ import { prepareProjectTableData } from '../utils';
 export const useProjectTableData = () => {
   const { project, displayProposalDataListOfProject } =
     useProjectDetailContext();
+
+  const { hasProposalKeys = [] } = project || {};
 
   // 创建分类表格数据（包含空数据项目）
   const { tableData, emptyItemsCounts } = useMemo(() => {
@@ -65,12 +68,32 @@ export const useProjectTableData = () => {
       {} as Record<IPocItemKey, IKeyItemDataForTable>,
     );
 
-    // 检查输入值是否为空的辅助函数
-    const isInputEmpty = (input: any): boolean => {
-      if (input === null || input === undefined || input === '') return true;
-      if (Array.isArray(input) && input.length === 0) return true;
-      if (typeof input === 'string' && input.trim() === '') return true;
-      return false;
+    // 辅助函数：计算状态字段
+    const calculateStatusFields = (
+      itemKey: string,
+      existingItem: IKeyItemDataForTable | undefined,
+    ) => {
+      const hasProposal = hasProposalKeys.includes(itemKey as IPocItemKey);
+      const hasValidatedLeadingProposal =
+        existingItem && !isInputValueEmpty(existingItem.input);
+      const isNotLeading = existingItem?.isNotLeading === true;
+      const isNotEssential =
+        !AllItemConfig[itemKey as IPocItemKey]?.isEssential;
+
+      return {
+        // 非核心字段且目前没有 proposal
+        canBePropose: isNotEssential && !hasProposal,
+
+        // 有 validated leading proposal 但不是 leading（权重不够高）
+        isConsensusInProgress: Boolean(
+          hasValidatedLeadingProposal && isNotLeading,
+        ),
+
+        // 有 proposal 但还没有 validated leading proposal
+        isPendingValidation: Boolean(
+          isNotEssential && hasProposal && !hasValidatedLeadingProposal,
+        ),
+      };
     };
 
     // 按照配置的顺序组织数据
@@ -100,9 +123,11 @@ export const useProjectTableData = () => {
           if (item) {
             // Check if this item belongs to a group
             const groupInfo = itemToGroupMap.get(itemKey);
-
-            // Add group information, accountability and legitimacy data if item belongs to a group
             const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+
+            // 计算状态字段
+            const statusFields = calculateStatusFields(itemKey, item);
+
             const enhancedItem = {
               ...item,
               ...(groupInfo && {
@@ -111,6 +136,7 @@ export const useProjectTableData = () => {
               }),
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              ...statusFields,
             };
 
             result[subCategoryConfig.key].push(enhancedItem);
@@ -121,10 +147,12 @@ export const useProjectTableData = () => {
         itemsNotEssential.forEach((itemKey) => {
           const existingItem = displayItemMap[itemKey as IPocItemKey];
           const groupInfo = itemToGroupMap.get(itemKey);
+          const itemConfig = AllItemConfig[itemKey as IPocItemKey];
 
           if (existingItem) {
-            // Add group information, accountability and legitimacy data to existing item
-            const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+            // 计算状态字段
+            const statusFields = calculateStatusFields(itemKey, existingItem);
+
             const enhancedItem = {
               ...existingItem,
               ...(groupInfo && {
@@ -133,10 +161,11 @@ export const useProjectTableData = () => {
               }),
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              ...statusFields,
             };
 
             // 如果有数据且不为空，添加到主表格
-            if (!isInputEmpty(existingItem.input)) {
+            if (!isInputValueEmpty(existingItem.input)) {
               result[subCategoryConfig.key].push(enhancedItem);
             } else {
               // 如果有数据但为空，添加到空数据列表
@@ -144,8 +173,10 @@ export const useProjectTableData = () => {
             }
           } else {
             // 为没有 proposal 数据的 itemsNotEssential 创建默认条目并添加到空数据列表
-            const itemConfig = AllItemConfig[itemKey as IPocItemKey];
             if (itemConfig) {
+              // 计算状态字段
+              const statusFields = calculateStatusFields(itemKey, undefined);
+
               const defaultItem: IKeyItemDataForTable = {
                 key: itemKey,
                 property: itemConfig.label || itemKey,
@@ -179,6 +210,7 @@ export const useProjectTableData = () => {
                   group: groupInfo.key,
                   groupTitle: groupInfo.title,
                 }),
+                ...statusFields,
               } as any;
               emptyItems.push(defaultItem);
             }
@@ -191,8 +223,10 @@ export const useProjectTableData = () => {
       });
     });
 
+    console.log('useProjectTableData result', result);
+
     return { tableData: result, emptyItemsCounts: emptyCounts };
-  }, [project, displayProposalDataListOfProject]);
+  }, [project, displayProposalDataListOfProject, hasProposalKeys]);
 
   return {
     tableData,

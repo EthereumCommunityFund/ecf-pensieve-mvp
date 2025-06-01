@@ -43,6 +43,12 @@ export interface IKeyItemDataForTable {
   accountability?: string[];
   // Legitimacy metrics from item config
   legitimacy?: string[];
+  // not essential item, 还没有 proposal， value 是 empty状态， 所以可以 propose
+  canBePropose: boolean;
+  // 原来是 leading proposal，但现在后端字段里isNotLeading为 true(因为 itemWeight < itemTopWeight)
+  isConsensusInProgress: boolean;
+  // 有 proposal， 但还没有 validated leading proposal
+  isPendingValidation: boolean;
 }
 
 interface IUseProjectTableColumnsProps {
@@ -71,10 +77,10 @@ export const useProjectTableColumns = ({
       header: () => <PropertyCol.Header />,
       size: isPageExpanded ? 247 : 220,
       cell: (info) => {
-        const item = info.row.original;
+        const { key } = info.row.original;
 
         return (
-          <PropertyCol.Cell itemKey={item.key}>
+          <PropertyCol.Cell itemKey={key} rowData={info.row.original}>
             {info.getValue()}
           </PropertyCol.Cell>
         );
@@ -173,14 +179,12 @@ export const useProjectTableColumns = ({
       size: 195,
       cell: (info) => {
         const item = info.row.original;
-        const itemConfig = AllItemConfig[item.key as IPocItemKey];
         const { onOpenModal } = info.table.options
           .meta as ITableMetaOfProjectDetail;
 
         return (
           <ActionsCol.Cell
             item={item}
-            itemConfig={itemConfig!}
             onView={(contentType?: 'viewItemProposal' | 'submitPropose') => {
               // TODO 查看逻辑, 类型优化
               if (onOpenModal && contentType) {
