@@ -147,6 +147,7 @@ export const ProjectDetailProvider = ({
     data: project,
     isLoading: isProjectLoading,
     isFetched: isProjectFetched,
+    refetch: refetchProject,
   } = trpc.project.getProjectById.useQuery(
     { id: projectId },
     {
@@ -177,6 +178,7 @@ export const ProjectDetailProvider = ({
     data: leadingItemProposalsByProject,
     isLoading: isLeadingProposalsLoading,
     isFetched: isLeadingProposalsFetched,
+    refetch: refetchLeadingProposals,
   } = trpc.projectLog.getLeadingProposalsByProjectId.useQuery(
     { projectId },
     {
@@ -438,7 +440,12 @@ export const ProjectDetailProvider = ({
         { itemProposalId, key },
         {
           onSuccess: async () => {
-            refetchProposalsByKey();
+            devLog('onCreateItemProposalVote success', key, itemProposalId);
+            await Promise.all([
+              refetchProject(),
+              refetchLeadingProposals(),
+              refetchProposalsByKey(),
+            ]);
             setKeyActive(key, false);
           },
           onError: (error) => {
@@ -448,7 +455,12 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [createItemProposalVoteMutation, refetchProposalsByKey],
+    [
+      createItemProposalVoteMutation,
+      refetchProposalsByKey,
+      refetchProject,
+      refetchLeadingProposals,
+    ],
   );
 
   const onSwitchItemProposalVote = useCallback(
@@ -458,7 +470,11 @@ export const ProjectDetailProvider = ({
         { itemProposalId, key },
         {
           onSuccess: async () => {
-            refetchProposalsByKey();
+            await Promise.all([
+              refetchProject(),
+              refetchProposalsByKey(),
+              refetchLeadingProposals(),
+            ]);
             setKeyActive(key, false);
           },
           onError: (error) => {
@@ -468,7 +484,12 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [switchItemProposalVoteMutation, refetchProposalsByKey],
+    [
+      switchItemProposalVoteMutation,
+      refetchProposalsByKey,
+      refetchProject,
+      refetchLeadingProposals,
+    ],
   );
 
   const onCancelVote = useCallback(
@@ -478,7 +499,11 @@ export const ProjectDetailProvider = ({
         { id: voteRecordId },
         {
           onSuccess: async () => {
-            refetchProposalsByKey();
+            await Promise.all([
+              refetchProject(),
+              refetchProposalsByKey(),
+              refetchLeadingProposals(),
+            ]);
             setKeyActive(key, false);
           },
           onError: (error) => {
@@ -488,7 +513,12 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [cancelVoteMutation, refetchProposalsByKey],
+    [
+      cancelVoteMutation,
+      refetchProposalsByKey,
+      refetchProject,
+      refetchLeadingProposals,
+    ],
   );
 
   const showReferenceModal = useCallback(
