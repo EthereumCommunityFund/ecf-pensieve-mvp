@@ -11,10 +11,10 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import {
   ExpandableRow,
   ModalTableContainer,
-  TableCell,
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
+import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey } from '@/types/item';
@@ -309,8 +309,10 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => (
-                      <TableCell
+                      <OptimizedTableCell
                         key={cell.id}
+                        cell={cell}
+                        cellIndex={cellIndex}
                         width={
                           cell.column.getSize() === 0
                             ? undefined
@@ -331,12 +333,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
                             ? { width: 'auto' }
                             : undefined
                         }
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
+                      />
                     ))}
                   </TableRow>
 

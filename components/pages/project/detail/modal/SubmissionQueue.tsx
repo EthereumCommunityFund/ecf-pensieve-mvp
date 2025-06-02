@@ -11,11 +11,11 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import {
   ExpandableRow,
   ModalTableContainer,
-  TableCell,
   TableFooter,
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
+import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
 import { CaretUpDownIcon, ClockClockwiseIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -336,12 +336,12 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 if (!showRowOverTaken) return '';
 
                                 const borderClasses = [
-                                  'border-t-2 border-t-[#F7992D] border-b-2 border-b-[#F7992D]', // Top and bottom yellow borders for all cells
+                                  'border-t-1 border-t-[#F7992D] border-b-1 border-b-[#F7992D]', // Top and bottom yellow borders for all cells
                                 ];
 
                                 if (isFirstCell) {
                                   borderClasses.push(
-                                    'border-l-2 border-l-[#F7992D]',
+                                    'border-l-1 border-l-[#F7992D]',
                                   ); // Left yellow border for first cell
                                   // Add bottom-left rounded corner only for last row
                                   if (isLastRowInTable) {
@@ -351,7 +351,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
                                 if (isLastCell) {
                                   borderClasses.push(
-                                    'border-r-2 border-r-[#F7992D]',
+                                    'border-r-1 border-r-[#F7992D]',
                                   ); // Right yellow border for last cell
                                   // Add bottom-right rounded corner only for last row
                                   if (isLastRowInTable) {
@@ -363,8 +363,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               };
 
                               return (
-                                <TableCell
+                                <OptimizedTableCell
                                   key={cell.id}
+                                  cell={cell}
+                                  cellIndex={cellIndex}
                                   width={
                                     cell.column.getSize() === 0
                                       ? undefined
@@ -390,12 +392,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                       ? { width: 'auto' }
                                       : undefined
                                   }
-                                >
-                                  {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext(),
-                                  )}
-                                </TableCell>
+                                />
                               );
                             })}
                           </TableRow>
@@ -562,11 +559,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                           if (!isFirstRowLeading) return '';
 
                           const borderClasses = [
-                            'border-t-2 border-t-[#46A287] border-b-2 border-b-[#46A287]', // Top and bottom green borders for all cells
+                            'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]', // Top and bottom green borders for all cells
                           ];
 
                           if (isFirstCell) {
-                            borderClasses.push('border-l-2 border-l-[#46A287]'); // Left green border for first cell
+                            borderClasses.push('border-l-1 border-l-[#46A287]'); // Left green border for first cell
                             // Add bottom-left rounded corner only for last row
                             if (isLastRowInTable) {
                               borderClasses.push('rounded-bl-[10px]');
@@ -574,7 +571,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                           }
 
                           if (isLastCell) {
-                            borderClasses.push('border-r-2 border-r-[#46A287]'); // Right green border for last cell
+                            borderClasses.push('border-r-1 border-r-[#46A287]'); // Right green border for last cell
                             // Add bottom-right rounded corner only for last row
                             if (isLastRowInTable) {
                               borderClasses.push('rounded-br-[10px]');
@@ -585,8 +582,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                         };
 
                         return (
-                          <TableCell
+                          <OptimizedTableCell
                             key={cell.id}
+                            cell={cell}
+                            cellIndex={cellIndex}
                             width={
                               cell.column.getSize() === 0
                                 ? undefined
@@ -609,12 +608,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 ? { width: 'auto' }
                                 : undefined
                             }
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
+                          />
                         );
                       })}
                     </TableRow>

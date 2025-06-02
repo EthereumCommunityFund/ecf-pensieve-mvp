@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar, cn } from '@heroui/react';
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 
 import { Button } from '@/components/base';
 import {
@@ -474,42 +474,72 @@ const SubmitterHeader = (_props: SubmitterColHeaderProps) => {
   );
 };
 
-const SubmitterCell = ({
-  submitter,
-  item,
-  itemConfig,
-}: SubmitterColCellProps) => {
-  const isNonEssential = !itemConfig?.isEssential;
-  const isValueEmpty = isInputValueEmpty(item?.input);
-
-  if (isNonEssential && isValueEmpty) {
+// Optimized Avatar component with memo to prevent unnecessary re-renders
+const OptimizedAvatar = memo(
+  ({
+    src,
+    alt,
+    className,
+    userId,
+  }: {
+    src: string;
+    alt: string;
+    className: string;
+    userId: string | number;
+  }) => {
     return (
-      <div className="font-mona flex-1 text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
-        empty
+      <Avatar
+        key={`avatar-${userId}`} // Stable key based on user ID
+        src={src}
+        alt={alt}
+        className={className}
+      />
+    );
+  },
+);
+
+OptimizedAvatar.displayName = 'OptimizedAvatar';
+
+const SubmitterCell = memo(
+  ({ submitter, item, itemConfig }: SubmitterColCellProps) => {
+    const isNonEssential = !itemConfig?.isEssential;
+    const isValueEmpty = isInputValueEmpty(item?.input);
+
+    if (isNonEssential && isValueEmpty) {
+      return (
+        <div className="font-mona flex-1 text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
+          empty
+        </div>
+      );
+    }
+
+    const data = item?.createdAt;
+    const avatarSrc = submitter.avatarUrl ?? '/images/user/avatar_p.png';
+
+    return (
+      <div className="flex items-center gap-[5px]">
+        <div className="size-[24px] rounded-full bg-[#D9D9D9]">
+          <OptimizedAvatar
+            src={avatarSrc}
+            alt="avatar"
+            className="size-[24px] rounded-full"
+            userId={submitter.userId || submitter.address || submitter.name}
+          />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[14px] font-[400] leading-[20px] text-black">
+            {submitter.name}
+          </span>
+          <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
+            {formatDate(data, 'MM/DD/YYYY', '00/00/0000')}
+          </span>
+        </div>
       </div>
     );
-  }
-  const data = item?.createdAt;
-  return (
-    <div className="flex items-center gap-[5px]">
-      <div className="size-[24px] rounded-full bg-[#D9D9D9]">
-        <Avatar
-          src={submitter.avatarUrl ?? '/images/user/avatar_p.png'}
-          alt="avatar"
-          className="size-[24px] rounded-full"
-        />
-      </div>
-      <div className="flex flex-col">
-        <span className="text-[14px] font-[400] leading-[20px] text-black">
-          {submitter.name}
-        </span>
-        <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
-          {formatDate(data, 'MM/DD/YYYY', '00/00/0000')}
-        </span>
-      </div>
-    </div>
-  );
-};
+  },
+);
+
+SubmitterCell.displayName = 'SubmitterCell';
 
 export const SubmitterCol = {
   Header: SubmitterHeader,

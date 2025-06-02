@@ -11,11 +11,11 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import {
   ExpandableRow,
   ModalTableContainer,
-  TableCell,
   TableFooter,
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
+import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
 import { CaretDownIcon, ClockClockwiseIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
@@ -218,8 +218,10 @@ const Displayed: FC<DisplayedProps> = ({
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => (
-                      <TableCell
+                      <OptimizedTableCell
                         key={cell.id}
+                        cell={cell}
+                        cellIndex={cellIndex}
                         width={
                           cell.column.getSize() === 0
                             ? undefined
@@ -239,12 +241,7 @@ const Displayed: FC<DisplayedProps> = ({
                             ? { width: 'auto' }
                             : undefined
                         }
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
+                      />
                     ))}
                   </TableRow>
 

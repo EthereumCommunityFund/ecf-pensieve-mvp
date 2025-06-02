@@ -9,13 +9,13 @@ import {
   GroupHeader,
   groupTableRows,
   PageTableContainer,
-  TableCell,
   TableCellSkeleton,
   TableFooter,
   TableHeader,
   TableRow,
   TableRowSkeleton,
 } from '@/components/biz/table';
+import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IItemSubCategoryEnum } from '@/types/item';
 
@@ -188,8 +188,10 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                   }
                 >
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => (
-                    <TableCell
+                    <OptimizedTableCell
                       key={cell.id}
+                      cell={cell}
+                      cellIndex={cellIndex}
                       width={cell.column.getSize()}
                       isLast={cellIndex === row.getVisibleCells().length - 1}
                       isLastRow={
@@ -199,12 +201,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           ?.showExpand
                       }
                       minHeight={60}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                    />
                   ))}
                 </TableRow>
 
@@ -241,18 +238,15 @@ export const CategoryTable: FC<CategoryTableProps> = ({
               <React.Fragment key={`empty-${rowIndex}`}>
                 <TableRow isLastRow={rowIndex === emptyRows.length - 1}>
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => (
-                    <TableCell
+                    <OptimizedTableCell
                       key={cell.id}
+                      cell={cell}
+                      cellIndex={cellIndex}
                       width={cell.column.getSize()}
                       isLast={cellIndex === row.getVisibleCells().length - 1}
                       isLastRow={rowIndex === emptyRows.length - 1}
                       minHeight={60}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                    />
                   ))}
                 </TableRow>
 

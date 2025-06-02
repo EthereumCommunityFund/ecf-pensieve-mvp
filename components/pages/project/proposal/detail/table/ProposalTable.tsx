@@ -94,10 +94,13 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                       boxSizing: 'border-box',
                     }}
                     className={cn(
-                      'border-b-0 border-l-0',
+                      'border-l-0',
                       cellIndex === table.getAllColumns().length - 1
                         ? 'border-r-0'
                         : 'border-r border-black/10',
+                      rowIndex === table.getRowModel().rows.length - 1
+                        ? 'border-b-0'
+                        : 'border-b border-black/10',
                     )}
                   >
                     <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
@@ -144,10 +147,13 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                       boxSizing: 'border-box',
                     }}
                     className={cn(
-                      'border-b-0 border-l-0 hover:bg-[#EBEBEB]',
+                      'border-l-0 hover:bg-[#EBEBEB]',
                       cellIndex === row.getVisibleCells().length - 1
                         ? 'border-r-0'
                         : 'border-r border-black/10',
+                      rowIndex === table.getRowModel().rows.length - 1
+                        ? 'border-b-0'
+                        : 'border-b border-black/10',
                     )}
                   >
                     <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
