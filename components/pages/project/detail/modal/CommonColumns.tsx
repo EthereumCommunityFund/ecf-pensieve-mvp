@@ -143,9 +143,7 @@ export const useCommonColumnsOfModal = () => {
         ) as IItemProposalVoteRecord[];
 
         const votesRecordsOfLeadingProposal =
-          leadingProposal && leadingProposal.itemProposal
-            ? leadingProposal.itemProposal.voteRecords
-            : [];
+          leadingProposal?.itemProposal?.voteRecords || [];
 
         // 1、是否在project leading proposal中投过这个 key 的票
         const isUserVotedKeyInLeadingProposal =
@@ -156,14 +154,18 @@ export const useCommonColumnsOfModal = () => {
         const userVotedItemProposal = allItemProposalVoteRecords.find(
           (item) => item.creator === profile?.userId,
         );
-        // 2、是否在item proposals中投过这个 key 票
-        const isUserVotedKeyInItemProposals = !!userVotedItemProposal;
 
+        const userVoteRecords = allItemProposalVoteRecords.filter(
+          (item) => item.creator === profile?.userId,
+        );
+
+        // 2、是否在item proposals中投过这个 key 票
+        const isUserVotedKeyInItemProposals = userVoteRecords.length > 0;
         // 3、是否投了当前这一条
-        const isUserVotedCurrentItemProposal =
-          isUserVotedKeyInItemProposals &&
-          userVotedItemProposal?.itemProposalId ===
-            info.row.original.proposalId;
+        const isUserVotedCurrentItemProposal = !!userVoteRecords.find(
+          (voteRecord) =>
+            voteRecord.itemProposalId === info.row.original.proposalId,
+        );
 
         const showQuorum =
           !AllItemConfig[info.row.original.key as IPocItemKey]?.isEssential &&
