@@ -52,8 +52,7 @@ export const FormItemUIContainer: React.FC<IFormItemUIContainerProps> = ({
           }}
           content={
             <div className="flex-col gap-[5px]">
-              {/* TODO Mona Sans font */}
-              <div className="text-[14px] font-[500]">{label}</div>
+              <div className="font-mona text-[14px] font-[500]">{label}</div>
               <div className="text-[13px] font-[400] opacity-80">
                 {shortDescription || description}
               </div>
