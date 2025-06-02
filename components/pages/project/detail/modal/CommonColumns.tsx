@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
 import { QuestionIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
@@ -129,11 +130,16 @@ export const useCommonColumnsOfModal = () => {
           proposalsByProjectIdAndKey,
           project,
           profile,
+          inActionKeyMap,
+          inActionItemProposalIdMap,
         } = info.table.options.meta as ITableMetaOfSubmissionQueue;
+
+        const itemKey = info.row.original.key as IPocItemKey;
+        const itemProposalId = info.row.original.proposalId;
         const itemTopWeight =
-          (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[
-            info.row.original.key as IPocItemKey
-          ] || 0;
+          (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[itemKey] ||
+          0;
+
         // TODO 抽取到 context里面去
         const { leadingProposal = null, allItemProposals = [] } =
           proposalsByProjectIdAndKey || {};
@@ -163,26 +169,50 @@ export const useCommonColumnsOfModal = () => {
         const isUserVotedKeyInItemProposals = userVoteRecords.length > 0;
         // 3、是否投了当前这一条
         const isUserVotedCurrentItemProposal = !!userVoteRecords.find(
-          (voteRecord) =>
-            voteRecord.itemProposalId === info.row.original.proposalId,
+          (voteRecord) => voteRecord.itemProposalId === itemProposalId,
         );
 
         const showQuorum =
-          !AllItemConfig[info.row.original.key as IPocItemKey]?.isEssential &&
-          !leadingProposal;
+          !AllItemConfig[itemKey]?.isEssential && !leadingProposal;
+
+        // Implement precise isLoading logic
+        // 使用 inActionItemProposalIdMap 来精确判断当前 item proposal 是否正在执行操作
+        // 同时也检查 key 级别的操作状态作为 fallback
+        const isLoading = !!(
+          inActionItemProposalIdMap &&
+          inActionItemProposalIdMap[itemProposalId] &&
+          inActionKeyMap &&
+          inActionKeyMap[itemKey]
+        );
+
+        // Implement isUserVoted logic
+        // 基于用户是否在当前 item proposal 中投票
+        const isUserVoted = isUserVotedCurrentItemProposal;
+
+        // Implement isProposalCreator logic
+        // 检查当前用户是否为该 item proposal 的创建者
+        const proposalCreator = info.row.original.submitter;
+        const isProposalCreator = !!(
+          profile?.userId &&
+          proposalCreator &&
+          proposalCreator.userId === profile.userId
+        );
+
+        // Calculate isReachQuorum based on support data and requirements
+        const isReachQuorum = support.voters >= QUORUM_AMOUNT;
 
         return (
           <SupportColumnItem
             proposalId={info.row.original.proposalId}
-            itemKey={info.row.original.key as IPocItemKey}
+            itemKey={itemKey}
             itemPoints={support.count}
             itemPointsNeeded={itemTopWeight}
             showQuorum={showQuorum}
             votedMemberCount={support.voters}
-            isReachQuorum={false}
-            isUserVoted={false}
-            isLoading={false}
-            isProposalCreator={false}
+            isReachQuorum={isReachQuorum}
+            isUserVoted={isUserVoted}
+            isLoading={isLoading}
+            isProposalCreator={isProposalCreator}
             onCreateItemProposalVote={onCreateItemProposalVote}
             onSwitchItemProposalVote={onSwitchItemProposalVote}
             onCancelVote={onCancelVote}

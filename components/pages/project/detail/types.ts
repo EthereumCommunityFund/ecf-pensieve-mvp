@@ -47,11 +47,17 @@ export interface ITableMetaOfSubmissionQueue {
     key: IPocItemKey,
     itemProposalId: number,
   ) => Promise<void>;
-  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+  onCancelVote: (
+    key: IPocItemKey,
+    voteRecordId: number,
+    itemProposalId: number,
+  ) => Promise<void>;
   project?: IProject;
   profile?: IProfile;
   showRowOverTaken?: boolean;
   showRowIsLeading?: boolean;
+  inActionKeyMap?: Partial<Record<IPocItemKey, boolean>>;
+  inActionItemProposalIdMap?: Record<number, boolean>;
 }
 
 export interface IProjectTableRowData extends IKeyItemDataForTable {

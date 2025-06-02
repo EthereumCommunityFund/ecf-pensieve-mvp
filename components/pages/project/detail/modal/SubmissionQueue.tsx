@@ -68,6 +68,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showRowOverTaken,
     showRowIsLeading,
     isProposalsByKeyLoading,
+    inActionKeyMap,
+    inActionItemProposalIdMap,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -139,6 +141,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
       showRowOverTaken, // 只有 displayed 的 table 需要考虑 showRowOverTaken
+      inActionKeyMap,
+      inActionItemProposalIdMap,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -152,6 +156,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     displayedExpandedRows,
     toggleDisplayedRowExpanded,
     showRowOverTaken,
+    inActionKeyMap,
+    inActionItemProposalIdMap,
   ]);
 
   const submissionQueueTableMeta = useMemo(() => {
@@ -167,6 +173,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       expandedRows: submissionQueueExpandedRows,
       toggleRowExpanded: toggleSubmissionQueueRowExpanded,
       showRowIsLeading, // 只有 submission queue 的 table 需要考虑 showRowIsLeading
+      inActionKeyMap,
+      inActionItemProposalIdMap,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -180,6 +188,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     submissionQueueExpandedRows,
     toggleSubmissionQueueRowExpanded,
     showRowIsLeading,
+    inActionKeyMap,
+    inActionItemProposalIdMap,
   ]);
 
   const displayedTable = useReactTable({

@@ -60,6 +60,7 @@ interface ProjectDetailContextType {
   refetchProposalsByKey: () => void;
   refetchProposalHistory: () => void;
   inActionKeyMap: Partial<Record<IPocItemKey, boolean>>;
+  inActionItemProposalIdMap: Record<number, boolean>;
   onCreateItemProposalVote: (
     key: IPocItemKey,
     itemProposalId: number,
@@ -68,7 +69,11 @@ interface ProjectDetailContextType {
     key: IPocItemKey,
     itemProposalId: number,
   ) => Promise<void>;
-  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+  onCancelVote: (
+    key: IPocItemKey,
+    voteRecordId: number,
+    itemProposalId: number,
+  ) => Promise<void>;
 
   // utils
   openReferenceModal: boolean;
@@ -111,6 +116,7 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   refetchProposalsByKey: () => {},
   refetchProposalHistory: () => {},
   inActionKeyMap: {},
+  inActionItemProposalIdMap: {},
   onCreateItemProposalVote: () => Promise.resolve(),
   onSwitchItemProposalVote: () => Promise.resolve(),
   onCancelVote: () => Promise.resolve(),
@@ -141,6 +147,10 @@ export const ProjectDetailProvider = ({
 
   const [inActionKeyMap, setInActionKeyMap] = useState<
     Partial<Record<IPocItemKey, boolean>>
+  >({});
+
+  const [inActionItemProposalIdMap, setInActionItemProposalIdMap] = useState<
+    Record<number, boolean>
   >({});
 
   const {
@@ -433,9 +443,24 @@ export const ProjectDetailProvider = ({
     }));
   };
 
+  const setItemProposalActive = (
+    key: IPocItemKey,
+    itemProposalId: number,
+    active: boolean,
+  ) => {
+    setInActionKeyMap((pre) => ({
+      ...pre,
+      [key]: active,
+    }));
+    setInActionItemProposalIdMap((pre) => ({
+      ...pre,
+      [itemProposalId]: active,
+    }));
+  };
+
   const onCreateItemProposalVote = useCallback(
     async (key: IPocItemKey, itemProposalId: number) => {
-      setKeyActive(key, true);
+      setItemProposalActive(key, itemProposalId, true);
       createItemProposalVoteMutation.mutate(
         { itemProposalId, key },
         {
@@ -446,10 +471,10 @@ export const ProjectDetailProvider = ({
               refetchLeadingProposals(),
               refetchProposalsByKey(),
             ]);
-            setKeyActive(key, false);
+            setItemProposalActive(key, itemProposalId, false);
           },
           onError: (error) => {
-            setKeyActive(key, false);
+            setItemProposalActive(key, itemProposalId, false);
             devLog('onCreateItemProposalVote error', error);
           },
         },
@@ -465,7 +490,7 @@ export const ProjectDetailProvider = ({
 
   const onSwitchItemProposalVote = useCallback(
     async (key: IPocItemKey, itemProposalId: number) => {
-      setKeyActive(key, true);
+      setItemProposalActive(key, itemProposalId, true);
       switchItemProposalVoteMutation.mutate(
         { itemProposalId, key },
         {
@@ -475,10 +500,10 @@ export const ProjectDetailProvider = ({
               refetchProposalsByKey(),
               refetchLeadingProposals(),
             ]);
-            setKeyActive(key, false);
+            setItemProposalActive(key, itemProposalId, false);
           },
           onError: (error) => {
-            setKeyActive(key, false);
+            setItemProposalActive(key, itemProposalId, false);
             devLog('onSwitchItemProposalVote error', error);
           },
         },
@@ -493,8 +518,8 @@ export const ProjectDetailProvider = ({
   );
 
   const onCancelVote = useCallback(
-    async (key: IPocItemKey, voteRecordId: number) => {
-      setKeyActive(key, true);
+    async (key: IPocItemKey, voteRecordId: number, itemProposalId: number) => {
+      setItemProposalActive(key, voteRecordId, true);
       cancelVoteMutation.mutate(
         { id: voteRecordId },
         {
@@ -504,10 +529,10 @@ export const ProjectDetailProvider = ({
               refetchProposalsByKey(),
               refetchLeadingProposals(),
             ]);
-            setKeyActive(key, false);
+            setItemProposalActive(key, itemProposalId, false);
           },
           onError: (error) => {
-            setKeyActive(key, false);
+            setItemProposalActive(key, itemProposalId, false);
             devLog('onCancelVote error', error);
           },
         },
@@ -567,6 +592,7 @@ export const ProjectDetailProvider = ({
     refetchProposalsByKey,
     refetchProposalHistory,
     inActionKeyMap,
+    inActionItemProposalIdMap,
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,

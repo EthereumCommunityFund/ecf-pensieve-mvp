@@ -23,7 +23,11 @@ interface IProps {
     key: IPocItemKey,
     itemProposalId: number,
   ) => Promise<void>;
-  onCancelVote: (key: IPocItemKey, voteRecordId: number) => Promise<void>;
+  onCancelVote: (
+    key: IPocItemKey,
+    voteRecordId: number,
+    itemProposalId: number,
+  ) => Promise<void>;
   onSwitchItemProposalVote: (
     key: IPocItemKey,
     itemProposalId: number,
