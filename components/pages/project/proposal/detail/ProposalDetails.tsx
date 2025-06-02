@@ -47,16 +47,6 @@ export interface ProposalDetailsProps {
   toggleExpanded: () => void;
 }
 
-const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
-  [IItemSubCategoryEnum.Organization]: true,
-  [IItemSubCategoryEnum.Team]: true,
-  [IItemSubCategoryEnum.BasicProfile]: true,
-  [IItemSubCategoryEnum.Development]: true,
-  [IItemSubCategoryEnum.Finances]: true,
-  [IItemSubCategoryEnum.Token]: true,
-  [IItemSubCategoryEnum.Governance]: true,
-};
-
 const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Organization]: false,
   [IItemSubCategoryEnum.Team]: false,
@@ -79,7 +69,6 @@ const ProposalDetails = ({
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
 
-  const [expandedSubCat, setExpandedSubCat] = useState(DefaultExpandedSubCat);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [metricsVisibleSubCat, setMetricsVisibleSubCat] = useState(
     DefaultMetricsVisibleSubCat,
@@ -199,6 +188,39 @@ const ProposalDetails = ({
   const tableDataMap = useMemo(
     () => prepareProposalTableData(proposal),
     [proposal],
+  );
+
+  // 批量切换某个分类下所有行的展开状态
+  const toggleAllRowsInCategory = useCallback(
+    (subCat: IItemSubCategoryEnum) => {
+      // 获取该分类下所有行的key
+      const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
+
+      setExpandedRows((prev) => {
+        // 检查该分类下是否有任何行已展开
+        const hasExpandedRows = categoryRows.some((rowKey) => prev[rowKey]);
+
+        // 如果有展开的行，则全部收起；如果都收起，则全部展开
+        const newExpandedState = !hasExpandedRows;
+
+        const newExpandedRows = { ...prev };
+        categoryRows.forEach((rowKey) => {
+          newExpandedRows[rowKey] = newExpandedState;
+        });
+
+        return newExpandedRows;
+      });
+    },
+    [tableDataMap],
+  );
+
+  // 检查某个分类下是否有任何行已展开
+  const hasExpandedRowsInCategory = useCallback(
+    (subCat: IItemSubCategoryEnum) => {
+      const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
+      return categoryRows.some((rowKey) => expandedRows[rowKey]);
+    },
+    [tableDataMap, expandedRows],
   );
 
   const coreTableMeta = useMemo(
@@ -365,25 +387,6 @@ const ProposalDetails = ({
     governanceTable,
   ]);
 
-  const toggleCategory = useCallback((category: IItemSubCategoryEnum) => {
-    setExpandedSubCat((prev) => {
-      const newExpanded = { ...prev };
-      newExpanded[category] = !newExpanded[category];
-      return newExpanded;
-    });
-  }, []);
-
-  const getAnimationStyle = (isExpanded: boolean) => ({
-    height: isExpanded ? 'auto' : '0',
-    opacity: isExpanded ? 1 : 0,
-    overflow: 'hidden',
-    transition: 'opacity 0.2s ease',
-    transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)',
-    transformOrigin: 'top',
-    transitionProperty: 'opacity, transform',
-    transitionDuration: '0.2s',
-  });
-
   return (
     <div className="flex flex-col gap-[20px]">
       <ActionSectionHeader
@@ -406,11 +409,11 @@ const ProposalDetails = ({
                   title={subCat.title}
                   description={subCat.description}
                   category={subCat.key}
-                  isExpanded={expandedSubCat[subCat.key]}
-                  onToggle={() => toggleCategory(subCat.key)}
+                  isExpanded={hasExpandedRowsInCategory(subCat.key)}
+                  onToggle={() => toggleAllRowsInCategory(subCat.key)}
                   onToggleMetrics={toggleMetricsVisible}
                 />
-                <div style={getAnimationStyle(expandedSubCat[subCat.key])}>
+                <div>
                   <ProposalTable
                     table={tableInstanceMap[subCat.key]}
                     isLoading={isOverallLoading}
