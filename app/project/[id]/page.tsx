@@ -10,6 +10,7 @@ import { useProjectDetailContext } from '@/components/pages/project/context/proj
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
+import MerrticDetailModal from '@/components/pages/project/detail/modal/MerrticDetailModal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
@@ -57,6 +58,10 @@ const ProjectPage = () => {
   const [selectedItemKey, setSelectedItemKey] = useState<IPocItemKey | null>(
     null,
   );
+
+  // MerrticDetailModal 状态管理
+  const [isMetricModalOpen, setIsMetricModalOpen] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<string>('');
 
   useEffect(() => {
     const currentTab = searchParams.get('tab');
@@ -108,6 +113,18 @@ const ProjectPage = () => {
     console.log('Submit entry for item:', selectedItemKey);
     setModalContentType('submitPropose');
   }, [selectedItemKey, profile, showAuthPrompt]);
+
+  // 处理 Metric 点击
+  const handleMetricClick = useCallback((metric: string) => {
+    setSelectedMetric(metric);
+    setIsMetricModalOpen(true);
+  }, []);
+
+  // 处理 MerrticDetailModal 关闭
+  const handleCloseMetricModal = useCallback(() => {
+    setIsMetricModalOpen(false);
+    setSelectedMetric('');
+  }, []);
 
   return (
     <div className="pb-[20px]">
@@ -175,6 +192,7 @@ const ProjectPage = () => {
           isProposalsFetched={isProposalsFetched}
           onSubmitProposal={onSubmitProposal}
           onOpenModal={handleOpenModal}
+          onMetricClick={handleMetricClick}
         />
       )}
       {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
@@ -196,6 +214,13 @@ const ProjectPage = () => {
         onClose={closeReferenceModal}
         ref={currentRefValue || ''}
         reason={currentItemReason}
+      />
+
+      <MerrticDetailModal
+        isOpen={isMetricModalOpen}
+        onClose={handleCloseMetricModal}
+        metricName={selectedMetric}
+        title={`About ${selectedMetric}`}
       />
     </div>
   );

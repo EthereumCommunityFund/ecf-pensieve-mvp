@@ -43,8 +43,18 @@ export const useTableStates = () => {
     {},
   );
 
-  // Metrics 列显示状态管理 (默认隐藏)
-  const [metricsVisible, setMetricsVisible] = useState<boolean>(false);
+  // Metrics 列显示状态管理 (默认隐藏) - 按子分类独立管理
+  const [metricsVisible, setMetricsVisible] = useState<
+    Record<IItemSubCategoryEnum, boolean>
+  >({
+    [IItemSubCategoryEnum.Organization]: false,
+    [IItemSubCategoryEnum.Team]: false,
+    [IItemSubCategoryEnum.BasicProfile]: false,
+    [IItemSubCategoryEnum.Development]: false,
+    [IItemSubCategoryEnum.Finances]: false,
+    [IItemSubCategoryEnum.Token]: false,
+    [IItemSubCategoryEnum.Governance]: false,
+  });
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
@@ -79,9 +89,12 @@ export const useTableStates = () => {
     }));
   }, []);
 
-  // 切换 Metrics 列显示状态
-  const toggleMetricsVisible = useCallback(() => {
-    setMetricsVisible((prev) => !prev);
+  // 切换特定子分类的 Metrics 列显示状态
+  const toggleMetricsVisible = useCallback((category: IItemSubCategoryEnum) => {
+    setMetricsVisible((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
   }, []);
 
   // 批量切换某个分类下所有行的展开状态

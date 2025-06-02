@@ -49,9 +49,39 @@ export const useSharedColumns = () => {
           .meta as ITableMetaOfShared;
         const isRowExpanded = expandedRows[item.key];
 
+        // Create a minimal item object that matches IKeyItemDataForTable interface
+        const minimalItem = {
+          key: item.key,
+          property: '',
+          input: info.getValue(),
+          reference: item.reference
+            ? { key: item.key, value: item.reference }
+            : null,
+          submitter: {
+            userId: 'default',
+            name: 'User',
+            avatarUrl: null,
+            address: '',
+            weight: null,
+            invitationCodeId: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          createdAt: new Date(),
+          projectId: 0,
+          proposalId: 0,
+          itemTopWeight: 0,
+          accountability: [],
+          legitimacy: [],
+          canBePropose: false,
+          isConsensusInProgress: false,
+          isPendingValidation: false,
+        };
+
         return (
           <InputCol.Cell
             value={info.getValue()}
+            item={minimalItem}
             itemKey={item.key as any}
             isExpanded={isRowExpanded}
             onToggleExpand={

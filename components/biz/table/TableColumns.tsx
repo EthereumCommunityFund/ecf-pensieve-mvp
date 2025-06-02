@@ -190,7 +190,7 @@ const InputCell = ({
   onViewProposals,
 }: InputColCellProps) => {
   const itemConfig = AllItemConfig[itemKey];
-  const { canBePropose, isPendingValidation } = item || {};
+  const { canBePropose = false, isPendingValidation = false } = item || {};
   const finalDisplayFormType = displayFormType || itemConfig?.formDisplayType;
   const finalIsExpandable =
     isExpandable !== undefined ? isExpandable : itemConfig?.showExpand;
@@ -605,6 +605,7 @@ export type AccountabilityColHeaderProps = BaseHeaderProps;
 
 export interface AccountabilityColCellProps extends BaseCellProps {
   accountability?: string[];
+  onMetricClick?: (metric: string) => void;
 }
 
 const AccountabilityHeader = (_props: AccountabilityColHeaderProps) => {
@@ -616,7 +617,10 @@ const AccountabilityHeader = (_props: AccountabilityColHeaderProps) => {
   );
 };
 
-const AccountabilityCell = ({ accountability }: AccountabilityColCellProps) => {
+const AccountabilityCell = ({
+  accountability,
+  onMetricClick,
+}: AccountabilityColCellProps) => {
   if (!accountability || accountability.length === 0) {
     return (
       <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
@@ -630,7 +634,8 @@ const AccountabilityCell = ({ accountability }: AccountabilityColCellProps) => {
       {accountability.map((metric, index) => (
         <div
           key={index}
-          className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px]"
+          className="flex cursor-pointer items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px] transition-colors hover:bg-[#E5E5E5]"
+          onClick={() => onMetricClick?.(metric)}
         >
           <span className="text-center text-[13px] font-[500] leading-[19px] text-[#333333]">
             {metric}
@@ -654,6 +659,7 @@ export type LegitimacyColHeaderProps = BaseHeaderProps;
 
 export interface LegitimacyColCellProps extends BaseCellProps {
   legitimacy?: string[];
+  onMetricClick?: (metric: string) => void;
 }
 
 const LegitimacyHeader = (_props: LegitimacyColHeaderProps) => {
@@ -665,7 +671,10 @@ const LegitimacyHeader = (_props: LegitimacyColHeaderProps) => {
   );
 };
 
-const LegitimacyCell = ({ legitimacy }: LegitimacyColCellProps) => {
+const LegitimacyCell = ({
+  legitimacy,
+  onMetricClick,
+}: LegitimacyColCellProps) => {
   if (!legitimacy || legitimacy.length === 0) {
     return (
       <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
@@ -679,7 +688,8 @@ const LegitimacyCell = ({ legitimacy }: LegitimacyColCellProps) => {
       {legitimacy.map((metric, index) => (
         <div
           key={index}
-          className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px]"
+          className="flex cursor-pointer items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px] transition-colors hover:bg-[#E5E5E5]"
+          onClick={() => onMetricClick?.(metric)}
         >
           <span className="text-center text-[13px] font-[500] leading-[19px] text-[#333333]">
             {metric}

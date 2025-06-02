@@ -25,6 +25,7 @@ export interface ITableMetaOfProjectDetail {
     contentType?: 'viewItemProposal' | 'submitPropose',
   ) => void;
   showReferenceModal?: (ref: string, key: IPocItemKey, reason: string) => void;
+  onMetricClick?: (metric: string) => void;
 }
 
 export interface ITableMetaOfDisplayed {

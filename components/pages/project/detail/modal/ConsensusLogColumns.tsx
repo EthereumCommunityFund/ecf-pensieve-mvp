@@ -75,6 +75,7 @@ export const useConsensusLogColumns = ({
 
         const result = (
           <InputCol.Cell
+            item={item as any}
             value={inputValue}
             itemKey={itemKey as any}
             isExpanded={item.isExpanded || false}

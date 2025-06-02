@@ -170,7 +170,14 @@ export const useProjectTableColumns = ({
       size: 228,
       cell: (info) => {
         const accountability = info.getValue();
-        return <AccountabilityCol.Cell accountability={accountability} />;
+        const { onMetricClick } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <AccountabilityCol.Cell
+            accountability={accountability}
+            onMetricClick={onMetricClick}
+          />
+        );
       },
     });
 
@@ -180,7 +187,14 @@ export const useProjectTableColumns = ({
       size: 228,
       cell: (info) => {
         const legitimacy = info.getValue();
-        return <LegitimacyCol.Cell legitimacy={legitimacy} />;
+        const { onMetricClick } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <LegitimacyCol.Cell
+            legitimacy={legitimacy}
+            onMetricClick={onMetricClick}
+          />
+        );
       },
     });
 

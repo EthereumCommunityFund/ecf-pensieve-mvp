@@ -100,6 +100,9 @@ export const prepareProjectTableData = ({
               itemTopWeight: 0,
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              canBePropose: false,
+              isConsensusInProgress: false,
+              isPendingValidation: false,
               // Add group information if item belongs to a group
               ...(groupInfo && {
                 group: groupInfo.key,

@@ -26,6 +26,7 @@ interface IProjectTableProps {
     itemKey: IPocItemKey,
     contentType?: 'viewItemProposal' | 'submitPropose',
   ) => void;
+  onMetricClick?: (metric: string) => void;
 }
 
 /**
@@ -35,6 +36,7 @@ interface IProjectTableProps {
 const ProjectDetailTable: FC<IProjectTableProps> = ({
   isProposalsLoading,
   onOpenModal,
+  onMetricClick,
 }) => {
   const { project, showReferenceModal } = useProjectDetailContext();
 
@@ -64,62 +66,100 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       project,
       onOpenModal,
       showReferenceModal,
+      onMetricClick,
     }),
-    [expandedRows, toggleRowExpanded, project, onOpenModal, showReferenceModal],
+    [
+      expandedRows,
+      toggleRowExpanded,
+      project,
+      onOpenModal,
+      showReferenceModal,
+      onMetricClick,
+    ],
   );
 
-  // Column definitions
-  const columns = useProjectTableColumns({
+  // Column definitions for each category (independent metrics visibility)
+  const basicProfileColumns = useProjectTableColumns({
     isPageExpanded: false,
-    showMetrics: metricsVisible,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.BasicProfile],
   });
 
-  // Create table instances for each category
+  const developmentColumns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.Development],
+  });
+
+  const organizationColumns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.Organization],
+  });
+
+  const teamColumns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.Team],
+  });
+
+  const financesColumns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.Finances],
+  });
+
+  const tokenColumns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.Token],
+  });
+
+  const governanceColumns = useProjectTableColumns({
+    isPageExpanded: false,
+    showMetrics: metricsVisible[IItemSubCategoryEnum.Governance],
+  });
+
+  // Create table instances for each category with their own columns
   const basicProfileTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.BasicProfile] || [],
-    columns,
+    columns: basicProfileColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const developmentTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.Development] || [],
-    columns,
+    columns: developmentColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const organizationTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.Organization] || [],
-    columns,
+    columns: organizationColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const teamTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.Team] || [],
-    columns,
+    columns: teamColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const financesTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.Finances] || [],
-    columns,
+    columns: financesColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const tokenTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.Token] || [],
-    columns,
+    columns: tokenColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const governanceTable = useReactTable({
     data: tableData[IItemSubCategoryEnum.Governance] || [],
-    columns,
+    columns: governanceColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
@@ -177,7 +217,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
               />
               {cat.subCategories.map((subCat) => (
                 <CategoryTableSection
-                  key={`${subCat.key}-${metricsVisible ? 'with-metrics' : 'no-metrics'}`}
+                  key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
                   subCategory={subCat}
                   table={tables[subCat.key]}
                   isLoading={isProposalsLoading}
@@ -194,8 +234,8 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   onToggleEmptyItems={toggleEmptyItems}
                   onToggleGroupExpanded={toggleGroupExpanded}
                   onToggleAllRowsInCategory={toggleAllRowsInCategory}
-                  metricsVisible={metricsVisible}
-                  onToggleMetrics={toggleMetricsVisible}
+                  metricsVisible={metricsVisible[subCat.key]}
+                  onToggleMetrics={() => toggleMetricsVisible(subCat.key)}
                 />
               ))}
             </div>

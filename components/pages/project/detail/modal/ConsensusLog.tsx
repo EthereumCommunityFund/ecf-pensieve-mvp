@@ -26,16 +26,10 @@ import { useConsensusLogColumns } from './ConsensusLogColumns';
 import { ModalTableSkeleton } from './ModalTableSkeleton';
 
 interface ConsensusLogProps {
-  itemName?: string;
-  itemWeight?: number;
   itemKey?: string;
 }
 
-const ConsensusLog: FC<ConsensusLogProps> = ({
-  itemName = 'ItemName',
-  itemWeight = 22,
-  itemKey,
-}) => {
+const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
   // 展开行状态管理
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -79,15 +73,11 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
     return sortedHistory.map((historyItem, index) => {
       const createdAt = new Date(historyItem.createdAt);
 
-      // 获取创建者信息，可能来自 proposal 或 itemProposal
-      const creator =
-        historyItem.proposal?.creator || historyItem.itemProposal?.creator;
+      // 获取创建者信息，只从 itemProposal 获取
+      const creator = historyItem.itemProposal?.creator;
 
-      // 获取投票记录，可能来自 proposal 或 itemProposal
-      const voteRecords =
-        historyItem.proposal?.voteRecords ||
-        historyItem.itemProposal?.voteRecords ||
-        [];
+      // 获取投票记录，只从 itemProposal 获取
+      const voteRecords = historyItem.itemProposal?.voteRecords || [];
 
       // 计算当前权重
       const currentWeight = voteRecords.reduce((acc: number, vote: any) => {
@@ -100,38 +90,22 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
           ? currentWeight // 第一个提案，权重变化就是当前权重
           : Math.abs(
               currentWeight -
-                (sortedHistory[index + 1]?.proposal?.voteRecords?.reduce(
+                (sortedHistory[index + 1]?.itemProposal?.voteRecords?.reduce(
                   (acc: number, vote: any) => acc + Number(vote.weight || 0),
                   0,
-                ) ||
-                  sortedHistory[index + 1]?.itemProposal?.voteRecords?.reduce(
-                    (acc: number, vote: any) => acc + Number(vote.weight || 0),
-                    0,
-                  ) ||
-                  0),
+                ) || 0),
             );
 
       const isPositive =
         index === sortedHistory.length - 1 || currentWeight > 0;
 
-      // 获取输入值，可能来自 proposal 的 items 或 itemProposal 的 value
+      // 获取输入值，只从 itemProposal 的 value 获取
       let inputValue = 'No input provided';
       if (historyItem.itemProposal?.value) {
         inputValue =
           typeof historyItem.itemProposal.value === 'string'
             ? historyItem.itemProposal.value
             : JSON.stringify(historyItem.itemProposal.value);
-      } else if (historyItem.proposal?.items) {
-        // 从 proposal 的 items 中找到对应 key 的值
-        const item = historyItem.proposal.items.find(
-          (item: any) => item.key === itemKey,
-        );
-        if (item && (item as any).value) {
-          inputValue =
-            typeof (item as any).value === 'string'
-              ? (item as any).value
-              : JSON.stringify((item as any).value);
-        }
       }
 
       return {

@@ -86,13 +86,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
           />
         );
       case 'consensus-log':
-        return (
-          <ConsensusLog
-            itemName={itemName}
-            itemWeight={itemWeight}
-            itemKey={itemKey}
-          />
-        );
+        return <ConsensusLog itemKey={itemKey} />;
       default:
         // Return the first available tab content
         if (displayProposalDataOfKey) {
