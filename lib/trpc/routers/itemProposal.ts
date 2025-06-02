@@ -134,6 +134,8 @@ export const itemProposalRouter = router({
             itemProposalId: itemProposal.id,
             key: input.key,
             weight: userProfile?.weight ?? 0,
+            existingVoteRecord: voteRecord,
+            proposalCreatorId: itemProposal.creator,
           });
           logUserActivity.itemProposal.update({
             userId: ctx.user.id,

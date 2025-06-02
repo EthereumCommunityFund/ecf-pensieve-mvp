@@ -365,7 +365,6 @@ export const voteRouter = router({
           itemProposalId,
           key,
           weight: userProfile?.weight ?? 0,
-          proposalCreatorId: itemProposal.creator.userId,
         });
 
         const [votes, project, projectLog] = await Promise.all([
