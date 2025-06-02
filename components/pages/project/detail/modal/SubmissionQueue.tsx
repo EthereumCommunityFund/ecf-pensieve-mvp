@@ -319,40 +319,85 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 'bg-[rgba(247,153,45,0.2)] border-t border-[#F7992D] hover:bg-[rgba(247,153,45,0.2)]',
                             )}
                           >
-                            {row.getVisibleCells().map((cell, cellIndex) => (
-                              <TableCell
-                                key={cell.id}
-                                width={
-                                  cell.column.getSize() === 0
-                                    ? undefined
-                                    : cell.column.getSize()
+                            {row.getVisibleCells().map((cell, cellIndex) => {
+                              const isFirstCell = cellIndex === 0;
+                              const isLastCell =
+                                cellIndex === row.getVisibleCells().length - 1;
+                              const isLastRowInTable =
+                                rowIndex ===
+                                  displayedTable.getRowModel().rows.length -
+                                    1 &&
+                                !AllItemConfig[
+                                  row.original.key as IEssentialItemKey
+                                ]?.showExpand;
+
+                              // Generate yellow border classes for over-taken row
+                              const getOverTakenBorderClasses = () => {
+                                if (!showRowOverTaken) return '';
+
+                                const borderClasses = [
+                                  'border-t-2 border-t-[#F7992D] border-b-2 border-b-[#F7992D]', // Top and bottom yellow borders for all cells
+                                ];
+
+                                if (isFirstCell) {
+                                  borderClasses.push(
+                                    'border-l-2 border-l-[#F7992D]',
+                                  ); // Left yellow border for first cell
+                                  // Add bottom-left rounded corner only for last row
+                                  if (isLastRowInTable) {
+                                    borderClasses.push('rounded-bl-[10px]');
+                                  }
                                 }
-                                isLast={
-                                  cellIndex === row.getVisibleCells().length - 1
+
+                                if (isLastCell) {
+                                  borderClasses.push(
+                                    'border-r-2 border-r-[#F7992D]',
+                                  ); // Right yellow border for last cell
+                                  // Add bottom-right rounded corner only for last row
+                                  if (isLastRowInTable) {
+                                    borderClasses.push('rounded-br-[10px]');
+                                  }
                                 }
-                                isLastRow={
-                                  rowIndex ===
-                                    displayedTable.getRowModel().rows.length -
-                                      1 &&
-                                  !AllItemConfig[
-                                    row.original.key as IEssentialItemKey
-                                  ]?.showExpand
-                                }
-                                isContainerBordered={true}
-                                className="px-2.5"
-                                minHeight={60}
-                                style={
-                                  cell.column.getSize() === 0
-                                    ? { width: 'auto' }
-                                    : undefined
-                                }
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext(),
-                                )}
-                              </TableCell>
-                            ))}
+
+                                return borderClasses.join(' ');
+                              };
+
+                              return (
+                                <TableCell
+                                  key={cell.id}
+                                  width={
+                                    cell.column.getSize() === 0
+                                      ? undefined
+                                      : cell.column.getSize()
+                                  }
+                                  isLast={isLastCell}
+                                  isLastRow={
+                                    rowIndex ===
+                                      displayedTable.getRowModel().rows.length -
+                                        1 &&
+                                    !AllItemConfig[
+                                      row.original.key as IEssentialItemKey
+                                    ]?.showExpand
+                                  }
+                                  isContainerBordered={true}
+                                  className={cn(
+                                    'px-2.5',
+                                    getOverTakenBorderClasses(),
+                                  )}
+                                  minHeight={60}
+                                  style={
+                                    cell.column.getSize() === 0
+                                      ? { width: 'auto' }
+                                      : undefined
+                                  }
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext(),
+                                  )}
+                                </TableCell>
+                              );
+                            })}
                           </TableRow>
 
                           <ExpandableRow
@@ -501,40 +546,77 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                           'bg-[rgba(162,208,195,0.2)] border-t border-[#46A287] hover:bg-[rgba(162,208,195,0.2)]',
                       )}
                     >
-                      {row.getVisibleCells().map((cell, cellIndex) => (
-                        <TableCell
-                          key={cell.id}
-                          width={
-                            cell.column.getSize() === 0
-                              ? undefined
-                              : cell.column.getSize()
+                      {row.getVisibleCells().map((cell, cellIndex) => {
+                        const isFirstCell = cellIndex === 0;
+                        const isLastCell =
+                          cellIndex === row.getVisibleCells().length - 1;
+                        const isLastRowInTable =
+                          rowIndex ===
+                            submissionQueueTable.getRowModel().rows.length -
+                              1 &&
+                          !AllItemConfig[row.original.key as IEssentialItemKey]
+                            ?.showExpand;
+
+                        // Generate green border classes for leading row
+                        const getLeadingBorderClasses = () => {
+                          if (!isFirstRowLeading) return '';
+
+                          const borderClasses = [
+                            'border-t-2 border-t-[#46A287] border-b-2 border-b-[#46A287]', // Top and bottom green borders for all cells
+                          ];
+
+                          if (isFirstCell) {
+                            borderClasses.push('border-l-2 border-l-[#46A287]'); // Left green border for first cell
+                            // Add bottom-left rounded corner only for last row
+                            if (isLastRowInTable) {
+                              borderClasses.push('rounded-bl-[10px]');
+                            }
                           }
-                          isLast={
-                            cellIndex === row.getVisibleCells().length - 1
+
+                          if (isLastCell) {
+                            borderClasses.push('border-r-2 border-r-[#46A287]'); // Right green border for last cell
+                            // Add bottom-right rounded corner only for last row
+                            if (isLastRowInTable) {
+                              borderClasses.push('rounded-br-[10px]');
+                            }
                           }
-                          isLastRow={
-                            rowIndex ===
-                              submissionQueueTable.getRowModel().rows.length -
-                                1 &&
-                            !AllItemConfig[
-                              row.original.key as IEssentialItemKey
-                            ]?.showExpand
-                          }
-                          isContainerBordered={true}
-                          className="px-2.5"
-                          minHeight={60}
-                          style={
-                            cell.column.getSize() === 0
-                              ? { width: 'auto' }
-                              : undefined
-                          }
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
+
+                          return borderClasses.join(' ');
+                        };
+
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            width={
+                              cell.column.getSize() === 0
+                                ? undefined
+                                : cell.column.getSize()
+                            }
+                            isLast={isLastCell}
+                            isLastRow={
+                              rowIndex ===
+                                submissionQueueTable.getRowModel().rows.length -
+                                  1 &&
+                              !AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]?.showExpand
+                            }
+                            isContainerBordered={true}
+                            className={cn('px-2.5', getLeadingBorderClasses())}
+                            minHeight={60}
+                            style={
+                              cell.column.getSize() === 0
+                                ? { width: 'auto' }
+                                : undefined
+                            }
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
 
                     <ExpandableRow

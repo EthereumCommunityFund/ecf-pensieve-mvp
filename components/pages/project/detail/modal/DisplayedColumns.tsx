@@ -10,11 +10,11 @@ import { IPocItemKey } from '@/types/item';
 
 import { IProjectTableRowData, ITableMetaOfDisplayed } from '../types';
 
-interface UseDisplayedColumnsProps extends Record<string, any> {
+interface UseDisplayedColumnsProps {
   isPageExpanded?: boolean;
 }
 
-export const useDisplayedColumns = (props: UseDisplayedColumnsProps) => {
+export const useDisplayedColumns = (_props: UseDisplayedColumnsProps) => {
   const columnHelper = useMemo(
     () => createColumnHelper<IProjectTableRowData>(),
     [],
@@ -36,6 +36,7 @@ export const useDisplayedColumns = (props: UseDisplayedColumnsProps) => {
         return (
           <InputCol.Cell
             value={info.getValue()}
+            item={item}
             itemKey={item.key as any}
             isExpanded={isRowExpanded}
             onToggleExpand={

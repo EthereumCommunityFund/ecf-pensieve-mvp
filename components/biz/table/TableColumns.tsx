@@ -6,7 +6,8 @@ import { ReactNode } from 'react';
 import { Button } from '@/components/base';
 import {
   CaretDownIcon,
-  CaretUpIcon,
+  CaretDownYellowIcon,
+  CaretUpGreenIcon,
   ClockClockwiseIcon,
   GitPullBlueIcon,
 } from '@/components/icons';
@@ -222,20 +223,22 @@ const InputCell = ({
       <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center gap-[5px]">
-            <CaretDownIcon size={16} className="text-[#C47D54]" />
+            <CaretDownYellowIcon size={16} className="text-[#C47D54]" />
             <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#C47D54]">
               Over-taken
             </span>
           </div>
-          <InputContentRenderer
-            itemKey={itemKey}
-            value={value}
-            displayFormType={finalDisplayFormType}
-            isEssential={itemConfig?.isEssential || false}
-            isExpandable={finalIsExpandable}
-            isRowExpanded={isExpanded}
-            onToggleExpanded={onToggleExpand}
-          />
+          <div className="text-[13px] leading-[19px]">
+            <InputContentRenderer
+              itemKey={itemKey}
+              value={value}
+              displayFormType={finalDisplayFormType}
+              isEssential={itemConfig?.isEssential || false}
+              isExpandable={finalIsExpandable}
+              isRowExpanded={isExpanded}
+              onToggleExpanded={onToggleExpand}
+            />
+          </div>
         </div>
         {finalIsExpandable && (
           <Button
@@ -259,20 +262,22 @@ const InputCell = ({
       <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center gap-[5px]">
-            <CaretUpIcon size={16} className="text-[#408671]" />
+            <CaretUpGreenIcon size={16} className="text-[#408671]" />
             <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#408671]">
               Leading
             </span>
           </div>
-          <InputContentRenderer
-            itemKey={itemKey}
-            value={value}
-            displayFormType={finalDisplayFormType}
-            isEssential={itemConfig?.isEssential || false}
-            isExpandable={finalIsExpandable}
-            isRowExpanded={isExpanded}
-            onToggleExpanded={onToggleExpand}
-          />
+          <div className="text-[13px] leading-[19px]">
+            <InputContentRenderer
+              itemKey={itemKey}
+              value={value}
+              displayFormType={finalDisplayFormType}
+              isEssential={itemConfig?.isEssential || false}
+              isExpandable={finalIsExpandable}
+              isRowExpanded={isExpanded}
+              onToggleExpanded={onToggleExpand}
+            />
+          </div>
         </div>
         {finalIsExpandable && (
           <Button

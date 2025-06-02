@@ -2,14 +2,18 @@ import React from 'react';
 
 import { IconProps } from '@/types/common';
 
-const CaretUpIcon: React.FC<IconProps> = ({ size = 18, ...props }) => {
+const CaretUpIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = 'black',
+  ...props
+}) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
       viewBox="0 0 18 18"
-      fill="none"
+      fill={color}
       {...props}
     >
       <path
