@@ -9,6 +9,7 @@ import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 
 import ActivityItem from './activityItem';
+import ActivityItemSkeleton from './ActivityItemSkeleton';
 import { useProfileData } from './dataContext';
 
 const contributionsColorScale = scaleThreshold<number, string>()
@@ -81,7 +82,7 @@ export default function Contributions() {
 
   return (
     <div className="flex w-full flex-col gap-[20px]">
-      <div className="h-[156px] w-full px-[45px]">
+      <div className="tablet:px-0 mobile:px-0 h-[156px] w-full px-[45px]">
         <div className="relative size-full overflow-hidden rounded-[10px] border border-black/10 bg-white">
           <div
             style={{ height: 'calc(100% - 30px)' }}
@@ -175,55 +176,37 @@ export default function Contributions() {
 
       <div className="flex w-full flex-col gap-[30px]">
         {isLoadingActivities ? (
-          <div className="space-y-4">
+          <>
             {[...Array(5)].map((_, index) => (
-              <div key={index} className="flex w-full items-start py-4">
-                <div className="relative flex size-8 shrink-0 items-center justify-center">
-                  <Skeleton className="size-8 rounded-full" />
-                  {index < 4 && (
-                    <div className="absolute left-1/2 top-8 h-8 w-px -translate-x-1/2 border-l border-black/10" />
-                  )}
-                </div>
-                <div className="ml-2.5 flex w-full items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-48 rounded" />
-                    <Skeleton className="h-3 w-32 rounded" />
-                  </div>
-                  <Skeleton className="h-6 w-20 rounded" />
-                </div>
-              </div>
+              <ActivityItemSkeleton
+                key={index}
+                isLast={index === 4}
+                variant="loadMore"
+              />
             ))}
-          </div>
+          </>
         ) : filteredActivities.length > 0 ? (
           <>
             {filteredActivities.map((activity, index) => (
               <ActivityItem
                 key={activity.activeLog.id}
                 activity={activity as any}
-                isLast={index === filteredActivities.length - 1 && !hasNextPage}
+                isLast={
+                  index === filteredActivities.length - 1 && !isFetchingNextPage
+                }
               />
             ))}
 
             {isFetchingNextPage && (
-              <div className="space-y-4">
+              <>
                 {[...Array(3)].map((_, index) => (
-                  <div key={index} className="flex w-full items-start py-4">
-                    <div className="relative flex size-8 shrink-0 items-center justify-center">
-                      <Skeleton className="size-8 rounded-full" />
-                      {index < 2 && (
-                        <div className="absolute left-1/2 top-8 h-8 w-px -translate-x-1/2 border-l border-black/10" />
-                      )}
-                    </div>
-                    <div className="ml-2.5 flex w-full items-center justify-between">
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-48 rounded" />
-                        <Skeleton className="h-3 w-32 rounded" />
-                      </div>
-                      <Skeleton className="h-6 w-20 rounded" />
-                    </div>
-                  </div>
+                  <ActivityItemSkeleton
+                    key={index}
+                    isLast={index === 2}
+                    variant="loadMore"
+                  />
                 ))}
-              </div>
+              </>
             )}
 
             {hasNextPage && (

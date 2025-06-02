@@ -48,70 +48,75 @@ const ProfileSettingsPage = () => {
   }, [searchParams, address, router]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[800px] flex-col items-center gap-5 pb-16 pt-8">
-      <div className="flex w-full items-center justify-center gap-[10px]">
-        <div className="flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
-          <ECFTypography type="caption" className="opacity-50">
-            Connected Address:
-          </ECFTypography>
-          <ECFTypography type="caption" className="opacity-80">
-            {address}
-          </ECFTypography>
-        </div>
-
-        <div className="flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
-          <ECFTypography type="caption" className="opacity-50">
-            Weight:
-          </ECFTypography>
-          <Skeleton isLoaded={!!user}>
-            <ECFTypography type="caption" className="opacity-80">
-              {user?.weight ?? 100}
+    <div className="mobile:px-[10px] px-[40px]">
+      <div className="tablet:w-full mx-auto flex w-full max-w-[800px] flex-col items-center gap-5 pb-16 pt-8">
+        <div className="mobile:flex-col flex w-full items-center justify-center gap-[10px]">
+          <div className="mobile:flex-col mobile:w-full flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+            <ECFTypography type="caption" className="opacity-50">
+              Connected Address:
             </ECFTypography>
-          </Skeleton>
+            <ECFTypography type="caption" className="opacity-80">
+              {address}
+            </ECFTypography>
+          </div>
+
+          <div className="mobile:w-full flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+            <ECFTypography type="caption" className="opacity-50">
+              Weight:
+            </ECFTypography>
+            <Skeleton isLoaded={!!user}>
+              <ECFTypography type="caption" className="opacity-80">
+                {user?.weight ?? 100}
+              </ECFTypography>
+            </Skeleton>
+          </div>
         </div>
-      </div>
 
-      <div className="w-full">
-        <Tabs
-          selectedKey={activeTab}
-          onSelectionChange={(key) => {
-            const newTab = key as 'profile' | 'contributions';
-            setActiveTab(newTab);
-            router.push(`/profile/${address}?tab=${newTab}`, { scroll: false });
-          }}
-          variant="underlined"
-          className="w-full"
-          classNames={{
-            tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
-            tab: 'flex-1 flex justify-start items-center',
-            cursor: 'bg-black w-[102%] bottom-[-4px] left-[-4px] right-[-4px]',
-            tabContent: 'font-semibold',
-          }}
-        >
-          {tabItems.map(({ key, label, icon }) => (
-            <Tab
-              key={key}
-              title={
-                <div className="flex items-center gap-[10px]">
-                  {icon}
-                  <ECFTypography
-                    type="body1"
-                    className={cn(
-                      'font-semibold',
-                      activeTab === key ? 'opacity-100' : 'opacity-60',
-                    )}
-                  >
-                    {label}
-                  </ECFTypography>
-                </div>
-              }
-            />
-          ))}
-        </Tabs>
-      </div>
+        <div className="w-full">
+          <Tabs
+            selectedKey={activeTab}
+            onSelectionChange={(key) => {
+              const newTab = key as 'profile' | 'contributions';
+              setActiveTab(newTab);
+              router.push(`/profile/${address}?tab=${newTab}`, {
+                scroll: false,
+              });
+            }}
+            variant="underlined"
+            className="w-full"
+            classNames={{
+              tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
+              tab: 'flex-1 flex justify-start items-center',
+              cursor:
+                'bg-black w-[102%] bottom-[-4px] left-[-4px] right-[-4px]',
+              tabContent: 'font-semibold',
+            }}
+          >
+            {tabItems.map(({ key, label, icon }) => (
+              <Tab
+                key={key}
+                title={
+                  <div className="flex items-center gap-[10px]">
+                    {icon}
+                    <ECFTypography
+                      type="body1"
+                      className={cn(
+                        'font-semibold',
+                        activeTab === key ? 'opacity-100' : 'opacity-60',
+                      )}
+                    >
+                      {label}
+                    </ECFTypography>
+                  </div>
+                }
+              />
+            ))}
+          </Tabs>
+        </div>
 
-      {activeTab === 'profile' && <Setting />}
-      {activeTab === 'contributions' && <Contributions />}
+        {activeTab === 'profile' && <Setting />}
+        {activeTab === 'contributions' && <Contributions />}
+      </div>
     </div>
   );
 };

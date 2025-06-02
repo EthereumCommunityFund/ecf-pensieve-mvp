@@ -155,16 +155,15 @@ export default function ActivityItem({
   };
 
   return (
-    <div className="flex w-full items-start">
+    <div className="mobile:items-start relative flex w-full items-center  ">
       <div className="relative flex size-8 shrink-0 items-center justify-center">
         {getIcon()}
-        {!isLast && (
-          <div className="absolute left-1/2 top-8 h-[29px] w-px -translate-x-1/2 border-l border-black/10" />
-        )}
       </div>
-
-      <div className="ml-2.5 flex w-full items-center justify-between">
-        <div className="flex flex-col gap-2.5">
+      {!isLast && (
+        <div className="absolute bottom-[-30px] left-4 top-8 w-px -translate-x-1/2 border-l border-black/10" />
+      )}
+      <div className="mobile:flex-col mobile:gap-[10px] ml-2.5 flex w-full items-center justify-between">
+        <div className="mobile:w-full flex flex-col gap-2.5">
           <div className="flex flex-wrap items-center gap-1">
             {renderAction()}
           </div>
@@ -178,7 +177,7 @@ export default function ActivityItem({
         <Button
           size="sm"
           variant="ghost"
-          className="border-1 rounded-[5px] border-black/10 px-2.5 py-[5px] text-[13px]"
+          className="border-1 mobile:w-full rounded-[5px] border-black/10 px-2.5 py-[5px] text-[13px]"
           onPress={() => {
             if (activity.activeLog.projectId) {
               router.push(`/project/${activity.activeLog.projectId}`);
