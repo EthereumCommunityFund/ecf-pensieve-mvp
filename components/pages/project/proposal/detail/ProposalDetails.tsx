@@ -18,7 +18,7 @@ import ReferenceModal from './modal/ReferenceModal';
 import SwitchVoteModal from './modal/SwitchVoteModal';
 import CategoryHeader from './table/CategoryHeader';
 import ProposalTable from './table/ProposalTable';
-import { createTableColumns } from './table/tableColumns';
+import { useCreateProposalTableColumns } from './table/tableColumns';
 import { prepareProposalTableData } from './table/utils';
 import TableSectionHeader from './TableSectionHeader';
 
@@ -32,6 +32,8 @@ export interface ITableProposalItem {
   // Group information for visual grouping
   group?: string;
   groupTitle?: string;
+  accountability?: string[];
+  legitimacy?: string[];
 }
 
 export interface ProposalDetailsProps {
@@ -55,6 +57,16 @@ const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Governance]: true,
 };
 
+const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
+  [IItemSubCategoryEnum.Organization]: false,
+  [IItemSubCategoryEnum.Team]: false,
+  [IItemSubCategoryEnum.BasicProfile]: false,
+  [IItemSubCategoryEnum.Development]: false,
+  [IItemSubCategoryEnum.Finances]: false,
+  [IItemSubCategoryEnum.Token]: true,
+  [IItemSubCategoryEnum.Governance]: true,
+};
+
 const ProposalDetails = ({
   proposal,
   projectId,
@@ -69,6 +81,9 @@ const ProposalDetails = ({
 
   const [expandedSubCat, setExpandedSubCat] = useState(DefaultExpandedSubCat);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [metricsVisibleSubCat, setMetricsVisibleSubCat] = useState(
+    DefaultMetricsVisibleSubCat,
+  );
 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -174,7 +189,14 @@ const ProposalDetails = ({
     setIsReferenceModalOpen(true);
   }, []);
 
-  const tableData = useMemo(
+  const toggleMetricsVisible = useCallback((subCat: IItemSubCategoryEnum) => {
+    setMetricsVisibleSubCat((prev) => ({
+      ...prev,
+      [subCat]: !prev[subCat],
+    }));
+  }, []);
+
+  const tableDataMap = useMemo(
     () => prepareProposalTableData(proposal),
     [proposal],
   );
@@ -192,6 +214,7 @@ const ProposalDetails = ({
       isVoteActionPending,
       inActionKeys,
       getItemVoteResult,
+      toggleMetricsVisible,
     }),
     [
       expandedRows,
@@ -205,63 +228,124 @@ const ProposalDetails = ({
       isVoteActionPending,
       inActionKeys,
       getItemVoteResult,
+      toggleMetricsVisible,
     ],
   );
 
-  const columns = useMemo(() => {
-    return createTableColumns({ isPageExpanded, isProposalCreator });
-  }, [isPageExpanded, isProposalCreator]);
+  // Create column definitions for each subcategory at the top level
+  const basicProfileColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.BasicProfile],
+  });
+
+  const developmentColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Development],
+  });
+
+  const organizationColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Organization],
+  });
+
+  const teamColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Team],
+  });
+
+  const financesColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
+  });
+
+  const tokenColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Token],
+  });
+
+  const governanceColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Governance],
+  });
+
+  const columnsMap = useMemo(
+    () => ({
+      [IItemSubCategoryEnum.BasicProfile]: basicProfileColumns,
+      [IItemSubCategoryEnum.Development]: developmentColumns,
+      [IItemSubCategoryEnum.Organization]: organizationColumns,
+      [IItemSubCategoryEnum.Team]: teamColumns,
+      [IItemSubCategoryEnum.Finances]: financesColumns,
+      [IItemSubCategoryEnum.Token]: tokenColumns,
+      [IItemSubCategoryEnum.Governance]: governanceColumns,
+    }),
+    [
+      basicProfileColumns,
+      developmentColumns,
+      organizationColumns,
+      teamColumns,
+      financesColumns,
+      tokenColumns,
+      governanceColumns,
+    ],
+  );
 
   const basicProfileTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.BasicProfile],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.BasicProfile],
+    columns: columnsMap[IItemSubCategoryEnum.BasicProfile],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const technicalDevelopmentTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Development],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Development],
+    columns: columnsMap[IItemSubCategoryEnum.Development],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const organizationTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Organization],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Organization],
+    columns: columnsMap[IItemSubCategoryEnum.Organization],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const teamTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Team],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Team],
+    columns: columnsMap[IItemSubCategoryEnum.Team],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const financialTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Finances],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Finances],
+    columns: columnsMap[IItemSubCategoryEnum.Finances],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const tokenTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Token],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Token],
+    columns: columnsMap[IItemSubCategoryEnum.Token],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
   const governanceTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Governance],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Governance],
+    columns: columnsMap[IItemSubCategoryEnum.Governance],
     getCoreRowModel: getCoreRowModel(),
     meta: coreTableMeta,
   });
 
-  const tables = useMemo(() => {
+  const tableInstanceMap = useMemo(() => {
     return {
       [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
       [IItemSubCategoryEnum.Development]: technicalDevelopmentTable,
@@ -324,10 +408,11 @@ const ProposalDetails = ({
                   category={subCat.key}
                   isExpanded={expandedSubCat[subCat.key]}
                   onToggle={() => toggleCategory(subCat.key)}
+                  onToggleMetrics={toggleMetricsVisible}
                 />
                 <div style={getAnimationStyle(expandedSubCat[subCat.key])}>
                   <ProposalTable
-                    table={tables[subCat.key]}
+                    table={tableInstanceMap[subCat.key]}
                     isLoading={isOverallLoading}
                     expandedRows={expandedRows}
                     isPageExpanded={isPageExpanded}

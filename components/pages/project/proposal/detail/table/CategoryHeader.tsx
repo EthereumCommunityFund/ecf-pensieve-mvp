@@ -3,7 +3,7 @@ import { FC } from 'react';
 
 import { IItemSubCategoryEnum } from '@/types/item';
 
-import { CollapseButton, FilterButton, MetricButton } from '../ActionButtons';
+import { CollapseButton, MetricButton } from '../ActionButtons';
 
 interface CategoryHeaderProps {
   title: string;
@@ -12,7 +12,7 @@ interface CategoryHeaderProps {
   isExpanded: boolean;
   onToggle: () => void;
   metricsVisible?: boolean;
-  onToggleMetrics?: () => void;
+  onToggleMetrics?: (subCat: IItemSubCategoryEnum) => void;
 }
 
 const CategoryHeader: FC<CategoryHeaderProps> = ({
@@ -42,8 +42,8 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
       </div>
       <div className="flex items-center justify-end gap-[10px]">
         <CollapseButton isExpanded={isExpanded} onChange={onToggle} />
-        <MetricButton onClick={onToggleMetrics || (() => {})} />
-        <FilterButton onClick={() => {}} />
+        <MetricButton onClick={() => onToggleMetrics?.(category)} />
+        {/* <FilterButton onClick={() => {}} /> */}
       </div>
     </div>
   );

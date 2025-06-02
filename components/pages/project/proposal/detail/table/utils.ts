@@ -58,18 +58,20 @@ export const prepareProposalTableData = (
         // Check if this item belongs to a group
         const groupInfo = itemToGroupMap.get(itemKey);
 
+        const itemConfig = AllItemConfig[itemKey as IEssentialItemKey]!;
+
         const tableRowItem: ITableProposalItem = {
           key: itemKey,
-          property:
-            AllItemConfig[itemKey as IEssentialItemKey]?.label || itemKey,
+          property: itemConfig.label || itemKey,
           input: value,
           reference: referenceValue,
           support: proposalItem ? 1 : 0,
-          // Add group information if item belongs to a group
           ...(groupInfo && {
             group: groupInfo.key,
             groupTitle: groupInfo.title,
           }),
+          accountability: itemConfig?.accountability || [],
+          legitimacy: itemConfig?.legitimacy || [],
         };
         result[subCategoryConfig.key].push(tableRowItem);
       });
