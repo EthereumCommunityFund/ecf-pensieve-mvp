@@ -15,6 +15,7 @@ import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
+import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
@@ -29,6 +30,7 @@ export type IModalContentType = 'viewItemProposal' | 'submitPropose';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
+  const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab');
@@ -109,6 +111,15 @@ const ProjectPage = () => {
     setModalContentType('viewItemProposal');
   }, []);
 
+  const onSubmitEntry = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    console.log('Submit entry for item:', selectedItemKey);
+    setModalContentType('submitPropose');
+  }, [selectedItemKey, profile, showAuthPrompt]);
+
   return (
     <div className="pb-[20px]">
       <BackHeader>
@@ -184,10 +195,7 @@ const ProjectPage = () => {
         isOpen={isModalOpen && !!selectedItemKey}
         onClose={handleCloseModal}
         contentType={modalContentType}
-        onSubmitEntry={() => {
-          console.log('Submit entry for item:', selectedItemKey);
-          setModalContentType('submitPropose');
-        }}
+        onSubmitEntry={onSubmitEntry}
         itemKey={selectedItemKey as IPocItemKey}
         setModalContentType={setModalContentType}
       />
