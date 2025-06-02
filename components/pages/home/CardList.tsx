@@ -1,6 +1,8 @@
 import { Image } from '@heroui/react';
+import { useRouter } from 'next/navigation';
 
 import ECFTypography from '@/components/base/typography';
+import { useAuth } from '@/context/AuthContext';
 
 const CardListData = [
   {
@@ -27,12 +29,18 @@ const CardListData = [
 ];
 
 const CardList = () => {
+  const { profile, showAuthPrompt } = useAuth();
+  const router = useRouter();
   const proposeProject = () => {
-    console.log('propose project');
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push('/project/create');
   };
 
   const exploreIndex = () => {
-    console.log('explore index');
+    router.push('/projects');
   };
 
   return (
@@ -136,6 +144,7 @@ const CardAction = (props: ICardActionProps) => {
       style={{
         opacity: !props.onClick ? '0.5' : '1',
       }}
+      onClick={props.onClick}
     >
       {!props.onClick && (
         <div className="size-[8px] rounded-[8px] bg-black"></div>
