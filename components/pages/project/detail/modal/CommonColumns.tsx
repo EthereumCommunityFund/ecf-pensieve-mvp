@@ -44,8 +44,7 @@ export const useCommonColumnsOfModal = () => {
         const isFirstRowOverTaken = showRowOverTaken && info.row.index === 0;
 
         // 检查当前行是否是第一行且处于 leading 状态
-        const isFirstRowLeading =
-          showRowOverTaken && showRowIsLeading && info.row.index === 0;
+        const isFirstRowLeading = showRowIsLeading && info.row.index === 0;
 
         return (
           <InputCol.Cell
