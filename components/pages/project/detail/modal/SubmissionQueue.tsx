@@ -383,7 +383,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   }
                                   isContainerBordered={true}
                                   className={cn(
-                                    'px-2.5',
+                                    '',
                                     getOverTakenBorderClasses(),
                                   )}
                                   minHeight={60}
@@ -601,7 +601,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               ]?.showExpand
                             }
                             isContainerBordered={true}
-                            className={cn('px-2.5', getLeadingBorderClasses())}
+                            className={cn('', getLeadingBorderClasses())}
                             minHeight={60}
                             style={
                               cell.column.getSize() === 0

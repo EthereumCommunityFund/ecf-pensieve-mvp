@@ -33,7 +33,6 @@ const ProjectPage = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab');
 
   // 使用 Context 获取项目数据
   const {
@@ -51,13 +50,7 @@ const ProjectPage = () => {
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
 
-  const [activeTab, setActiveTab] = useState<ITabKey>(
-    initialTab === 'ecosystem' ||
-      initialTab === 'profile' ||
-      initialTab === 'review'
-      ? initialTab
-      : 'project-data',
-  );
+  const [activeTab, setActiveTab] = useState<ITabKey>('project-data');
 
   // SwitchVoteModal 状态管理
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,15 +60,11 @@ const ProjectPage = () => {
 
   useEffect(() => {
     const currentTab = searchParams.get('tab');
-    if (
-      currentTab &&
-      (currentTab === 'project-data' ||
-        currentTab === 'ecosystem' ||
-        currentTab === 'profile' ||
-        currentTab === 'review')
-    ) {
+    // Only allow project-data tab, redirect disabled tabs to project-data
+    if (currentTab === 'project-data') {
       setActiveTab(currentTab as ITabKey);
-    } else if (!currentTab) {
+    } else {
+      // Redirect any other tab (including disabled ones) to project-data
       router.push(`/project/${projectId}?tab=project-data`, { scroll: false });
     }
   }, [searchParams, projectId, router]);
@@ -148,6 +137,7 @@ const ProjectPage = () => {
               });
             }}
             variant="underlined"
+            disabledKeys={['ecosystem', 'profile', 'review']}
             // className="w-full"
             classNames={{
               tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',

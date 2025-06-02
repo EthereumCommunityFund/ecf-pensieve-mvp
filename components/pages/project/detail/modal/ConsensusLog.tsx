@@ -326,7 +326,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({
                             ?.showExpand
                         }
                         isContainerBordered={true}
-                        className="px-2.5"
+                        className=""
                         minHeight={60}
                         style={
                           cell.column.getSize() === 0
