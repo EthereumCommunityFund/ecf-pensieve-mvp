@@ -11,6 +11,7 @@ import PendingProjectCard, {
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
+import { isScanPendingProject } from '@/constants/env';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -35,10 +36,10 @@ const PendingProjectsPage = () => {
       },
     );
 
-  // TODO remove this in prod env
+  // only scan pending project in dev env
   const { data: scanPendingProjectData } =
     trpc.project.scanPendingProject.useQuery(undefined, {
-      enabled: true,
+      enabled: !!isScanPendingProject,
     });
 
   const handleLoadMore = () => {
