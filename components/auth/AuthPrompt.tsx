@@ -170,9 +170,14 @@ const AuthPrompt: React.FC = () => {
   const handleCloseAndReset = useCallback(async () => {
     setInputUsername('');
     setInviteCode('');
+    // 先断开钱包连接，再隐藏提示和登出
+    try {
+      await disconnectAsync();
+    } catch (error) {
+      console.error('Error disconnecting wallet during close:', error);
+    }
     await hideAuthPrompt();
     await logout();
-    await disconnectAsync();
   }, [hideAuthPrompt, logout, disconnectAsync]);
 
   const renderConnectWalletContent = useMemo(() => {

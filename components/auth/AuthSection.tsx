@@ -8,15 +8,16 @@ import {
 } from '@heroui/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import ECFTypography from '@/components/base/typography';
+import { useAuth } from '@/context/AuthContext';
 import { getShortenAddress } from '@/lib/utils';
 
 export function AuthSection() {
   const { isConnected, address } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { performFullLogoutAndReload } = useAuth();
 
   if (isConnected && address) {
     return (
@@ -50,7 +51,7 @@ export function AuthSection() {
                 key="Logout"
                 textValue="Logout"
                 className="text-[rgba(0,0,0,0.3)] hover:text-[rgba(0,0,0,0.5)]"
-                onClick={() => disconnect()}
+                onClick={performFullLogoutAndReload}
               >
                 Logout
               </DropdownItem>
