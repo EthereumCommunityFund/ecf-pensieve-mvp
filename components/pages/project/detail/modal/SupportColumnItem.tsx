@@ -1,6 +1,7 @@
 import { CircularProgress, cn } from '@heroui/react';
-import { FC, memo, useCallback } from 'react';
+import { FC, memo, useCallback, useMemo } from 'react'; // Added useMemo
 
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext'; // Added import
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
 import { QUORUM_AMOUNT } from '@/lib/constants';
@@ -17,7 +18,7 @@ interface IProps {
   isReachQuorum: boolean;
   votedMemberCount: number;
   isUserVoted: boolean;
-  isLoading: boolean;
+  isLoading?: boolean; // Made optional
   isProposalCreator: boolean;
   onCreateItemProposalVote: (
     key: IPocItemKey,
@@ -54,7 +55,16 @@ const SupportColumnItem: FC<IProps> = ({
   proposalId,
   isUserVotedInProposalOrItemProposals,
   isUserVotedCurrentItemProposal,
+  // isLoading prop is kept from props for now, but internalIsLoading will be primary
 }) => {
+  const { inActionItemProposalIdMap } = useProjectDetailContext();
+
+  const internalIsLoading = useMemo(() => {
+    return !!(
+      inActionItemProposalIdMap && inActionItemProposalIdMap[proposalId]
+    );
+  }, [inActionItemProposalIdMap, proposalId]);
+
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
   const handleAction = useCallback(() => {
@@ -131,13 +141,13 @@ const SupportColumnItem: FC<IProps> = ({
         color="secondary"
         size="sm"
         isIconOnly
-        isLoading={isLoading}
-        disabled={isLoading}
+        isLoading={internalIsLoading} // Use internalIsLoading
+        disabled={internalIsLoading} // Use internalIsLoading
         onPress={handleAction}
         className={cn(
           'px-[5px] border-none',
           isUserVotedCurrentItemProposal ? '' : 'opacity-30',
-          isLoading ? 'cursor-not-allowed' : '',
+          internalIsLoading ? 'cursor-not-allowed' : '', // Use internalIsLoading
         )}
       >
         {isUserVotedCurrentItemProposal ? (
