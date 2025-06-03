@@ -107,12 +107,12 @@ const ProjectPage = () => {
       {/* Proposal list */}
       <div
         className={cn(
-          'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
+          'mt-[20px] px-[160px] tablet:px-[20px] mobile:px-[10px] pt-[20px] ',
           'flex items-start justify-center gap-[40px] ',
-          'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
+          'mobile:flex-col mobile:gap-[20px]',
         )}
       >
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[800px] flex-1 ">
+        <div className="mobile:max-w-[9999px] w-full max-w-[800px] flex-1 ">
           <div className="font-mona flex items-center justify-between border-b border-black/10 bg-[rgba(245,245,245,0.80)] py-[8px] backdrop-blur-[5px]">
             <p className="text-[24px] font-[700] leading-[34px] text-black/80 ">
               Proposals
