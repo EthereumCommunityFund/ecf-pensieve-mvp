@@ -65,6 +65,7 @@ const InputContentRenderer: React.FC<IProps> = ({
         );
       case 'date':
         return <>{dayjs(value).format('MMM, DD, YYYY')}</>;
+      // TODO, founderList的展示UI需要调整，目前是展示name-title，需要展示类似表格的形式
       case 'founderList': {
         const parsedFounderList = parseValue(value);
         return (

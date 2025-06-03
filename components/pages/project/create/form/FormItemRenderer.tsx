@@ -3,9 +3,14 @@ import { DateValue, parseDate } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import dayjs from 'dayjs';
 import React from 'react';
-import { ControllerFieldState, ControllerRenderProps } from 'react-hook-form';
+import {
+  ControllerFieldState,
+  ControllerRenderProps,
+  useFormContext,
+} from 'react-hook-form';
 
 import {
+  Button,
   DatePicker,
   Input,
   Select,
@@ -15,6 +20,9 @@ import {
 import { CalendarBlankIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
 
+import { IProjectFormData } from '../types';
+
+import FounderFormItem from './FounderFormItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 
@@ -42,6 +50,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     formDisplayType,
   } = itemConfig;
 
+  // 始终获取 form context，但只在需要时使用
+  const { register } = useFormContext<IProjectFormData>();
+
   const dateToDateValue = (date: Date | null | undefined): DateValue | null => {
     if (!date) return null;
     try {
@@ -66,7 +77,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
   const errorMessageElement = error ? (
-    <p className="text-danger mt-1 text-[12px]">{error.message}</p>
+    <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
 
   switch (formDisplayType) {
@@ -197,7 +208,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         </div>
       );
     }
-
     case 'img': {
       return (
         <div>
@@ -241,9 +251,57 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         </div>
       );
 
-    case 'founderList':
-      // TODO: Implement founder list, use FounderFormItem
-      return <div>FounderFormItem</div>;
+    case 'founderList': {
+      // 确保有有效的数组数据
+      const foundersArray = Array.isArray(field.value) ? field.value : [];
+
+      return (
+        <div>
+          <div className="flex flex-col gap-2.5 pt-[10px]">
+            {foundersArray.map((founder: any, index: number) => {
+              // 从 fieldState 中获取特定索引的错误
+              const founderError =
+                fieldState.error && Array.isArray(fieldState.error)
+                  ? fieldState.error[index]
+                  : undefined;
+
+              return (
+                <FounderFormItem
+                  key={index}
+                  index={index}
+                  remove={() => {
+                    const newFounders = foundersArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newFounders);
+                  }}
+                  register={register}
+                  errors={founderError}
+                  foundersKey={field.name as 'founders'}
+                  isPrimary={index === 0}
+                  canRemove={foundersArray.length > 1}
+                />
+              );
+            })}
+          </div>
+
+          <div className="pt-[10px]">
+            <Button
+              color="secondary"
+              size="md"
+              className="mobile:w-full px-[20px]"
+              onPress={() => {
+                field.onChange([...foundersArray, { name: '', title: '' }]);
+              }}
+              isDisabled={isDisabled}
+            >
+              Add Entry
+            </Button>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
     case 'roadmap':
       return (
         <div className="rounded-md border border-dashed border-gray-300 p-4 text-center text-gray-500">
@@ -253,7 +311,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
     default:
       return (
-        <div className="border-danger text-danger rounded-md border p-4">
+        <div className="rounded-md border border-red-500 p-4 text-red-500">
           Not supported field type: {formDisplayType} (field: {label || itemKey}
           ){errorMessageElement}
         </div>

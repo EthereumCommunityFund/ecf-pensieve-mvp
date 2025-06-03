@@ -24,8 +24,8 @@ export enum IFormTypeEnum {
 export type IStepStatus = 'Inactive' | 'Active' | 'Finished';
 
 export interface IFounderInput {
-  fullName: string;
-  titleRole: string;
+  name: string;
+  title: string;
 }
 
 export interface IReferenceData {

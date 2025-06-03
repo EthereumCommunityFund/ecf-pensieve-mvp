@@ -43,8 +43,8 @@ yup.addMethod(
 );
 
 const founderSchema: yup.ObjectSchema<IFounderInput> = yup.object().shape({
-  fullName: yup.string().required('Founder name is required'),
-  titleRole: yup.string().required('Founder title/role is required'),
+  name: yup.string().required('Founder name is required'),
+  title: yup.string().required('Founder title is required'),
 });
 
 export const basicsSchema = yup.object().shape({

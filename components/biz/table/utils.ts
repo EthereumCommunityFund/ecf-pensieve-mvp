@@ -136,10 +136,7 @@ export const formatProjectValue = (key: string, value: any): any => {
     case 'founders':
       if (Array.isArray(value)) {
         return value
-          .map(
-            (founder: any) =>
-              `${founder.name || founder.fullName}-${founder.title || founder.titleRole}`,
-          )
+          .map((founder: any) => `${founder.name}-${founder.title}`)
           .join(', ');
       }
       return value;
