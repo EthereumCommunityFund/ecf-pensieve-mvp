@@ -16,7 +16,7 @@ import {
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
 import { dbLog, memLog, perfLog } from '@/utils/devLog';
 
-import { protectedProcedure, router } from '../server';
+import { protectedProcedure, publicProcedure, router } from '../server';
 
 import { voteRouter } from './vote';
 
@@ -72,17 +72,28 @@ export const itemProposalRouter = router({
         perfLog(
           '2. Check existing proposal',
           performance.now() - existingCheckStartTime,
-          { key: input.key, exists: !!existingProposal },
+          {
+            projectId: input.projectId,
+            key: input.key,
+            existingCheckCondition: {
+              projectId: input.projectId,
+              key: input.key,
+            },
+            exists: !!existingProposal,
+            existingProposalId: existingProposal?.id,
+            existingProposalCreator: existingProposal?.creator,
+          },
         );
 
         // 3. 创建新的item proposal
         const insertStartTime = performance.now();
+        const itemProposalData = {
+          ...input,
+          creator: ctx.user.id,
+        };
         const [itemProposal] = await tx
           .insert(itemProposals)
-          .values({
-            ...input,
-            creator: ctx.user.id,
-          })
+          .values(itemProposalData)
           .returning();
         dbLog(
           'INSERT',
@@ -93,7 +104,16 @@ export const itemProposalRouter = router({
         perfLog(
           '3. Insert item proposal',
           performance.now() - insertStartTime,
-          { itemProposalId: itemProposal?.id },
+          {
+            itemProposalId: itemProposal?.id,
+            insertData: itemProposalData,
+            projectId: input.projectId,
+            key: input.key,
+            value: input.value,
+            ref: input.ref,
+            reason: input.reason,
+            creator: ctx.user.id,
+          },
         );
 
         if (!itemProposal) {
@@ -126,7 +146,22 @@ export const itemProposalRouter = router({
         perfLog(
           '4. Get user profile and vote record',
           performance.now() - parallelQueryStartTime,
-          { userId: ctx.user.id, hasVoteRecord: !!voteRecord },
+          {
+            userId: ctx.user.id,
+            creator: ctx.user.id,
+            projectId: input.projectId,
+            key: input.key,
+            voteRecordCondition: {
+              creator: ctx.user.id,
+              projectId: input.projectId,
+              key: input.key,
+            },
+            hasVoteRecord: !!voteRecord,
+            foundUserProfile: !!userProfile,
+            userWeight: userProfile?.weight,
+            voteRecordId: voteRecord?.id,
+            voteRecordWeight: voteRecord?.weight,
+          },
         );
 
         // 5. 创建投票caller
@@ -139,25 +174,36 @@ export const itemProposalRouter = router({
 
         // 6. 处理投票逻辑
         const voteStartTime = performance.now();
+        const voteParams = {
+          itemProposalId: itemProposal.id,
+          key: input.key,
+        };
         if (voteRecord) {
-          await caller.switchItemProposalVote({
-            itemProposalId: itemProposal.id,
-            key: input.key,
-          });
+          await caller.switchItemProposalVote(voteParams);
           perfLog(
             '6. Switch item proposal vote',
             performance.now() - voteStartTime,
-            { itemProposalId: itemProposal.id },
+            {
+              itemProposalId: itemProposal.id,
+              key: input.key,
+              voteParams,
+              action: 'switch',
+              existingVoteId: voteRecord.id,
+              existingVoteWeight: voteRecord.weight,
+            },
           );
         } else {
-          await caller.createItemProposalVote({
-            itemProposalId: itemProposal.id,
-            key: input.key,
-          });
+          await caller.createItemProposalVote(voteParams);
           perfLog(
             '6. Create item proposal vote',
             performance.now() - voteStartTime,
-            { itemProposalId: itemProposal.id },
+            {
+              itemProposalId: itemProposal.id,
+              key: input.key,
+              voteParams,
+              action: 'create',
+              userWeight: userProfile?.weight ?? 0,
+            },
           );
         }
 
@@ -171,13 +217,33 @@ export const itemProposalRouter = router({
             input.key,
           ]);
           perfLog('7. Calculate reward', performance.now() - rewardStartTime, {
+            key: input.key,
             reward,
             oldWeight: userProfile?.weight ?? 0,
             newWeight: finalWeight,
+            userId: ctx.user.id,
+            projectId: input.projectId,
+            itemProposalId: itemProposal.id,
+            originalHasProposalKeys: project.hasProposalKeys,
+            newHasProposalKeys: Array.from(hasProposalKeys),
+            rewardCalculation: { key: input.key, calculatedReward: reward },
           });
 
           // 8. 并行执行更新操作
           const updateStartTime = performance.now();
+          const notificationData = createRewardNotification.createItemProposal(
+            ctx.user.id,
+            input.projectId,
+            itemProposal.id,
+            reward,
+          );
+          const activityData = {
+            userId: ctx.user.id,
+            targetId: itemProposal.id,
+            projectId: itemProposal.projectId,
+            items: [{ field: input.key }],
+          };
+
           await Promise.all([
             tx
               .update(profiles)
@@ -191,25 +257,9 @@ export const itemProposalRouter = router({
               })
               .where(eq(projects.id, input.projectId)),
 
-            addRewardNotification(
-              createRewardNotification.createItemProposal(
-                ctx.user.id,
-                input.projectId,
-                itemProposal.id,
-                reward,
-              ),
-              tx,
-            ),
+            addRewardNotification(notificationData, tx),
 
-            logUserActivity.itemProposal.create(
-              {
-                userId: ctx.user.id,
-                targetId: itemProposal.id,
-                projectId: itemProposal.projectId,
-                items: [{ field: input.key }],
-              },
-              tx,
-            ),
+            logUserActivity.itemProposal.create(activityData, tx),
           ]);
           dbLog(
             'UPDATE',
@@ -220,23 +270,39 @@ export const itemProposalRouter = router({
           perfLog(
             '8. Update user weight and project data',
             performance.now() - updateStartTime,
-            { userId: ctx.user.id, reward },
+            {
+              userId: ctx.user.id,
+              reward,
+              profileUpdate: { userId: ctx.user.id, newWeight: finalWeight },
+              projectUpdate: {
+                projectId: input.projectId,
+                newHasProposalKeys: Array.from(hasProposalKeys),
+              },
+              notificationData,
+              activityData,
+              operationsCount: 4,
+            },
           );
         } else {
           // 9. 记录更新活动
           const logStartTime = performance.now();
-          await logUserActivity.itemProposal.update(
-            {
-              userId: ctx.user.id,
-              targetId: itemProposal.id,
-              projectId: itemProposal.projectId,
-              items: [{ field: input.key }],
-            },
-            tx,
-          );
+          const updateActivityData = {
+            userId: ctx.user.id,
+            targetId: itemProposal.id,
+            projectId: itemProposal.projectId,
+            items: [{ field: input.key }],
+          };
+          await logUserActivity.itemProposal.update(updateActivityData, tx);
           dbLog('INSERT', 'activities', performance.now() - logStartTime, 1);
           perfLog('9. Log update activity', performance.now() - logStartTime, {
             itemProposalId: itemProposal.id,
+            updateActivityData,
+            userId: ctx.user.id,
+            targetId: itemProposal.id,
+            projectId: itemProposal.projectId,
+            key: input.key,
+            existingProposalId: existingProposal?.id,
+            action: 'update',
           });
         }
 
@@ -249,11 +315,116 @@ export const itemProposalRouter = router({
             itemProposalId: itemProposal.id,
             projectId: input.projectId,
             key: input.key,
+            value: input.value,
+            ref: input.ref,
+            reason: input.reason,
+            creator: ctx.user.id,
+            userId: ctx.user.id,
             isNewProposal: !existingProposal,
+            existingProposalId: existingProposal?.id,
+            hadExistingVoteRecord: !!voteRecord,
+            voteAction: voteRecord ? 'switch' : 'create',
+            userWeight: userProfile?.weight,
+            finalItemProposal: {
+              id: itemProposal.id,
+              projectId: itemProposal.projectId,
+              key: itemProposal.key,
+              value: itemProposal.value,
+              ref: itemProposal.ref,
+              reason: itemProposal.reason,
+              creator: itemProposal.creator,
+              createdAt: itemProposal.createdAt,
+            },
           },
         );
 
         return itemProposal;
       });
+    }),
+
+  getItemProposalById: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const startTime = performance.now();
+      const startMem = memLog('getItemProposalById - Start');
+
+      // 查询item proposal详情
+      const queryStartTime = performance.now();
+      const itemProposal = await ctx.db.query.itemProposals.findFirst({
+        where: eq(itemProposals.id, input.id),
+        with: {
+          creator: {
+            columns: {
+              userId: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+          project: {
+            columns: {
+              id: true,
+              name: true,
+              tagline: true,
+              isPublished: true,
+            },
+          },
+          voteRecords: {
+            with: {
+              creator: {
+                columns: {
+                  userId: true,
+                  name: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      dbLog(
+        'SELECT',
+        'itemProposals with relations',
+        performance.now() - queryStartTime,
+        itemProposal ? 1 : 0,
+      );
+      perfLog(
+        '1. Get item proposal by id',
+        performance.now() - queryStartTime,
+        {
+          itemProposalId: input.id,
+          found: !!itemProposal,
+          hasCreator: !!itemProposal?.creator,
+          hasProject: !!itemProposal?.project,
+          voteRecordsCount: itemProposal?.voteRecords?.length ?? 0,
+        },
+      );
+
+      if (!itemProposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Item proposal not found',
+        });
+      }
+
+      // 记录总执行时间和内存使用
+      memLog('getItemProposalById - End', startMem);
+      perfLog(
+        'TOTAL getItemProposalById execution',
+        performance.now() - startTime,
+        {
+          itemProposalId: itemProposal.id,
+          projectId: itemProposal.projectId,
+          key: itemProposal.key,
+          creator: itemProposal.creator?.userId,
+          voteRecordsCount: itemProposal.voteRecords?.length ?? 0,
+        },
+      );
+
+      return itemProposal;
     }),
 });
