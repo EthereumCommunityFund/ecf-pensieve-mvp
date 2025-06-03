@@ -1,9 +1,9 @@
 import { CircularProgress, cn } from '@heroui/react';
 import { FC, memo, useCallback, useMemo } from 'react'; // Added useMemo
 
-import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext'; // Added import
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext'; // Added import
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
@@ -70,7 +70,7 @@ const SupportColumnItem: FC<IProps> = ({
   const handleAction = useCallback(() => {
     if (isUserVotedCurrentItemProposal) {
       // 不能取消 item proposal 的投票
-      console.log('can not cancel item proposal vote');
+      console.warn('can not cancel item proposal vote');
     } else {
       if (isUserVotedInProposalOrItemProposals) {
         // 在proposal中投过这个key的票，或者在item proposals中投过这个key的票
@@ -142,12 +142,12 @@ const SupportColumnItem: FC<IProps> = ({
         size="sm"
         isIconOnly
         isLoading={internalIsLoading} // Use internalIsLoading
-        disabled={internalIsLoading} // Use internalIsLoading
+        disabled={internalIsLoading || isUserVotedCurrentItemProposal} // Use internalIsLoading
         onPress={handleAction}
         className={cn(
           'px-[5px] border-none',
           isUserVotedCurrentItemProposal ? '' : 'opacity-30',
-          internalIsLoading ? 'cursor-not-allowed' : '', // Use internalIsLoading
+          isUserVotedCurrentItemProposal ? 'cursor-not-allowed' : '', // Use internalIsLoading
         )}
       >
         {isUserVotedCurrentItemProposal ? (

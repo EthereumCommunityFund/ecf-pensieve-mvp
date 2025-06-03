@@ -304,12 +304,14 @@ export function useProposalVotes(
         return;
       }
       if (isUserVotedItemOfProposal(item.key)) {
-        if (doNotShowCancelModal) {
-          await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
-        } else {
-          setIsCancelModalOpen(true);
-        }
+        console.warn('Can not cancel vote');
         return;
+        // if (doNotShowCancelModal) {
+        //   await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
+        // } else {
+        //   setIsCancelModalOpen(true);
+        // }
+        // return;
       }
 
       if (
