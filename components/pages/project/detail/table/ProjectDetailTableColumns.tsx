@@ -49,6 +49,7 @@ export interface IKeyItemDataForTable {
   isConsensusInProgress: boolean;
   // 有 proposal， 但还没有 validated leading proposal
   isPendingValidation: boolean;
+  isEmptyItem?: boolean;
 }
 
 interface IUseProjectTableColumnsProps {
