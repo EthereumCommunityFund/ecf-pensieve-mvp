@@ -120,12 +120,15 @@ export const itemProposalRouter = router({
               proposalCreatorId: itemProposal.creator,
             }),
 
-            logUserActivity.itemProposal.create({
-              userId: ctx.user.id,
-              targetId: itemProposal.id,
-              projectId: itemProposal.projectId,
-              items: [{ field: input.key }],
-            }),
+            logUserActivity.itemProposal.create(
+              {
+                userId: ctx.user.id,
+                targetId: itemProposal.id,
+                projectId: itemProposal.projectId,
+                items: [{ field: input.key }],
+              },
+              tx,
+            ),
           ]);
         } else {
           await handleVoteRecord(tx, {
@@ -137,12 +140,15 @@ export const itemProposalRouter = router({
             existingVoteRecord: voteRecord,
             proposalCreatorId: itemProposal.creator,
           });
-          logUserActivity.itemProposal.update({
-            userId: ctx.user.id,
-            targetId: itemProposal.id,
-            projectId: itemProposal.projectId,
-            items: [{ field: input.key }],
-          });
+          logUserActivity.itemProposal.update(
+            {
+              userId: ctx.user.id,
+              targetId: itemProposal.id,
+              projectId: itemProposal.projectId,
+              items: [{ field: input.key }],
+            },
+            tx,
+          );
         }
 
         return itemProposal;

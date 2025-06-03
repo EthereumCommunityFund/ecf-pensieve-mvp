@@ -58,13 +58,16 @@ export const handleVoteRecord = async (
       })
       .returning();
 
-    logUserActivity.vote.create({
-      userId,
-      targetId: vote.id,
-      projectId,
-      items: [{ field: key }],
-      proposalCreatorId,
-    });
+    logUserActivity.vote.create(
+      {
+        userId,
+        targetId: vote.id,
+        projectId,
+        items: [{ field: key }],
+        proposalCreatorId,
+      },
+      tx,
+    );
 
     return vote;
   } else {
@@ -76,13 +79,16 @@ export const handleVoteRecord = async (
       })
       .where(eq(voteRecords.id, existingVoteRecord.id));
 
-    logUserActivity.vote.update({
-      userId,
-      targetId: existingVoteRecord.id,
-      projectId,
-      items: [{ field: key }],
-      proposalCreatorId,
-    });
+    logUserActivity.vote.update(
+      {
+        userId,
+        targetId: existingVoteRecord.id,
+        projectId,
+        items: [{ field: key }],
+        proposalCreatorId,
+      },
+      tx,
+    );
 
     return existingVoteRecord;
   }
