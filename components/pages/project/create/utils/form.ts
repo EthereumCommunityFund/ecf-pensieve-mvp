@@ -149,8 +149,8 @@ export const transformProjectData = (
     ),
     publicGoods: formData.publicGoods === 'Yes',
     founders: formData.founders.map((founder) => ({
-      name: founder.fullName,
-      title: founder.titleRole,
+      name: founder.name,
+      title: founder.title,
     })),
     refs:
       references.length > 0
@@ -324,8 +324,8 @@ export const transformProposalData = (
         formData.founders?.length > 0
           ? JSON.stringify(
               formData.founders.map((founder) => ({
-                name: founder.fullName,
-                title: founder.titleRole,
+                name: founder.name,
+                title: founder.title,
               })),
             )
           : '',
@@ -368,8 +368,8 @@ export const convertProjectToFormData = (
     orgStructure: project.orgStructure,
     publicGoods: project.publicGoods ? 'Yes' : 'No',
     founders: project.founders.map((founder: any) => ({
-      fullName: founder.name,
-      titleRole: founder.title,
+      name: founder.name,
+      title: founder.title,
     })),
   };
 };

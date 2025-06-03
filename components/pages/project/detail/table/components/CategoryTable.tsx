@@ -98,7 +98,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
           {colGroupDefinition}
           {tableHeaders}
           <tbody>
-            {Array.from({ length: 3 }).map((_, rowIndex) => (
+            {Array.from({ length: 10 }).map((_, rowIndex) => (
               <TableRowSkeleton
                 key={`skeleton-row-${rowIndex}`}
                 isLastRow={rowIndex === 2}

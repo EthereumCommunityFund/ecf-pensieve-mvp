@@ -11,7 +11,6 @@ import PendingProjectCard, {
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
-import { isScanPendingProject } from '@/constants/env';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -37,10 +36,10 @@ const PendingProjectsPage = () => {
     );
 
   // only scan pending project in dev env
-  const { data: scanPendingProjectData } =
-    trpc.project.scanPendingProject.useQuery(undefined, {
-      enabled: !!isScanPendingProject,
-    });
+  // const { data: scanPendingProjectData } =
+  //   trpc.project.scanPendingProject.useQuery(undefined, {
+  //     enabled: !!isScanPendingProject,
+  //   });
 
   const handleLoadMore = () => {
     if (!isFetchingNextPage) {
@@ -103,11 +102,11 @@ const PendingProjectsPage = () => {
           {/* Project list */}
           <div className="pb-2.5">
             {isLoading ? (
-              <div>
-                <PendingProjectCardSkeleton />
-                <PendingProjectCardSkeleton />
-                <PendingProjectCardSkeleton />
-              </div>
+              <>
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <PendingProjectCardSkeleton key={index} />
+                ))}
+              </>
             ) : allProjects.length > 0 ? (
               <>
                 {allProjects.map((project) => (

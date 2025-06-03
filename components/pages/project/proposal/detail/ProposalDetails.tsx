@@ -53,8 +53,8 @@ const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.BasicProfile]: false,
   [IItemSubCategoryEnum.Development]: false,
   [IItemSubCategoryEnum.Finances]: false,
-  [IItemSubCategoryEnum.Token]: true,
-  [IItemSubCategoryEnum.Governance]: true,
+  [IItemSubCategoryEnum.Token]: false,
+  [IItemSubCategoryEnum.Governance]: false,
 };
 
 const ProposalDetails = ({

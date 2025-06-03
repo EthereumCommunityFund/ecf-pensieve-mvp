@@ -144,7 +144,10 @@ const ProposalPage = () => {
               <UserWeightCard weight={Number(profile.weight)} />
             </div>
           )}
-          <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
+          <SubmitProposalCard
+            onSubmitProposal={onSubmitProposal}
+            showFullOnTablet={true}
+          />
         </div>
       </div>
     </div>

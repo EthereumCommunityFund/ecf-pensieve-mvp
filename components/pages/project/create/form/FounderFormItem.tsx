@@ -41,9 +41,9 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
         label="Full Name"
         labelPlacement="outside"
         placeholder="Type a name"
-        {...register(`${foundersKey}.${index}.fullName`)}
-        isInvalid={!!errors?.fullName}
-        errorMessage={errors?.fullName?.message}
+        {...register(`${foundersKey}.${index}.name`)}
+        isInvalid={!!errors?.name}
+        errorMessage={errors?.name?.message}
         classNames={{
           label: 'text-[14px] font-[600] text-black leading-[20px]',
         }}
@@ -53,9 +53,9 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
         label="Title / Role"
         labelPlacement="outside"
         placeholder="Type their role or title"
-        {...register(`${foundersKey}.${index}.titleRole`)}
-        isInvalid={!!errors?.titleRole}
-        errorMessage={errors?.titleRole?.message}
+        {...register(`${foundersKey}.${index}.title`)}
+        isInvalid={!!errors?.title}
+        errorMessage={errors?.title?.message}
         classNames={{
           label: 'text-[14px] font-[600] text-black leading-[20px]',
         }}

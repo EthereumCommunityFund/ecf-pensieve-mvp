@@ -4,7 +4,6 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IProject } from '@/types';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
-import { devLog } from '@/utils/devLog';
 
 import { IKeyItemDataForTable } from './ProjectDetailTableColumns';
 
@@ -115,6 +114,5 @@ export const prepareProjectTableData = ({
     });
   });
 
-  devLog('prepareProjectTableData', result);
   return result;
 };

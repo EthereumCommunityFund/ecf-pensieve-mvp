@@ -256,7 +256,7 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [isPageExpanded, isProposalCreator, showMetrics]);
+  }, [isPageExpanded, isProposalCreator, showMetrics, columnHelper]);
 
   return columns;
 };

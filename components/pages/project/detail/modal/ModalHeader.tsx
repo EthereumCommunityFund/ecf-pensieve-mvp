@@ -1,8 +1,10 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useCallback, useMemo } from 'react';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button } from '@/components/base/button';
+import { addToast } from '@/components/base/toast';
 import {
   CaretDownIcon,
   CaretUpIcon,
@@ -24,6 +26,20 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   onShare,
   breadcrumbs = { section: 'Section', item: 'Itemname' },
 }) => {
+  const copyLink = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+    return window.location.href;
+  }, []);
+
+  const onCopySuccess = useCallback(() => {
+    addToast({
+      title: 'Copy share link to clipboard',
+      color: 'success',
+    });
+  }, []);
+
   return (
     <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] p-5">
       {/* Left side - Breadcrumbs and voting icons */}
@@ -52,13 +68,15 @@ const ModalHeader: FC<ModalHeaderProps> = ({
         </div>
 
         {/* Share button */}
-        <Button
-          isIconOnly
-          className="size-5 min-w-0 border-none bg-transparent p-0 opacity-30"
-          onPress={onShare}
-        >
-          <ShareIcon size={20} />
-        </Button>
+        <CopyToClipboard text={copyLink} onCopy={onCopySuccess}>
+          <Button
+            isIconOnly
+            className="size-[24px] min-w-0 border-none bg-transparent p-[2px] opacity-30"
+            onPress={onShare}
+          >
+            <ShareIcon size={20} />
+          </Button>
+        </CopyToClipboard>
       </div>
 
       {/* Right side - Close button */}

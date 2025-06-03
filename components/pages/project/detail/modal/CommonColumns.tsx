@@ -130,9 +130,13 @@ export const useCommonColumnsOfModal = () => {
           proposalsByProjectIdAndKey,
           project,
           profile,
-          inActionKeyMap,
-          inActionItemProposalIdMap,
+          // inActionKeyMap, // No longer taken from meta
+          // inActionItemProposalIdMap, // No longer taken from meta
         } = info.table.options.meta as ITableMetaOfSubmissionQueue;
+
+        // Get the latest status directly from context
+        // const { inActionItemProposalIdMap, inActionKeyMap } = useProjectDetailContext(); // No longer needed here
+        // SupportColumnItem will get inActionItemProposalIdMap from context directly
 
         const itemKey = info.row.original.key as IPocItemKey;
         const itemProposalId = info.row.original.proposalId;
@@ -175,15 +179,8 @@ export const useCommonColumnsOfModal = () => {
         const showQuorum =
           !AllItemConfig[itemKey]?.isEssential && !leadingProposal;
 
-        // Implement precise isLoading logic
-        // 使用 inActionItemProposalIdMap 来精确判断当前 item proposal 是否正在执行操作
-        // 同时也检查 key 级别的操作状态作为 fallback
-        const isLoading = !!(
-          inActionItemProposalIdMap &&
-          inActionItemProposalIdMap[itemProposalId] &&
-          inActionKeyMap &&
-          inActionKeyMap[itemKey]
-        );
+        // isLoading is no longer calculated or passed from here.
+        // console.log('[CommonColumns] Calculated isLoading for proposalId', itemProposalId, ':', isLoading, 'from map:', JSON.stringify(inActionItemProposalIdMap));
 
         // Implement isUserVoted logic
         // 基于用户是否在当前 item proposal 中投票
@@ -211,7 +208,7 @@ export const useCommonColumnsOfModal = () => {
             votedMemberCount={support.voters}
             isReachQuorum={isReachQuorum}
             isUserVoted={isUserVoted}
-            isLoading={isLoading}
+            // isLoading={!!isLoading} // No longer passed as prop
             isProposalCreator={isProposalCreator}
             onCreateItemProposalVote={onCreateItemProposalVote}
             onSwitchItemProposalVote={onSwitchItemProposalVote}

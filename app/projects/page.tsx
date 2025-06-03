@@ -1,8 +1,8 @@
 'use client';
 
 import { Image } from '@heroui/react';
-import Link from 'next/link';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -16,7 +16,8 @@ import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 const ProjectsPage = () => {
-  const { profile } = useAuth();
+  const { profile, showAuthPrompt } = useAuth();
+  const router = useRouter();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     trpc.project.getProjects.useInfiniteQuery(
@@ -35,9 +36,13 @@ const ProjectsPage = () => {
     }
   };
 
-  const handleProposeProject = () => {
-    console.log('Propose a Project');
-  };
+  const handleProposeProject = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push('/project/create');
+  }, [profile, showAuthPrompt, router]);
 
   const allProjects = useMemo(() => {
     return data?.pages.flatMap((page) => page.items) || [];
@@ -63,13 +68,9 @@ const ProjectsPage = () => {
           <ECFTypography type={'subtitle2'} className="mt-2.5">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          {profile && (
-            <Link href="/project/create">
-              <ECFButton onPress={handleProposeProject} className="mt-2.5">
-                Propose a Project
-              </ECFButton>
-            </Link>
-          )}
+          <ECFButton onPress={handleProposeProject} className="mt-2.5">
+            Propose a Project
+          </ECFButton>
         </div>
       </div>
 
@@ -90,11 +91,11 @@ const ProjectsPage = () => {
           {/* Project list */}
           <div className="pb-2.5">
             {isLoading ? (
-              <div>
-                <ProjectCardSkeleton />
-                <ProjectCardSkeleton />
-                <ProjectCardSkeleton />
-              </div>
+              <>
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <ProjectCardSkeleton key={index} />
+                ))}
+              </>
             ) : allProjects.length > 0 ? (
               <>
                 {allProjects.map((project) => (

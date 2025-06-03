@@ -84,7 +84,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
           {colGroupDefinition}
           {tableHeaders}
           <tbody>
-            {Array.from({ length: 8 }).map((_, rowIndex) => (
+            {Array.from({ length: 10 }).map((_, rowIndex) => (
               <tr key={`skeleton-row-${rowIndex}`}>
                 {table.getAllColumns().map((column, cellIndex) => (
                   <td

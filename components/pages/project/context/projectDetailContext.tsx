@@ -57,6 +57,9 @@ interface ProjectDetailContextType {
   isProposalsByKeyFetched: boolean;
   isProposalHistoryLoading: boolean;
   isProposalHistoryFetched: boolean;
+  refetchAll: () => Promise<void>;
+  refetchProject: () => void;
+  refetchLeadingProposals: () => void;
   refetchProposalsByKey: () => void;
   refetchProposalHistory: () => void;
   inActionKeyMap: Partial<Record<IPocItemKey, boolean>>;
@@ -113,6 +116,9 @@ export const ProjectDetailContext = createContext<ProjectDetailContextType>({
   isProposalsByKeyFetched: false,
   isProposalHistoryLoading: true,
   isProposalHistoryFetched: false,
+  refetchAll: () => Promise.resolve(),
+  refetchProject: () => {},
+  refetchLeadingProposals: () => {},
   refetchProposalsByKey: () => {},
   refetchProposalHistory: () => {},
   inActionKeyMap: {},
@@ -436,12 +442,13 @@ export const ProjectDetailProvider = ({
     trpc.vote.switchItemProposalVote.useMutation();
   const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
-  const setKeyActive = (key: IPocItemKey, active: boolean) => {
-    setInActionKeyMap((pre) => ({
-      ...pre,
-      [key]: active,
-    }));
-  };
+  const refetchAll = useCallback(async () => {
+    await Promise.all([
+      refetchProject(),
+      refetchLeadingProposals(),
+      refetchProposalsByKey(),
+    ]);
+  }, [refetchProject, refetchLeadingProposals, refetchProposalsByKey]);
 
   const setItemProposalActive = (
     key: IPocItemKey,
@@ -466,11 +473,7 @@ export const ProjectDetailProvider = ({
         {
           onSuccess: async () => {
             devLog('onCreateItemProposalVote success', key, itemProposalId);
-            await Promise.all([
-              refetchProject(),
-              refetchLeadingProposals(),
-              refetchProposalsByKey(),
-            ]);
+            await refetchAll();
             setItemProposalActive(key, itemProposalId, false);
           },
           onError: (error) => {
@@ -480,12 +483,7 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [
-      createItemProposalVoteMutation,
-      refetchProposalsByKey,
-      refetchProject,
-      refetchLeadingProposals,
-    ],
+    [createItemProposalVoteMutation, refetchAll],
   );
 
   const onSwitchItemProposalVote = useCallback(
@@ -495,11 +493,7 @@ export const ProjectDetailProvider = ({
         { itemProposalId, key },
         {
           onSuccess: async () => {
-            await Promise.all([
-              refetchProject(),
-              refetchProposalsByKey(),
-              refetchLeadingProposals(),
-            ]);
+            await refetchAll();
             setItemProposalActive(key, itemProposalId, false);
           },
           onError: (error) => {
@@ -509,12 +503,7 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [
-      switchItemProposalVoteMutation,
-      refetchProposalsByKey,
-      refetchProject,
-      refetchLeadingProposals,
-    ],
+    [switchItemProposalVoteMutation, refetchAll],
   );
 
   const onCancelVote = useCallback(
@@ -589,13 +578,16 @@ export const ProjectDetailProvider = ({
     isProposalsByKeyFetched,
     isProposalHistoryLoading,
     isProposalHistoryFetched,
-    refetchProposalsByKey,
-    refetchProposalHistory,
     inActionKeyMap,
     inActionItemProposalIdMap,
     onCreateItemProposalVote,
     onSwitchItemProposalVote,
     onCancelVote,
+    refetchAll,
+    refetchProject,
+    refetchLeadingProposals,
+    refetchProposalsByKey,
+    refetchProposalHistory,
 
     // utils
     openReferenceModal,

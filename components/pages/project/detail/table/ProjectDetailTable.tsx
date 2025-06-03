@@ -183,7 +183,6 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       financesTable,
       tokenTable,
       governanceTable,
-      metricsVisible, // 添加 metricsVisible 依赖
     ],
   );
 
