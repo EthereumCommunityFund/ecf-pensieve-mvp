@@ -4,6 +4,7 @@ import { cn, Image, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
 import Link from 'next/link';
 
+import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
 import { useAuth } from '@/context/AuthContext';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
@@ -30,7 +31,6 @@ export function ProjectCardSkeleton() {
         <div className="flex flex-col items-center justify-center gap-[4px] text-center">
           <Skeleton className="mx-auto size-[40px] rounded-lg" />
           <Skeleton className="h-[13px] w-[30px] rounded-[4px]" />
-          <Skeleton className="h-[11px] w-[20px] rounded-[4px]" />
         </div>
       </div>
     </div>
@@ -126,12 +126,11 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
           </div>
         </div>
 
+        {/* TODO： Like logic */}
         <div className="flex-col items-center justify-center gap-[4px] text-center">
-          <div
-            className={cn(
-              'mx-auto flex items-center justify-center w-[40px] h-[40px] rounded-lg',
-              'bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.1)]',
-            )}
+          <Button
+            isIconOnly
+            className={cn('rounded-[8px] size-[40px] bg-black/5')}
           >
             <Image
               src="/images/common/CaretUpDark.png"
@@ -140,17 +139,10 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
               width={24}
               height={24}
             />
-          </div>
-          {/* TODO： need confirm the number */}
+          </Button>
+
           <p className="font-saria text-[13px] font-semibold leading-[20px] text-black opacity-60">
-            {formatNumber(
-              leadingProposalResult?.totalSupportedUserWeightOfProposal || 0,
-            )}
-          </p>
-          <p className="font-saria text-[11px] font-semibold leading-[17px] text-[rgba(0,0,0,0.7)] opacity-60">
-            {formatNumber(
-              leadingProposalResult?.totalValidQuorumOfProposal || 0,
-            )}
+            {formatNumber(Math.round(Math.random() * 100000))}
           </p>
         </div>
       </Link>
