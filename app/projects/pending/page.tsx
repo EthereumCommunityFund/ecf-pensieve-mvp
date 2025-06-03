@@ -102,11 +102,11 @@ const PendingProjectsPage = () => {
           {/* Project list */}
           <div className="pb-2.5">
             {isLoading ? (
-              <div>
-                <PendingProjectCardSkeleton />
-                <PendingProjectCardSkeleton />
-                <PendingProjectCardSkeleton />
-              </div>
+              <>
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <PendingProjectCardSkeleton key={index} />
+                ))}
+              </>
             ) : allProjects.length > 0 ? (
               <>
                 {allProjects.map((project) => (

@@ -14,23 +14,25 @@ import ProposalVoteUtils from '@/utils/proposal';
 export function ProjectCardSkeleton() {
   return (
     <div className="py-[10px]">
-      <div className="flex items-center justify-start gap-[20px] rounded-[10px] p-[10px]">
+      <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5">
         <div className="flex flex-1 items-start gap-[14px]">
-          <Skeleton className="mobile:size-[60px] size-[100px] rounded-[10px]" />
-          <div className="mobile:max-w-full max-w-[440px] flex-1">
+          <Skeleton className="mobile:hidden size-[100px] rounded-[10px]" />
+          <Skeleton className="mobile:block hidden size-[60px] rounded-[5px]" />
+          <div className="mobile:max-w-full flex-1">
             <Skeleton className="h-[18px] w-[200px] rounded-[4px]" />
             <Skeleton className="mt-[6px] h-[18px] w-full rounded-[4px]" />
-            <Skeleton className="mt-[6px] h-[18px] w-[120px] rounded-[4px]" />
+            <Skeleton className="mt-[6px] h-[18px] w-[180px] rounded-[4px]" />
             <div className="mt-[10px] flex flex-wrap gap-[8px]">
               <Skeleton className="h-[22px] w-[60px] rounded-[6px]" />
-              <Skeleton className="h-[22px] w-[60px] rounded-[6px]" />
+              <Skeleton className="h-[22px] w-[80px] rounded-[6px]" />
+              <Skeleton className="h-[22px] w-[50px] rounded-[6px]" />
             </div>
           </div>
         </div>
 
         <div className="flex flex-col items-center justify-center gap-[4px] text-center">
-          <Skeleton className="mx-auto size-[40px] rounded-lg" />
-          <Skeleton className="h-[13px] w-[30px] rounded-[4px]" />
+          <Skeleton className="size-[40px] rounded-[8px]" />
+          <Skeleton className="h-[20px] w-[40px] rounded-[4px]" />
         </div>
       </div>
     </div>
@@ -89,7 +91,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
             />
           </div>
 
-          <div className="mobile:max-w-full max-w-[440px] flex-1">
+          <div className="mobile:max-w-full flex-1">
             <ECFTypography
               type={'body1'}
               className="font-semibold leading-[18px]"
