@@ -257,7 +257,14 @@ export const ProjectDetailProvider = ({
 
     leadingItemProposalsByProject.forEach((proposal) => {
       const { projectId, itemProposal, isNotLeading } = proposal;
-      const { key, createdAt, value, ref, creator, id, reason } = itemProposal!;
+
+      // 检查 itemProposal 是否存在，如果不存在则跳过
+      if (!itemProposal) {
+        console.warn('itemProposal is null for proposal:', proposal);
+        return;
+      }
+
+      const { key, createdAt, value, ref, creator, id, reason } = itemProposal;
 
       // 计算状态字段
       const hasProposal = (project?.hasProposalKeys || []).includes(
@@ -296,13 +303,14 @@ export const ProjectDetailProvider = ({
     const { leadingProposal } = proposalsByProjectIdAndKey;
     // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
     if (leadingProposal && leadingProposal.itemProposal) {
+      const itemProposal = leadingProposal.itemProposal;
       const { key, value, ref, creator, createdAt, projectId, id, reason } =
-        leadingProposal.itemProposal;
-      const weight = leadingProposal.itemProposal.voteRecords.reduce(
+        itemProposal;
+      const weight = itemProposal.voteRecords.reduce(
         (acc, vote) => acc + Number(vote.weight),
         0,
       );
-      const voterMemberCount = leadingProposal.itemProposal.voteRecords.length;
+      const voterMemberCount = itemProposal.voteRecords.length;
 
       // 计算状态字段
       const hasProposal = (project?.hasProposalKeys || []).includes(

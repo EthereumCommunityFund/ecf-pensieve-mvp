@@ -1,3 +1,5 @@
+import { performance } from 'perf_hooks';
+
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -19,6 +21,7 @@ import {
 } from '@/lib/services/notification';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
+import { dbLog, devLog, memLog, perfLog } from '@/utils/devLog';
 
 import { proposalRouter } from './proposal';
 
@@ -70,7 +73,13 @@ export const projectRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const totalStartTime = performance.now();
+      const initialMemory = memLog('createProject - Start');
+      devLog('createProject', 'Starting project creation');
+
       return await ctx.db.transaction(async (tx) => {
+        // 1. 处理输入数据
+        const dataProcessStartTime = performance.now();
         const proposalItems = Object.entries(input)
           .filter(([key]) => key !== 'refs')
           .map(([key, value]) => {
@@ -78,7 +87,15 @@ export const projectRouter = router({
           });
 
         const hasProposalKeys = proposalItems.map((item) => item.key);
+        perfLog(
+          '1. Process input data',
+          performance.now() - dataProcessStartTime,
+          { itemCount: proposalItems.length },
+        );
 
+        // 2. 插入项目记录
+        devLog('createProject', 'Inserting project record');
+        const insertStartTime = performance.now();
         const [project] = await tx
           .insert(projects)
           .values({
@@ -87,6 +104,12 @@ export const projectRouter = router({
             hasProposalKeys,
           })
           .returning();
+        dbLog('INSERT', 'projects', performance.now() - insertStartTime, 1);
+        perfLog(
+          '2. Insert project record',
+          performance.now() - insertStartTime,
+          { projectId: project?.id },
+        );
 
         if (!project) {
           throw new TRPCError({
@@ -96,23 +119,51 @@ export const projectRouter = router({
         }
 
         try {
+          // 3. 创建proposal调用者
+          devLog('createProject', 'Creating proposal caller');
+          const callerStartTime = performance.now();
           const caller = proposalRouter.createCaller({
             ...ctx,
             db: tx as any,
           });
+          perfLog(
+            '3. Create proposal caller',
+            performance.now() - callerStartTime,
+          );
 
+          // 4. 更新用户权重
+          devLog('createProject', 'Updating user weight');
+          const weightStartTime = performance.now();
           await updateUserWeight(
             ctx.user.id,
             ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
             tx,
           );
+          perfLog(
+            '4. Update user weight',
+            performance.now() - weightStartTime,
+            {
+              userId: ctx.user.id,
+              reward: ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT,
+            },
+          );
 
+          // 5. 创建提案
+          devLog('createProject', 'Creating proposal');
+          const proposalStartTime = performance.now();
           const proposal = await caller.createProposal({
             projectId: project.id,
             items: proposalItems,
             ...(input.refs && { refs: input.refs }),
           });
+          perfLog('5. Create proposal', performance.now() - proposalStartTime, {
+            proposalId: proposal.id,
+            itemCount: proposalItems.length,
+          });
 
+          // 6. 添加奖励通知
+          devLog('createProject', 'Adding reward notification');
+          const notificationStartTime = performance.now();
           await addRewardNotification(
             createRewardNotification.createProposal(
               ctx.user.id,
@@ -122,9 +173,26 @@ export const projectRouter = router({
             ),
             tx,
           );
+          perfLog(
+            '6. Add reward notification',
+            performance.now() - notificationStartTime,
+          );
+
+          // 最终内存和性能统计
+          memLog('createProject - End', initialMemory);
+          perfLog(
+            'TOTAL createProject execution',
+            performance.now() - totalStartTime,
+            {
+              projectId: project.id,
+              proposalId: proposal.id,
+              itemCount: proposalItems.length,
+            },
+          );
 
           return project;
         } catch (error) {
+          devLog('createProject ERROR', error);
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message:

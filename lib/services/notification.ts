@@ -1,3 +1,7 @@
+import { performance } from 'perf_hooks';
+
+import { dbLog, perfLog } from '@/utils/devLog';
+
 import { db } from '../db';
 import { notifications } from '../db/schema';
 
@@ -20,17 +24,31 @@ export const addRewardNotification = async (
   notification: RewardNotificationData,
   tx?: any,
 ): Promise<typeof notifications.$inferSelect> => {
+  const startTime = performance.now();
+
   try {
     const currentDb = tx ?? db;
 
+    const insertStartTime = performance.now();
     const [newNotification] = await currentDb
       .insert(notifications)
       .values(notification)
       .returning();
+    dbLog('INSERT', 'notifications', performance.now() - insertStartTime, 1);
 
     if (!newNotification) {
       throw new Error('Failed to create notification');
     }
+
+    perfLog(
+      `addRewardNotification (type: ${notification.type})`,
+      performance.now() - startTime,
+      {
+        userId: notification.userId,
+        projectId: notification.projectId,
+        reward: notification.reward,
+      },
+    );
 
     return newNotification;
   } catch (error) {

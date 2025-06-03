@@ -1,9 +1,12 @@
+import { performance } from 'perf_hooks';
+
 import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { profiles, projects, proposals, voteRecords } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { dbLog, perfLog } from '@/utils/devLog';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -29,7 +32,11 @@ export const proposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const totalStartTime = performance.now();
+
       return await ctx.db.transaction(async (tx) => {
+        // 并行查询项目和用户信息
+        const queryStartTime = performance.now();
         const [project, userProfile] = await Promise.all([
           tx.query.projects.findFirst({
             where: eq(projects.id, input.projectId),
@@ -38,6 +45,12 @@ export const proposalRouter = router({
             where: eq(profiles.userId, ctx.user.id),
           }),
         ]);
+        dbLog(
+          'SELECT',
+          'projects+profiles',
+          performance.now() - queryStartTime,
+          2,
+        );
 
         if (!project) {
           throw new TRPCError({
@@ -46,6 +59,8 @@ export const proposalRouter = router({
           });
         }
 
+        // 插入提案
+        const insertStartTime = performance.now();
         const [proposal] = await tx
           .insert(proposals)
           .values({
@@ -55,6 +70,7 @@ export const proposalRouter = router({
             creator: ctx.user.id,
           })
           .returning();
+        dbLog('INSERT', 'proposals', performance.now() - insertStartTime, 1);
 
         if (!proposal) {
           throw new TRPCError({
@@ -63,7 +79,10 @@ export const proposalRouter = router({
           });
         }
 
+        // 处理投票记录
+        const voteStartTime = performance.now();
         const votePromises = input.items.map(async (item) => {
+          const voteQueryStartTime = performance.now();
           const otherVote = await tx.query.voteRecords.findFirst({
             where: and(
               eq(voteRecords.creator, ctx.user.id),
@@ -71,9 +90,16 @@ export const proposalRouter = router({
               eq(voteRecords.projectId, input.projectId),
             ),
           });
+          dbLog(
+            'SELECT',
+            'voteRecords',
+            performance.now() - voteQueryStartTime,
+            1,
+          );
 
           let vote;
           if (otherVote) {
+            const updateStartTime = performance.now();
             [vote] = await tx
               .update(voteRecords)
               .set({
@@ -82,6 +108,12 @@ export const proposalRouter = router({
               })
               .where(eq(voteRecords.id, otherVote.id))
               .returning();
+            dbLog(
+              'UPDATE',
+              'voteRecords',
+              performance.now() - updateStartTime,
+              1,
+            );
 
             logUserActivity.vote.update(
               {
@@ -94,6 +126,7 @@ export const proposalRouter = router({
               tx,
             );
           } else {
+            const insertVoteStartTime = performance.now();
             [vote] = await tx
               .insert(voteRecords)
               .values({
@@ -104,6 +137,12 @@ export const proposalRouter = router({
                 projectId: input.projectId,
               })
               .returning();
+            dbLog(
+              'INSERT',
+              'voteRecords',
+              performance.now() - insertVoteStartTime,
+              1,
+            );
 
             logUserActivity.vote.create(
               {
@@ -121,7 +160,12 @@ export const proposalRouter = router({
         });
 
         await Promise.all(votePromises);
+        perfLog('Process vote records', performance.now() - voteStartTime, {
+          itemCount: input.items.length,
+        });
 
+        // 记录用户活动
+        const activityStartTime = performance.now();
         logUserActivity.proposal.create(
           {
             userId: ctx.user.id,
@@ -133,6 +177,13 @@ export const proposalRouter = router({
             })),
           },
           tx,
+        );
+        perfLog('Log user activity', performance.now() - activityStartTime);
+
+        perfLog(
+          'TOTAL createProposal execution',
+          performance.now() - totalStartTime,
+          { projectId: input.projectId, itemCount: input.items.length },
         );
 
         return proposal;
