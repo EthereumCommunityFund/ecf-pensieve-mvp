@@ -36,210 +36,258 @@ export const voteRouter = router({
       const startMem = memLog('createVote - Start');
 
       return await ctx.db.transaction(async (tx) => {
-        // 1. 并行获取提案、用户资料和现有投票记录
-        const parallelQueryStartTime = performance.now();
-        const [proposalWithProject, userProfile, existingVote] =
-          await Promise.all([
-            tx.query.proposals.findFirst({
-              where: eq(proposals.id, proposalId),
-              with: {
-                project: true,
-              },
-            }),
-            tx.query.profiles.findFirst({
-              where: eq(profiles.userId, ctx.user.id),
-            }),
-            tx.query.voteRecords.findFirst({
-              where: and(
-                eq(voteRecords.creator, ctx.user.id),
-                eq(voteRecords.key, key),
-                eq(voteRecords.proposalId, proposalId),
-              ),
-            }),
-          ]);
-        dbLog(
-          'SELECT',
-          'proposals + profiles + voteRecords',
-          performance.now() - parallelQueryStartTime,
-          (proposalWithProject ? 1 : 0) +
-            (userProfile ? 1 : 0) +
-            (existingVote ? 1 : 0),
-        );
-        perfLog(
-          '1. Get proposal, user profile and existing vote',
-          performance.now() - parallelQueryStartTime,
-          {
-            proposalId,
-            userId: ctx.user.id,
-            key,
-            creator: ctx.user.id,
-            queryParams: { proposalId, userId: ctx.user.id, key },
-            existingVoteCondition: { creator: ctx.user.id, key, proposalId },
-            hasExistingVote: !!existingVote,
-            foundProposal: !!proposalWithProject,
-            foundUserProfile: !!userProfile,
-          },
-        );
-
-        // 2. 验证提案和项目存在性
-        const validationStartTime = performance.now();
-        if (!proposalWithProject) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Proposal not found',
-          });
-        }
-
-        if (!proposalWithProject.project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Associated project not found',
-          });
-        }
-
-        const projectId = proposalWithProject.projectId;
-
-        if (proposalWithProject.project.isPublished) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot vote on proposals for published projects',
-          });
-        }
-
-        if (existingVote) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'You have already voted for this key in this proposal',
-          });
-        }
-        perfLog(
-          '2. Validate proposal and project',
-          performance.now() - validationStartTime,
-          { projectId, isPublished: proposalWithProject.project.isPublished },
-        );
-
-        // 3. 检查是否在同项目其他提案中已投票
-        const otherVoteCheckStartTime = performance.now();
-        const otherVote = await tx.query.voteRecords.findFirst({
-          where: and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.key, key),
-            eq(voteRecords.projectId, projectId),
-            ne(voteRecords.proposalId, proposalId),
-          ),
-        });
-        dbLog(
-          'SELECT',
-          'voteRecords (other vote check)',
-          performance.now() - otherVoteCheckStartTime,
-          otherVote ? 1 : 0,
-        );
-        perfLog(
-          '3. Check other votes in project',
-          performance.now() - otherVoteCheckStartTime,
-          {
-            projectId,
-            key,
-            creator: ctx.user.id,
-            excludeProposalId: proposalId,
-            otherVoteCondition: {
-              creator: ctx.user.id,
-              key,
-              projectId,
-              excludeProposalId: proposalId,
-            },
-            hasOtherVote: !!otherVote,
-            otherVoteId: otherVote?.id,
-            otherVoteProposalId: otherVote?.proposalId,
-          },
-        );
-
-        if (otherVote) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message:
-              'You have already voted for the same key in another proposal of this project',
-          });
-        }
-
-        // 4. 创建投票记录
-        const insertVoteStartTime = performance.now();
-        const voteData = {
-          key,
+        const transactionStartTime = performance.now();
+        perfLog('Transaction started', 0, {
+          method: 'createVote',
           proposalId,
-          creator: ctx.user.id,
-          weight: userProfile?.weight ?? 0,
-          projectId,
-        };
-        const [vote] = await tx
-          .insert(voteRecords)
-          .values(voteData)
-          .returning();
-        dbLog(
-          'INSERT',
-          'voteRecords',
-          performance.now() - insertVoteStartTime,
-          1,
-        );
-        perfLog(
-          '4. Insert vote record',
-          performance.now() - insertVoteStartTime,
-          {
-            voteId: vote.id,
-            insertData: voteData,
-            weight: userProfile?.weight ?? 0,
-            userProfileWeight: userProfile?.weight,
-            finalWeight: voteData.weight,
-          },
-        );
-
-        // 5. 记录用户活动
-        const activityStartTime = performance.now();
-        const activityData = {
+          key,
           userId: ctx.user.id,
-          targetId: vote.id,
-          projectId,
-          items: [{ field: key }],
-          proposalCreatorId: proposalWithProject.creator,
-        };
-        await logUserActivity.vote.create(activityData, tx);
-        dbLog('INSERT', 'activities', performance.now() - activityStartTime, 1);
-        perfLog('5. Log vote activity', performance.now() - activityStartTime, {
-          voteId: vote.id,
-          activityData,
-          userId: ctx.user.id,
-          targetId: vote.id,
-          proposalCreatorId: proposalWithProject.creator,
         });
 
-        // 6. 记录总执行时间和内存使用
-        memLog('createVote - End', startMem);
-        perfLog(
-          'TOTAL createVote execution',
-          performance.now() - totalStartTime,
-          {
-            voteId: vote.id,
-            proposalId,
-            projectId,
-            key,
-            creator: ctx.user.id,
-            userId: ctx.user.id,
-            weight: userProfile?.weight ?? 0,
-            userProfileWeight: userProfile?.weight,
-            proposalCreatorId: proposalWithProject.creator,
-            isPublished: proposalWithProject.project.isPublished,
-            finalVoteData: {
-              id: vote.id,
-              key: vote.key,
-              proposalId: vote.proposalId,
-              creator: vote.creator,
-              weight: vote.weight,
-              projectId: vote.projectId,
+        try {
+          // 1. 并行获取提案、用户资料和现有投票记录
+          const parallelQueryStartTime = performance.now();
+          const [proposalWithProject, userProfile, existingVote] =
+            await Promise.all([
+              tx.query.proposals.findFirst({
+                where: eq(proposals.id, proposalId),
+                with: {
+                  project: true,
+                },
+              }),
+              tx.query.profiles.findFirst({
+                where: eq(profiles.userId, ctx.user.id),
+              }),
+              tx.query.voteRecords.findFirst({
+                where: and(
+                  eq(voteRecords.creator, ctx.user.id),
+                  eq(voteRecords.key, key),
+                  eq(voteRecords.proposalId, proposalId),
+                ),
+              }),
+            ]);
+          dbLog(
+            'SELECT',
+            'proposals + profiles + voteRecords',
+            performance.now() - parallelQueryStartTime,
+            (proposalWithProject ? 1 : 0) +
+              (userProfile ? 1 : 0) +
+              (existingVote ? 1 : 0),
+          );
+          perfLog(
+            '1. Get proposal, user profile and existing vote',
+            performance.now() - parallelQueryStartTime,
+            {
+              proposalId,
+              userId: ctx.user.id,
+              key,
+              creator: ctx.user.id,
+              queryParams: { proposalId, userId: ctx.user.id, key },
+              existingVoteCondition: { creator: ctx.user.id, key, proposalId },
+              hasExistingVote: !!existingVote,
+              foundProposal: !!proposalWithProject,
+              foundUserProfile: !!userProfile,
             },
-          },
-        );
+          );
 
-        return vote;
+          // 2. 验证提案和项目存在性
+          const validationStartTime = performance.now();
+          if (!proposalWithProject) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Proposal not found',
+            });
+          }
+
+          if (!proposalWithProject.project) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Associated project not found',
+            });
+          }
+
+          const projectId = proposalWithProject.projectId;
+
+          if (proposalWithProject.project.isPublished) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Cannot vote on proposals for published projects',
+            });
+          }
+
+          if (existingVote) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'You have already voted for this key in this proposal',
+            });
+          }
+          perfLog(
+            '2. Validate proposal and project',
+            performance.now() - validationStartTime,
+            { projectId, isPublished: proposalWithProject.project.isPublished },
+          );
+
+          // 3. 检查是否在同项目其他提案中已投票
+          const otherVoteCheckStartTime = performance.now();
+          const otherVote = await tx.query.voteRecords.findFirst({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.key, key),
+              eq(voteRecords.projectId, projectId),
+              ne(voteRecords.proposalId, proposalId),
+            ),
+          });
+          dbLog(
+            'SELECT',
+            'voteRecords (other vote check)',
+            performance.now() - otherVoteCheckStartTime,
+            otherVote ? 1 : 0,
+          );
+          perfLog(
+            '3. Check other votes in project',
+            performance.now() - otherVoteCheckStartTime,
+            {
+              projectId,
+              key,
+              creator: ctx.user.id,
+              excludeProposalId: proposalId,
+              otherVoteCondition: {
+                creator: ctx.user.id,
+                key,
+                projectId,
+                excludeProposalId: proposalId,
+              },
+              hasOtherVote: !!otherVote,
+              otherVoteId: otherVote?.id,
+              otherVoteProposalId: otherVote?.proposalId,
+            },
+          );
+
+          if (otherVote) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message:
+                'You have already voted for the same key in another proposal of this project',
+            });
+          }
+
+          // 4. 创建投票记录
+          const insertVoteStartTime = performance.now();
+          const voteData = {
+            key,
+            proposalId,
+            creator: ctx.user.id,
+            weight: userProfile?.weight ?? 0,
+            projectId,
+          };
+          const [vote] = await tx
+            .insert(voteRecords)
+            .values(voteData)
+            .returning();
+          dbLog(
+            'INSERT',
+            'voteRecords',
+            performance.now() - insertVoteStartTime,
+            1,
+          );
+          perfLog(
+            '4. Insert vote record',
+            performance.now() - insertVoteStartTime,
+            {
+              voteId: vote.id,
+              insertData: voteData,
+              weight: userProfile?.weight ?? 0,
+              userProfileWeight: userProfile?.weight,
+              finalWeight: voteData.weight,
+            },
+          );
+
+          // 5. 记录用户活动
+          const activityStartTime = performance.now();
+          const activityData = {
+            userId: ctx.user.id,
+            targetId: vote.id,
+            projectId,
+            items: [{ field: key }],
+            proposalCreatorId: proposalWithProject.creator,
+          };
+          await logUserActivity.vote.create(activityData, tx);
+          dbLog(
+            'INSERT',
+            'activities',
+            performance.now() - activityStartTime,
+            1,
+          );
+          perfLog(
+            '5. Log vote activity',
+            performance.now() - activityStartTime,
+            {
+              voteId: vote.id,
+              activityData,
+              userId: ctx.user.id,
+              targetId: vote.id,
+              proposalCreatorId: proposalWithProject.creator,
+            },
+          );
+
+          // 6. 记录总执行时间和内存使用
+          memLog('createVote - End', startMem);
+          perfLog(
+            'TOTAL createVote execution',
+            performance.now() - totalStartTime,
+            {
+              voteId: vote.id,
+              proposalId,
+              projectId,
+              key,
+              creator: ctx.user.id,
+              userId: ctx.user.id,
+              weight: userProfile?.weight ?? 0,
+              userProfileWeight: userProfile?.weight,
+              proposalCreatorId: proposalWithProject.creator,
+              isPublished: proposalWithProject.project.isPublished,
+              finalVoteData: {
+                id: vote.id,
+                key: vote.key,
+                proposalId: vote.proposalId,
+                creator: vote.creator,
+                weight: vote.weight,
+                projectId: vote.projectId,
+              },
+            },
+          );
+
+          perfLog(
+            'Transaction completed successfully',
+            performance.now() - transactionStartTime,
+            {
+              method: 'createVote',
+              voteId: vote.id,
+              transactionDuration: performance.now() - transactionStartTime,
+            },
+          );
+
+          return vote;
+        } catch (error) {
+          // 记录事务回滚
+          perfLog(
+            '🔄 Transaction ROLLBACK',
+            performance.now() - transactionStartTime,
+            {
+              method: 'createVote',
+              proposalId,
+              key,
+              userId: ctx.user.id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              transactionDuration: performance.now() - transactionStartTime,
+            },
+          );
+
+          memLog('createVote - Rollback', startMem);
+
+          // 重新抛出错误
+          throw error;
+        }
       });
     }),
 
@@ -349,125 +397,177 @@ export const voteRouter = router({
       const startMem = memLog('cancelVote - Start');
 
       return await ctx.db.transaction(async (tx) => {
-        // 1. 查询投票详情
-        const queryStartTime = performance.now();
-        const condition = and(
-          eq(voteRecords.id, id),
-          eq(voteRecords.creator, ctx.user.id),
-        );
+        const transactionStartTime = performance.now();
+        perfLog('Transaction started', 0, {
+          method: 'cancelVote',
+          voteId: id,
+          userId: ctx.user.id,
+        });
 
-        const voteWithDetails = await tx.query.voteRecords.findFirst({
-          where: condition,
-          with: {
-            proposal: {
-              with: {
-                project: true,
+        try {
+          // 1. 查询投票详情
+          const queryStartTime = performance.now();
+          const condition = and(
+            eq(voteRecords.id, id),
+            eq(voteRecords.creator, ctx.user.id),
+          );
+
+          const voteWithDetails = await tx.query.voteRecords.findFirst({
+            where: condition,
+            with: {
+              proposal: {
+                with: {
+                  project: true,
+                },
               },
             },
-          },
-        });
-        dbLog(
-          'SELECT',
-          'voteRecords with proposal and project',
-          performance.now() - queryStartTime,
-          voteWithDetails ? 1 : 0,
-        );
-        perfLog(
-          '1. Get vote with details',
-          performance.now() - queryStartTime,
-          {
-            voteId: id,
-            userId: ctx.user.id,
-            creator: ctx.user.id,
-            conditionParams: { id, creator: ctx.user.id },
-            found: !!voteWithDetails,
-          },
-        );
-
-        // 2. 验证投票和相关数据存在性
-        const validationStartTime = performance.now();
-        if (!voteWithDetails || !voteWithDetails.proposal) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Vote record not found',
           });
+          dbLog(
+            'SELECT',
+            'voteRecords with proposal and project',
+            performance.now() - queryStartTime,
+            voteWithDetails ? 1 : 0,
+          );
+          perfLog(
+            '1. Get vote with details',
+            performance.now() - queryStartTime,
+            {
+              voteId: id,
+              userId: ctx.user.id,
+              creator: ctx.user.id,
+              conditionParams: { id, creator: ctx.user.id },
+              found: !!voteWithDetails,
+            },
+          );
+
+          // 2. 验证投票和相关数据存在性
+          const validationStartTime = performance.now();
+          if (!voteWithDetails || !voteWithDetails.proposal) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Vote record not found',
+            });
+          }
+
+          if (!voteWithDetails.proposal.project) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Associated project not found',
+            });
+          }
+
+          if (voteWithDetails.proposal.creator === ctx.user.id) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Cannot cancel vote on your own proposal',
+            });
+          }
+
+          if (voteWithDetails.proposal.project.isPublished) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message:
+                'Cannot cancel votes on proposals for published projects',
+            });
+          }
+          perfLog(
+            '2. Validate vote permissions',
+            performance.now() - validationStartTime,
+            {
+              proposalId: voteWithDetails.proposal.id,
+              isPublished: voteWithDetails.proposal.project.isPublished,
+              isOwnProposal: voteWithDetails.proposal.creator === ctx.user.id,
+            },
+          );
+
+          // 3. 删除投票记录
+          const deleteStartTime = performance.now();
+          const [deletedVote] = await tx
+            .delete(voteRecords)
+            .where(condition)
+            .returning();
+          dbLog(
+            'DELETE',
+            'voteRecords',
+            performance.now() - deleteStartTime,
+            1,
+          );
+          perfLog(
+            '3. Delete vote record',
+            performance.now() - deleteStartTime,
+            {
+              voteId: deletedVote.id,
+              weight: deletedVote.weight,
+            },
+          );
+
+          // 4. 记录删除活动
+          const activityStartTime = performance.now();
+          await logUserActivity.vote.delete(
+            {
+              userId: ctx.user.id,
+              targetId: deletedVote.id,
+              projectId: voteWithDetails.proposal!.projectId,
+              items: [{ field: voteWithDetails.key }],
+              proposalCreatorId: voteWithDetails.proposal!.creator,
+            },
+            tx,
+          );
+          dbLog(
+            'INSERT',
+            'activities',
+            performance.now() - activityStartTime,
+            1,
+          );
+          perfLog(
+            '4. Log delete activity',
+            performance.now() - activityStartTime,
+            { voteId: deletedVote.id },
+          );
+
+          // 5. 记录总执行时间和内存使用
+          memLog('cancelVote - End', startMem);
+          perfLog(
+            'TOTAL cancelVote execution',
+            performance.now() - totalStartTime,
+            {
+              voteId: deletedVote.id,
+              proposalId: voteWithDetails.proposal!.id,
+              key: voteWithDetails.key,
+              weight: deletedVote.weight,
+            },
+          );
+
+          perfLog(
+            'Transaction completed successfully',
+            performance.now() - transactionStartTime,
+            {
+              method: 'cancelVote',
+              voteId: deletedVote.id,
+              transactionDuration: performance.now() - transactionStartTime,
+            },
+          );
+
+          return deletedVote;
+        } catch (error) {
+          // 记录事务回滚
+          perfLog(
+            '🔄 Transaction ROLLBACK',
+            performance.now() - transactionStartTime,
+            {
+              method: 'cancelVote',
+              voteId: id,
+              userId: ctx.user.id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              transactionDuration: performance.now() - transactionStartTime,
+            },
+          );
+
+          memLog('cancelVote - Rollback', startMem);
+
+          // 重新抛出错误
+          throw error;
         }
-
-        if (!voteWithDetails.proposal.project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Associated project not found',
-          });
-        }
-
-        if (voteWithDetails.proposal.creator === ctx.user.id) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot cancel vote on your own proposal',
-          });
-        }
-
-        if (voteWithDetails.proposal.project.isPublished) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot cancel votes on proposals for published projects',
-          });
-        }
-        perfLog(
-          '2. Validate vote permissions',
-          performance.now() - validationStartTime,
-          {
-            proposalId: voteWithDetails.proposal.id,
-            isPublished: voteWithDetails.proposal.project.isPublished,
-            isOwnProposal: voteWithDetails.proposal.creator === ctx.user.id,
-          },
-        );
-
-        // 3. 删除投票记录
-        const deleteStartTime = performance.now();
-        const [deletedVote] = await tx
-          .delete(voteRecords)
-          .where(condition)
-          .returning();
-        dbLog('DELETE', 'voteRecords', performance.now() - deleteStartTime, 1);
-        perfLog('3. Delete vote record', performance.now() - deleteStartTime, {
-          voteId: deletedVote.id,
-          weight: deletedVote.weight,
-        });
-
-        // 4. 记录删除活动
-        const activityStartTime = performance.now();
-        await logUserActivity.vote.delete(
-          {
-            userId: ctx.user.id,
-            targetId: deletedVote.id,
-            projectId: voteWithDetails.proposal!.projectId,
-            items: [{ field: voteWithDetails.key }],
-            proposalCreatorId: voteWithDetails.proposal!.creator,
-          },
-          tx,
-        );
-        dbLog('INSERT', 'activities', performance.now() - activityStartTime, 1);
-        perfLog(
-          '4. Log delete activity',
-          performance.now() - activityStartTime,
-          { voteId: deletedVote.id },
-        );
-
-        // 5. 记录总执行时间和内存使用
-        memLog('cancelVote - End', startMem);
-        perfLog(
-          'TOTAL cancelVote execution',
-          performance.now() - totalStartTime,
-          {
-            voteId: deletedVote.id,
-            proposalId: voteWithDetails.proposal!.id,
-            key: voteWithDetails.key,
-            weight: deletedVote.weight,
-          },
-        );
-
-        return deletedVote;
       });
     }),
 

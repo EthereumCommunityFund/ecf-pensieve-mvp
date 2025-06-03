@@ -57,3 +57,47 @@ export const memLog = (label: string, beforeMem?: number) => {
   }
   return 0;
 };
+
+// 事务日志专用方法
+export const transactionLog = {
+  start: (method: string, details?: any) => {
+    if (process.env.NODE_ENV !== 'production') {
+      const color = '#00bcd4';
+      console.log(
+        `%c🔄 [TRANSACTION] ${method} - START`,
+        `background: ${color}; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold;`,
+        details ? details : '',
+      );
+    }
+  },
+
+  success: (method: string, duration: number, details?: any) => {
+    if (process.env.NODE_ENV !== 'production') {
+      const color = '#4caf50';
+      console.log(
+        `%c✅ [TRANSACTION] ${method} - SUCCESS`,
+        `background: ${color}; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold;`,
+        `${duration.toFixed(2)}ms`,
+        details ? details : '',
+      );
+    }
+  },
+
+  rollback: (
+    method: string,
+    duration: number,
+    error: string,
+    details?: any,
+  ) => {
+    if (process.env.NODE_ENV !== 'production') {
+      const color = '#f44336';
+      console.log(
+        `%c🔄 [TRANSACTION] ${method} - ROLLBACK`,
+        `background: ${color}; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold;`,
+        `${duration.toFixed(2)}ms`,
+        `Error: ${error}`,
+        details ? details : '',
+      );
+    }
+  },
+};
