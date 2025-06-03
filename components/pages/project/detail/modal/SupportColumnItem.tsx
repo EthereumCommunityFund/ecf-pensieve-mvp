@@ -132,12 +132,12 @@ const SupportColumnItem: FC<IProps> = ({
         size="sm"
         isIconOnly
         isLoading={isLoading}
-        disabled={isLoading || isProposalCreator}
+        disabled={isLoading}
         onPress={handleAction}
         className={cn(
           'px-[5px] border-none',
           isUserVotedCurrentItemProposal ? '' : 'opacity-30',
-          isProposalCreator ? 'cursor-not-allowed' : '',
+          isLoading ? 'cursor-not-allowed' : '',
         )}
       >
         {isUserVotedCurrentItemProposal ? (
