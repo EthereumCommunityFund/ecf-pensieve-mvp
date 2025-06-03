@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { addToast } from '@/components/base';
 import { ITableProposalItem } from '@/components/pages/project/proposal/detail/ProposalDetails';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -174,16 +175,25 @@ export function useProposalVotes(
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
       createVoteMutation.mutate(payload, {
-        onSuccess: async (data) => {
-          await Promise.all([
-            refetchVotesOfProposal(),
-            refetchVotesOfProject(),
-          ]);
-          setKeyActive(key, false);
+        onSuccess: async () => {
+          try {
+            await Promise.all([
+              refetchVotesOfProposal(),
+              refetchVotesOfProject(),
+            ]);
+          } finally {
+            // 确保无论refetch成功还是失败都清除loading状态
+            setKeyActive(key, false);
+          }
         },
         onError: (error) => {
           setKeyActive(key, false);
           devLog('onVote error', error);
+          addToast({
+            title: 'Vote Failed',
+            description: error.message || 'Unknown error',
+            color: 'danger',
+          });
         },
       });
     },
@@ -203,16 +213,24 @@ export function useProposalVotes(
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
       switchVoteMutation.mutate(payload, {
-        onSuccess: async (data) => {
-          await Promise.all([
-            refetchVotesOfProposal(),
-            refetchVotesOfProject(),
-          ]);
-          setKeyActive(key, false);
+        onSuccess: async () => {
+          try {
+            await Promise.all([
+              refetchVotesOfProposal(),
+              refetchVotesOfProject(),
+            ]);
+          } finally {
+            // 确保无论refetch成功还是失败都清除loading状态
+            setKeyActive(key, false);
+          }
         },
         onError: (error) => {
           setKeyActive(key, false);
-          // devLog('onSwitchVote error', error);
+          addToast({
+            title: 'Switch Vote Failed',
+            description: error.message || 'Unknown error',
+            color: 'danger',
+          });
         },
       });
     },
@@ -232,16 +250,24 @@ export function useProposalVotes(
       cancelVoteMutation.mutate(
         { id },
         {
-          onSuccess: async (data) => {
-            await Promise.all([
-              refetchVotesOfProposal(),
-              refetchVotesOfProject(),
-            ]);
-            setKeyActive(key, false);
+          onSuccess: async () => {
+            try {
+              await Promise.all([
+                refetchVotesOfProposal(),
+                refetchVotesOfProject(),
+              ]);
+            } finally {
+              // 确保无论refetch成功还是失败都清除loading状态
+              setKeyActive(key, false);
+            }
           },
           onError: (error) => {
             setKeyActive(key, false);
-            // devLog('onCancelVote error', error);
+            addToast({
+              title: 'Cancel Vote Failed',
+              description: error.message || 'Unknown error',
+              color: 'danger',
+            });
           },
         },
       );

@@ -2,7 +2,7 @@
 
 import { cn } from '@heroui/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
 import { AccountabilityCol, LegitimacyCol } from '@/components/biz/table';
@@ -32,45 +32,53 @@ export interface TableCellsMeta {
 }
 
 // 支持列单元格组件，使用context获取动态数据
-const SupportCell = ({
-  rowData,
-  isProposalCreator,
-}: {
-  rowData: ITableProposalItem;
-  isProposalCreator: boolean;
-}) => {
-  const { getItemVoteResult, onVoteAction, project, proposal } =
-    useProposalDetailContext();
+const SupportCell = memo(
+  ({
+    rowData,
+    isProposalCreator,
+  }: {
+    rowData: ITableProposalItem;
+    isProposalCreator: boolean;
+  }) => {
+    const { getItemVoteResult, onVoteAction, project, proposal } =
+      useProposalDetailContext();
 
-  const key = rowData.key;
-  const {
-    itemVotedMemberCount,
-    itemPoints,
-    itemPointsNeeded,
-    isItemReachPointsNeeded,
-    isItemReachQuorum,
-    isItemValidated,
-    isUserVotedInItem,
-  } = getItemVoteResult(key);
+    const key = rowData.key as IPocItemKey;
 
-  return (
-    <VoteItem
-      fieldKey={key}
-      itemPoints={itemPoints}
-      itemPointsNeeded={itemPointsNeeded}
-      isReachQuorum={isItemReachQuorum}
-      isReachPointsNeeded={isItemReachPointsNeeded}
-      isValidated={isItemValidated}
-      isProposalCreator={isProposalCreator}
-      project={project!}
-      proposal={proposal!}
-      proposalItem={rowData}
-      isUserVoted={isUserVotedInItem}
-      votedMemberCount={itemVotedMemberCount}
-      onAction={() => onVoteAction(rowData)}
-    />
-  );
-};
+    const {
+      itemVotedMemberCount,
+      itemPoints,
+      itemPointsNeeded,
+      isItemReachPointsNeeded,
+      isItemReachQuorum,
+      isItemValidated,
+      isUserVotedInItem,
+    } = getItemVoteResult(key);
+
+    const handleVoteAction = useCallback(() => {
+      return onVoteAction(rowData);
+    }, [onVoteAction, rowData]);
+
+    return (
+      <VoteItem
+        fieldKey={key}
+        itemPoints={itemPoints}
+        itemPointsNeeded={itemPointsNeeded}
+        isReachQuorum={isItemReachQuorum}
+        isReachPointsNeeded={isItemReachPointsNeeded}
+        isValidated={isItemValidated}
+        isProposalCreator={isProposalCreator}
+        project={project!}
+        proposal={proposal!}
+        proposalItem={rowData}
+        isUserVoted={isUserVotedInItem}
+        votedMemberCount={itemVotedMemberCount}
+        onAction={handleVoteAction}
+      />
+    );
+  },
+);
+SupportCell.displayName = 'SupportCell';
 
 export const useCreateProposalTableColumns = ({
   isPageExpanded,

@@ -5,12 +5,13 @@ import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
+import { IPocItemKey } from '@/types/item';
 
 import { useProposalDetailContext } from '../context/proposalDetailContext';
 import { ITableProposalItem } from '../ProposalDetails';
 
 interface IProps {
-  fieldKey: string;
+  fieldKey: IPocItemKey;
   project: IProject;
   proposal: IProposal;
   itemPoints: number;
@@ -41,7 +42,7 @@ const VoteItem: FC<IProps> = ({
   const { isFetchVoteInfoLoading, isVoteActionPending, inActionKeys } =
     useProposalDetailContext();
   const isLoading =
-    (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[fieldKey];
+    (isFetchVoteInfoLoading || isVoteActionPending) && !!inActionKeys[fieldKey];
 
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
