@@ -174,6 +174,7 @@ export function useProposalVotes(
       if (!profile) return;
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
+      devLog('onCreateVote payload', payload);
       createVoteMutation.mutate(payload, {
         onSuccess: async () => {
           try {
@@ -212,6 +213,7 @@ export function useProposalVotes(
       if (!profile) return;
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
+      devLog('onSwitchVote payload', payload);
       switchVoteMutation.mutate(payload, {
         onSuccess: async () => {
           try {
@@ -247,6 +249,7 @@ export function useProposalVotes(
     async (id: number, key: string) => {
       if (!profile) return;
       setKeyActive(key, true);
+      devLog('onCancelVote payload', id, key);
       cancelVoteMutation.mutate(
         { id },
         {
@@ -300,7 +303,6 @@ export function useProposalVotes(
         setSourceProposal: (proposal: IProposal | null) => void;
       },
     ) => {
-      devLog('onVoteAction item', item);
       const {
         setCurrentVoteItem,
         setIsCancelModalOpen,
