@@ -14,6 +14,7 @@ import {
   createRewardNotification,
 } from '@/lib/services/notification';
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
+import { dbLog, memLog, perfLog } from '@/utils/devLog';
 
 import { protectedProcedure, router } from '../server';
 
@@ -31,9 +32,20 @@ export const itemProposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const totalStartTime = performance.now();
+      const startMem = memLog('createItemProposal - Start');
+
+      // 1. 验证项目存在
+      const projectCheckStartTime = performance.now();
       const project = await ctx.db.query.projects.findFirst({
         where: eq(projects.id, input.projectId),
       });
+      dbLog('SELECT', 'projects', performance.now() - projectCheckStartTime, 1);
+      perfLog(
+        '1. Check project exists',
+        performance.now() - projectCheckStartTime,
+        { projectId: input.projectId },
+      );
 
       if (!project) {
         throw new TRPCError({
@@ -43,13 +55,28 @@ export const itemProposalRouter = router({
       }
 
       return await ctx.db.transaction(async (tx) => {
+        // 2. 检查是否已存在相同key的提案
+        const existingCheckStartTime = performance.now();
         const existingProposal = await tx.query.itemProposals.findFirst({
           where: and(
             eq(itemProposals.projectId, input.projectId),
             eq(itemProposals.key, input.key),
           ),
         });
+        dbLog(
+          'SELECT',
+          'itemProposals',
+          performance.now() - existingCheckStartTime,
+          existingProposal ? 1 : 0,
+        );
+        perfLog(
+          '2. Check existing proposal',
+          performance.now() - existingCheckStartTime,
+          { key: input.key, exists: !!existingProposal },
+        );
 
+        // 3. 创建新的item proposal
+        const insertStartTime = performance.now();
         const [itemProposal] = await tx
           .insert(itemProposals)
           .values({
@@ -57,6 +84,17 @@ export const itemProposalRouter = router({
             creator: ctx.user.id,
           })
           .returning();
+        dbLog(
+          'INSERT',
+          'itemProposals',
+          performance.now() - insertStartTime,
+          1,
+        );
+        perfLog(
+          '3. Insert item proposal',
+          performance.now() - insertStartTime,
+          { itemProposalId: itemProposal?.id },
+        );
 
         if (!itemProposal) {
           throw new TRPCError({
@@ -65,6 +103,8 @@ export const itemProposalRouter = router({
           });
         }
 
+        // 4. 并行获取用户资料和投票记录
+        const parallelQueryStartTime = performance.now();
         const [userProfile, voteRecord] = await Promise.all([
           tx.query.profiles.findFirst({
             where: eq(profiles.userId, ctx.user.id),
@@ -77,32 +117,67 @@ export const itemProposalRouter = router({
             ),
           }),
         ]);
+        dbLog(
+          'SELECT',
+          'profiles + voteRecords',
+          performance.now() - parallelQueryStartTime,
+          (userProfile ? 1 : 0) + (voteRecord ? 1 : 0),
+        );
+        perfLog(
+          '4. Get user profile and vote record',
+          performance.now() - parallelQueryStartTime,
+          { userId: ctx.user.id, hasVoteRecord: !!voteRecord },
+        );
 
+        // 5. 创建投票caller
+        const callerStartTime = performance.now();
         const caller = voteRouter.createCaller({
           ...ctx,
           db: tx as any,
         });
+        perfLog('5. Create vote caller', performance.now() - callerStartTime);
 
+        // 6. 处理投票逻辑
+        const voteStartTime = performance.now();
         if (voteRecord) {
           await caller.switchItemProposalVote({
             itemProposalId: itemProposal.id,
             key: input.key,
           });
+          perfLog(
+            '6. Switch item proposal vote',
+            performance.now() - voteStartTime,
+            { itemProposalId: itemProposal.id },
+          );
         } else {
           await caller.createItemProposalVote({
             itemProposalId: itemProposal.id,
             key: input.key,
           });
+          perfLog(
+            '6. Create item proposal vote',
+            performance.now() - voteStartTime,
+            { itemProposalId: itemProposal.id },
+          );
         }
 
         if (!existingProposal) {
+          // 7. 计算奖励和更新数据
+          const rewardStartTime = performance.now();
           const reward = calculateReward(input.key);
           const finalWeight = (userProfile?.weight ?? 0) + reward;
           const hasProposalKeys = new Set([
             ...project.hasProposalKeys,
             input.key,
           ]);
+          perfLog('7. Calculate reward', performance.now() - rewardStartTime, {
+            reward,
+            oldWeight: userProfile?.weight ?? 0,
+            newWeight: finalWeight,
+          });
 
+          // 8. 并行执行更新操作
+          const updateStartTime = performance.now();
           await Promise.all([
             tx
               .update(profiles)
@@ -136,8 +211,21 @@ export const itemProposalRouter = router({
               tx,
             ),
           ]);
+          dbLog(
+            'UPDATE',
+            'profiles + projects + notifications + activities',
+            performance.now() - updateStartTime,
+            4,
+          );
+          perfLog(
+            '8. Update user weight and project data',
+            performance.now() - updateStartTime,
+            { userId: ctx.user.id, reward },
+          );
         } else {
-          logUserActivity.itemProposal.update(
+          // 9. 记录更新活动
+          const logStartTime = performance.now();
+          await logUserActivity.itemProposal.update(
             {
               userId: ctx.user.id,
               targetId: itemProposal.id,
@@ -146,7 +234,24 @@ export const itemProposalRouter = router({
             },
             tx,
           );
+          dbLog('INSERT', 'activities', performance.now() - logStartTime, 1);
+          perfLog('9. Log update activity', performance.now() - logStartTime, {
+            itemProposalId: itemProposal.id,
+          });
         }
+
+        // 10. 记录总执行时间和内存使用
+        memLog('createItemProposal - End', startMem);
+        perfLog(
+          'TOTAL createItemProposal execution',
+          performance.now() - totalStartTime,
+          {
+            itemProposalId: itemProposal.id,
+            projectId: input.projectId,
+            key: input.key,
+            isNewProposal: !existingProposal,
+          },
+        );
 
         return itemProposal;
       });
