@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, memo, useEffect, useMemo, useState } from 'react';
+import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import Tab from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
@@ -18,6 +18,8 @@ interface LeftContentProps {
 }
 
 const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
+  const { refetchProposalHistory, refetchProposalsByKey } =
+    useProjectDetailContext();
   const [activeTab, setActiveTab] = useState('submission-queue');
 
   // Get project detail context to access proposalsByProjectIdAndKey and displayProposalDataOfKey
@@ -58,6 +60,16 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
       setActiveTab(availableTabKeys[0] || 'submission-queue');
     }
   }, [tabs, activeTab]);
+
+  const onTabChange = useCallback(
+    (tabKey: string) => {
+      if (tabKey === 'consensus-log') {
+        refetchProposalHistory();
+      }
+      setActiveTab(tabKey);
+    },
+    [refetchProposalHistory],
+  );
 
   const { itemName, itemWeight } = useMemo(() => {
     const itemConfig = AllItemConfig[itemKey as IPocItemKey];
@@ -111,7 +123,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   return (
     <div className="flex flex-col gap-5 p-5">
       {/* Tab Navigation */}
-      <Tab tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tab tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
       {/* Tab Content */}
       {renderTabContent()}
     </div>

@@ -52,8 +52,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   onBackToSubmissionQueue,
 }) => {
   const { id: projectId } = useParams();
-  const { refetchProposalsByKey, refetchProposalHistory } =
-    useProjectDetailContext();
+  const { refetchAll } = useProjectDetailContext();
 
   const [fieldApplicability, setFieldApplicability] = useState<
     Record<string, boolean>
@@ -194,9 +193,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       onSuccess: (data) => {
         devLog('createItemProposal success', data);
         setSubmissionStep('success');
-        // TODO : 不用屏闪，重新渲染 modal
-        refetchProposalsByKey();
-        refetchProposalHistory();
+        refetchAll();
       },
       onError: (error: any) => {
         console.error('createItemProposal error', error);
@@ -207,8 +204,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     createItemProposalMutation,
     itemKey,
     projectId,
-    refetchProposalsByKey,
-    refetchProposalHistory,
+    refetchAll,
   ]);
 
   useEffect(() => {
