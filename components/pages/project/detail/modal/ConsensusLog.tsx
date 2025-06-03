@@ -43,28 +43,17 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
   // 根据 itemKey 从 proposalHistory 中获取真实数据
   const tableData: IConsensusLogRowData[] = useMemo(() => {
     if (!itemKey) {
-      console.log('ConsensusLog: Missing itemKey', { itemKey });
       return [];
     }
 
     if (!proposalHistory) {
-      console.log('ConsensusLog: No proposalHistory data available');
       return [];
     }
 
     if (!proposalHistory || proposalHistory.length === 0) {
-      console.log('ConsensusLog: No proposalHistory data available');
       return [];
     }
 
-    console.log(
-      'ConsensusLog: Processing proposalHistory for itemKey:',
-      itemKey,
-      'proposalHistory:',
-      proposalHistory,
-    );
-
-    // 按照 createdAt 时间倒序排列
     const sortedHistory = [...proposalHistory].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -73,33 +62,26 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
     return sortedHistory.map((historyItem, index) => {
       const createdAt = new Date(historyItem.createdAt);
 
-      // 获取创建者信息，只从 itemProposal 获取
       const creator = historyItem.itemProposal?.creator;
 
-      // 获取投票记录，只从 itemProposal 获取
       const voteRecords = historyItem.itemProposal?.voteRecords || [];
 
-      // 计算当前权重
       const currentWeight = voteRecords.reduce((acc: number, vote: any) => {
         return acc + Number(vote.weight || 0);
       }, 0);
 
-      // 计算权重变化（这里简化处理，实际可能需要更复杂的逻辑）
+      // 权重变化：当前权重 - 上一个的权重
       const weightChange =
         index === sortedHistory.length - 1
           ? currentWeight // 第一个提案，权重变化就是当前权重
-          : Math.abs(
-              currentWeight -
-                (sortedHistory[index + 1]?.itemProposal?.voteRecords?.reduce(
-                  (acc: number, vote: any) => acc + Number(vote.weight || 0),
-                  0,
-                ) || 0),
-            );
+          : currentWeight -
+            (sortedHistory[index + 1]?.itemProposal?.voteRecords?.reduce(
+              (acc: number, vote: any) => acc + Number(vote.weight || 0),
+              0,
+            ) || 0);
 
-      const isPositive =
-        index === sortedHistory.length - 1 || currentWeight > 0;
+      const isPositive = weightChange > 0;
 
-      // 获取输入值，只从 itemProposal 的 value 获取
       let inputValue = 'No input provided';
       if (historyItem.itemProposal?.value) {
         inputValue =
@@ -129,7 +111,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
         },
         weight: {
           current: currentWeight.toString(),
-          change: `${isPositive ? '+' : '-'}${weightChange}`,
+          change: `${isPositive ? '+' : '-'}${Math.abs(weightChange)}`,
         },
       };
     });
