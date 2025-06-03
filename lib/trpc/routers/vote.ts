@@ -383,7 +383,7 @@ export const voteRouter = router({
           weight: userProfile?.weight ?? 0,
         });
 
-        const [votes, project, projectLog] = await Promise.all([
+        const [votes, project, leadingProposal] = await Promise.all([
           tx.query.voteRecords.findMany({
             where: and(
               eq(voteRecords.itemProposalId, itemProposalId),
@@ -403,7 +403,7 @@ export const voteRouter = router({
           }),
         ]);
 
-        if (projectLog?.itemProposalId === itemProposalId) {
+        if (leadingProposal?.itemProposalId === itemProposalId) {
           await processItemProposalUpdate(tx, {
             votes,
             project,
@@ -497,7 +497,7 @@ export const voteRouter = router({
           .where(eq(voteRecords.id, voteToSwitch.id))
           .returning();
 
-        const [votes, project, projectLog] = await Promise.all([
+        const [votes, project, leadingProposal] = await Promise.all([
           tx.query.voteRecords.findMany({
             where: and(
               eq(voteRecords.itemProposalId, itemProposalId),
@@ -517,7 +517,7 @@ export const voteRouter = router({
           }),
         ]);
 
-        if (projectLog?.itemProposalId === itemProposalId) {
+        if (leadingProposal?.itemProposalId === itemProposalId) {
           await processItemProposalUpdate(tx, {
             votes,
             project,

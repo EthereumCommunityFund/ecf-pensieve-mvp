@@ -13,12 +13,11 @@ import {
   addRewardNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
-import {
-  calculateReward,
-  handleVoteRecord,
-} from '@/lib/utils/itemProposalUtils';
+import { calculateReward } from '@/lib/utils/itemProposalUtils';
 
 import { protectedProcedure, router } from '../server';
+
+import { voteRouter } from './vote';
 
 export const itemProposalRouter = router({
   createItemProposal: protectedProcedure
@@ -79,6 +78,23 @@ export const itemProposalRouter = router({
           }),
         ]);
 
+        const caller = voteRouter.createCaller({
+          ...ctx,
+          db: tx as any,
+        });
+
+        if (voteRecord) {
+          await caller.switchItemProposalVote({
+            itemProposalId: itemProposal.id,
+            key: input.key,
+          });
+        } else {
+          await caller.createItemProposalVote({
+            itemProposalId: itemProposal.id,
+            key: input.key,
+          });
+        }
+
         if (!existingProposal) {
           const reward = calculateReward(input.key);
           const finalWeight = (userProfile?.weight ?? 0) + reward;
@@ -110,16 +126,6 @@ export const itemProposalRouter = router({
               tx,
             ),
 
-            handleVoteRecord(tx, {
-              userId: ctx.user.id,
-              projectId: input.projectId,
-              itemProposalId: itemProposal.id,
-              key: input.key,
-              weight: finalWeight,
-              existingVoteRecord: voteRecord,
-              proposalCreatorId: itemProposal.creator,
-            }),
-
             logUserActivity.itemProposal.create(
               {
                 userId: ctx.user.id,
@@ -131,15 +137,6 @@ export const itemProposalRouter = router({
             ),
           ]);
         } else {
-          await handleVoteRecord(tx, {
-            userId: ctx.user.id,
-            projectId: input.projectId,
-            itemProposalId: itemProposal.id,
-            key: input.key,
-            weight: userProfile?.weight ?? 0,
-            existingVoteRecord: voteRecord,
-            proposalCreatorId: itemProposal.creator,
-          });
           logUserActivity.itemProposal.update(
             {
               userId: ctx.user.id,
