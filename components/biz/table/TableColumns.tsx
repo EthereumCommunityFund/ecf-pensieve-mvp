@@ -386,7 +386,7 @@ export const ReferenceCol = {
 export type SupportColHeaderProps = BaseHeaderProps;
 
 export interface SupportColCellProps extends BaseCellProps {
-  fieldKey: string;
+  fieldKey: IPocItemKey;
   project: IProject;
   proposal: IProposal;
   proposalItem: any; // ITableProposalItem
@@ -438,7 +438,6 @@ const SupportCell = ({
       project={project}
       proposal={proposal}
       proposalItem={proposalItem}
-      isLoading={isLoading}
       isUserVoted={isUserVoted}
       isProposalCreator={isProposalCreator}
       votedMemberCount={votedMemberCount}
