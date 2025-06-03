@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { addToast } from '@/components/base';
 import { ITableProposalItem } from '@/components/pages/project/proposal/detail/ProposalDetails';
@@ -18,6 +18,8 @@ export function useProposalVotes(
 ) {
   const { profile } = useAuth();
   const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
+  // 用于跟踪每个key的操作状态，防止重复操作
+  const operationInProgress = useRef<Record<string, boolean>>({});
 
   const proposalQueryOptions = useMemo(
     () => ({
@@ -161,126 +163,112 @@ export function useProposalVotes(
   const switchVoteMutation = trpc.vote.switchVote.useMutation();
   const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
-  const setKeyActive = (key: string, active: boolean) => {
+  const setKeyActive = useCallback((key: string, active: boolean) => {
+    operationInProgress.current[key] = active;
+
     setInActionKeys((pre) => ({
       ...pre,
       [key]: active,
     }));
-  };
+  }, []);
+
+  const refetchVoteData = useCallback(async () => {
+    try {
+      await Promise.all([refetchVotesOfProposal(), refetchVotesOfProject()]);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [refetchVotesOfProposal, refetchVotesOfProject]);
 
   const onCreateVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
       if (!profile) return;
+
+      if (operationInProgress.current[key]) {
+        devLog('onCreateVote already in progress for key:', key);
+        return;
+      }
+
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
       devLog('onCreateVote payload', payload);
-      createVoteMutation.mutate(payload, {
-        onSuccess: async () => {
-          try {
-            await Promise.all([
-              refetchVotesOfProposal(),
-              refetchVotesOfProject(),
-            ]);
-          } finally {
-            // 确保无论refetch成功还是失败都清除loading状态
-            setKeyActive(key, false);
-          }
-        },
-        onError: (error) => {
-          setKeyActive(key, false);
-          devLog('onVote error', error);
-          addToast({
-            title: 'Vote Failed',
-            description: error.message || 'Unknown error',
-            color: 'danger',
-          });
-        },
-      });
+
+      try {
+        await createVoteMutation.mutateAsync(payload);
+        devLog('onCreateVote success', payload);
+        await refetchVoteData();
+      } catch (error) {
+        devLog('onVote error', error);
+        addToast({
+          title: 'Vote Failed',
+          description: (error as Error)?.message || 'Unknown error',
+          color: 'danger',
+        });
+      } finally {
+        setKeyActive(key, false);
+      }
     },
-    [
-      profile,
-      proposal,
-      createVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
+    [profile, proposal, createVoteMutation, refetchVoteData],
   );
 
   const onSwitchVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
       if (!profile) return;
+
+      if (operationInProgress.current[key]) {
+        devLog('onSwitchVote already in progress for key:', key);
+        return;
+      }
+
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
       devLog('onSwitchVote payload', payload);
-      switchVoteMutation.mutate(payload, {
-        onSuccess: async () => {
-          try {
-            await Promise.all([
-              refetchVotesOfProposal(),
-              refetchVotesOfProject(),
-            ]);
-          } finally {
-            // 确保无论refetch成功还是失败都清除loading状态
-            setKeyActive(key, false);
-          }
-        },
-        onError: (error) => {
-          setKeyActive(key, false);
-          addToast({
-            title: 'Switch Vote Failed',
-            description: error.message || 'Unknown error',
-            color: 'danger',
-          });
-        },
-      });
+
+      try {
+        await switchVoteMutation.mutateAsync(payload);
+        await refetchVoteData();
+      } catch (error) {
+        addToast({
+          title: 'Switch Vote Failed',
+          description: (error as Error)?.message || 'Unknown error',
+          color: 'danger',
+        });
+      } finally {
+        setKeyActive(key, false);
+      }
     },
-    [
-      profile,
-      proposal,
-      switchVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
+    [profile, proposal, switchVoteMutation, refetchVoteData],
   );
 
   const onCancelVote = useCallback(
     async (id: number, key: string) => {
       if (!profile) return;
+
+      if (operationInProgress.current[key]) {
+        devLog('onCancelVote already in progress for key:', key);
+        return;
+      }
+
       setKeyActive(key, true);
       devLog('onCancelVote payload', id, key);
-      cancelVoteMutation.mutate(
-        { id },
-        {
-          onSuccess: async () => {
-            try {
-              await Promise.all([
-                refetchVotesOfProposal(),
-                refetchVotesOfProject(),
-              ]);
-            } finally {
-              // 确保无论refetch成功还是失败都清除loading状态
-              setKeyActive(key, false);
-            }
-          },
-          onError: (error) => {
-            setKeyActive(key, false);
-            addToast({
-              title: 'Cancel Vote Failed',
-              description: error.message || 'Unknown error',
-              color: 'danger',
-            });
-          },
-        },
-      );
+
+      try {
+        await cancelVoteMutation.mutateAsync({ id });
+        devLog('onCancelVote success', id, key);
+        await refetchVoteData();
+      } catch (error) {
+        addToast({
+          title: 'Cancel Vote Failed',
+          description: (error as Error)?.message || 'Unknown error',
+          color: 'danger',
+        });
+      } finally {
+        setKeyActive(key, false);
+      }
     },
-    [
-      profile,
-      cancelVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
+    [profile, cancelVoteMutation, refetchVoteData],
   );
 
   const findSourceProposal = useCallback(
