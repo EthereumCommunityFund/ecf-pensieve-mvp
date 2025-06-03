@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import {
   Dropdown,
   DropdownItem,
@@ -7,55 +6,54 @@ import {
   Image,
 } from '@heroui/react';
 import NextImage from 'next/image';
-import Link from 'next/link';
 
 export const DropDownMenuData = {
   common: [
     {
       name: 'Whitepaper',
-      link: '/whitepaper',
+      link: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
     },
     {
       name: 'Docs',
-      link: '/docs',
+      link: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
     },
     {
       name: 'Changelog',
-      link: '/changelog',
+      link: 'https://ecf.wiki/s/0174d7fe-2818-4587-95ae-fd8b5b27b6ed',
     },
     {
       name: 'About ECF Network',
-      link: '/about',
+      link: 'https://ecf.network/our-vision',
     },
     {
       name: 'Terms of Service',
-      link: '/terms',
+      link: 'https://ecf.network/privacy-policy-and-terms-of-service',
     },
     {
       name: 'Privacy',
-      link: '/privacy',
+      link: 'https://ecf.network/privacy-policy-and-terms-of-service',
     },
   ],
   social: [
     {
       name: 'Medium',
       icon: '/images/common/MediumLogo.png',
-      link: '/',
+      link: 'https://medium.com/@EthereumECF',
     },
     {
       name: 'X',
       icon: '/images/common/XLogo.png',
-      link: '/',
+      link: 'https://x.com/ethereumecf',
     },
     {
       name: 'Globe',
       icon: '/images/common/Globe.png',
-      link: '/',
+      link: 'https://ecf.network/',
     },
     {
       name: 'Github',
       icon: '/images/common/GithubLogo.png',
-      link: '/',
+      link: 'https://github.com/EthereumCommunityFund/ecf-pensieve-mvp',
     },
   ],
 };
@@ -78,12 +76,17 @@ const DropDownMenu = () => {
       <DropdownMenu>
         <>
           {DropDownMenuData.common.map((item) => (
-            <DropdownItem key={item.name} textValue={item.name}>
-              <MenuItemLink href={item.link}>{item.name}</MenuItemLink>
+            <DropdownItem
+              key={item.name}
+              textValue={item.name}
+              onPress={() => window.open(item.link, '_blank')}
+            >
+              <span className="cursor-pointer text-sm font-semibold text-black">
+                {item.name}
+              </span>
             </DropdownItem>
           ))}
 
-          {/* Social media icon container */}
           <DropdownItem
             key="social"
             textValue="social"
@@ -91,10 +94,10 @@ const DropDownMenu = () => {
           >
             <div className="flex items-center gap-2 bg-white px-2">
               {DropDownMenuData.social.map((item) => (
-                <Link
+                <div
                   key={item.name}
-                  href={item.link}
-                  className="rounded-md p-2 transition-colors hover:bg-[rgba(0,0,0,0.05)]"
+                  onClick={() => window.open(item.link, '_blank')}
+                  className="cursor-pointer rounded-md p-2 transition-colors hover:bg-[rgba(0,0,0,0.05)]"
                 >
                   <Image
                     src={item.icon}
@@ -102,7 +105,7 @@ const DropDownMenu = () => {
                     width={24}
                     height={24}
                   />
-                </Link>
+                </div>
               ))}
             </div>
           </DropdownItem>
@@ -113,10 +116,3 @@ const DropDownMenu = () => {
 };
 
 export default DropDownMenu;
-
-const MenuItemLink = styled(Link)({
-  color: '#000',
-  fontSize: '14px',
-  fontWeight: '600',
-  textDecoration: 'none',
-});
