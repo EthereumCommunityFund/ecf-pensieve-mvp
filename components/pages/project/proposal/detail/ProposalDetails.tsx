@@ -13,6 +13,7 @@ import { IItemSubCategoryEnum } from '@/types/item';
 import { safeGetLocalStorage } from '@/utils/localStorage';
 
 import ActionSectionHeader from './ActionSectionHeader';
+import { ProposalDetailProvider } from './context/proposalDetailContext';
 import CancelVoteModal from './modal/CancelVoteModal';
 import ReferenceModal from './modal/ReferenceModal';
 import SwitchVoteModal from './modal/SwitchVoteModal';
@@ -223,33 +224,20 @@ const ProposalDetails = ({
     [tableDataMap, expandedRows],
   );
 
+  // 只保留变化不频繁的稳定参数
   const coreTableMeta = useMemo(
     () => ({
       expandedRows,
       toggleRowExpanded,
       onShowReference,
-      project,
-      proposal,
-      onVoteAction,
       isProposalCreator,
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      inActionKeys,
-      getItemVoteResult,
       toggleMetricsVisible,
     }),
     [
       expandedRows,
       toggleRowExpanded,
       onShowReference,
-      project,
-      proposal,
-      onVoteAction,
       isProposalCreator,
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      inActionKeys,
-      getItemVoteResult,
       toggleMetricsVisible,
     ],
   );
@@ -387,70 +375,94 @@ const ProposalDetails = ({
     governanceTable,
   ]);
 
+  // 创建context的value，包含所有动态变化的参数
+  const proposalDetailContextValue = useMemo(
+    () => ({
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      inActionKeys,
+      getItemVoteResult,
+      onVoteAction,
+      project,
+      proposal,
+    }),
+    [
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      inActionKeys,
+      getItemVoteResult,
+      onVoteAction,
+      project,
+      proposal,
+    ],
+  );
+
   return (
-    <div className="flex flex-col gap-[20px]">
-      <ActionSectionHeader
-        isExpanded={isPageExpanded}
-        isFiltered={isFiltered}
-        onChangeExpand={toggleExpanded}
-        onChangeFilter={toggleFiltered}
-      />
+    <ProposalDetailProvider value={proposalDetailContextValue}>
+      <div className="flex flex-col gap-[20px]">
+        <ActionSectionHeader
+          isExpanded={isPageExpanded}
+          isFiltered={isFiltered}
+          onChangeExpand={toggleExpanded}
+          onChangeFilter={toggleFiltered}
+        />
 
-      <div className="flex flex-col gap-[40px]">
-        {ProposalTableFieldCategory.map((cat) => (
-          <div key={cat.key} className="flex flex-col gap-[20px]">
-            <TableSectionHeader
-              title={cat.title}
-              description={cat.description}
-            />
-            {cat.subCategories.map((subCat) => (
-              <div key={subCat.key}>
-                <CategoryHeader
-                  title={subCat.title}
-                  description={subCat.description}
-                  category={subCat.key}
-                  isExpanded={hasExpandedRowsInCategory(subCat.key)}
-                  onToggle={() => toggleAllRowsInCategory(subCat.key)}
-                  onToggleMetrics={toggleMetricsVisible}
-                />
-                <div>
-                  <ProposalTable
-                    table={tableInstanceMap[subCat.key]}
-                    isLoading={isOverallLoading}
-                    expandedRows={expandedRows}
-                    isPageExpanded={isPageExpanded}
+        <div className="flex flex-col gap-[40px]">
+          {ProposalTableFieldCategory.map((cat) => (
+            <div key={cat.key} className="flex flex-col gap-[20px]">
+              <TableSectionHeader
+                title={cat.title}
+                description={cat.description}
+              />
+              {cat.subCategories.map((subCat) => (
+                <div key={subCat.key}>
+                  <CategoryHeader
+                    title={subCat.title}
+                    description={subCat.description}
+                    category={subCat.key}
+                    isExpanded={hasExpandedRowsInCategory(subCat.key)}
+                    onToggle={() => toggleAllRowsInCategory(subCat.key)}
+                    onToggleMetrics={toggleMetricsVisible}
                   />
+                  <div>
+                    <ProposalTable
+                      table={tableInstanceMap[subCat.key]}
+                      isLoading={isOverallLoading}
+                      expandedRows={expandedRows}
+                      isPageExpanded={isPageExpanded}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <SwitchVoteModal
+          isOpen={isSwitchModalOpen}
+          onClose={() => setIsSwitchModalOpen(false)}
+          onConfirm={handleSwitchVoteConfirm}
+          isLoading={switchVoteMutation.isPending}
+          proposalItem={currentVoteItem || undefined}
+          sourceProposal={sourceProposal || undefined}
+        />
+
+        <CancelVoteModal
+          isOpen={isCancelModalOpen}
+          onClose={() => setIsCancelModalOpen(false)}
+          onConfirm={handleCancelVoteConfirm}
+          isLoading={cancelVoteMutation.isPending}
+          proposalItem={currentVoteItem || undefined}
+        />
+
+        <ReferenceModal
+          isOpen={isReferenceModalOpen}
+          onClose={() => setIsReferenceModalOpen(false)}
+          fieldKey={currentReferenceKey}
+          refs={(proposal?.refs || []) as IRef[]}
+        />
       </div>
-
-      <SwitchVoteModal
-        isOpen={isSwitchModalOpen}
-        onClose={() => setIsSwitchModalOpen(false)}
-        onConfirm={handleSwitchVoteConfirm}
-        isLoading={switchVoteMutation.isPending}
-        proposalItem={currentVoteItem || undefined}
-        sourceProposal={sourceProposal || undefined}
-      />
-
-      <CancelVoteModal
-        isOpen={isCancelModalOpen}
-        onClose={() => setIsCancelModalOpen(false)}
-        onConfirm={handleCancelVoteConfirm}
-        isLoading={cancelVoteMutation.isPending}
-        proposalItem={currentVoteItem || undefined}
-      />
-
-      <ReferenceModal
-        isOpen={isReferenceModalOpen}
-        onClose={() => setIsReferenceModalOpen(false)}
-        fieldKey={currentReferenceKey}
-        refs={(proposal?.refs || []) as IRef[]}
-      />
-    </div>
+    </ProposalDetailProvider>
   );
 };
 

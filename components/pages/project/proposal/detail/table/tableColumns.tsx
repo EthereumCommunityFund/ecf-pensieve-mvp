@@ -9,9 +9,13 @@ import { AccountabilityCol, LegitimacyCol } from '@/components/biz/table';
 import { CaretDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
-import { IProject, IProposal } from '@/types';
-import { IEssentialItemKey, IPocItemKey } from '@/types/item';
+import {
+  IEssentialItemKey,
+  IItemSubCategoryEnum,
+  IPocItemKey,
+} from '@/types/item';
 
+import { useProposalDetailContext } from '../context/proposalDetailContext';
 import { ITableProposalItem } from '../ProposalDetails';
 
 import InputContentRenderer from './InputContentRenderer';
@@ -20,17 +24,53 @@ import TooltipTh from './TooltipTh';
 import VoteItem from './VoteItem';
 
 export interface TableCellsMeta {
-  expandedRows: Record<string, boolean>;
-  toggleRowExpanded: (key: string) => void;
-  onShowReference: (key: string) => void;
-  project?: IProject;
-  proposal?: IProposal;
-  onVoteAction: (item: ITableProposalItem) => Promise<void>;
-  isFetchVoteInfoLoading: boolean;
-  isVoteActionPending: boolean;
-  inActionKeys: Record<string, boolean>;
-  getItemVoteResult: (key: string) => any;
+  expandedRows: Record<IPocItemKey, boolean>;
+  toggleRowExpanded: (key: IPocItemKey) => void;
+  onShowReference: (key: IPocItemKey) => void;
+  isProposalCreator: boolean;
+  toggleMetricsVisible: (subCat: IItemSubCategoryEnum) => void;
 }
+
+// 支持列单元格组件，使用context获取动态数据
+const SupportCell = ({
+  rowData,
+  isProposalCreator,
+}: {
+  rowData: ITableProposalItem;
+  isProposalCreator: boolean;
+}) => {
+  const { getItemVoteResult, onVoteAction, project, proposal } =
+    useProposalDetailContext();
+
+  const key = rowData.key;
+  const {
+    itemVotedMemberCount,
+    itemPoints,
+    itemPointsNeeded,
+    isItemReachPointsNeeded,
+    isItemReachQuorum,
+    isItemValidated,
+    isUserVotedInItem,
+  } = getItemVoteResult(key);
+
+  return (
+    <VoteItem
+      fieldKey={key}
+      itemPoints={itemPoints}
+      itemPointsNeeded={itemPointsNeeded}
+      isReachQuorum={isItemReachQuorum}
+      isReachPointsNeeded={isItemReachPointsNeeded}
+      isValidated={isItemValidated}
+      isProposalCreator={isProposalCreator}
+      project={project!}
+      proposal={proposal!}
+      proposalItem={rowData}
+      isUserVoted={isUserVotedInItem}
+      votedMemberCount={itemVotedMemberCount}
+      onAction={() => onVoteAction(rowData)}
+    />
+  );
+};
 
 export const useCreateProposalTableColumns = ({
   isPageExpanded,
@@ -158,7 +198,9 @@ export const useCreateProposalTableColumns = ({
                 color="secondary"
                 size="md"
                 className="w-[104px] text-[13px] font-[400]"
-                onPress={() => onShowReference(info.row.original.key)}
+                onPress={() =>
+                  onShowReference(info.row.original.key as IPocItemKey)
+                }
               >
                 Reference
               </Button>
@@ -201,45 +243,12 @@ export const useCreateProposalTableColumns = ({
       ),
       size: 220,
       cell: (info) => {
-        const {
-          project,
-          proposal,
-          onVoteAction,
-          isFetchVoteInfoLoading,
-          isVoteActionPending,
-          inActionKeys,
-          getItemVoteResult,
-        } = info.table.options.meta as TableCellsMeta;
-
-        const key = info.row.original.key;
-        const isLoading =
-          (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[key];
-        const {
-          itemVotedMemberCount,
-          itemPoints,
-          itemPointsNeeded,
-          isItemReachPointsNeeded,
-          isItemReachQuorum,
-          isItemValidated,
-          isUserVotedInItem,
-        } = getItemVoteResult(key);
+        const { isProposalCreator } = info.table.options.meta as TableCellsMeta;
 
         return (
-          <VoteItem
-            fieldKey={key}
-            itemPoints={itemPoints}
-            itemPointsNeeded={itemPointsNeeded}
-            isReachQuorum={isItemReachQuorum}
-            isReachPointsNeeded={isItemReachPointsNeeded}
-            isValidated={isItemValidated}
+          <SupportCell
+            rowData={info.row.original}
             isProposalCreator={isProposalCreator}
-            project={project!}
-            proposal={proposal!}
-            proposalItem={info.row.original}
-            isLoading={isLoading}
-            isUserVoted={isUserVotedInItem}
-            votedMemberCount={itemVotedMemberCount}
-            onAction={() => onVoteAction(info.row.original)}
           />
         );
       },
@@ -256,7 +265,7 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [isPageExpanded, isProposalCreator, showMetrics, columnHelper]);
+  }, [isPageExpanded, showMetrics, columnHelper]);
 
   return columns;
 };

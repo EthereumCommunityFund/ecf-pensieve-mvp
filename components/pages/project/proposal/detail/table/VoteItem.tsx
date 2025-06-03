@@ -6,6 +6,7 @@ import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
 
+import { useProposalDetailContext } from '../context/proposalDetailContext';
 import { ITableProposalItem } from '../ProposalDetails';
 
 interface IProps {
@@ -20,7 +21,6 @@ interface IProps {
   proposalItem: ITableProposalItem;
   votedMemberCount: number;
   isUserVoted: boolean;
-  isLoading: boolean;
   isProposalCreator: boolean;
   onAction: () => Promise<void>;
 }
@@ -35,9 +35,14 @@ const VoteItem: FC<IProps> = ({
   itemPointsNeeded,
   onAction,
   isUserVoted,
-  isLoading,
   isProposalCreator,
 }) => {
+  // 从context获取loading状态
+  const { isFetchVoteInfoLoading, isVoteActionPending, inActionKeys } =
+    useProposalDetailContext();
+  const isLoading =
+    (isFetchVoteInfoLoading || isVoteActionPending) && inActionKeys[fieldKey];
+
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
   return (
