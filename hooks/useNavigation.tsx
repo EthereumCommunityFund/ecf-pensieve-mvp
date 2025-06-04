@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   createContext,
   useCallback,
@@ -15,17 +15,25 @@ export const useNavigationContext = () => useContext(NavigationContext);
 
 const useNavigation = () => {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   const [currentRoute, setCurrentRoute] = useState<string | null>(null);
   const [previousRoute, setPreviousRoute] = useState<string | null>(null);
+  const [clientSearchParams, setClientSearchParams] =
+    useState<URLSearchParams | null>(null);
 
   useEffect(() => {
-    const url = `${pathname}?${searchParams}`;
+    if (typeof window !== 'undefined') {
+      setClientSearchParams(new URLSearchParams(window.location.search));
+    }
+  }, []);
+
+  useEffect(() => {
+    const effectiveSearchParams = clientSearchParams || new URLSearchParams('');
+    const url = `${pathname}?${effectiveSearchParams.toString()}`;
     setPreviousRoute(currentRoute);
     setCurrentRoute(url);
-  }, [pathname, searchParams]);
+  }, [pathname, clientSearchParams, currentRoute]);
 
   const onRouterBack = useCallback(() => {
     if (previousRoute) {
