@@ -49,8 +49,6 @@ const ProposalListItem = ({
     });
   }, [proposal.createdAt]);
 
-  const progressPercentage = 48;
-
   const formatAddress = useMemo(() => {
     return proposal.creator?.address
       ? `${proposal.creator.address.substring(0, 6)}...${proposal.creator.address.substring(
@@ -74,7 +72,7 @@ const ProposalListItem = ({
       {/* title and date */}
       <div className="flex items-center gap-[10px] border-b border-black/10 pb-[10px]">
         <p className="font-mona text-[18px] font-[700] leading-[1.6] text-black">
-          Proposal {proposal.id}
+          Proposal {index + 1}
         </p>
         <span className="text-[14px] font-[400] leading-[20px] text-black">
           {formattedDate}

@@ -80,7 +80,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
         {/* title and date */}
         <div className="flex items-center gap-[10px]">
           <p className="font-mona text-[18px] font-[700] leading-[1.6] text-black">
-            Proposal {proposalIndex}
+            Proposal {proposalIndex + 1}
           </p>
           <span className="shrink-0 text-[14px] font-[400] leading-[20px] text-black">
             {formattedDate}

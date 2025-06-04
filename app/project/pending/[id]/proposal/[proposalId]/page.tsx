@@ -48,6 +48,10 @@ const ProposalPage = () => {
     router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
+  const proposalIndex = useMemo(() => {
+    return proposals?.findIndex((p) => p.id === Number(proposalId));
+  }, [proposals, proposalId]);
+
   return (
     <div className=" pb-[20px]">
       <BackHeader>
@@ -61,7 +65,7 @@ const ProposalPage = () => {
           )}
           <span className="font-[600]">/</span>
           {isProposalFetched ? (
-            <span>Proposal {proposalId}</span>
+            <span>Proposal {proposalIndex + 1}</span>
           ) : (
             <Skeleton className="h-[20px] w-[100px]" />
           )}
@@ -71,7 +75,7 @@ const ProposalPage = () => {
       <ProposalDetailCard
         proposal={proposal}
         projectId={Number(projectId)}
-        proposalIndex={Number(proposalId)}
+        proposalIndex={proposalIndex}
         leadingProposalId={leadingProposalId}
       />
 
