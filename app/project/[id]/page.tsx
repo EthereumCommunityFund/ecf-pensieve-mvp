@@ -112,7 +112,6 @@ const ProjectPage = () => {
       showAuthPrompt();
       return;
     }
-    console.log('Submit entry for item:', selectedItemKey);
     setModalContentType('submitPropose');
   }, [selectedItemKey, profile, showAuthPrompt]);
 

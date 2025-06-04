@@ -216,7 +216,7 @@ export const useProjectTableColumns = ({
               if (onOpenModal && contentType) {
                 onOpenModal(item.key as IPocItemKey, contentType);
               } else {
-                console.log('Menu for item:', item.key);
+                // console.log('Menu for item:', item.key);
               }
             }}
           />

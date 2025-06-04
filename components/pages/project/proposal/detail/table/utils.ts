@@ -78,8 +78,6 @@ export const prepareProposalTableData = (
     });
   });
 
-  console.log('prepareProposalTableData', result);
-
   return result;
 };
 

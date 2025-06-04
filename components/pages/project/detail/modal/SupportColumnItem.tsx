@@ -74,11 +74,9 @@ const SupportColumnItem: FC<IProps> = ({
     } else {
       if (isUserVotedInProposalOrItemProposals) {
         // 在proposal中投过这个key的票，或者在item proposals中投过这个key的票
-        console.log('switch item proposal vote');
         onSwitchItemProposalVote(itemKey, proposalId);
       } else {
         // 在proposal中没有投过这个key的票，也没有在item proposals中投过这个key的票
-        console.log('create item proposal vote');
         onCreateItemProposalVote(itemKey, proposalId);
       }
     }
