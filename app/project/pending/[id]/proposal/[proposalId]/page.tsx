@@ -6,19 +6,21 @@ import { useCallback, useMemo, useState } from 'react';
 
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
+import { useProposalDetailContext } from '@/components/pages/project/proposal/detail/context/proposalDetailContext';
 import ProposalDetailCard from '@/components/pages/project/proposal/detail/ProposalDetailCard';
 import ProposalDetails from '@/components/pages/project/proposal/detail/ProposalDetails';
 import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeightCard';
 import { useAuth } from '@/context/AuthContext';
-import { trpc } from '@/lib/trpc/client';
-import { IProject, IProposalWithVotes } from '@/types';
-import { devLog } from '@/utils/devLog';
+import { IProposalWithVotes } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
 const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
   const router = useRouter();
   const { profile } = useAuth();
+
+  const { project, proposal, proposals, isProjectFetched, isProposalFetched } =
+    useProposalDetailContext();
 
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
@@ -30,34 +32,6 @@ const ProposalPage = () => {
   const toggleFiltered = useCallback(() => {
     setIsFiltered((pre) => !pre);
   }, []);
-
-  const { data: project, isFetched: isProjectFetched } =
-    trpc.project.getProjectById.useQuery(
-      { id: Number(projectId) },
-      {
-        enabled: !!projectId,
-        select: (data) => {
-          devLog('getProjectById', data);
-          return data;
-        },
-      },
-    );
-
-  const { data: proposal, isFetched: isProposalFetched } =
-    trpc.proposal.getProposalById.useQuery(
-      { id: Number(proposalId) },
-      {
-        enabled: !!proposalId,
-        select: (data) => {
-          devLog('proposal', data);
-          return data;
-        },
-      },
-    );
-
-  const proposals = useMemo(() => {
-    return project?.proposals || [];
-  }, [project?.proposals]);
 
   const { leadingProposalId } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({
@@ -122,10 +96,6 @@ const ProposalPage = () => {
           )}
         >
           <ProposalDetails
-            project={project as IProject}
-            proposal={proposal}
-            proposals={proposals || []}
-            projectId={Number(projectId)}
             isPageExpanded={isPageExpanded}
             isFiltered={isFiltered}
             toggleExpanded={togglePageExpanded}

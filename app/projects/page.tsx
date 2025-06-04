@@ -1,8 +1,8 @@
 'use client';
 
 import { Image } from '@heroui/react';
-import { useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -80,7 +80,7 @@ const ProjectsPage = () => {
           <ECFButton $size="small">Filter</ECFButton>
         </div>
 
-        <div className="flex-1">
+        <div className="w-full flex-1">
           <div className="px-2.5 py-2 opacity-80">
             <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
             <ECFTypography type={'body2'} className="mt-[5px]">
@@ -143,7 +143,7 @@ const ProjectsPage = () => {
           <RewardCard />
         </div>
 
-        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden">
+        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden ">
           <RewardCard />
         </div>
       </div>

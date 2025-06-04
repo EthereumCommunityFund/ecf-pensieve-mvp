@@ -209,7 +209,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, proposal, createVoteMutation, refetchVoteData],
+    [profile, proposal, createVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onSwitchVote = useCallback(
@@ -239,7 +239,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, proposal, switchVoteMutation, refetchVoteData],
+    [profile, proposal, switchVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onCancelVote = useCallback(
@@ -268,7 +268,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, cancelVoteMutation, refetchVoteData],
+    [profile, cancelVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const findSourceProposal = useCallback(
@@ -304,12 +304,14 @@ export function useProposalVotes(
         return;
       }
       if (isUserVotedItemOfProposal(item.key)) {
-        if (doNotShowCancelModal) {
-          await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
-        } else {
-          setIsCancelModalOpen(true);
-        }
+        console.warn('Can not cancel vote');
         return;
+        // if (doNotShowCancelModal) {
+        //   await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
+        // } else {
+        //   setIsCancelModalOpen(true);
+        // }
+        // return;
       }
 
       if (
@@ -325,8 +327,6 @@ export function useProposalVotes(
       isUserVotedItemOfProject,
       isUserVotedItemOfProposal,
       onCreateVote,
-      onCancelVote,
-      userVotesOfProposalMap,
       findSourceProposal,
     ],
   );

@@ -629,7 +629,7 @@ const AccountabilityCell = ({
   }
 
   return (
-    <div className="flex cursor-pointer flex-wrap items-center gap-[10px] py-[10px]">
+    <div className="flex cursor-pointer flex-wrap items-center gap-[10px]">
       {accountability.map((metric, index) => (
         <div
           key={index}
@@ -683,7 +683,7 @@ const LegitimacyCell = ({
   }
 
   return (
-    <div className="flex cursor-pointer flex-wrap items-center gap-[10px] py-[10px]">
+    <div className="flex cursor-pointer flex-wrap items-center gap-[10px]">
       {legitimacy.map((metric, index) => (
         <div
           key={index}

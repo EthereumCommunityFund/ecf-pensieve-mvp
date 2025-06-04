@@ -26,6 +26,12 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   const { proposalsByProjectIdAndKey, displayProposalDataOfKey } =
     useProjectDetailContext();
 
+  useEffect(() => {
+    if (displayProposalDataOfKey) {
+      setActiveTab('displayed');
+    }
+  }, [displayProposalDataOfKey]);
+
   // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
   const submissionQueueCount = useMemo(() => {
     const len = proposalsByProjectIdAndKey?.allItemProposals?.length;
@@ -79,6 +85,10 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
     };
   }, [itemKey]);
 
+  const onViewSubmissions = useCallback(() => {
+    setActiveTab('submission-queue');
+  }, []);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'displayed':
@@ -87,6 +97,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
             itemName={itemName}
             itemWeight={itemWeight}
             itemKey={itemKey}
+            onViewSubmissions={onViewSubmissions}
           />
         );
       case 'submission-queue':
@@ -107,6 +118,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
               itemName={itemName}
               itemWeight={itemWeight}
               itemKey={itemKey}
+              onViewSubmissions={onViewSubmissions}
             />
           );
         }
