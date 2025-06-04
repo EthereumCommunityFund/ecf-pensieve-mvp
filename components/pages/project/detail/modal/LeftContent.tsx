@@ -26,6 +26,12 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   const { proposalsByProjectIdAndKey, displayProposalDataOfKey } =
     useProjectDetailContext();
 
+  useEffect(() => {
+    if (displayProposalDataOfKey) {
+      setActiveTab('displayed');
+    }
+  }, [displayProposalDataOfKey]);
+
   // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
   const submissionQueueCount = useMemo(() => {
     const len = proposalsByProjectIdAndKey?.allItemProposals?.length;
