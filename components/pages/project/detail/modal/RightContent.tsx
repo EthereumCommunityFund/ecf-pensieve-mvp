@@ -30,8 +30,9 @@ const RightContent: FC<RightContentProps> = memo(
     const displayedItemWeight = useMemo(() => {
       if (!displayProposalDataOfKey) return 0;
       const itemTopWeight = displayProposalDataOfKey.itemTopWeight;
-      const weightOfLeadingProposal = displayProposalDataOfKey.support.count;
-      return Math.min(itemTopWeight, weightOfLeadingProposal);
+      // const weightOfLeadingProposal = displayProposalDataOfKey.support.count;
+      // return Math.min(itemTopWeight, weightOfLeadingProposal);
+      return itemTopWeight;
     }, [displayProposalDataOfKey]);
 
     const isUserWeightExceedsItemWeight = useMemo(() => {
