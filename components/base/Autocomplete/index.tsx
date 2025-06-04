@@ -109,14 +109,22 @@ export default function SelectCategories({
       slotProps={{
         popper: {
           sx: {
+            zIndex: 9999, // 确保下拉框显示在最上层
+            '& .MuiAutocomplete-paper': {
+              maxHeight: '200px', // 限制下拉框最大高度
+              overflow: 'auto',
+            },
             '& .MuiAutocomplete-listbox': {
               backgroundColor: 'white',
               border: '1px solid rgba(0, 0, 0, 0.1)',
               borderRadius: '8px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              maxHeight: '200px', // 限制列表最大高度
+              overflow: 'auto', // 添加滚动条
               '& .MuiAutocomplete-option': {
                 color: 'black',
                 fontSize: '14px',
+                minHeight: '36px', // 设置选项最小高度
                 '&[aria-selected="true"]': {
                   backgroundColor: 'rgba(0, 0, 0, 0.05)',
                 },
@@ -126,6 +134,29 @@ export default function SelectCategories({
               },
             },
           },
+          placement: 'bottom-start', // 确保下拉框在输入框下方
+          modifiers: [
+            {
+              name: 'flip',
+              enabled: true,
+              options: {
+                altBoundary: true,
+                rootBoundary: 'viewport',
+                padding: 8,
+              },
+            },
+            {
+              name: 'preventOverflow',
+              enabled: true,
+              options: {
+                altAxis: true,
+                altBoundary: true,
+                tether: false,
+                rootBoundary: 'viewport',
+                padding: 8,
+              },
+            },
+          ],
         },
       }}
       getOptionLabel={(option) => {
