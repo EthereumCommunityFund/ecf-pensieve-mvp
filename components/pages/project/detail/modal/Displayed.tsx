@@ -38,6 +38,7 @@ interface DisplayedProps {
   itemName?: string;
   itemWeight?: number;
   itemKey?: string;
+  onViewSubmissions: () => void;
 }
 const accountabilityMetrics: IAccountabilityMetric[] = [
   { name: 'Transparency', isExpanded: false },
@@ -60,6 +61,7 @@ const Displayed: FC<DisplayedProps> = ({
   itemName = 'ItemName',
   itemWeight = 22,
   itemKey,
+  onViewSubmissions,
 }) => {
   const { profile } = useAuth();
 
@@ -152,8 +154,14 @@ const Displayed: FC<DisplayedProps> = ({
       {showRowOverTaken && (
         <div className="flex items-center gap-[5px] rounded-[10px] p-2.5">
           <ClockClockwiseIcon size={20} />
-          <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black">
-            This item is current undergoing consensus. View Submissions
+          <span className="font-sans text-[13px] font-normal leading-[18px] text-black">
+            This item is current undergoing consensus.{' '}
+            <span
+              className="cursor-pointer font-[700] text-black hover:underline"
+              onClick={onViewSubmissions}
+            >
+              View Submissions
+            </span>
           </span>
         </div>
       )}

@@ -79,6 +79,10 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
     };
   }, [itemKey]);
 
+  const onViewSubmissions = useCallback(() => {
+    setActiveTab('submission-queue');
+  }, []);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'displayed':
@@ -87,6 +91,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
             itemName={itemName}
             itemWeight={itemWeight}
             itemKey={itemKey}
+            onViewSubmissions={onViewSubmissions}
           />
         );
       case 'submission-queue':
@@ -107,6 +112,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
               itemName={itemName}
               itemWeight={itemWeight}
               itemKey={itemKey}
+              onViewSubmissions={onViewSubmissions}
             />
           );
         }
