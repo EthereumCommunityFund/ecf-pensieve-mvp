@@ -162,8 +162,6 @@ const ModalContentSection: FC<{
             {/* Right Content */}
             <div className="tablet:w-full mobile:w-full w-[300px]">
               <RightContent
-                userWeight={Number(profile?.weight) || 0}
-                currentItemWeight={currentWeight}
                 onSubmitEntry={onSubmitEntry}
                 hideSubmitEntry={contentType === 'submitPropose'}
                 showRewardCard={showRewardCard}
