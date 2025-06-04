@@ -1,40 +1,31 @@
-import { clsx, type ClassValue } from 'clsx';
-import dayjs from 'dayjs';
-import { twMerge } from 'tailwind-merge';
 import { isAddress } from 'viem';
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import dayjs from '@/lib/dayjs';
+import { formatNumber as formatNumberUtil } from '@/utils/formatters';
 
+/**
+ * @deprecated Use the formatNumber function from @/utils/formatters instead
+ */
 export function formatNumber(num: number): string {
-  if (num >= 10000) {
-    // 万以上的数字
-    return (num / 10000).toFixed(2) + 'W';
-  } else if (num >= 1000) {
-    // 千以上的数字
-    return (num / 1000).toFixed(1) + 'K';
-  } else {
-    // 三位数及以下正常展示
-    return num.toString();
-  }
+  return formatNumberUtil(num);
 }
 
 export function formatTimeAgo(timestamp: number): string {
   const now = dayjs();
   const inputTime = dayjs(timestamp);
   const diffInDays = now.diff(inputTime, 'day');
+  const diffInHours = now.diff(inputTime, 'hour');
 
-  if (now.diff(inputTime, 'hour') < 24) {
-    return 'today';
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
   } else if (diffInDays < 7) {
-    return `${diffInDays}d`;
+    return `${diffInDays}d ago`;
   } else if (diffInDays < 30) {
-    return `${Math.floor(diffInDays / 7)}W`;
+    return `${Math.floor(diffInDays / 7)}w ago`;
   } else if (now.diff(inputTime, 'month') < 12) {
-    return `${now.diff(inputTime, 'month')}M`;
+    return `${now.diff(inputTime, 'month')}m ago`;
   } else {
-    return `${now.diff(inputTime, 'year')}Y`;
+    return `${now.diff(inputTime, 'year')}y ago`;
   }
 }
 

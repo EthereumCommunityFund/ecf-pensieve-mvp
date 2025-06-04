@@ -1,11 +1,12 @@
+import { SupabaseClient } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
-import { count, eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { ethers } from 'ethers';
 import { generateSiweNonce } from 'viem/siwe';
 import { z } from 'zod';
-import { SupabaseClient } from '@supabase/supabase-js';
 
 import { loginNonces, profiles } from '@/lib/db/schema';
+import { invitationCodes } from '@/lib/db/schema/invitations';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 const NONCE_EXPIRY_MS = 10 * 60 * 1000;
@@ -124,13 +125,11 @@ export const authRouter = router({
       const lowerCaseAddress = input.address.toLowerCase();
 
       try {
-        const result = await ctx.db
-          .select({ value: count() })
-          .from(profiles)
-          .where(eq(profiles.address, lowerCaseAddress));
+        const profile = await ctx.db.query.profiles.findFirst({
+          where: eq(profiles.address, lowerCaseAddress),
+        });
 
-        const registrationCount = result?.[0]?.value ?? 0;
-        return { registered: registrationCount > 0 };
+        return { registered: !!profile };
       } catch (error: unknown) {
         console.error('Check registration error:', error);
         throw new TRPCError({
@@ -152,10 +151,11 @@ export const authRouter = router({
           .trim()
           .min(1, 'Username cannot be empty')
           .optional(),
+        inviteCode: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { address, signature, message, username } = input;
+      const { address, signature, message, username, inviteCode } = input;
       const normalizedAddress = address.toLowerCase();
       const email = getFakeEmail(normalizedAddress);
 
@@ -166,26 +166,24 @@ export const authRouter = router({
 
       try {
         const [nonceResult, profileResult] = await Promise.all([
-          ctx.db
-            .select({
-              nonce: loginNonces.nonce,
-              expiresAt: loginNonces.expiresAt,
-            })
-            .from(loginNonces)
-            .where(eq(loginNonces.address, normalizedAddress))
-            .limit(1),
+          ctx.db.query.loginNonces.findFirst({
+            where: eq(loginNonces.address, normalizedAddress),
+            columns: {
+              nonce: true,
+              expiresAt: true,
+            },
+          }),
 
-          ctx.db
-            .select({
-              userId: profiles.userId,
-            })
-            .from(profiles)
-            .where(eq(profiles.address, normalizedAddress))
-            .limit(1),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.address, normalizedAddress),
+            columns: {
+              userId: true,
+            },
+          }),
         ]);
 
-        nonceData = nonceResult[0];
-        profileData = profileResult[0];
+        nonceData = nonceResult;
+        profileData = profileResult;
       } catch (dbError: any) {
         console.error(
           `[TRPC Verify DB] Error fetching Nonce or Profile for ${normalizedAddress}:`,
@@ -263,6 +261,54 @@ export const authRouter = router({
         });
       }
 
+      let invitationCodeId: number;
+      if (isNewUser) {
+        if (!inviteCode) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'New account requires an invite code.',
+          });
+        }
+
+        try {
+          const codes = await ctx.db.query.invitationCodes.findFirst({
+            where: eq(invitationCodes.code, inviteCode),
+          });
+
+          if (!codes) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Invalid invite code.',
+            });
+          }
+
+          if (codes.currentUses >= codes.maxUses) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Invite code has been used to its maximum capacity.',
+            });
+          }
+
+          await ctx.db
+            .update(invitationCodes)
+            .set({ currentUses: sql`${invitationCodes.currentUses} + 1` })
+            .where(eq(invitationCodes.id, codes.id));
+
+          invitationCodeId = codes.id;
+        } catch (error: any) {
+          console.error(
+            `[TRPC Verify Flow] Error during invite code validation for ${normalizedAddress} (code: ${inviteCode}):`,
+            error,
+          );
+          if (error instanceof TRPCError) throw error;
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Error validating invite code.',
+            cause: error,
+          });
+        }
+      }
+
       let userId: string;
       try {
         const { data: newUserResponse, error: createUserError } =
@@ -307,6 +353,7 @@ export const authRouter = router({
           userId: userId,
           address: normalizedAddress,
           name: username,
+          invitationCodeId: invitationCodeId!,
         });
       } catch (createProfileError: any) {
         console.error(

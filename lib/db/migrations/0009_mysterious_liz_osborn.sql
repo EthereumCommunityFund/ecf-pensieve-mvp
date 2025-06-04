@@ -1,0 +1,2 @@
+ALTER TABLE "active_logs" ADD COLUMN "proposal_creator_id" uuid;--> statement-breakpoint
+ALTER TABLE "active_logs" ADD CONSTRAINT "active_logs_proposal_creator_id_profiles_user_id_fk" FOREIGN KEY ("proposal_creator_id") REFERENCES "public"."profiles"("user_id") ON DELETE no action ON UPDATE no action;

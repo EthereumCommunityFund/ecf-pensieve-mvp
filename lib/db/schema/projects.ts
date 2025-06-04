@@ -1,7 +1,9 @@
 import {
   bigserial,
   boolean,
+  doublePrecision,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -42,16 +44,28 @@ export const projects = pgTable(
     orgStructure: text('org_structure').notNull(),
     publicGoods: boolean('public_goods').notNull(),
     founders: jsonb('founders').array().notNull(),
+    tags: text('tags').array().notNull(),
+    whitePaper: text('white_paper').notNull(),
+    dappSmartContracts: text('dapp_smart_contracts'),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),
     refs: jsonb('refs').array(),
     isPublished: boolean('is_published').notNull().default(false),
+    itemsTopWeight: jsonb('items_top_weight').notNull().default('{}'),
+    support: doublePrecision('support').notNull().default(0),
+    likeCount: integer('like_count').notNull().default(0),
+    hasProposalKeys: text('has_proposal_keys').array().notNull().default([]),
   },
   (table) => {
     return {
       creatorIdx: index('projects_creator_idx').on(table.creator),
       isPublishedIdx: index('projects_is_published_idx').on(table.isPublished),
+      paginationIdx: index('projects_pagination_idx').on(
+        table.isPublished,
+        table.id.desc(),
+      ),
+      createdAtIdx: index('projects_created_at_idx').on(table.createdAt.desc()),
     };
   },
 );

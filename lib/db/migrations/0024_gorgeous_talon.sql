@@ -1,0 +1,1 @@
+ALTER TABLE "project_logs" DROP COLUMN "is_not_leading";

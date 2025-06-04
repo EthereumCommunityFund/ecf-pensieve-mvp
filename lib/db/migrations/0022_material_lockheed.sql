@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ADD COLUMN "items_top_weight" jsonb DEFAULT '{}' NOT NULL;

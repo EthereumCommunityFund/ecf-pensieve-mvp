@@ -103,22 +103,34 @@ const MobileNavigation = ({ onClose }: NavigationProps) => {
                     }
                 `}
         >
-          <Image
-            src={isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
-            as={NextImage}
-            alt={item.name}
-            width={24}
-            height={24}
-            className={`
-                        size-6 shrink-0
-                        ${
-                          isActiveRoute(item.matchPath)
-                            ? 'brightness-0 invert' // Active state (white icon)
-                            : 'brightness-0' // Default state (black icon)
-                        }
-                        transition-all duration-200
-                    `}
-          />
+          {typeof (isActiveRoute(item.matchPath)
+            ? item.activeIcon
+            : item.icon) === 'string' ? (
+            <Image
+              src={
+                isActiveRoute(item.matchPath)
+                  ? (item.activeIcon as string)
+                  : (item.icon as string)
+              }
+              as={NextImage}
+              alt={item.name}
+              width={24}
+              height={24}
+              className={`
+                size-6 shrink-0
+                ${
+                  isActiveRoute(item.matchPath)
+                    ? 'brightness-0 invert' // Active state (white icon)
+                    : 'brightness-0' // Default state (black icon)
+                }
+                transition-all duration-200
+              `}
+            />
+          ) : (
+            <div className="size-6 shrink-0">
+              {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
+            </div>
+          )}
           <span className="font-medium">{item.name}</span>
         </Link>
       ))}

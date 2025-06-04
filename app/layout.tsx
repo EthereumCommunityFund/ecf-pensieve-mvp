@@ -1,8 +1,7 @@
 import '../styles/globals.css';
 
 import { MainLayout } from '@/components/layout/mainLayout';
-
-import { Providers } from './providers';
+import { Providers } from '@/components/layout/providers';
 
 export default function RootLayout({
   children,
@@ -10,7 +9,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="min-w-[390px] light">
+    <html lang="en" className="light min-w-[390px]">
       <body className="font-sans">
         <Providers>
           <MainLayout>{children}</MainLayout>

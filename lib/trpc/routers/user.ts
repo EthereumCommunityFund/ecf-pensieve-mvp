@@ -3,14 +3,13 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { profiles } from '@/lib/db/schema';
-import { protectedProcedure, router } from '@/lib/trpc/server';
+import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
 export const userRouter = router({
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
-    const [user] = await ctx.db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.userId, ctx.user.id));
+    const user = await ctx.db.query.profiles.findFirst({
+      where: eq(profiles.userId, ctx.user.id),
+    });
 
     if (!user) {
       throw new TRPCError({
@@ -22,18 +21,35 @@ export const userRouter = router({
     return user;
   }),
 
+  getUserByAddress: publicProcedure
+    .input(z.object({ address: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.query.profiles.findFirst({
+        where: eq(profiles.address, input.address.toLowerCase()),
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'user not found',
+        });
+      }
+      return user;
+    }),
+
   updateProfile: protectedProcedure
     .input(
       z.object({
         name: z.string().optional(),
-        avatar_url: z.string().optional(),
+        avatarUrl: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const [updatedUser] = await ctx.db
         .update(profiles)
         .set({
-          ...input,
+          name: input.name,
+          avatarUrl: input.avatarUrl === '' ? null : input.avatarUrl,
         })
         .where(eq(profiles.userId, ctx.user.id))
         .returning();

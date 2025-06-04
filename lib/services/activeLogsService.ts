@@ -5,6 +5,8 @@ export enum LogType {
   PROJECT = 'project',
   PROPOSAL = 'proposal',
   VOTE = 'vote',
+  ITEM_PROPOSAL = 'item_proposal',
+  LIKE = 'like',
 }
 
 export enum LogAction {
@@ -13,15 +15,38 @@ export enum LogAction {
   DELETE = 'delete',
 }
 
+export type LogItem = {
+  field: string;
+  oldValue?: any;
+  newValue?: any;
+};
+
+type LogData = {
+  userId: string;
+  action: LogAction;
+  type: LogType;
+  targetId: number;
+  projectId?: number;
+  items?: LogItem[];
+  proposalCreatorId?: string;
+};
+
 export async function addActiveLog(
-  userId: string,
-  action: string,
-  type: string,
-  targetId: number,
-  projectId?: number,
+  {
+    userId,
+    action,
+    type,
+    targetId,
+    projectId,
+    items,
+    proposalCreatorId,
+  }: LogData,
+  tx?: any,
 ) {
   try {
-    const [insertedLog] = await db
+    const currentDb = tx ?? db;
+
+    const [insertedLog] = await currentDb
       .insert(activeLogs)
       .values({
         userId,
@@ -29,6 +54,8 @@ export async function addActiveLog(
         type,
         targetId,
         projectId,
+        items,
+        proposalCreatorId,
       })
       .returning();
 
@@ -40,16 +67,39 @@ export async function addActiveLog(
 }
 
 const createLogActions = (type: LogType) => ({
-  create: (userId: string, targetId: number, projectId?: number) =>
-    addActiveLog(userId, LogAction.CREATE, type, targetId, projectId),
-  update: (userId: string, targetId: number, projectId?: number) =>
-    addActiveLog(userId, LogAction.UPDATE, type, targetId, projectId),
-  delete: (userId: string, targetId: number, projectId?: number) =>
-    addActiveLog(userId, LogAction.DELETE, type, targetId, projectId),
+  create: (data: Omit<LogData, 'type' | 'action'>, tx?: any) =>
+    addActiveLog(
+      {
+        ...data,
+        type,
+        action: LogAction.CREATE,
+      },
+      tx,
+    ),
+  update: (data: Omit<LogData, 'type' | 'action'>, tx?: any) =>
+    addActiveLog(
+      {
+        ...data,
+        type,
+        action: LogAction.UPDATE,
+      },
+      tx,
+    ),
+  delete: (data: Omit<LogData, 'type' | 'action'>, tx?: any) =>
+    addActiveLog(
+      {
+        ...data,
+        type,
+        action: LogAction.DELETE,
+      },
+      tx,
+    ),
 });
 
 export const logUserActivity = {
   project: createLogActions(LogType.PROJECT),
   proposal: createLogActions(LogType.PROPOSAL),
   vote: createLogActions(LogType.VOTE),
+  itemProposal: createLogActions(LogType.ITEM_PROPOSAL),
+  like: createLogActions(LogType.LIKE),
 };

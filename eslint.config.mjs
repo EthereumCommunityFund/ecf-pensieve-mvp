@@ -88,6 +88,28 @@ export default [
           ignore: ['css'],
         },
       ],
+
+      'tailwindcss/no-contradicting-classname': [
+        'error',
+        {
+          config: {
+            classNameContradictions: {
+              'font-mona': [],
+              'font-saira': [],
+              'font-sans': [],
+            },
+          },
+        },
+      ],
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        {
+          whitelist: ['font-mona', 'font-saira', 'font-sans', 'scrollbar-hide'],
+        },
+      ],
+
+      // 禁用 PropTypes 相关规则，因为我们使用 TypeScript 进行类型检查
+      'react/prop-types': 'off',
     },
   },
   {
@@ -110,6 +132,7 @@ export default [
       '**/.vscode/**',
       '**/README.md',
       '**/LICENSE',
+      '**/stories/**',
     ],
   },
 ];

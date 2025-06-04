@@ -1,6 +1,7 @@
 import {
   bigint,
   bigserial,
+  doublePrecision,
   index,
   pgTable,
   text,
@@ -8,7 +9,9 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
+import { projects } from './projects';
 import { proposals } from './proposals';
 
 export const voteRecords = pgTable(
@@ -19,12 +22,19 @@ export const voteRecords = pgTable(
       .defaultNow()
       .notNull(),
     key: text('key').notNull(),
-    proposalId: bigint('proposal_id', { mode: 'number' })
-      .notNull()
-      .references(() => proposals.id),
+    proposalId: bigint('proposal_id', { mode: 'number' }).references(
+      () => proposals.id,
+    ),
+    itemProposalId: bigint('item_proposal_id', { mode: 'number' }).references(
+      () => itemProposals.id,
+    ),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),
+    weight: doublePrecision('weight'),
+    projectId: bigint('project_id', { mode: 'number' })
+      .notNull()
+      .references(() => projects.id),
   },
   (table) => {
     return {

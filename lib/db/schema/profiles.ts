@@ -1,5 +1,15 @@
 import { InferSelectModel } from 'drizzle-orm';
-import { pgSchema, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  doublePrecision,
+  pgSchema,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+import { invitationCodes } from './invitations';
 
 const authSchema = pgSchema('auth');
 
@@ -17,6 +27,10 @@ export const profiles = pgTable('profiles', {
   name: text('name').notNull(),
   avatarUrl: text('avatar_url'),
   address: text('address').notNull(),
+  weight: doublePrecision('weight').default(0),
+  invitationCodeId: bigint('invitation_code_id', { mode: 'number' }).references(
+    () => invitationCodes.id,
+  ),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .defaultNow()
     .notNull(),

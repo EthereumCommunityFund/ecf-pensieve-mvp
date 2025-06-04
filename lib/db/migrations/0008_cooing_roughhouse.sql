@@ -1,0 +1,1 @@
+ALTER TABLE "active_logs" ADD COLUMN "items" json;

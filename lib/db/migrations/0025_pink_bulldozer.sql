@@ -1,0 +1,1 @@
+ALTER TABLE "project_logs" ADD COLUMN "is_not_leading" boolean DEFAULT false NOT NULL;

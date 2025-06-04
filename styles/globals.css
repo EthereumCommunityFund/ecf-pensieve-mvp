@@ -11,6 +11,7 @@
   --primary-foreground: #ffffff;
   --font-open-sans: 'Open Sans', sans-serif;
   --font-saira: 'Saira', sans-serif;
+  --font-mona-sans: 'Mona Sans', sans-serif;
 }
 
 body {
@@ -30,5 +31,14 @@ body {
 
   .btn-primary {
     @apply btn-base bg-black text-white hover:bg-gray-800 flex items-center gap-2;
+  }
+}
+
+#active-contributions {
+  svg {
+    rect {
+      rx: 3px;
+      ry: 3px;
+    }
   }
 }

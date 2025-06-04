@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         pathname: '/images/**',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev',
+        pathname: '/uploads/**',
+      },
     ],
   },
 };

@@ -1,6 +1,11 @@
 'use client';
 
-import { Button, ButtonProps, cn } from '@heroui/react';
+import {
+  ButtonProps,
+  cn,
+  extendVariants,
+  Button as HButton,
+} from '@heroui/react';
 
 type IButtonSize = 'small' | 'normal' | 'large';
 
@@ -14,14 +19,14 @@ export interface IButtonProps extends ButtonProps {
   $size?: IButtonSize;
 }
 
-function ECFButton({
+export function ECFButton({
   className,
   children,
   $size = 'normal',
   ...props
 }: IButtonProps) {
   return (
-    <Button
+    <HButton
       className={cn(
         'flex items-center gap-2',
         'px-5 rounded-[5px] shrink-0',
@@ -34,8 +39,40 @@ function ECFButton({
       {...props}
     >
       {children}
-    </Button>
+    </HButton>
   );
 }
 
-export default ECFButton;
+export const Button = extendVariants(HButton, {
+  variants: {
+    color: {
+      primary:
+        'bg-black hover:bg-black/80 disabled:hover:bg-black/50 text-white',
+      secondary:
+        'bg-transparent hover:bg-black/10 text-black border border-black/10',
+    },
+    size: {
+      sm: 'px-[10px] py-[6px] h-[32px] text-[14px] leading-[20px] gap-[10px] font-[600]',
+      md: 'px-[14px] py-[10px] h-[42px] text-[14px] leading-[20px] gap-[10px] font-[600]',
+      lg: 'px-[14px] py-[12px] h-[48px] text-[16px] leading-[24px] gap-[10px] font-[600]',
+    },
+    radius: {
+      sm: 'rounded-[5px]',
+      md: 'rounded-[5px]',
+      lg: 'rounded-[12px]',
+      full: 'rounded-full',
+    },
+    border: {
+      true: 'border border-black/10',
+    },
+    isIconOnly: {
+      true: 'bg-transparent p-0 border-none min-w-0',
+    },
+  },
+
+  defaultVariants: {
+    color: 'secondary',
+    size: 'md',
+    radius: 'sm',
+  },
+});

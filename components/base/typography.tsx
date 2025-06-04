@@ -6,7 +6,9 @@ export type ITypographyType =
   | 'subtitle1'
   | 'subtitle2'
   | 'body1'
-  | 'body2';
+  | 'body2'
+  | 'caption'
+  | 'caption1';
 
 export interface ITypographyProps
   extends React.HTMLAttributes<HTMLParagraphElement> {
@@ -21,6 +23,8 @@ const typographyStyles: Record<ITypographyType, string> = {
   subtitle2: 'text-black text-[18px] leading-[29px] font-semibold',
   body1: 'text-black text-[16px] leading-[24px]',
   body2: 'text-black text-[14px] leading-[20x]',
+  caption: 'text-black text-[13px]',
+  caption1: 'text-black text-[12px] leading-none',
 };
 
 export default function ECFTypography({

@@ -1,9 +1,23 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { proposals, voteRecords } from '@/lib/db/schema';
+import {
+  itemProposals,
+  profiles,
+  projectLogs,
+  projects,
+  proposals,
+  voteRecords,
+} from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import {
+  checkNeedQuorum,
+  handleOriginalProposalUpdate,
+  handleVoteRecord,
+  processItemProposalUpdate,
+  processItemProposalVoteResult,
+} from '@/lib/utils/itemProposalUtils';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
@@ -18,80 +32,98 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const proposal = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.id, proposalId))
-        .limit(1);
+      return await ctx.db.transaction(async (tx) => {
+        const [proposalWithProject, userProfile, existingVote] =
+          await Promise.all([
+            tx.query.proposals.findFirst({
+              where: eq(proposals.id, proposalId),
+              with: {
+                project: true,
+              },
+            }),
+            tx.query.profiles.findFirst({
+              where: eq(profiles.userId, ctx.user.id),
+            }),
+            tx.query.voteRecords.findFirst({
+              where: and(
+                eq(voteRecords.creator, ctx.user.id),
+                eq(voteRecords.key, key),
+                eq(voteRecords.proposalId, proposalId),
+              ),
+            }),
+          ]);
 
-      if (!proposal || proposal.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Proposal not found',
+        if (!proposalWithProject) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Proposal not found',
+          });
+        }
+
+        if (!proposalWithProject.project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Associated project not found',
+          });
+        }
+
+        const projectId = proposalWithProject.projectId;
+
+        if (proposalWithProject.project.isPublished) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot vote on proposals for published projects',
+          });
+        }
+
+        if (existingVote) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'You have already voted for this key in this proposal',
+          });
+        }
+
+        const otherVote = await tx.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.key, key),
+            eq(voteRecords.projectId, projectId),
+            ne(voteRecords.proposalId, proposalId),
+          ),
         });
-      }
 
-      const projectId = proposal[0].projectId;
+        if (otherVote) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+              'You have already voted for the same key in another proposal of this project',
+          });
+        }
 
-      const projectProposals = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.projectId, projectId));
+        const [vote] = await tx
+          .insert(voteRecords)
+          .values({
+            key,
+            proposalId,
+            creator: ctx.user.id,
+            weight: userProfile?.weight ?? 0,
+            projectId,
+          })
+          .returning();
 
-      const projectProposalIds = projectProposals.map((p) => p.id);
-
-      const existingVotes = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(eq(voteRecords.creator, ctx.user.id), eq(voteRecords.key, key)),
+        logUserActivity.vote.create(
+          {
+            userId: ctx.user.id,
+            targetId: vote.id,
+            projectId,
+            items: [{ field: key }],
+            proposalCreatorId: proposalWithProject.creator,
+          },
+          tx,
         );
 
-      const conflictingVotes = existingVotes.filter(
-        (vote) =>
-          projectProposalIds.includes(vote.proposalId) &&
-          vote.proposalId !== proposalId,
-      );
-
-      if (conflictingVotes.length > 0) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message:
-            'You have already voted for the same key in another proposal of this project',
-        });
-      }
-
-      const existingVote = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.proposalId, proposalId),
-            eq(voteRecords.key, key),
-          ),
-        )
-        .limit(1);
-
-      if (existingVote && existingVote.length > 0) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'You have already voted for this key in this proposal',
-        });
-      }
-
-      const [vote] = await ctx.db
-        .insert(voteRecords)
-        .values({
-          key,
-          proposalId,
-          creator: ctx.user.id,
-        })
-        .returning();
-
-      logUserActivity.vote.create(ctx.user.id, vote.id, projectId);
-
-      return vote;
+        return vote;
+      });
     }),
 
   switchVote: protectedProcedure
@@ -104,80 +136,88 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      const targetProposal = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.id, proposalId))
-        .limit(1);
-
-      if (!targetProposal || targetProposal.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Target proposal not found',
+      return await ctx.db.transaction(async (tx) => {
+        const targetProposal = await tx.query.proposals.findFirst({
+          where: eq(proposals.id, proposalId),
+          with: {
+            project: true,
+          },
         });
-      }
 
-      const projectId = targetProposal[0].projectId;
+        if (!targetProposal) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Target proposal not found',
+          });
+        }
 
-      const projectProposals = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.projectId, projectId));
+        if (!targetProposal.project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Associated project not found',
+          });
+        }
 
-      const projectProposalIds = projectProposals.map((p) => p.id);
+        if (targetProposal.project.isPublished) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot switch votes on proposals for published projects',
+          });
+        }
 
-      const existingVotes = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(eq(voteRecords.creator, ctx.user.id), eq(voteRecords.key, key)),
+        const [userProfile, voteToSwitch] = await Promise.all([
+          tx.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+          tx.query.voteRecords.findFirst({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.key, key),
+              eq(voteRecords.projectId, targetProposal.projectId),
+            ),
+            with: {
+              proposal: true,
+            },
+          }),
+        ]);
+
+        if (!voteToSwitch) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No conflicting vote found to switch',
+          });
+        }
+
+        if (voteToSwitch.proposalId === proposalId) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+              'You have already voted for this key in the target proposal',
+          });
+        }
+
+        const [updatedVote] = await tx
+          .update(voteRecords)
+          .set({
+            proposalId,
+            weight: userProfile?.weight ?? 0,
+          })
+          .where(eq(voteRecords.id, voteToSwitch.id))
+          .returning();
+
+        logUserActivity.vote.update(
+          {
+            userId: ctx.user.id,
+            targetId: updatedVote.id,
+            projectId: targetProposal.projectId,
+            items: [{ field: key }],
+            proposalCreatorId: targetProposal.creator,
+          },
+          tx,
         );
 
-      const conflictingVotes = existingVotes.filter(
-        (vote) =>
-          projectProposalIds.includes(vote.proposalId) &&
-          vote.proposalId !== proposalId,
-      );
-
-      if (conflictingVotes.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No conflicting vote found to switch',
-        });
-      }
-
-      const voteToSwitch = conflictingVotes[0];
-
-      const targetProposalVote = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(
-          and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.proposalId, proposalId),
-            eq(voteRecords.key, key),
-          ),
-        )
-        .limit(1);
-
-      if (targetProposalVote && targetProposalVote.length > 0) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'You have already voted for this key in the target proposal',
-        });
-      }
-
-      const [updatedVote] = await ctx.db
-        .update(voteRecords)
-        .set({
-          proposalId,
-        })
-        .where(eq(voteRecords.id, voteToSwitch.id))
-        .returning();
-
-      logUserActivity.vote.update(ctx.user.id, updatedVote.id, projectId);
-
-      return updatedVote;
+        return updatedVote;
+      });
     }),
 
   cancelVote: protectedProcedure
@@ -189,41 +229,69 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id } = input;
 
-      const condition = and(
-        eq(voteRecords.id, id),
-        eq(voteRecords.creator, ctx.user.id),
-      );
+      return await ctx.db.transaction(async (tx) => {
+        const condition = and(
+          eq(voteRecords.id, id),
+          eq(voteRecords.creator, ctx.user.id),
+        );
 
-      const [existingVote, voteWithProposal] = await Promise.all([
-        ctx.db.select().from(voteRecords).where(condition).limit(1),
-        ctx.db
-          .select({
-            voteRecord: voteRecords,
-            proposal: proposals,
-          })
-          .from(voteRecords)
-          .where(condition)
-          .innerJoin(proposals, eq(voteRecords.proposalId, proposals.id))
-          .limit(1),
-      ]);
-
-      if (!existingVote || existingVote.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Vote record not found',
+        const voteWithDetails = await tx.query.voteRecords.findFirst({
+          where: condition,
+          with: {
+            proposal: {
+              with: {
+                project: true,
+              },
+            },
+          },
         });
-      }
 
-      const projectId = voteWithProposal[0]?.proposal.projectId;
+        if (!voteWithDetails || !voteWithDetails.proposal) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Vote record not found',
+          });
+        }
 
-      const [deletedVote] = await ctx.db
-        .delete(voteRecords)
-        .where(condition)
-        .returning();
+        if (!voteWithDetails.proposal.project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Associated project not found',
+          });
+        }
 
-      logUserActivity.vote.delete(ctx.user.id, deletedVote.id, projectId);
+        if (voteWithDetails.proposal.creator === ctx.user.id) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot cancel vote on your own proposal',
+          });
+        }
 
-      return deletedVote;
+        if (voteWithDetails.proposal.project.isPublished) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot cancel votes on proposals for published projects',
+          });
+        }
+
+        const [deletedVote] = await tx
+          .delete(voteRecords)
+          .where(condition)
+          .returning();
+
+        logUserActivity.vote.delete(
+          {
+            userId: ctx.user.id,
+            targetId: deletedVote.id,
+            projectId: voteWithDetails.proposal!.projectId,
+            items: [{ field: voteWithDetails.key }],
+            proposalCreatorId: voteWithDetails.proposal!.creator,
+          },
+          tx,
+        );
+
+        return deletedVote;
+      });
     }),
 
   getVotesByProposalId: publicProcedure
@@ -233,10 +301,12 @@ export const voteRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const votes = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(eq(voteRecords.proposalId, input.proposalId));
+      const votes = await ctx.db.query.voteRecords.findMany({
+        with: {
+          creator: true,
+        },
+        where: eq(voteRecords.proposalId, input.proposalId),
+      });
 
       return votes;
     }),
@@ -250,22 +320,247 @@ export const voteRouter = router({
     .query(async ({ ctx, input }) => {
       const { projectId } = input;
 
-      const projectProposals = await ctx.db
-        .select()
-        .from(proposals)
-        .where(eq(proposals.projectId, projectId));
-
-      if (!projectProposals || projectProposals.length === 0) {
-        return [];
-      }
-
-      const proposalIds = projectProposals.map((p) => p.id);
-
-      const votes = await ctx.db
-        .select()
-        .from(voteRecords)
-        .where(inArray(voteRecords.proposalId, proposalIds));
+      const votes = await ctx.db.query.voteRecords.findMany({
+        with: {
+          creator: true,
+        },
+        where: eq(voteRecords.projectId, projectId),
+      });
 
       return votes;
+    }),
+
+  createItemProposalVote: protectedProcedure
+    .input(
+      z.object({
+        itemProposalId: z.number(),
+        key: z.string().min(1, 'Key cannot be empty'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { itemProposalId, key } = input;
+
+      return await ctx.db.transaction(async (tx) => {
+        const [itemProposal, userProfile] = await Promise.all([
+          tx.query.itemProposals.findFirst({
+            where: eq(itemProposals.id, itemProposalId),
+            with: {
+              creator: true,
+            },
+          }),
+          tx.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+        ]);
+
+        if (!itemProposal) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Item proposal not found',
+          });
+        }
+
+        const existingVote = await tx.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.projectId, itemProposal.projectId),
+            eq(voteRecords.key, key),
+          ),
+        });
+
+        if (existingVote) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'You have already voted for this key in this project',
+          });
+        }
+
+        const vote = await handleVoteRecord(tx, {
+          userId: ctx.user.id,
+          projectId: itemProposal.projectId,
+          itemProposalId,
+          key,
+          weight: userProfile?.weight ?? 0,
+        });
+
+        const [votes, project, leadingProposal] = await Promise.all([
+          tx.query.voteRecords.findMany({
+            where: and(
+              eq(voteRecords.itemProposalId, itemProposalId),
+              eq(voteRecords.key, key),
+            ),
+          }),
+          tx.query.projects.findFirst({
+            where: eq(projects.id, itemProposal.projectId),
+          }),
+          tx.query.projectLogs.findFirst({
+            where: and(
+              eq(projectLogs.projectId, itemProposal.projectId),
+              eq(projectLogs.key, key),
+              eq(projectLogs.isNotLeading, false),
+            ),
+            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+          }),
+        ]);
+
+        if (leadingProposal?.itemProposalId === itemProposalId) {
+          await processItemProposalUpdate(tx, {
+            votes,
+            project,
+            key,
+          });
+          return vote;
+        }
+
+        const needCheckQuorum = await checkNeedQuorum(tx, {
+          projectId: itemProposal.projectId,
+          key,
+        });
+
+        await processItemProposalVoteResult(tx, {
+          votes,
+          itemProposal,
+          project,
+          key,
+          needCheckQuorum,
+          userId: ctx.user.id,
+        });
+
+        return vote;
+      });
+    }),
+
+  switchItemProposalVote: protectedProcedure
+    .input(
+      z.object({
+        itemProposalId: z.number(),
+        key: z.string().min(1, 'Key cannot be empty'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { itemProposalId, key } = input;
+
+      return await ctx.db.transaction(async (tx) => {
+        const [targetItemProposal, userProfile] = await Promise.all([
+          tx.query.itemProposals.findFirst({
+            where: eq(itemProposals.id, itemProposalId),
+            with: {
+              creator: true,
+            },
+          }),
+          tx.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+        ]);
+
+        if (!targetItemProposal) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Target item proposal not found',
+          });
+        }
+
+        const projectId = targetItemProposal.projectId;
+
+        const voteToSwitch = await tx.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.key, key),
+            eq(voteRecords.projectId, projectId),
+          ),
+        });
+
+        if (!voteToSwitch) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No conflicting vote found to switch',
+          });
+        }
+
+        if (voteToSwitch.itemProposalId === itemProposalId) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+              'You have already voted for this key in the target item proposal',
+          });
+        }
+
+        const originalItemProposalId = voteToSwitch.itemProposalId;
+
+        const [updatedVote] = await tx
+          .update(voteRecords)
+          .set({
+            itemProposalId,
+            proposalId: null,
+            weight: userProfile?.weight ?? 0,
+          })
+          .where(eq(voteRecords.id, voteToSwitch.id))
+          .returning();
+
+        const [votes, project, leadingProposal] = await Promise.all([
+          tx.query.voteRecords.findMany({
+            where: and(
+              eq(voteRecords.itemProposalId, itemProposalId),
+              eq(voteRecords.key, key),
+            ),
+          }),
+          tx.query.projects.findFirst({
+            where: eq(projects.id, projectId),
+          }),
+          tx.query.projectLogs.findFirst({
+            where: and(
+              eq(projectLogs.projectId, targetItemProposal.projectId),
+              eq(projectLogs.key, key),
+              eq(projectLogs.isNotLeading, false),
+            ),
+            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+          }),
+        ]);
+
+        if (leadingProposal?.itemProposalId === itemProposalId) {
+          await processItemProposalUpdate(tx, {
+            votes,
+            project,
+            key,
+          });
+          return updatedVote;
+        }
+
+        const needCheckQuorum = await checkNeedQuorum(tx, {
+          projectId,
+          key,
+        });
+
+        await processItemProposalVoteResult(tx, {
+          votes,
+          itemProposal: targetItemProposal,
+          project,
+          key,
+          needCheckQuorum,
+          userId: ctx.user.id,
+        });
+
+        if (originalItemProposalId) {
+          await handleOriginalProposalUpdate(tx, {
+            originalItemProposalId,
+            projectId,
+            key,
+            project,
+          });
+        }
+
+        logUserActivity.vote.update(
+          {
+            userId: ctx.user.id,
+            targetId: updatedVote.id,
+            projectId,
+            items: [{ field: key }],
+            proposalCreatorId: targetItemProposal.creator.userId,
+          },
+          tx,
+        );
+
+        return updatedVote;
+      });
     }),
 });
