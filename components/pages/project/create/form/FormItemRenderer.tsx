@@ -10,6 +10,7 @@ import {
 } from 'react-hook-form';
 
 import {
+  Autocomplete,
   Button,
   DatePicker,
   Input,
@@ -209,6 +210,27 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               </SelectItem>
             ))}
           </Select>
+          {errorMessageElement}
+        </div>
+      );
+    }
+    case 'autoComplete': {
+      // 确保 field.value 是数组格式
+      const currentValue = Array.isArray(field.value) ? field.value : [];
+
+      return (
+        <div>
+          <Autocomplete
+            options={options || []}
+            value={currentValue}
+            onChange={(newValue: string[]) => {
+              field.onChange(newValue);
+              field.onBlur(); // 触发验证
+            }}
+            placeholder={placeholder}
+            isDisabled={isDisabled}
+            isInvalid={!!error}
+          />
           {errorMessageElement}
         </div>
       );

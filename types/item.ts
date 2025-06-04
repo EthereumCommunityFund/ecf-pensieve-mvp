@@ -114,6 +114,7 @@ export type IFormDisplayType =
   | 'link'
   | 'date'
   | 'founderList'
+  | 'autoComplete'
   | 'roadmap';
 
 export interface IGroupConfig {

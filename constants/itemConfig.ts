@@ -73,7 +73,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     description: 'provide a list of tags for this project',
     shortDescription: 'A list of tags for the project.',
     weight: ALL_POC_ITEM_MAP.tags.weight,
-    formDisplayType: 'selectMultiple',
+    formDisplayType: 'autoComplete',
     placeholder: 'Select tags',
     showReference: true,
     options: [
