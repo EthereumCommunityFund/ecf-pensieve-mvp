@@ -1,34 +1,361 @@
 'use client';
 
-import { createContext, ReactNode, useContext } from 'react';
+import { useParams } from 'next/navigation';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
 
-import { IProject, IProposal } from '@/types';
-import { IPocItemKey } from '@/types/item';
+import { useProposalVotes as useProposalVotesHook } from '@/components/pages/project/proposal/detail/useProposalVotes';
+import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
+import { IProject, IProposal, IVote } from '@/types';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
+import { devLog } from '@/utils/devLog';
 import { IVoteResultOfItem } from '@/utils/proposal';
 
+import { ITableProposalItem } from '../ProposalDetails';
+import { useProposalModalState } from '../hooks/useProposalModalState';
+import { useProposalTableStates } from '../hooks/useProposalTableStates';
+
+const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
+  [IItemSubCategoryEnum.Organization]: false,
+  [IItemSubCategoryEnum.Team]: false,
+  [IItemSubCategoryEnum.BasicProfile]: false,
+  [IItemSubCategoryEnum.Development]: false,
+  [IItemSubCategoryEnum.Finances]: false,
+  [IItemSubCategoryEnum.Token]: false,
+  [IItemSubCategoryEnum.Governance]: false,
+};
+
 export interface ProposalDetailContextType {
-  isFetchVoteInfoLoading: boolean;
-  isVoteActionPending: boolean;
-  inActionKeys: Record<IPocItemKey, boolean>;
-  getItemVoteResult: (IPocItemKey: string) => IVoteResultOfItem;
-  onVoteAction: (item: any) => Promise<void>;
+  projectId: number;
   project?: IProject;
   proposal?: IProposal;
+  proposals: IProposal[];
+  isProjectFetched: boolean;
+  isProposalFetched: boolean;
+  isFetchVoteInfoLoading: boolean;
+  isVoteActionPending: boolean;
+  inActionKeys: Partial<Record<IPocItemKey, boolean>>;
+  getItemVoteResult: (IPocItemKey: string) => IVoteResultOfItem;
+
+  onVoteAction: (item: ITableProposalItem) => Promise<void>;
+
+  expandedRows: Partial<Record<IPocItemKey, boolean>>;
+  metricsVisibleSubCat: Partial<Record<IItemSubCategoryEnum, boolean>>;
+  toggleRowExpanded: (key: IPocItemKey) => void;
+  toggleMetricsVisible: (subCat: IItemSubCategoryEnum) => void;
+  setExpandedRows: (
+    expandedRows: Partial<Record<IPocItemKey, boolean>>,
+  ) => void;
+
+  userVotesOfProposalMap: Partial<Record<IPocItemKey, IVote>>;
+  onCancelVote: (voteId: number, itemKey: IPocItemKey) => Promise<void>;
+  onSwitchVote: (item: ITableProposalItem) => Promise<void>;
+  switchVotePending: boolean;
+  cancelVotePending: boolean;
+  handleVoteAction: (
+    item: ITableProposalItem,
+    doNotShowCancelModal: boolean,
+    options: {
+      setCurrentVoteItem: (item: ITableProposalItem | null) => void;
+      setIsCancelModalOpen: (isOpen: boolean) => void;
+      setIsSwitchModalOpen: (isOpen: boolean) => void;
+      setSourceProposal: (proposal: IProposal | null) => void;
+    },
+  ) => Promise<void>;
+
+  isSwitchModalOpen: boolean;
+  isCancelModalOpen: boolean;
+  isReferenceModalOpen: boolean;
+  currentReferenceKey: string;
+  currentVoteItem: ITableProposalItem | null;
+  sourceProposal: IProposal | null;
+  doNotShowCancelModal: boolean;
+  setIsSwitchModalOpen: (isOpen: boolean) => void;
+  setIsCancelModalOpen: (isOpen: boolean) => void;
+  setIsReferenceModalOpen: (isOpen: boolean) => void;
+  setCurrentReferenceKey: (key: string) => void;
+  setCurrentVoteItem: (item: ITableProposalItem | null) => void;
+  setSourceProposal: (proposal: IProposal | null) => void;
+  setDoNotShowCancelModal: (doNotShowCancelModal: boolean) => void;
 }
 
-const ProposalDetailContext = createContext<
-  ProposalDetailContextType | undefined
->(undefined);
+const ProposalDetailContext = createContext<ProposalDetailContextType>({
+  projectId: 0,
+  project: undefined,
+  proposal: undefined,
+  proposals: [],
+  isProjectFetched: false,
+  isProposalFetched: false,
+  isFetchVoteInfoLoading: false,
+  isVoteActionPending: false,
+  inActionKeys: {},
+  getItemVoteResult: (key: string) => ({
+    proposalId: 0,
+    key: key,
+    itemVotedMemberCount: 0,
+    itemPoints: 0,
+    itemPointsNeeded: 0,
+    isItemReachPointsNeeded: false,
+    isItemReachQuorum: false,
+    isItemValidated: false,
+    isUserVotedInItem: false,
+  }),
+  onVoteAction: async (item: ITableProposalItem) => {},
+  expandedRows: {},
+  metricsVisibleSubCat: {},
+  toggleRowExpanded: () => {},
+  toggleMetricsVisible: () => {},
+  setExpandedRows: () => {},
 
+  userVotesOfProposalMap: {},
+  onCancelVote: async (voteId: number, itemKey: IPocItemKey) => {},
+  onSwitchVote: async (item: ITableProposalItem) => {},
+  switchVotePending: false,
+  cancelVotePending: false,
+  handleVoteAction: async (
+    item: ITableProposalItem,
+    doNotShowCancelModal: boolean,
+    options: {
+      setCurrentVoteItem: (item: ITableProposalItem | null) => void;
+      setIsCancelModalOpen: (isOpen: boolean) => void;
+      setIsSwitchModalOpen: (isOpen: boolean) => void;
+      setSourceProposal: (proposal: IProposal | null) => void;
+    },
+  ) => {},
+
+  isSwitchModalOpen: false,
+  isCancelModalOpen: false,
+  isReferenceModalOpen: false,
+  currentReferenceKey: '',
+  currentVoteItem: null,
+  sourceProposal: null,
+  doNotShowCancelModal: false,
+  setIsSwitchModalOpen: () => {},
+  setIsCancelModalOpen: () => {},
+  setIsReferenceModalOpen: () => {},
+  setCurrentReferenceKey: () => {},
+  setCurrentVoteItem: () => {},
+  setSourceProposal: () => {},
+  setDoNotShowCancelModal: () => {},
+});
 export interface ProposalDetailProviderProps {
   children: ReactNode;
-  value: ProposalDetailContextType;
 }
 
 export const ProposalDetailProvider = ({
   children,
-  value,
 }: ProposalDetailProviderProps) => {
+  const { profile, showAuthPrompt } = useAuth();
+  const { id: projectId, proposalId } = useParams();
+
+  const {
+    isSwitchModalOpen,
+    setIsSwitchModalOpen,
+    isCancelModalOpen,
+    setIsCancelModalOpen,
+    isReferenceModalOpen,
+    setIsReferenceModalOpen,
+    currentReferenceKey,
+    setCurrentReferenceKey,
+    currentVoteItem,
+    setCurrentVoteItem,
+    sourceProposal,
+    setSourceProposal,
+    doNotShowCancelModal,
+    setDoNotShowCancelModal,
+  } = useProposalModalState();
+
+  const {
+    expandedRows,
+    metricsVisibleSubCat,
+    toggleRowExpanded,
+    toggleMetricsVisible,
+    setExpandedRows,
+  } = useProposalTableStates();
+
+  const getProjectOptions = useMemo(() => {
+    return {
+      enabled: !!projectId,
+      select: (data: IProject) => {
+        devLog('project', data);
+        return data;
+      },
+    };
+  }, [projectId]);
+
+  const { data: project, isFetched: isProjectFetched } =
+    trpc.project.getProjectById.useQuery(
+      { id: Number(projectId) },
+      getProjectOptions,
+    );
+
+  const getProposalOptions = useMemo(() => {
+    return {
+      enabled: !!proposalId,
+      select: (data: IProposal) => {
+        devLog('proposal', data);
+        return data;
+      },
+    };
+  }, [proposalId]);
+
+  const { data: proposal, isFetched: isProposalFetched } =
+    trpc.proposal.getProposalById.useQuery(
+      { id: Number(proposalId) },
+      getProposalOptions,
+    );
+
+  const proposals = useMemo(() => {
+    return project?.proposals || [];
+  }, [project?.proposals]);
+
+  const {
+    userVotesOfProposalMap,
+    isFetchVoteInfoLoading,
+    isVoteActionPending,
+    getItemVoteResult,
+    onCancelVote,
+    onSwitchVote: originalOnSwitchVote,
+    handleVoteAction,
+    switchVoteMutation,
+    cancelVoteMutation,
+    inActionKeys,
+  } = useProposalVotesHook(proposal, Number(projectId), proposals);
+
+  const isProposalCreator = useMemo(() => {
+    if (!proposal || !proposal.creator) return false;
+    if (!profile || !profile.userId) return false;
+    return proposal.creator.userId === profile.userId;
+  }, [proposal, profile]);
+
+  const onVoteAction = useCallback(
+    async (item: ITableProposalItem) => {
+      if (!profile) {
+        console.warn('not login');
+        showAuthPrompt();
+        return;
+      }
+      if (isProposalCreator) {
+        console.warn(
+          'is proposal creator, cannot vote/switch vote/cancel vote',
+        );
+        return;
+      }
+      await handleVoteAction(item, doNotShowCancelModal, {
+        setCurrentVoteItem,
+        setIsCancelModalOpen,
+        setIsSwitchModalOpen,
+        setSourceProposal,
+      });
+    },
+    [
+      profile,
+      handleVoteAction,
+      doNotShowCancelModal,
+      showAuthPrompt,
+      isProposalCreator,
+      setCurrentVoteItem,
+      setIsCancelModalOpen,
+      setIsSwitchModalOpen,
+      setSourceProposal,
+    ],
+  );
+
+  const onSwitchVote = useCallback(
+    async (item: ITableProposalItem) => {
+      await originalOnSwitchVote(item.key);
+    },
+    [originalOnSwitchVote],
+  );
+
+  const value = useMemo(
+    () => ({
+      projectId: Number(projectId),
+      proposals,
+      project,
+      proposal,
+      isProjectFetched,
+      isProposalFetched,
+      isFetchVoteInfoLoading,
+      isVoteActionPending,
+      inActionKeys,
+      getItemVoteResult,
+      expandedRows,
+      metricsVisibleSubCat,
+      toggleRowExpanded,
+      toggleMetricsVisible,
+      onVoteAction,
+      setExpandedRows,
+
+      userVotesOfProposalMap,
+      onCancelVote,
+      onSwitchVote,
+      switchVotePending: switchVoteMutation.isPending,
+      cancelVotePending: cancelVoteMutation.isPending,
+      handleVoteAction,
+
+      isSwitchModalOpen,
+      isCancelModalOpen,
+      isReferenceModalOpen,
+      currentReferenceKey,
+      currentVoteItem,
+      sourceProposal,
+      doNotShowCancelModal,
+
+      setIsSwitchModalOpen,
+      setIsCancelModalOpen,
+      setIsReferenceModalOpen,
+      setCurrentReferenceKey,
+      setCurrentVoteItem,
+      setSourceProposal,
+      setDoNotShowCancelModal,
+    }),
+    [
+      projectId,
+      proposals,
+      project,
+      proposal,
+      isProjectFetched,
+      isProposalFetched,
+      getItemVoteResult,
+      isVoteActionPending,
+      isFetchVoteInfoLoading,
+      expandedRows,
+      metricsVisibleSubCat,
+      toggleRowExpanded,
+      toggleMetricsVisible,
+      setExpandedRows,
+      inActionKeys,
+      onVoteAction,
+      userVotesOfProposalMap,
+      onCancelVote,
+      onSwitchVote,
+      handleVoteAction,
+      isSwitchModalOpen,
+      isCancelModalOpen,
+      isReferenceModalOpen,
+      currentReferenceKey,
+      cancelVoteMutation.isPending,
+      switchVoteMutation.isPending,
+      currentVoteItem,
+      sourceProposal,
+      doNotShowCancelModal,
+      setIsSwitchModalOpen,
+      setIsCancelModalOpen,
+      setIsReferenceModalOpen,
+      setCurrentReferenceKey,
+      setCurrentVoteItem,
+      setSourceProposal,
+      setDoNotShowCancelModal,
+    ],
+  );
+
   return (
     <ProposalDetailContext.Provider value={value}>
       {children}

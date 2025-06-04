@@ -1,19 +1,15 @@
 'use client';
 
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { IRef } from '@/components/pages/project/create/types';
-import { useProposalVotes as useProposalVotesHook } from '@/components/pages/project/proposal/detail/useProposalVotes';
-import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
-import { IProject, IProposal } from '@/types';
-import { IItemSubCategoryEnum } from '@/types/item';
-import { safeGetLocalStorage } from '@/utils/localStorage';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 
 import ActionSectionHeader from './ActionSectionHeader';
-import { ProposalDetailProvider } from './context/proposalDetailContext';
+import { useProposalDetailContext } from './context/proposalDetailContext';
 import CancelVoteModal from './modal/CancelVoteModal';
 import ReferenceModal from './modal/ReferenceModal';
 import SwitchVoteModal from './modal/SwitchVoteModal';
@@ -38,31 +34,13 @@ export interface ITableProposalItem {
 }
 
 export interface ProposalDetailsProps {
-  proposal?: IProposal;
-  proposals: IProposal[];
-  project?: IProject;
-  projectId: number;
   isFiltered: boolean;
   toggleFiltered: () => void;
   isPageExpanded: boolean;
   toggleExpanded: () => void;
 }
 
-const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
-  [IItemSubCategoryEnum.Organization]: false,
-  [IItemSubCategoryEnum.Team]: false,
-  [IItemSubCategoryEnum.BasicProfile]: false,
-  [IItemSubCategoryEnum.Development]: false,
-  [IItemSubCategoryEnum.Finances]: false,
-  [IItemSubCategoryEnum.Token]: false,
-  [IItemSubCategoryEnum.Governance]: false,
-};
-
 const ProposalDetails = ({
-  proposal,
-  projectId,
-  project,
-  proposals,
   isPageExpanded,
   toggleExpanded,
   isFiltered,
@@ -70,22 +48,38 @@ const ProposalDetails = ({
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
 
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const [metricsVisibleSubCat, setMetricsVisibleSubCat] = useState(
-    DefaultMetricsVisibleSubCat,
-  );
+  const {
+    proposal,
+    projectId,
+    project,
+    proposals,
+    expandedRows,
+    setExpandedRows,
+    metricsVisibleSubCat,
+    toggleRowExpanded,
+    toggleMetricsVisible,
+    onVoteAction,
+    userVotesOfProposalMap,
+    onCancelVote,
+    onSwitchVote,
+    switchVotePending,
+    cancelVotePending,
 
-  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
-  const [currentReferenceKey, setCurrentReferenceKey] = useState('');
-
-  const [currentVoteItem, setCurrentVoteItem] =
-    useState<ITableProposalItem | null>(null);
-  const [sourceProposal, setSourceProposal] = useState<IProposal | null>(null);
-
-  const [doNotShowCancelModal, setDoNotShowCancelModal] =
-    useState<boolean>(false);
+    isSwitchModalOpen,
+    isCancelModalOpen,
+    isReferenceModalOpen,
+    currentReferenceKey,
+    currentVoteItem,
+    sourceProposal,
+    doNotShowCancelModal,
+    setIsSwitchModalOpen,
+    setIsCancelModalOpen,
+    setIsReferenceModalOpen,
+    setCurrentReferenceKey,
+    setCurrentVoteItem,
+    setSourceProposal,
+    setDoNotShowCancelModal,
+  } = useProposalDetailContext();
 
   const isOverallLoading = !proposal;
 
@@ -95,101 +89,49 @@ const ProposalDetails = ({
     return proposal.creator.userId === profile.userId;
   }, [proposal, profile]);
 
-  const {
-    userVotesOfProposalMap,
-    isFetchVoteInfoLoading,
-    isVoteActionPending,
-    getItemVoteResult,
-    onCancelVote,
-    onSwitchVote,
-    handleVoteAction,
-    switchVoteMutation,
-    cancelVoteMutation,
-    inActionKeys,
-  } = useProposalVotesHook(proposal, projectId, proposals);
-
-  useEffect(() => {
-    const savedValue = safeGetLocalStorage(StorageKey_DoNotShowCancelModal);
-    setDoNotShowCancelModal(savedValue === 'true');
-  }, []);
-
-  const toggleRowExpanded = useCallback((key: string) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  }, []);
-
-  const onVoteAction = useCallback(
-    async (item: ITableProposalItem) => {
-      if (!profile) {
-        console.warn('not login');
-        showAuthPrompt();
-        return;
-      }
-      if (isProposalCreator) {
-        console.warn(
-          'is proposal creator, cannot vote/switch vote/cancel vote',
-        );
-        return;
-      }
-      await handleVoteAction(item, doNotShowCancelModal, {
-        setCurrentVoteItem,
-        setIsCancelModalOpen,
-        setIsSwitchModalOpen,
-        setSourceProposal,
-      });
-    },
-    [
-      profile,
-      handleVoteAction,
-      doNotShowCancelModal,
-      showAuthPrompt,
-      isProposalCreator,
-    ],
-  );
-
   const handleCancelVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
       await onCancelVote(
-        userVotesOfProposalMap[currentVoteItem!.key].id,
-        currentVoteItem.key,
+        Number(userVotesOfProposalMap[currentVoteItem!.key as IPocItemKey]?.id),
+        currentVoteItem.key as IPocItemKey,
       );
       setIsCancelModalOpen(false);
     } catch (err) {
       // TODO toast
       console.error(err);
     }
-  }, [currentVoteItem, userVotesOfProposalMap, onCancelVote]);
+  }, [
+    currentVoteItem,
+    userVotesOfProposalMap,
+    onCancelVote,
+    setIsCancelModalOpen,
+  ]);
 
   const handleSwitchVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
-      await onSwitchVote(currentVoteItem.key);
+      await onSwitchVote(currentVoteItem);
       setIsSwitchModalOpen(false);
     } catch (err) {
       // TODO toast
       console.error(err);
     }
-  }, [currentVoteItem, onSwitchVote]);
+  }, [currentVoteItem, onSwitchVote, setIsSwitchModalOpen]);
 
-  const onShowReference = useCallback((key: string) => {
-    setCurrentReferenceKey(key);
-    setIsReferenceModalOpen(true);
-  }, []);
-
-  const toggleMetricsVisible = useCallback((subCat: IItemSubCategoryEnum) => {
-    setMetricsVisibleSubCat((prev) => ({
-      ...prev,
-      [subCat]: !prev[subCat],
-    }));
-  }, []);
-
-  const tableDataMap = useMemo(
-    () => prepareProposalTableData(proposal),
-    [proposal],
+  const onShowReference = useCallback(
+    (key: string) => {
+      setCurrentReferenceKey(key);
+      setIsReferenceModalOpen(true);
+    },
+    [setCurrentReferenceKey, setIsReferenceModalOpen],
   );
+
+  const tableDataMap = useMemo(() => {
+    return proposal
+      ? prepareProposalTableData(proposal)
+      : prepareProposalTableData(undefined);
+  }, [proposal]);
 
   // 批量切换某个分类下所有行的展开状态
   const toggleAllRowsInCategory = useCallback(
@@ -199,27 +141,29 @@ const ProposalDetails = ({
 
       setExpandedRows((prev) => {
         // 检查该分类下是否有任何行已展开
-        const hasExpandedRows = categoryRows.some((rowKey) => prev[rowKey]);
+        const hasExpandedRows = categoryRows.some(
+          (rowKey) => prev[rowKey as IPocItemKey],
+        );
 
         // 如果有展开的行，则全部收起；如果都收起，则全部展开
         const newExpandedState = !hasExpandedRows;
 
         const newExpandedRows = { ...prev };
         categoryRows.forEach((rowKey) => {
-          newExpandedRows[rowKey] = newExpandedState;
+          newExpandedRows[rowKey as IPocItemKey] = newExpandedState;
         });
 
         return newExpandedRows;
       });
     },
-    [tableDataMap],
+    [tableDataMap, setExpandedRows],
   );
 
   // 检查某个分类下是否有任何行已展开
   const hasExpandedRowsInCategory = useCallback(
     (subCat: IItemSubCategoryEnum) => {
       const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
-      return categoryRows.some((rowKey) => expandedRows[rowKey]);
+      return categoryRows.some((rowKey) => expandedRows[rowKey as IPocItemKey]);
     },
     [tableDataMap, expandedRows],
   );
@@ -246,43 +190,43 @@ const ProposalDetails = ({
   const basicProfileColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.BasicProfile],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.BasicProfile],
   });
 
   const developmentColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Development],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Development],
   });
 
   const organizationColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Organization],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Organization],
   });
 
   const teamColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Team],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Team],
   });
 
   const financesColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
+    showMetrics: !metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
   });
 
   const tokenColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Token],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Token],
   });
 
   const governanceColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: metricsVisibleSubCat[IItemSubCategoryEnum.Governance],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Governance],
   });
 
   const columnsMap = useMemo(
@@ -375,94 +319,70 @@ const ProposalDetails = ({
     governanceTable,
   ]);
 
-  // 创建context的value，包含所有动态变化的参数
-  const proposalDetailContextValue = useMemo(
-    () => ({
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      inActionKeys,
-      getItemVoteResult,
-      onVoteAction,
-      project,
-      proposal,
-    }),
-    [
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      inActionKeys,
-      getItemVoteResult,
-      onVoteAction,
-      project,
-      proposal,
-    ],
-  );
-
   return (
-    <ProposalDetailProvider value={proposalDetailContextValue}>
-      <div className="flex flex-col gap-[20px]">
-        <ActionSectionHeader
-          isExpanded={isPageExpanded}
-          isFiltered={isFiltered}
-          onChangeExpand={toggleExpanded}
-          onChangeFilter={toggleFiltered}
-        />
+    <div className="flex flex-col gap-[20px]">
+      <ActionSectionHeader
+        isExpanded={isPageExpanded}
+        isFiltered={isFiltered}
+        onChangeExpand={toggleExpanded}
+        onChangeFilter={toggleFiltered}
+      />
 
-        <div className="flex flex-col gap-[40px]">
-          {ProposalTableFieldCategory.map((cat) => (
-            <div key={cat.key} className="flex flex-col gap-[20px]">
-              <TableSectionHeader
-                title={cat.title}
-                description={cat.description}
-              />
-              {cat.subCategories.map((subCat) => (
-                <div key={subCat.key}>
-                  <CategoryHeader
-                    title={subCat.title}
-                    description={subCat.description}
-                    category={subCat.key}
-                    isExpanded={hasExpandedRowsInCategory(subCat.key)}
-                    onToggle={() => toggleAllRowsInCategory(subCat.key)}
-                    onToggleMetrics={toggleMetricsVisible}
+      <div className="flex flex-col gap-[40px]">
+        {ProposalTableFieldCategory.map((cat) => (
+          <div key={cat.key} className="flex flex-col gap-[20px]">
+            <TableSectionHeader
+              title={cat.title}
+              description={cat.description}
+            />
+            {cat.subCategories.map((subCat) => (
+              <div key={subCat.key}>
+                <CategoryHeader
+                  title={subCat.title}
+                  description={subCat.description}
+                  category={subCat.key}
+                  isExpanded={hasExpandedRowsInCategory(subCat.key)}
+                  onToggle={() => toggleAllRowsInCategory(subCat.key)}
+                  onToggleMetrics={toggleMetricsVisible}
+                />
+                <div>
+                  <ProposalTable
+                    table={tableInstanceMap[subCat.key]}
+                    isLoading={isOverallLoading}
+                    expandedRows={expandedRows}
+                    isPageExpanded={isPageExpanded}
                   />
-                  <div>
-                    <ProposalTable
-                      table={tableInstanceMap[subCat.key]}
-                      isLoading={isOverallLoading}
-                      expandedRows={expandedRows}
-                      isPageExpanded={isPageExpanded}
-                    />
-                  </div>
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <SwitchVoteModal
-          isOpen={isSwitchModalOpen}
-          onClose={() => setIsSwitchModalOpen(false)}
-          onConfirm={handleSwitchVoteConfirm}
-          isLoading={switchVoteMutation.isPending}
-          proposalItem={currentVoteItem || undefined}
-          sourceProposal={sourceProposal || undefined}
-        />
-
-        <CancelVoteModal
-          isOpen={isCancelModalOpen}
-          onClose={() => setIsCancelModalOpen(false)}
-          onConfirm={handleCancelVoteConfirm}
-          isLoading={cancelVoteMutation.isPending}
-          proposalItem={currentVoteItem || undefined}
-        />
-
-        <ReferenceModal
-          isOpen={isReferenceModalOpen}
-          onClose={() => setIsReferenceModalOpen(false)}
-          fieldKey={currentReferenceKey}
-          refs={(proposal?.refs || []) as IRef[]}
-        />
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
-    </ProposalDetailProvider>
+
+      <SwitchVoteModal
+        isOpen={isSwitchModalOpen}
+        onClose={() => setIsSwitchModalOpen(false)}
+        onConfirm={handleSwitchVoteConfirm}
+        isLoading={switchVotePending}
+        proposalItem={currentVoteItem || undefined}
+        sourceProposal={sourceProposal || undefined}
+      />
+
+      <CancelVoteModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancelVoteConfirm}
+        isLoading={cancelVotePending}
+        proposalItem={currentVoteItem || undefined}
+      />
+
+      <ReferenceModal
+        isOpen={isReferenceModalOpen}
+        onClose={() => setIsReferenceModalOpen(false)}
+        fieldKey={currentReferenceKey}
+        refs={(proposal?.refs || []) as IRef[]}
+      />
+    </div>
   );
 };
 

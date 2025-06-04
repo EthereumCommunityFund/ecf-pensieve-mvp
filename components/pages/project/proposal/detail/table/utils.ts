@@ -10,6 +10,7 @@ import {
   IPocItemKey,
   IProposalItem,
 } from '@/types/item';
+import { devLog } from '@/utils/devLog';
 
 import { ITableProposalItem } from '../ProposalDetails';
 
@@ -77,6 +78,8 @@ export const prepareProposalTableData = (
       });
     });
   });
+
+  devLog('prepareProposalTableData', proposal, result);
 
   return result;
 };
