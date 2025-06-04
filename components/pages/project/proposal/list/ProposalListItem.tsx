@@ -1,8 +1,8 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
-import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
 import {
@@ -61,7 +61,7 @@ const ProposalListItem = ({
 
   const onViewProposal = useCallback(() => {
     router.push(`/project/pending/${projectId}/proposal/${proposal.id}`);
-  }, [projectId, proposal.id]);
+  }, [projectId, proposal.id, router]);
 
   return (
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">

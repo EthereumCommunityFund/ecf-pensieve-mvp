@@ -209,7 +209,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, proposal, createVoteMutation, refetchVoteData],
+    [profile, proposal, createVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onSwitchVote = useCallback(
@@ -239,7 +239,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, proposal, switchVoteMutation, refetchVoteData],
+    [profile, proposal, switchVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onCancelVote = useCallback(
@@ -268,7 +268,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, cancelVoteMutation, refetchVoteData],
+    [profile, cancelVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const findSourceProposal = useCallback(
@@ -327,8 +327,6 @@ export function useProposalVotes(
       isUserVotedItemOfProject,
       isUserVotedItemOfProposal,
       onCreateVote,
-      onCancelVote,
-      userVotesOfProposalMap,
       findSourceProposal,
     ],
   );
