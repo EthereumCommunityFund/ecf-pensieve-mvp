@@ -532,7 +532,7 @@ const SubmitterCell = memo(
             {submitter.name}
           </span>
           <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
-            {formatDate(data, 'MM/DD/YYYY', '00/00/0000')}
+            {formatDate(data, 'DD/MM/YYYY', '00/00/0000')}
           </span>
         </div>
       </div>
