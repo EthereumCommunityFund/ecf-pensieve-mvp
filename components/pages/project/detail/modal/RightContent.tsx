@@ -27,10 +27,16 @@ const RightContent: FC<RightContentProps> = memo(
       return Number(profile.weight);
     }, [profile]);
 
-    const itemWeightOfLeadingProposal = useMemo(() => {
+    const displayedItemWeight = useMemo(() => {
       if (!displayProposalDataOfKey) return 0;
-      return displayProposalDataOfKey.itemTopWeight;
+      const itemTopWeight = displayProposalDataOfKey.itemTopWeight;
+      const weightOfLeadingProposal = displayProposalDataOfKey.support.count;
+      return Math.min(itemTopWeight, weightOfLeadingProposal);
     }, [displayProposalDataOfKey]);
+
+    const isUserWeightExceedsItemWeight = useMemo(() => {
+      return userWeight > displayedItemWeight;
+    }, [userWeight, displayedItemWeight]);
 
     return (
       <div className="tablet:pt-0 mobile:pt-0 flex flex-col gap-2.5 p-5">
@@ -54,9 +60,9 @@ const RightContent: FC<RightContentProps> = memo(
           {/* Weight Information */}
           <div className="flex flex-col gap-[5px]">
             <span className="font-mona text-[13px] font-semibold leading-[1.41] text-black opacity-80">
-              Current Item Weight: {itemWeightOfLeadingProposal}
+              Current Item Weight: {displayedItemWeight}
             </span>
-            {userWeight > itemWeightOfLeadingProposal && (
+            {isUserWeightExceedsItemWeight && (
               <span className="font-sans text-[13px] leading-[1.54] text-black opacity-80">
                 Your weight exceeds the item's threshold, allowing you to
                 surpass the weight of any submission you vote on.
