@@ -1,8 +1,8 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
-import Link from 'next/link';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/base';
 import {
@@ -30,6 +30,8 @@ const ProposalListItem = ({
   isLeading = false,
   voteResultOfProposal,
 }: ProposalListItemProps) => {
+  const router = useRouter();
+
   const {
     totalValidPointsOfProposal,
     totalSupportedUserWeightOfProposal,
@@ -56,6 +58,10 @@ const ProposalListItem = ({
         )}`
       : '0x000...00000';
   }, [proposal.creator?.address]);
+
+  const onViewProposal = useCallback(() => {
+    router.push(`/project/pending/${projectId}/proposal/${proposal.id}`);
+  }, [projectId, proposal.id]);
 
   return (
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
@@ -119,11 +125,9 @@ const ProposalListItem = ({
         </span>
       </div>
 
-      <Link href={`/project/pending/${projectId}/proposal/${proposal.id}`}>
-        <Button color="secondary" className="w-full">
-          View Proposal
-        </Button>
-      </Link>
+      <Button color="secondary" className="w-full" onPress={onViewProposal}>
+        View Proposal
+      </Button>
     </div>
   );
 };
