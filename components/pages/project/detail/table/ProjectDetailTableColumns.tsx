@@ -57,14 +57,6 @@ interface IUseProjectTableColumnsProps {
   showMetrics?: boolean;
 }
 
-// TODO： 从 itemConfig 取
-const expandableRowKeys = ['tagline', 'mainDescription'];
-
-// 检查行是否可展开
-const isRowExpandable = (key: string) => {
-  return expandableRowKeys.includes(key);
-};
-
 export const useProjectTableColumns = ({
   isPageExpanded = false,
   showMetrics = false,
@@ -97,7 +89,8 @@ export const useProjectTableColumns = ({
         const { expandedRows, toggleRowExpanded, onOpenModal } = info.table
           .options.meta as ITableMetaOfProjectDetail;
 
-        const rowIsExpandable = isRowExpandable(item.key);
+        const rowIsExpandable =
+          !!AllItemConfig[item.key as IPocItemKey]?.showExpand;
         const isRowExpanded = expandedRows[item.key];
 
         return (
