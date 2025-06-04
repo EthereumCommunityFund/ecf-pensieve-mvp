@@ -64,7 +64,6 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
               displayFormType={itemConfig!.formDisplayType}
               isEssential={itemConfig!.isEssential}
               isExpandable={false}
-              isRowExpanded={false}
               onToggleExpanded={undefined}
             />
           </p>

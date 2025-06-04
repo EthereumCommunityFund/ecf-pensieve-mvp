@@ -164,7 +164,6 @@ export const useCreateProposalTableColumns = ({
                 displayFormType={displayFormType}
                 isEssential={itemConfig.isEssential}
                 isExpandable={isExpandable}
-                isRowExpanded={isRowExpanded}
                 onToggleExpanded={() => toggleRowExpanded(rowKey)}
               />
             </div>

@@ -17,7 +17,6 @@ interface IProps {
   value: any;
   displayFormType?: IFormDisplayType;
   isExpandable?: boolean;
-  isRowExpanded?: boolean;
   onToggleExpanded?: () => void;
 }
 
@@ -27,7 +26,6 @@ const InputContentRenderer: React.FC<IProps> = ({
   isEssential,
   displayFormType,
   isExpandable,
-  isRowExpanded,
   onToggleExpanded,
 }) => {
   const formatValue =
@@ -102,9 +100,7 @@ const InputContentRenderer: React.FC<IProps> = ({
   }
 
   if (isExpandable) {
-    return isRowExpanded ? (
-      <span>Close</span>
-    ) : (
+    return (
       <div
         className="cursor-pointer overflow-hidden"
         style={{

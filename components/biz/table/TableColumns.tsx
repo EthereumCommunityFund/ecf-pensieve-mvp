@@ -237,7 +237,6 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
-              isRowExpanded={isExpanded}
               onToggleExpanded={onToggleExpand}
             />
           </div>
@@ -276,7 +275,6 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
-              isRowExpanded={isExpanded}
               onToggleExpanded={onToggleExpand}
             />
           </div>
@@ -306,7 +304,6 @@ const InputCell = ({
           displayFormType={finalDisplayFormType}
           isEssential={itemConfig?.isEssential || false}
           isExpandable={finalIsExpandable}
-          isRowExpanded={isExpanded}
           onToggleExpanded={onToggleExpand}
         />
       </div>
