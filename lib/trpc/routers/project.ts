@@ -56,9 +56,7 @@ export const projectRouter = router({
           .min(1, 'At least one founder is required'),
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
         whitePaper: z.string().min(1, 'White paper cannot be empty'),
-        dappSmartContracts: z
-          .string()
-          .min(1, 'Dapp smart contracts cannot be empty'),
+        dappSmartContracts: z.string().optional(),
         refs: z
           .array(
             z.object({

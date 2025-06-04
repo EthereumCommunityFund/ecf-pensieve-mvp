@@ -392,6 +392,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     formDisplayType: 'string',
     placeholder: '0x...',
     showReference: true,
+    showApplicable: true,
     accountability: ['Transparency'],
     legitimacy: [],
   },
