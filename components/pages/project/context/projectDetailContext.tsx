@@ -28,42 +28,61 @@ import { calculateItemStatusFields } from '@/utils/item';
 
 import { IProjectTableRowData } from '../detail/types';
 
-// Define the context type
+// Context 类型定义
 interface ProjectDetailContextType {
+  // 基础项目数据
   project?: IProject;
   proposals?: IProposal[];
+  projectId: number;
+
+  // 数据加载状态
   isProjectLoading: boolean;
   isProjectFetched: boolean;
   isProposalsLoading: boolean;
   isProposalsFetched: boolean;
-  projectId: number;
+
+  // 领先提案数据
   leadingProposals?: ILeadingProposals;
   isLeadingProposalsLoading: boolean;
   isLeadingProposalsFetched: boolean;
+
+  // 显示数据
   displayProposalDataListOfProject?: IKeyItemDataForTable[];
-  getItemTopWeight: (key: IPocItemKey) => number;
   displayProposalDataOfKey?: IProjectTableRowData;
   tableDataOfDisplayed: IProjectTableRowData[];
   tableDataOfSubmissionQueue: IProjectTableRowData[];
+
+  // 表格显示控制
   showRowOverTaken: boolean;
   showRowIsLeading: boolean;
 
-  // Merged from ModalContextType
+  // 工具函数
+  getItemTopWeight: (key: IPocItemKey) => number;
+
+  // 当前选中项状态
   currentItemKey: string | null;
   setCurrentItemKey: (key: string | null) => void;
+
+  // 按键查询的提案数据
   proposalsByProjectIdAndKey?: IProposalsByProjectIdAndKey;
   proposalHistory?: ILeadingProposalHistory;
   isProposalsByKeyLoading: boolean;
   isProposalsByKeyFetched: boolean;
   isProposalHistoryLoading: boolean;
   isProposalHistoryFetched: boolean;
+
+  // 数据刷新操作
   refetchAll: () => Promise<void>;
   refetchProject: () => void;
   refetchLeadingProposals: () => void;
   refetchProposalsByKey: () => void;
   refetchProposalHistory: () => void;
+
+  // 投票操作状态
   inActionKeyMap: Partial<Record<IPocItemKey, boolean>>;
   inActionItemProposalIdMap: Record<number, boolean>;
+
+  // 投票操作
   onCreateItemProposalVote: (
     key: IPocItemKey,
     itemProposalId: number,
@@ -78,87 +97,119 @@ interface ProjectDetailContextType {
     itemProposalId: number,
   ) => Promise<void>;
 
-  // utils
+  // 引用模态框状态
   openReferenceModal: boolean;
-  showReferenceModal: (ref: string, key: IPocItemKey, reason: string) => void;
-  closeReferenceModal: () => void;
   currentRefValue: string | null;
   currentRefKey: IPocItemKey | null;
   currentItemReason: string;
+
+  // 引用模态框操作
+  showReferenceModal: (ref: string, key: IPocItemKey, reason: string) => void;
+  closeReferenceModal: () => void;
 }
 
-// Create the context with default values
-export const ProjectDetailContext = createContext<ProjectDetailContextType>({
+// Context 默认值
+const createDefaultContext = (): ProjectDetailContextType => ({
+  // 基础项目数据
   project: undefined,
   proposals: undefined,
+  projectId: 0,
+
+  // 数据加载状态
   isProjectLoading: true,
   isProjectFetched: false,
   isProposalsLoading: true,
   isProposalsFetched: false,
-  projectId: 0,
+
+  // 领先提案数据
   leadingProposals: undefined,
   isLeadingProposalsLoading: true,
   isLeadingProposalsFetched: false,
+
+  // 显示数据
   displayProposalDataListOfProject: undefined,
-  getItemTopWeight: () => 0,
   displayProposalDataOfKey: undefined,
   tableDataOfDisplayed: [],
   tableDataOfSubmissionQueue: [],
+
+  // 表格显示控制
   showRowOverTaken: false,
   showRowIsLeading: false,
 
-  // Merged defaults
+  // 工具函数
+  getItemTopWeight: () => 0,
+
+  // 当前选中项状态
   currentItemKey: null,
   setCurrentItemKey: () => {},
+
+  // 按键查询的提案数据
   proposalsByProjectIdAndKey: undefined,
   proposalHistory: undefined,
   isProposalsByKeyLoading: true,
   isProposalsByKeyFetched: false,
   isProposalHistoryLoading: true,
   isProposalHistoryFetched: false,
+
+  // 数据刷新操作
   refetchAll: () => Promise.resolve(),
   refetchProject: () => {},
   refetchLeadingProposals: () => {},
   refetchProposalsByKey: () => {},
   refetchProposalHistory: () => {},
+
+  // 投票操作状态
   inActionKeyMap: {},
   inActionItemProposalIdMap: {},
+
+  // 投票操作
   onCreateItemProposalVote: () => Promise.resolve(),
   onSwitchItemProposalVote: () => Promise.resolve(),
   onCancelVote: () => Promise.resolve(),
 
+  // 引用模态框状态
   openReferenceModal: false,
-  showReferenceModal: () => {},
   currentRefValue: null,
-  closeReferenceModal: () => {},
   currentRefKey: null,
   currentItemReason: '',
+
+  // 引用模态框操作
+  showReferenceModal: () => {},
+  closeReferenceModal: () => {},
 });
 
-// Provider component
+// 创建 Context
+export const ProjectDetailContext = createContext<ProjectDetailContextType>(
+  createDefaultContext(),
+);
+
+// Provider 组件接口
+export interface ProjectDetailProviderProps {
+  children: ReactNode;
+}
+
+// Provider 组件
 export const ProjectDetailProvider = ({
   children,
-}: {
-  children: ReactNode;
-}) => {
+}: ProjectDetailProviderProps) => {
   const { id } = useParams();
   const { profile } = useAuth();
   const projectId = Number(id);
 
+  // 本地状态管理
   const [currentItemKey, setCurrentItemKey] = useState<string | null>(null);
   const [openReferenceModal, setOpenReferenceModal] = useState<boolean>(false);
   const [currentRefValue, setCurrentRefValue] = useState<string | null>(null);
   const [currentRefKey, setCurrentRefKey] = useState<IPocItemKey | null>(null);
   const [currentItemReason, setCurrentItemReason] = useState<string>('');
-
   const [inActionKeyMap, setInActionKeyMap] = useState<
     Partial<Record<IPocItemKey, boolean>>
   >({});
-
   const [inActionItemProposalIdMap, setInActionItemProposalIdMap] = useState<
     Record<number, boolean>
   >({});
 
+  // 项目数据查询
   const {
     data: project,
     isLoading: isProjectLoading,
@@ -175,6 +226,7 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // 项目提案列表查询
   const {
     data: proposalsOfProject,
     isLoading: isProposalsLoading,
@@ -190,6 +242,7 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // 领先提案查询
   const {
     data: leadingItemProposalsByProject,
     isLoading: isLeadingProposalsLoading,
@@ -206,6 +259,7 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // 按键查询提案数据
   const {
     data: proposalsByProjectIdAndKey,
     isLoading: isProposalsByKeyLoading,
@@ -222,6 +276,7 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // 提案历史查询
   const {
     data: proposalHistory,
     isLoading: isProposalHistoryLoading,
@@ -238,17 +293,27 @@ export const ProjectDetailProvider = ({
     },
   );
 
+  // Mutation 定义
+  const createItemProposalVoteMutation =
+    trpc.vote.createItemProposalVote.useMutation();
+  const switchItemProposalVoteMutation =
+    trpc.vote.switchItemProposalVote.useMutation();
+  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
+
+  // 工具函数：获取项目权重
   const getItemTopWeight = useCallback(
     (itemKey: IPocItemKey) => {
       return (
         (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[itemKey] || 0
       );
     },
-    [project],
+    [project?.itemsTopWeight],
   );
 
+  // 计算显示的提案数据列表
   const displayProposalDataListOfProject = useMemo(() => {
     if (!leadingItemProposalsByProject) return [];
+
     const itemsTopWeight = (project?.itemsTopWeight || {}) as Record<
       IPocItemKey,
       number
@@ -272,10 +337,10 @@ export const ProjectDetailProvider = ({
         property: key!,
         input: value,
         reference: ref ? { key, value: ref } : null,
-        submitter: creator as IProfileCreator, // TODO: 这里的 creator 少字段
+        submitter: creator as IProfileCreator,
         createdAt: createdAt,
         projectId: projectId!,
-        proposalId: Number(id), // 这个是 itemProposal 的 proposalId
+        proposalId: Number(id),
         itemTopWeight: itemsTopWeight[key as IPocItemKey] || 0,
         reason: reason || undefined,
         isNotLeading: isNotLeading,
@@ -285,17 +350,22 @@ export const ProjectDetailProvider = ({
       };
       DataMap.set(key, row);
     });
+
     devLog('displayProposalDataListOfProject', Array.from(DataMap.values()));
     return Array.from(DataMap.values());
-  }, [leadingItemProposalsByProject, project]);
+  }, [
+    leadingItemProposalsByProject,
+    project?.itemsTopWeight,
+    project?.hasProposalKeys,
+  ]);
 
+  // 计算当前选中键的显示数据
   const displayProposalDataOfKey = useMemo(() => {
-    if (!currentItemKey) return undefined;
-    if (!proposalsByProjectIdAndKey) return undefined;
+    if (!currentItemKey || !proposalsByProjectIdAndKey) return undefined;
 
     const { leadingProposal } = proposalsByProjectIdAndKey;
-    // 1、如果 leadingProposal 存在，则取 leadingProposal 的数据
-    if (leadingProposal && leadingProposal.itemProposal) {
+
+    if (leadingProposal?.itemProposal) {
       const { key, value, ref, creator, createdAt, projectId, id, reason } =
         leadingProposal.itemProposal;
       const weight = leadingProposal.itemProposal.voteRecords.reduce(
@@ -335,18 +405,21 @@ export const ProjectDetailProvider = ({
     return undefined;
   }, [
     currentItemKey,
-    getItemTopWeight,
     proposalsByProjectIdAndKey,
     project?.hasProposalKeys,
+    getItemTopWeight,
   ]);
 
+  // 计算已显示的表格数据
   const tableDataOfDisplayed: IProjectTableRowData[] = useMemo(() => {
     if (!displayProposalDataOfKey) return [];
     return [displayProposalDataOfKey];
   }, [displayProposalDataOfKey]);
 
+  // 计算提交队列的表格数据
   const tableDataOfSubmissionQueue: IProjectTableRowData[] = useMemo(() => {
     if (!proposalsByProjectIdAndKey) return [];
+
     const { allItemProposals, leadingProposal } = proposalsByProjectIdAndKey;
 
     const list: IProjectTableRowData[] = allItemProposals
@@ -365,7 +438,7 @@ export const ProjectDetailProvider = ({
           ref = '',
         } = itemProposal;
 
-        // 构建符合 IProjectDataItem 结构的数据
+        // 构建基础数据
         const baseData = {
           key,
           property: key,
@@ -378,11 +451,11 @@ export const ProjectDetailProvider = ({
           itemTopWeight: getItemTopWeight(key as IPocItemKey),
         };
 
-        // 对于单个item，每人只能投一票, 不需要根据用户去重
-        const sumOfWeight = voteRecords.reduce((acc, vote) => {
-          return acc + Number(vote.weight);
-        }, 0);
-
+        // 计算权重和投票者
+        const sumOfWeight = voteRecords.reduce(
+          (acc, vote) => acc + Number(vote.weight),
+          0,
+        );
         const voterMap = new Map<string, number>();
 
         voteRecords.forEach((voteRecord) => {
@@ -414,34 +487,25 @@ export const ProjectDetailProvider = ({
         };
       });
 
-    // 根据 weight 排序
-    return list.sort((a, b) => {
-      return b.support.count - a.support.count;
-    });
+    // 根据权重排序
+    return list.sort((a, b) => b.support.count - a.support.count);
   }, [proposalsByProjectIdAndKey, getItemTopWeight, project?.hasProposalKeys]);
 
+  // 计算是否显示被超越行
   const showRowOverTaken = useMemo(() => {
-    // 原来有validated的leading item proposal,由于voter switch 投票，导致它的 weight不再是最高(后端已计算到 isNotLeading 字段)
-    // 比 submission queue某一条的 weight(已排序，最高的 weight) 要低
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     if (!leadingProposal) return false;
     return !!leadingProposal.isNotLeading;
   }, [proposalsByProjectIdAndKey]);
 
+  // 计算是否显示领先行
   const showRowIsLeading = useMemo(() => {
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
-    // 1、没有validated的 leading item proposal(仅限not essential item)
     if (!leadingProposal) return true;
-    // 2、要展示showRowOverTaken时也需要展示showRowIsLeading
     return showRowOverTaken;
   }, [showRowOverTaken, proposalsByProjectIdAndKey]);
 
-  const createItemProposalVoteMutation =
-    trpc.vote.createItemProposalVote.useMutation();
-  const switchItemProposalVoteMutation =
-    trpc.vote.switchItemProposalVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
-
+  // 数据刷新函数
   const refetchAll = useCallback(async () => {
     await Promise.all([
       refetchProject(),
@@ -450,21 +514,19 @@ export const ProjectDetailProvider = ({
     ]);
   }, [refetchProject, refetchLeadingProposals, refetchProposalsByKey]);
 
-  const setItemProposalActive = (
-    key: IPocItemKey,
-    itemProposalId: number,
-    active: boolean,
-  ) => {
-    setInActionKeyMap((pre) => ({
-      ...pre,
-      [key]: active,
-    }));
-    setInActionItemProposalIdMap((pre) => ({
-      ...pre,
-      [itemProposalId]: active,
-    }));
-  };
+  // 设置项目提案活动状态
+  const setItemProposalActive = useCallback(
+    (key: IPocItemKey, itemProposalId: number, active: boolean) => {
+      setInActionKeyMap((pre) => ({ ...pre, [key]: active }));
+      setInActionItemProposalIdMap((pre) => ({
+        ...pre,
+        [itemProposalId]: active,
+      }));
+    },
+    [],
+  );
 
+  // 创建投票操作
   const onCreateItemProposalVote = useCallback(
     async (key: IPocItemKey, itemProposalId: number) => {
       setItemProposalActive(key, itemProposalId, true);
@@ -483,9 +545,10 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [createItemProposalVoteMutation, refetchAll],
+    [createItemProposalVoteMutation, refetchAll, setItemProposalActive],
   );
 
+  // 切换投票操作
   const onSwitchItemProposalVote = useCallback(
     async (key: IPocItemKey, itemProposalId: number) => {
       setItemProposalActive(key, itemProposalId, true);
@@ -503,9 +566,10 @@ export const ProjectDetailProvider = ({
         },
       );
     },
-    [switchItemProposalVoteMutation, refetchAll],
+    [switchItemProposalVoteMutation, refetchAll, setItemProposalActive],
   );
 
+  // 取消投票操作
   const onCancelVote = useCallback(
     async (key: IPocItemKey, voteRecordId: number, itemProposalId: number) => {
       setItemProposalActive(key, voteRecordId, true);
@@ -529,12 +593,14 @@ export const ProjectDetailProvider = ({
     },
     [
       cancelVoteMutation,
-      refetchProposalsByKey,
       refetchProject,
+      refetchProposalsByKey,
       refetchLeadingProposals,
+      setItemProposalActive,
     ],
   );
 
+  // 显示引用模态框
   const showReferenceModal = useCallback(
     (ref: string, key: IPocItemKey, reason: string) => {
       setOpenReferenceModal(true);
@@ -545,61 +611,155 @@ export const ProjectDetailProvider = ({
     [],
   );
 
+  // 关闭引用模态框
   const closeReferenceModal = useCallback(() => {
     setOpenReferenceModal(false);
     setCurrentRefValue(null);
     setCurrentRefKey(null);
   }, []);
 
-  const value: ProjectDetailContextType = {
-    project: project as IProject,
-    proposals: proposalsOfProject,
-    isProjectLoading,
-    isProjectFetched,
-    isProposalsLoading,
-    isProposalsFetched,
-    projectId,
-    leadingProposals: leadingItemProposalsByProject,
-    isLeadingProposalsLoading,
-    isLeadingProposalsFetched,
-    displayProposalDataListOfProject,
-    displayProposalDataOfKey,
-    getItemTopWeight,
-    tableDataOfDisplayed,
-    tableDataOfSubmissionQueue,
-    showRowOverTaken,
-    showRowIsLeading,
+  // Context 值组装
+  const contextValue = useMemo(
+    (): ProjectDetailContextType => ({
+      // 基础项目数据
+      project: project as IProject,
+      proposals: proposalsOfProject,
+      projectId,
 
-    currentItemKey,
-    setCurrentItemKey,
-    proposalsByProjectIdAndKey,
-    proposalHistory,
-    isProposalsByKeyLoading,
-    isProposalsByKeyFetched,
-    isProposalHistoryLoading,
-    isProposalHistoryFetched,
-    inActionKeyMap,
-    inActionItemProposalIdMap,
-    onCreateItemProposalVote,
-    onSwitchItemProposalVote,
-    onCancelVote,
-    refetchAll,
-    refetchProject,
-    refetchLeadingProposals,
-    refetchProposalsByKey,
-    refetchProposalHistory,
+      // 数据加载状态
+      isProjectLoading,
+      isProjectFetched,
+      isProposalsLoading,
+      isProposalsFetched,
 
-    // utils
-    openReferenceModal,
-    showReferenceModal,
-    currentRefValue,
-    currentRefKey: currentRefKey,
-    currentItemReason,
-    closeReferenceModal,
-  };
+      // 领先提案数据
+      leadingProposals: leadingItemProposalsByProject,
+      isLeadingProposalsLoading,
+      isLeadingProposalsFetched,
+
+      // 显示数据
+      displayProposalDataListOfProject,
+      displayProposalDataOfKey,
+      tableDataOfDisplayed,
+      tableDataOfSubmissionQueue,
+
+      // 表格显示控制
+      showRowOverTaken,
+      showRowIsLeading,
+
+      // 工具函数
+      getItemTopWeight,
+
+      // 当前选中项状态
+      currentItemKey,
+      setCurrentItemKey,
+
+      // 按键查询的提案数据
+      proposalsByProjectIdAndKey,
+      proposalHistory,
+      isProposalsByKeyLoading,
+      isProposalsByKeyFetched,
+      isProposalHistoryLoading,
+      isProposalHistoryFetched,
+
+      // 数据刷新操作
+      refetchAll,
+      refetchProject,
+      refetchLeadingProposals,
+      refetchProposalsByKey,
+      refetchProposalHistory,
+
+      // 投票操作状态
+      inActionKeyMap,
+      inActionItemProposalIdMap,
+
+      // 投票操作
+      onCreateItemProposalVote,
+      onSwitchItemProposalVote,
+      onCancelVote,
+
+      // 引用模态框状态
+      openReferenceModal,
+      currentRefValue,
+      currentRefKey,
+      currentItemReason,
+
+      // 引用模态框操作
+      showReferenceModal,
+      closeReferenceModal,
+    }),
+    [
+      // 基础项目数据依赖
+      project,
+      proposalsOfProject,
+      projectId,
+
+      // 数据加载状态依赖
+      isProjectLoading,
+      isProjectFetched,
+      isProposalsLoading,
+      isProposalsFetched,
+
+      // 领先提案数据依赖
+      leadingItemProposalsByProject,
+      isLeadingProposalsLoading,
+      isLeadingProposalsFetched,
+
+      // 显示数据依赖
+      displayProposalDataListOfProject,
+      displayProposalDataOfKey,
+      tableDataOfDisplayed,
+      tableDataOfSubmissionQueue,
+
+      // 表格显示控制依赖
+      showRowOverTaken,
+      showRowIsLeading,
+
+      // 工具函数依赖
+      getItemTopWeight,
+
+      // 当前选中项状态依赖
+      currentItemKey,
+      setCurrentItemKey,
+
+      // 按键查询的提案数据依赖
+      proposalsByProjectIdAndKey,
+      proposalHistory,
+      isProposalsByKeyLoading,
+      isProposalsByKeyFetched,
+      isProposalHistoryLoading,
+      isProposalHistoryFetched,
+
+      // 数据刷新操作依赖
+      refetchAll,
+      refetchProject,
+      refetchLeadingProposals,
+      refetchProposalsByKey,
+      refetchProposalHistory,
+
+      // 投票操作状态依赖
+      inActionKeyMap,
+      inActionItemProposalIdMap,
+
+      // 投票操作依赖
+      onCreateItemProposalVote,
+      onSwitchItemProposalVote,
+      onCancelVote,
+
+      // 引用模态框状态依赖
+      openReferenceModal,
+      currentRefValue,
+      currentRefKey,
+      currentItemReason,
+
+      // 引用模态框操作依赖
+      showReferenceModal,
+      closeReferenceModal,
+    ],
+  );
 
   return (
-    <ProjectDetailContext.Provider value={value}>
+    <ProjectDetailContext.Provider value={contextValue}>
       {children}
     </ProjectDetailContext.Provider>
   );
