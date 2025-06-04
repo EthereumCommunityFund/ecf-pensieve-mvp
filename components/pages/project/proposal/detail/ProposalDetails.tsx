@@ -214,7 +214,7 @@ const ProposalDetails = ({
   const financesColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
-    showMetrics: !metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
   });
 
   const tokenColumns = useCreateProposalTableColumns({
@@ -317,6 +317,7 @@ const ProposalDetails = ({
     financialTable,
     tokenTable,
     governanceTable,
+    columnsMap, // Add columnsMap as a dependency
   ]);
 
   return (
@@ -343,6 +344,7 @@ const ProposalDetails = ({
                   category={subCat.key}
                   isExpanded={hasExpandedRowsInCategory(subCat.key)}
                   onToggle={() => toggleAllRowsInCategory(subCat.key)}
+                  metricsVisible={!!metricsVisibleSubCat[subCat.key]}
                   onToggleMetrics={toggleMetricsVisible}
                 />
                 <div>
@@ -351,6 +353,7 @@ const ProposalDetails = ({
                     isLoading={isOverallLoading}
                     expandedRows={expandedRows}
                     isPageExpanded={isPageExpanded}
+                    metricsVisible={!!metricsVisibleSubCat[subCat.key]}
                   />
                 </div>
               </div>

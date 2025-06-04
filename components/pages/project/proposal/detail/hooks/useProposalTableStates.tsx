@@ -1,7 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
-import { devLog } from '@/utils/devLog';
 
 const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Organization]: false,
@@ -18,7 +17,9 @@ export const useProposalTableStates = () => {
     Partial<Record<IPocItemKey, boolean>>
   >({});
 
-  const metricsVisibleSubCatRef = useRef(DefaultMetricsVisibleSubCat);
+  const [metricsVisibleSubCat, setMetricsVisibleSubCat] = useState(
+    DefaultMetricsVisibleSubCat,
+  );
 
   const toggleRowExpanded = useCallback((key: IPocItemKey) => {
     setExpandedRows((prev) => ({
@@ -27,18 +28,19 @@ export const useProposalTableStates = () => {
     }));
   }, []);
 
-  const toggleMetricsVisible = useCallback((subCat: IItemSubCategoryEnum) => {
-    devLog('toggleMetricsVisible', subCat, metricsVisibleSubCatRef.current);
-    const res = {
-      ...metricsVisibleSubCatRef.current,
-      [subCat]: !metricsVisibleSubCatRef.current[subCat],
-    };
-    metricsVisibleSubCatRef.current = res;
-  }, []);
+  const toggleMetricsVisible = useCallback(
+    (subCat: IItemSubCategoryEnum) => {
+      setMetricsVisibleSubCat((prev) => ({
+        ...prev,
+        [subCat]: !prev[subCat],
+      }));
+    },
+    [metricsVisibleSubCat],
+  );
 
   return {
     expandedRows,
-    metricsVisibleSubCat: metricsVisibleSubCatRef.current,
+    metricsVisibleSubCat,
     toggleRowExpanded,
     toggleMetricsVisible,
     setExpandedRows,

@@ -3,7 +3,9 @@
 import { useParams } from 'next/navigation';
 import {
   createContext,
+  Dispatch,
   ReactNode,
+  SetStateAction,
   useCallback,
   useContext,
   useMemo,
@@ -49,9 +51,9 @@ export interface ProposalDetailContextType {
   metricsVisibleSubCat: Partial<Record<IItemSubCategoryEnum, boolean>>;
   toggleRowExpanded: (key: IPocItemKey) => void;
   toggleMetricsVisible: (subCat: IItemSubCategoryEnum) => void;
-  setExpandedRows: (
-    expandedRows: Partial<Record<IPocItemKey, boolean>>,
-  ) => void;
+  setExpandedRows: Dispatch<
+    SetStateAction<Partial<Record<IPocItemKey, boolean>>>
+  >;
 
   userVotesOfProposalMap: Partial<Record<IPocItemKey, IVote>>;
   onCancelVote: (voteId: number, itemKey: IPocItemKey) => Promise<void>;
@@ -239,12 +241,6 @@ export const ProposalDetailProvider = ({
       if (!profile) {
         console.warn('not login');
         showAuthPrompt();
-        return;
-      }
-      if (isProposalCreator) {
-        console.warn(
-          'is proposal creator, cannot vote/switch vote/cancel vote',
-        );
         return;
       }
       await handleVoteAction(item, doNotShowCancelModal, {
