@@ -230,12 +230,6 @@ export const ProposalDetailProvider = ({
     inActionKeys,
   } = useProposalVotesHook(proposal, Number(projectId), proposals);
 
-  const isProposalCreator = useMemo(() => {
-    if (!proposal || !proposal.creator) return false;
-    if (!profile || !profile.userId) return false;
-    return proposal.creator.userId === profile.userId;
-  }, [proposal, profile]);
-
   const onVoteAction = useCallback(
     async (item: ITableProposalItem) => {
       if (!profile) {
@@ -255,7 +249,6 @@ export const ProposalDetailProvider = ({
       handleVoteAction,
       doNotShowCancelModal,
       showAuthPrompt,
-      isProposalCreator,
       setCurrentVoteItem,
       setIsCancelModalOpen,
       setIsSwitchModalOpen,
