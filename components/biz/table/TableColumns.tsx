@@ -76,7 +76,7 @@ const PropertyCell = ({
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
-  const { isConsensusInProgress, isPendingValidation } = rowData;
+  const { isConsensusInProgress, isPendingValidation, itemTopWeight } = rowData;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -103,7 +103,9 @@ const PropertyCell = ({
       </div>
       {shouldShowWeight && (
         <TooltipItemWeight
-          itemWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
+          itemWeight={
+            itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
+          }
         />
       )}
     </div>

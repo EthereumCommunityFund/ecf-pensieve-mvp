@@ -29,7 +29,7 @@ const RightContent: FC<RightContentProps> = memo(
 
     const itemWeightOfLeadingProposal = useMemo(() => {
       if (!displayProposalDataOfKey) return 0;
-      return displayProposalDataOfKey.support.count;
+      return displayProposalDataOfKey.itemTopWeight;
     }, [displayProposalDataOfKey]);
 
     return (

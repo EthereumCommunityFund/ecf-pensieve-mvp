@@ -206,6 +206,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     meta: submissionQueueTableMeta,
   });
 
+  const itemWeightOfLeadingProposal = useMemo(() => {
+    if (!displayProposalDataOfKey) return 0;
+    return displayProposalDataOfKey.itemTopWeight;
+  }, [displayProposalDataOfKey]);
+
   return (
     <div className="flex flex-col gap-5">
       {/* Item Info */}
@@ -215,7 +220,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             Item:
           </span>
         </div>
-        <ItemWeight itemName={itemName} itemWeight={itemWeight} />
+        <ItemWeight
+          itemName={itemName}
+          itemWeight={itemWeightOfLeadingProposal}
+        />
       </div>
       {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
       {showRowOverTaken && (

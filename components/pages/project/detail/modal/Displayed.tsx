@@ -127,6 +127,11 @@ const Displayed: FC<DisplayedProps> = ({
     ],
   );
 
+  const displayedItemWeight = useMemo(() => {
+    if (!displayProposalDataOfKey) return 0;
+    return displayProposalDataOfKey.itemTopWeight;
+  }, [displayProposalDataOfKey]);
+
   // Create columns
   const columns = useCommonColumnsOfModal();
 
@@ -147,7 +152,7 @@ const Displayed: FC<DisplayedProps> = ({
             Item:
           </span>
         </div>
-        <ItemWeight itemName={itemName} itemWeight={itemWeight} />
+        <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
       </div>
 
       {/* Consensus Status Info */}
