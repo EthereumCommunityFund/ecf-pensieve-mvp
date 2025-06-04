@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ALTER COLUMN "dapp_smart_contracts" DROP NOT NULL;
