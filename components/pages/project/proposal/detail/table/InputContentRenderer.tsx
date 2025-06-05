@@ -40,6 +40,8 @@ const InputContentRenderer: React.FC<IProps> = ({
         return <>{parseMultipleValue(value).join(', ')}</>;
       case 'selectMultiple':
         return <>{parseMultipleValue(value).join(', ')}</>;
+      case 'autoComplete':
+        return <>{parseMultipleValue(value).join(', ')}</>;
       case 'img':
         return (
           <Image
