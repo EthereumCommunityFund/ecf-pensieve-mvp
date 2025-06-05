@@ -9,4 +9,5 @@ export * from './Row';
 export * from './RowSkeleton';
 export * from './TableColumns';
 export * from './TableContainer';
+export * from './TooltipThWithPin';
 export * from './utils';

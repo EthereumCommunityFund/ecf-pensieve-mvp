@@ -109,3 +109,4 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
 };
 
 export default TooltipThWithPin;
+export { TooltipThWithPin };

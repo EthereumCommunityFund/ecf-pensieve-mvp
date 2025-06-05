@@ -5,7 +5,11 @@ import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { memo, useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
-import { AccountabilityCol, LegitimacyCol } from '@/components/biz/table';
+import {
+  AccountabilityCol,
+  LegitimacyCol,
+  TooltipThWithPin,
+} from '@/components/biz/table';
 import { CaretDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -29,6 +33,16 @@ export interface TableCellsMeta {
   onShowReference: (key: IPocItemKey) => void;
   isProposalCreator: boolean;
   toggleMetricsVisible: (subCat: IItemSubCategoryEnum) => void;
+  toggleColumnPinning?: (
+    category: IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+  isColumnPinned?: (
+    category: IItemSubCategoryEnum,
+    columnId: string,
+  ) => 'left' | 'right' | false;
+  category?: IItemSubCategoryEnum;
 }
 
 // 支持列单元格组件，使用context获取动态数据
@@ -84,22 +98,44 @@ export const useCreateProposalTableColumns = ({
   isPageExpanded,
   isProposalCreator,
   showMetrics,
+  category,
 }: {
   isPageExpanded: boolean;
   isProposalCreator: boolean;
   showMetrics: boolean;
+  category: IItemSubCategoryEnum;
 }): ColumnDef<ITableProposalItem, any>[] => {
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
   const columns = useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
       id: 'property',
-      header: () => (
-        <TooltipTh
-          title="Property"
-          tooltipContext="The property name of the project item"
-        />
-      ),
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+
+        // If column pinning is supported, use TooltipThWithPin
+        if (toggleColumnPinning && isColumnPinned && category) {
+          return (
+            <TooltipThWithPin
+              title="Property"
+              tooltipContext="The property name of the project item"
+              columnId="property"
+              category={category}
+              isPinned={isColumnPinned(category, 'property')}
+              onTogglePin={toggleColumnPinning}
+            />
+          );
+        }
+
+        // Fallback to regular TooltipTh
+        return (
+          <TooltipTh
+            title="Property"
+            tooltipContext="The property name of the project item"
+          />
+        );
+      },
       size: isPageExpanded ? 247 : 220,
       cell: (info) => {
         const rowKey = info.row.original.key;
@@ -188,12 +224,33 @@ export const useCreateProposalTableColumns = ({
     });
 
     const referenceColumn = columnHelper.accessor('reference', {
-      header: () => (
-        <TooltipTh
-          title="Reference"
-          tooltipContext="Reference information for this property"
-        />
-      ),
+      id: 'reference',
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+
+        // If column pinning is supported, use TooltipThWithPin
+        if (toggleColumnPinning && isColumnPinned && category) {
+          return (
+            <TooltipThWithPin
+              title="Reference"
+              tooltipContext="Reference information for this property"
+              columnId="reference"
+              category={category}
+              isPinned={isColumnPinned(category, 'reference')}
+              onTogglePin={toggleColumnPinning}
+            />
+          );
+        }
+
+        // Fallback to regular TooltipTh
+        return (
+          <TooltipTh
+            title="Reference"
+            tooltipContext="Reference information for this property"
+          />
+        );
+      },
       size: 124,
       cell: (info) => {
         const { onShowReference } = info.table.options.meta as TableCellsMeta;
@@ -242,12 +299,33 @@ export const useCreateProposalTableColumns = ({
     });
 
     const supportColumn = columnHelper.accessor('support', {
-      header: () => (
-        <TooltipTh
-          title="Support"
-          tooltipContext="Number of supporters for this property"
-        />
-      ),
+      id: 'support',
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+
+        // If column pinning is supported, use TooltipThWithPin
+        if (toggleColumnPinning && isColumnPinned && category) {
+          return (
+            <TooltipThWithPin
+              title="Support"
+              tooltipContext="Number of supporters for this property"
+              columnId="support"
+              category={category}
+              isPinned={isColumnPinned(category, 'support')}
+              onTogglePin={toggleColumnPinning}
+            />
+          );
+        }
+
+        // Fallback to regular TooltipTh
+        return (
+          <TooltipTh
+            title="Support"
+            tooltipContext="Number of supporters for this property"
+          />
+        );
+      },
       size: 220,
       cell: (info) => {
         const { isProposalCreator } = info.table.options.meta as TableCellsMeta;
