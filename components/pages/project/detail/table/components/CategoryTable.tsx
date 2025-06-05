@@ -72,20 +72,39 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     <thead>
       <tr className="bg-[#F5F5F5]">
         {table.getHeaderGroups().map((headerGroup: any) =>
-          headerGroup.headers.map((header: any, index: number) => (
-            <TableHeader
-              key={header.id}
-              width={header.getSize()}
-              isLast={index === headerGroup.headers.length - 1}
-            >
-              {header.isPlaceholder
-                ? null
-                : flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
-            </TableHeader>
-          )),
+          headerGroup.headers.map((header: any, index: number) => {
+            const isPinned = header.column.getIsPinned();
+            const pinnedPosition =
+              isPinned === 'left'
+                ? header.column.getStart('left')
+                : isPinned === 'right'
+                  ? header.column.getAfter('right')
+                  : undefined;
+
+            return (
+              <TableHeader
+                key={header.id}
+                width={header.getSize()}
+                isLast={index === headerGroup.headers.length - 1}
+                className={cn(
+                  isPinned && 'sticky z-10 bg-[#F5F5F5]',
+                  isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                  isPinned === 'right' && 'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                )}
+                style={{
+                  ...(isPinned === 'left' && { left: pinnedPosition }),
+                  ...(isPinned === 'right' && { right: pinnedPosition }),
+                }}
+              >
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+              </TableHeader>
+            );
+          }),
         )}
       </tr>
     </thead>
@@ -103,16 +122,37 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                 key={`skeleton-row-${rowIndex}`}
                 isLastRow={rowIndex === 2}
               >
-                {table.getAllColumns().map((column: any, cellIndex: number) => (
-                  <TableCellSkeleton
-                    key={`skeleton-cell-${column.id}-${rowIndex}`}
-                    width={column.getSize()}
-                    isLast={cellIndex === table.getAllColumns().length - 1}
-                    isLastRow={rowIndex === 2}
-                    minHeight={60}
-                    skeletonHeight={20}
-                  />
-                ))}
+                {table.getAllColumns().map((column: any, cellIndex: number) => {
+                  const isPinned = column.getIsPinned();
+                  const pinnedPosition =
+                    isPinned === 'left'
+                      ? column.getStart('left')
+                      : isPinned === 'right'
+                        ? column.getAfter('right')
+                        : undefined;
+
+                  return (
+                    <TableCellSkeleton
+                      key={`skeleton-cell-${column.id}-${rowIndex}`}
+                      width={column.getSize()}
+                      isLast={cellIndex === table.getAllColumns().length - 1}
+                      isLastRow={rowIndex === 2}
+                      minHeight={60}
+                      skeletonHeight={20}
+                      className={cn(
+                        isPinned && 'sticky z-10 bg-white',
+                        isPinned === 'left' &&
+                          'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                        isPinned === 'right' &&
+                          'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                      )}
+                      style={{
+                        ...(isPinned === 'left' && { left: pinnedPosition }),
+                        ...(isPinned === 'right' && { right: pinnedPosition }),
+                      }}
+                    />
+                  );
+                })}
               </TableRowSkeleton>
             ))}
             <TableFooter colSpan={table.getAllColumns().length}>
@@ -187,22 +227,45 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     // expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
                   }
                 >
-                  {row.getVisibleCells().map((cell: any, cellIndex: number) => (
-                    <OptimizedTableCell
-                      key={cell.id}
-                      cell={cell}
-                      cellIndex={cellIndex}
-                      width={cell.column.getSize()}
-                      isLast={cellIndex === row.getVisibleCells().length - 1}
-                      isLastRow={
-                        rowIndex === nonEmptyRows.length - 1 &&
-                        emptyRows.length === 0 &&
-                        !AllItemConfig[row.original.key as IEssentialItemKey]
-                          ?.showExpand
-                      }
-                      minHeight={60}
-                    />
-                  ))}
+                  {row.getVisibleCells().map((cell: any, cellIndex: number) => {
+                    const isPinned = cell.column.getIsPinned();
+                    const pinnedPosition =
+                      isPinned === 'left'
+                        ? cell.column.getStart('left')
+                        : isPinned === 'right'
+                          ? cell.column.getAfter('right')
+                          : undefined;
+
+                    return (
+                      <OptimizedTableCell
+                        key={cell.id}
+                        cell={cell}
+                        cellIndex={cellIndex}
+                        width={cell.column.getSize()}
+                        isLast={cellIndex === row.getVisibleCells().length - 1}
+                        isLastRow={
+                          rowIndex === nonEmptyRows.length - 1 &&
+                          emptyRows.length === 0 &&
+                          !AllItemConfig[row.original.key as IEssentialItemKey]
+                            ?.showExpand
+                        }
+                        minHeight={60}
+                        className={cn(
+                          isPinned && 'sticky z-10 bg-white',
+                          isPinned === 'left' &&
+                            'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                          isPinned === 'right' &&
+                            'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        )}
+                        style={{
+                          ...(isPinned === 'left' && { left: pinnedPosition }),
+                          ...(isPinned === 'right' && {
+                            right: pinnedPosition,
+                          }),
+                        }}
+                      />
+                    );
+                  })}
                 </TableRow>
 
                 <ExpandableRow
@@ -227,7 +290,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
               emptyItemsCount={emptyItemsCount}
               isExpanded={isExpanded}
               onToggle={onToggleEmptyItems}
-              colSpan={table.getAllColumns().length}
+              table={table}
             />
           )}
 
@@ -237,17 +300,40 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             emptyRows.map((row: any, rowIndex: number) => (
               <React.Fragment key={`empty-${rowIndex}`}>
                 <TableRow isLastRow={rowIndex === emptyRows.length - 1}>
-                  {row.getVisibleCells().map((cell: any, cellIndex: number) => (
-                    <OptimizedTableCell
-                      key={cell.id}
-                      cell={cell}
-                      cellIndex={cellIndex}
-                      width={cell.column.getSize()}
-                      isLast={cellIndex === row.getVisibleCells().length - 1}
-                      isLastRow={rowIndex === emptyRows.length - 1}
-                      minHeight={60}
-                    />
-                  ))}
+                  {row.getVisibleCells().map((cell: any, cellIndex: number) => {
+                    const isPinned = cell.column.getIsPinned();
+                    const pinnedPosition =
+                      isPinned === 'left'
+                        ? cell.column.getStart('left')
+                        : isPinned === 'right'
+                          ? cell.column.getAfter('right')
+                          : undefined;
+
+                    return (
+                      <OptimizedTableCell
+                        key={cell.id}
+                        cell={cell}
+                        cellIndex={cellIndex}
+                        width={cell.column.getSize()}
+                        isLast={cellIndex === row.getVisibleCells().length - 1}
+                        isLastRow={rowIndex === emptyRows.length - 1}
+                        minHeight={60}
+                        className={cn(
+                          isPinned && 'sticky z-10 bg-white',
+                          isPinned === 'left' &&
+                            'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                          isPinned === 'right' &&
+                            'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        )}
+                        style={{
+                          ...(isPinned === 'left' && { left: pinnedPosition }),
+                          ...(isPinned === 'right' && {
+                            right: pinnedPosition,
+                          }),
+                        }}
+                      />
+                    );
+                  })}
                 </TableRow>
 
                 <ExpandableRow

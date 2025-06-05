@@ -14,7 +14,7 @@ import {
 } from '@/components/biz/table';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IProfileCreator } from '@/types';
-import { IPocItemKey } from '@/types/item';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 
 import { IRef } from '../../create/types';
 import { ITableMetaOfProjectDetail } from '../types';
@@ -55,11 +55,13 @@ export interface IKeyItemDataForTable {
 interface IUseProjectTableColumnsProps {
   isPageExpanded?: boolean;
   showMetrics?: boolean;
+  category?: IItemSubCategoryEnum;
 }
 
 export const useProjectTableColumns = ({
   isPageExpanded = false,
   showMetrics = false,
+  category,
 }: IUseProjectTableColumnsProps) => {
   // 创建列定义
   const columnHelper = createColumnHelper<IKeyItemDataForTable>();
@@ -67,7 +69,18 @@ export const useProjectTableColumns = ({
   return useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
       id: 'property',
-      header: () => <PropertyCol.Header />,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <PropertyCol.Header
+            columnId="property"
+            category={category}
+            isPinned={category ? isColumnPinned?.(category, 'property') : false}
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
       size: isPageExpanded ? 247 : 220,
       cell: (info) => {
         const { key } = info.row.original;
@@ -82,7 +95,18 @@ export const useProjectTableColumns = ({
 
     const inputColumn = columnHelper.accessor('input', {
       id: 'input',
-      header: () => <InputCol.Header />,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <InputCol.Header
+            columnId="input"
+            category={category}
+            isPinned={category ? isColumnPinned?.(category, 'input') : false}
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const item = info.row.original;
@@ -116,8 +140,21 @@ export const useProjectTableColumns = ({
 
     const referenceColumn = columnHelper.accessor('reference', {
       id: 'reference',
-      header: () => <ReferenceCol.Header />,
-      size: 124,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <ReferenceCol.Header
+            columnId="reference"
+            category={category}
+            isPinned={
+              category ? isColumnPinned?.(category, 'reference') : false
+            }
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
+      size: 130,
       cell: (info) => {
         const reference = info.getValue();
         const key = info.row.original.key;
@@ -141,7 +178,20 @@ export const useProjectTableColumns = ({
 
     const submitterColumn = columnHelper.accessor('submitter', {
       id: 'submitter',
-      header: () => <SubmitterCol.Header />,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <SubmitterCol.Header
+            columnId="submitter"
+            category={category}
+            isPinned={
+              category ? isColumnPinned?.(category, 'submitter') : false
+            }
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
       size: 183,
       cell: (info) => {
         const item = info.row.original;
@@ -160,8 +210,21 @@ export const useProjectTableColumns = ({
 
     const accountabilityColumn = columnHelper.accessor('accountability', {
       id: 'accountability',
-      header: () => <AccountabilityCol.Header />,
-      size: 228,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <AccountabilityCol.Header
+            columnId="accountability"
+            category={category}
+            isPinned={
+              category ? isColumnPinned?.(category, 'accountability') : false
+            }
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
+      size: 240,
       cell: (info) => {
         const accountability = info.getValue();
         const { onMetricClick } = info.table.options
@@ -177,7 +240,20 @@ export const useProjectTableColumns = ({
 
     const legitimacyColumn = columnHelper.accessor('legitimacy', {
       id: 'legitimacy',
-      header: () => <LegitimacyCol.Header />,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <LegitimacyCol.Header
+            columnId="legitimacy"
+            category={category}
+            isPinned={
+              category ? isColumnPinned?.(category, 'legitimacy') : false
+            }
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
       size: 228,
       cell: (info) => {
         const legitimacy = info.getValue();
@@ -194,7 +270,18 @@ export const useProjectTableColumns = ({
 
     const actionsColumn = columnHelper.accessor('key', {
       id: 'actions',
-      header: () => <ActionsCol.Header />,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
+        return (
+          <ActionsCol.Header
+            columnId="actions"
+            category={category}
+            isPinned={category ? isColumnPinned?.(category, 'actions') : false}
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
       size: 195,
       cell: (info) => {
         const item = info.row.original;
