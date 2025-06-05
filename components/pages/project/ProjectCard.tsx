@@ -102,7 +102,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
               type={'body2'}
               className="mt-[6px] leading-[18px] opacity-65"
             >
-              {project.mainDescription}
+              {project.tagline}
             </ECFTypography>
             <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
               <span className="opacity-60">by: </span>

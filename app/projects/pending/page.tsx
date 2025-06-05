@@ -11,6 +11,7 @@ import PendingProjectCard, {
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
+import ScanPendingProject from '@/components/pages/ScanPendingProject';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -34,12 +35,6 @@ const PendingProjectsPage = () => {
         },
       },
     );
-
-  // only scan pending project in dev env
-  // const { data: scanPendingProjectData } =
-  //   trpc.project.scanPendingProject.useQuery(undefined, {
-  //     enabled: !!isScanPendingProject,
-  //   });
 
   const handleLoadMore = () => {
     if (!isFetchingNextPage) {
@@ -82,6 +77,7 @@ const PendingProjectsPage = () => {
             <Button className="font-mona px-[20px] text-[16px]">
               How it works
             </Button>
+            <ScanPendingProject />
           </div>
         </div>
       </div>

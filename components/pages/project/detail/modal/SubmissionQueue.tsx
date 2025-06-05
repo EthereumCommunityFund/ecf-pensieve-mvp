@@ -19,7 +19,7 @@ import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
 import { CaretUpDownIcon, ClockClockwiseIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
-import { IEssentialItemKey } from '@/types/item';
+import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
@@ -70,6 +70,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     isProposalsByKeyLoading,
     inActionKeyMap,
     inActionItemProposalIdMap,
+    currentItemKey,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -206,10 +207,17 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     meta: submissionQueueTableMeta,
   });
 
-  const itemWeightOfLeadingProposal = useMemo(() => {
-    if (!displayProposalDataOfKey) return 0;
-    return displayProposalDataOfKey.itemTopWeight;
-  }, [displayProposalDataOfKey]);
+  const displayedItemWeight = useMemo(() => {
+    const itemKey = currentItemKey as IPocItemKey;
+    const itemConfigWeight = Number(AllItemConfig[itemKey]?.weight);
+    if (displayProposalDataOfKey) {
+      const itemTopWeight = Number(displayProposalDataOfKey.itemTopWeight);
+      if (itemTopWeight > 0) {
+        return itemTopWeight;
+      }
+    }
+    return itemConfigWeight;
+  }, [displayProposalDataOfKey, currentItemKey]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -220,10 +228,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             Item:
           </span>
         </div>
-        <ItemWeight
-          itemName={itemName}
-          itemWeight={itemWeightOfLeadingProposal}
-        />
+        <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
       </div>
       {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
       {showRowOverTaken && (

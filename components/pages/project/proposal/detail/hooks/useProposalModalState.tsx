@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
 import { IProposal } from '@/types';
@@ -15,6 +15,7 @@ export const useProposalModalState = () => {
   const [currentVoteItem, setCurrentVoteItem] =
     useState<ITableProposalItem | null>(null);
   const [sourceProposal, setSourceProposal] = useState<IProposal | null>(null);
+  const [sourceProposalIndex, setSourceProposalIndex] = useState<number>(0);
 
   const [doNotShowCancelModal, setDoNotShowCancelModal] =
     useState<boolean>(false);
@@ -30,6 +31,14 @@ export const useProposalModalState = () => {
     }
   }, [doNotShowCancelModal]);
 
+  const setSourceProposalInfo = useCallback(
+    (proposal: IProposal | null, index: number) => {
+      setSourceProposal(proposal);
+      setSourceProposalIndex(index);
+    },
+    [],
+  );
+
   return {
     isSwitchModalOpen,
     isCancelModalOpen,
@@ -37,6 +46,7 @@ export const useProposalModalState = () => {
     currentReferenceKey,
     currentVoteItem,
     sourceProposal,
+    sourceProposalIndex,
     doNotShowCancelModal,
 
     setIsSwitchModalOpen,
@@ -44,7 +54,7 @@ export const useProposalModalState = () => {
     setIsReferenceModalOpen,
     setCurrentReferenceKey,
     setCurrentVoteItem,
-    setSourceProposal,
+    setSourceProposalInfo,
     setDoNotShowCancelModal,
   };
 };
