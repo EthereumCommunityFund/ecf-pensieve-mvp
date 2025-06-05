@@ -68,32 +68,31 @@ export const projectRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (tx) => {
-        const proposalItems = Object.entries(input)
-          .filter(([key]) => key !== 'refs')
-          .map(([key, value]) => {
-            return { key, value };
-          });
+      try {
+        return await ctx.db.transaction(async (tx) => {
+          const proposalItems = Object.entries(input)
+            .filter(([key]) => key !== 'refs')
+            .map(([key, value]) => {
+              return { key, value };
+            });
 
-        const hasProposalKeys = proposalItems.map((item) => item.key);
+          const hasProposalKeys = proposalItems.map((item) => item.key);
 
-        const [project] = await tx
-          .insert(projects)
-          .values({
-            ...input,
-            creator: ctx.user.id,
-            hasProposalKeys,
-          })
-          .returning();
+          const [project] = await tx
+            .insert(projects)
+            .values({
+              ...input,
+              creator: ctx.user.id,
+              hasProposalKeys,
+            })
+            .returning();
 
-        if (!project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'project not found',
-          });
-        }
-
-        try {
+          if (!project) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'project not found',
+            });
+          }
           const caller = proposalRouter.createCaller({
             ...ctx,
             db: tx as any,
@@ -122,15 +121,22 @@ export const projectRouter = router({
           );
 
           return project;
-        } catch (error) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message:
-              'Failed to create the project and its initial proposal. All changes have been rolled back.',
-            cause: error,
-          });
+        });
+      } catch (error) {
+        console.error('Error in createProject:', {
+          userId: ctx.user.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        if (error instanceof TRPCError) {
+          throw error;
         }
-      });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create project',
+          cause: error,
+        });
+      }
     }),
 
   getProjects: publicProcedure

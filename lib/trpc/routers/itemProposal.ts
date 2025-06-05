@@ -61,7 +61,6 @@ export const itemProposalRouter = router({
             ),
           }),
         ]);
-        console.log(voteRecord);
 
         return await ctx.db.transaction(async (tx) => {
           const [itemProposal] = await tx
@@ -152,7 +151,16 @@ export const itemProposalRouter = router({
           return itemProposal;
         });
       } catch (error) {
-        console.error('Error creating item proposal:', error);
+        console.error('Error in createItemProposal:', {
+          userId: ctx.user.id,
+          projectId: input.projectId,
+          key: input.key,
+          value: input.value,
+          ref: input.ref,
+          reason: input.reason,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
 
         if (error instanceof TRPCError) {
           throw error;
