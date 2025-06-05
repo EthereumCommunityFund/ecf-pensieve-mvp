@@ -356,7 +356,7 @@ export const convertProjectToFormData = (
     websiteUrl: project.websiteUrl,
     appUrl: project.appUrl || null,
     tags: project.tags,
-    whitePaper: project.whitePaper,
+    whitePaper: project.whitePaper || '',
     dappSmartContracts: project.dappSmartContracts || '',
     dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
     dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,

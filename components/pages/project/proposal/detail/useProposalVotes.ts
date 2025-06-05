@@ -288,14 +288,17 @@ export function useProposalVotes(
         setCurrentVoteItem: (item: ITableProposalItem) => void;
         setIsCancelModalOpen: (open: boolean) => void;
         setIsSwitchModalOpen: (open: boolean) => void;
-        setSourceProposal: (proposal: IProposal | null) => void;
+        setSourceProposalInfo: (
+          proposal: IProposal | null,
+          index: number,
+        ) => void;
       },
     ) => {
       const {
         setCurrentVoteItem,
         setIsCancelModalOpen,
         setIsSwitchModalOpen,
-        setSourceProposal,
+        setSourceProposalInfo,
       } = callbacks;
 
       setCurrentVoteItem(item);
@@ -319,7 +322,10 @@ export function useProposalVotes(
         !isUserVotedItemOfProposal(item.key)
       ) {
         const sourceProposalData = findSourceProposal(item.key);
-        setSourceProposal(sourceProposalData);
+        const sourceProposalIndex = proposals?.findIndex(
+          (p) => p.id === sourceProposalData?.id,
+        );
+        setSourceProposalInfo(sourceProposalData, sourceProposalIndex || 0);
         setIsSwitchModalOpen(true);
       }
     },

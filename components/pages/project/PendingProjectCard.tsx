@@ -138,7 +138,7 @@ const PendingProjectCard = ({
               {project.name}
             </p>
             <p className="mt-[4px] text-[14px] font-[400] leading-[18px] text-black">
-              {project.mainDescription}
+              {project.tagline}
             </p>
           </div>
 
