@@ -1,5 +1,6 @@
 'use client';
 
+import { ColumnPinningState } from '@tanstack/react-table';
 import { useCallback, useState } from 'react';
 
 import { IItemSubCategoryEnum } from '@/types/item';
@@ -56,6 +57,19 @@ export const useTableStates = () => {
     [IItemSubCategoryEnum.Governance]: false,
   });
 
+  // 列固定状态管理 - 按子分类独立管理
+  const [columnPinning, setColumnPinning] = useState<
+    Record<IItemSubCategoryEnum, ColumnPinningState>
+  >({
+    [IItemSubCategoryEnum.Organization]: { left: [], right: [] },
+    [IItemSubCategoryEnum.Team]: { left: [], right: [] },
+    [IItemSubCategoryEnum.BasicProfile]: { left: [], right: [] },
+    [IItemSubCategoryEnum.Development]: { left: [], right: [] },
+    [IItemSubCategoryEnum.Finances]: { left: [], right: [] },
+    [IItemSubCategoryEnum.Token]: { left: [], right: [] },
+    [IItemSubCategoryEnum.Governance]: { left: [], right: [] },
+  });
+
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
@@ -97,6 +111,60 @@ export const useTableStates = () => {
     }));
   }, []);
 
+  // 切换列固定状态
+  const toggleColumnPinning = useCallback(
+    (
+      category: IItemSubCategoryEnum,
+      columnId: string,
+      position?: 'left' | 'right',
+    ) => {
+      setColumnPinning((prev) => {
+        const currentPinning = prev[category];
+        const newPinning = { ...currentPinning };
+
+        // 检查列是否已经固定
+        const isLeftPinned = currentPinning.left?.includes(columnId);
+        const isRightPinned = currentPinning.right?.includes(columnId);
+
+        if (isLeftPinned || isRightPinned) {
+          // 如果已固定，则取消固定
+          newPinning.left =
+            currentPinning.left?.filter((id) => id !== columnId) || [];
+          newPinning.right =
+            currentPinning.right?.filter((id) => id !== columnId) || [];
+        } else {
+          // 如果未固定，则固定到指定位置（默认左侧）
+          const targetPosition = position || 'left';
+          if (targetPosition === 'left') {
+            newPinning.left = [...(currentPinning.left || []), columnId];
+          } else {
+            newPinning.right = [...(currentPinning.right || []), columnId];
+          }
+        }
+
+        return {
+          ...prev,
+          [category]: newPinning,
+        };
+      });
+    },
+    [],
+  );
+
+  // 获取列是否已固定
+  const isColumnPinned = useCallback(
+    (
+      category: IItemSubCategoryEnum,
+      columnId: string,
+    ): 'left' | 'right' | false => {
+      const pinning = columnPinning[category];
+      if (pinning.left?.includes(columnId)) return 'left';
+      if (pinning.right?.includes(columnId)) return 'right';
+      return false;
+    },
+    [columnPinning],
+  );
+
   // 批量切换某个分类下所有行的展开状态
   const toggleAllRowsInCategory = useCallback((categoryRows: string[]) => {
     setExpandedRows((prev) => {
@@ -122,6 +190,7 @@ export const useTableStates = () => {
     emptyItemsExpanded,
     groupExpanded,
     metricsVisible,
+    columnPinning,
 
     // Actions
     toggleRowExpanded,
@@ -130,5 +199,7 @@ export const useTableStates = () => {
     toggleGroupExpanded,
     toggleMetricsVisible,
     toggleAllRowsInCategory,
+    toggleColumnPinning,
+    isColumnPinned,
   };
 };

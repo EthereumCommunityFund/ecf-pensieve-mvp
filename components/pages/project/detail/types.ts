@@ -1,7 +1,7 @@
 import { IModalContentType } from '@/app/project/[id]/page';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProfile, IProject, IProposalsByProjectIdAndKey } from '@/types';
-import { IPocItemKey } from '@/types/item';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 
 export interface IProjectDetailModalProps {
   isOpen: boolean;
@@ -26,6 +26,15 @@ export interface ITableMetaOfProjectDetail {
   ) => void;
   showReferenceModal?: (ref: string, key: IPocItemKey, reason: string) => void;
   onMetricClick?: (metric: string) => void;
+  toggleColumnPinning?: (
+    category: IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+  isColumnPinned?: (
+    category: IItemSubCategoryEnum,
+    columnId: string,
+  ) => 'left' | 'right' | false;
 }
 
 export interface ITableMetaOfDisplayed {

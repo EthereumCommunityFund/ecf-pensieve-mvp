@@ -48,12 +48,15 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     emptyItemsExpanded,
     groupExpanded,
     metricsVisible,
+    columnPinning,
     toggleRowExpanded,
     toggleCategory,
     toggleEmptyItems,
     toggleGroupExpanded,
     toggleMetricsVisible,
     toggleAllRowsInCategory,
+    toggleColumnPinning,
+    isColumnPinned,
   } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
@@ -67,6 +70,8 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       onOpenModal,
       showReferenceModal,
       onMetricClick,
+      toggleColumnPinning,
+      isColumnPinned,
     }),
     [
       expandedRows,
@@ -75,6 +80,8 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       onOpenModal,
       showReferenceModal,
       onMetricClick,
+      toggleColumnPinning,
+      isColumnPinned,
     ],
   );
 
@@ -82,36 +89,43 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   const basicProfileColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.BasicProfile],
+    category: IItemSubCategoryEnum.BasicProfile,
   });
 
   const developmentColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.Development],
+    category: IItemSubCategoryEnum.Development,
   });
 
   const organizationColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.Organization],
+    category: IItemSubCategoryEnum.Organization,
   });
 
   const teamColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.Team],
+    category: IItemSubCategoryEnum.Team,
   });
 
   const financesColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.Finances],
+    category: IItemSubCategoryEnum.Finances,
   });
 
   const tokenColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.Token],
+    category: IItemSubCategoryEnum.Token,
   });
 
   const governanceColumns = useProjectTableColumns({
     isPageExpanded: false,
     showMetrics: metricsVisible[IItemSubCategoryEnum.Governance],
+    category: IItemSubCategoryEnum.Governance,
   });
 
   // Create table instances for each category with their own columns
@@ -119,6 +133,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.BasicProfile] || [],
     columns: basicProfileColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.BasicProfile],
+    },
     meta: coreTableMeta,
   });
 
@@ -126,6 +144,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.Development] || [],
     columns: developmentColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Development],
+    },
     meta: coreTableMeta,
   });
 
@@ -133,6 +155,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.Organization] || [],
     columns: organizationColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Organization],
+    },
     meta: coreTableMeta,
   });
 
@@ -140,6 +166,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.Team] || [],
     columns: teamColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Team],
+    },
     meta: coreTableMeta,
   });
 
@@ -147,6 +177,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.Finances] || [],
     columns: financesColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Finances],
+    },
     meta: coreTableMeta,
   });
 
@@ -154,6 +188,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.Token] || [],
     columns: tokenColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Token],
+    },
     meta: coreTableMeta,
   });
 
@@ -161,6 +199,10 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     data: tableData[IItemSubCategoryEnum.Governance] || [],
     columns: governanceColumns,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Governance],
+    },
     meta: coreTableMeta,
   });
 

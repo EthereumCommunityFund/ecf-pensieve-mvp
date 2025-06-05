@@ -28,6 +28,7 @@ import { isInputValueEmpty } from '@/utils/item';
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
 import TooltipTh from './TooltipTh';
+import TooltipThWithPin from './TooltipThWithPin';
 
 // Common types for all column components
 interface BaseHeaderProps {
@@ -50,7 +51,16 @@ interface BaseCellProps {
 // PropertyCol Components
 // =============================================================================
 
-export type PropertyColHeaderProps = BaseHeaderProps;
+export interface PropertyColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface PropertyColCellProps extends BaseCellProps {
   children: ReactNode;
@@ -59,7 +69,27 @@ export interface PropertyColCellProps extends BaseCellProps {
   rowData: IKeyItemDataForTable;
 }
 
-const PropertyHeader = (_props: PropertyColHeaderProps) => {
+const PropertyHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: PropertyColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Property"
+        tooltipContext="The property name of the project item"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Property"
@@ -153,7 +183,16 @@ export const FieldTypeCol = {
 // InputCol Components
 // =============================================================================
 
-export type InputColHeaderProps = BaseHeaderProps;
+export interface InputColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface InputColCellProps extends BaseCellProps {
   value: any;
@@ -169,7 +208,27 @@ export interface InputColCellProps extends BaseCellProps {
   onViewProposals?: () => void;
 }
 
-const InputHeader = (_props: InputColHeaderProps) => {
+const InputHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: InputColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Input"
+        tooltipContext="The input value provided by the user"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Input"
@@ -333,14 +392,43 @@ export const InputCol = {
 // ReferenceCol Components
 // =============================================================================
 
-export type ReferenceColHeaderProps = BaseHeaderProps;
+export interface ReferenceColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface ReferenceColCellProps extends BaseCellProps {
   hasReference: boolean;
   onShowReference?: () => void;
 }
 
-const ReferenceHeader = (_props: ReferenceColHeaderProps) => {
+const ReferenceHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: ReferenceColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Reference"
+        tooltipContext="Reference information for this property"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Reference"
@@ -454,7 +542,16 @@ export const SupportCol = {
 // SubmitterCol Components
 // =============================================================================
 
-export type SubmitterColHeaderProps = BaseHeaderProps;
+export interface SubmitterColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface SubmitterColCellProps extends BaseCellProps {
   item: IKeyItemDataForTable;
@@ -463,7 +560,27 @@ export interface SubmitterColCellProps extends BaseCellProps {
   data: Date;
 }
 
-const SubmitterHeader = (_props: SubmitterColHeaderProps) => {
+const SubmitterHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: SubmitterColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Submitter"
+        tooltipContext="The person who submitted this item"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Submitter"
@@ -548,14 +665,43 @@ export const SubmitterCol = {
 // ActionsCol Components
 // =============================================================================
 
-export type ActionsColHeaderProps = BaseHeaderProps;
+export interface ActionsColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface ActionsColCellProps extends BaseCellProps {
   item: IKeyItemDataForTable;
   onView?: (contentType?: 'viewItemProposal' | 'submitPropose') => void;
 }
 
-const ActionsHeader = (_props: ActionsColHeaderProps) => {
+const ActionsHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: ActionsColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Actions"
+        tooltipContext="Actions you can take on this item"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Actions"
@@ -599,14 +745,43 @@ export const ActionsCol = {
 // AccountabilityCol Components
 // =============================================================================
 
-export type AccountabilityColHeaderProps = BaseHeaderProps;
+export interface AccountabilityColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface AccountabilityColCellProps extends BaseCellProps {
   accountability?: string[];
   onMetricClick?: (metric: string) => void;
 }
 
-const AccountabilityHeader = (_props: AccountabilityColHeaderProps) => {
+const AccountabilityHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: AccountabilityColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Accountability Metrics"
+        tooltipContext="The accountability metrics associated with this property"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Accountability Metrics"
@@ -653,14 +828,43 @@ export const AccountabilityCol = {
 // LegitimacyCol Components
 // =============================================================================
 
-export type LegitimacyColHeaderProps = BaseHeaderProps;
+export interface LegitimacyColHeaderProps extends BaseHeaderProps {
+  columnId?: string;
+  category?: import('@/types/item').IItemSubCategoryEnum;
+  isPinned?: 'left' | 'right' | false;
+  onTogglePin?: (
+    category: import('@/types/item').IItemSubCategoryEnum,
+    columnId: string,
+    position?: 'left' | 'right',
+  ) => void;
+}
 
 export interface LegitimacyColCellProps extends BaseCellProps {
   legitimacy?: string[];
   onMetricClick?: (metric: string) => void;
 }
 
-const LegitimacyHeader = (_props: LegitimacyColHeaderProps) => {
+const LegitimacyHeader = ({
+  columnId,
+  category,
+  isPinned,
+  onTogglePin,
+}: LegitimacyColHeaderProps) => {
+  // If column pinning is supported, use TooltipThWithPin
+  if (columnId && category && onTogglePin) {
+    return (
+      <TooltipThWithPin
+        title="Legitimacy Metrics"
+        tooltipContext="The legitimacy metrics associated with this property"
+        columnId={columnId}
+        category={category}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
+      />
+    );
+  }
+
+  // Fallback to regular TooltipTh
   return (
     <TooltipTh
       title="Legitimacy Metrics"

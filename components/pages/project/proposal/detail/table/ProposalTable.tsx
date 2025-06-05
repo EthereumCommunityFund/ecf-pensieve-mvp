@@ -43,33 +43,50 @@ const ProposalTable: React.FC<ProposalTableProps> = memo(
         <thead>
           <tr className="bg-[#F5F5F5]">
             {table.getHeaderGroups().map((headerGroup) =>
-              headerGroup.headers.map((header, index) => (
-                <th
-                  key={header.id}
-                  style={{
-                    width: `${header.getSize()}px`,
-                    boxSizing: 'border-box',
-                  }}
-                  className={cn(
-                    'h-[30px] border-b-0 border-l-0 px-[10px] text-left text-[14px] font-[600] text-black/60',
-                    index === headerGroup.headers.length - 1
-                      ? 'border-r-0'
-                      : 'border-r border-black/10',
-                  )}
-                >
-                  <div
-                    className="flex items-center"
-                    style={{ width: '100%', overflow: 'hidden' }}
+              headerGroup.headers.map((header, index) => {
+                const isPinned = header.column.getIsPinned();
+                const pinnedPosition =
+                  isPinned === 'left'
+                    ? header.column.getStart('left')
+                    : isPinned === 'right'
+                      ? header.column.getAfter('right')
+                      : undefined;
+
+                return (
+                  <th
+                    key={header.id}
+                    style={{
+                      width: `${header.getSize()}px`,
+                      boxSizing: 'border-box',
+                      ...(isPinned === 'left' && { left: pinnedPosition }),
+                      ...(isPinned === 'right' && { right: pinnedPosition }),
+                    }}
+                    className={cn(
+                      'h-[30px] border-b-0 border-l-0 px-[10px] text-left text-[14px] font-[600] text-black/60',
+                      index === headerGroup.headers.length - 1
+                        ? 'border-r-0'
+                        : 'border-r border-black/10',
+                      isPinned && 'sticky z-10 bg-[#F5F5F5]',
+                      isPinned === 'left' &&
+                        'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                      isPinned === 'right' &&
+                        'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                    )}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </div>
-                </th>
-              )),
+                    <div
+                      className="flex items-center"
+                      style={{ width: '100%', overflow: 'hidden' }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </div>
+                  </th>
+                );
+              }),
             )}
           </tr>
         </thead>
@@ -90,28 +107,47 @@ const ProposalTable: React.FC<ProposalTableProps> = memo(
             <tbody>
               {Array.from({ length: 10 }).map((_, rowIndex) => (
                 <tr key={`skeleton-row-${rowIndex}`}>
-                  {table.getAllColumns().map((column, cellIndex) => (
-                    <td
-                      key={`skeleton-cell-${column.id}-${rowIndex}`}
-                      style={{
-                        width: `${column.getSize()}px`,
-                        boxSizing: 'border-box',
-                      }}
-                      className={cn(
-                        'border-l-0',
-                        cellIndex === table.getAllColumns().length - 1
-                          ? 'border-r-0'
-                          : 'border-r border-black/10',
-                        rowIndex === table.getRowModel().rows.length - 1
-                          ? 'border-b-0'
-                          : 'border-b border-black/10',
-                      )}
-                    >
-                      <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
-                        <Skeleton className="h-[20px] w-full rounded" />
-                      </div>
-                    </td>
-                  ))}
+                  {table.getAllColumns().map((column, cellIndex) => {
+                    const isPinned = column.getIsPinned();
+                    const pinnedPosition =
+                      isPinned === 'left'
+                        ? column.getStart('left')
+                        : isPinned === 'right'
+                          ? column.getAfter('right')
+                          : undefined;
+
+                    return (
+                      <td
+                        key={`skeleton-cell-${column.id}-${rowIndex}`}
+                        style={{
+                          width: `${column.getSize()}px`,
+                          boxSizing: 'border-box',
+                          ...(isPinned === 'left' && { left: pinnedPosition }),
+                          ...(isPinned === 'right' && {
+                            right: pinnedPosition,
+                          }),
+                        }}
+                        className={cn(
+                          'border-l-0',
+                          cellIndex === table.getAllColumns().length - 1
+                            ? 'border-r-0'
+                            : 'border-r border-black/10',
+                          rowIndex === table.getRowModel().rows.length - 1
+                            ? 'border-b-0'
+                            : 'border-b border-black/10',
+                          isPinned && 'sticky z-10 bg-white',
+                          isPinned === 'left' &&
+                            'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                          isPinned === 'right' &&
+                            'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        )}
+                      >
+                        <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
+                          <Skeleton className="h-[20px] w-full rounded" />
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -143,20 +179,43 @@ const ProposalTable: React.FC<ProposalTableProps> = memo(
                     expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
                   )}
                 >
-                  {row.getVisibleCells().map((cell, cellIndex) => (
-                    <OptimizedTableCell
-                      key={cell.id}
-                      cell={cell}
-                      cellIndex={cellIndex}
-                      width={cell.column.getSize()}
-                      isLast={cellIndex === row.getVisibleCells().length - 1}
-                      isLastRow={
-                        rowIndex === table.getRowModel().rows.length - 1
-                      }
-                      minHeight={60}
-                      isContainerBordered={true}
-                    />
-                  ))}
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    const isPinned = cell.column.getIsPinned();
+                    const pinnedPosition =
+                      isPinned === 'left'
+                        ? cell.column.getStart('left')
+                        : isPinned === 'right'
+                          ? cell.column.getAfter('right')
+                          : undefined;
+
+                    return (
+                      <OptimizedTableCell
+                        key={cell.id}
+                        cell={cell}
+                        cellIndex={cellIndex}
+                        width={cell.column.getSize()}
+                        isLast={cellIndex === row.getVisibleCells().length - 1}
+                        isLastRow={
+                          rowIndex === table.getRowModel().rows.length - 1
+                        }
+                        minHeight={60}
+                        isContainerBordered={true}
+                        className={cn(
+                          isPinned && 'sticky z-10 bg-white',
+                          isPinned === 'left' &&
+                            'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
+                          isPinned === 'right' &&
+                            'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        )}
+                        style={{
+                          ...(isPinned === 'left' && { left: pinnedPosition }),
+                          ...(isPinned === 'right' && {
+                            right: pinnedPosition,
+                          }),
+                        }}
+                      />
+                    );
+                  })}
                 </tr>
 
                 <ExpandableRow

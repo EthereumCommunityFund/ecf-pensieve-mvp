@@ -10,6 +10,7 @@ import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 
 import ActionSectionHeader from './ActionSectionHeader';
 import { useProposalDetailContext } from './context/proposalDetailContext';
+import { useProposalTableStates } from './hooks/useProposalTableStates';
 import CancelVoteModal from './modal/CancelVoteModal';
 import ReferenceModal from './modal/ReferenceModal';
 import SwitchVoteModal from './modal/SwitchVoteModal';
@@ -52,20 +53,10 @@ const ProposalDetails = ({
 
   const {
     proposal,
-    projectId,
-    project,
-    proposals,
-    expandedRows,
-    setExpandedRows,
-    metricsVisibleSubCat,
-    toggleRowExpanded,
-    toggleMetricsVisible,
-    onVoteAction,
     userVotesOfProposalMap,
     onCancelVote,
     onSwitchVote,
     switchVotePending,
-    cancelVotePending,
 
     isSwitchModalOpen,
     isCancelModalOpen,
@@ -73,16 +64,23 @@ const ProposalDetails = ({
     currentReferenceKey,
     currentVoteItem,
     sourceProposal,
-    sourceProposalIndex,
-    doNotShowCancelModal,
     setIsSwitchModalOpen,
     setIsCancelModalOpen,
     setIsReferenceModalOpen,
     setCurrentReferenceKey,
-    setCurrentVoteItem,
-    setSourceProposalInfo,
-    setDoNotShowCancelModal,
   } = useProposalDetailContext();
+
+  // Use the new table states hook for column pinning functionality
+  const {
+    expandedRows,
+    metricsVisibleSubCat,
+    columnPinning,
+    toggleRowExpanded,
+    toggleMetricsVisible,
+    toggleColumnPinning,
+    isColumnPinned,
+    setExpandedRows,
+  } = useProposalTableStates();
 
   const isOverallLoading = !proposal;
 
@@ -179,6 +177,8 @@ const ProposalDetails = ({
       onShowReference,
       isProposalCreator,
       toggleMetricsVisible,
+      toggleColumnPinning,
+      isColumnPinned,
     }),
     [
       expandedRows,
@@ -186,6 +186,8 @@ const ProposalDetails = ({
       onShowReference,
       isProposalCreator,
       toggleMetricsVisible,
+      toggleColumnPinning,
+      isColumnPinned,
     ],
   );
 
@@ -194,42 +196,49 @@ const ProposalDetails = ({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.BasicProfile],
+    category: IItemSubCategoryEnum.BasicProfile,
   });
 
   const developmentColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Development],
+    category: IItemSubCategoryEnum.Development,
   });
 
   const organizationColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Organization],
+    category: IItemSubCategoryEnum.Organization,
   });
 
   const teamColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Team],
+    category: IItemSubCategoryEnum.Team,
   });
 
   const financesColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
+    category: IItemSubCategoryEnum.Finances,
   });
 
   const tokenColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Token],
+    category: IItemSubCategoryEnum.Token,
   });
 
   const governanceColumns = useCreateProposalTableColumns({
     isPageExpanded,
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Governance],
+    category: IItemSubCategoryEnum.Governance,
   });
 
   const columnsMap = useMemo(
@@ -257,49 +266,77 @@ const ProposalDetails = ({
     data: tableDataMap[IItemSubCategoryEnum.BasicProfile],
     columns: columnsMap[IItemSubCategoryEnum.BasicProfile],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.BasicProfile],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.BasicProfile },
   });
 
   const technicalDevelopmentTable = useReactTable({
     data: tableDataMap[IItemSubCategoryEnum.Development],
     columns: columnsMap[IItemSubCategoryEnum.Development],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Development],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Development },
   });
 
   const organizationTable = useReactTable({
     data: tableDataMap[IItemSubCategoryEnum.Organization],
     columns: columnsMap[IItemSubCategoryEnum.Organization],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Organization],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Organization },
   });
 
   const teamTable = useReactTable({
     data: tableDataMap[IItemSubCategoryEnum.Team],
     columns: columnsMap[IItemSubCategoryEnum.Team],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Team],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Team },
   });
 
   const financialTable = useReactTable({
     data: tableDataMap[IItemSubCategoryEnum.Finances],
     columns: columnsMap[IItemSubCategoryEnum.Finances],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Finances],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Finances },
   });
 
   const tokenTable = useReactTable({
     data: tableDataMap[IItemSubCategoryEnum.Token],
     columns: columnsMap[IItemSubCategoryEnum.Token],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Token],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Token },
   });
 
   const governanceTable = useReactTable({
     data: tableDataMap[IItemSubCategoryEnum.Governance],
     columns: columnsMap[IItemSubCategoryEnum.Governance],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Governance],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Governance },
   });
 
   const tableInstanceMap = useMemo(() => {
@@ -372,15 +409,13 @@ const ProposalDetails = ({
         isLoading={switchVotePending}
         proposalItem={currentVoteItem || undefined}
         sourceProposal={sourceProposal || undefined}
-        proposalIndex={proposalIndex}
-        sourceProposalIndex={sourceProposalIndex}
       />
 
       <CancelVoteModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         onConfirm={handleCancelVoteConfirm}
-        isLoading={cancelVotePending}
+        isLoading={false}
         proposalItem={currentVoteItem || undefined}
       />
 

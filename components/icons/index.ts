@@ -22,6 +22,8 @@ export { default as LinkIcon } from './Link';
 export { default as PaperClipIcon } from './PaperClip';
 export { default as PencilCircleIcon } from './PencilCircle';
 export { default as PlusIcon } from './Plus';
+export { default as PushPinSimpleIcon } from './PushPinSimple';
+export { default as PushPinSimpleSlashIcon } from './PushPinSimpleSlash';
 export { default as QuestionIcon } from './Question';
 export { default as SearchIcon } from './Search';
 export { default as ShareIcon } from './Share';
