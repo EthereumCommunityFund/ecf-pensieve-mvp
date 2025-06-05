@@ -64,6 +64,7 @@ const ProposalDetails = ({
     currentReferenceKey,
     currentVoteItem,
     sourceProposal,
+    sourceProposalIndex,
     setIsSwitchModalOpen,
     setIsCancelModalOpen,
     setIsReferenceModalOpen,
@@ -197,6 +198,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.BasicProfile],
     category: IItemSubCategoryEnum.BasicProfile,
+    columnPinning: columnPinning[IItemSubCategoryEnum.BasicProfile],
   });
 
   const developmentColumns = useCreateProposalTableColumns({
@@ -204,6 +206,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Development],
     category: IItemSubCategoryEnum.Development,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Development],
   });
 
   const organizationColumns = useCreateProposalTableColumns({
@@ -211,6 +214,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Organization],
     category: IItemSubCategoryEnum.Organization,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Organization],
   });
 
   const teamColumns = useCreateProposalTableColumns({
@@ -218,6 +222,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Team],
     category: IItemSubCategoryEnum.Team,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Team],
   });
 
   const financesColumns = useCreateProposalTableColumns({
@@ -225,6 +230,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
     category: IItemSubCategoryEnum.Finances,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Finances],
   });
 
   const tokenColumns = useCreateProposalTableColumns({
@@ -232,6 +238,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Token],
     category: IItemSubCategoryEnum.Token,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Token],
   });
 
   const governanceColumns = useCreateProposalTableColumns({
@@ -239,6 +246,7 @@ const ProposalDetails = ({
     isProposalCreator,
     showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Governance],
     category: IItemSubCategoryEnum.Governance,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Governance],
   });
 
   const columnsMap = useMemo(
@@ -409,6 +417,8 @@ const ProposalDetails = ({
         isLoading={switchVotePending}
         proposalItem={currentVoteItem || undefined}
         sourceProposal={sourceProposal || undefined}
+        proposalIndex={proposalIndex}
+        sourceProposalIndex={sourceProposalIndex}
       />
 
       <CancelVoteModal

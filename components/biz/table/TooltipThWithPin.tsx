@@ -31,8 +31,9 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
       if (isPinned) {
         onTogglePin(category, columnId, undefined);
       } else {
-        // Actions column should pin to right, others to left
-        const defaultPosition = columnId === 'actions' ? 'right' : 'left';
+        // Actions and Support columns should pin to right, others to left
+        const defaultPosition =
+          columnId === 'actions' || columnId === 'support' ? 'right' : 'left';
         onTogglePin(category, columnId, defaultPosition);
       }
     }

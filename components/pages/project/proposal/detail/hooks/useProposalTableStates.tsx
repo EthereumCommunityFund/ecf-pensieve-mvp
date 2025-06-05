@@ -23,27 +23,28 @@ export const useProposalTableStates = () => {
   );
 
   // Column pinning state management - independent for each subcategory
+  // Default state: no columns pinned initially
   const [columnPinning, setColumnPinning] = useState<
     Record<IItemSubCategoryEnum, ColumnPinningState>
   >({
     [IItemSubCategoryEnum.Organization]: {
-      left: ['property'],
-      right: ['support'],
+      left: [],
+      right: [],
     },
-    [IItemSubCategoryEnum.Team]: { left: ['property'], right: ['support'] },
+    [IItemSubCategoryEnum.Team]: { left: [], right: [] },
     [IItemSubCategoryEnum.BasicProfile]: {
-      left: ['property'],
-      right: ['support'],
+      left: [],
+      right: [],
     },
     [IItemSubCategoryEnum.Development]: {
-      left: ['property'],
-      right: ['support'],
+      left: [],
+      right: [],
     },
-    [IItemSubCategoryEnum.Finances]: { left: ['property'], right: ['support'] },
-    [IItemSubCategoryEnum.Token]: { left: ['property'], right: ['support'] },
+    [IItemSubCategoryEnum.Finances]: { left: [], right: [] },
+    [IItemSubCategoryEnum.Token]: { left: [], right: [] },
     [IItemSubCategoryEnum.Governance]: {
-      left: ['property'],
-      right: ['support'],
+      left: [],
+      right: [],
     },
   });
 

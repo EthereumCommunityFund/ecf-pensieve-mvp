@@ -99,11 +99,13 @@ export const useCreateProposalTableColumns = ({
   isProposalCreator,
   showMetrics,
   category,
+  columnPinning,
 }: {
   isPageExpanded: boolean;
   isProposalCreator: boolean;
   showMetrics: boolean;
   category: IItemSubCategoryEnum;
+  columnPinning?: import('@tanstack/react-table').ColumnPinningState;
 }): ColumnDef<ITableProposalItem, any>[] => {
   const columnHelper = createColumnHelper<ITableProposalItem>();
 
@@ -155,12 +157,32 @@ export const useCreateProposalTableColumns = ({
     // TODO 预留字段，用于显示字段类型
     const fieldTypeColumn = columnHelper.accessor('fieldType', {
       id: 'fieldType',
-      header: () => (
-        <TooltipTh
-          title="Field Type"
-          tooltipContext="The type of the field for the project item"
-        />
-      ),
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+
+        // If column pinning is supported, use TooltipThWithPin
+        if (toggleColumnPinning && isColumnPinned && category) {
+          return (
+            <TooltipThWithPin
+              title="Field Type"
+              tooltipContext="The type of the field for the project item"
+              columnId="fieldType"
+              category={category}
+              isPinned={isColumnPinned(category, 'fieldType')}
+              onTogglePin={toggleColumnPinning}
+            />
+          );
+        }
+
+        // Fallback to regular TooltipTh
+        return (
+          <TooltipTh
+            title="Field Type"
+            tooltipContext="The type of the field for the project item"
+          />
+        );
+      },
       size: 220,
       cell: (info) => {
         const key = info.row.original.key;
@@ -174,12 +196,32 @@ export const useCreateProposalTableColumns = ({
     });
 
     const inputColumn = columnHelper.accessor('input', {
-      header: () => (
-        <TooltipTh
-          title="Input"
-          tooltipContext="The input value provided by the user"
-        />
-      ),
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+
+        // If column pinning is supported, use TooltipThWithPin
+        if (toggleColumnPinning && isColumnPinned && category) {
+          return (
+            <TooltipThWithPin
+              title="Input"
+              tooltipContext="The input value provided by the user"
+              columnId="input"
+              category={category}
+              isPinned={isColumnPinned(category, 'input')}
+              onTogglePin={toggleColumnPinning}
+            />
+          );
+        }
+
+        // Fallback to regular TooltipTh
+        return (
+          <TooltipTh
+            title="Input"
+            tooltipContext="The input value provided by the user"
+          />
+        );
+      },
       size: isPageExpanded ? 480 : 250,
       cell: (info) => {
         const { expandedRows, toggleRowExpanded } = info.table.options
@@ -251,7 +293,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 124,
+      size: 135,
       cell: (info) => {
         const { onShowReference } = info.table.options.meta as TableCellsMeta;
         const value = info.getValue();
@@ -280,8 +322,23 @@ export const useCreateProposalTableColumns = ({
 
     const accountabilityColumn = columnHelper.accessor('accountability', {
       id: 'accountability',
-      header: () => <AccountabilityCol.Header />,
-      size: 228,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+        return (
+          <AccountabilityCol.Header
+            columnId="accountability"
+            category={category}
+            isPinned={
+              category && isColumnPinned
+                ? isColumnPinned(category, 'accountability')
+                : false
+            }
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
+      size: 240,
       cell: (info) => {
         const accountability = info.getValue();
         return <AccountabilityCol.Cell accountability={accountability} />;
@@ -290,7 +347,22 @@ export const useCreateProposalTableColumns = ({
 
     const legitimacyColumn = columnHelper.accessor('legitimacy', {
       id: 'legitimacy',
-      header: () => <LegitimacyCol.Header />,
+      header: (info) => {
+        const { toggleColumnPinning, isColumnPinned } = info.table.options
+          .meta as TableCellsMeta;
+        return (
+          <LegitimacyCol.Header
+            columnId="legitimacy"
+            category={category}
+            isPinned={
+              category && isColumnPinned
+                ? isColumnPinned(category, 'legitimacy')
+                : false
+            }
+            onTogglePin={toggleColumnPinning}
+          />
+        );
+      },
       size: 228,
       cell: (info) => {
         const legitimacy = info.getValue();
@@ -326,7 +398,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 220,
+      size: 200,
       cell: (info) => {
         const { isProposalCreator } = info.table.options.meta as TableCellsMeta;
 
@@ -350,7 +422,7 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [isPageExpanded, showMetrics, columnHelper]);
+  }, [isPageExpanded, showMetrics, columnHelper, category, columnPinning]);
 
   return columns;
 };
