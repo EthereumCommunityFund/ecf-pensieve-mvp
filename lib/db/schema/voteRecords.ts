@@ -6,7 +6,6 @@ import {
   pgTable,
   text,
   timestamp,
-  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -51,9 +50,6 @@ export const voteRecords = pgTable(
         table.proposalId,
         table.key,
       ),
-      uniqueCreatorProjectKey: unique(
-        'vote_records_creator_project_key_unique',
-      ).on(table.creator, table.projectId, table.key),
     };
   },
 );

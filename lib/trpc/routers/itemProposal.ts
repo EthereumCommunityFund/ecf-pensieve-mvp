@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
 import {
@@ -58,6 +58,7 @@ export const itemProposalRouter = router({
               eq(voteRecords.creator, ctx.user.id),
               eq(voteRecords.projectId, input.projectId),
               eq(voteRecords.key, input.key),
+              isNull(voteRecords.proposalId),
             ),
           }),
         ]);
