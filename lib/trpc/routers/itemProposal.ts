@@ -42,14 +42,27 @@ export const itemProposalRouter = router({
         });
       }
 
-      return await ctx.db.transaction(async (tx) => {
-        const existingProposal = await tx.query.itemProposals.findFirst({
+      const [existingProposal, userProfile, voteRecord] = await Promise.all([
+        ctx.db.query.itemProposals.findFirst({
           where: and(
             eq(itemProposals.projectId, input.projectId),
             eq(itemProposals.key, input.key),
           ),
-        });
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+        ctx.db.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.projectId, input.projectId),
+            eq(voteRecords.key, input.key),
+          ),
+        }),
+      ]);
+      console.log(voteRecord);
 
+      return await ctx.db.transaction(async (tx) => {
         const [itemProposal] = await tx
           .insert(itemProposals)
           .values({
@@ -64,19 +77,6 @@ export const itemProposalRouter = router({
             message: 'Failed to create item proposal',
           });
         }
-
-        const [userProfile, voteRecord] = await Promise.all([
-          tx.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          }),
-          tx.query.voteRecords.findFirst({
-            where: and(
-              eq(voteRecords.creator, ctx.user.id),
-              eq(voteRecords.projectId, input.projectId),
-              eq(voteRecords.key, input.key),
-            ),
-          }),
-        ]);
 
         const caller = voteRouter.createCaller({
           ...ctx,

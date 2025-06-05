@@ -232,6 +232,13 @@
       "when": 1749013937769,
       "tag": "0032_smooth_donald_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1749115495308,
+      "tag": "0033_careful_night_thrasher",
+      "breakpoints": true
     }
   ]
 }
