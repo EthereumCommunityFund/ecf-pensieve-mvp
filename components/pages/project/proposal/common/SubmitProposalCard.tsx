@@ -1,5 +1,5 @@
-import { FC } from 'react';
 import { cn } from '@heroui/react';
+import { FC } from 'react';
 
 import { Button } from '@/components/base';
 
@@ -21,11 +21,11 @@ const SubmitProposalCard: FC<IProps> = ({
     >
       <div className="flex flex-col gap-[10px]">
         <p className="text-[18px] font-[600] leading-[25px] text-black">
-          Vote of Propose
+          Vote or Propose
         </p>
         <p className="text-[15px] font-[400] leading-[20px] text-black/80">
-          Vote on existing proposals or submit a new one for review if none are
-          accurate.
+          View existing proposal(s) and vote on or submit a new one for review
+          if none are accurate.
         </p>
       </div>
       <Button onPress={onSubmitProposal}>Submit a Proposal</Button>
