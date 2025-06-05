@@ -586,6 +586,11 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         <div
           className={cn('mobile:gap-[20px] flex flex-1 flex-col gap-[40px]')}
         >
+          <div className="mobile:mx-[10px] rounded-[10px] border border-black/10 bg-[rgba(235,235,235,0.80)] px-[10px] py-[5px] backdrop-blur-[5px]">
+            <p className="text-[16px] font-[600] leading-[1.6]">
+              Note: Once you submit your proposal, you cannot edit your inputs.
+            </p>
+          </div>
           <div className={cn(showSubmittingPage ? 'hidden' : '')}>
             <StepHeader currentStep={currentStep} />
           </div>
