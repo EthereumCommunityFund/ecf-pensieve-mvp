@@ -113,7 +113,7 @@ const ProjectPage = () => {
       return;
     }
     setModalContentType('submitPropose');
-  }, [selectedItemKey, profile, showAuthPrompt]);
+  }, [profile, showAuthPrompt]);
 
   // 处理 Metric 点击
   const handleMetricClick = useCallback((metric: string) => {

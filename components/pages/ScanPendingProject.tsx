@@ -30,7 +30,7 @@ const ScanPendingProject = () => {
       devLog('canScanPendingProject', canScanPendingProject);
       setShowScanButton(true);
     }
-  }, [canScanPendingProject]);
+  }, []);
 
   const handleScanClick = useCallback(() => {
     if (!hasClicked) {

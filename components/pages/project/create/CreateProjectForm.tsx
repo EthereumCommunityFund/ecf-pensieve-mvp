@@ -300,6 +300,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       externalOnError,
       handleSubmissionError,
       currentStep,
+      fetchUserProfile,
     ],
   );
 
