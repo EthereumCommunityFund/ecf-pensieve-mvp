@@ -104,6 +104,7 @@ const ProposalPage = () => {
             isFiltered={isFiltered}
             toggleExpanded={togglePageExpanded}
             toggleFiltered={toggleFiltered}
+            proposalIndex={proposalIndex}
           />
         </div>
 

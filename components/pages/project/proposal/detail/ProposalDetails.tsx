@@ -38,6 +38,7 @@ export interface ProposalDetailsProps {
   toggleFiltered: () => void;
   isPageExpanded: boolean;
   toggleExpanded: () => void;
+  proposalIndex: number;
 }
 
 const ProposalDetails = ({
@@ -45,6 +46,7 @@ const ProposalDetails = ({
   toggleExpanded,
   isFiltered,
   toggleFiltered,
+  proposalIndex,
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
 
@@ -71,13 +73,14 @@ const ProposalDetails = ({
     currentReferenceKey,
     currentVoteItem,
     sourceProposal,
+    sourceProposalIndex,
     doNotShowCancelModal,
     setIsSwitchModalOpen,
     setIsCancelModalOpen,
     setIsReferenceModalOpen,
     setCurrentReferenceKey,
     setCurrentVoteItem,
-    setSourceProposal,
+    setSourceProposalInfo,
     setDoNotShowCancelModal,
   } = useProposalDetailContext();
 
@@ -369,6 +372,8 @@ const ProposalDetails = ({
         isLoading={switchVotePending}
         proposalItem={currentVoteItem || undefined}
         sourceProposal={sourceProposal || undefined}
+        proposalIndex={proposalIndex}
+        sourceProposalIndex={sourceProposalIndex}
       />
 
       <CancelVoteModal

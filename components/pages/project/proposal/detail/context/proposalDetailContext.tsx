@@ -67,7 +67,10 @@ export interface ProposalDetailContextType {
       setCurrentVoteItem: (item: ITableProposalItem | null) => void;
       setIsCancelModalOpen: (isOpen: boolean) => void;
       setIsSwitchModalOpen: (isOpen: boolean) => void;
-      setSourceProposal: (proposal: IProposal | null) => void;
+      setSourceProposalInfo: (
+        proposal: IProposal | null,
+        index: number,
+      ) => void;
     },
   ) => Promise<void>;
 
@@ -77,13 +80,14 @@ export interface ProposalDetailContextType {
   currentReferenceKey: string;
   currentVoteItem: ITableProposalItem | null;
   sourceProposal: IProposal | null;
+  sourceProposalIndex: number;
   doNotShowCancelModal: boolean;
   setIsSwitchModalOpen: (isOpen: boolean) => void;
   setIsCancelModalOpen: (isOpen: boolean) => void;
   setIsReferenceModalOpen: (isOpen: boolean) => void;
   setCurrentReferenceKey: (key: string) => void;
   setCurrentVoteItem: (item: ITableProposalItem | null) => void;
-  setSourceProposal: (proposal: IProposal | null) => void;
+  setSourceProposalInfo: (proposal: IProposal | null, index: number) => void;
   setDoNotShowCancelModal: (doNotShowCancelModal: boolean) => void;
 }
 
@@ -127,7 +131,10 @@ const ProposalDetailContext = createContext<ProposalDetailContextType>({
       setCurrentVoteItem: (item: ITableProposalItem | null) => void;
       setIsCancelModalOpen: (isOpen: boolean) => void;
       setIsSwitchModalOpen: (isOpen: boolean) => void;
-      setSourceProposal: (proposal: IProposal | null) => void;
+      setSourceProposalInfo: (
+        proposal: IProposal | null,
+        index: number,
+      ) => void;
     },
   ) => {},
 
@@ -137,13 +144,14 @@ const ProposalDetailContext = createContext<ProposalDetailContextType>({
   currentReferenceKey: '',
   currentVoteItem: null,
   sourceProposal: null,
+  sourceProposalIndex: 0,
   doNotShowCancelModal: false,
   setIsSwitchModalOpen: () => {},
   setIsCancelModalOpen: () => {},
   setIsReferenceModalOpen: () => {},
   setCurrentReferenceKey: () => {},
   setCurrentVoteItem: () => {},
-  setSourceProposal: () => {},
+  setSourceProposalInfo: () => {},
   setDoNotShowCancelModal: () => {},
 });
 export interface ProposalDetailProviderProps {
@@ -168,7 +176,8 @@ export const ProposalDetailProvider = ({
     currentVoteItem,
     setCurrentVoteItem,
     sourceProposal,
-    setSourceProposal,
+    sourceProposalIndex,
+    setSourceProposalInfo,
     doNotShowCancelModal,
     setDoNotShowCancelModal,
   } = useProposalModalState();
@@ -241,7 +250,7 @@ export const ProposalDetailProvider = ({
         setCurrentVoteItem,
         setIsCancelModalOpen,
         setIsSwitchModalOpen,
-        setSourceProposal,
+        setSourceProposalInfo,
       });
     },
     [
@@ -252,7 +261,7 @@ export const ProposalDetailProvider = ({
       setCurrentVoteItem,
       setIsCancelModalOpen,
       setIsSwitchModalOpen,
-      setSourceProposal,
+      setSourceProposalInfo,
     ],
   );
 
@@ -295,6 +304,7 @@ export const ProposalDetailProvider = ({
       currentReferenceKey,
       currentVoteItem,
       sourceProposal,
+      sourceProposalIndex,
       doNotShowCancelModal,
 
       setIsSwitchModalOpen,
@@ -302,7 +312,7 @@ export const ProposalDetailProvider = ({
       setIsReferenceModalOpen,
       setCurrentReferenceKey,
       setCurrentVoteItem,
-      setSourceProposal,
+      setSourceProposalInfo,
       setDoNotShowCancelModal,
     }),
     [
@@ -334,13 +344,14 @@ export const ProposalDetailProvider = ({
       switchVoteMutation.isPending,
       currentVoteItem,
       sourceProposal,
+      sourceProposalIndex,
       doNotShowCancelModal,
       setIsSwitchModalOpen,
       setIsCancelModalOpen,
       setIsReferenceModalOpen,
       setCurrentReferenceKey,
       setCurrentVoteItem,
-      setSourceProposal,
+      setSourceProposalInfo,
       setDoNotShowCancelModal,
     ],
   );
