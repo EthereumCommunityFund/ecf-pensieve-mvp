@@ -32,74 +32,74 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      return await ctx.db.transaction(async (tx) => {
-        const [proposalWithProject, userProfile, existingVote] =
-          await Promise.all([
-            tx.query.proposals.findFirst({
-              where: eq(proposals.id, proposalId),
-              with: {
-                project: true,
-              },
-            }),
-            tx.query.profiles.findFirst({
-              where: eq(profiles.userId, ctx.user.id),
-            }),
-            tx.query.voteRecords.findFirst({
-              where: and(
-                eq(voteRecords.creator, ctx.user.id),
-                eq(voteRecords.key, key),
-                eq(voteRecords.proposalId, proposalId),
-              ),
-            }),
-          ]);
+      const [proposalWithProject, userProfile, existingVote] =
+        await Promise.all([
+          ctx.db.query.proposals.findFirst({
+            where: eq(proposals.id, proposalId),
+            with: {
+              project: true,
+            },
+          }),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+          ctx.db.query.voteRecords.findFirst({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.key, key),
+              eq(voteRecords.proposalId, proposalId),
+            ),
+          }),
+        ]);
 
-        if (!proposalWithProject) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Proposal not found',
-          });
-        }
-
-        if (!proposalWithProject.project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Associated project not found',
-          });
-        }
-
-        const projectId = proposalWithProject.projectId;
-
-        if (proposalWithProject.project.isPublished) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot vote on proposals for published projects',
-          });
-        }
-
-        if (existingVote) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'You have already voted for this key in this proposal',
-          });
-        }
-
-        const otherVote = await tx.query.voteRecords.findFirst({
-          where: and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.key, key),
-            eq(voteRecords.projectId, projectId),
-            ne(voteRecords.proposalId, proposalId),
-          ),
+      if (!proposalWithProject) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Proposal not found',
         });
+      }
 
-        if (otherVote) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message:
-              'You have already voted for the same key in another proposal of this project',
-          });
-        }
+      if (!proposalWithProject.project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Associated project not found',
+        });
+      }
 
+      const projectId = proposalWithProject.projectId;
+
+      if (proposalWithProject.project.isPublished) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot vote on proposals for published projects',
+        });
+      }
+
+      if (existingVote) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You have already voted for this key in this proposal',
+        });
+      }
+
+      const otherVote = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+          eq(voteRecords.projectId, projectId),
+          ne(voteRecords.proposalId, proposalId),
+        ),
+      });
+
+      if (otherVote) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'You have already voted for the same key in another proposal of this project',
+        });
+      }
+
+      return await ctx.db.transaction(async (tx) => {
         const [vote] = await tx
           .insert(voteRecords)
           .values({
@@ -136,66 +136,65 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { proposalId, key } = input;
 
-      return await ctx.db.transaction(async (tx) => {
-        const targetProposal = await tx.query.proposals.findFirst({
-          where: eq(proposals.id, proposalId),
-          with: {
-            project: true,
-          },
+      const targetProposal = await ctx.db.query.proposals.findFirst({
+        where: eq(proposals.id, proposalId),
+        with: {
+          project: true,
+        },
+      });
+
+      if (!targetProposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Target proposal not found',
         });
+      }
 
-        if (!targetProposal) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Target proposal not found',
-          });
-        }
+      if (!targetProposal.project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Associated project not found',
+        });
+      }
 
-        if (!targetProposal.project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Associated project not found',
-          });
-        }
+      if (targetProposal.project.isPublished) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot switch votes on proposals for published projects',
+        });
+      }
 
-        if (targetProposal.project.isPublished) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot switch votes on proposals for published projects',
-          });
-        }
+      const [userProfile, voteToSwitch] = await Promise.all([
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+        ctx.db.query.voteRecords.findFirst({
+          where: and(
+            eq(voteRecords.creator, ctx.user.id),
+            eq(voteRecords.key, key),
+            eq(voteRecords.projectId, targetProposal.projectId),
+          ),
+          with: {
+            proposal: true,
+          },
+        }),
+      ]);
 
-        const [userProfile, voteToSwitch] = await Promise.all([
-          tx.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          }),
-          tx.query.voteRecords.findFirst({
-            where: and(
-              eq(voteRecords.creator, ctx.user.id),
-              eq(voteRecords.key, key),
-              eq(voteRecords.projectId, targetProposal.projectId),
-            ),
-            with: {
-              proposal: true,
-            },
-          }),
-        ]);
+      if (!voteToSwitch) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No conflicting vote found to switch',
+        });
+      }
 
-        if (!voteToSwitch) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'No conflicting vote found to switch',
-          });
-        }
+      if (voteToSwitch.proposalId === proposalId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You have already voted for this key in the target proposal',
+        });
+      }
 
-        if (voteToSwitch.proposalId === proposalId) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message:
-              'You have already voted for this key in the target proposal',
-          });
-        }
-
+      return await ctx.db.transaction(async (tx) => {
         const [updatedVote] = await tx
           .update(voteRecords)
           .set({
@@ -217,80 +216,6 @@ export const voteRouter = router({
         );
 
         return updatedVote;
-      });
-    }),
-
-  cancelVote: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id } = input;
-
-      return await ctx.db.transaction(async (tx) => {
-        const condition = and(
-          eq(voteRecords.id, id),
-          eq(voteRecords.creator, ctx.user.id),
-        );
-
-        const voteWithDetails = await tx.query.voteRecords.findFirst({
-          where: condition,
-          with: {
-            proposal: {
-              with: {
-                project: true,
-              },
-            },
-          },
-        });
-
-        if (!voteWithDetails || !voteWithDetails.proposal) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Vote record not found',
-          });
-        }
-
-        if (!voteWithDetails.proposal.project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Associated project not found',
-          });
-        }
-
-        if (voteWithDetails.proposal.creator === ctx.user.id) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot cancel vote on your own proposal',
-          });
-        }
-
-        if (voteWithDetails.proposal.project.isPublished) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Cannot cancel votes on proposals for published projects',
-          });
-        }
-
-        const [deletedVote] = await tx
-          .delete(voteRecords)
-          .where(condition)
-          .returning();
-
-        logUserActivity.vote.delete(
-          {
-            userId: ctx.user.id,
-            targetId: deletedVote.id,
-            projectId: voteWithDetails.proposal!.projectId,
-            items: [{ field: voteWithDetails.key }],
-            proposalCreatorId: voteWithDetails.proposal!.creator,
-          },
-          tx,
-        );
-
-        return deletedVote;
       });
     }),
 
@@ -340,41 +265,41 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { itemProposalId, key } = input;
 
-      return await ctx.db.transaction(async (tx) => {
-        const [itemProposal, userProfile] = await Promise.all([
-          tx.query.itemProposals.findFirst({
-            where: eq(itemProposals.id, itemProposalId),
-            with: {
-              creator: true,
-            },
-          }),
-          tx.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          }),
-        ]);
+      const [itemProposal, userProfile] = await Promise.all([
+        ctx.db.query.itemProposals.findFirst({
+          where: eq(itemProposals.id, itemProposalId),
+          with: {
+            creator: true,
+          },
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+      ]);
 
-        if (!itemProposal) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Item proposal not found',
-          });
-        }
-
-        const existingVote = await tx.query.voteRecords.findFirst({
-          where: and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.projectId, itemProposal.projectId),
-            eq(voteRecords.key, key),
-          ),
+      if (!itemProposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Item proposal not found',
         });
+      }
 
-        if (existingVote) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'You have already voted for this key in this project',
-          });
-        }
+      const existingVote = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.projectId, itemProposal.projectId),
+          eq(voteRecords.key, key),
+        ),
+      });
 
+      if (existingVote) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You have already voted for this key in this project',
+        });
+      }
+
+      return await ctx.db.transaction(async (tx) => {
         const vote = await handleVoteRecord(tx, {
           userId: ctx.user.id,
           projectId: itemProposal.projectId,
@@ -440,53 +365,73 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { itemProposalId, key } = input;
 
-      return await ctx.db.transaction(async (tx) => {
-        const [targetItemProposal, userProfile] = await Promise.all([
-          tx.query.itemProposals.findFirst({
-            where: eq(itemProposals.id, itemProposalId),
-            with: {
-              creator: true,
-            },
-          }),
-          tx.query.profiles.findFirst({
-            where: eq(profiles.userId, ctx.user.id),
-          }),
-        ]);
+      const [targetItemProposal, userProfile] = await Promise.all([
+        ctx.db.query.itemProposals.findFirst({
+          where: eq(itemProposals.id, itemProposalId),
+          with: {
+            creator: true,
+          },
+        }),
+        ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, ctx.user.id),
+        }),
+      ]);
 
-        if (!targetItemProposal) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Target item proposal not found',
-          });
-        }
-
-        const projectId = targetItemProposal.projectId;
-
-        const voteToSwitch = await tx.query.voteRecords.findFirst({
-          where: and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.key, key),
-            eq(voteRecords.projectId, projectId),
-          ),
+      if (!targetItemProposal) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Target item proposal not found',
         });
+      }
 
-        if (!voteToSwitch) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'No conflicting vote found to switch',
-          });
-        }
+      const projectId = targetItemProposal.projectId;
 
-        if (voteToSwitch.itemProposalId === itemProposalId) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message:
-              'You have already voted for this key in the target item proposal',
-          });
-        }
+      const voteToSwitch = await ctx.db.query.voteRecords.findFirst({
+        where: and(
+          eq(voteRecords.creator, ctx.user.id),
+          eq(voteRecords.key, key),
+          eq(voteRecords.projectId, projectId),
+        ),
+      });
 
-        const originalItemProposalId = voteToSwitch.itemProposalId;
+      if (!voteToSwitch) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No conflicting vote found to switch',
+        });
+      }
 
+      if (voteToSwitch.itemProposalId === itemProposalId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'You have already voted for this key in the target item proposal',
+        });
+      }
+
+      const originalItemProposalId = voteToSwitch.itemProposalId;
+
+      const [votes, project, leadingProposal] = await Promise.all([
+        ctx.db.query.voteRecords.findMany({
+          where: and(
+            eq(voteRecords.itemProposalId, itemProposalId),
+            eq(voteRecords.key, key),
+          ),
+        }),
+        ctx.db.query.projects.findFirst({
+          where: eq(projects.id, projectId),
+        }),
+        ctx.db.query.projectLogs.findFirst({
+          where: and(
+            eq(projectLogs.projectId, targetItemProposal.projectId),
+            eq(projectLogs.key, key),
+            eq(projectLogs.isNotLeading, false),
+          ),
+          orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+        }),
+      ]);
+
+      return await ctx.db.transaction(async (tx) => {
         const [updatedVote] = await tx
           .update(voteRecords)
           .set({
@@ -496,26 +441,6 @@ export const voteRouter = router({
           })
           .where(eq(voteRecords.id, voteToSwitch.id))
           .returning();
-
-        const [votes, project, leadingProposal] = await Promise.all([
-          tx.query.voteRecords.findMany({
-            where: and(
-              eq(voteRecords.itemProposalId, itemProposalId),
-              eq(voteRecords.key, key),
-            ),
-          }),
-          tx.query.projects.findFirst({
-            where: eq(projects.id, projectId),
-          }),
-          tx.query.projectLogs.findFirst({
-            where: and(
-              eq(projectLogs.projectId, targetItemProposal.projectId),
-              eq(projectLogs.key, key),
-              eq(projectLogs.isNotLeading, false),
-            ),
-            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-          }),
-        ]);
 
         if (leadingProposal?.itemProposalId === itemProposalId) {
           await processItemProposalUpdate(tx, {

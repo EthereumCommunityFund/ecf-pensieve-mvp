@@ -31,102 +31,114 @@ export const itemProposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const project = await ctx.db.query.projects.findFirst({
-        where: eq(projects.id, input.projectId),
-      });
-
-      if (!project) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Project not found',
+      try {
+        const project = await ctx.db.query.projects.findFirst({
+          where: eq(projects.id, input.projectId),
         });
-      }
 
-      const [existingProposal, userProfile, voteRecord] = await Promise.all([
-        ctx.db.query.itemProposals.findFirst({
-          where: and(
-            eq(itemProposals.projectId, input.projectId),
-            eq(itemProposals.key, input.key),
-          ),
-        }),
-        ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        }),
-        ctx.db.query.voteRecords.findFirst({
-          where: and(
-            eq(voteRecords.creator, ctx.user.id),
-            eq(voteRecords.projectId, input.projectId),
-            eq(voteRecords.key, input.key),
-          ),
-        }),
-      ]);
-      console.log(voteRecord);
-
-      return await ctx.db.transaction(async (tx) => {
-        const [itemProposal] = await tx
-          .insert(itemProposals)
-          .values({
-            ...input,
-            creator: ctx.user.id,
-          })
-          .returning();
-
-        if (!itemProposal) {
+        if (!project) {
           throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to create item proposal',
+            code: 'NOT_FOUND',
+            message: 'Project not found',
           });
         }
 
-        const caller = voteRouter.createCaller({
-          ...ctx,
-          db: tx as any,
-        });
-
-        if (voteRecord) {
-          await caller.switchItemProposalVote({
-            itemProposalId: itemProposal.id,
-            key: input.key,
-          });
-        } else {
-          await caller.createItemProposalVote({
-            itemProposalId: itemProposal.id,
-            key: input.key,
-          });
-        }
-
-        if (!existingProposal) {
-          const reward = calculateReward(input.key);
-          const finalWeight = (userProfile?.weight ?? 0) + reward;
-          const hasProposalKeys = new Set([
-            ...project.hasProposalKeys,
-            input.key,
-          ]);
-
-          await Promise.all([
-            tx
-              .update(profiles)
-              .set({ weight: finalWeight })
-              .where(eq(profiles.userId, ctx.user.id)),
-
-            tx
-              .update(projects)
-              .set({
-                hasProposalKeys: Array.from(hasProposalKeys),
-              })
-              .where(eq(projects.id, input.projectId)),
-
-            addRewardNotification(
-              createRewardNotification.createItemProposal(
-                ctx.user.id,
-                input.projectId,
-                itemProposal.id,
-                reward,
-              ),
-              tx,
+        const [existingProposal, userProfile, voteRecord] = await Promise.all([
+          ctx.db.query.itemProposals.findFirst({
+            where: and(
+              eq(itemProposals.projectId, input.projectId),
+              eq(itemProposals.key, input.key),
             ),
+          }),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+          ctx.db.query.voteRecords.findFirst({
+            where: and(
+              eq(voteRecords.creator, ctx.user.id),
+              eq(voteRecords.projectId, input.projectId),
+              eq(voteRecords.key, input.key),
+            ),
+          }),
+        ]);
+        console.log(voteRecord);
 
-            logUserActivity.itemProposal.create(
+        return await ctx.db.transaction(async (tx) => {
+          const [itemProposal] = await tx
+            .insert(itemProposals)
+            .values({
+              ...input,
+              creator: ctx.user.id,
+            })
+            .returning();
+
+          if (!itemProposal) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to create item proposal',
+            });
+          }
+
+          const caller = voteRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
+
+          if (voteRecord) {
+            await caller.switchItemProposalVote({
+              itemProposalId: itemProposal.id,
+              key: input.key,
+            });
+          } else {
+            await caller.createItemProposalVote({
+              itemProposalId: itemProposal.id,
+              key: input.key,
+            });
+          }
+
+          if (!existingProposal) {
+            const reward = calculateReward(input.key);
+            const finalWeight = (userProfile?.weight ?? 0) + reward;
+            const hasProposalKeys = new Set([
+              ...project.hasProposalKeys,
+              input.key,
+            ]);
+
+            await Promise.all([
+              tx
+                .update(profiles)
+                .set({ weight: finalWeight })
+                .where(eq(profiles.userId, ctx.user.id)),
+
+              tx
+                .update(projects)
+                .set({
+                  hasProposalKeys: Array.from(hasProposalKeys),
+                })
+                .where(eq(projects.id, input.projectId)),
+
+              addRewardNotification(
+                createRewardNotification.createItemProposal(
+                  ctx.user.id,
+                  input.projectId,
+                  itemProposal.id,
+                  reward,
+                ),
+                tx,
+              ),
+
+              logUserActivity.itemProposal.create(
+                {
+                  userId: ctx.user.id,
+                  targetId: itemProposal.id,
+                  projectId: itemProposal.projectId,
+                  items: [{ field: input.key }],
+                },
+                tx,
+              ),
+            ]);
+          } else {
+            logUserActivity.itemProposal.update(
               {
                 userId: ctx.user.id,
                 targetId: itemProposal.id,
@@ -134,21 +146,23 @@ export const itemProposalRouter = router({
                 items: [{ field: input.key }],
               },
               tx,
-            ),
-          ]);
-        } else {
-          logUserActivity.itemProposal.update(
-            {
-              userId: ctx.user.id,
-              targetId: itemProposal.id,
-              projectId: itemProposal.projectId,
-              items: [{ field: input.key }],
-            },
-            tx,
-          );
+            );
+          }
+
+          return itemProposal;
+        });
+      } catch (error) {
+        console.error('Error creating item proposal:', error);
+
+        if (error instanceof TRPCError) {
+          throw error;
         }
 
-        return itemProposal;
-      });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create item proposal',
+          cause: error,
+        });
+      }
     }),
 });
