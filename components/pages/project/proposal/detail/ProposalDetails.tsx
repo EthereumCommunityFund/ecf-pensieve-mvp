@@ -65,7 +65,6 @@ const ProposalDetails = ({
     onCancelVote,
     onSwitchVote,
     switchVotePending,
-    cancelVotePending,
 
     isSwitchModalOpen,
     isCancelModalOpen,
@@ -380,7 +379,7 @@ const ProposalDetails = ({
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         onConfirm={handleCancelVoteConfirm}
-        isLoading={cancelVotePending}
+        isLoading={false}
         proposalItem={currentVoteItem || undefined}
       />
 

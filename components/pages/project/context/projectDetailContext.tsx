@@ -298,7 +298,6 @@ export const ProjectDetailProvider = ({
     trpc.vote.createItemProposalVote.useMutation();
   const switchItemProposalVoteMutation =
     trpc.vote.switchItemProposalVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
   // 工具函数：获取项目权重
   const getItemTopWeight = useCallback(
@@ -569,35 +568,11 @@ export const ProjectDetailProvider = ({
     [switchItemProposalVoteMutation, refetchAll, setItemProposalActive],
   );
 
-  // 取消投票操作
   const onCancelVote = useCallback(
     async (key: IPocItemKey, voteRecordId: number, itemProposalId: number) => {
-      setItemProposalActive(key, voteRecordId, true);
-      cancelVoteMutation.mutate(
-        { id: voteRecordId },
-        {
-          onSuccess: async () => {
-            await Promise.all([
-              refetchProject(),
-              refetchProposalsByKey(),
-              refetchLeadingProposals(),
-            ]);
-            setItemProposalActive(key, itemProposalId, false);
-          },
-          onError: (error) => {
-            setItemProposalActive(key, itemProposalId, false);
-            devLog('onCancelVote error', error);
-          },
-        },
-      );
+      devLog('no onCancelVote', key, voteRecordId, itemProposalId);
     },
-    [
-      cancelVoteMutation,
-      refetchProject,
-      refetchProposalsByKey,
-      refetchLeadingProposals,
-      setItemProposalActive,
-    ],
+    [],
   );
 
   // 显示引用模态框

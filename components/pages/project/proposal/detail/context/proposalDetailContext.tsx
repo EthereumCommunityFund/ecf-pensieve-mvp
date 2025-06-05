@@ -68,7 +68,6 @@ export interface ProposalDetailContextType {
   onCancelVote: (voteId: number, itemKey: IPocItemKey) => Promise<void>;
   onSwitchVote: (item: ITableProposalItem) => Promise<void>;
   switchVotePending: boolean;
-  cancelVotePending: boolean;
 
   // 表格状态
   expandedRows: Partial<Record<IPocItemKey, boolean>>;
@@ -139,7 +138,6 @@ const createDefaultContext = (): ProposalDetailContextType => ({
   onCancelVote: async () => {},
   onSwitchVote: async () => {},
   switchVotePending: false,
-  cancelVotePending: false,
 
   // 表格状态
   expandedRows: {},
@@ -267,7 +265,6 @@ export const ProposalDetailProvider = ({
     onSwitchVote: originalOnSwitchVote,
     handleVoteAction,
     switchVoteMutation,
-    cancelVoteMutation,
     inActionKeys,
   } = useProposalVotesHook(proposal, Number(projectId), proposals);
 
@@ -329,7 +326,6 @@ export const ProposalDetailProvider = ({
       onCancelVote,
       onSwitchVote,
       switchVotePending: switchVoteMutation.isPending,
-      cancelVotePending: cancelVoteMutation.isPending,
       handleVoteAction,
 
       // 表格状态
@@ -379,7 +375,6 @@ export const ProposalDetailProvider = ({
       onCancelVote,
       onSwitchVote,
       switchVoteMutation.isPending,
-      cancelVoteMutation.isPending,
       handleVoteAction,
 
       // 表格状态依赖

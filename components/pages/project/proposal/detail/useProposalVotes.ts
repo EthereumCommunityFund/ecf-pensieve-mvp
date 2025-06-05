@@ -161,7 +161,6 @@ export function useProposalVotes(
 
   const createVoteMutation = trpc.vote.createVote.useMutation();
   const switchVoteMutation = trpc.vote.switchVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
   const setKeyActive = useCallback((key: string, active: boolean) => {
     operationInProgress.current[key] = active;
@@ -242,34 +241,9 @@ export function useProposalVotes(
     [profile, proposal, switchVoteMutation, refetchVoteData, setKeyActive],
   );
 
-  const onCancelVote = useCallback(
-    async (id: number, key: string) => {
-      if (!profile) return;
-
-      if (operationInProgress.current[key]) {
-        devLog('onCancelVote already in progress for key:', key);
-        return;
-      }
-
-      setKeyActive(key, true);
-      devLog('onCancelVote payload', id, key);
-
-      try {
-        await cancelVoteMutation.mutateAsync({ id });
-        devLog('onCancelVote success', id, key);
-        await refetchVoteData();
-      } catch (error) {
-        addToast({
-          title: 'Cancel Vote Failed',
-          description: (error as Error)?.message || 'Unknown error',
-          color: 'danger',
-        });
-      } finally {
-        setKeyActive(key, false);
-      }
-    },
-    [profile, cancelVoteMutation, refetchVoteData, setKeyActive],
-  );
+  const onCancelVote = useCallback(async (id: number, key: string) => {
+    devLog('can not cancel vote', id, key);
+  }, []);
 
   const findSourceProposal = useCallback(
     (key: string): IProposal | null => {
@@ -330,6 +304,7 @@ export function useProposalVotes(
       }
     },
     [
+      proposals,
       isUserVotedItemOfProject,
       isUserVotedItemOfProposal,
       onCreateVote,
@@ -351,12 +326,9 @@ export function useProposalVotes(
     isFetchVoteInfoLoading:
       isVotesOfProposalFetching || isVotesOfProjectFetching,
     isVoteActionPending:
-      createVoteMutation.isPending ||
-      switchVoteMutation.isPending ||
-      cancelVoteMutation.isPending,
+      createVoteMutation.isPending || switchVoteMutation.isPending,
     createVoteMutation,
     switchVoteMutation,
-    cancelVoteMutation,
     inActionKeys,
     onCreateVote,
     onSwitchVote,
