@@ -86,6 +86,7 @@ export interface ProposalDetailContextType {
   currentReferenceKey: string;
   currentVoteItem: ITableProposalItem | null;
   sourceProposal: IProposal | null;
+  sourceProposalIndex: number;
   doNotShowCancelModal: boolean;
 
   // 模态框操作
@@ -94,7 +95,7 @@ export interface ProposalDetailContextType {
   setIsReferenceModalOpen: (isOpen: boolean) => void;
   setCurrentReferenceKey: (key: string) => void;
   setCurrentVoteItem: (item: ITableProposalItem | null) => void;
-  setSourceProposal: (proposal: IProposal | null) => void;
+  setSourceProposalInfo: (proposal: IProposal | null, index: number) => void;
   setDoNotShowCancelModal: (doNotShowCancelModal: boolean) => void;
 
   // 复合操作
@@ -105,7 +106,10 @@ export interface ProposalDetailContextType {
       setCurrentVoteItem: (item: ITableProposalItem | null) => void;
       setIsCancelModalOpen: (isOpen: boolean) => void;
       setIsSwitchModalOpen: (isOpen: boolean) => void;
-      setSourceProposal: (proposal: IProposal | null) => void;
+      setSourceProposalInfo: (
+        proposal: IProposal | null,
+        index: number,
+      ) => void;
     },
   ) => Promise<void>;
 }
@@ -151,6 +155,7 @@ const createDefaultContext = (): ProposalDetailContextType => ({
   currentReferenceKey: '',
   currentVoteItem: null,
   sourceProposal: null,
+  sourceProposalIndex: 0,
   doNotShowCancelModal: false,
 
   // 模态框操作
@@ -159,7 +164,7 @@ const createDefaultContext = (): ProposalDetailContextType => ({
   setIsReferenceModalOpen: () => {},
   setCurrentReferenceKey: () => {},
   setCurrentVoteItem: () => {},
-  setSourceProposal: () => {},
+  setSourceProposalInfo: () => {},
   setDoNotShowCancelModal: () => {},
 
   // 复合操作
@@ -193,7 +198,8 @@ export const ProposalDetailProvider = ({
     currentVoteItem,
     setCurrentVoteItem,
     sourceProposal,
-    setSourceProposal,
+    sourceProposalIndex,
+    setSourceProposalInfo,
     doNotShowCancelModal,
     setDoNotShowCancelModal,
   } = useProposalModalState();
@@ -277,7 +283,7 @@ export const ProposalDetailProvider = ({
         setCurrentVoteItem,
         setIsCancelModalOpen,
         setIsSwitchModalOpen,
-        setSourceProposal,
+        setSourceProposalInfo,
       });
     },
     [
@@ -288,7 +294,7 @@ export const ProposalDetailProvider = ({
       setCurrentVoteItem,
       setIsCancelModalOpen,
       setIsSwitchModalOpen,
-      setSourceProposal,
+      setSourceProposalInfo,
     ],
   );
 
@@ -340,6 +346,7 @@ export const ProposalDetailProvider = ({
       currentReferenceKey,
       currentVoteItem,
       sourceProposal,
+      sourceProposalIndex,
       doNotShowCancelModal,
 
       // 模态框操作
@@ -348,7 +355,7 @@ export const ProposalDetailProvider = ({
       setIsReferenceModalOpen,
       setCurrentReferenceKey,
       setCurrentVoteItem,
-      setSourceProposal,
+      setSourceProposalInfo,
       setDoNotShowCancelModal,
     }),
     [
@@ -389,6 +396,7 @@ export const ProposalDetailProvider = ({
       currentReferenceKey,
       currentVoteItem,
       sourceProposal,
+      sourceProposalIndex,
       doNotShowCancelModal,
 
       // 模态框操作依赖
@@ -397,7 +405,7 @@ export const ProposalDetailProvider = ({
       setIsReferenceModalOpen,
       setCurrentReferenceKey,
       setCurrentVoteItem,
-      setSourceProposal,
+      setSourceProposalInfo,
       setDoNotShowCancelModal,
     ],
   );
