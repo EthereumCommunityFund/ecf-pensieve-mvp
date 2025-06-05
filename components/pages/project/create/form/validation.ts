@@ -133,7 +133,7 @@ export const financialSchema = yup.object().shape({
   tokenContract: yup
     .string()
     .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
-    .required('Token contract address is required'),
+    .required('Token contract address is required when applicable'),
 });
 
 export const projectSchema = basicsSchema

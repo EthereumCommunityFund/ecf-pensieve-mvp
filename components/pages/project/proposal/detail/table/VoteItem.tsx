@@ -96,12 +96,12 @@ const VoteItem: FC<IProps> = ({
         size="sm"
         isIconOnly
         isLoading={isLoading}
-        disabled={isLoading || isProposalCreator}
+        disabled={isLoading || isUserVoted}
         onPress={onAction}
         className={cn(
           'px-[5px] border-none',
           isUserVoted ? '' : 'opacity-30',
-          isProposalCreator ? 'cursor-not-allowed' : '',
+          isUserVoted ? 'cursor-not-allowed' : '',
         )}
       >
         {isUserVoted ? <CheckedGreenIcon /> : <CaretUpIcon />}

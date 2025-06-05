@@ -1,29 +1,51 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { FC, memo } from 'react';
+import { FC, memo, useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { InfoIcon } from '@/components/icons';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
+import { IPocItemKey } from '@/types/item';
+
+import { useProjectDetailContext } from '../../context/projectDetailContext';
 
 import NewItemRewardCard from './NewItemRewardCard';
 
 interface RightContentProps {
-  userWeight?: number;
-  currentItemWeight?: number;
   onSubmitEntry?: () => void;
   hideSubmitEntry?: boolean;
   showRewardCard?: boolean;
 }
 
 const RightContent: FC<RightContentProps> = memo(
-  ({
-    userWeight = 0,
-    currentItemWeight = 0,
-    onSubmitEntry,
-    hideSubmitEntry,
-    showRewardCard,
-  }) => {
+  ({ onSubmitEntry, hideSubmitEntry, showRewardCard }) => {
+    const { profile } = useAuth();
+    const { displayProposalDataOfKey, currentItemKey } =
+      useProjectDetailContext();
+
+    const userWeight = useMemo(() => {
+      if (!profile) return 0;
+      return Number(profile.weight);
+    }, [profile]);
+
+    const displayedItemWeight = useMemo(() => {
+      const itemKey = currentItemKey as IPocItemKey;
+      const itemConfigWeight = Number(AllItemConfig[itemKey]?.weight);
+      if (displayProposalDataOfKey) {
+        const itemTopWeight = Number(displayProposalDataOfKey.itemTopWeight);
+        if (itemTopWeight > 0) {
+          return itemTopWeight;
+        }
+      }
+      return itemConfigWeight;
+    }, [displayProposalDataOfKey, currentItemKey]);
+
+    const isUserWeightExceedsItemWeight = useMemo(() => {
+      return userWeight > displayedItemWeight;
+    }, [userWeight, displayedItemWeight]);
+
     return (
       <div className="tablet:pt-0 mobile:pt-0 flex flex-col gap-2.5 p-5">
         {/* Your Weight Section */}
@@ -39,20 +61,21 @@ const RightContent: FC<RightContentProps> = memo(
               </div>
             </div>
             <span className="font-mona text-[18px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
-              {userWeight.toString().padStart(2, '0')}
+              {userWeight}
             </span>
           </div>
 
           {/* Weight Information */}
           <div className="flex flex-col gap-[5px]">
             <span className="font-mona text-[13px] font-semibold leading-[1.41] text-black opacity-80">
-              Current Item Weight:{' '}
-              {currentItemWeight.toString().padStart(2, '0')}
+              Current Item Weight: {displayedItemWeight}
             </span>
-            <span className="font-sans text-[13px] leading-[1.54] text-black opacity-80">
-              Your weight exceeds the item's threshold, allowing you to surpass
-              the weight of any submission you vote on.
-            </span>
+            {isUserWeightExceedsItemWeight && (
+              <span className="font-sans text-[13px] leading-[1.54] text-black opacity-80">
+                Your weight exceeds the item's threshold, allowing you to
+                surpass the weight of any submission you vote on.
+              </span>
+            )}
           </div>
         </div>
 

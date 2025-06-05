@@ -247,6 +247,26 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     formState.defaultValues,
   ]);
 
+  const clearStatus = useCallback(() => {
+    setSubmissionStep('form');
+    setEditReason('');
+    setDataForPreview({
+      value: '',
+      ref: '',
+      reason: '',
+    });
+  }, []);
+
+  const onCloseModal = useCallback(() => {
+    clearStatus();
+    onClose();
+  }, [onClose, clearStatus]);
+
+  const onViewProposal = useCallback(() => {
+    clearStatus();
+    onBackToSubmissionQueue();
+  }, [onBackToSubmissionQueue, clearStatus]);
+
   return (
     <FormProvider {...methods}>
       <form
@@ -311,10 +331,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         isShow={submissionStep === 'success' && !!dataForPreview}
         data={dataForPreview}
         itemKey={itemKey}
-        onClose={() => {
-          onClose();
-        }}
-        onViewSubmission={onBackToSubmissionQueue}
+        onClose={onCloseModal}
+        onViewSubmission={onViewProposal}
         expandedRows={expandedRows}
         toggleRowExpanded={toggleRowExpanded}
       />

@@ -18,6 +18,8 @@ interface ISwitchVoteModalProps {
   isLoading: boolean;
   proposalItem?: ITableProposalItem;
   sourceProposal?: IProposal;
+  proposalIndex: number;
+  sourceProposalIndex: number;
 }
 
 const SwitchVoteModal: FC<ISwitchVoteModalProps> = ({
@@ -27,6 +29,8 @@ const SwitchVoteModal: FC<ISwitchVoteModalProps> = ({
   onConfirm,
   proposalItem,
   sourceProposal,
+  proposalIndex,
+  sourceProposalIndex,
 }) => {
   return (
     <Modal
@@ -54,7 +58,7 @@ const SwitchVoteModal: FC<ISwitchVoteModalProps> = ({
             <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[10px]">
               <div className="flex flex-col gap-[5px] border-b border-black/10 pb-[10px]">
                 <div className="text-[16px] font-[500] leading-[20px] text-black/80">
-                  Proposal No.{sourceProposal?.id || 0}
+                  Proposal No.{sourceProposalIndex + 1}
                 </div>
                 <div className=" text-[14px] text-black">
                   Item: {proposalItem?.property || 'ItemName'}

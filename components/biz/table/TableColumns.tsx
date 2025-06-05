@@ -76,7 +76,7 @@ const PropertyCell = ({
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
-  const { isConsensusInProgress, isPendingValidation } = rowData;
+  const { isConsensusInProgress, isPendingValidation, itemTopWeight } = rowData;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -103,7 +103,9 @@ const PropertyCell = ({
       </div>
       {shouldShowWeight && (
         <TooltipItemWeight
-          itemWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
+          itemWeight={
+            itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
+          }
         />
       )}
     </div>
@@ -386,7 +388,7 @@ export const ReferenceCol = {
 export type SupportColHeaderProps = BaseHeaderProps;
 
 export interface SupportColCellProps extends BaseCellProps {
-  fieldKey: string;
+  fieldKey: IPocItemKey;
   project: IProject;
   proposal: IProposal;
   proposalItem: any; // ITableProposalItem
@@ -438,7 +440,6 @@ const SupportCell = ({
       project={project}
       proposal={proposal}
       proposalItem={proposalItem}
-      isLoading={isLoading}
       isUserVoted={isUserVoted}
       isProposalCreator={isProposalCreator}
       votedMemberCount={votedMemberCount}
@@ -531,7 +532,7 @@ const SubmitterCell = memo(
             {submitter.name}
           </span>
           <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
-            {formatDate(data, 'MM/DD/YYYY', '00/00/0000')}
+            {formatDate(data, 'DD/MM/YYYY', '00/00/0000')}
           </span>
         </div>
       </div>
@@ -630,7 +631,7 @@ const AccountabilityCell = ({
   }
 
   return (
-    <div className="flex cursor-pointer flex-wrap items-center gap-[10px] py-[10px]">
+    <div className="flex cursor-pointer flex-wrap items-center gap-[10px]">
       {accountability.map((metric, index) => (
         <div
           key={index}
@@ -684,7 +685,7 @@ const LegitimacyCell = ({
   }
 
   return (
-    <div className="flex cursor-pointer flex-wrap items-center gap-[10px] py-[10px]">
+    <div className="flex cursor-pointer flex-wrap items-center gap-[10px]">
       {legitimacy.map((metric, index) => (
         <div
           key={index}

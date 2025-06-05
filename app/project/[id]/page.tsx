@@ -70,7 +70,9 @@ const ProjectPage = () => {
       setActiveTab(currentTab as ITabKey);
     } else {
       // Redirect any other tab (including disabled ones) to project-data
-      router.push(`/project/${projectId}?tab=project-data`, { scroll: false });
+      router.replace(`/project/${projectId}?tab=project-data`, {
+        scroll: false,
+      });
     }
   }, [searchParams, projectId, router]);
 
@@ -110,7 +112,6 @@ const ProjectPage = () => {
       showAuthPrompt();
       return;
     }
-    console.log('Submit entry for item:', selectedItemKey);
     setModalContentType('submitPropose');
   }, [selectedItemKey, profile, showAuthPrompt]);
 

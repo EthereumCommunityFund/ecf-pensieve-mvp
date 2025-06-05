@@ -179,9 +179,6 @@ export const useCommonColumnsOfModal = () => {
         const showQuorum =
           !AllItemConfig[itemKey]?.isEssential && !leadingProposal;
 
-        // isLoading is no longer calculated or passed from here.
-        // console.log('[CommonColumns] Calculated isLoading for proposalId', itemProposalId, ':', isLoading, 'from map:', JSON.stringify(inActionItemProposalIdMap));
-
         // Implement isUserVoted logic
         // 基于用户是否在当前 item proposal 中投票
         const isUserVoted = isUserVotedCurrentItemProposal;

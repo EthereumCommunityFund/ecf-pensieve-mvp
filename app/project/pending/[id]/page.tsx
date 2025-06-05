@@ -213,7 +213,7 @@ const ProjectCard = ({
           {project.name}
         </p>
         <p className="text-[14px] font-[400] leading-[1.66] text-[#202023]">
-          {project.mainDescription}
+          {project.tagline}
         </p>
         <div className="flex flex-wrap gap-[8px]">
           {project.categories.map((category) => {

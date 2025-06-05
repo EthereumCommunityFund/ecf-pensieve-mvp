@@ -90,7 +90,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   projectData,
 }) => {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, fetchUserProfile } = useAuth();
   const createProjectMutation = trpc.project.createProject.useMutation();
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
@@ -227,6 +227,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              fetchUserProfile();
             },
             onError: (error: any) => {
               setApiSubmissionStatus('error');
@@ -263,6 +264,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              fetchUserProfile();
             },
             onError: (error: any) => {
               setApiSubmissionStatus('error');

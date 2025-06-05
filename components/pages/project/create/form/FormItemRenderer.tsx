@@ -165,7 +165,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         <div>
           <Select
             name={field.name}
-            onBlur={field.onBlur}
             ref={field.ref}
             variant="bordered"
             placeholder={placeholder}
@@ -189,6 +188,12 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   field.onChange(firstKey != null ? String(firstKey) : null);
                 }
               }
+              // 在选择完成后触发 blur 事件进行校验
+              field.onBlur();
+            }}
+            onClose={() => {
+              // 当下拉框关闭时也触发 blur 事件
+              field.onBlur();
             }}
             isInvalid={!!error}
             isDisabled={isDisabled}

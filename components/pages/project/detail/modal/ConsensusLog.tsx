@@ -128,7 +128,6 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
   // Event handlers
   const handleExpandClick = useCallback(
     (rowId: string) => {
-      console.log('Expand clicked for row:', rowId);
       toggleRowExpanded(rowId);
     },
     [toggleRowExpanded],

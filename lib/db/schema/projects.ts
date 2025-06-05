@@ -45,8 +45,8 @@ export const projects = pgTable(
     publicGoods: boolean('public_goods').notNull(),
     founders: jsonb('founders').array().notNull(),
     tags: text('tags').array().notNull(),
-    whitePaper: text('white_paper').notNull(),
-    dappSmartContracts: text('dapp_smart_contracts').notNull(),
+    whitePaper: text('white_paper'),
+    dappSmartContracts: text('dapp_smart_contracts'),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),

@@ -209,7 +209,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, proposal, createVoteMutation, refetchVoteData],
+    [profile, proposal, createVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onSwitchVote = useCallback(
@@ -239,7 +239,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, proposal, switchVoteMutation, refetchVoteData],
+    [profile, proposal, switchVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onCancelVote = useCallback(
@@ -268,7 +268,7 @@ export function useProposalVotes(
         setKeyActive(key, false);
       }
     },
-    [profile, cancelVoteMutation, refetchVoteData],
+    [profile, cancelVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const findSourceProposal = useCallback(
@@ -288,14 +288,17 @@ export function useProposalVotes(
         setCurrentVoteItem: (item: ITableProposalItem) => void;
         setIsCancelModalOpen: (open: boolean) => void;
         setIsSwitchModalOpen: (open: boolean) => void;
-        setSourceProposal: (proposal: IProposal | null) => void;
+        setSourceProposalInfo: (
+          proposal: IProposal | null,
+          index: number,
+        ) => void;
       },
     ) => {
       const {
         setCurrentVoteItem,
         setIsCancelModalOpen,
         setIsSwitchModalOpen,
-        setSourceProposal,
+        setSourceProposalInfo,
       } = callbacks;
 
       setCurrentVoteItem(item);
@@ -304,12 +307,14 @@ export function useProposalVotes(
         return;
       }
       if (isUserVotedItemOfProposal(item.key)) {
-        if (doNotShowCancelModal) {
-          await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
-        } else {
-          setIsCancelModalOpen(true);
-        }
+        console.warn('Can not cancel vote');
         return;
+        // if (doNotShowCancelModal) {
+        //   await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
+        // } else {
+        //   setIsCancelModalOpen(true);
+        // }
+        // return;
       }
 
       if (
@@ -317,7 +322,10 @@ export function useProposalVotes(
         !isUserVotedItemOfProposal(item.key)
       ) {
         const sourceProposalData = findSourceProposal(item.key);
-        setSourceProposal(sourceProposalData);
+        const sourceProposalIndex = proposals?.findIndex(
+          (p) => p.id === sourceProposalData?.id,
+        );
+        setSourceProposalInfo(sourceProposalData, sourceProposalIndex || 0);
         setIsSwitchModalOpen(true);
       }
     },
@@ -325,8 +333,6 @@ export function useProposalVotes(
       isUserVotedItemOfProject,
       isUserVotedItemOfProposal,
       onCreateVote,
-      onCancelVote,
-      userVotesOfProposalMap,
       findSourceProposal,
     ],
   );

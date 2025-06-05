@@ -14,8 +14,15 @@ const RewardCard = () => {
         proposal does not pass.
       </p>
       <div className="mt-[20px]">
-        {/* TODO learn more link */}
-        <Button className="w-full rounded-[8px] border-none bg-black/5">
+        <Button
+          className="w-full rounded-[8px] border-none bg-black/5"
+          onPress={() => {
+            window.open(
+              'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
+              '_blank',
+            );
+          }}
+        >
           Learn More
         </Button>
       </div>

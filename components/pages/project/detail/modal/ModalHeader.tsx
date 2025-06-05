@@ -72,7 +72,6 @@ const ModalHeader: FC<ModalHeaderProps> = ({
           <Button
             isIconOnly
             className="size-[24px] min-w-0 border-none bg-transparent p-[2px] opacity-30"
-            onPress={onShare}
           >
             <ShareIcon size={20} />
           </Button>

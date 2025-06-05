@@ -14,10 +14,11 @@ interface ProposalTableProps {
   isLoading: boolean;
   isPageExpanded: boolean;
   expandedRows: Record<string, boolean>;
+  metricsVisible: boolean;
 }
 
 const ProposalTable: React.FC<ProposalTableProps> = memo(
-  ({ table, isLoading, isPageExpanded, expandedRows }) => {
+  ({ table, isLoading, isPageExpanded, expandedRows, metricsVisible }) => {
     const noDataForThisTable = table.options.data.length === 0;
     const showSkeleton = isLoading || noDataForThisTable;
 
@@ -34,7 +35,7 @@ const ProposalTable: React.FC<ProposalTableProps> = memo(
           ))}
         </colgroup>
       ),
-      [table],
+      [table, table.options.columns], // Ensure re-calc when column definitions change
     );
 
     const tableHeaders = useMemo(
@@ -73,7 +74,7 @@ const ProposalTable: React.FC<ProposalTableProps> = memo(
           </tr>
         </thead>
       ),
-      [table],
+      [table, table.options.columns], // Ensure re-calc when column definitions change
     );
 
     if (showSkeleton) {
@@ -174,12 +175,11 @@ const ProposalTable: React.FC<ProposalTableProps> = memo(
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison function for memo
-    // Only re-render if essential props have changed
     return (
       prevProps.table === nextProps.table &&
       prevProps.isLoading === nextProps.isLoading &&
       prevProps.isPageExpanded === nextProps.isPageExpanded &&
+      prevProps.metricsVisible === nextProps.metricsVisible &&
       JSON.stringify(prevProps.expandedRows) ===
         JSON.stringify(nextProps.expandedRows)
     );
