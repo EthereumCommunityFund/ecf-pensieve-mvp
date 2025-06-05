@@ -6,6 +6,8 @@ import { FC, memo, useMemo } from 'react';
 import { Button } from '@/components/base/button';
 import { InfoIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
@@ -20,7 +22,8 @@ interface RightContentProps {
 const RightContent: FC<RightContentProps> = memo(
   ({ onSubmitEntry, hideSubmitEntry, showRewardCard }) => {
     const { profile } = useAuth();
-    const { displayProposalDataOfKey } = useProjectDetailContext();
+    const { displayProposalDataOfKey, currentItemKey } =
+      useProjectDetailContext();
 
     const userWeight = useMemo(() => {
       if (!profile) return 0;
@@ -28,12 +31,16 @@ const RightContent: FC<RightContentProps> = memo(
     }, [profile]);
 
     const displayedItemWeight = useMemo(() => {
-      if (!displayProposalDataOfKey) return 0;
-      const itemTopWeight = displayProposalDataOfKey.itemTopWeight;
-      // const weightOfLeadingProposal = displayProposalDataOfKey.support.count;
-      // return Math.min(itemTopWeight, weightOfLeadingProposal);
-      return itemTopWeight;
-    }, [displayProposalDataOfKey]);
+      const itemKey = currentItemKey as IPocItemKey;
+      const itemConfigWeight = Number(AllItemConfig[itemKey]?.weight);
+      if (displayProposalDataOfKey) {
+        const itemTopWeight = Number(displayProposalDataOfKey.itemTopWeight);
+        if (itemTopWeight > 0) {
+          return itemTopWeight;
+        }
+      }
+      return itemConfigWeight;
+    }, [displayProposalDataOfKey, currentItemKey]);
 
     const isUserWeightExceedsItemWeight = useMemo(() => {
       return userWeight > displayedItemWeight;
