@@ -202,6 +202,7 @@ export const processItemProposalVoteResult = async (
         itemProposal.id,
         reward,
       ),
+      tx,
     );
 
     return { reward, finalWeight, voteSum };
