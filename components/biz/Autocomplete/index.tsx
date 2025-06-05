@@ -3,9 +3,8 @@ import TextField from '@mui/material/TextField';
 import * as React from 'react';
 import { useCallback } from 'react';
 
+import { SelectCheckItem } from '@/components/base/Autocomplete';
 import { SearchIcon } from '@/components/icons';
-
-import SelectCheckItem from '@/components/select/selectCheckItem';
 
 const filter = createFilterOptions<FilmOptionType>();
 

@@ -241,3 +241,5 @@ interface FilmOptionType {
   label: string;
   isAdd?: boolean;
 }
+
+export { SelectCheckItem };
