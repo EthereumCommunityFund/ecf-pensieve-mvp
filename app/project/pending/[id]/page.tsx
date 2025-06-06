@@ -2,7 +2,7 @@
 
 import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
@@ -33,6 +33,12 @@ const ProjectPage = () => {
       },
     },
   );
+
+  useEffect(() => {
+    if (project && project?.isPublished) {
+      router.replace(`/project/${projectId}`);
+    }
+  }, [project?.isPublished, router, projectId]);
 
   const {
     data: proposals,
