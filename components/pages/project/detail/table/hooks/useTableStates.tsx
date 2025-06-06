@@ -15,6 +15,28 @@ const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Governance]: true, // 保留以防将来启用
 };
 
+// Default column pinning configuration - no columns pinned by default
+const DefaultColumnPinning: Record<IItemSubCategoryEnum, ColumnPinningState> = {
+  [IItemSubCategoryEnum.Organization]: { left: [], right: [] },
+  [IItemSubCategoryEnum.Team]: { left: [], right: [] },
+  [IItemSubCategoryEnum.BasicProfile]: { left: [], right: [] },
+  [IItemSubCategoryEnum.Development]: { left: [], right: [] },
+  [IItemSubCategoryEnum.Finances]: { left: [], right: [] },
+  [IItemSubCategoryEnum.Token]: { left: [], right: [] },
+  [IItemSubCategoryEnum.Governance]: { left: [], right: [] },
+};
+
+// Original column order for maintaining sequence during pinning operations
+const OriginalColumnOrder = [
+  'property',
+  'input',
+  'reference',
+  'submitter',
+  'accountability', // metrics column
+  'legitimacy', // metrics column
+  'actions',
+];
+
 /**
  * Hook for managing all table-related states
  * Centralizes state management for expandable rows, categories, groups, etc.
@@ -57,18 +79,11 @@ export const useTableStates = () => {
     [IItemSubCategoryEnum.Governance]: false,
   });
 
-  // 列固定状态管理 - 按子分类独立管理
-  const [columnPinning, setColumnPinning] = useState<
-    Record<IItemSubCategoryEnum, ColumnPinningState>
-  >({
-    [IItemSubCategoryEnum.Organization]: { left: [], right: [] },
-    [IItemSubCategoryEnum.Team]: { left: [], right: [] },
-    [IItemSubCategoryEnum.BasicProfile]: { left: [], right: [] },
-    [IItemSubCategoryEnum.Development]: { left: [], right: [] },
-    [IItemSubCategoryEnum.Finances]: { left: [], right: [] },
-    [IItemSubCategoryEnum.Token]: { left: [], right: [] },
-    [IItemSubCategoryEnum.Governance]: { left: [], right: [] },
-  });
+  // 列固定状态管理 - 按子分类独立管理，使用默认配置
+  const [columnPinning, setColumnPinning] =
+    useState<Record<IItemSubCategoryEnum, ColumnPinningState>>(
+      DefaultColumnPinning,
+    );
 
   // 切换行展开状态
   const toggleRowExpanded = useCallback((key: string) => {
@@ -111,6 +126,11 @@ export const useTableStates = () => {
     }));
   }, []);
 
+  // Helper function to maintain column order based on original sequence
+  const maintainColumnOrder = useCallback((columnIds: string[]): string[] => {
+    return OriginalColumnOrder.filter((id) => columnIds.includes(id));
+  }, []);
+
   // 切换列固定状态
   const toggleColumnPinning = useCallback(
     (
@@ -136,9 +156,13 @@ export const useTableStates = () => {
           // 如果未固定，则固定到指定位置（默认左侧）
           const targetPosition = position || 'left';
           if (targetPosition === 'left') {
-            newPinning.left = [...(currentPinning.left || []), columnId];
+            const newLeftColumns = [...(currentPinning.left || []), columnId];
+            // Maintain original column order for left-pinned columns
+            newPinning.left = maintainColumnOrder(newLeftColumns);
           } else {
-            newPinning.right = [...(currentPinning.right || []), columnId];
+            const newRightColumns = [...(currentPinning.right || []), columnId];
+            // Maintain original column order for right-pinned columns
+            newPinning.right = maintainColumnOrder(newRightColumns);
           }
         }
 
@@ -148,7 +172,7 @@ export const useTableStates = () => {
         };
       });
     },
-    [],
+    [maintainColumnOrder],
   );
 
   // 获取列是否已固定

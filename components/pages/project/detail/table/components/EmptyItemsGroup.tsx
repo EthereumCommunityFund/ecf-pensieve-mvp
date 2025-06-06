@@ -63,8 +63,6 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
               !isExpanded && isLastColumn && 'rounded-br-[10px]',
               // Pinned column styles
               isPinned && 'sticky z-10 bg-[#F5F5F5]',
-              isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
-              isPinned === 'right' && 'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
               // Padding for first column (content) and last column (icon)
               isFirstColumn ? 'p-[10px_20px]' : isLastColumn ? 'p-0' : 'p-0',
             )}
@@ -97,7 +95,9 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
             {/* Render CaretUp/CaretDown icon in the last column */}
             {isLastColumn && (
               <div className="flex items-center justify-end p-[10px_20px]">
-                <div className={`${isExpanded ? 'rotate-180' : ''}`}>
+                <div
+                  className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                >
                   <CaretDownIcon size={18} className="text-black" />
                 </div>
               </div>

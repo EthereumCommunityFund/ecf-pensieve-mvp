@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar, cn } from '@heroui/react';
-import { ReactNode, memo } from 'react';
+import { ReactNode, memo, useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/base';
 import {
@@ -29,6 +29,32 @@ import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
 import TooltipTh from './TooltipTh';
 import TooltipThWithPin from './TooltipThWithPin';
+
+// Simplified expand button that relies on parent state management
+const OptimizedExpandButton = memo(
+  ({
+    isExpanded,
+    onToggleExpand,
+  }: {
+    isExpanded: boolean;
+    onToggleExpand?: () => void;
+  }) => {
+    return (
+      <Button
+        isIconOnly
+        className={cn(
+          'size-[24px] shrink-0 opacity-50 transition-transform duration-200',
+          isExpanded ? 'rotate-180' : '',
+        )}
+        onPress={onToggleExpand}
+      >
+        <CaretDownIcon size={18} />
+      </Button>
+    );
+  },
+);
+
+OptimizedExpandButton.displayName = 'OptimizedExpandButton';
 
 // Common types for all column components
 interface BaseHeaderProps {
@@ -256,6 +282,22 @@ const InputCell = ({
   const finalIsExpandable =
     isExpandable !== undefined ? isExpandable : itemConfig?.showExpand;
 
+  // Create a shared state for immediate visual feedback
+  const [localExpanded, setLocalExpanded] = useState(isExpanded);
+
+  // Sync local state with external state
+  useEffect(() => {
+    setLocalExpanded(isExpanded);
+  }, [isExpanded]);
+
+  // Create a wrapper function that provides immediate feedback
+  const handleToggleExpand = useCallback(() => {
+    // Immediately update local state for instant visual feedback
+    setLocalExpanded(!localExpanded);
+    // Then call the external handler
+    onToggleExpand?.();
+  }, [localExpanded, onToggleExpand]);
+
   if (isPendingValidation) {
     return (
       <div
@@ -296,21 +338,15 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
-              onToggleExpanded={onToggleExpand}
+              onToggleExpanded={handleToggleExpand}
             />
           </div>
         </div>
         {finalIsExpandable && (
-          <Button
-            isIconOnly
-            className={cn(
-              'size-[24px] shrink-0 opacity-50',
-              isExpanded ? 'rotate-180' : '',
-            )}
-            onPress={onToggleExpand}
-          >
-            <CaretDownIcon size={18} />
-          </Button>
+          <OptimizedExpandButton
+            isExpanded={localExpanded}
+            onToggleExpand={handleToggleExpand}
+          />
         )}
       </div>
     );
@@ -334,21 +370,15 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
-              onToggleExpanded={onToggleExpand}
+              onToggleExpanded={handleToggleExpand}
             />
           </div>
         </div>
         {finalIsExpandable && (
-          <Button
-            isIconOnly
-            className={cn(
-              'size-[24px] shrink-0 opacity-50',
-              isExpanded ? 'rotate-180' : '',
-            )}
-            onPress={onToggleExpand}
-          >
-            <CaretDownIcon size={18} />
-          </Button>
+          <OptimizedExpandButton
+            isExpanded={localExpanded}
+            onToggleExpand={handleToggleExpand}
+          />
         )}
       </div>
     );
@@ -363,21 +393,15 @@ const InputCell = ({
           displayFormType={finalDisplayFormType}
           isEssential={itemConfig?.isEssential || false}
           isExpandable={finalIsExpandable}
-          onToggleExpanded={onToggleExpand}
+          onToggleExpanded={handleToggleExpand}
         />
       </div>
 
       {finalIsExpandable && (
-        <Button
-          isIconOnly
-          className={cn(
-            'size-[24px] shrink-0 opacity-50',
-            isExpanded ? 'rotate-180' : '',
-          )}
-          onPress={onToggleExpand}
-        >
-          <CaretDownIcon size={18} />
-        </Button>
+        <OptimizedExpandButton
+          isExpanded={localExpanded}
+          onToggleExpand={handleToggleExpand}
+        />
       )}
     </div>
   );

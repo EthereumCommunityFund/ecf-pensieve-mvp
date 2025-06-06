@@ -250,7 +250,7 @@ export const useCreateProposalTableColumns = ({
               <Button
                 isIconOnly
                 className={cn(
-                  'size-[24px] shrink-0 opacity-50',
+                  'size-[24px] shrink-0 opacity-50 transition-transform duration-200',
                   isRowExpanded ? 'rotate-180' : '',
                 )}
                 onPress={() => {
