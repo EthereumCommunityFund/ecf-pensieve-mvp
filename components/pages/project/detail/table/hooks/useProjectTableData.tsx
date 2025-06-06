@@ -4,12 +4,12 @@ import { useCallback, useMemo } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
-import { IProfileCreator } from '@/types';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { calculateItemStatusFields, isInputValueEmpty } from '@/utils/item';
 
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
+import { IProposalCreator } from '../../types';
 import { IKeyItemDataForTable } from '../ProjectDetailTableColumns';
 
 export const useProjectTableData = () => {
@@ -152,19 +152,11 @@ export const useProjectTableData = () => {
                 hasProposal,
                 undefined,
               );
-              const defaultSubmitter: IProfileCreator = {
+              const defaultSubmitter: IProposalCreator = {
                 userId: 'default',
                 name: 'Creator',
                 avatarUrl: null,
                 address: '',
-                weight: null,
-                invitationCodeId: null,
-                createdAt: project.createdAt
-                  ? new Date(project.createdAt)
-                  : new Date(),
-                updatedAt: project.updatedAt
-                  ? new Date(project.updatedAt)
-                  : new Date(),
               };
               const defaultItem: IKeyItemDataForTable = {
                 key: itemKey,

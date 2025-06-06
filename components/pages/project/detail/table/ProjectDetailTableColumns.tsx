@@ -13,18 +13,17 @@ import {
   SubmitterCol,
 } from '@/components/biz/table';
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IProfileCreator } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 import { IRef } from '../../create/types';
-import { ITableMetaOfProjectDetail } from '../types';
+import { IProposalCreator, ITableMetaOfProjectDetail } from '../types';
 
 export interface IKeyItemDataForTable {
   key: string;
   property: string;
   input: any;
   reference: IRef | null;
-  submitter: IProfileCreator;
+  submitter: IProposalCreator;
   createdAt: Date;
   projectId: number;
   proposalId: number;
@@ -147,12 +146,15 @@ export const useProjectTableColumns = ({
         const item = info.row.original;
         const itemConfig = AllItemConfig[item.key as IPocItemKey];
         const submitterData = info.getValue();
+        const { showSubmitterModal } = info.table.options
+          .meta as ITableMetaOfProjectDetail;
         return (
           <SubmitterCol.Cell
             item={info.row.original}
             itemConfig={itemConfig!}
             submitter={submitterData}
             data={item.createdAt}
+            showSubmitterModal={showSubmitterModal}
           />
         );
       },

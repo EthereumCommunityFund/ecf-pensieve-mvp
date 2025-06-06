@@ -334,6 +334,7 @@ export function useProposalVotes(
       isUserVotedItemOfProposal,
       onCreateVote,
       findSourceProposal,
+      proposals,
     ],
   );
 

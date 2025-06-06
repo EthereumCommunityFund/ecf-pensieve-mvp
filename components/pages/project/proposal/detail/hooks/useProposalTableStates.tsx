@@ -28,15 +28,12 @@ export const useProposalTableStates = () => {
     }));
   }, []);
 
-  const toggleMetricsVisible = useCallback(
-    (subCat: IItemSubCategoryEnum) => {
-      setMetricsVisibleSubCat((prev) => ({
-        ...prev,
-        [subCat]: !prev[subCat],
-      }));
-    },
-    [metricsVisibleSubCat],
-  );
+  const toggleMetricsVisible = useCallback((subCat: IItemSubCategoryEnum) => {
+    setMetricsVisibleSubCat((prev) => ({
+      ...prev,
+      [subCat]: !prev[subCat],
+    }));
+  }, []);
 
   return {
     expandedRows,

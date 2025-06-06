@@ -96,6 +96,8 @@ export const useCommonColumnsOfModal = () => {
       cell: (info) => {
         const rowData = info.row.original;
         const submitterData = info.getValue();
+        const { showSubmitterModal } = info.table.options
+          .meta as ITableMetaOfSubmissionQueue;
 
         return (
           <SubmitterCol.Cell
@@ -103,6 +105,7 @@ export const useCommonColumnsOfModal = () => {
             itemConfig={AllItemConfig[rowData.key as IPocItemKey]!}
             submitter={submitterData}
             data={rowData.createdAt}
+            showSubmitterModal={showSubmitterModal}
           />
         );
       },
