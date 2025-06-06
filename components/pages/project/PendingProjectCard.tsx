@@ -255,7 +255,8 @@ const ProgressCard = ({
         className="flex cursor-pointer items-center justify-between rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[10px] py-[6px] hover:bg-[rgba(0,0,0,0.1)]"
       >
         <span className="text-[13px] leading-[18px] text-black">
-          View Published Page
+          {/* View Published Page */}
+          Waiting to be published
         </span>
         <ArrowUpRightIcon />
       </Link>
