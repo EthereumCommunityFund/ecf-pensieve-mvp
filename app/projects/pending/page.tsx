@@ -73,10 +73,10 @@ const PendingProjectsPage = () => {
             >
               Propose a Project
             </Button>
-            {/* TODO click logic */}
-            <Button className="font-mona px-[20px] text-[16px]">
+            {/* TODO click logic -- disable for now*/}
+            {/*<Button className="font-mona px-[20px] text-[16px]">
               How it works
-            </Button>
+            </Button>*/}
             <ScanPendingProject />
           </div>
         </div>
