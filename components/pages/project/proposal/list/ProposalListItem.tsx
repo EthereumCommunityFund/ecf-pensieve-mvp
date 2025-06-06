@@ -11,7 +11,9 @@ import {
 } from '@/lib/constants';
 import { IProposal } from '@/types';
 import { IVoteResultOfProposal } from '@/utils/proposal';
+import { InfoIcon } from '@/components/icons';
 
+import ProgressLine from '../../ProgressLine';
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
 
@@ -79,38 +81,47 @@ const ProposalListItem = ({
         </span>
       </div>
 
-      {/* progress */}
       <div className="flex items-center gap-[10px]">
-        <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
-          {formattedPercentageOfProposal}
-        </span>
-        <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-          <div
-            className="h-[7px] bg-black"
-            style={{ width: formattedPercentageOfProposal }}
-          ></div>
+        <div className="flex items-center gap-[5px]">
+          <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
+            {formattedPercentageOfProposal}
+          </span>
+          <InfoIcon size={20} />
         </div>
+        <p className="flex gap-[10px] text-[14px] text-black">
+          <span className="font-[600]">Total Points Supported:</span>
+          <span className="text-black/50">
+            {totalSupportedUserWeightOfProposal}
+          </span>
+        </p>
       </div>
+
+      {/* progress */}
+      <ProgressLine percentage={formattedPercentageOfProposal} />
 
       {/* vote info */}
       <div className="flex flex-col gap-[10px] text-[14px] font-[600] leading-[19px] text-black">
-        <div className="flex items-center justify-between">
-          <span>Points Needed</span>
-          <span className="text-black/60">
-            {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
-          </span>
+        <div className="flex items-center gap-[10px]">
+          <span>Min Points</span>
+          <p>
+            <span className="font-[600] text-black/80">
+              {ESSENTIAL_ITEM_WEIGHT_SUM}
+            </span>
+            <span className="ml-[5px] text-black/50">
+              ({totalValidPointsOfProposal} supported)
+            </span>
+          </p>
         </div>
-        <div className="flex items-center justify-between">
-          <span>Supported</span>
-          <span className="text-black/60">
-            {totalSupportedUserWeightOfProposal}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>quorum</span>
-          <span className="text-black/60">
-            {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
-          </span>
+        <div className="flex items-center gap-[10px]">
+          <span>Min Participants:</span>
+          <p>
+            <span className="font-[600] text-black/80">
+              {ESSENTIAL_ITEM_QUORUM_SUM}
+            </span>
+            <span className="ml-[5px] text-black/50">
+              ({totalValidQuorumOfProposal} supported)
+            </span>
+          </p>
         </div>
       </div>
 
@@ -135,47 +146,60 @@ export default ProposalListItem;
 export const ProposalListItemSkeleton = () => {
   return (
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
+      {/* leading labels area */}
+      {/* <div className="flex items-center gap-[10px]">
+        <Skeleton className="h-[24px] w-[80px] rounded-[12px]" />
+        <Skeleton className="h-[24px] w-[60px] rounded-[12px]" />
+      </div> */}
+
       {/* title and date */}
       <div className="flex items-center gap-[10px] border-b border-black/10 pb-[10px]">
-        <Skeleton className="h-[20px] w-[100px]" />
-        <Skeleton className="h-[20px] w-[100px]" />
+        <Skeleton className="h-[25px] w-[120px]" />
+        <Skeleton className="h-[20px] w-[120px]" />
       </div>
 
-      {/* progress */}
+      {/* percentage and total points info */}
       <div className="flex items-center gap-[10px]">
-        <Skeleton className="h-[25px] w-[40px]" />
-        {/* <span className="text-[18px] font-[500] leading-[25px] text-black font-mona">
-          {progressPercentage}%
-        </span> */}
-        <Skeleton className="h-[10px] flex-1" />
+        <div className="flex items-center gap-[5px]">
+          <Skeleton className="h-[25px] w-[50px]" />
+          <Skeleton className="size-[20px] rounded-full" />
+        </div>
+        <div className="flex gap-[10px]">
+          <Skeleton className="h-[20px] w-[140px]" />
+          <Skeleton className="h-[20px] w-[60px]" />
+        </div>
       </div>
+
+      {/* progress line */}
+      <Skeleton className="h-[8px] w-full rounded-[4px]" />
 
       {/* vote info */}
       <div className="flex flex-col gap-[10px] text-[14px] font-[600] leading-[19px] text-black">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-[19px] w-[100px]" />
-          <Skeleton className="h-[19px] w-[60px]" />
-        </div>
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-[19px] w-[90px]" />
-          <Skeleton className="h-[19px] w-[60px]" />
-        </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-[10px]">
           <Skeleton className="h-[19px] w-[80px]" />
-          <Skeleton className="h-[19px] w-[60px]" />
+          <div className="flex items-center gap-[5px]">
+            <Skeleton className="h-[19px] w-[40px]" />
+            <Skeleton className="h-[19px] w-[80px]" />
+          </div>
+        </div>
+        <div className="flex items-center gap-[10px]">
+          <Skeleton className="h-[19px] w-[120px]" />
+          <div className="flex items-center gap-[5px]">
+            <Skeleton className="h-[19px] w-[40px]" />
+            <Skeleton className="h-[19px] w-[80px]" />
+          </div>
         </div>
       </div>
 
       {/* Creator */}
       <div className="flex items-center gap-[5px] text-[14px] leading-[20px] text-black">
-        <Skeleton className="size-[20px]" />
-        <Skeleton className="h-[20px] w-[60px]" />
-        <Skeleton className="h-[20px] w-[100px]" />
+        <Skeleton className="h-[20px] w-[25px]" />
+        <Skeleton className="h-[20px] w-[80px]" />
+        <Skeleton className="h-[24px] w-[100px] rounded-[4px]" />
       </div>
 
-      <div>
-        <Skeleton className="h-[40px] w-full rounded-[5px]" />
-      </div>
+      {/* View Proposal Button */}
+      <Skeleton className="h-[40px] w-full rounded-[5px]" />
     </div>
   );
 };

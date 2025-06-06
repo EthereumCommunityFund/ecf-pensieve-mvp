@@ -60,6 +60,7 @@ const SectionList = (props: ISectionProps) => {
 const HomeList = () => {
   const { data: projectsData, isLoading } = trpc.project.getProjects.useQuery({
     limit: 10,
+    isPublished: true,
   });
 
   const viewAllProject = () => {

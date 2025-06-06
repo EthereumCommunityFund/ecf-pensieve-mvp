@@ -4,7 +4,6 @@ import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
-import { ArrowUpRightIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
@@ -12,6 +11,8 @@ import {
 } from '@/lib/constants';
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
+
+import ProgressLine from './ProgressLine';
 
 export function PendingProjectCardSkeleton() {
   return (
@@ -255,9 +256,10 @@ const ProgressCard = ({
         className="flex cursor-pointer items-center justify-between rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[10px] py-[6px] hover:bg-[rgba(0,0,0,0.1)]"
       >
         <span className="text-[13px] leading-[18px] text-black">
-          View Published Page
+          {/* View Published Page */}
+          Waiting to be published
         </span>
-        <ArrowUpRightIcon />
+        {/* <ArrowUpRightIcon /> */}
       </Link>
     </div>
   ) : (
@@ -276,12 +278,7 @@ const ProgressCard = ({
         </span>
       </div>
 
-      <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-        <div
-          className="h-[7px] bg-black"
-          style={{ width: formattedPercentageOfProposal }}
-        ></div>
-      </div>
+      <ProgressLine percentage={formattedPercentageOfProposal} />
 
       <div className="flex items-center justify-between">
         <span className="font-[600]">Supported</span>
