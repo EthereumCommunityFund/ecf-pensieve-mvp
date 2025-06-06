@@ -9,6 +9,7 @@ import { IProposal } from '@/types';
 
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
+import ProgressLine from '../../ProgressLine';
 
 import { useProposalVotes } from './useProposalVotes';
 
@@ -102,12 +103,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
             {formattedPercentageOfProposal}
           </span>
-          <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-            <div
-              className="h-[7px] bg-black"
-              style={{ width: formattedPercentageOfProposal }}
-            ></div>
-          </div>
+          <ProgressLine percentage={formattedPercentageOfProposal} />
         </div>
 
         <div className="flex items-center justify-between text-[14px] font-[600] leading-[19px] text-black">

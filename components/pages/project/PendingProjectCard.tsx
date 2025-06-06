@@ -12,6 +12,8 @@ import {
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
+import ProgressLine from './ProgressLine';
+
 export function PendingProjectCardSkeleton() {
   return (
     <div className="py-[10px]">
@@ -276,12 +278,7 @@ const ProgressCard = ({
         </span>
       </div>
 
-      <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-        <div
-          className="h-[7px] bg-black"
-          style={{ width: formattedPercentageOfProposal }}
-        ></div>
-      </div>
+      <ProgressLine percentage={formattedPercentageOfProposal} />
 
       <div className="flex items-center justify-between">
         <span className="font-[600]">Supported</span>
