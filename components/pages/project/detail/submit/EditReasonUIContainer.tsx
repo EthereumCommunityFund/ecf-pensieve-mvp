@@ -33,6 +33,7 @@ const EditReasonUIContainer: FC<IProps> = ({
               </div>
             </div>
           }
+          closeDelay={0}
         >
           <div className="opacity-50">
             <InfoIcon size={20} />

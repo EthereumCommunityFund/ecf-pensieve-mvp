@@ -48,6 +48,7 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
           classNames={{
             content: 'p-[10px] rounded-[5px] border border-black/10',
           }}
+          closeDelay={0}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -89,6 +90,7 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
           classNames={{
             content: 'p-[10px] rounded-[5px] border border-black/10',
           }}
+          closeDelay={0}
         >
           <Button
             isIconOnly

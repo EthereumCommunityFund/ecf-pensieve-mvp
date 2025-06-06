@@ -58,6 +58,7 @@ export const FormItemUIContainer: React.FC<IFormItemUIContainerProps> = ({
               </div>
             </div>
           }
+          closeDelay={0}
         >
           <div className="opacity-50">
             <InfoIcon size={20} />

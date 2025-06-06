@@ -5,12 +5,12 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
+import MerrticDetailModal from '@/components/biz/MerrticDetailModal';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
-import MerrticDetailModal from '@/components/pages/project/detail/modal/MerrticDetailModal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';

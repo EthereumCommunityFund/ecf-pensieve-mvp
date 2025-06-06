@@ -31,6 +31,7 @@ const ApplicableSwitch: React.FC<ApplicableSwitchProps> = ({
           'p-0 bg-white border border-[rgba(0,0,0,0.1)] rounded-[10px]',
         ],
       }}
+      closeDelay={0}
     >
       <div className="inline-flex h-[32px] items-center gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.2)] bg-[#E1E1E1] p-[2px]">
         <Button

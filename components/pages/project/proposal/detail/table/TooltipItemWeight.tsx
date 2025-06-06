@@ -12,6 +12,7 @@ const TooltipItemWeight: FC<IProps> = ({ itemWeight }) => {
       classNames={{
         content: 'p-[10px] rounded-[5px] border border-black/10',
       }}
+      closeDelay={0}
     >
       <div className="rounded-[4px] border border-black px-[4px] py-[2px] text-[12px] font-[600] leading-[16px] text-black opacity-50">
         {itemWeight}

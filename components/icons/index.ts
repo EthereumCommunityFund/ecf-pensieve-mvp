@@ -15,6 +15,7 @@ export { default as CheckSelectIcon } from './CheckSelect';
 export { default as ClockClockwiseIcon } from './ClockClockwise';
 export { default as CodeIcon } from './Code';
 export { CopyIcon } from './Copy';
+export { default as FileIcon } from './File';
 export { default as GaugeIcon } from './Gauge';
 export { GitPullBlueIcon, GitPullDarkIcon, GitPullLightIcon } from './GitPull';
 export { default as InfoIcon } from './Info';
