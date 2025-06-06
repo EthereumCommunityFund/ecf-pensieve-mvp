@@ -4,7 +4,6 @@ import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
-import { ArrowUpRightIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
@@ -258,7 +257,7 @@ const ProgressCard = ({
           {/* View Published Page */}
           Waiting to be published
         </span>
-        <ArrowUpRightIcon />
+        {/* <ArrowUpRightIcon /> */}
       </Link>
     </div>
   ) : (
