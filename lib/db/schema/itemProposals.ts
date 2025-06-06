@@ -35,6 +35,10 @@ export const itemProposals = pgTable(
       projectIdIdx: index('item_proposals_project_id_idx').on(table.projectId),
       creatorIdx: index('item_proposals_creator_idx').on(table.creator),
       keyIdx: index('item_proposals_key_idx').on(table.key),
+      projectIdKeyIdx: index('item_proposals_project_id_key_idx').on(
+        table.projectId,
+        table.key,
+      ),
     };
   },
 );
