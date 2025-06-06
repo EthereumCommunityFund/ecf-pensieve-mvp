@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { projectRouter } from '@/lib/trpc/routers/project';
 import { createTRPCContext } from '@/lib/trpc/server';
 
+export const maxDuration = 300;
+
 async function handleCronJob(request: Request) {
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
