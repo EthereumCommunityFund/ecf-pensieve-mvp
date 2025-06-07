@@ -5,9 +5,10 @@ import { FC, memo, useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { InfoIcon } from '@/components/icons';
-import { useAuth } from '@/context/AuthContext';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
+import { formatWeight } from '@/utils/weight';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
@@ -61,7 +62,7 @@ const RightContent: FC<RightContentProps> = memo(
               </div>
             </div>
             <span className="font-mona text-[18px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
-              {userWeight}
+              {formatWeight(userWeight)}
             </span>
           </div>
 
