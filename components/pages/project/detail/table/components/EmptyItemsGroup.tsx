@@ -53,7 +53,7 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
           <td
             key={column.id}
             className={cn(
-              'border-b border-black/10 bg-[#F5F5F5] hover:bg-[#F5F5F5]',
+              'bg-[#F5F5F5] hover:bg-[#F5F5F5]',
               // No left/right borders since container provides them
               // Apply rounded corners only to last row when collapsed
               !isExpanded && isFirstColumn && 'rounded-bl-[10px]',
