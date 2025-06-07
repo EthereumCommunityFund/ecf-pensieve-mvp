@@ -126,7 +126,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   if (showSkeleton || noDataForThisTable) {
     return (
-      <PageTableContainer className="overflow-x-auto rounded-b-[10px] border border-black/10 bg-white">
+      <PageTableContainer className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white">
         <table className="box-border w-full table-fixed border-separate border-spacing-0">
           {colGroupDefinition}
           {tableHeaders}
@@ -201,7 +201,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   );
 
   return (
-    <PageTableContainer className="mt-px overflow-x-auto rounded-b-[10px] border border-black/10 bg-white">
+    <PageTableContainer className="mt-px overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white">
       <table className="box-border w-full table-fixed border-separate border-spacing-0">
         {colGroupDefinition}
         {tableHeaders}
