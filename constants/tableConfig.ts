@@ -115,12 +115,14 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Basics,
     title: 'Project Overview',
-    description: 'Project Overview description',
+    description:
+      'This section contains the basic set of information about a project',
     subCategories: [
       {
         key: IItemSubCategoryEnum.BasicProfile,
         title: 'Basic Profile',
-        description: 'These are the basic information about the project',
+        description:
+          'Basic identifying information about the project, including name, status, categories, and key links',
         items: [
           'name',
           'tagline',
@@ -142,12 +144,14 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Technicals,
     title: 'Technicals',
-    description: 'Technicals description',
+    description:
+      'Key technical components of the project, including architecture, protocols, and deployment details.',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Development,
         title: 'Development',
-        description: '',
+        description:
+          'Tracks the project’s development activity, open-source contributions, and codebase evolution',
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
         itemsNotEssential: [
           'audit_status',
@@ -168,19 +172,21 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Organization,
     title: 'Organization & Team',
-    description: 'Organization & Team description',
+    description:
+      'An overview of the people and entities driving the project, from early founders to current core contributors.',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Organization,
         title: 'Organization',
-        description: '',
+        description: 'How the project is organized legally and operationally',
         items: ['orgStructure', 'publicGoods'],
         groups: [],
       },
       {
         key: IItemSubCategoryEnum.Team,
         title: 'Team',
-        description: '',
+        description:
+          'An overview of the people behind the project—pseudonymous or public—including their roles and contributions',
         items: ['founders'],
         itemsNotEssential: [
           'core_team',
@@ -194,12 +200,14 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Financial,
     title: 'Project Financials',
-    description: 'description',
+    description:
+      'An overview of how the project is funded, how resources are allocated, and its current financial state.',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Finances,
         title: 'Finances',
-        description: '',
+        description:
+          'A look at the project’s financial setup, including capital flows and long-term sustainability',
         items: ['fundingStatus'],
         itemsNotEssential: [
           'project_funded_date',
@@ -213,7 +221,8 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
       {
         key: IItemSubCategoryEnum.Token,
         title: 'Token',
-        description: '',
+        description:
+          'Key details about the project’s token, including its purpose, supply, and mechanics',
         items: ['tokenContract'],
         itemsNotEssential: [
           'token_sales',

@@ -65,13 +65,25 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                     boxSizing: 'border-box',
                     ...(isPinned === 'left' && { left: pinnedPosition }),
                     ...(isPinned === 'right' && { right: pinnedPosition }),
+                    ...(isPinned && {
+                      backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                      backdropFilter: 'blur(24px)',
+                      borderRight:
+                        isPinned === 'left'
+                          ? '2px solid rgba(0, 0, 0, 0.1)'
+                          : undefined,
+                      borderLeft:
+                        isPinned === 'right'
+                          ? '2px solid rgba(0, 0, 0, 0.1)'
+                          : undefined,
+                    }),
                   }}
                   className={cn(
                     'h-[30px] border-b-0 border-l-0 px-[10px] text-left text-[14px] font-[600] text-black/60',
                     index === headerGroup.headers.length - 1
                       ? 'border-r-0'
                       : 'border-r border-black/10',
-                    isPinned && 'sticky z-10 bg-[#F5F5F5]',
+                    isPinned && 'sticky z-10',
                     isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                     isPinned === 'right' &&
                       'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
@@ -130,6 +142,17 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         ...(isPinned === 'right' && {
                           right: pinnedPosition,
                         }),
+                        ...(isPinned && {
+                          backgroundColor: '#F5F5F5',
+                          borderRight:
+                            isPinned === 'left'
+                              ? '2px solid rgba(0, 0, 0, 0.1)'
+                              : undefined,
+                          borderLeft:
+                            isPinned === 'right'
+                              ? '2px solid rgba(0, 0, 0, 0.1)'
+                              : undefined,
+                        }),
                       }}
                       className={cn(
                         'border-l-0',
@@ -139,7 +162,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         rowIndex === table.getRowModel().rows.length - 1
                           ? 'border-b-0'
                           : 'border-b border-black/10',
-                        isPinned && 'sticky z-10 bg-white',
+                        isPinned && 'sticky z-10',
                         isPinned === 'left' &&
                           'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                         isPinned === 'right' &&
@@ -205,7 +228,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                       minHeight={60}
                       isContainerBordered={true}
                       className={cn(
-                        isPinned && 'sticky z-10 bg-white',
+                        isPinned && 'sticky z-10',
                         isPinned === 'left' &&
                           'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                         isPinned === 'right' &&
@@ -215,6 +238,17 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         ...(isPinned === 'left' && { left: pinnedPosition }),
                         ...(isPinned === 'right' && {
                           right: pinnedPosition,
+                        }),
+                        ...(isPinned && {
+                          backgroundColor: '#F5F5F5',
+                          borderRight:
+                            isPinned === 'left'
+                              ? '2px solid rgba(0, 0, 0, 0.1)'
+                              : undefined,
+                          borderLeft:
+                            isPinned === 'right'
+                              ? '2px solid rgba(0, 0, 0, 0.1)'
+                              : undefined,
                         }),
                       }}
                     />

@@ -46,7 +46,7 @@ const CollapseButton: FC<ICollapseButtonProps> = ({ isExpanded, onChange }) => {
           </clipPath>
         </defs>
       </svg>
-      {isExpanded ? 'Collapse' : 'Expand'}
+      {isExpanded ? 'Collapse All' : 'Expand All'}
     </Button>
   );
 };

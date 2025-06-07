@@ -229,58 +229,58 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   );
 
   return (
-    <div
-      className={cn(
-        'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
-        'flex items-start gap-[40px] ',
-        'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
-      )}
-    >
-      {/* 左侧导航菜单 - 固定定位 */}
-      <div className="tablet:hidden mobile:hidden shrink-0">
-        <div className="sticky top-[20px]">
+    <div className="relative">
+      <div
+        className={cn(
+          'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
+          'flex items-start gap-[40px] ',
+          'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
+        )}
+      >
+        {/* 左侧导航菜单 - 固定定位 */}
+        <div className="tablet:hidden mobile:hidden w-[200px] shrink-0 self-start">
           <NavigationMenu
             activeCategory={activeCategory}
             onCategoryClick={handleCategoryClick}
           />
         </div>
-      </div>
 
-      {/* 右侧表格内容 */}
-      <div className="w-full max-w-[1000px] flex-1">
-        {/* 分类表格 */}
-        <div className="flex flex-col gap-[20px]">
-          {ProjectTableFieldCategory.map((cat) => (
-            <div key={cat.key} className="flex flex-col gap-[20px]">
-              <TableSectionHeader
-                title={cat.title}
-                description={cat.description}
-              />
-              {cat.subCategories.map((subCat) => (
-                <CategoryTableSection
-                  key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
-                  subCategory={subCat}
-                  table={tables[subCat.key]}
-                  isLoading={isProposalsLoading}
-                  expanded={expanded}
-                  expandedRows={expandedRows}
-                  emptyItemsExpanded={emptyItemsExpanded}
-                  groupExpanded={groupExpanded}
-                  emptyItemsCount={emptyItemsCounts[subCat.key] || 0}
-                  project={project}
-                  categoryRef={(el) => {
-                    categoryRefs.current[subCat.key] = el;
-                  }}
-                  onToggleCategory={toggleCategory}
-                  onToggleEmptyItems={toggleEmptyItems}
-                  onToggleGroupExpanded={toggleGroupExpanded}
-                  onToggleAllRowsInCategory={toggleAllRowsInCategory}
-                  metricsVisible={metricsVisible[subCat.key]}
-                  onToggleMetrics={() => toggleMetricsVisible(subCat.key)}
+        {/* 右侧表格内容 */}
+        <div className="w-full max-w-[1000px] flex-1">
+          {/* 分类表格 */}
+          <div className="flex flex-col gap-[40px]">
+            {ProjectTableFieldCategory.map((cat) => (
+              <div key={cat.key} className="flex flex-col gap-[30px]">
+                <TableSectionHeader
+                  title={cat.title}
+                  description={cat.description}
                 />
-              ))}
-            </div>
-          ))}
+                {cat.subCategories.map((subCat) => (
+                  <CategoryTableSection
+                    key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
+                    subCategory={subCat}
+                    table={tables[subCat.key]}
+                    isLoading={isProposalsLoading}
+                    expanded={expanded}
+                    expandedRows={expandedRows}
+                    emptyItemsExpanded={emptyItemsExpanded}
+                    groupExpanded={groupExpanded}
+                    emptyItemsCount={emptyItemsCounts[subCat.key] || 0}
+                    project={project}
+                    categoryRef={(el) => {
+                      categoryRefs.current[subCat.key] = el;
+                    }}
+                    onToggleCategory={toggleCategory}
+                    onToggleEmptyItems={toggleEmptyItems}
+                    onToggleGroupExpanded={toggleGroupExpanded}
+                    onToggleAllRowsInCategory={toggleAllRowsInCategory}
+                    metricsVisible={metricsVisible[subCat.key]}
+                    onToggleMetrics={() => toggleMetricsVisible(subCat.key)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

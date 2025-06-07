@@ -64,7 +64,11 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
               // Pinned column styles
               isPinned && 'sticky z-10 bg-[#F5F5F5]',
               // Padding for first column (content) and last column (icon)
-              isFirstColumn ? 'p-[10px_20px]' : isLastColumn ? 'p-0' : 'p-0',
+              isFirstColumn
+                ? 'p-[10px_20px] pr-[0px]'
+                : isLastColumn
+                  ? 'p-0'
+                  : 'p-0',
             )}
             style={{
               width: `${column.getSize()}px`,

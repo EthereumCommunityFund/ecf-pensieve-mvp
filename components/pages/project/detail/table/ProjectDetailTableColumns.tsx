@@ -81,7 +81,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: isPageExpanded ? 247 : 220,
+      size: 180,
       cell: (info) => {
         const { key } = info.row.original;
 
@@ -107,7 +107,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: isPageExpanded ? 480 : 250,
+      // size: 300,
       cell: (info) => {
         const item = info.row.original;
         const { expandedRows, toggleRowExpanded, onOpenModal } = info.table
@@ -154,7 +154,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 130,
+      size: 140,
       cell: (info) => {
         const reference = info.getValue();
         const key = info.row.original.key;
@@ -192,7 +192,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 183,
+      size: 150,
       cell: (info) => {
         const item = info.row.original;
         const itemConfig = AllItemConfig[item.key as IPocItemKey];
@@ -224,7 +224,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 240,
+      size: 180,
       cell: (info) => {
         const accountability = info.getValue();
         const { onMetricClick } = info.table.options
@@ -282,7 +282,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 195,
+      size: 160,
       cell: (info) => {
         const item = info.row.original;
         const { onOpenModal } = info.table.options

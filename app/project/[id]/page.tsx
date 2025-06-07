@@ -4,7 +4,6 @@ import { cn, Skeleton, Tab, Tabs } from '@heroui/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import ECFTypography from '@/components/base/typography';
 import MerrticDetailModal from '@/components/biz/MerrticDetailModal';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
@@ -20,9 +19,9 @@ import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
-  { key: 'project-data', label: 'Project Data' },
+  { key: 'project-data', label: 'Profile' },
   { key: 'ecosystem', label: 'Ecosystem' },
-  { key: 'profile', label: 'Profile' },
+  // { key: 'profile', label: 'Profile' },
   { key: 'review', label: 'Review' },
 ];
 
@@ -156,28 +155,25 @@ const ProjectPage = () => {
             }}
             variant="underlined"
             disabledKeys={['ecosystem', 'profile', 'review']}
-            // className="w-full"
             classNames={{
               tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
-              tab: 'w-fit flex justify-start items-center',
-              cursor:
-                'bg-black w-[102%] bottom-[-4px] left-[-4px] right-[-4px]',
-              tabContent: 'font-semibold',
+              tab: 'w-fit h-[40px] px-[8px] py-[10px] flex justify-center items-centerrounded-[4px]',
+              cursor: 'bg-black h-[3px] bottom-[-5px]',
+              tabContent: 'font-[600] text-[15px] leading-[20.4px]',
             }}
           >
             {tabItems.map(({ key, label }) => (
               <Tab
                 key={key}
                 title={
-                  <ECFTypography
-                    type="body1"
+                  <span
                     className={cn(
-                      'font-semibold',
+                      'font-[600] text-[15px] leading-[20.4px] font-open-sans',
                       activeTab === key ? 'opacity-100' : 'opacity-60',
                     )}
                   >
                     {label}
-                  </ECFTypography>
+                  </span>
                 }
               />
             ))}

@@ -87,13 +87,25 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                 width={header.getSize()}
                 isLast={index === headerGroup.headers.length - 1}
                 className={cn(
-                  isPinned && 'sticky z-10 bg-[#F5F5F5]',
+                  isPinned && 'sticky z-10',
                   isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                   isPinned === 'right' && 'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
                 )}
                 style={{
                   ...(isPinned === 'left' && { left: pinnedPosition }),
                   ...(isPinned === 'right' && { right: pinnedPosition }),
+                  ...(isPinned && {
+                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                    backdropFilter: 'blur(24px)',
+                    borderRight:
+                      isPinned === 'left'
+                        ? '2px solid rgba(0, 0, 0, 0.1)'
+                        : undefined,
+                    borderLeft:
+                      isPinned === 'right'
+                        ? '2px solid rgba(0, 0, 0, 0.1)'
+                        : undefined,
+                  }),
                 }}
               >
                 {header.isPlaceholder
@@ -251,7 +263,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                         }
                         minHeight={60}
                         className={cn(
-                          isPinned && 'sticky z-10 bg-white',
+                          isPinned && 'sticky z-10',
                           isPinned === 'left' &&
                             'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                           isPinned === 'right' &&
@@ -261,6 +273,17 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           ...(isPinned === 'left' && { left: pinnedPosition }),
                           ...(isPinned === 'right' && {
                             right: pinnedPosition,
+                          }),
+                          ...(isPinned && {
+                            backgroundColor: '#F5F5F5',
+                            borderRight:
+                              isPinned === 'left'
+                                ? '1px solid rgba(0, 0, 0, 0.1)'
+                                : undefined,
+                            borderLeft:
+                              isPinned === 'right'
+                                ? '1px solid rgba(0, 0, 0, 0.1)'
+                                : undefined,
                           }),
                         }}
                       />
@@ -319,7 +342,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                         isLastRow={rowIndex === emptyRows.length - 1}
                         minHeight={60}
                         className={cn(
-                          isPinned && 'sticky z-10 bg-white',
+                          isPinned && 'sticky z-10',
                           isPinned === 'left' &&
                             'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                           isPinned === 'right' &&
@@ -329,6 +352,17 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           ...(isPinned === 'left' && { left: pinnedPosition }),
                           ...(isPinned === 'right' && {
                             right: pinnedPosition,
+                          }),
+                          ...(isPinned && {
+                            backgroundColor: '#F5F5F5',
+                            borderRight:
+                              isPinned === 'left'
+                                ? '2px solid rgba(0, 0, 0, 0.1)'
+                                : undefined,
+                            borderLeft:
+                              isPinned === 'right'
+                                ? '2px solid rgba(0, 0, 0, 0.1)'
+                                : undefined,
                           }),
                         }}
                       />
