@@ -89,7 +89,8 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
           <div className="flex items-center gap-[5px]">
             <CheckedCircleIcon />
             <span>
-              Your User Weight and vote is being accounted for all items
+              Your Contribution Points (CP) and vote has been accounted for all
+              items
             </span>
           </div>
         ),
@@ -99,7 +100,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
         children: (
           <div className="flex items-center gap-[5px]">
             <CheckedCircleIcon />
-            <span>Your proposal is posted in the Contribute Page</span>
+            <span>Your proposal is now posted in the Contribute Page</span>
           </div>
         ),
       },
@@ -113,14 +114,14 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
                 <span className="font-open-sans mr-[5px] font-[800] italic text-[#64C0A5]">
                   ZERO-TO-ONE
                 </span>
-                <span>reward has been added to your User Weight</span>
+                <span>reward has been added to your CP</span>
               </p>
               <p className="text-[14px] font-[400] leading-[20px] text-black/80">
                 You have gained{' '}
                 <span className="font-[700]">
                   {isProject ? RewardWeight : '0'}
                 </span>{' '}
-                to your User Weight
+                to your CP
               </p>
             </div>
           </div>
