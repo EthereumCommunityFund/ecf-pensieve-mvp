@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
+import { useProposalProgressModal } from '@/components/biz/modal/proposalProgress/Context';
 import { InfoIcon } from '@/components/icons';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
@@ -33,6 +34,7 @@ const ProposalListItem = ({
   voteResultOfProposal,
 }: ProposalListItemProps) => {
   const router = useRouter();
+  const { openProposalProgressModal } = useProposalProgressModal();
 
   const {
     totalValidPointsOfProposal,
@@ -64,6 +66,11 @@ const ProposalListItem = ({
     router.push(`/project/pending/${projectId}/proposal/${proposal.id}`);
   }, [projectId, proposal.id, router]);
 
+  // 处理 InfoIcon 点击事件
+  const handleInfoIconClick = useCallback(() => {
+    openProposalProgressModal();
+  }, [openProposalProgressModal]);
+
   return (
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
       {/* leading */}
@@ -91,8 +98,14 @@ const ProposalListItem = ({
           <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
             {formattedPercentageOfProposal}
           </span>
-          {/* TODO: open progress info modal */}
-          <InfoIcon size={20} className="opacity-30" />
+          <button
+            onClick={handleInfoIconClick}
+            className="-m-1 cursor-pointer rounded-sm p-1 opacity-50 transition-opacity duration-200 hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            aria-label="View proposal progress information"
+            title="Click to learn more about proposal progress"
+          >
+            <InfoIcon size={20} />
+          </button>
         </div>
         <p className="flex gap-[10px] text-[14px] text-black">
           <span className="font-[600] text-black/60">

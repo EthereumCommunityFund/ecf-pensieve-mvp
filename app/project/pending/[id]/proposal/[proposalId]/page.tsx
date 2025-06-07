@@ -4,12 +4,13 @@ import { cn, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useUserWeightModal } from '@/components/biz/modal/userWeightCard/Context';
+import UserWeightCard from '@/components/biz/modal/userWeightCard/UserWeightCard';
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import { useProposalDetailContext } from '@/components/pages/project/proposal/detail/context/proposalDetailContext';
 import ProposalDetailCard from '@/components/pages/project/proposal/detail/ProposalDetailCard';
 import ProposalDetails from '@/components/pages/project/proposal/detail/ProposalDetails';
-import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeightCard';
 import { useAuth } from '@/context/AuthContext';
 import { IProposalWithVotes } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
@@ -19,9 +20,17 @@ const ProposalPage = () => {
   const router = useRouter();
   const { profile } = useAuth();
   const userId = profile?.userId;
+  const { openUserWeightModal, setUserWeight } = useUserWeightModal();
 
   const { project, proposal, proposals, isProjectFetched, isProposalFetched } =
     useProposalDetailContext();
+
+  // 设置用户权重到 Context
+  useEffect(() => {
+    if (profile?.weight) {
+      setUserWeight(Number(profile.weight));
+    }
+  }, [profile?.weight, setUserWeight]);
 
   useEffect(() => {
     if (project && project?.isPublished) {
@@ -104,7 +113,10 @@ const ProposalPage = () => {
 
       {profile && (
         <div className="tablet:block mobile:block mx-[10px] mt-[10px] hidden">
-          <UserWeightCard weight={Number(profile.weight)} />
+          <UserWeightCard
+            weight={Number(profile.weight)}
+            onInfoClick={openUserWeightModal}
+          />
         </div>
       )}
 
@@ -139,7 +151,10 @@ const ProposalPage = () => {
         >
           {profile && (
             <div className="tablet:hidden mobile:hidden">
-              <UserWeightCard weight={Number(profile.weight)} />
+              <UserWeightCard
+                weight={Number(profile.weight)}
+                onInfoClick={openUserWeightModal}
+              />
             </div>
           )}
           <SubmitProposalCard

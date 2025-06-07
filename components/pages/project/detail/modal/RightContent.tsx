@@ -4,6 +4,7 @@ import { cn } from '@heroui/react';
 import { FC, memo, useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
+import { useUserWeightModal } from '@/components/biz/modal/userWeightCard/Context';
 import { InfoIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -23,6 +24,7 @@ interface RightContentProps {
 const RightContent: FC<RightContentProps> = memo(
   ({ onSubmitEntry, hideSubmitEntry, showRewardCard }) => {
     const { profile } = useAuth();
+    const { openUserWeightModal, setUserWeight } = useUserWeightModal();
     const { displayProposalDataOfKey, currentItemKey } =
       useProjectDetailContext();
 
@@ -47,6 +49,16 @@ const RightContent: FC<RightContentProps> = memo(
       return userWeight > displayedItemWeight;
     }, [userWeight, displayedItemWeight]);
 
+    // 处理 InfoIcon 点击事件
+    const handleInfoIconClick = () => {
+      // 设置当前用户的权重值
+      if (profile?.weight !== undefined) {
+        setUserWeight(Number(profile.weight));
+      }
+      // 打开用户权重说明模态框
+      openUserWeightModal();
+    };
+
     return (
       <div className="tablet:pt-0 mobile:pt-0 flex flex-col gap-2.5 p-5">
         {/* Your Weight Section */}
@@ -57,9 +69,14 @@ const RightContent: FC<RightContentProps> = memo(
               <span className="font-mona text-[18px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
                 Your Weight
               </span>
-              <div className="opacity-50">
+              <button
+                onClick={handleInfoIconClick}
+                className="-m-1 cursor-pointer rounded-sm p-1 opacity-50 transition-opacity duration-200 hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                aria-label="View weight information"
+                title="Click to learn more about your weight"
+              >
                 <InfoIcon size={20} />
-              </div>
+              </button>
             </div>
             <span className="font-mona text-[18px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
               {formatWeight(userWeight)}
