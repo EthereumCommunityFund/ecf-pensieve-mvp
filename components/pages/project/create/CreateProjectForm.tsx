@@ -24,6 +24,7 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { IItemCategoryEnum } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+import { WarningDiamondIcon } from '@/components/icons';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -587,9 +588,11 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         <div
           className={cn('mobile:gap-[20px] flex flex-1 flex-col gap-[40px]')}
         >
-          <div className="mobile:mx-[10px] rounded-[10px] border border-black/10 bg-[rgba(235,235,235,0.80)] px-[10px] py-[5px] backdrop-blur-[5px]">
-            <p className="text-[16px] font-[600] leading-[1.6]">
-              Note: Once you submit your proposal, you cannot edit your inputs.
+          <div className="mobile:mx-[10px] mobile:p-[10px] flex items-center gap-[10px] rounded-[10px] border border-black/10 bg-[rgba(235,235,235,0.80)] p-[20px] backdrop-blur-[5px]">
+            <WarningDiamondIcon className="shrink-0" />
+            <p className="text-[16px] leading-[1.6]">
+              <span className="font-[700]">Note: {` `}</span>
+              Once you submit your proposal, you cannot edit your inputs.
             </p>
           </div>
           <div className={cn(showSubmittingPage ? 'hidden' : '')}>
