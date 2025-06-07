@@ -33,7 +33,7 @@ const UserWeightCard: FC<IProps> = ({ weight = '00' }) => {
             isIconOnly
             size="sm"
             onPress={() => setIsOpen(true)}
-            className="size-[20px] min-w-0 hover:bg-transparent"
+            className="size-[20px] min-w-0 opacity-30 hover:bg-transparent"
           >
             <InfoIcon size={20} />
           </Button>
