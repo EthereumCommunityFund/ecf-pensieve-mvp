@@ -2,7 +2,6 @@ import { X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { FC, useCallback, useState } from 'react';
 
-import { InfoIcon } from '@/components/icons';
 import {
   Button,
   CommonModalHeader,
@@ -10,6 +9,7 @@ import {
   ModalBody,
   ModalContent,
 } from '@/components/base';
+import { InfoIcon } from '@/components/icons';
 
 interface IProps {
   weight?: string | number;
@@ -24,10 +24,10 @@ const UserWeightCard: FC<IProps> = ({ weight = '00' }) => {
 
   return (
     <>
-      <div className="mobile:p-[20px] flex w-full items-center justify-between rounded-[10px] border border-black/10 bg-white p-[14px]">
+      <div className="flex w-full flex-col justify-between gap-[10px] rounded-[10px] border border-black/30 bg-[#EBEBEB] p-[14px]">
         <div className="flex items-center justify-start gap-[5px]">
           <p className="font-mona text-[18px] font-[600] leading-[25px] text-black ">
-            Your Weight
+            Your Contribution Points
           </p>
           <Button
             isIconOnly
