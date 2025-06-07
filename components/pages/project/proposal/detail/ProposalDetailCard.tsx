@@ -1,6 +1,7 @@
 import { cn, Skeleton } from '@heroui/react';
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
+import { useProposalProgressModal } from '@/components/biz/modal/proposalProgress/Context';
 import { InfoIcon } from '@/components/icons';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
@@ -25,6 +26,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
   const { proposal, projectId, proposalIndex, leadingProposalId } = props;
 
   const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
+  const { openProposalProgressModal } = useProposalProgressModal();
 
   const {
     percentageOfProposal,
@@ -57,7 +59,10 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       : '0x000...00000';
   }, [proposal]);
 
-  const progressPercentage = 48;
+  // Handle InfoIcon click event
+  const handleInfoIconClick = useCallback(() => {
+    openProposalProgressModal();
+  }, [openProposalProgressModal]);
 
   if (!proposal) {
     return <ProposalDetailCardSkeleton />;
@@ -110,7 +115,14 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
               <span className="font-mona text-[18px] font-[600] leading-[25px] text-black">
                 {formattedPercentageOfProposal}
               </span>
-              <InfoIcon size={20} className="opacity-30" />
+              <button
+                onClick={handleInfoIconClick}
+                className="-m-1 cursor-pointer rounded-sm p-1 opacity-30 transition-opacity duration-200 hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                aria-label="View proposal progress information"
+                title="Click to learn more about proposal progress"
+              >
+                <InfoIcon size={20} />
+              </button>
             </div>
             {/* Total Supported */}
             <div className="flex items-center gap-[10px] text-[14px] font-[600] leading-[19px] text-black/50">
