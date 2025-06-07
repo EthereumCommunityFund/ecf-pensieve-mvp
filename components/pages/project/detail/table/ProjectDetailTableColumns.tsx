@@ -324,5 +324,5 @@ export const useProjectTableColumns = ({
     const actionColumns = [actionsColumn];
 
     return [...baseColumns, ...metricsColumns, ...actionColumns];
-  }, [columnHelper, isPageExpanded, showMetrics]);
+  }, [columnHelper, isPageExpanded, showMetrics, category]);
 };
