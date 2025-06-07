@@ -35,12 +35,14 @@ export interface ITableMetaOfProjectDetail {
     category: IItemSubCategoryEnum,
     columnId: string,
   ) => 'left' | 'right' | false;
+  showSubmitterModal?: (submitter: IProposalCreator, validatedAt: Date) => void;
 }
 
 export interface ITableMetaOfDisplayed {
   expandedRows: Record<string, boolean>;
   toggleRowExpanded: (key: string) => void;
   showReferenceModal?: (ref: string, key: IPocItemKey, reason: string) => void;
+  showSubmitterModal?: (submitter: IProposalCreator, validatedAt: Date) => void;
 }
 
 export interface ITableMetaOfSubmissionQueue {
@@ -68,6 +70,7 @@ export interface ITableMetaOfSubmissionQueue {
   showRowIsLeading?: boolean;
   inActionKeyMap?: Partial<Record<IPocItemKey, boolean>>;
   inActionItemProposalIdMap?: Record<number, boolean>;
+  showSubmitterModal?: (submitter: IProposalCreator, validatedAt: Date) => void;
 }
 
 export interface IProjectTableRowData extends IKeyItemDataForTable {
@@ -118,4 +121,11 @@ export interface IConsensusLogRowData {
     change: string;
   };
   isExpanded?: boolean;
+}
+
+export interface IProposalCreator {
+  name: string;
+  avatarUrl: string | null;
+  userId: string;
+  address: string;
 }

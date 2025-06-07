@@ -11,6 +11,7 @@ import ContributeButton from '@/components/pages/project/detail/ContributeButton
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
+import SubmitterModal from '@/components/pages/project/detail/modal/Submitter';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
@@ -45,6 +46,11 @@ const ProjectPage = () => {
     currentRefValue,
     currentItemReason,
     openReferenceModal,
+    isSubmitterModalOpen,
+    selectedSubmitter,
+    selectedValidatedAt,
+    showSubmitterModal: handleOpenSubmitterModal,
+    closeSubmitterModal: handleCloseSubmitterModal,
   } = useProjectDetailContext();
 
   const [modalContentType, setModalContentType] =
@@ -218,6 +224,13 @@ const ProjectPage = () => {
         onClose={handleCloseMetricModal}
         metricName={selectedMetric}
         title={`About ${selectedMetric}`}
+      />
+
+      <SubmitterModal
+        isOpen={isSubmitterModalOpen}
+        onClose={handleCloseSubmitterModal}
+        submitter={selectedSubmitter}
+        validatedAt={selectedValidatedAt}
       />
     </div>
   );

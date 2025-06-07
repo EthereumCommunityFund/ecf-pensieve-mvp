@@ -17,7 +17,6 @@ import { trpc } from '@/lib/trpc/client';
 import {
   ILeadingProposalHistory,
   ILeadingProposals,
-  IProfileCreator,
   IProject,
   IProposal,
   IProposalsByProjectIdAndKey,
@@ -26,7 +25,7 @@ import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { calculateItemStatusFields } from '@/utils/item';
 
-import { IProjectTableRowData } from '../detail/types';
+import { IProjectTableRowData, IProposalCreator } from '../detail/types';
 
 // Context 类型定义
 interface ProjectDetailContextType {
@@ -103,9 +102,18 @@ interface ProjectDetailContextType {
   currentRefKey: IPocItemKey | null;
   currentItemReason: string;
 
+  // SubmitterModal 状态管理
+  isSubmitterModalOpen: boolean;
+  selectedSubmitter: IProposalCreator | null;
+  selectedValidatedAt: Date | null;
+
   // 引用模态框操作
   showReferenceModal: (ref: string, key: IPocItemKey, reason: string) => void;
   closeReferenceModal: () => void;
+
+  // SubmitterModal 操作
+  showSubmitterModal: (submitter: IProposalCreator, validatedAt: Date) => void;
+  closeSubmitterModal: () => void;
 }
 
 // Context 默认值
@@ -173,9 +181,18 @@ const createDefaultContext = (): ProjectDetailContextType => ({
   currentRefKey: null,
   currentItemReason: '',
 
+  // SubmitterModal 状态管理
+  isSubmitterModalOpen: false,
+  selectedSubmitter: null,
+  selectedValidatedAt: null,
+
   // 引用模态框操作
   showReferenceModal: () => {},
   closeReferenceModal: () => {},
+
+  // SubmitterModal 操作
+  showSubmitterModal: () => {},
+  closeSubmitterModal: () => {},
 });
 
 // 创建 Context
@@ -208,6 +225,14 @@ export const ProjectDetailProvider = ({
   const [inActionItemProposalIdMap, setInActionItemProposalIdMap] = useState<
     Record<number, boolean>
   >({});
+
+  // SubmitterModal 状态管理
+  const [isSubmitterModalOpen, setIsSubmitterModalOpen] = useState(false);
+  const [selectedSubmitter, setSelectedSubmitter] =
+    useState<IProposalCreator | null>(null);
+  const [selectedValidatedAt, setSelectedValidatedAt] = useState<Date | null>(
+    null,
+  );
 
   // 项目数据查询
   const {
@@ -336,7 +361,7 @@ export const ProjectDetailProvider = ({
         property: key!,
         input: value,
         reference: ref ? { key, value: ref } : null,
-        submitter: creator as IProfileCreator,
+        submitter: creator as IProposalCreator,
         createdAt: createdAt,
         projectId: projectId!,
         proposalId: Number(id),
@@ -461,7 +486,7 @@ export const ProjectDetailProvider = ({
           const userId =
             typeof voteRecord.creator === 'string'
               ? voteRecord.creator
-              : (voteRecord.creator as IProfileCreator).userId;
+              : (voteRecord.creator as IProposalCreator).userId;
           voterMap.set(
             userId,
             (voterMap.get(userId) || 0) + Number(voteRecord.weight),
@@ -586,6 +611,21 @@ export const ProjectDetailProvider = ({
     [],
   );
 
+  const showSubmitterModal = useCallback(
+    (submitter: IProposalCreator, validatedAt: Date) => {
+      setSelectedSubmitter(submitter);
+      setSelectedValidatedAt(validatedAt);
+      setIsSubmitterModalOpen(true);
+    },
+    [],
+  );
+
+  const closeSubmitterModal = useCallback(() => {
+    setSelectedSubmitter(null);
+    setSelectedValidatedAt(null);
+    setIsSubmitterModalOpen(false);
+  }, []);
+
   // 关闭引用模态框
   const closeReferenceModal = useCallback(() => {
     setOpenReferenceModal(false);
@@ -659,9 +699,18 @@ export const ProjectDetailProvider = ({
       currentRefKey,
       currentItemReason,
 
+      // SubmitterModal 状态管理
+      isSubmitterModalOpen,
+      selectedSubmitter,
+      selectedValidatedAt,
+
       // 引用模态框操作
       showReferenceModal,
       closeReferenceModal,
+
+      // SubmitterModal 操作
+      showSubmitterModal,
+      closeSubmitterModal,
     }),
     [
       // 基础项目数据依赖
@@ -727,9 +776,18 @@ export const ProjectDetailProvider = ({
       currentRefKey,
       currentItemReason,
 
+      // SubmitterModal 状态管理依赖
+      isSubmitterModalOpen,
+      selectedSubmitter,
+      selectedValidatedAt,
+
       // 引用模态框操作依赖
       showReferenceModal,
       closeReferenceModal,
+
+      // SubmitterModal 操作依赖
+      showSubmitterModal,
+      closeSubmitterModal,
     ],
   );
 

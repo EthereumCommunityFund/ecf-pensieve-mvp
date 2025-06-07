@@ -79,6 +79,7 @@ const Displayed: FC<DisplayedProps> = ({
     showRowOverTaken,
     isProposalsByKeyLoading,
     isProposalsByKeyFetched,
+    showSubmitterModal,
   } = useProjectDetailContext();
 
   // 展开行状态管理
@@ -112,6 +113,7 @@ const Displayed: FC<DisplayedProps> = ({
         showReferenceModal,
         expandedRows,
         toggleRowExpanded,
+        showSubmitterModal,
       }) as ITableMetaOfSubmissionQueue,
     [
       project,
@@ -124,6 +126,7 @@ const Displayed: FC<DisplayedProps> = ({
       showReferenceModal,
       expandedRows,
       toggleRowExpanded,
+      showSubmitterModal,
     ],
   );
 

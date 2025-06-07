@@ -12,10 +12,11 @@ import {
   GitPullBlueIcon,
 } from '@/components/icons';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
+import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
-import { IProfileCreator, IProject, IProposal } from '@/types';
+import { IProject, IProposal } from '@/types';
 import {
   IEssentialItemKey,
   IFormDisplayType,
@@ -580,8 +581,9 @@ export interface SubmitterColHeaderProps extends BaseHeaderProps {
 export interface SubmitterColCellProps extends BaseCellProps {
   item: IKeyItemDataForTable;
   itemConfig: IItemConfig<IPocItemKey>;
-  submitter: IProfileCreator;
+  submitter: IProposalCreator;
   data: Date;
+  showSubmitterModal?: (submitter: IProposalCreator, validatedAt: Date) => void;
 }
 
 const SubmitterHeader = ({
@@ -640,7 +642,12 @@ const OptimizedAvatar = memo(
 OptimizedAvatar.displayName = 'OptimizedAvatar';
 
 const SubmitterCell = memo(
-  ({ submitter, item, itemConfig }: SubmitterColCellProps) => {
+  ({
+    submitter,
+    item,
+    itemConfig,
+    showSubmitterModal,
+  }: SubmitterColCellProps) => {
     const isNonEssential = !itemConfig?.isEssential;
     const isValueEmpty = isInputValueEmpty(item?.input);
 
@@ -655,8 +662,18 @@ const SubmitterCell = memo(
     const data = item?.createdAt;
     const avatarSrc = submitter.avatarUrl ?? '/images/user/avatar_p.png';
 
+    const handleSubmitterClick = () => {
+      showSubmitterModal?.(submitter, data);
+    };
+
     return (
-      <div className="flex items-center gap-[5px]">
+      <div
+        className={cn(
+          'flex items-center gap-[5px]',
+          showSubmitterModal ? 'cursor-pointer' : 'cursor-default',
+        )}
+        onClick={handleSubmitterClick}
+      >
         <div className="size-[24px] rounded-full bg-[#D9D9D9]">
           <OptimizedAvatar
             src={avatarSrc}

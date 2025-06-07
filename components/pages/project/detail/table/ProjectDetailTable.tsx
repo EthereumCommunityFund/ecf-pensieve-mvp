@@ -38,7 +38,8 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   onOpenModal,
   onMetricClick,
 }) => {
-  const { project, showReferenceModal } = useProjectDetailContext();
+  const { project, showReferenceModal, showSubmitterModal } =
+    useProjectDetailContext();
 
   // Custom hooks for data and state management
   const { tableData, emptyItemsCounts } = useProjectTableData();
@@ -72,6 +73,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       onMetricClick,
       toggleColumnPinning,
       isColumnPinned,
+      showSubmitterModal,
     }),
     [
       expandedRows,
@@ -82,6 +84,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
       onMetricClick,
       toggleColumnPinning,
       isColumnPinned,
+      showSubmitterModal,
     ],
   );
 
