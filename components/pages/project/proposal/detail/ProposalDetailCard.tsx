@@ -175,8 +175,8 @@ const ProposalDetailCardSkeleton = () => {
       <div className="mobile:w-full flex flex-1 flex-col gap-[10px]">
         <div className="flex items-center gap-[10px]">
           {/* Leading and Voted labels skeleton - sometimes empty */}
-          <Skeleton className="h-[24px] w-[80px] rounded-[4px]" />
-          <Skeleton className="h-[24px] w-[60px] rounded-[4px]" />
+          <Skeleton className="h-[30px] w-[160px] rounded-[4px]" />
+          {/* <Skeleton className="h-[24px] w-[60px] rounded-[4px]" /> */}
         </div>
         {/* title and date */}
         <div className="flex items-center gap-[10px]">
@@ -198,7 +198,7 @@ const ProposalDetailCardSkeleton = () => {
             {/* Percentage */}
             <div className="flex items-center gap-[5px]">
               <Skeleton className="h-[25px] w-[50px]" />
-              <Skeleton className="size-[20px] rounded-full" />
+              <Skeleton className="size-[32px] rounded-sm" />
             </div>
             {/* Total Supported */}
             <div className="flex items-center gap-[10px]">
