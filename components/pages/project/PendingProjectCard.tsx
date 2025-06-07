@@ -106,6 +106,7 @@ const PendingProjectCard = ({
     totalValidPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
+    isProposalValidated,
   } = leadingProposalResult;
 
   const leadingProposal = useMemo(() => {
@@ -169,8 +170,12 @@ const PendingProjectCard = ({
               project.proposals.length > 0 &&
               leadingProposalId && (
                 <p className="mt-[5px]">
-                  Leading:{' '}
-                  <span className="text-black/60">
+                  {isProposalValidated ? 'Winning Proposer' : 'Leading'}:{' '}
+                  <span
+                    className={cn(
+                      isProposalValidated ? 'text-[#64C0A5]' : 'text-black/60',
+                    )}
+                  >
                     @{leadingProposalCreator}
                   </span>
                 </p>
