@@ -28,6 +28,7 @@ export interface IVoteResultOfProposal {
   formattedPercentageOfProposal: string;
   isProposalValidated: boolean;
   isUserVotedInProposal: boolean;
+  latestVotingEndedAt: Date | null;
 }
 
 export interface IVoteResultOfItem {
@@ -80,6 +81,7 @@ const DefaultProposalResult: IVoteResultOfProposal = {
   formattedPercentageOfProposal: '0%',
   isProposalValidated: false,
   isUserVotedInProposal: false,
+  latestVotingEndedAt: null,
 };
 
 const ProposalVoteUtils = {
@@ -155,6 +157,20 @@ const ProposalVoteUtils = {
   ): IVoteResultOfProposal => {
     const { proposalId, votesOfProposal = [], userId } = params;
 
+    const latestVotingEndedAt = votesOfProposal.reduce(
+      (acc, vote) => {
+        const createdAt = vote.createdAt || null;
+        if (!acc) {
+          acc = createdAt;
+        }
+        if (createdAt && createdAt > acc) {
+          acc = createdAt;
+        }
+        return acc;
+      },
+      null as Date | null,
+    );
+
     const isUserVotedInProposal = userId
       ? votesOfProposal.some((vote) => vote.creator?.userId === userId)
       : false;
@@ -225,6 +241,7 @@ const ProposalVoteUtils = {
       formattedPercentageOfProposal,
       isProposalValidated,
       isUserVotedInProposal,
+      latestVotingEndedAt,
     };
   },
   getVoteResultOfProject: (

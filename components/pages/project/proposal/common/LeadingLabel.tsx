@@ -1,7 +1,11 @@
-const ActiveLeadingLabel = () => {
+const ActiveLeadingLabel = ({
+  isProposalValidated,
+}: {
+  isProposalValidated: boolean;
+}) => {
   return (
     <div className="flex shrink-0 items-center gap-[5px] rounded-[5px] border border-[rgba(104,204,174,0.40)] bg-[rgba(104,204,174,0.10)] px-[8px] py-[4px] text-[14px] font-[400] leading-[20px] text-[#40A486]">
-      <span>Leading Proposal</span>
+      <span>{isProposalValidated ? 'Winning' : 'Leading'} Proposal</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="18"

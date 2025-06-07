@@ -77,6 +77,8 @@ const ProjectPage = () => {
     leadingProposalResult,
     voteResultOfProposalMap,
     leadingProposal,
+    canBePublished,
+    votesOfProposalMap,
   } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({
       projectId: Number(projectId),
@@ -85,6 +87,17 @@ const ProjectPage = () => {
       userId,
     });
   }, [projectId, votesOfProject, proposals, userId]);
+
+  const voteResultOfLeadingProposal = useMemo(() => {
+    if (!leadingProposal) {
+      return null;
+    }
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: leadingProposal.id,
+      votesOfProposal: votesOfProposalMap[leadingProposal.id],
+      userId,
+    });
+  }, [leadingProposal, votesOfProposalMap, userId]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/pending/${projectId}/proposal/create`);
@@ -108,6 +121,7 @@ const ProjectPage = () => {
         project={project as IProject}
         proposals={proposals}
         leadingProposal={leadingProposal}
+        canBePublished={canBePublished}
       />
 
       {/* Proposal list */}
@@ -143,7 +157,13 @@ const ProjectPage = () => {
           />
         </div>
 
-        <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
+        <SubmitProposalCard
+          onSubmitProposal={onSubmitProposal}
+          canBePublished={canBePublished}
+          latestVotingEndedAt={
+            voteResultOfLeadingProposal?.latestVotingEndedAt || null
+          }
+        />
       </div>
     </div>
   );
@@ -155,10 +175,12 @@ const ProjectCard = ({
   project,
   proposals,
   leadingProposal,
+  canBePublished,
 }: {
   project?: IProject;
   proposals?: IProposal[];
   leadingProposal?: IProposal;
+  canBePublished?: boolean;
 }) => {
   if (!project) {
     return (
@@ -239,7 +261,8 @@ const ProjectCard = ({
           {!!leadingProposal && (
             <>
               <span className="text-black/20">|</span>
-              <span>Leading:</span>
+              {/* when reach 100%, use `winner` */}
+              <span>{canBePublished ? 'Winner' : 'Leading'}:</span>
               <span className="text-black/60">
                 @{leadingProposal.creator.name}
               </span>

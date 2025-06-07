@@ -18,6 +18,7 @@ export { CopyIcon } from './Copy';
 export { default as FileIcon } from './File';
 export { default as GaugeIcon } from './Gauge';
 export { GitPullBlueIcon, GitPullDarkIcon, GitPullLightIcon } from './GitPull';
+export { default as HourglassMediumIcon } from './HourglassMedium';
 export { default as InfoIcon } from './Info';
 export { default as LinkIcon } from './Link';
 export { default as PaperClipIcon } from './PaperClip';

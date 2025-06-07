@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
+import { InfoIcon } from '@/components/icons';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
   ESSENTIAL_ITEM_WEIGHT_SUM,
 } from '@/lib/constants';
 import { IProposal } from '@/types';
 import { IVoteResultOfProposal } from '@/utils/proposal';
-import { InfoIcon } from '@/components/icons';
 
 import ProgressLine from '../../ProgressLine';
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
@@ -40,6 +40,7 @@ const ProposalListItem = ({
     totalValidQuorumOfProposal,
     formattedPercentageOfProposal,
     isUserVotedInProposal,
+    isProposalValidated,
   } = voteResultOfProposal || {};
 
   const formattedDate = useMemo(() => {
@@ -67,7 +68,11 @@ const ProposalListItem = ({
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
       {/* leading */}
       <div className="flex items-center gap-[10px]">
-        {isLeading && <ActiveLeadingLabel />}
+        {isLeading && (
+          <ActiveLeadingLabel
+            isProposalValidated={isProposalValidated || false}
+          />
+        )}
         {isUserVotedInProposal && <VotedLabel />}
       </div>
 
@@ -86,10 +91,13 @@ const ProposalListItem = ({
           <span className="font-mona text-[18px] font-[500] leading-[25px] text-black">
             {formattedPercentageOfProposal}
           </span>
-          <InfoIcon size={20} />
+          {/* TODO: open progress info modal */}
+          <InfoIcon size={20} className="opacity-30" />
         </div>
         <p className="flex gap-[10px] text-[14px] text-black">
-          <span className="font-[600]">Total Points Supported:</span>
+          <span className="font-[600] text-black/60">
+            Total Points Supported:
+          </span>
           <span className="text-black/50">
             {totalSupportedUserWeightOfProposal}
           </span>
@@ -97,7 +105,10 @@ const ProposalListItem = ({
       </div>
 
       {/* progress */}
-      <ProgressLine percentage={formattedPercentageOfProposal} />
+      <ProgressLine
+        percentage={formattedPercentageOfProposal}
+        isProposalValidated={isProposalValidated}
+      />
 
       {/* vote info */}
       <div className="flex flex-col gap-[10px] text-[14px] font-[600] leading-[19px] text-black">

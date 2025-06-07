@@ -18,6 +18,7 @@ const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
   const router = useRouter();
   const { profile } = useAuth();
+  const userId = profile?.userId;
 
   const { project, proposal, proposals, isProjectFetched, isProposalFetched } =
     useProposalDetailContext();
@@ -39,7 +40,12 @@ const ProposalPage = () => {
     setIsFiltered((pre) => !pre);
   }, []);
 
-  const { leadingProposalId } = useMemo(() => {
+  const {
+    leadingProposalId,
+    canBePublished,
+    leadingProposal,
+    votesOfProposalMap,
+  } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({
       projectId: Number(projectId),
       proposals: proposals || [],
@@ -49,6 +55,17 @@ const ProposalPage = () => {
       userId: profile?.userId,
     });
   }, [proposals, projectId, profile?.userId, project?.proposals]);
+
+  const voteResultOfLeadingProposal = useMemo(() => {
+    if (!leadingProposal) {
+      return null;
+    }
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: leadingProposal.id,
+      votesOfProposal: votesOfProposalMap[leadingProposal.id],
+      userId,
+    });
+  }, [leadingProposal, votesOfProposalMap, userId]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/pending/${projectId}/proposal/create`);
@@ -128,6 +145,10 @@ const ProposalPage = () => {
           <SubmitProposalCard
             onSubmitProposal={onSubmitProposal}
             showFullOnTablet={true}
+            canBePublished={canBePublished}
+            latestVotingEndedAt={
+              voteResultOfLeadingProposal?.latestVotingEndedAt || null
+            }
           />
         </div>
       </div>

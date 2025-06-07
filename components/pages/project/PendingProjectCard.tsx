@@ -4,6 +4,8 @@ import { cn, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { Button } from '@/components/base';
+import HourglassMediumIcon from '@/components/icons/HourglassMedium';
 import { useAuth } from '@/context/AuthContext';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
@@ -228,39 +230,32 @@ const ProgressCard = ({
         </span>
       </div>
 
-      <div className="flex h-[10px] flex-1 items-center justify-start bg-[#D7D7D7] px-px">
-        <div
-          className="h-[7px] bg-[#64C0A5]"
-          style={{ width: formattedPercentageOfProposal }}
-        ></div>
-      </div>
+      <ProgressLine
+        percentage={formattedPercentageOfProposal}
+        isProposalValidated={canBePublished}
+      />
 
       <div className="flex items-center justify-between gap-[10px]">
         <div className="flex items-center gap-[4px]">
-          <span className="font-[600]">Supported</span>
+          <span>Supported</span>
           <span className="text-black/60">
             {totalSupportedUserWeightOfProposal}
           </span>
         </div>
         <div className="flex items-center gap-[4px]">
-          <span className="font-[600]">Quorum</span>
+          <span>Quorum</span>
           <span className="text-black/60">
             {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
           </span>
         </div>
       </div>
 
-      {/* TODO set to project page */}
-      <Link
-        href={`/project/pending/${projectId}`}
-        className="flex cursor-pointer items-center justify-between rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[10px] py-[6px] hover:bg-[rgba(0,0,0,0.1)]"
-      >
-        <span className="text-[13px] leading-[18px] text-black">
-          {/* View Published Page */}
-          Waiting to be published
+      <Button className="flex h-[40px] items-center justify-between gap-[4px] rounded-[5px] border-none bg-black/5 px-[10px] py-[6px]">
+        <span className="text-[13px] font-[400] leading-[18px] text-black">
+          Publishing...
         </span>
-        {/* <ArrowUpRightIcon /> */}
-      </Link>
+        <HourglassMediumIcon />
+      </Button>
     </div>
   ) : (
     <div
@@ -278,7 +273,10 @@ const ProgressCard = ({
         </span>
       </div>
 
-      <ProgressLine percentage={formattedPercentageOfProposal} />
+      <ProgressLine
+        percentage={formattedPercentageOfProposal}
+        isProposalValidated={canBePublished}
+      />
 
       <div className="flex items-center justify-between">
         <span className="font-[600]">Supported</span>
