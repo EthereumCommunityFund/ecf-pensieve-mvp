@@ -74,7 +74,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
               src={project.logoUrl}
               as={NextImage}
               alt={project.name}
-              className="rounded-[10px] object-cover"
+              className="rounded-none object-cover"
               width={100}
               height={100}
             />
@@ -85,7 +85,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
               src={project.logoUrl}
               as={NextImage}
               alt={project.name}
-              className="rounded-[5px] object-cover"
+              className="rounded-none object-cover"
               width={60}
               height={60}
             />
