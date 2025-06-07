@@ -1,6 +1,6 @@
 import { X } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   Button,
@@ -12,15 +12,22 @@ import {
 import { InfoIcon } from '@/components/icons';
 
 interface IProps {
-  weight?: string | number;
+  weight?: number;
 }
 
-const UserWeightCard: FC<IProps> = ({ weight = '00' }) => {
+const UserWeightCard: FC<IProps> = ({ weight = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const onClose = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  const displayWeight = useMemo(() => {
+    if (weight > 9999) {
+      return `${(weight / 1000).toFixed(2).padStart(2, '0')}K`;
+    }
+    return weight;
+  }, [weight]);
 
   return (
     <>
@@ -39,8 +46,8 @@ const UserWeightCard: FC<IProps> = ({ weight = '00' }) => {
           </Button>
         </div>
 
-        <div className="font-mona text-[18px] font-[600] leading-[25px] text-black ">
-          {weight}
+        <div className="font-mona text-[20px] font-[600] leading-[28px] text-black ">
+          {displayWeight}
         </div>
       </div>
 
