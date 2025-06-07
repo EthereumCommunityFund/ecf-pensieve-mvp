@@ -70,7 +70,7 @@ const ActionSectionHeader: FC<IProps> = ({
             </defs>
           </svg>
         </Button>
-        <Button
+        {/* <Button
           isIconOnly
           color={isFiltered ? 'primary' : 'secondary'}
           className={cn('p-[5px] transition-colors duration-300')}
@@ -114,7 +114,7 @@ const ActionSectionHeader: FC<IProps> = ({
               </clipPath>
             </defs>
           </svg>
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
