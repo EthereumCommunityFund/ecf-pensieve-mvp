@@ -81,7 +81,8 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 180,
+      size: 210,
+      minSize: 210,
       cell: (info) => {
         const { key } = info.row.original;
 
@@ -224,7 +225,7 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 180,
+      size: 240,
       cell: (info) => {
         const accountability = info.getValue();
         const { onMetricClick } = info.table.options

@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 export interface TableHeaderProps {
   children: ReactNode;
   width?: number | string;
+  isFirst?: boolean;
   isLast?: boolean;
   className?: string;
   style?: React.CSSProperties;

@@ -86,10 +86,12 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                 key={header.id}
                 width={header.getSize()}
                 isLast={index === headerGroup.headers.length - 1}
+                isContainerBordered={true}
                 className={cn(
                   isPinned && 'sticky z-10',
                   isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                   isPinned === 'right' && 'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                  'border-b border-t',
                 )}
                 style={{
                   ...(isPinned === 'left' && { left: pinnedPosition }),
@@ -99,11 +101,11 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     backdropFilter: 'blur(24px)',
                     borderRight:
                       isPinned === 'left'
-                        ? '2px solid rgba(0, 0, 0, 0.1)'
+                        ? '1px solid rgba(0, 0, 0, 0.1)'
                         : undefined,
                     borderLeft:
                       isPinned === 'right'
-                        ? '2px solid rgba(0, 0, 0, 0.1)'
+                        ? '1px solid rgba(0, 0, 0, 0.1)'
                         : undefined,
                   }),
                 }}
@@ -124,7 +126,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   if (showSkeleton || noDataForThisTable) {
     return (
-      <PageTableContainer className="overflow-x-auto">
+      <PageTableContainer className="overflow-x-auto rounded-b-[10px] border border-black/10 bg-white">
         <table className="box-border w-full table-fixed border-separate border-spacing-0">
           {colGroupDefinition}
           {tableHeaders}
@@ -149,6 +151,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                       width={column.getSize()}
                       isLast={cellIndex === table.getAllColumns().length - 1}
                       isLastRow={rowIndex === 2}
+                      isContainerBordered={true}
                       minHeight={60}
                       skeletonHeight={20}
                       className={cn(
@@ -198,7 +201,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   );
 
   return (
-    <PageTableContainer className="overflow-x-auto">
+    <PageTableContainer className="mt-px overflow-x-auto rounded-b-[10px] border border-black/10 bg-white">
       <table className="box-border w-full table-fixed border-separate border-spacing-0">
         {colGroupDefinition}
         {tableHeaders}
@@ -261,6 +264,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           !AllItemConfig[row.original.key as IEssentialItemKey]
                             ?.showExpand
                         }
+                        isContainerBordered={true}
                         minHeight={60}
                         className={cn(
                           isPinned && 'sticky z-10',
@@ -340,6 +344,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                         width={cell.column.getSize()}
                         isLast={cellIndex === row.getVisibleCells().length - 1}
                         isLastRow={rowIndex === emptyRows.length - 1}
+                        isContainerBordered={true}
                         minHeight={60}
                         className={cn(
                           isPinned && 'sticky z-10',

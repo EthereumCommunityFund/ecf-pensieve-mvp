@@ -1,8 +1,7 @@
 'use client';
 
-import { Skeleton } from '@heroui/react';
+import { cn, Skeleton } from '@heroui/react';
 import { ReactNode } from 'react';
-import { cn } from '@heroui/react';
 
 export interface TableCellSkeletonProps {
   width?: number | string;
@@ -15,6 +14,8 @@ export interface TableCellSkeletonProps {
   skeletonWidth?: string;
   skeletonClassName?: string;
   children?: ReactNode; // Optional custom skeleton content
+  /** Whether this table is inside a bordered container */
+  isContainerBordered?: boolean;
 }
 
 export const TableCellSkeleton = ({
@@ -28,6 +29,7 @@ export const TableCellSkeleton = ({
   skeletonWidth = 'w-full',
   skeletonClassName,
   children,
+  isContainerBordered = false,
   ...props
 }: TableCellSkeletonProps) => {
   const cellStyle = {
@@ -36,15 +38,29 @@ export const TableCellSkeleton = ({
     ...style,
   };
 
+  // Smart border logic based on container type
+  const getBorderClasses = () => {
+    if (isContainerBordered) {
+      // For bordered containers: no left border, conditional right border, keep bottom border for row separation
+      return cn(
+        'border-l-0',
+        isLast ? 'border-r-0' : 'border-r border-black/10',
+        isLastRow ? 'border-b-0' : 'border-b border-black/10',
+      );
+    } else {
+      // For non-bordered containers: default behavior
+      return cn(
+        'border-l border-b border-black/10',
+        isLast && 'border-r',
+        isLastRow && 'border-b-0',
+      );
+    }
+  };
+
   return (
     <td
       style={cellStyle}
-      className={cn(
-        'border-b border-r border-black/10',
-        isLast && 'border-r-0',
-        isLastRow && 'border-b-0',
-        className,
-      )}
+      className={cn(getBorderClasses(), className)}
       {...props}
     >
       <div

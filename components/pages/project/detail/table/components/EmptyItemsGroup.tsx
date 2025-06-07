@@ -54,10 +54,7 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
             key={column.id}
             className={cn(
               'border-b border-black/10 bg-[#F5F5F5] hover:bg-[#F5F5F5]',
-              // Apply left border only to first column
-              isFirstColumn && 'border-l',
-              // Apply right border only to last column
-              isLastColumn && 'border-r',
+              // No left/right borders since container provides them
               // Apply rounded corners only to last row when collapsed
               !isExpanded && isFirstColumn && 'rounded-bl-[10px]',
               !isExpanded && isLastColumn && 'rounded-br-[10px]',

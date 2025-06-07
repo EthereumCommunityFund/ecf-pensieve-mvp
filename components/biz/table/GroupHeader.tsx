@@ -57,10 +57,7 @@ export const GroupHeader = ({
       style={style}
       onClick={handleClick}
     >
-      <td
-        className="border-x border-black/5 px-[20px] py-[8px]"
-        colSpan={colSpan}
-      >
+      <td className="px-[20px] py-[8px]" colSpan={colSpan}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[10px]">
             {/* Expand/Collapse Icon */}

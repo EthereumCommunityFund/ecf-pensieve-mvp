@@ -27,7 +27,7 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
   return (
     <div
       className={cn(
-        'flex items-center justify-between border border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px] rounded-t-[10px]',
+        'flex items-center justify-between border border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px] rounded-t-[10px] border-b-0 mb-[-1px]',
       )}
     >
       <div className="flex flex-col gap-[5px]">
