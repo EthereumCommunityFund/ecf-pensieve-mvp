@@ -82,14 +82,6 @@ export const prepareProjectTableData = ({
                 name: 'Creator',
                 avatarUrl: null,
                 address: '',
-                weight: null,
-                invitationCodeId: null,
-                createdAt: project?.createdAt
-                  ? new Date(project.createdAt)
-                  : new Date(),
-                updatedAt: project?.createdAt
-                  ? new Date(project.createdAt)
-                  : new Date(),
               },
               createdAt: project?.createdAt
                 ? new Date(project.createdAt)
