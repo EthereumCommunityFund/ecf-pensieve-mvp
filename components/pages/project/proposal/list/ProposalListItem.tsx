@@ -170,15 +170,15 @@ export default ProposalListItem;
 export const ProposalListItemSkeleton = () => {
   return (
     <div className="mobile:p-[14px] flex flex-col gap-[10px] rounded-[10px] border border-black/10 bg-white p-[20px]">
-      {/* leading labels area */}
-      {/* <div className="flex items-center gap-[10px]">
-        <Skeleton className="h-[24px] w-[80px] rounded-[12px]" />
-        <Skeleton className="h-[24px] w-[60px] rounded-[12px]" />
-      </div> */}
+      {/* leading labels area - sometimes empty */}
+      <div className="flex items-center gap-[10px]">
+        <Skeleton className="h-[24px] w-[80px] rounded-[4px]" />
+        <Skeleton className="h-[24px] w-[60px] rounded-[4px]" />
+      </div>
 
       {/* title and date */}
       <div className="flex items-center gap-[10px] border-b border-black/10 pb-[10px]">
-        <Skeleton className="h-[25px] w-[120px]" />
+        <Skeleton className="h-[29px] w-[120px]" />
         <Skeleton className="h-[20px] w-[120px]" />
       </div>
 
@@ -189,34 +189,34 @@ export const ProposalListItemSkeleton = () => {
           <Skeleton className="size-[20px] rounded-full" />
         </div>
         <div className="flex gap-[10px]">
-          <Skeleton className="h-[20px] w-[140px]" />
-          <Skeleton className="h-[20px] w-[60px]" />
+          <Skeleton className="h-[20px] w-[150px]" />
+          <Skeleton className="h-[20px] w-[30px]" />
         </div>
       </div>
 
       {/* progress line */}
-      <Skeleton className="h-[8px] w-full rounded-[4px]" />
+      <Skeleton className="h-[8px] w-full rounded-full" />
 
       {/* vote info */}
-      <div className="flex flex-col gap-[10px] text-[14px] font-[600] leading-[19px] text-black">
+      <div className="flex flex-col gap-[10px]">
         <div className="flex items-center gap-[10px]">
           <Skeleton className="h-[19px] w-[80px]" />
           <div className="flex items-center gap-[5px]">
-            <Skeleton className="h-[19px] w-[40px]" />
-            <Skeleton className="h-[19px] w-[80px]" />
+            <Skeleton className="h-[19px] w-[30px]" />
+            <Skeleton className="h-[19px] w-[100px]" />
           </div>
         </div>
         <div className="flex items-center gap-[10px]">
           <Skeleton className="h-[19px] w-[120px]" />
           <div className="flex items-center gap-[5px]">
-            <Skeleton className="h-[19px] w-[40px]" />
-            <Skeleton className="h-[19px] w-[80px]" />
+            <Skeleton className="h-[19px] w-[30px]" />
+            <Skeleton className="h-[19px] w-[100px]" />
           </div>
         </div>
       </div>
 
       {/* Creator */}
-      <div className="flex items-center gap-[5px] text-[14px] leading-[20px] text-black">
+      <div className="flex items-center gap-[5px]">
         <Skeleton className="h-[20px] w-[25px]" />
         <Skeleton className="h-[20px] w-[80px]" />
         <Skeleton className="h-[24px] w-[100px] rounded-[4px]" />
