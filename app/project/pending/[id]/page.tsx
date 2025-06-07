@@ -183,42 +183,7 @@ const ProjectCard = ({
   canBePublished?: boolean;
 }) => {
   if (!project) {
-    return (
-      <div
-        className={cn(
-          'mt-[10px] mx-[20px] mobile:mx-[10px]',
-          'p-[20px] mobile:p-[14px]',
-          'bg-white border border-black/10 rounded-[10px]',
-          'flex justify-start items-start gap-[20px]',
-        )}
-      >
-        <Skeleton className="size-[100px] overflow-hidden rounded-[10px] border border-black/10" />
-
-        <div className="flex flex-1 flex-col gap-[10px]">
-          <Skeleton className="h-[25px] w-[180px]" />
-          <Skeleton className="h-[23px] w-full" />
-
-          <div className="flex flex-wrap gap-[8px]">
-            {[1, 2, 3].map((index) => {
-              return (
-                <Skeleton
-                  key={index}
-                  className="h-[22px] w-[60px] rounded-[6px]"
-                />
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-start gap-[10px]">
-            <Skeleton className="h-[20px] w-[110px]" />
-            <Skeleton className="h-[20px] w-[16px]" />
-            <span className="text-black/20">|</span>
-            <Skeleton className="h-[20px] w-[60px]" />
-            <Skeleton className="h-[20px] w-[120px]" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ProjectCardSkeleton />;
   }
   return (
     <div
@@ -268,6 +233,45 @@ const ProjectCard = ({
               </span>
             </>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProjectCardSkeleton = () => {
+  return (
+    <div
+      className={cn(
+        'mt-[10px] mx-[20px] mobile:mx-[10px]',
+        'p-[20px] mobile:p-[14px]',
+        'bg-white border border-black/10 rounded-[10px]',
+        'flex justify-start items-start gap-[20px]',
+      )}
+    >
+      <Skeleton className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10" />
+
+      <div className="flex min-w-0 flex-1 flex-col gap-[10px]">
+        <Skeleton className="mobile:w-[150px] h-[25px] w-[180px]" />
+        <Skeleton className="h-[23px] w-full" />
+
+        <div className="flex flex-wrap gap-[8px]">
+          {[1, 2, 3].map((index) => {
+            return (
+              <Skeleton
+                key={index}
+                className="h-[22px] w-[60px] rounded-[6px]"
+              />
+            );
+          })}
+        </div>
+
+        <div className="mobile:flex-wrap mobile:gap-[8px] flex items-center justify-start gap-[10px]">
+          <Skeleton className="mobile:w-[90px] h-[20px] w-[110px]" />
+          <Skeleton className="h-[20px] w-[16px]" />
+          <span className="text-black/20">|</span>
+          <Skeleton className="mobile:w-[50px] h-[20px] w-[60px]" />
+          <Skeleton className="mobile:w-[80px] h-[20px] w-[120px]" />
         </div>
       </div>
     </div>
