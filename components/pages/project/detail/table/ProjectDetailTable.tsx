@@ -235,8 +235,8 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     <div className="relative">
       <div
         className={cn(
-          'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
-          'flex items-start gap-[40px] ',
+          'mt-[20px] px-[20px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
+          'flex justify-center items-start gap-[40px] ',
           'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
         )}
       >
