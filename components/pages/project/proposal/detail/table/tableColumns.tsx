@@ -148,6 +148,7 @@ export const useCreateProposalTableColumns = ({
             </div>
             <TooltipItemWeight
               itemWeight={ALL_POC_ITEM_MAP[rowKey as IPocItemKey].weight}
+              isGenesis={true}
             />
           </div>
         );
