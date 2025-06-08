@@ -2,7 +2,7 @@
 
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Tab from '@/components/base/Tab';
+import Tab, { TabSkeleton } from '@/components/base/Tab';
 import { TabItem } from '@/components/base/Tab/types';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
@@ -23,8 +23,11 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   const [activeTab, setActiveTab] = useState('submission-queue');
 
   // Get project detail context to access proposalsByProjectIdAndKey and displayProposalDataOfKey
-  const { proposalsByProjectIdAndKey, displayProposalDataOfKey } =
-    useProjectDetailContext();
+  const {
+    proposalsByProjectIdAndKey,
+    displayProposalDataOfKey,
+    isProposalsByKeyLoading,
+  } = useProjectDetailContext();
 
   useEffect(() => {
     if (displayProposalDataOfKey) {
@@ -135,7 +138,11 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   return (
     <div className="flex flex-col gap-5 p-5">
       {/* Tab Navigation */}
-      <Tab tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+      {isProposalsByKeyLoading ? (
+        <TabSkeleton tabCount={displayProposalDataOfKey ? 3 : 2} />
+      ) : (
+        <Tab tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+      )}
       {/* Tab Content */}
       {renderTabContent()}
     </div>

@@ -25,7 +25,7 @@ const StableModalBackdrop: FC<{
 }> = memo(({ isOpen, onClose, children }) => {
   const modalClassNames = useMemo(
     () => ({
-      base: 'max-w-[auto]',
+      base: 'max-w-[auto] h-[600px]',
       body: 'p-0',
       backdrop: 'backdrop-blur-[20px]',
     }),

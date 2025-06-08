@@ -225,32 +225,37 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
   }, [displayProposalDataOfKey, currentItemKey]);
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Item Info */}
-      <div className="flex flex-col gap-[5px] border-b border-black/10 pb-5">
-        <div className="flex items-center gap-2">
-          <span className="font-mona text-[14px] leading-[1.43] text-black opacity-80">
-            Item:
-          </span>
-        </div>
-        <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
-      </div>
+    <div className="flex flex-col gap-[20px]">
       {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
       {showRowOverTaken && (
-        <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
-          <ClockClockwiseIcon size={50} />
+        <>
+          {/* Item Info */}
           <div className="flex flex-col gap-[5px]">
-            <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
-              Consensus in Progress
-            </span>
-            <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
-              The displayed submission is now outpaced by a leading submission
-              with more support. To keep the displayed submission in place,
-              additional support is needed, or if the leading submission
-              surpasses the Item Weight, it will replace the displayed one.
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mona text-[14px] leading-[1.43] text-black opacity-80">
+                Item:
+              </span>
+            </div>
+            <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
           </div>
-        </div>
+          <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
+            <ClockClockwiseIcon size={50} />
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
+                Consensus in Progress
+              </span>
+              <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
+                <b>
+                  The displayed submission is now outpaced by a leading
+                  submission with more support.{' '}
+                </b>
+                To keep the displayed submission in place, additional support is
+                needed, or if the leading submission surpasses the Item Weight,
+                it will replace the displayed one.
+              </span>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Displayed Section - Show when displayProposalDataOfKey has value or is loading */}
@@ -297,7 +302,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                             }
                             isLast={index === headerGroup.headers.length - 1}
                             isContainerBordered={true}
-                            className="h-auto bg-[#F5F5F5] px-2.5 py-4"
+                            className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
                             style={
                               header.getSize() === 0
                                 ? { width: 'auto' }
@@ -324,17 +329,14 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                           <TableRow
                             isLastRow={
                               rowIndex ===
-                                displayedTable.getRowModel().rows.length - 1 &&
-                              !AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]?.showExpand
+                              displayedTable.getRowModel().rows.length - 1
                             }
                             className={cn(
                               // displayedExpandedRows[getRowUniqueId(row.original)]
                               //   ? 'bg-[#EBEBEB]'
                               //   : '',
                               showRowOverTaken &&
-                                'bg-[rgba(247,153,45,0.2)] border-t border-[#F7992D] hover:bg-[rgba(247,153,45,0.2)]',
+                                'bg-[rgba(247,153,45,0.2)] hover:bg-[rgba(247,153,45,0.2)]',
                             )}
                           >
                             {row.getVisibleCells().map((cell, cellIndex) => {
@@ -343,38 +345,31 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 cellIndex === row.getVisibleCells().length - 1;
                               const isLastRowInTable =
                                 rowIndex ===
-                                  displayedTable.getRowModel().rows.length -
-                                    1 &&
-                                !AllItemConfig[
-                                  row.original.key as IEssentialItemKey
-                                ]?.showExpand;
+                                displayedTable.getRowModel().rows.length - 1;
 
-                              // Generate yellow border classes for over-taken row
+                              // Generate border classes for over-taken row
                               const getOverTakenBorderClasses = () => {
                                 if (!showRowOverTaken) return '';
 
-                                const borderClasses = [
-                                  'border-t-1 border-t-[#F7992D] border-b-1 border-b-[#F7992D]', // Top and bottom yellow borders for all cells
-                                ];
+                                const borderClasses = [];
 
+                                // Add top and bottom borders for all cells
+                                borderClasses.push(
+                                  'border-t-1 border-t-[#F7992D] border-b-1 border-b-[#F7992D]',
+                                );
+
+                                // Add left border and bottom-left rounded corner for first cell
                                 if (isFirstCell) {
                                   borderClasses.push(
-                                    'border-l-1 border-l-[#F7992D]',
-                                  ); // Left yellow border for first cell
-                                  // Add bottom-left rounded corner only for last row
-                                  if (isLastRowInTable) {
-                                    borderClasses.push('rounded-bl-[10px]');
-                                  }
+                                    'border-l-1 border-l-[#F7992D] rounded-bl-[10px]',
+                                  );
                                 }
 
+                                // Add right border and bottom-right rounded corner for last cell
                                 if (isLastCell) {
                                   borderClasses.push(
-                                    'border-r-1 border-r-[#F7992D]',
-                                  ); // Right yellow border for last cell
-                                  // Add bottom-right rounded corner only for last row
-                                  if (isLastRowInTable) {
-                                    borderClasses.push('rounded-br-[10px]');
-                                  }
+                                    'border-r-1 border-r-[#F7992D] rounded-br-[10px]',
+                                  );
                                 }
 
                                 return borderClasses.join(' ');
@@ -391,19 +386,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                       : cell.column.getSize()
                                   }
                                   isLast={isLastCell}
-                                  isLastRow={
-                                    rowIndex ===
-                                      displayedTable.getRowModel().rows.length -
-                                        1 &&
-                                    !AllItemConfig[
-                                      row.original.key as IEssentialItemKey
-                                    ]?.showExpand
-                                  }
+                                  isLastRow={isLastRowInTable}
                                   isContainerBordered={true}
-                                  className={cn(
-                                    '',
-                                    getOverTakenBorderClasses(),
-                                  )}
+                                  className={cn(getOverTakenBorderClasses())}
                                   minHeight={60}
                                   style={
                                     cell.column.getSize() === 0
@@ -558,7 +543,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                         //   ? 'bg-[#EBEBEB]'
                         //   : '',
                         isFirstRowLeading &&
-                          'bg-[rgba(162,208,195,0.2)] border-t border-[#46A287] hover:bg-[rgba(162,208,195,0.2)]',
+                          'bg-[rgba(162,208,195,0.2)] hover:bg-[rgba(162,208,195,0.2)]',
                       )}
                     >
                       {row.getVisibleCells().map((cell, cellIndex) => {
@@ -572,28 +557,29 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                           !AllItemConfig[row.original.key as IEssentialItemKey]
                             ?.showExpand;
 
-                        // Generate green border classes for leading row
+                        // Generate border classes for leading row
                         const getLeadingBorderClasses = () => {
                           if (!isFirstRowLeading) return '';
 
-                          const borderClasses = [
-                            'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]', // Top and bottom green borders for all cells
-                          ];
+                          const borderClasses = [];
 
+                          // Add top and bottom borders for all cells
+                          borderClasses.push(
+                            'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]',
+                          );
+
+                          // Add left border and bottom-left rounded corner for first cell
                           if (isFirstCell) {
-                            borderClasses.push('border-l-1 border-l-[#46A287]'); // Left green border for first cell
-                            // Add bottom-left rounded corner only for last row
-                            if (isLastRowInTable) {
-                              borderClasses.push('rounded-bl-[10px]');
-                            }
+                            borderClasses.push(
+                              'border-l-1 border-l-[#46A287] rounded-bl-[10px]',
+                            );
                           }
 
+                          // Add right border and bottom-right rounded corner for last cell
                           if (isLastCell) {
-                            borderClasses.push('border-r-1 border-r-[#46A287]'); // Right green border for last cell
-                            // Add bottom-right rounded corner only for last row
-                            if (isLastRowInTable) {
-                              borderClasses.push('rounded-br-[10px]');
-                            }
+                            borderClasses.push(
+                              'border-r-1 border-r-[#46A287] rounded-br-[10px]',
+                            );
                           }
 
                           return borderClasses.join(' ');
@@ -610,16 +596,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 : cell.column.getSize()
                             }
                             isLast={isLastCell}
-                            isLastRow={
-                              rowIndex ===
-                                submissionQueueTable.getRowModel().rows.length -
-                                  1 &&
-                              !AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]?.showExpand
-                            }
+                            isLastRow={isLastRowInTable}
                             isContainerBordered={true}
-                            className={cn('', getLeadingBorderClasses())}
+                            className={cn(getLeadingBorderClasses())}
                             minHeight={60}
                             style={
                               cell.column.getSize() === 0
