@@ -160,7 +160,7 @@ const Displayed: FC<DisplayedProps> = ({
 
       {/* Consensus Status Info */}
       {showRowOverTaken && (
-        <div className="flex items-center gap-[5px] rounded-[10px] p-2.5">
+        <div className="flex items-center gap-[5px] rounded-[10px]">
           <ClockClockwiseIcon size={20} />
           <span className="font-sans text-[13px] font-normal leading-[18px] text-black">
             This item is current undergoing consensus.{' '}
@@ -200,7 +200,7 @@ const Displayed: FC<DisplayedProps> = ({
                       }
                       isLast={index === headerGroup.headers.length - 1}
                       isContainerBordered={true}
-                      className="h-auto bg-[#F5F5F5] px-2.5 py-4"
+                      className="h-auto bg-[#F5F5F5] py-[5px]"
                       style={
                         header.getSize() === 0 ? { width: 'auto' } : undefined
                       }
@@ -245,9 +245,7 @@ const Displayed: FC<DisplayedProps> = ({
                         }
                         isLast={cellIndex === row.getVisibleCells().length - 1}
                         isLastRow={
-                          rowIndex === table.getRowModel().rows.length - 1 &&
-                          !AllItemConfig[row.original.key as IEssentialItemKey]
-                            ?.showExpand
+                          rowIndex === table.getRowModel().rows.length - 1
                         }
                         isContainerBordered={true}
                         className=""

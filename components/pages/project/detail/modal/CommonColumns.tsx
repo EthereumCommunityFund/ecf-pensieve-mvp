@@ -4,11 +4,11 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
-import { QuestionIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord } from '@/types';
 import { IPocItemKey } from '@/types/item';
+import TooltipTh from '@/components/biz/table/TooltipTh';
 
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
@@ -115,12 +115,10 @@ export const useCommonColumnsOfModal = () => {
     const supportColumn = columnHelper.accessor('support', {
       id: 'support',
       header: () => (
-        <div className="flex items-center gap-[5px]">
-          <span className="font-sans text-[14px] font-semibold text-[#333] opacity-60">
-            Support
-          </span>
-          <QuestionIcon size={18} />
-        </div>
+        <TooltipTh
+          title="Support"
+          tooltipContext="Number of supporters for this property"
+        />
       ),
       size: 150,
       cell: (info) => {

@@ -95,7 +95,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
       resetInput();
     },
-    [accept, maxSizeMB, uploadMutation.mutate, resetInput],
+    [accept, maxSizeMB, uploadMutation, resetInput],
   );
 
   const isLoading = uploadMutation.isPending;

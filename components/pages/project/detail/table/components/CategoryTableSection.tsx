@@ -67,7 +67,7 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
   };
 
   return (
-    <div key={subCategory.key} ref={categoryRef}>
+    <div key={subCategory.key} ref={categoryRef} className="scroll-mt-[140px]">
       <CategoryHeader
         title={subCategory.title}
         description={subCategory.description || ''}

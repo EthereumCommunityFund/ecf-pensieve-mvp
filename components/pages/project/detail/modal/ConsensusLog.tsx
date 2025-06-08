@@ -232,7 +232,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
                       }
                       isLast={index === headerGroup.headers.length - 1}
                       isContainerBordered={true}
-                      className="h-auto bg-[#F5F5F5] px-2.5 py-4"
+                      className="h-auto bg-[#F5F5F5] px-[10px] py-[2.5px]"
                       style={
                         header.getSize() === 0 ? { width: 'auto' } : undefined
                       }
@@ -275,10 +275,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
                         }
                         isLast={cellIndex === row.getVisibleCells().length - 1}
                         isLastRow={
-                          (rowIndex === table.getRowModel().rows.length - 1 &&
-                            !itemKey) ||
-                          !AllItemConfig[itemKey as IEssentialItemKey]
-                            ?.showExpand
+                          rowIndex === table.getRowModel().rows.length - 1
                         }
                         isContainerBordered={true}
                         className=""

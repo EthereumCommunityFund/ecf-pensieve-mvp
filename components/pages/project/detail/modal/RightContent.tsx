@@ -71,7 +71,7 @@ const RightContent: FC<RightContentProps> = memo(
               </span>
               <button
                 onClick={handleInfoIconClick}
-                className="-m-1 cursor-pointer rounded-sm p-1 opacity-50 transition-opacity duration-200 hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                className="-m-1 cursor-pointer rounded-sm p-1 opacity-50 transition-opacity duration-200 hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 aria-label="View weight information"
                 title="Click to learn more about your weight"
               >

@@ -36,7 +36,7 @@ const ProposalPage = () => {
     if (project && project?.isPublished) {
       router.replace(`/project/${projectId}`);
     }
-  }, [project?.isPublished, router, projectId]);
+  }, [project, router, projectId]);
 
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);

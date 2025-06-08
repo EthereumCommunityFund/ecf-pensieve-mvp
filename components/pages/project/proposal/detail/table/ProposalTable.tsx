@@ -27,6 +27,9 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
   const noDataForThisTable = table.options.data.length === 0;
   const showSkeleton = isLoading || noDataForThisTable;
 
+  const tableColumns = table.options.columns;
+  const columnPinning = table.getState().columnPinning;
+
   const colGroupDefinition = useMemo(
     () => (
       <colgroup>
@@ -40,7 +43,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
         ))}
       </colgroup>
     ),
-    [table, table.options.columns, table.getState().columnPinning], // Ensure re-calc when column definitions or pinning state change
+    [table, tableColumns, columnPinning], // Ensure re-calc when column definitions or pinning state change
   );
 
   const tableHeaders = useMemo(
@@ -107,7 +110,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
         </tr>
       </thead>
     ),
-    [table, table.options.columns, table.getState().columnPinning], // Ensure re-calc when column definitions or pinning state change
+    [table, tableColumns, columnPinning], // Ensure re-calc when column definitions or pinning state change
   );
 
   if (showSkeleton) {

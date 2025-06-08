@@ -80,8 +80,8 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 210,
-      minSize: 210,
+      size: 240,
+      minSize: 240,
       cell: (info) => {
         const { key } = info.row.original;
 
@@ -324,5 +324,5 @@ export const useProjectTableColumns = ({
     const actionColumns = [actionsColumn];
 
     return [...baseColumns, ...metricsColumns, ...actionColumns];
-  }, [columnHelper, isPageExpanded, showMetrics, category]);
+  }, [columnHelper, showMetrics, category]);
 };

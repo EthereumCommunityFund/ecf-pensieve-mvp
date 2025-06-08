@@ -23,7 +23,7 @@ const tabItems = [
   { key: 'project-data', label: 'Profile' },
   { key: 'ecosystem', label: 'Ecosystem' },
   // { key: 'profile', label: 'Profile' },
-  { key: 'review', label: 'Review' },
+  // { key: 'review', label: 'Review' },
 ];
 
 export type ITabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
@@ -148,7 +148,7 @@ const ProjectPage = () => {
 
       <ProjectDetailCard project={project} />
 
-      <div className="tablet:px-[10px] mobile:px-[10px]  mt-[20px] px-[20px]">
+      <div className="tablet:px-[10px] mobile:px-[10px] mt-[20px] px-[20px]">
         <div className="flex items-center justify-between">
           <Tabs
             selectedKey={activeTab}

@@ -19,8 +19,32 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
 }) => {
   const [isFixed, setIsFixed] = useState(false);
   const [topOffset, setTopOffset] = useState(0);
+  const [leftOffset, setLeftOffset] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
+  const originalLeftRef = useRef<number>(0);
+
+  // 记录原始位置
+  useEffect(() => {
+    const recordOriginalPosition = () => {
+      if (menuRef.current) {
+        const menuRect = menuRef.current.getBoundingClientRect();
+        originalLeftRef.current = menuRect.left;
+        setLeftOffset(menuRect.left);
+      }
+    };
+
+    // 延迟一点执行，确保布局已经稳定
+    const timer = setTimeout(recordOriginalPosition, 100);
+
+    // 也监听窗口大小变化，重新计算位置
+    window.addEventListener('resize', recordOriginalPosition);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', recordOriginalPosition);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +58,8 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
         setIsFixed(shouldBeFixed);
         if (shouldBeFixed) {
           setTopOffset(70); // Fixed position from top
+          // 使用记录的原始水平位置
+          setLeftOffset(originalLeftRef.current);
         }
       }
     };
@@ -68,7 +94,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
           isFixed
             ? {
                 top: `${topOffset}px`,
-                left: '160px', // Match the page padding
+                left: `${leftOffset}px`, // 使用动态计算的水平位置
               }
             : undefined
         }

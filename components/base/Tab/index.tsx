@@ -27,5 +27,6 @@ const Tab: FC<TabProps> = ({ tabs, activeTab, onTabChange, className }) => {
 };
 
 export default Tab;
+export { default as TabSkeleton } from './TabSkeleton';
 export type { TabItem as TabItemType, TabProps } from './types';
 export { TabItem };

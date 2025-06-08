@@ -58,7 +58,7 @@ Smart Contract Audit: Before a project launches on blockchain networks like Ethe
           {/* Metric Name Tag */}
           <div className="flex justify-start">
             <div className="rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px]">
-              <span className="font-inter text-[13px] font-medium leading-[1.4615384615384615] text-[#333333]">
+              <span className="text-[13px] font-medium leading-[1.4615384615384615] text-[#333333]">
                 {metricName}
               </span>
             </div>
@@ -66,7 +66,7 @@ Smart Contract Audit: Before a project launches on blockchain networks like Ethe
 
           {/* Description */}
           <div className="flex-1">
-            <p className="font-inter whitespace-pre-line text-[14px] font-normal leading-[1.5999999727521623] text-black">
+            <p className="whitespace-pre-line text-[14px] font-normal leading-[1.5999999727521623] text-black">
               {description}
             </p>
           </div>
