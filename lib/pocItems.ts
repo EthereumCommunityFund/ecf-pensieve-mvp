@@ -1,7 +1,7 @@
 export const POC_ITEMS = {
   name: {
     isEssential: true,
-    accountability_metric: 2,
+    accountability_metric: 1,
   },
   tagline: {
     isEssential: true,
@@ -37,7 +37,7 @@ export const POC_ITEMS = {
   },
   devStatus: {
     isEssential: true,
-    accountability_metric: 1,
+    accountability_metric: 2,
   },
   fundingStatus: {
     isEssential: true,
@@ -49,7 +49,7 @@ export const POC_ITEMS = {
   },
   codeRepo: {
     isEssential: true,
-    accountability_metric: 1,
+    accountability_metric: 3,
   },
   tokenContract: {
     isEssential: true,
@@ -65,7 +65,7 @@ export const POC_ITEMS = {
   },
   founders: {
     isEssential: true,
-    accountability_metric: 1,
+    accountability_metric: 2,
   },
 
   tags: {
