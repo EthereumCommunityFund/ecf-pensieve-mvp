@@ -231,11 +231,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
         <>
           {/* Item Info */}
           <div className="flex flex-col gap-[5px]">
-            <div className="flex items-center gap-2">
-              <span className="font-mona text-[14px] leading-[1.43] text-black opacity-80">
-                Item:
-              </span>
-            </div>
             <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
           </div>
           <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
@@ -440,198 +435,204 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           </div>
         </div>
       )}
+      <div className="flex flex-col gap-[10px]">
+        {/* Submission Queue Header Section */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-[5px]">
+            <div className="flex items-center gap-2">
+              <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+                Submission Que:
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+                This is the list of submissions available to replace the
+                displayed one.
+              </span>
+            </div>
+          </div>
 
-      {/* Submission Queue Header Section */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-[5px]">
-          <div className="flex items-center gap-2">
-            <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-              Submission Que:
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-              This is the list of submissions available to replace the displayed
-              one.
-            </span>
-          </div>
+          {/* Collapse All Button - Only show when there are expandable rows */}
+          {hasExpandableRows && (
+            <button
+              onClick={handleCollapseAll}
+              className="flex items-center gap-[5px] rounded-[5px] bg-black/5 px-2.5 py-[5px] transition-colors hover:bg-black/10"
+            >
+              <CaretUpDownIcon size={16} className="opacity-80" />
+              <span className="font-sans text-[13px] font-semibold text-black opacity-80">
+                {hasSubmissionQueueExpandedRows
+                  ? 'Collapse All Items'
+                  : 'Expand All Items'}
+              </span>
+            </button>
+          )}
         </div>
 
-        {/* Collapse All Button - Only show when there are expandable rows */}
-        {hasExpandableRows && (
-          <button
-            onClick={handleCollapseAll}
-            className="flex items-center gap-[5px] rounded-[5px] bg-black/5 px-2.5 py-[5px] transition-colors hover:bg-black/10"
-          >
-            <CaretUpDownIcon size={16} className="opacity-80" />
-            <span className="font-sans text-[13px] font-semibold text-black opacity-80">
-              {hasSubmissionQueueExpandedRows
-                ? 'Collapse All Items'
-                : 'Expand All Items'}
+        {/* Table */}
+        {isProposalsByKeyLoading ? (
+          <ModalTableSkeleton
+            rowCount={3}
+            columns={[
+              { header: 'Input', width: 480 },
+              { header: 'Reference', width: 124 },
+              { header: 'Submitter', width: 183 },
+              { header: 'Support', width: 150, isLast: true },
+            ]}
+          />
+        ) : tableDataOfSubmissionQueue.length === 0 ? (
+          <div className="flex items-center justify-center rounded-[10px] border border-black/10 bg-white py-8">
+            <span className="font-sans text-[14px] text-black opacity-60">
+              No submission queue data available for this item.
             </span>
-          </button>
+          </div>
+        ) : (
+          <ModalTableContainer>
+            <table className="w-full border-separate border-spacing-0">
+              {/* Table Header */}
+              <thead>
+                {submissionQueueTable.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="bg-[#F5F5F5]">
+                    {headerGroup.headers.map((header, index) => (
+                      <TableHeader
+                        key={header.id}
+                        width={
+                          header.getSize() === 0 ? undefined : header.getSize()
+                        }
+                        isLast={index === headerGroup.headers.length - 1}
+                        isContainerBordered={true}
+                        className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
+                        style={
+                          header.getSize() === 0 ? { width: 'auto' } : undefined
+                        }
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHeader>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+
+              {/* Table Body */}
+              <tbody>
+                {submissionQueueTable
+                  .getRowModel()
+                  .rows.map((row, rowIndex) => {
+                    // 检查是否是第一行且处于 leading 状态
+                    const isFirstRowLeading =
+                      showRowOverTaken && showRowIsLeading && rowIndex === 0;
+
+                    return (
+                      <React.Fragment key={row.id}>
+                        <TableRow
+                          isLastRow={
+                            rowIndex ===
+                              submissionQueueTable.getRowModel().rows.length -
+                                1 &&
+                            !AllItemConfig[
+                              row.original.key as IEssentialItemKey
+                            ]?.showExpand
+                          }
+                          className={cn(
+                            // submissionQueueExpandedRows[getRowUniqueId(row.original)]
+                            //   ? 'bg-[#EBEBEB]'
+                            //   : '',
+                            isFirstRowLeading &&
+                              'bg-[rgba(162,208,195,0.2)] hover:bg-[rgba(162,208,195,0.2)]',
+                          )}
+                        >
+                          {row.getVisibleCells().map((cell, cellIndex) => {
+                            const isFirstCell = cellIndex === 0;
+                            const isLastCell =
+                              cellIndex === row.getVisibleCells().length - 1;
+                            const isLastRowInTable =
+                              rowIndex ===
+                                submissionQueueTable.getRowModel().rows.length -
+                                  1 &&
+                              !AllItemConfig[
+                                row.original.key as IEssentialItemKey
+                              ]?.showExpand;
+
+                            // Generate border classes for leading row
+                            const getLeadingBorderClasses = () => {
+                              if (!isFirstRowLeading) return '';
+
+                              const borderClasses = [];
+
+                              // Add top and bottom borders for all cells
+                              borderClasses.push(
+                                'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]',
+                              );
+
+                              // Add left border and bottom-left rounded corner for first cell
+                              if (isFirstCell) {
+                                borderClasses.push(
+                                  'border-l-1 border-l-[#46A287] rounded-bl-[10px]',
+                                );
+                              }
+
+                              // Add right border and bottom-right rounded corner for last cell
+                              if (isLastCell) {
+                                borderClasses.push(
+                                  'border-r-1 border-r-[#46A287] rounded-br-[10px]',
+                                );
+                              }
+
+                              return borderClasses.join(' ');
+                            };
+
+                            return (
+                              <OptimizedTableCell
+                                key={cell.id}
+                                cell={cell}
+                                cellIndex={cellIndex}
+                                width={
+                                  cell.column.getSize() === 0
+                                    ? undefined
+                                    : cell.column.getSize()
+                                }
+                                isLast={isLastCell}
+                                isLastRow={isLastRowInTable}
+                                isContainerBordered={true}
+                                className={cn(getLeadingBorderClasses())}
+                                minHeight={60}
+                                style={
+                                  cell.column.getSize() === 0
+                                    ? { width: 'auto' }
+                                    : undefined
+                                }
+                              />
+                            );
+                          })}
+                        </TableRow>
+
+                        <ExpandableRow
+                          rowId={getRowUniqueId(row.original)}
+                          itemKey={row.original.key}
+                          inputValue={row.original.input}
+                          isExpanded={
+                            submissionQueueExpandedRows[
+                              getRowUniqueId(row.original)
+                            ] || false
+                          }
+                          colSpan={row.getVisibleCells().length}
+                          isLastRow={
+                            rowIndex ===
+                            submissionQueueTable.getRowModel().rows.length - 1
+                          }
+                        />
+                      </React.Fragment>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </ModalTableContainer>
         )}
       </div>
-
-      {/* Table */}
-      {isProposalsByKeyLoading ? (
-        <ModalTableSkeleton
-          rowCount={3}
-          columns={[
-            { header: 'Input', width: 480 },
-            { header: 'Reference', width: 124 },
-            { header: 'Submitter', width: 183 },
-            { header: 'Support', width: 150, isLast: true },
-          ]}
-        />
-      ) : tableDataOfSubmissionQueue.length === 0 ? (
-        <div className="flex items-center justify-center rounded-[10px] border border-black/10 bg-white py-8">
-          <span className="font-sans text-[14px] text-black opacity-60">
-            No submission queue data available for this item.
-          </span>
-        </div>
-      ) : (
-        <ModalTableContainer>
-          <table className="w-full border-separate border-spacing-0">
-            {/* Table Header */}
-            <thead>
-              {submissionQueueTable.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="bg-[#F5F5F5]">
-                  {headerGroup.headers.map((header, index) => (
-                    <TableHeader
-                      key={header.id}
-                      width={
-                        header.getSize() === 0 ? undefined : header.getSize()
-                      }
-                      isLast={index === headerGroup.headers.length - 1}
-                      isContainerBordered={true}
-                      className="h-auto bg-[#F5F5F5] px-2.5 py-4"
-                      style={
-                        header.getSize() === 0 ? { width: 'auto' } : undefined
-                      }
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHeader>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-
-            {/* Table Body */}
-            <tbody>
-              {submissionQueueTable.getRowModel().rows.map((row, rowIndex) => {
-                // 检查是否是第一行且处于 leading 状态
-                const isFirstRowLeading =
-                  showRowOverTaken && showRowIsLeading && rowIndex === 0;
-
-                return (
-                  <React.Fragment key={row.id}>
-                    <TableRow
-                      isLastRow={
-                        rowIndex ===
-                          submissionQueueTable.getRowModel().rows.length - 1 &&
-                        !AllItemConfig[row.original.key as IEssentialItemKey]
-                          ?.showExpand
-                      }
-                      className={cn(
-                        // submissionQueueExpandedRows[getRowUniqueId(row.original)]
-                        //   ? 'bg-[#EBEBEB]'
-                        //   : '',
-                        isFirstRowLeading &&
-                          'bg-[rgba(162,208,195,0.2)] hover:bg-[rgba(162,208,195,0.2)]',
-                      )}
-                    >
-                      {row.getVisibleCells().map((cell, cellIndex) => {
-                        const isFirstCell = cellIndex === 0;
-                        const isLastCell =
-                          cellIndex === row.getVisibleCells().length - 1;
-                        const isLastRowInTable =
-                          rowIndex ===
-                            submissionQueueTable.getRowModel().rows.length -
-                              1 &&
-                          !AllItemConfig[row.original.key as IEssentialItemKey]
-                            ?.showExpand;
-
-                        // Generate border classes for leading row
-                        const getLeadingBorderClasses = () => {
-                          if (!isFirstRowLeading) return '';
-
-                          const borderClasses = [];
-
-                          // Add top and bottom borders for all cells
-                          borderClasses.push(
-                            'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]',
-                          );
-
-                          // Add left border and bottom-left rounded corner for first cell
-                          if (isFirstCell) {
-                            borderClasses.push(
-                              'border-l-1 border-l-[#46A287] rounded-bl-[10px]',
-                            );
-                          }
-
-                          // Add right border and bottom-right rounded corner for last cell
-                          if (isLastCell) {
-                            borderClasses.push(
-                              'border-r-1 border-r-[#46A287] rounded-br-[10px]',
-                            );
-                          }
-
-                          return borderClasses.join(' ');
-                        };
-
-                        return (
-                          <OptimizedTableCell
-                            key={cell.id}
-                            cell={cell}
-                            cellIndex={cellIndex}
-                            width={
-                              cell.column.getSize() === 0
-                                ? undefined
-                                : cell.column.getSize()
-                            }
-                            isLast={isLastCell}
-                            isLastRow={isLastRowInTable}
-                            isContainerBordered={true}
-                            className={cn(getLeadingBorderClasses())}
-                            minHeight={60}
-                            style={
-                              cell.column.getSize() === 0
-                                ? { width: 'auto' }
-                                : undefined
-                            }
-                          />
-                        );
-                      })}
-                    </TableRow>
-
-                    <ExpandableRow
-                      rowId={getRowUniqueId(row.original)}
-                      itemKey={row.original.key}
-                      inputValue={row.original.input}
-                      isExpanded={
-                        submissionQueueExpandedRows[
-                          getRowUniqueId(row.original)
-                        ] || false
-                      }
-                      colSpan={row.getVisibleCells().length}
-                      isLastRow={
-                        rowIndex ===
-                        submissionQueueTable.getRowModel().rows.length - 1
-                      }
-                    />
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </ModalTableContainer>
-      )}
     </div>
   );
 };
