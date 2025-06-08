@@ -233,56 +233,82 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
 
   return (
     <div className="relative">
+      {/* 主容器 - 确保在所有屏幕尺寸下都居中 */}
       <div
         className={cn(
-          'mt-[20px] px-[20px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
-          'flex justify-center items-start gap-[40px] ',
-          'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
+          'mx-auto w-full',
+          // 桌面端：最大宽度限制，左右居中
+          'lg:max-w-[1400px] pc:max-w-[1200px]',
+          // 内边距：桌面端较大，移动端较小
+          'px-[20px] tablet:px-[15px] mobile:px-[10px]',
+          // 上边距和内边距
+          'mt-[20px] pt-[20px]',
         )}
       >
-        {/* 左侧导航菜单 - 固定定位 */}
-        <div className="tablet:hidden mobile:hidden w-[200px] shrink-0 self-start">
-          <NavigationMenu
-            activeCategory={activeCategory}
-            onCategoryClick={handleCategoryClick}
-          />
-        </div>
+        <div
+          className={cn(
+            'flex items-start gap-[40px]',
+            // 桌面端：水平布局，表格居中
+            'lg:justify-center pc:justify-center',
+            // 平板和移动端：垂直布局，表格占满宽度
+            'tablet:flex-col tablet:gap-[20px]',
+            'mobile:flex-col mobile:gap-[20px]',
+          )}
+        >
+          {/* 左侧导航菜单 - 仅在桌面端显示 */}
+          <div className="tablet:hidden mobile:hidden w-[200px] shrink-0 self-start">
+            <NavigationMenu
+              activeCategory={activeCategory}
+              onCategoryClick={handleCategoryClick}
+            />
+          </div>
 
-        {/* 右侧表格内容 */}
-        <div className="w-full max-w-[1000px] flex-1">
-          {/* 分类表格 */}
-          <div className="flex flex-col gap-[40px]">
-            {ProjectTableFieldCategory.map((cat) => (
-              <div key={cat.key} className="flex flex-col gap-[30px]">
-                <TableSectionHeader
-                  title={cat.title}
-                  description={cat.description}
-                />
-                {cat.subCategories.map((subCat) => (
-                  <CategoryTableSection
-                    key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
-                    subCategory={subCat}
-                    table={tables[subCat.key]}
-                    isLoading={isProposalsLoading}
-                    expanded={expanded}
-                    expandedRows={expandedRows}
-                    emptyItemsExpanded={emptyItemsExpanded}
-                    groupExpanded={groupExpanded}
-                    emptyItemsCount={emptyItemsCounts[subCat.key] || 0}
-                    project={project}
-                    categoryRef={(el) => {
-                      categoryRefs.current[subCat.key] = el;
-                    }}
-                    onToggleCategory={toggleCategory}
-                    onToggleEmptyItems={toggleEmptyItems}
-                    onToggleGroupExpanded={toggleGroupExpanded}
-                    onToggleAllRowsInCategory={toggleAllRowsInCategory}
-                    metricsVisible={metricsVisible[subCat.key]}
-                    onToggleMetrics={() => toggleMetricsVisible(subCat.key)}
+          {/* 表格内容容器 */}
+          <div
+            className={cn(
+              'w-full',
+              // 桌面端：限制最大宽度，确保表格不会过宽
+              'lg:max-w-[1000px] pc:max-w-[900px]',
+              // 平板和移动端：充分利用可用宽度
+              'tablet:max-w-none mobile:max-w-none',
+              // 在桌面端作为 flex 项目时的行为
+              'flex-1',
+            )}
+          >
+            {/* 分类表格 */}
+            <div className="flex flex-col gap-[40px]">
+              {ProjectTableFieldCategory.map((cat) => (
+                <div key={cat.key} className="flex flex-col gap-[30px]">
+                  <TableSectionHeader
+                    title={cat.title}
+                    description={cat.description}
                   />
-                ))}
-              </div>
-            ))}
+                  {cat.subCategories.map((subCat) => (
+                    <CategoryTableSection
+                      key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
+                      subCategory={subCat}
+                      table={tables[subCat.key]}
+                      isLoading={isProposalsLoading}
+                      expanded={expanded}
+                      expandedRows={expandedRows}
+                      emptyItemsExpanded={emptyItemsExpanded}
+                      groupExpanded={groupExpanded}
+                      emptyItemsCount={emptyItemsCounts[subCat.key] || 0}
+                      project={project}
+                      categoryRef={(el) => {
+                        categoryRefs.current[subCat.key] = el;
+                      }}
+                      onToggleCategory={toggleCategory}
+                      onToggleEmptyItems={toggleEmptyItems}
+                      onToggleGroupExpanded={toggleGroupExpanded}
+                      onToggleAllRowsInCategory={toggleAllRowsInCategory}
+                      metricsVisible={metricsVisible[subCat.key]}
+                      onToggleMetrics={() => toggleMetricsVisible(subCat.key)}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
