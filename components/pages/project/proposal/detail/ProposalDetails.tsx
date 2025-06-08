@@ -365,7 +365,6 @@ const ProposalDetails = ({
     financialTable,
     tokenTable,
     governanceTable,
-    columnsMap, // Add columnsMap as a dependency
   ]);
 
   return (

@@ -18,9 +18,7 @@ const SelectCheckItem: React.FC<SelectCheckItemProps> = ({
       <span className="text-sm text-black">{label}</span>
       {showCheck && (
         <div className="flex size-5 items-center justify-center">
-          {isChecked && (
-            <CheckSelectIcon size={12} className="text-[rgb(229, 231, 235)]" />
-          )}
+          {isChecked && <CheckSelectIcon size={12} className="text-gray-300" />}
         </div>
       )}
     </div>

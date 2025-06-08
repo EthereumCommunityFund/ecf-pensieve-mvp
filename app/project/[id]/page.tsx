@@ -148,7 +148,7 @@ const ProjectPage = () => {
 
       <ProjectDetailCard project={project} />
 
-      <div className="tablet:px-[10px] mobile:px-[10px]  mt-[20px] px-[20px]">
+      <div className="tablet:px-[10px] mobile:px-[10px] mt-[20px] px-[20px]">
         <div className="flex items-center justify-between">
           <Tabs
             selectedKey={activeTab}

@@ -76,7 +76,13 @@ export default function Setting() {
         },
       },
     );
-  }, [isOwner, getValues, updateProfile, fetchUserProfile]);
+  }, [
+    isOwner,
+    getValues,
+    updateProfile,
+    fetchUserProfile,
+    utils.user.getUserByAddress,
+  ]);
 
   const handleDiscard = useCallback(() => {
     if (!isOwner) return;

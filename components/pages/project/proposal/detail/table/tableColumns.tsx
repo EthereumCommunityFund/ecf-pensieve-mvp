@@ -422,7 +422,7 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [isPageExpanded, showMetrics, columnHelper, category, columnPinning]);
+  }, [isPageExpanded, showMetrics, columnHelper, category]);
 
   return columns;
 };

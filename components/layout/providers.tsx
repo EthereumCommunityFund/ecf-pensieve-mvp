@@ -4,7 +4,6 @@ import {
   ToastProvider as HeroToastProvider,
   HeroUIProvider,
 } from '@heroui/react';
-
 import '@rainbow-me/rainbowkit/styles.css';
 
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';

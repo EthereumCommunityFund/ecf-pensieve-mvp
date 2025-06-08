@@ -177,7 +177,7 @@ export default function ActivityItem({
         <Button
           size="sm"
           variant="ghost"
-          className="border-1 mobile:w-full rounded-[5px] border-black/10 px-2.5 py-[5px] text-[13px]"
+          className="mobile:w-full rounded-[5px] border border-black/10 px-2.5 py-[5px] text-[13px]"
           onPress={() => {
             if (activity.activeLog.projectId) {
               router.push(`/project/${activity.activeLog.projectId}`);
