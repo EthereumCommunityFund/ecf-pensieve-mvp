@@ -23,7 +23,7 @@ const tabItems = [
   { key: 'project-data', label: 'Profile' },
   { key: 'ecosystem', label: 'Ecosystem' },
   // { key: 'profile', label: 'Profile' },
-  { key: 'review', label: 'Review' },
+  // { key: 'review', label: 'Review' },
 ];
 
 export type ITabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
