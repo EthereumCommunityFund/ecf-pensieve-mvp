@@ -4,7 +4,7 @@ import { cn, Skeleton, Tab, Tabs } from '@heroui/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import MerrticDetailModal from '@/components/biz/MerrticDetailModal';
+import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import ContributeButton from '@/components/pages/project/detail/ContributeButton';
@@ -64,9 +64,8 @@ const ProjectPage = () => {
     null,
   );
 
-  // MerrticDetailModal 状态管理
-  const [isMetricModalOpen, setIsMetricModalOpen] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<string>('');
+  // MerrticDetailModal 状态管理 - 使用 Context
+  const { openMetricModal } = useMetricDetailModal();
 
   useEffect(() => {
     const currentTab = searchParams.get('tab');
@@ -121,16 +120,12 @@ const ProjectPage = () => {
   }, [profile, showAuthPrompt]);
 
   // 处理 Metric 点击
-  const handleMetricClick = useCallback((metric: string) => {
-    setSelectedMetric(metric);
-    setIsMetricModalOpen(true);
-  }, []);
-
-  // 处理 MerrticDetailModal 关闭
-  const handleCloseMetricModal = useCallback(() => {
-    setIsMetricModalOpen(false);
-    setSelectedMetric('');
-  }, []);
+  const handleMetricClick = useCallback(
+    (metric: string) => {
+      openMetricModal(metric);
+    },
+    [openMetricModal],
+  );
 
   return (
     <div className="pb-[20px]">
@@ -217,13 +212,6 @@ const ProjectPage = () => {
         onClose={closeReferenceModal}
         ref={currentRefValue || ''}
         reason={currentItemReason}
-      />
-
-      <MerrticDetailModal
-        isOpen={isMetricModalOpen}
-        onClose={handleCloseMetricModal}
-        metricName={selectedMetric}
-        title={`About ${selectedMetric}`}
       />
 
       <SubmitterModal

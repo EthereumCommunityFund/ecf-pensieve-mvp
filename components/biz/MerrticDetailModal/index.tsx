@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { Button } from '@/components/base/button';
 import { Modal, ModalContent } from '@/components/base/modal';
@@ -11,18 +11,15 @@ interface MerrticDetailModalProps {
   onClose: () => void;
   title?: string;
   metricName?: string;
-  description?: string;
+  children?: ReactNode;
 }
 
 const MerrticDetailModal: FC<MerrticDetailModalProps> = ({
   isOpen,
   onClose,
-  title = 'About Transparency',
-  metricName = 'Transparency',
-  description = `transparency_refers to making all relevant data about transactions, decisions, and activities accessible to anyone. For instance, consider an NFT (Non-Fungible Token) marketplace in a Web3 project:
-Transaction Data: Every sale or purchase on the platform is recorded on a blockchain ledger, which is public and transparent. Anyone can see who bought what from whom at any given time, providing clear ownership history of NFTs.
-Decision-Making Process: In decentralized communities running on Web3 protocols, governance decisions are often made through proposals submitted by community members, voted upon publicly using DAO (Decentralized Autonomous Organization) mechanisms. The voting results and the rationale behind each decision can be transparent to all participants, ensuring accountability and trust in how funds or resources are allocated.
-Smart Contract Audit: Before a project launches on blockchain networks like Ethereum, it often undergoes an audit by security firms to identify potential vulnerabilities or issues. These audits are typically made public after completion, providing transparency into the security aspects of the smart contracts that govern various functionalities within the project ecosystem.`,
+  title,
+  metricName,
+  children,
 }) => {
   return (
     <Modal
@@ -42,7 +39,7 @@ Smart Contract Audit: Before a project launches on blockchain networks like Ethe
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] p-[20px]">
           <span className="font-open-sans text-[16px] font-semibold leading-[1.36181640625] text-black opacity-80">
-            {title}
+            {title || `About ${metricName || 'Metric'}`}
           </span>
           <Button
             isIconOnly
@@ -66,9 +63,9 @@ Smart Contract Audit: Before a project launches on blockchain networks like Ethe
 
           {/* Description */}
           <div className="flex-1">
-            <p className="whitespace-pre-line text-[14px] font-normal leading-[1.5999999727521623] text-black">
-              {description}
-            </p>
+            <div className="whitespace-pre-line text-[14px] font-normal leading-[1.5999999727521623] text-black">
+              {children}
+            </div>
           </div>
         </div>
 
