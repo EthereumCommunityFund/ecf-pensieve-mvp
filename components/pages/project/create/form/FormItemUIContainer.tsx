@@ -88,7 +88,7 @@ export const FormItemUIContainer: React.FC<IFormItemUIContainerProps> = ({
       )}
       {children}
       {showReference && (
-        <div className="flex h-[28px] items-center justify-end px-[8px] opacity-60">
+        <div className="flex h-[28px] items-center justify-start opacity-60">
           <Button
             color="secondary"
             className={cn(
