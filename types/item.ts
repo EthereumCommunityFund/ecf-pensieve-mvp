@@ -81,6 +81,19 @@ export enum IItemGroupEnum {
   TokenDetails = 'Token Details',
 }
 
+export interface IDateConstraints {
+  minDate?: Date | string | 'today' | 'yesterday' | 'tomorrow'; // 最小日期
+  maxDate?: Date | string | 'today' | 'yesterday' | 'tomorrow'; // 最大日期
+  disabledDates?: Date[] | string[]; // 禁用的特定日期
+  disabledDaysOfWeek?: number[]; // 禁用的星期几 (0-6, 0为周日)
+  enabledDateRanges?: Array<{ start: Date | string; end: Date | string }>; // 只允许的日期范围
+  yearRange?: { min?: number; max?: number }; // 年份范围限制
+  relativeToToday?: {
+    minDaysFromToday?: number; // 距离今天的最小天数（负数表示过去，正数表示未来）
+    maxDaysFromToday?: number; // 距离今天的最大天数
+  };
+}
+
 export interface IItemConfig<K extends IItemKey> {
   key: K;
   category: IItemCategoryEnum;
@@ -99,9 +112,10 @@ export interface IItemConfig<K extends IItemKey> {
   showExpand?: boolean; // Whether the field can be expanded in the projectDetail/proposal table
   startContentText?: string; // For URL inputs
   minRows?: number; // For Textarea
-  // TODO
   accountability?: string[];
   legitimacy?: string[];
+  dateConstraints?: IDateConstraints; // Date constraints for date type fields
+  componentsProps?: Record<string, any>; // For custom props of the components
 }
 
 export type IFormDisplayType =

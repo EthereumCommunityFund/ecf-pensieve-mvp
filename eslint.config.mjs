@@ -108,8 +108,8 @@ export default [
         },
       ],
 
-      // 禁用 PropTypes 相关规则，因为我们使用 TypeScript 进行类型检查
       'react/prop-types': 'off',
+      'no-case-declarations': 'off',
     },
   },
   {

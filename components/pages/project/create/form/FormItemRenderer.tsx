@@ -1,7 +1,6 @@
 import { Avatar } from '@heroui/react';
-import { DateValue, parseDate } from '@internationalized/date';
+import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
-import dayjs from 'dayjs';
 import React from 'react';
 import {
   ControllerFieldState,
@@ -20,6 +19,11 @@ import {
 } from '@/components/base';
 import { CalendarBlankIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
+import {
+  buildDatePickerProps,
+  dateToDateValue,
+  dateValueToDate,
+} from '@/utils/formatters';
 
 import { IProjectFormData } from '../types';
 
@@ -49,31 +53,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     startContentText,
     minRows,
     formDisplayType,
+    componentsProps = {},
   } = itemConfig;
 
-  // 始终获取 form context，但只在需要时使用
   const { register } = useFormContext<IProjectFormData>();
-
-  const dateToDateValue = (date: Date | null | undefined): DateValue | null => {
-    if (!date) return null;
-    try {
-      const dateString = dayjs(date).format('YYYY-MM-DD');
-      return parseDate(dateString);
-    } catch (e) {
-      console.error('Error parsing date for DatePicker:', date, e);
-      return null;
-    }
-  };
-
-  const dateValueToDate = (dateValue: DateValue | null): Date | null => {
-    if (!dateValue) return null;
-    try {
-      return dayjs(dateValue.toString()).toDate();
-    } catch (e) {
-      console.error('Error converting DateValue to Date:', dateValue, e);
-      return null;
-    }
-  };
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
@@ -257,26 +240,31 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         </div>
       );
     }
-    case 'date':
+    case 'date': {
+      const dateConstraintProps = buildDatePickerProps(
+        itemConfig.dateConstraints,
+      );
+
       return (
         <div>
           <DatePicker
-            showMonthAndYearPickers={true} // Default, can be from itemConfig
+            showMonthAndYearPickers={true}
             value={dateToDateValue(field.value)}
             onChange={(dateValue: DateValue | null) => {
               field.onChange(dateValueToDate(dateValue));
             }}
             isInvalid={!!error}
             isDisabled={isDisabled}
-            // isRequired={itemConfig.isEssential} // Or a specific 'isRequired' in itemConfig
-            className="w-full" // Default, can be from itemConfig
+            className="w-full"
             aria-label={label}
-            radius="sm" // Default, can be from itemConfig
-            selectorIcon={<CalendarBlankIcon size={20} />} // Default
+            radius="sm"
+            selectorIcon={<CalendarBlankIcon size={20} />}
+            {...dateConstraintProps}
           />
           {errorMessageElement}
         </div>
       );
+    }
 
     case 'founderList': {
       // 确保有有效的数组数据
