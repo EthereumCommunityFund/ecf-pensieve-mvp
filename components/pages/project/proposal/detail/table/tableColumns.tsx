@@ -382,7 +382,7 @@ export const useCreateProposalTableColumns = ({
           return (
             <TooltipThWithPin
               title="Support"
-              tooltipContext="Number of supporters for this property"
+              tooltipContext="Amount of Contribution Points and number of supporters"
               columnId="support"
               category={category}
               isPinned={isColumnPinned(category, 'support')}
