@@ -25,20 +25,22 @@ const SectionList = (props: ISectionProps) => {
     <div>
       <div
         className="mobile:h-auto mobile:flex-col mobile:items-start mobile:gap-2.5
-				mt-5 flex h-[65px]
+				mt-5 flex
 				items-center justify-between
 				px-[20px]"
       >
-        <div className="mobile:h-auto h-[57px]">
+        <div className="mobile:h-auto">
           <ECFTypography type={'subtitle1'} className="font-bold opacity-80">
             {props.title}
           </ECFTypography>
-          <ECFTypography
-            type={'body2'}
-            className="mt-[5px] font-normal leading-[19px] opacity-80"
-          >
-            {props.description}
-          </ECFTypography>
+          {props.description && (
+            <ECFTypography
+              type={'body2'}
+              className="mt-[5px] font-normal leading-[19px] opacity-80"
+            >
+              {props.description}
+            </ECFTypography>
+          )}
         </div>
         {props.buttonText && (
           <Link href="/projects">
@@ -72,8 +74,8 @@ const HomeList = () => {
   return (
     <div className="mt-5">
       <SectionList
-        title="Top Transparent Projects"
-        description="Page Completion Rate (Transparency) * User Supported Votes"
+        title="Recent Projects"
+        description=""
         buttonText="View All Projects"
         onClick={viewAllProject}
       >
