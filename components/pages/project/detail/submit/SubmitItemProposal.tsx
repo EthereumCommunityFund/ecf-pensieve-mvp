@@ -92,8 +92,15 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     resolver: yupResolver(createItemValidationSchema(itemKey)),
   });
 
-  const { control, handleSubmit, setValue, clearErrors, formState, trigger } =
-    methods;
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    clearErrors,
+    formState,
+    trigger,
+    getValues,
+  } = methods;
 
   const [editReason, setEditReason] = useState('');
   const [submissionStep, setSubmissionStep] = useState<
@@ -222,8 +229,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   );
 
   const onNext = useCallback(() => {
-    handleSubmit(handleProceedToPreview)();
-  }, [handleSubmit, handleProceedToPreview]);
+    handleProceedToPreview(getValues());
+  }, [handleProceedToPreview, getValues]);
 
   const triggerActualAPISubmission = useCallback(() => {
     if (!dataForPreview) return;
