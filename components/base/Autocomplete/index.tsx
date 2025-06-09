@@ -3,6 +3,8 @@ import TextField from '@mui/material/TextField';
 import * as React from 'react';
 import { useCallback } from 'react';
 
+import { CheckSelectIcon } from '@/components/icons';
+
 import SelectCheckItem from './selectCheckItem';
 
 const filter = createFilterOptions<FilmOptionType>();
@@ -69,9 +71,9 @@ export default function SelectCategories({
           color: 'black',
           fontSize: '14px',
           '& .MuiChip-deleteIcon': {
-            color: 'rgba(0, 0, 0, 0.6)',
+            color: 'rgba(0, 0, 0, 0.3)',
             '&:hover': {
-              color: 'rgba(0, 0, 0, 0.8)',
+              color: 'rgba(0, 0, 0, 0.5)',
             },
           },
         },
@@ -120,32 +122,57 @@ export default function SelectCategories({
         popper: {
           sx: {
             zIndex: 9999, // 确保下拉框显示在最上层
+            marginTop: '4px !important', // 下拉框离输入框 4px 距离
             '& .MuiAutocomplete-paper': {
-              maxHeight: '200px', // 限制下拉框最大高度
-              overflow: 'auto',
+              backgroundColor: 'white', // 白色底
+              border: '1px solid #e4e4e7',
+              borderRadius: '12px', // 圆角处理
+              boxShadow:
+                '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+              maxHeight: '256px', // 限制下拉框最大高度
+              overflow: 'hidden', // 防止内容溢出
             },
             '& .MuiAutocomplete-listbox': {
-              backgroundColor: 'white',
-              border: '1px solid rgba(0, 0, 0, 0.1)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              maxHeight: '200px', // 限制列表最大高度
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderRadius: '0',
+              boxShadow: 'none',
+              maxHeight: '256px', // 限制列表最大高度
               overflow: 'auto', // 添加滚动条
+              padding: '6px', // 添加内边距
               '& .MuiAutocomplete-option': {
-                color: 'black',
+                color: 'rgba(0, 0, 0, 0.8)',
                 fontSize: '14px',
-                minHeight: '36px', // 设置选项最小高度
+                fontWeight: '400',
+                minHeight: '30px', // 设置选项最小高度
+                padding: '0 12px', // 设置选项内边距
+                borderRadius: '8px', // 选项圆角
+                margin: '1px 0', // 选项间距
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.15s ease',
                 '&[aria-selected="true"]': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: 'transparent', // 已选中不需要底色
                 },
-                '&.Mui-focused': {
-                  backgroundColor: 'rgb(212, 212, 216)',
+                '&.Mui-focused, &:hover': {
+                  backgroundColor: '#d4d4d8', // hover 背景色
                 },
+                '&[aria-selected="true"].Mui-focused, &[aria-selected="true"]:hover':
+                  {
+                    backgroundColor: '#d4d4d8', // 已选中项的 hover 状态
+                  },
               },
             },
           },
           placement: 'bottom-start', // 确保下拉框在输入框下方
           modifiers: [
+            {
+              name: 'offset',
+              options: {
+                offset: [0, 4], // 设置 4px 间距
+              },
+            },
             {
               name: 'flip',
               enabled: true,
@@ -177,15 +204,14 @@ export default function SelectCategories({
       }}
       renderOption={(props, option) => {
         const { key, ...optionProps } = props as any;
+        const isSelected =
+          value.findIndex((item) => item.value === option.value) > -1;
+        const isAddOption = (option as any).isAdd;
+
         return (
           <li key={key} {...optionProps}>
-            <SelectCheckItem
-              label={option.label}
-              isChecked={
-                value.findIndex((item) => item.value === option.value) > -1
-              }
-              showCheck={!(option as any).isAdd}
-            />
+            <span style={{ flex: 1 }}>{option.label}</span>
+            {isSelected && !isAddOption && <CheckSelectIcon size={12} />}
           </li>
         );
       }}
@@ -203,25 +229,28 @@ export default function SelectCategories({
                 borderRadius: '8px',
                 minHeight: '40px',
                 fontSize: '14px',
-                color: 'black',
+                color: '#18181b',
+                transition: 'all 0.15s ease',
                 '& fieldset': {
                   borderColor: 'rgba(0, 0, 0, 0.1)',
+                  borderWidth: '1px',
                 },
                 '&:hover fieldset': {
-                  borderColor: 'rgba(0, 0, 0, 0.4)',
+                  borderColor: '#d4d4d8',
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: 'rgba(0, 0, 0, 0.4)',
+                  borderColor: '#18181b',
                   borderWidth: '1px',
                 },
                 '&.Mui-error fieldset': {
                   borderColor: '#ef4444',
+                  borderWidth: '1px',
                 },
                 '& .MuiOutlinedInput-input': {
-                  padding: '0 10px',
-                  color: 'black',
+                  padding: '0 12px',
+                  color: '#18181b',
                   '&::placeholder': {
-                    color: 'rgba(0, 0, 0, 0.6)',
+                    color: '#71717a',
                     opacity: 1,
                   },
                 },
