@@ -221,6 +221,10 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     ],
   );
 
+  const onNext = useCallback(() => {
+    handleSubmit(handleProceedToPreview)();
+  }, [handleSubmit, handleProceedToPreview]);
+
   const triggerActualAPISubmission = useCallback(() => {
     if (!dataForPreview) return;
 
@@ -346,7 +350,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
               color="primary"
               isLoading={false}
               className="w-full"
-              type="submit"
+              onPress={onNext}
             >
               Next
             </Button>
