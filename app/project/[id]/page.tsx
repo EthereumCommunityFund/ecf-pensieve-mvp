@@ -1,13 +1,12 @@
 'use client';
 
-import { cn, Skeleton, Tab, Tabs } from '@heroui/react';
+import { Skeleton } from '@heroui/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
-import ContributeButton from '@/components/pages/project/detail/ContributeButton';
 import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
@@ -21,7 +20,7 @@ import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
   { key: 'project-data', label: 'Profile' },
-  { key: 'ecosystem', label: 'Ecosystem' },
+  // { key: 'ecosystem', label: 'Ecosystem' },
   // { key: 'profile', label: 'Profile' },
   // { key: 'review', label: 'Review' },
 ];
@@ -143,7 +142,7 @@ const ProjectPage = () => {
 
       <ProjectDetailCard project={project} />
 
-      <div className="tablet:px-[10px] mobile:px-[10px] mt-[20px] px-[20px]">
+      {/* <div className="tablet:px-[10px] mobile:px-[10px] mt-[20px] px-[20px]">
         <div className="flex items-center justify-between">
           <Tabs
             selectedKey={activeTab}
@@ -181,7 +180,7 @@ const ProjectPage = () => {
           </Tabs>
           <ContributeButton onClick={handleContribute} />
         </div>
-      </div>
+      </div> */}
 
       {activeTab === 'project-data' && (
         <ProjectDetailTable
