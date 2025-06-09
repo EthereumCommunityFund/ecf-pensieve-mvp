@@ -204,6 +204,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    dateConstraints: {},
   },
   dateLaunch: {
     key: 'dateLaunch',
@@ -222,6 +223,12 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency', 'Performance Eval'],
     legitimacy: [],
+    dateConstraints: {
+      maxDate: 'today',
+      relativeToToday: {
+        minDaysFromToday: -365 * 20,
+      },
+    },
   },
   devStatus: {
     key: 'devStatus',
