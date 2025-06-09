@@ -1,9 +1,11 @@
 import { cn } from '@heroui/react';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useParams } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { IModalContentType } from '@/app/project/[id]/page';
+import { addToast } from '@/components/base';
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
 import FormItemManager from '@/components/pages/project/create/form/FormItemManager';
@@ -15,6 +17,7 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { trpc } from '@/lib/trpc/client';
 import { IItemConfig, IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import AddReferenceModal from '../../create/AddReferenceModal';
@@ -85,9 +88,12 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     defaultValues: {
       [itemConfig.key]: '',
     },
+    mode: 'all',
+    resolver: yupResolver(createItemValidationSchema(itemKey)),
   });
 
-  const { control, handleSubmit, setValue, clearErrors, formState } = methods;
+  const { control, handleSubmit, setValue, clearErrors, formState, trigger } =
+    methods;
 
   const [editReason, setEditReason] = useState('');
   const [submissionStep, setSubmissionStep] = useState<
@@ -102,6 +108,35 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
   const createItemProposalMutation =
     trpc.itemProposal.createItemProposal.useMutation();
+
+  const getApplicableFields = useCallback(
+    (fields: string[]) => {
+      return fields.filter((field) => {
+        if (field in fieldApplicability) {
+          return fieldApplicability[field];
+        }
+        return true;
+      });
+    },
+    [fieldApplicability],
+  );
+
+  const validateFields = useCallback(async (): Promise<boolean> => {
+    const fieldsToValidate = getApplicableFields([itemConfig.key]);
+
+    const isValid =
+      fieldsToValidate.length > 0 ? await trigger(fieldsToValidate) : true;
+
+    if (!isValid) {
+      addToast({
+        title: 'Validation Error',
+        description: 'Please fix the errors before proceeding',
+        color: 'warning',
+      });
+    }
+
+    return isValid;
+  }, [itemConfig.key, getApplicableFields, trigger]);
 
   const handleApplicabilityChange = useCallback(
     (field: string, value: boolean) => {
@@ -160,8 +195,10 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   );
 
   const handleProceedToPreview = useCallback(
-    (formData: IFormData) => {
-      // TODO form validate
+    async (formData: IFormData) => {
+      const isValid = await validateFields();
+      if (!isValid) return;
+
       const formValue = formData[itemConfig.key];
       const isApplicableFalse =
         itemConfig.showApplicable && !fieldApplicability[itemConfig.key];
@@ -175,7 +212,13 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       });
       setSubmissionStep('preview');
     },
-    [itemConfig, fieldApplicability, getFieldReference, editReason],
+    [
+      itemConfig,
+      fieldApplicability,
+      getFieldReference,
+      editReason,
+      validateFields,
+    ],
   );
 
   const triggerActualAPISubmission = useCallback(() => {

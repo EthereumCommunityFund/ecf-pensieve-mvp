@@ -7,6 +7,8 @@ import {
   IItemSubCategoryEnum,
 } from '@/types/item';
 
+import { itemValidationSchemas } from './itemSchemas';
+
 export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
   name: {
     key: 'name',
@@ -22,6 +24,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.name,
   },
   tagline: {
     key: 'tagline',
@@ -39,6 +42,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showExpand: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.tagline,
   },
   categories: {
     key: 'categories',
@@ -64,6 +68,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: ['Community Participation'],
+    validationSchema: itemValidationSchemas.categories,
   },
   tags: {
     key: 'tags',
@@ -106,6 +111,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     ],
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.tags,
   },
   mainDescription: {
     key: 'mainDescription',
@@ -123,6 +129,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showExpand: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.mainDescription,
   },
   logoUrl: {
     key: 'logoUrl',
@@ -138,6 +145,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.logoUrl,
   },
   websiteUrl: {
     key: 'websiteUrl',
@@ -154,6 +162,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.websiteUrl,
   },
   appUrl: {
     key: 'appUrl',
@@ -172,6 +181,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.appUrl,
   },
   whitePaper: {
     key: 'whitePaper',
@@ -189,6 +199,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: ['Legitimacy by Process'],
+    validationSchema: itemValidationSchemas.whitePaper,
   },
   dateFounded: {
     key: 'dateFounded',
@@ -205,6 +216,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     accountability: ['Transparency'],
     legitimacy: [],
     dateConstraints: {},
+    validationSchema: itemValidationSchemas.dateFounded,
   },
   dateLaunch: {
     key: 'dateLaunch',
@@ -229,6 +241,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
         minDaysFromToday: -365 * 20,
       },
     },
+    validationSchema: itemValidationSchemas.dateLaunch,
   },
   devStatus: {
     key: 'devStatus',
@@ -255,6 +268,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency', 'Performance Eval'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.devStatus,
   },
   openSource: {
     key: 'openSource',
@@ -274,6 +288,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency', 'Participation'],
     legitimacy: ['Community Participation'],
+    validationSchema: itemValidationSchemas.openSource,
   },
   codeRepo: {
     key: 'codeRepo',
@@ -291,6 +306,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency', 'Participation', 'Performance Eval'],
     legitimacy: ['Community Participation'],
+    validationSchema: itemValidationSchemas.codeRepo,
   },
   dappSmartContracts: {
     key: 'dappSmartContracts',
@@ -308,6 +324,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showExpand: true,
     accountability: ['Transparency'],
     legitimacy: ['Legitimacy by Process'],
+    validationSchema: itemValidationSchemas.dappSmartContracts,
   },
   orgStructure: {
     key: 'orgStructure',
@@ -323,6 +340,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency', 'Participation'],
     legitimacy: ['Community Participation'],
+    validationSchema: itemValidationSchemas.orgStructure,
   },
   publicGoods: {
     key: 'publicGoods',
@@ -342,6 +360,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency'],
     legitimacy: ['Community Participation'],
+    validationSchema: itemValidationSchemas.publicGoods,
   },
   founders: {
     key: 'founders',
@@ -359,6 +378,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showExpand: true,
     accountability: ['Transparency', 'Participation'],
     legitimacy: ['Legitimacy by Continuity'],
+    validationSchema: itemValidationSchemas.founders,
   },
   fundingStatus: {
     key: 'fundingStatus',
@@ -379,6 +399,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: ['Transparency', 'Participation'],
     legitimacy: ['Community Acceptance'],
+    validationSchema: itemValidationSchemas.fundingStatus,
   },
   tokenContract: {
     key: 'tokenContract',
@@ -397,6 +418,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showApplicable: true,
     accountability: ['Transparency'],
     legitimacy: [],
+    validationSchema: itemValidationSchemas.tokenContract,
   },
   adoption_plan: {
     key: 'adoption_plan',
