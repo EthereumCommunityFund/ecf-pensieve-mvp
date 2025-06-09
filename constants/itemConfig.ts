@@ -30,7 +30,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.tagline.isEssential,
     label: 'Tagline',
     description:
-      'provide a simple short description about this project to display on its card',
+      'Write a short and clear sentence that captures the essence of the project.',
     shortDescription: 'A simple and catchy slogan for the project.',
     weight: ALL_POC_ITEM_MAP.tagline.weight,
     formDisplayType: 'string',
@@ -47,7 +47,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.categories.isEssential,
     label: 'Project Category',
     description:
-      'provide a simple short description about this project to display on its card',
+      "Select the categories that best fit the project's domain or impact area.",
     shortDescription: 'Categorize the project into relevant categories.',
     weight: ALL_POC_ITEM_MAP.categories.weight,
     formDisplayType: 'selectMultiple',
@@ -71,7 +71,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.tags.isEssential,
     label: 'Tags',
-    description: 'provide a list of tags for this project',
+    description:
+      "Select or create the tags that best describe the project's focus, impact area, or techs.",
     shortDescription: 'A list of tags for the project.',
     weight: ALL_POC_ITEM_MAP.tags.weight,
     formDisplayType: 'autoComplete',
@@ -115,7 +116,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.mainDescription.isEssential,
     label: 'Project Description',
-    description: 'provide a longer description about this project in detail',
+    description: 'Provide a detailed overview of the project.',
     shortDescription: 'A comprehensive description of the project.',
     weight: ALL_POC_ITEM_MAP.mainDescription.weight,
     formDisplayType: 'textarea',
@@ -310,7 +311,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.Organization,
     isEssential: POC_ITEMS.orgStructure.isEssential,
     label: 'Organization Structure',
-    description: 'With what structure does this project operate?',
+    description: "Describe the project's governance model.",
     shortDescription: 'The organizational and governance model of the project.',
     weight: ALL_POC_ITEM_MAP.orgStructure.weight,
     formDisplayType: 'string',
@@ -361,7 +362,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.Finances,
     isEssential: POC_ITEMS.fundingStatus.isEssential,
     label: 'Funding Status',
-    description: 'Select the current status of their funding phase',
+    description: 'Indicate whether the project has been funded.',
     shortDescription: 'The sources and status of project funding.',
     weight: ALL_POC_ITEM_MAP.fundingStatus.weight,
     formDisplayType: 'select',
@@ -381,7 +382,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.Token,
     isEssential: POC_ITEMS.tokenContract.isEssential,
     label: 'Token Contract',
-    description: 'Input the projects token contract address',
+    description:
+      "Provide the address of the project's token smart contract, if applicable.",
     shortDescription:
       'The contract address of the project token on the blockchain.',
     weight: ALL_POC_ITEM_MAP.tokenContract.weight,
@@ -399,7 +401,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.adoption_plan.isEssential,
     label: 'Adoption Plan',
-    description: 'Provide the adoption plan for this project',
+    description:
+      'Describe how the project plans to grow its user base or drive adoption of the project.',
     shortDescription:
       'The plan for the project to be adopted by the community.',
     weight: ALL_POC_ITEM_MAP.adoption_plan.weight,
@@ -416,7 +419,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.launch_plan.isEssential,
     label: 'Launch Plan',
-    description: 'Provide the launch plan for this project',
+    description: 'Outline how and when the project plans to launch it.',
     shortDescription:
       'The plan for the project to be launched by the community.',
     weight: ALL_POC_ITEM_MAP.launch_plan.weight,
@@ -449,7 +452,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.Development,
     isEssential: POC_ITEMS.audit_status.isEssential,
     label: 'Audit Status',
-    description: 'Select the current status of their audit',
+    description:
+      "Describe whether the project's code has been audited. If yes, mention the auditor and the audit date if available.",
     shortDescription: 'The most recent audit status of the project.',
     weight: ALL_POC_ITEM_MAP.audit_status.weight,
     formDisplayType: 'textarea',
@@ -546,7 +550,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.ownership_of_project.isEssential,
     label: 'Ownership of Project',
     description:
-      'Describe the ownership structure and distribution of the project',
+      "Who owns or controls the project? Specify if it's founder-owned, community-owned, owned by a company, DAO, or another structure.",
     shortDescription:
       'The ownership structure and distribution model of the project.',
     weight: ALL_POC_ITEM_MAP.ownership_of_project.weight,
