@@ -191,7 +191,7 @@ export default function SelectCategories({
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'rgba(0, 0, 0, 0.05)',
                 borderRadius: '8px',
-                height: '40px',
+                minHeight: '40px',
                 fontSize: '14px',
                 color: 'black',
                 '& fieldset': {
