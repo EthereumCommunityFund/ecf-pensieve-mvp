@@ -115,6 +115,7 @@ export interface IItemConfig<K extends IItemKey> {
   accountability?: string[];
   legitimacy?: string[];
   dateConstraints?: IDateConstraints; // Date constraints for date type fields
+  validationSchema?: any; // Validation schema for the item
   componentsProps?: Record<string, any>; // For custom props of the components
 }
 
