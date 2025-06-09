@@ -100,7 +100,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
         children: (
           <div className="flex items-center gap-[5px]">
             <CheckedCircleIcon />
-            <span>Your proposal is now posted in the Contribute Page</span>
+            <span>Your proposal is now posted in the Pending Page</span>
           </div>
         ),
       },
@@ -121,7 +121,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
                 <span className="font-[700]">
                   {isProject ? RewardWeight : '0'}
                 </span>{' '}
-                to your CP
+                Contribution Points
               </p>
             </div>
           </div>

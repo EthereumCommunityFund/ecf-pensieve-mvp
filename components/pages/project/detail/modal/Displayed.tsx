@@ -80,6 +80,7 @@ const Displayed: FC<DisplayedProps> = ({
     isProposalsByKeyLoading,
     isProposalsByKeyFetched,
     showSubmitterModal,
+    isLeadingProposalNotLeading,
   } = useProjectDetailContext();
 
   // 展开行状态管理
@@ -159,7 +160,7 @@ const Displayed: FC<DisplayedProps> = ({
       </div>
 
       {/* Consensus Status Info */}
-      {showRowOverTaken && (
+      {isLeadingProposalNotLeading && (
         <div className="flex items-center gap-[5px] rounded-[10px]">
           <ClockClockwiseIcon size={20} />
           <span className="font-sans text-[13px] font-normal leading-[18px] text-black">

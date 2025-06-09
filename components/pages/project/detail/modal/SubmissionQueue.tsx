@@ -72,6 +72,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     inActionItemProposalIdMap,
     currentItemKey,
     showSubmitterModal,
+    isLeadingProposalNotLeading,
   } = useProjectDetailContext();
 
   const toggleDisplayedRowExpanded = useCallback((uniqueId: string) => {
@@ -227,27 +228,36 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
   return (
     <div className="flex flex-col gap-[20px]">
       {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
-      {showRowOverTaken && (
+      {isLeadingProposalNotLeading && (
         <>
           {/* Item Info */}
           <div className="flex flex-col gap-[5px]">
             <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
           </div>
-          <div className="flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]">
-            <ClockClockwiseIcon size={50} />
+          <div
+            className={cn(
+              'flex gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]',
+              showRowOverTaken ? 'items-start' : 'items-center',
+            )}
+          >
+            <div className="shrink-0">
+              <ClockClockwiseIcon size={24} />
+            </div>
             <div className="flex flex-col gap-[5px]">
               <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
                 Consensus in Progress
               </span>
-              <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
-                <b>
-                  The displayed submission is now outpaced by a leading
-                  submission with more support.{' '}
-                </b>
-                To keep the displayed submission in place, additional support is
-                needed, or if the leading submission surpasses the Item Weight,
-                it will replace the displayed one.
-              </span>
+              {showRowOverTaken && (
+                <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
+                  <b>
+                    The displayed submission is now outpaced by a leading
+                    submission with more support.{' '}
+                  </b>
+                  To keep the displayed submission in place, additional support
+                  is needed, or if the leading submission surpasses the Item
+                  Weight, it will replace the displayed one.
+                </span>
+              )}
             </div>
           </div>
         </>

@@ -51,6 +51,7 @@ interface ProjectDetailContextType {
   tableDataOfDisplayed: IProjectTableRowData[];
   tableDataOfSubmissionQueue: IProjectTableRowData[];
 
+  isLeadingProposalNotLeading: boolean;
   // 表格显示控制
   showRowOverTaken: boolean;
   showRowIsLeading: boolean;
@@ -140,6 +141,7 @@ const createDefaultContext = (): ProjectDetailContextType => ({
   tableDataOfDisplayed: [],
   tableDataOfSubmissionQueue: [],
 
+  isLeadingProposalNotLeading: false,
   // 表格显示控制
   showRowOverTaken: false,
   showRowIsLeading: false,
@@ -515,12 +517,31 @@ export const ProjectDetailProvider = ({
     return list.sort((a, b) => b.support.count - a.support.count);
   }, [proposalsByProjectIdAndKey, getItemTopWeight, project?.hasProposalKeys]);
 
-  // 计算是否显示被超越行
-  const showRowOverTaken = useMemo(() => {
+  const isLeadingProposalNotLeading = useMemo(() => {
     const { leadingProposal } = proposalsByProjectIdAndKey || {};
     if (!leadingProposal) return false;
     return !!leadingProposal.isNotLeading;
   }, [proposalsByProjectIdAndKey]);
+
+  // 计算是否显示被超越行
+  const showRowOverTaken = useMemo(() => {
+    const { leadingProposal } = proposalsByProjectIdAndKey || {};
+    if (!leadingProposal) return false;
+    const leadingProposalWeight =
+      leadingProposal.itemProposal?.voteRecords.reduce(
+        (acc, vote) => acc + Number(vote.weight),
+        0,
+      ) || 0;
+    const weightOfFirstProposalInQueue =
+      tableDataOfSubmissionQueue[0]?.support.count || 0;
+    if (
+      !!leadingProposal.isNotLeading &&
+      weightOfFirstProposalInQueue > leadingProposalWeight
+    ) {
+      return true;
+    }
+    return false;
+  }, [proposalsByProjectIdAndKey, tableDataOfSubmissionQueue]);
 
   // 计算是否显示领先行
   const showRowIsLeading = useMemo(() => {
@@ -658,6 +679,7 @@ export const ProjectDetailProvider = ({
       tableDataOfDisplayed,
       tableDataOfSubmissionQueue,
 
+      isLeadingProposalNotLeading,
       // 表格显示控制
       showRowOverTaken,
       showRowIsLeading,
@@ -735,6 +757,7 @@ export const ProjectDetailProvider = ({
       tableDataOfDisplayed,
       tableDataOfSubmissionQueue,
 
+      isLeadingProposalNotLeading,
       // 表格显示控制依赖
       showRowOverTaken,
       showRowIsLeading,
