@@ -109,13 +109,7 @@ export const technicalsSchema = yup.object().shape({
 });
 
 export const organizationSchema = yup.object().shape({
-  orgStructure: yup
-    .string()
-    .oneOf(
-      ['Centralized', 'DAO', 'Decentralized'],
-      'Invalid organization structure',
-    )
-    .required('Organization structure is required'),
+  orgStructure: yup.string().required('Organization structure is required'),
   publicGoods: yup
     .string()
     .required('Please select whether the project is a public good'),

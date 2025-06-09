@@ -122,9 +122,10 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
 };
 
 export const FakeProjectFormData: IProjectFormData = {
-  name: 'Fake Project for testing',
-  tagline: 'fake tagline',
-  categories: ['Development', 'Design'],
+  name: 'Project for testing',
+  tagline: 'Tagline of project',
+  categories: ['Infrastructure', 'Applications/dApps'],
+  tags: ['Optimism', 'Ethereum'],
   mainDescription:
     'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology. Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
   logoUrl:
@@ -134,14 +135,13 @@ export const FakeProjectFormData: IProjectFormData = {
   dateFounded: new Date('2026-01-01'),
   dateLaunch: new Date('2026-01-01'),
   devStatus: 'Beta',
-  fundingStatus: 'Funded',
+  fundingStatus: 'Yes',
   openSource: 'Yes',
   codeRepo: 'https://github.com/fake-project',
   tokenContract: '0x1234567890123456789012345678901234567890',
   orgStructure: 'DAO',
   publicGoods: 'Yes',
   founders: [{ name: 'John Doe', title: 'Founder' }],
-  tags: ['Optimism', 'Ethereum'],
   whitePaper: 'https://fake-project.com/whitepaper.pdf',
   dappSmartContracts: '0x1234567890123456789012345678901234567890',
 };
