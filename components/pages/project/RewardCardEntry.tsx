@@ -18,7 +18,7 @@ const RewardCard = () => {
           className="w-full rounded-[8px] border-none bg-black/5"
           onPress={() => {
             window.open(
-              'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
+              'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus/3.2-genesis-creation',
               '_blank',
             );
           }}

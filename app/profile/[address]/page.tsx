@@ -51,7 +51,7 @@ const ProfileSettingsPage = () => {
     <div className="mobile:px-[10px] px-[40px]">
       <div className="tablet:w-full mx-auto flex w-full max-w-[800px] flex-col items-center gap-5 pb-16 pt-8">
         <div className="mobile:flex-col flex w-full items-center justify-center gap-[10px]">
-          <div className="mobile:flex-col mobile:w-full flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+          <div className="mobile:w-full mobile:flex-col flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
             <ECFTypography type="caption" className="opacity-50">
               Connected Address:
             </ECFTypography>
@@ -62,7 +62,7 @@ const ProfileSettingsPage = () => {
 
           <div className="mobile:w-full flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
             <ECFTypography type="caption" className="opacity-50">
-              Weight:
+              Contribution Points:
             </ECFTypography>
             <Skeleton isLoaded={!!user}>
               <ECFTypography type="caption" className="opacity-80">

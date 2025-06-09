@@ -4,6 +4,7 @@ import { Avatar, cn } from '@heroui/react';
 import { ReactNode, memo, useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/base';
+import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import {
   CaretDownIcon,
   CaretDownYellowIcon,
@@ -835,6 +836,9 @@ const AccountabilityCell = ({
   accountability,
   onMetricClick,
 }: AccountabilityColCellProps) => {
+  // Use Context for metric modal if onMetricClick is not provided
+  const { openMetricModal } = useMetricDetailModal();
+  const handleMetricClick = onMetricClick || openMetricModal;
   if (!accountability || accountability.length === 0) {
     return (
       <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
@@ -849,7 +853,7 @@ const AccountabilityCell = ({
         <div
           key={index}
           className="flex cursor-pointer items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px] transition-colors hover:bg-[#E5E5E5]"
-          onClick={() => onMetricClick?.(metric)}
+          onClick={() => handleMetricClick(metric)}
         >
           <span className="text-center text-[13px] font-[500] leading-[19px] text-[#333333]">
             {metric}
@@ -918,6 +922,9 @@ const LegitimacyCell = ({
   legitimacy,
   onMetricClick,
 }: LegitimacyColCellProps) => {
+  // Use Context for metric modal if onMetricClick is not provided
+  const { openMetricModal } = useMetricDetailModal();
+  const handleMetricClick = onMetricClick || openMetricModal;
   if (!legitimacy || legitimacy.length === 0) {
     return (
       <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
@@ -932,7 +939,7 @@ const LegitimacyCell = ({
         <div
           key={index}
           className="flex cursor-pointer items-center justify-center gap-[10px] rounded-[20px] bg-[#F5F5F5] px-[8px] py-[4px] transition-colors hover:bg-[#E5E5E5]"
-          onClick={() => onMetricClick?.(metric)}
+          onClick={() => handleMetricClick(metric)}
         >
           <span className="text-center text-[13px] font-[500] leading-[19px] text-[#333333]">
             {metric}

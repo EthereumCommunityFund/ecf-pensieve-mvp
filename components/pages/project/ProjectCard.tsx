@@ -4,10 +4,9 @@ import { cn, Image, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
 import Link from 'next/link';
 
-import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
 import { useAuth } from '@/context/AuthContext';
-import { formatNumber, formatTimeAgo } from '@/lib/utils';
+import { formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
@@ -130,7 +129,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 
         {/* TODO： Like logic */}
         <div className="flex-col items-center justify-center gap-[4px] text-center">
-          <Button
+          {/* <Button
             isIconOnly
             className={cn('rounded-[8px] size-[40px] bg-black/5')}
           >
@@ -145,7 +144,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
 
           <p className="font-saria text-[13px] font-semibold leading-[20px] text-black opacity-60">
             {formatNumber(Math.round(Math.random() * 100000))}
-          </p>
+          </p> */}
         </div>
       </Link>
     </div>
