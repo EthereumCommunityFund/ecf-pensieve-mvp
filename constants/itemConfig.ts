@@ -394,7 +394,6 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     accountability: ['Transparency'],
     legitimacy: [],
   },
-
   adoption_plan: {
     key: 'adoption_plan',
     category: IItemCategoryEnum.Basics,
@@ -652,7 +651,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription:
       'Links to income and revenue statements with descriptive labels.',
     weight: ALL_POC_ITEM_MAP.income_and_revenue_statements.weight,
-    formDisplayType: 'stringMultiple',
+    formDisplayType: 'stringMultiple', // TODO: type need to be updated
     placeholder: 'Add income/revenue statement URL',
     showReference: true,
     accountability: [
@@ -692,7 +691,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     description: 'Select the type of token or specify other type',
     shortDescription: 'The classification and type of the project token.',
     weight: ALL_POC_ITEM_MAP.token_type.weight,
-    formDisplayType: 'select',
+    formDisplayType: 'autoComplete',
     placeholder: 'Select token type',
     options: [
       { value: 'Access Token', label: 'Access Token' },
@@ -712,7 +711,6 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
         value: 'Hybrid / Multi-Role Token',
         label: 'Hybrid / Multi-Role Token',
       },
-      { value: 'Other', label: 'Other (input value)' },
     ],
     showReference: true,
     accountability: ['Transparency', 'Participation'],
