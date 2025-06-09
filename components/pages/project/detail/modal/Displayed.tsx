@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/biz/table';
 import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
-import { CaretDownIcon, ClockClockwiseIcon } from '@/components/icons';
+import { ClockClockwiseIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -288,9 +288,9 @@ const Displayed: FC<DisplayedProps> = ({
         </ModalTableContainer>
       )}
       {/* Accountability Metrics Section */}
-      <div className="flex flex-col gap-5 border-t border-black/10 pt-5">
-        {/* Accountability Metrics */}
-        <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
+      {/* <div className="flex flex-col gap-5 border-t border-black/10 pt-5"> */}
+      {/* Accountability Metrics */}
+      {/* <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
           <div className="flex flex-col gap-[5px]">
             <div className="font-mona text-[14px] font-semibold leading-[1.43em] text-black opacity-80">
               Accountability Metrics:
@@ -314,10 +314,10 @@ const Displayed: FC<DisplayedProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
-        {/* Legitimacy Analysis */}
-        <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
+      {/* Legitimacy Analysis */}
+      {/* <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
           <div className="flex flex-col gap-[5px]">
             <div className="font-mona text-[14px] font-semibold leading-[1.43em] text-black opacity-80">
               Legitimacy Analysis:
@@ -341,10 +341,10 @@ const Displayed: FC<DisplayedProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
-        {/* Web3 Metrics */}
-        <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
+      {/* Web3 Metrics */}
+      {/* <div className="flex flex-col gap-2.5 rounded-[10px] bg-[#F5F5F5] p-2.5">
           <div className="font-mona text-[14px] font-semibold leading-[1.43em] text-black opacity-80">
             Web3 Metrics (coming soon)
           </div>
@@ -363,8 +363,8 @@ const Displayed: FC<DisplayedProps> = ({
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
     </div>
   );
 };
