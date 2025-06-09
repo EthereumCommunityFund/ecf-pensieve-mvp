@@ -241,21 +241,21 @@ const ProgressCard = ({
       />
 
       <div className="flex items-center justify-between gap-[10px]">
+        {/* <div className="flex items-center gap-[4px]">
+          <span>Min Participation</span>
+          <span className="text-black/60">
+            {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
+          </span>
+        </div> */}
         <div className="flex items-center gap-[4px]">
-          <span>Supported</span>
+          <span className="text-[13px]">Total Supported</span>
           <span className="text-black/60">
             {totalSupportedUserWeightOfProposal}
           </span>
         </div>
-        <div className="flex items-center gap-[4px]">
-          <span>Quorum</span>
-          <span className="text-black/60">
-            {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
-          </span>
-        </div>
       </div>
 
-      <Button className="flex h-[40px] items-center justify-between gap-[4px] rounded-[5px] border-none bg-black/5 px-[10px] py-[6px]">
+      <Button className="flex h-[40px] items-center justify-between gap-[4px] rounded-[5px] border border-black/10 bg-black/5 px-[10px] py-[6px]">
         <span className="text-[13px] font-[400] leading-[18px] text-black">
           Publishing...
         </span>
@@ -273,7 +273,7 @@ const ProgressCard = ({
         <span className="font-mona text-[16px] font-[500]">
           {formattedPercentageOfProposal}
         </span>
-        <span className="text-black/60">
+        <span className="font-[600] text-black/60">
           {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
         </span>
       </div>
@@ -284,15 +284,15 @@ const ProgressCard = ({
       />
 
       <div className="flex items-center justify-between">
-        <span className="font-[600]">Supported</span>
-        <span className="text-black/60">
-          {totalSupportedUserWeightOfProposal}
+        <span className="text-[13px]">Min Participation</span>
+        <span className="font-[600] text-black/60">
+          {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
         </span>
       </div>
       <div className="flex items-center justify-between">
-        <span className="font-[600]">Quorum</span>
-        <span className="text-black/60">
-          {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
+        <span className="text-[13px]">Total Supported</span>
+        <span className="font-[600] text-black/60">
+          {totalSupportedUserWeightOfProposal}
         </span>
       </div>
     </div>
