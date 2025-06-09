@@ -216,7 +216,12 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
-    dateConstraints: {},
+    dateConstraints: {
+      maxDate: 'today',
+      relativeToToday: {
+        minDaysFromToday: -365 * 20,
+      },
+    },
     validationSchema: itemValidationSchemas.dateFounded,
   },
   dateLaunch: {
