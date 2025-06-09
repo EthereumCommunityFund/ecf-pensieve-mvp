@@ -1,0 +1,2 @@
+ALTER TABLE "notifications" ADD COLUMN "item_proposal_id" bigint;--> statement-breakpoint
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_item_proposal_id_item_proposals_id_fk" FOREIGN KEY ("item_proposal_id") REFERENCES "public"."item_proposals"("id") ON DELETE no action ON UPDATE no action;

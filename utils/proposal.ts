@@ -1,10 +1,10 @@
 import {
-  ESSENTIAL_ITEM_MAP,
+  ALL_POC_ITEM_MAP,
   ESSENTIAL_ITEM_QUORUM_SUM,
   ESSENTIAL_ITEM_WEIGHT_SUM,
 } from '@/lib/constants';
 import { IProposal, IVote } from '@/types';
-import { IEssentialItemKey } from '@/types/item';
+import { IPocItemKey } from '@/types/item';
 
 export interface IGetVoteResultOfProposalParams {
   proposalId: number;
@@ -28,6 +28,7 @@ export interface IVoteResultOfProposal {
   formattedPercentageOfProposal: string;
   isProposalValidated: boolean;
   isUserVotedInProposal: boolean;
+  latestVotingEndedAt: Date | null;
 }
 
 export interface IVoteResultOfItem {
@@ -80,6 +81,7 @@ const DefaultProposalResult: IVoteResultOfProposal = {
   formattedPercentageOfProposal: '0%',
   isProposalValidated: false,
   isUserVotedInProposal: false,
+  latestVotingEndedAt: null,
 };
 
 const ProposalVoteUtils = {
@@ -131,10 +133,11 @@ const ProposalVoteUtils = {
 
     const itemVotedMemberCount = votesOfKeyInProposalMap[key]?.length || 0;
     const itemPoints = getItemPoints(key);
-    const itemPointsNeeded = ESSENTIAL_ITEM_MAP[key].weight || 0;
+    const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey].weight || 0;
     const isItemReachPointsNeeded = itemPoints >= itemPointsNeeded;
     const isItemReachQuorum =
-      itemVotedMemberCount >= (ESSENTIAL_ITEM_MAP[key].quorum || 0);
+      itemVotedMemberCount >=
+      (ALL_POC_ITEM_MAP[key as IPocItemKey].quorum || 0);
     const isItemValidated = isItemReachQuorum && isItemReachPointsNeeded;
 
     return {
@@ -154,6 +157,20 @@ const ProposalVoteUtils = {
   ): IVoteResultOfProposal => {
     const { proposalId, votesOfProposal = [], userId } = params;
 
+    const latestVotingEndedAt = votesOfProposal.reduce(
+      (acc, vote) => {
+        const createdAt = vote.createdAt || null;
+        if (!acc) {
+          acc = createdAt;
+        }
+        if (createdAt && createdAt > acc) {
+          acc = createdAt;
+        }
+        return acc;
+      },
+      null as Date | null,
+    );
+
     const isUserVotedInProposal = userId
       ? votesOfProposal.some((vote) => vote.creator?.userId === userId)
       : false;
@@ -164,8 +181,7 @@ const ProposalVoteUtils = {
     const totalValidPointsOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const itemPointsNeeded =
-        ESSENTIAL_ITEM_MAP[key as IEssentialItemKey].weight || 0;
+      const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey].weight || 0;
       const totalVotesWeightForKey = votes.reduce(
         (sum, vote) => sum + Number(vote.weight || 0),
         0,
@@ -196,7 +212,7 @@ const ProposalVoteUtils = {
     const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const quorum = ESSENTIAL_ITEM_MAP[key as IEssentialItemKey].quorum || 0;
+      const quorum = ALL_POC_ITEM_MAP[key as IPocItemKey].quorum || 0;
       return acc + Math.min(votes.length, quorum);
     }, 0);
 
@@ -225,6 +241,7 @@ const ProposalVoteUtils = {
       formattedPercentageOfProposal,
       isProposalValidated,
       isUserVotedInProposal,
+      latestVotingEndedAt,
     };
   },
   getVoteResultOfProject: (

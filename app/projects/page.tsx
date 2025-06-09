@@ -1,10 +1,9 @@
 'use client';
 
 import { Image } from '@heroui/react';
-import Link from 'next/link';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo } from 'react';
 
-import { devLog } from '@/utils/devLog';
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import ProjectCard, {
@@ -14,9 +13,11 @@ import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { devLog } from '@/utils/devLog';
 
 const ProjectsPage = () => {
-  const { profile } = useAuth();
+  const { profile, showAuthPrompt } = useAuth();
+  const router = useRouter();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     trpc.project.getProjects.useInfiniteQuery(
@@ -35,11 +36,17 @@ const ProjectsPage = () => {
     }
   };
 
-  const handleProposeProject = () => {
-    console.log('Propose a Project');
-  };
+  const handleProposeProject = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push('/project/create');
+  }, [profile, showAuthPrompt, router]);
 
-  const allProjects = data?.pages.flatMap((page) => page.items) || [];
+  const allProjects = useMemo(() => {
+    return data?.pages.flatMap((page) => page.items) || [];
+  }, [data]);
 
   useEffect(() => {
     if (allProjects.length > 0) {
@@ -61,24 +68,20 @@ const ProjectsPage = () => {
           <ECFTypography type={'subtitle2'} className="mt-2.5">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          {profile && (
-            <Link href="/project/create">
-              <ECFButton onPress={handleProposeProject} className="mt-2.5">
-                Propose a Project
-              </ECFButton>
-            </Link>
-          )}
+          <ECFButton onPress={handleProposeProject} className="mt-2.5">
+            Propose a Project
+          </ECFButton>
         </div>
       </div>
 
       <div className="mobile:flex-col mobile:gap-5 mt-5 flex items-start justify-between gap-10 px-2.5">
-        <div className="pc:hidden tablet:hidden flex w-full items-center justify-end gap-2.5 lg:hidden">
+        {/* <div className="pc:hidden tablet:hidden flex w-full items-center justify-end gap-2.5 lg:hidden">
           <ECFButton $size="small">Sort</ECFButton>
           <ECFButton $size="small">Filter</ECFButton>
-        </div>
+        </div> */}
 
-        <div className="flex-1">
-          <div className="px-2.5 py-2 opacity-80">
+        <div className="w-full flex-1">
+          <div className="border-b border-black/10 px-2.5 py-2 opacity-80">
             <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
             <ECFTypography type={'body2'} className="mt-[5px]">
               Page Completion Rate (Transparency) * User Supported Votes
@@ -88,11 +91,11 @@ const ProjectsPage = () => {
           {/* Project list */}
           <div className="pb-2.5">
             {isLoading ? (
-              <div>
-                <ProjectCardSkeleton />
-                <ProjectCardSkeleton />
-                <ProjectCardSkeleton />
-              </div>
+              <>
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <ProjectCardSkeleton key={index} />
+                ))}
+              </>
             ) : allProjects.length > 0 ? (
               <>
                 {allProjects.map((project) => (
@@ -128,19 +131,19 @@ const ProjectsPage = () => {
         </div>
 
         <div className="mobile:hidden">
-          <div className="flex h-[73px] w-[300px] items-start justify-start gap-5">
+          {/* <div className="flex h-[73px] w-[300px] items-start justify-start gap-5">
             <ECFButton $size="small" className="min-w-0 px-2.5">
               Sort
             </ECFButton>
             <ECFButton $size="small" className="min-w-0 px-2.5">
               Filter
             </ECFButton>
-          </div>
+          </div> */}
 
           <RewardCard />
         </div>
 
-        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden">
+        <div className="pc:hidden tablet:hidden mt-5 w-full lg:hidden ">
           <RewardCard />
         </div>
       </div>

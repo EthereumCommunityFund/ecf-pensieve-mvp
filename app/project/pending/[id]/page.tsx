@@ -2,7 +2,7 @@
 
 import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
@@ -34,6 +34,12 @@ const ProjectPage = () => {
     },
   );
 
+  useEffect(() => {
+    if (project && project?.isPublished) {
+      router.replace(`/project/${projectId}`);
+    }
+  }, [project, router, projectId]);
+
   const {
     data: proposals,
     isLoading: isProposalsLoading,
@@ -43,7 +49,7 @@ const ProjectPage = () => {
     {
       enabled: !!projectId,
       select: (data) => {
-        devLog('getProposalsByProjectId', data);
+        // devLog('getProposalsByProjectId', data);
         return data;
       },
     },
@@ -71,6 +77,8 @@ const ProjectPage = () => {
     leadingProposalResult,
     voteResultOfProposalMap,
     leadingProposal,
+    canBePublished,
+    votesOfProposalMap,
   } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({
       projectId: Number(projectId),
@@ -79,6 +87,17 @@ const ProjectPage = () => {
       userId,
     });
   }, [projectId, votesOfProject, proposals, userId]);
+
+  const voteResultOfLeadingProposal = useMemo(() => {
+    if (!leadingProposal) {
+      return null;
+    }
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: leadingProposal.id,
+      votesOfProposal: votesOfProposalMap[leadingProposal.id],
+      userId,
+    });
+  }, [leadingProposal, votesOfProposalMap, userId]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/pending/${projectId}/proposal/create`);
@@ -102,17 +121,18 @@ const ProjectPage = () => {
         project={project as IProject}
         proposals={proposals}
         leadingProposal={leadingProposal}
+        canBePublished={canBePublished}
       />
 
       {/* Proposal list */}
       <div
         className={cn(
-          'mt-[20px] px-[160px] tablet:px-[10px] mobile:px-[10px] pt-[20px] ',
+          'mt-[20px] px-[160px] tablet:px-[20px] mobile:px-[10px] pt-[20px] ',
           'flex items-start justify-center gap-[40px] ',
-          'tablet:flex-col mobile:flex-col tablet:gap-[20px] mobile:gap-[20px]',
+          'mobile:flex-col mobile:gap-[20px]',
         )}
       >
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[800px] flex-1 ">
+        <div className="mobile:max-w-[9999px] w-full max-w-[800px] flex-1 ">
           <div className="font-mona flex items-center justify-between border-b border-black/10 bg-[rgba(245,245,245,0.80)] py-[8px] backdrop-blur-[5px]">
             <p className="text-[24px] font-[700] leading-[34px] text-black/80 ">
               Proposals
@@ -137,7 +157,13 @@ const ProjectPage = () => {
           />
         </div>
 
-        <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
+        <SubmitProposalCard
+          onSubmitProposal={onSubmitProposal}
+          canBePublished={canBePublished}
+          latestVotingEndedAt={
+            voteResultOfLeadingProposal?.latestVotingEndedAt || null
+          }
+        />
       </div>
     </div>
   );
@@ -149,48 +175,15 @@ const ProjectCard = ({
   project,
   proposals,
   leadingProposal,
+  canBePublished,
 }: {
   project?: IProject;
   proposals?: IProposal[];
   leadingProposal?: IProposal;
+  canBePublished?: boolean;
 }) => {
   if (!project) {
-    return (
-      <div
-        className={cn(
-          'mt-[10px] mx-[20px] mobile:mx-[10px]',
-          'p-[20px] mobile:p-[14px]',
-          'bg-white border border-black/10 rounded-[10px]',
-          'flex justify-start items-start gap-[20px]',
-        )}
-      >
-        <Skeleton className="size-[100px] overflow-hidden rounded-[10px] border border-black/10" />
-
-        <div className="flex flex-1 flex-col gap-[10px]">
-          <Skeleton className="h-[25px] w-[180px]" />
-          <Skeleton className="h-[23px] w-full" />
-
-          <div className="flex flex-wrap gap-[8px]">
-            {[1, 2, 3].map((index) => {
-              return (
-                <Skeleton
-                  key={index}
-                  className="h-[22px] w-[60px] rounded-[6px]"
-                />
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-start gap-[10px]">
-            <Skeleton className="h-[20px] w-[110px]" />
-            <Skeleton className="h-[20px] w-[16px]" />
-            <span className="text-black/20">|</span>
-            <Skeleton className="h-[20px] w-[60px]" />
-            <Skeleton className="h-[20px] w-[120px]" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ProjectCardSkeleton />;
   }
   return (
     <div
@@ -213,7 +206,7 @@ const ProjectCard = ({
           {project.name}
         </p>
         <p className="text-[14px] font-[400] leading-[1.66] text-[#202023]">
-          {project.mainDescription}
+          {project.tagline}
         </p>
         <div className="flex flex-wrap gap-[8px]">
           {project.categories.map((category) => {
@@ -233,12 +226,52 @@ const ProjectCard = ({
           {!!leadingProposal && (
             <>
               <span className="text-black/20">|</span>
-              <span>Leading:</span>
+              {/* when reach 100%, use `winner` */}
+              <span>{canBePublished ? 'Winner' : 'Leading'}:</span>
               <span className="text-black/60">
                 @{leadingProposal.creator.name}
               </span>
             </>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProjectCardSkeleton = () => {
+  return (
+    <div
+      className={cn(
+        'mt-[10px] mx-[20px] mobile:mx-[10px]',
+        'p-[20px] mobile:p-[14px]',
+        'bg-white border border-black/10 rounded-[10px]',
+        'flex justify-start items-start gap-[20px]',
+      )}
+    >
+      <Skeleton className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10" />
+
+      <div className="flex min-w-0 flex-1 flex-col gap-[10px]">
+        <Skeleton className="mobile:w-[150px] h-[25px] w-[180px]" />
+        <Skeleton className="h-[23px] w-full" />
+
+        <div className="flex flex-wrap gap-[8px]">
+          {[1, 2, 3].map((index) => {
+            return (
+              <Skeleton
+                key={index}
+                className="h-[22px] w-[60px] rounded-[6px]"
+              />
+            );
+          })}
+        </div>
+
+        <div className="mobile:flex-wrap mobile:gap-[8px] flex items-center justify-start gap-[10px]">
+          <Skeleton className="mobile:w-[90px] h-[20px] w-[110px]" />
+          <Skeleton className="h-[20px] w-[16px]" />
+          <span className="text-black/20">|</span>
+          <Skeleton className="mobile:w-[50px] h-[20px] w-[60px]" />
+          <Skeleton className="mobile:w-[80px] h-[20px] w-[120px]" />
         </div>
       </div>
     </div>

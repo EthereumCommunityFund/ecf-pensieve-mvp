@@ -63,11 +63,14 @@ export const likeProjectRouter = router({
           })
           .where(eq(projects.id, projectId));
 
-        logUserActivity.like.create({
-          userId: ctx.user.id,
-          targetId: newLikeRecord.id,
-          projectId,
-        });
+        logUserActivity.like.create(
+          {
+            userId: ctx.user.id,
+            targetId: newLikeRecord.id,
+            projectId,
+          },
+          tx,
+        );
 
         return newLikeRecord;
       });

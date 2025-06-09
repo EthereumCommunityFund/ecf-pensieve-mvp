@@ -35,12 +35,15 @@ export default function MobileMenu() {
         onOpenChange={onOpenChange}
         placement="top"
         hideCloseButton={true}
+        classNames={{
+          base: 'max-h-[9999px]',
+        }}
       >
         <DrawerContent>
           {(onClose) => (
             <>
-              <DrawerBody className="pt-[54px]">
-                <QuickSearch />
+              <DrawerBody className="p-[10px]">
+                {/* <QuickSearch /> */}
 
                 <MobileNavigation onClose={onClose} />
 
@@ -58,7 +61,7 @@ export default function MobileMenu() {
 
 const QuickSearch = () => {
   return (
-    <div className="flex h-[32px] w-full items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] px-[10px]">
+    <div className="flex h-[32px] w-full items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] px-[10px] py-[6px]">
       <Image
         src="/images/common/search.png"
         alt="Search"

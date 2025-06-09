@@ -1,14 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 
-import { Button, Select, SelectItem } from '@/components/base';
-import { organizationFieldsConfig } from '@/components/pages/project/create/FormData';
-import { FormFieldContainer } from '@/components/pages/project/create/FormFieldContainer';
-import { useCreateContainerPropsWithValue } from '@/components/pages/project/create/utils/useCreateContainerPropsWithValue';
+import { Button } from '@/components/base';
+import { organizationFieldsConfig } from '@/components/pages/project/create/form/FormData';
+import FormItemManager from '@/components/pages/project/create/form/FormItemManager';
+import { useFormPropsWithValue } from '@/components/pages/project/create/form/useFormPropsWithValue';
+import { IItemConfig } from '@/types/item';
 
-import FounderFormItem from '../FounderFormItem';
+import { FormItemUIContainer } from '../form/FormItemUIContainer';
+import FounderFormItem from '../form/FounderFormItem';
 import { IProjectFormData, IStepFormProps } from '../types';
 
 const OrganizationStepForm: React.FC<
@@ -16,105 +18,49 @@ const OrganizationStepForm: React.FC<
     IStepFormProps,
     'register' | 'watch' | 'setValue' | 'trigger' | 'hasFieldValue'
   >
-> = ({ control, errors, onAddReference, hasFieldReference }) => {
+> = ({
+  control,
+  errors,
+  fieldApplicability,
+  onChangeApplicability,
+  onAddReference,
+  hasFieldReference,
+}) => {
   const { register } = useFormContext<IProjectFormData>();
 
+  const standardFieldConfigs = [
+    organizationFieldsConfig.orgStructure,
+    organizationFieldsConfig.publicGoods,
+  ];
+
   const foundersConfig = organizationFieldsConfig.founders;
-  const foundersKey = foundersConfig?.key;
+  const foundersKey = foundersConfig?.key || 'founders';
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: foundersKey || 'founders',
+    name: foundersKey as 'founders',
   });
-
-  const orgStructureOptions =
-    organizationFieldsConfig.orgStructure?.options || [];
-  const publicGoodsOptions =
-    organizationFieldsConfig.publicGoods?.options || [];
 
   return (
     <div className="mobile:gap-[20px] flex flex-col gap-[40px]">
-      {/* orgStructure */}
-      <FormFieldContainer
-        {...useCreateContainerPropsWithValue({
-          fieldConfig: organizationFieldsConfig.orgStructure,
-          onAddReference: onAddReference,
-          hasFieldReference,
-        })}
-      >
-        <Controller
-          name={organizationFieldsConfig.orgStructure.key}
+      {standardFieldConfigs.map((itemConfig) => (
+        <FormItemManager
+          key={itemConfig.key}
+          itemConfig={itemConfig}
           control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Select
-              aria-label={organizationFieldsConfig.orgStructure.label}
-              placeholder={organizationFieldsConfig.orgStructure.placeholder}
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as IProjectFormData['orgStructure']);
-              }}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              className="w-full"
-            >
-              {orgStructureOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  textValue={option.label}
-                  aria-label={option.label}
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
-          )}
+          fieldApplicability={fieldApplicability}
+          onChangeApplicability={onChangeApplicability}
+          onAddReference={onAddReference}
+          hasFieldReference={hasFieldReference}
         />
-      </FormFieldContainer>
+      ))}
 
-      {/* publicGoods */}
-      <FormFieldContainer
-        {...useCreateContainerPropsWithValue({
-          fieldConfig: organizationFieldsConfig.publicGoods,
-          onAddReference: onAddReference,
-          hasFieldReference,
-        })}
-      >
-        <Controller
-          name={organizationFieldsConfig.publicGoods.key}
-          control={control}
-          render={({ field, fieldState: { error } }) => (
-            <Select
-              aria-label={organizationFieldsConfig.publicGoods.label}
-              placeholder={organizationFieldsConfig.publicGoods.placeholder}
-              selectedKeys={field.value ? [field.value] : []}
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] ?? '';
-                field.onChange(value as IProjectFormData['publicGoods']);
-              }}
-              isInvalid={!!error}
-              errorMessage={error?.message}
-              className="w-full"
-            >
-              {publicGoodsOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  textValue={option.label}
-                  aria-label={option.label}
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
-          )}
-        />
-      </FormFieldContainer>
-
-      {/* founders */}
       <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[20px]">
-        <FormFieldContainer
-          {...useCreateContainerPropsWithValue({
-            fieldConfig: organizationFieldsConfig.founders,
+        <FormItemUIContainer
+          {...useFormPropsWithValue({
+            fieldConfig: foundersConfig as IItemConfig<keyof IProjectFormData>,
+            fieldApplicabilityMap: fieldApplicability,
+            rawOnChangeApplicability: onChangeApplicability,
             onAddReference: onAddReference,
             hasFieldReference,
           })}
@@ -139,12 +85,12 @@ const OrganizationStepForm: React.FC<
               color="secondary"
               size="md"
               className="mobile:w-full px-[20px]"
-              onPress={() => append({ fullName: '', titleRole: '' })}
+              onPress={() => append({ name: '', title: '' })}
             >
               Add Entry
             </Button>
           </div>
-        </FormFieldContainer>
+        </FormItemUIContainer>
       </div>
     </div>
   );

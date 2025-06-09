@@ -3,10 +3,13 @@ import { ResponsiveCalendar } from '@nivo/calendar';
 import { scaleThreshold } from 'd3-scale';
 import { useMemo, useState } from 'react';
 
+import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 
+import ActivityItem from './activityItem';
+import ActivityItemSkeleton from './ActivityItemSkeleton';
 import { useProfileData } from './dataContext';
 
 const contributionsColorScale = scaleThreshold<number, string>()
@@ -15,9 +18,9 @@ const contributionsColorScale = scaleThreshold<number, string>()
 
 const tabItems = [
   { key: 'all', label: 'View All' },
-  { key: 'edits', label: 'Edits' },
-  { key: 'votes', label: 'Votes' },
-  { key: 'proposals', label: 'Proposals' },
+  { key: 'update', label: 'Edits' },
+  { key: 'vote', label: 'Votes' },
+  { key: 'proposal', label: 'Proposals' },
 ];
 
 export default function Contributions() {
@@ -25,6 +28,7 @@ export default function Contributions() {
   const currentYearEnd = dayjs().endOf('year').format('YYYY-MM-DD');
 
   const { user } = useProfileData();
+
   const { data: contributions, isLoading } =
     trpc.active.getUserDailyActivities.useQuery(
       {
@@ -36,7 +40,26 @@ export default function Contributions() {
         enabled: !!user?.userId,
       },
     );
+
   const [activeTab, setActiveTab] = useState('all');
+
+  const {
+    data: activitiesData,
+    isLoading: isLoadingActivities,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = trpc.active.getUserActivities.useInfiniteQuery(
+    {
+      userId: user?.userId ?? '',
+      limit: 50,
+      type: activeTab === 'all' ? undefined : activeTab,
+    },
+    {
+      enabled: !!user?.userId,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
 
   const isLoadingContributions = isLoading || !user?.userId;
 
@@ -47,9 +70,19 @@ export default function Contributions() {
     );
   }, [contributions]);
 
+  const filteredActivities = useMemo(() => {
+    return activitiesData?.pages.flatMap((page) => page.items) ?? [];
+  }, [activitiesData?.pages]);
+
+  const handleLoadMore = () => {
+    if (!isFetchingNextPage && hasNextPage) {
+      fetchNextPage();
+    }
+  };
+
   return (
     <div className="flex w-full flex-col gap-[20px]">
-      <div className="h-[156px] w-full px-[45px]">
+      <div className="tablet:px-0 mobile:px-0 h-[156px] w-full px-[45px]">
         <div className="relative size-full overflow-hidden rounded-[10px] border border-black/10 bg-white">
           <div
             style={{ height: 'calc(100% - 30px)' }}
@@ -102,9 +135,11 @@ export default function Contributions() {
           )}
         </div>
       </div>
+
       <ECFTypography type="body1" className="font-semibold">
         Your Activity
       </ECFTypography>
+
       <div className="w-full">
         <Tabs
           selectedKey={activeTab}
@@ -137,6 +172,63 @@ export default function Contributions() {
             />
           ))}
         </Tabs>
+      </div>
+
+      <div className="flex w-full flex-col gap-[30px]">
+        {isLoadingActivities ? (
+          <>
+            {[...Array(5)].map((_, index) => (
+              <ActivityItemSkeleton
+                key={index}
+                isLast={index === 4}
+                variant="loadMore"
+              />
+            ))}
+          </>
+        ) : filteredActivities.length > 0 ? (
+          <>
+            {filteredActivities.map((activity, index) => (
+              <ActivityItem
+                key={activity.activeLog.id}
+                activity={activity as any}
+                isLast={
+                  index === filteredActivities.length - 1 && !isFetchingNextPage
+                }
+              />
+            ))}
+
+            {isFetchingNextPage && (
+              <>
+                {[...Array(3)].map((_, index) => (
+                  <ActivityItemSkeleton
+                    key={index}
+                    isLast={index === 2}
+                    variant="loadMore"
+                  />
+                ))}
+              </>
+            )}
+
+            {hasNextPage && (
+              <div className="flex justify-center py-4">
+                <ECFButton
+                  $size="small"
+                  onPress={handleLoadMore}
+                  isDisabled={isFetchingNextPage}
+                  className="border border-black/10 bg-transparent text-black hover:bg-black/5"
+                >
+                  {isFetchingNextPage ? 'Loading...' : 'Load More Activities'}
+                </ECFButton>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="py-8 text-center">
+            <ECFTypography type="body1" className="opacity-60">
+              No activities found for this filter.
+            </ECFTypography>
+          </div>
+        )}
       </div>
     </div>
   );

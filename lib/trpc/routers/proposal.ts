@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { profiles, projects, proposals, voteRecords } from '@/lib/db/schema';
@@ -29,75 +29,133 @@ export const proposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [project, userProfile] = await Promise.all([
-        ctx.db.query.projects.findFirst({
-          where: eq(projects.id, input.projectId),
-        }),
-        ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        }),
-      ]);
+      try {
+        const [project, userProfile] = await Promise.all([
+          ctx.db.query.projects.findFirst({
+            where: eq(projects.id, input.projectId),
+          }),
+          ctx.db.query.profiles.findFirst({
+            where: eq(profiles.userId, ctx.user.id),
+          }),
+        ]);
 
-      if (!project) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Project not found',
+        if (!project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Project not found',
+          });
+        }
+
+        return await ctx.db.transaction(async (tx) => {
+          const [proposal] = await tx
+            .insert(proposals)
+            .values({
+              projectId: input.projectId,
+              items: input.items,
+              refs: input.refs,
+              creator: ctx.user.id,
+            })
+            .returning();
+
+          if (!proposal) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Proposal not found',
+            });
+          }
+
+          const votePromises = input.items.map(async (item) => {
+            const otherVote = await tx.query.voteRecords.findFirst({
+              where: and(
+                eq(voteRecords.creator, ctx.user.id),
+                eq(voteRecords.key, item.key),
+                eq(voteRecords.projectId, input.projectId),
+              ),
+            });
+
+            let vote;
+            if (otherVote) {
+              [vote] = await tx
+                .update(voteRecords)
+                .set({
+                  proposalId: proposal.id,
+                  weight: userProfile?.weight ?? 0,
+                })
+                .where(eq(voteRecords.id, otherVote.id))
+                .returning();
+
+              logUserActivity.vote.update(
+                {
+                  userId: ctx.user.id,
+                  targetId: vote.id,
+                  projectId: input.projectId,
+                  items: [{ field: item.key }],
+                  proposalCreatorId: ctx.user.id,
+                },
+                tx,
+              );
+            } else {
+              [vote] = await tx
+                .insert(voteRecords)
+                .values({
+                  key: item.key,
+                  proposalId: proposal.id,
+                  creator: ctx.user.id,
+                  weight: userProfile?.weight ?? 0,
+                  projectId: input.projectId,
+                })
+                .returning();
+
+              logUserActivity.vote.create(
+                {
+                  userId: ctx.user.id,
+                  targetId: vote.id,
+                  projectId: input.projectId,
+                  items: [{ field: item.key }],
+                  proposalCreatorId: ctx.user.id,
+                },
+                tx,
+              );
+            }
+
+            return vote;
+          });
+
+          await Promise.all(votePromises);
+
+          logUserActivity.proposal.create(
+            {
+              userId: ctx.user.id,
+              targetId: proposal.id,
+              projectId: proposal.projectId,
+              items: input.items.map((item) => ({
+                field: item.key,
+                newValue: item.value,
+              })),
+            },
+            tx,
+          );
+
+          return proposal;
         });
-      }
-
-      const [proposal] = await ctx.db
-        .insert(proposals)
-        .values({
+      } catch (error) {
+        console.error('Error in createProposal:', {
+          userId: ctx.user.id,
           projectId: input.projectId,
           items: input.items,
           refs: input.refs,
-          creator: ctx.user.id,
-        })
-        .returning();
-
-      if (!proposal) {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Proposal not found',
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create proposal',
+          cause: error,
         });
       }
-
-      const votePromises = input.items.map(async (item) => {
-        const [vote] = await ctx.db
-          .insert(voteRecords)
-          .values({
-            key: item.key,
-            proposalId: proposal.id,
-            creator: ctx.user.id,
-            weight: userProfile?.weight ?? 0,
-            projectId: input.projectId,
-          })
-          .returning();
-
-        logUserActivity.vote.create({
-          userId: ctx.user.id,
-          targetId: vote.id,
-          projectId: input.projectId,
-          items: [{ field: item.key }],
-          proposalCreatorId: ctx.user.id,
-        });
-
-        return vote;
-      });
-
-      await Promise.all(votePromises);
-
-      logUserActivity.proposal.create({
-        userId: ctx.user.id,
-        targetId: proposal.id,
-        projectId: proposal.projectId,
-        items: input.items.map((item) => ({
-          field: item.key,
-          newValue: item.value,
-        })),
-      });
-
-      return proposal;
     }),
 
   getProposalsByProjectId: publicProcedure

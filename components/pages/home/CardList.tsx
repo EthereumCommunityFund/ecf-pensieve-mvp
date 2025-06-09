@@ -1,6 +1,8 @@
 import { Image } from '@heroui/react';
+import { useRouter } from 'next/navigation';
 
 import ECFTypography from '@/components/base/typography';
+import { useAuth } from '@/context/AuthContext';
 
 const CardListData = [
   {
@@ -27,18 +29,24 @@ const CardListData = [
 ];
 
 const CardList = () => {
+  const { profile, showAuthPrompt } = useAuth();
+  const router = useRouter();
   const proposeProject = () => {
-    console.log('propose project');
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push('/project/create');
   };
 
   const exploreIndex = () => {
-    console.log('explore index');
+    router.push('/projects');
   };
 
   return (
     <div className="mt-5 w-full">
       <div className="scrollbar-hide overflow-x-auto">
-        <div className="flex min-w-fit flex-nowrap gap-5">
+        <div className="flex min-w-fit flex-nowrap items-stretch gap-5">
           <CardItem
             title={CardListData[0].title}
             description={CardListData[0].description}
@@ -86,16 +94,16 @@ interface ICardItemProps {
 const CardItem = (props: ICardItemProps) => {
   return (
     <div
-      className="pc:w-auto pc:flex-1 tablet:w-[373px] mobile:w-[300px] group relative min-h-[245px] shrink-0 overflow-hidden rounded-md border border-[rgba(0,0,0,0.1)]
-				bg-white 
-				px-[19px]
-				py-5 hover:border-[rgba(0,0,0,0.2)] 
-				lg:w-auto lg:flex-1"
+      className="pc:w-auto pc:flex-1 tablet:w-[373px] mobile:w-[300px] mobile:gap-[10px] group relative flex shrink-0 flex-col gap-[20px]
+				overflow-hidden 
+				rounded-md
+				border border-black/10 
+				bg-white px-[19px] py-5 hover:border-black/20 lg:w-auto lg:flex-1"
       style={{
         cursor: props.disabled ? 'not-allowed' : 'pointer',
       }}
     >
-      <div className="relative">
+      <div className="flex flex-col gap-[14px]">
         <ECFTypography
           type={'subtitle1'}
           className="font-saria text-[var(--primary-green)]"
@@ -104,12 +112,10 @@ const CardItem = (props: ICardItemProps) => {
         </ECFTypography>
         <ECFTypography
           type={'body1'}
-          className="mobile:min-h-0 mt-[14px] min-h-[130px] leading-[25.6px] text-[rgba(0,0,0,0.8)]"
+          className="mobile:min-h-0 leading-[25.6px] text-[rgba(0,0,0,0.8)]"
         >
           {props.description}
         </ECFTypography>
-
-        <div className="h-[24px]"></div>
       </div>
 
       <div
@@ -119,7 +125,7 @@ const CardItem = (props: ICardItemProps) => {
         }}
       />
 
-      {props.children}
+      <div className="mt-auto">{props.children}</div>
     </div>
   );
 };
@@ -132,10 +138,11 @@ interface ICardActionProps {
 const CardAction = (props: ICardActionProps) => {
   return (
     <div
-      className="absolute inset-x-0 bottom-[19px] flex h-[24px] w-full items-center justify-start gap-2 px-5"
+      className="inset-x-0 flex h-[24px] w-full items-center justify-start gap-2"
       style={{
         opacity: !props.onClick ? '0.5' : '1',
       }}
+      onClick={props.onClick}
     >
       {!props.onClick && (
         <div className="size-[8px] rounded-[8px] bg-black"></div>

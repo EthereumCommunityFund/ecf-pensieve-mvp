@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 
-import { profiles } from '../db/schema';
 import { db } from '../db';
+import { profiles } from '../db/schema';
 
 export const updateUserWeight = async (
   userId: string,

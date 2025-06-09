@@ -8,11 +8,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { addToast } from '@/components/base';
+import { WarningDiamondIcon } from '@/components/icons';
 import {
   DefaultFieldApplicabilityMap,
   getCreateProjectStepFields,
   getDefaultProjectFormData,
-} from '@/components/pages/project/create/FormData';
+} from '@/components/pages/project/create/form/FormData';
 import {
   transformProjectData,
   transformProposalData,
@@ -27,17 +28,18 @@ import { devLog } from '@/utils/devLog';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
-import FormActions from './FormActions';
+import FormActions from './form/FormActions';
+import { projectSchema } from './form/validation';
 import StepNavigation, {
   IItemCategoryEnumWithoutGovernance,
   StepHeader,
 } from './StepNavigation';
-import StepWrapper from './StepWrapper';
 import BasicsStepForm from './steps/BasicsStepForm';
 import FinancialStepForm from './steps/FinancialStepForm';
 import OrganizationStepForm from './steps/OrganizationStepForm';
 import SubmittingStep from './steps/SubmittingStep';
 import TechnicalsStepForm from './steps/TechnicalsStepForm';
+import StepWrapper from './StepWrapper';
 import {
   IFormTypeEnum,
   IProjectFormData,
@@ -45,7 +47,6 @@ import {
   IStepStatus,
 } from './types';
 import { updateFormWithProjectData } from './utils/form';
-import { projectSchema } from './validation';
 
 dayjs.extend(utc);
 
@@ -90,7 +91,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   projectData,
 }) => {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, fetchUserProfile } = useAuth();
   const createProjectMutation = trpc.project.createProject.useMutation();
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
@@ -128,7 +129,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       IProjectFormData,
       Record<string, boolean>,
       IProjectFormData
-    >(projectSchema, { context: fieldApplicability }),
+    >(projectSchema),
     mode: 'all',
     defaultValues: DefaultProjectFormData,
   });
@@ -227,6 +228,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              fetchUserProfile();
             },
             onError: (error: any) => {
               setApiSubmissionStatus('error');
@@ -263,6 +265,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              fetchUserProfile();
             },
             onError: (error: any) => {
               setApiSubmissionStatus('error');
@@ -298,6 +301,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       externalOnError,
       handleSubmissionError,
       currentStep,
+      fetchUserProfile,
     ],
   );
 
@@ -391,12 +395,15 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       return;
     }
 
-    const isFinalValidationValid = await trigger(
-      Object.keys(getValues()) as (keyof IProjectFormData)[],
-    );
+    const allFormFields = Object.keys(
+      getValues(),
+    ) as (keyof IProjectFormData)[];
+    const fieldsToValidateFinally = getApplicableFields(allFormFields);
+    const isFinalValidationValid = await trigger(fieldsToValidateFinally);
 
     if (isFinalValidationValid) {
-      handleSubmit(onSubmit)();
+      // not call handleSubmit, just call onSubmit directly, to skip the validation of keys in FieldApplicabilityMap
+      onSubmit(getValues());
     } else {
       scrollToError(errors);
       addToast({
@@ -407,7 +414,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       });
     }
   }, [
-    handleSubmit,
     currentStep,
     validateCurrentStep,
     updateStepStatuses,
@@ -419,6 +425,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     scrollToError,
     clearErrors,
     references,
+    getApplicableFields,
   ]);
 
   const handleBack = useCallback(async () => {
@@ -581,6 +588,16 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         <div
           className={cn('mobile:gap-[20px] flex flex-1 flex-col gap-[40px]')}
         >
+          {!showSubmittingPage ? (
+            <div className="mobile:mx-[10px] mobile:p-[10px] flex items-center gap-[10px] rounded-[10px] border border-black/10 bg-[rgba(235,235,235,0.80)] p-[20px] backdrop-blur-[5px]">
+              <WarningDiamondIcon className="shrink-0" />
+              <p className="text-[16px] leading-[1.6]">
+                <span className="font-[700]">Note: {` `}</span>
+                Once you submit your proposal, you cannot edit your inputs.
+              </p>
+            </div>
+          ) : null}
+
           <div className={cn(showSubmittingPage ? 'hidden' : '')}>
             <StepHeader currentStep={currentStep} />
           </div>

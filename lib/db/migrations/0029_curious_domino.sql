@@ -1,0 +1,1 @@
+ALTER TABLE "item_proposals" ADD COLUMN "reason" text;

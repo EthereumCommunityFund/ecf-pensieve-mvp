@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast, Spinner } from '@heroui/react';
+import { addToast, InputOtp, Spinner } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import React, {
   useCallback,
@@ -24,6 +24,12 @@ import { CreateProfileErrorPrefix, useAuth } from '@/context/AuthContext';
 import ConnectWalletButton from './ConnectWalletButton';
 
 type LoadingButtonType = 'skip' | 'continue' | null;
+
+// Format address to 0x0000...000000 pattern
+const formatDisplayedAddress = (address: string): string => {
+  if (!address || address.length < 12) return address;
+  return `${address.slice(0, 6)}...${address.slice(-6)}`;
+};
 
 const AuthButton = ({
   children,
@@ -69,6 +75,7 @@ const AuthPrompt: React.FC = () => {
   const { isConnected, address } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const [inputUsername, setInputUsername] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
   const connectionIntentRef = useRef(false);
 
@@ -104,6 +111,7 @@ const AuthPrompt: React.FC = () => {
   useEffect(() => {
     if (isAuthPromptVisible) {
       setInputUsername('');
+      setInviteCode('');
     }
   }, [isAuthPromptVisible]);
 
@@ -131,9 +139,9 @@ const AuthPrompt: React.FC = () => {
         try {
           const usernameToUse = useInputUsername
             ? inputUsername
-            : ((ensName || address.slice(0, 10)) as string);
+            : ((ensName || formatDisplayedAddress(address)) as string);
 
-          await createProfile(usernameToUse);
+          await createProfile(usernameToUse, inviteCode);
         } catch (e: any) {
           addToast({
             title: e.message || 'Fail to create profile',
@@ -145,7 +153,7 @@ const AuthPrompt: React.FC = () => {
         }
       }
     },
-    [address, ensName, inputUsername, createProfile],
+    [address, ensName, inputUsername, inviteCode, createProfile],
   );
 
   const handleSkip = useCallback(() => {
@@ -161,9 +169,15 @@ const AuthPrompt: React.FC = () => {
 
   const handleCloseAndReset = useCallback(async () => {
     setInputUsername('');
+    setInviteCode('');
+    // 先断开钱包连接，再隐藏提示和登出
+    try {
+      await disconnectAsync();
+    } catch (error) {
+      console.error('Error disconnecting wallet during close:', error);
+    }
     await hideAuthPrompt();
     await logout();
-    await disconnectAsync();
   }, [hideAuthPrompt, logout, disconnectAsync]);
 
   const renderConnectWalletContent = useMemo(() => {
@@ -247,6 +261,32 @@ const AuthPrompt: React.FC = () => {
             />
           </div>
 
+          <div>
+            <label
+              htmlFor="inviteCodeInput"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              Invitation Code <span className="text-red-500">*</span>
+            </label>
+            <InputOtp
+              length={6}
+              value={inviteCode}
+              onValueChange={setInviteCode}
+              placeholder="-"
+              allowedKeys="^.*$"
+              isDisabled={isCreatingProfile}
+              variant="bordered"
+              color="primary"
+              size="md"
+              classNames={{
+                base: 'gap-2',
+                segmentWrapper: 'gap-2',
+                segment:
+                  'w-10 h-10 text-center border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+              }}
+            />
+          </div>
+
           <div className="flex justify-between gap-[10px]">
             <Button
               color="secondary"
@@ -261,17 +301,36 @@ const AuthPrompt: React.FC = () => {
               onPress={handleContinue}
               color="primary"
               className="flex-1"
-              isDisabled={!inputUsername || isAnyLoading}
+              isDisabled={
+                !inputUsername ||
+                !inviteCode ||
+                inviteCode.length !== 6 ||
+                isAnyLoading
+              }
               isLoading={loadingButton === 'continue'}
             >
               Continue
             </Button>
+          </div>
+
+          <div>
+            <p className="text-[13px] font-[700] leading-[20px] text-black/80">
+              Do not have PoC Invitation Code?
+            </p>
+            <p className="mt-[10px] text-[13px] font-[400] leading-[20px] text-black/80">
+              To apply for testing, you could introduce yourself to the
+              community in our Discord Server Or speed up the process by
+              catching invitation officer's attention here (link to
+              application). Invitation code will be distributed in ECF Discord
+              in direct messages.
+            </p>
           </div>
         </ModalBody>
       </>
     );
   }, [
     inputUsername,
+    inviteCode,
     onInputChange,
     handleContinue,
     isCreatingProfile,
@@ -282,42 +341,36 @@ const AuthPrompt: React.FC = () => {
 
   const renderLoggedInContent = useMemo(() => {
     const username = profile?.name;
-    const isAddressUsername =
-      username && address && username === address.slice(0, 10);
     return (
       <>
         <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
-            You're all set!
+            Sign in
           </ModalHeader>
           <CloseButton onPress={hideAuthPrompt} />
         </div>
         <ModalBody>
-          {username && !isAddressUsername && (
-            <p className="text-center text-xl font-semibold text-gray-800">
-              Welcome,{' '}
-              <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                {username}
-              </span>
-              !
-            </p>
-          )}
-          <p className="text-center text-sm text-gray-600">
-            You are now logged in and ready to use Pensieve.
-          </p>
+          <div className="flex flex-col gap-[10px]">
+            <div className="text-[16px] leading-[1.6] text-black/80">
+              {newUser ? `You're All Set` : 'Welcome Back,'}
+            </div>
+            <span className="text-[20px] font-[700] leading-[1.2] text-[#28C196]">
+              {username}!
+            </span>
+          </div>
           <div className="mt-[10px]">
             <Button
               onPress={hideAuthPrompt}
               color="secondary"
-              className="w-full"
+              className="w-full rounded-[8px] bg-[#F5F5F5]"
             >
-              Let's Go!
+              Close
             </Button>
           </div>
         </ModalBody>
       </>
     );
-  }, [profile, hideAuthPrompt, address]);
+  }, [profile, hideAuthPrompt, newUser]);
 
   const renderModalContent = useCallback(() => {
     if (!isConnected) {

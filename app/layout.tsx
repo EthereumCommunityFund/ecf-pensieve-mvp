@@ -9,7 +9,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="light min-w-[390px]">
+    <html lang="en" className="min-w-[390px]">
       <body className="font-sans">
         <Providers>
           <MainLayout>{children}</MainLayout>

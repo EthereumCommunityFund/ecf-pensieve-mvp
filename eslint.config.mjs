@@ -107,6 +107,9 @@ export default [
           whitelist: ['font-mona', 'font-saira', 'font-sans', 'scrollbar-hide'],
         },
       ],
+
+      'react/prop-types': 'off',
+      'no-case-declarations': 'off',
     },
   },
   {
@@ -129,6 +132,7 @@ export default [
       '**/.vscode/**',
       '**/README.md',
       '**/LICENSE',
+      '**/stories/**',
     ],
   },
 ];

@@ -3,7 +3,7 @@ import { FC } from 'react';
 
 import { IItemSubCategoryEnum } from '@/types/item';
 
-import { CollapseButton, FilterButton, MetricButton } from '../ActionButtons';
+import { CollapseButton, MetricButton } from '../ActionButtons';
 
 interface CategoryHeaderProps {
   title: string;
@@ -11,6 +11,8 @@ interface CategoryHeaderProps {
   category: IItemSubCategoryEnum;
   isExpanded: boolean;
   onToggle: () => void;
+  metricsVisible?: boolean;
+  onToggleMetrics?: (subCat: IItemSubCategoryEnum) => void;
 }
 
 const CategoryHeader: FC<CategoryHeaderProps> = ({
@@ -19,12 +21,13 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
   category,
   isExpanded,
   onToggle,
+  metricsVisible = false,
+  onToggleMetrics,
 }) => {
   return (
     <div
       className={cn(
-        'flex items-center justify-between border border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]',
-        isExpanded ? 'rounded-t-[10px]' : 'rounded-[10px]',
+        'flex items-center justify-between border border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px] rounded-t-[10px] border-b-0 mb-[-1px]',
       )}
     >
       <div className="flex flex-col gap-[5px]">
@@ -39,8 +42,8 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
       </div>
       <div className="flex items-center justify-end gap-[10px]">
         <CollapseButton isExpanded={isExpanded} onChange={onToggle} />
-        <MetricButton onClick={() => {}} />
-        <FilterButton onClick={() => {}} />
+        <MetricButton onClick={() => onToggleMetrics?.(category)} />
+        {/* <FilterButton onClick={() => {}} /> */}
       </div>
     </div>
   );

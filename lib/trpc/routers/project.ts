@@ -9,10 +9,10 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { projects, voteRecords } from '@/lib/db/schema';
-import { projectLogs } from '@/lib/db/schema/projectLogs';
+import { projectLogs, projects, voteRecords } from '@/lib/db/schema';
+import { itemProposals } from '@/lib/db/schema/itemProposals';
+import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
-import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
   addRewardNotification,
   createRewardNotification,
@@ -55,10 +55,8 @@ export const projectRouter = router({
           )
           .min(1, 'At least one founder is required'),
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
-        whitePaper: z.string().min(1, 'White paper cannot be empty'),
-        dappSmartContracts: z
-          .string()
-          .min(1, 'Dapp smart contracts cannot be empty'),
+        whitePaper: z.string().optional(),
+        dappSmartContracts: z.string().optional(),
         refs: z
           .array(
             z.object({
@@ -70,32 +68,35 @@ export const projectRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (tx) => {
-        const [project] = await tx
-          .insert(projects)
-          .values({
-            ...input,
-            creator: ctx.user.id,
-          })
-          .returning();
-
-        if (!project) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'project not found',
-          });
-        }
-
-        try {
-          const caller = proposalRouter.createCaller({
-            ...ctx,
-            db: tx as any,
-          });
+      try {
+        return await ctx.db.transaction(async (tx) => {
           const proposalItems = Object.entries(input)
             .filter(([key]) => key !== 'refs')
             .map(([key, value]) => {
               return { key, value };
             });
+
+          const hasProposalKeys = proposalItems.map((item) => item.key);
+
+          const [project] = await tx
+            .insert(projects)
+            .values({
+              ...input,
+              creator: ctx.user.id,
+              hasProposalKeys,
+            })
+            .returning();
+
+          if (!project) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'project not found',
+            });
+          }
+          const caller = proposalRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
 
           await updateUserWeight(
             ctx.user.id,
@@ -109,12 +110,6 @@ export const projectRouter = router({
             ...(input.refs && { refs: input.refs }),
           });
 
-          logUserActivity.project.create({
-            userId: ctx.user.id,
-            targetId: project.id,
-            projectId: project.id,
-          });
-
           await addRewardNotification(
             createRewardNotification.createProposal(
               ctx.user.id,
@@ -126,15 +121,22 @@ export const projectRouter = router({
           );
 
           return project;
-        } catch (error) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message:
-              'Failed to create the project and its initial proposal. All changes have been rolled back.',
-            cause: error,
-          });
+        });
+      } catch (error) {
+        console.error('Error in createProject:', {
+          userId: ctx.user.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        if (error instanceof TRPCError) {
+          throw error;
         }
-      });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create project',
+          cause: error,
+        });
+      }
     }),
 
   getProjects: publicProcedure
@@ -211,7 +213,11 @@ export const projectRouter = router({
           creator: true,
           proposals: {
             with: {
-              voteRecords: true,
+              voteRecords: {
+                with: {
+                  creator: true,
+                },
+              },
               creator: true,
             },
           },
@@ -326,10 +332,59 @@ export const projectRouter = router({
               })
               .where(eq(projects.id, projectId));
 
-            await tx.insert(projectLogs).values({
-              projectId: projectId,
-              proposalId: proposalId,
+            const originalProposal = await tx.query.proposals.findFirst({
+              where: eq(proposals.id, proposalId),
             });
+
+            if (originalProposal && originalProposal.items) {
+              const itemProposalMap: Record<string, number> = {};
+
+              const formatRefs = (refs: any, key: string) => {
+                if (!refs || !Array.isArray(refs) || refs.length === 0) {
+                  return null;
+                }
+
+                return refs.find((ref: any) => ref.key === key)?.value || null;
+              };
+
+              for (const item of originalProposal.items as any[]) {
+                if (item.key) {
+                  const [newItemProposal] = await tx
+                    .insert(itemProposals)
+                    .values({
+                      key: item.key,
+                      value: item.value ?? '',
+                      projectId: projectId,
+                      creator: originalProposal.creator,
+                      ref: formatRefs(originalProposal.refs, item.key),
+                    })
+                    .returning();
+
+                  if (newItemProposal) {
+                    itemProposalMap[item.key] = newItemProposal.id;
+                    await tx.insert(projectLogs).values({
+                      projectId,
+                      key: item.key,
+                      itemProposalId: newItemProposal.id,
+                    });
+                  }
+                }
+              }
+
+              for (const voteRecord of projectVoteRecords) {
+                const itemProposalId = itemProposalMap[voteRecord.key];
+
+                if (itemProposalId) {
+                  await tx.insert(voteRecords).values({
+                    key: voteRecord.key,
+                    itemProposalId: itemProposalId,
+                    creator: voteRecord.creator,
+                    weight: voteRecord.weight,
+                    projectId: voteRecord.projectId,
+                  });
+                }
+              }
+            }
 
             if (proposalCreator) {
               await updateUserWeight(

@@ -1,3 +1,4 @@
+export { default as Autocomplete } from './Autocomplete';
 export * from './button';
 export * from './datePicker';
 export * from './input';

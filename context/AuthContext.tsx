@@ -67,7 +67,7 @@ interface IAuthContext {
 
   // Actions
   authenticate: () => Promise<void>;
-  createProfile: (username: string) => Promise<void>;
+  createProfile: (username: string, inviteCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   performFullLogoutAndReload: () => Promise<void>;
   showAuthPrompt: (source?: ConnectSource) => void;
@@ -189,7 +189,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateAuthState('idle');
     await supabase.auth.signOut();
     resetAuthState();
-  }, [resetAuthState, updateAuthState]);
+    try {
+      await disconnectAsync();
+    } catch (error) {
+      console.error('Error disconnecting wallet during logout:', error);
+    }
+  }, [resetAuthState, updateAuthState, disconnectAsync]);
 
   const performFullLogoutAndReload = useCallback(async () => {
     try {
@@ -227,7 +232,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateAuthState('authenticated');
         return profileData.data;
       } else {
-        // TODO to confirm: should updateAuthState('authenticated') here?
         return handleError('Get profile failed, please try again.');
       }
     } catch (error: any) {
@@ -372,7 +376,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   ]);
 
   const createProfile = useCallback(
-    async (username: string) => {
+    async (username: string, inviteCode?: string) => {
       if (!address) {
         handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
         return;
@@ -386,6 +390,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           signature: signatureDataRef.current.signature!,
           message: signatureDataRef.current.message!,
           username,
+          inviteCode,
         });
 
         await handleSupabaseLogin(verifyResult.token);
@@ -442,8 +447,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const showAuthPrompt = useCallback(
     async (source: ConnectSource = 'connectButton') => {
-      if (isConnected) {
+      // 总是先断开钱包连接，确保用户可以重新选择钱包
+      try {
         await disconnectAsync();
+      } catch (error) {
+        console.error(
+          'Error disconnecting wallet before showing auth prompt:',
+          error,
+        );
       }
 
       if (authState.status === 'error') {
@@ -456,7 +467,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isPromptVisible: true,
       }));
     },
-    [isConnected, disconnectAsync, resetAuthState, authState.status],
+    [disconnectAsync, resetAuthState, authState.status],
   );
 
   const hideAuthPrompt = useCallback(() => {

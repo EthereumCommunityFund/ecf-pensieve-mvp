@@ -2,23 +2,41 @@
 
 import { cn, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useUserWeightModal } from '@/components/biz/modal/userWeightCard/Context';
+import UserWeightCard from '@/components/biz/modal/userWeightCard/UserWeightCard';
 import BackHeader from '@/components/pages/project/BackHeader';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
+import { useProposalDetailContext } from '@/components/pages/project/proposal/detail/context/proposalDetailContext';
 import ProposalDetailCard from '@/components/pages/project/proposal/detail/ProposalDetailCard';
 import ProposalDetails from '@/components/pages/project/proposal/detail/ProposalDetails';
-import UserWeightCard from '@/components/pages/project/proposal/detail/UserWeightCard';
 import { useAuth } from '@/context/AuthContext';
-import { trpc } from '@/lib/trpc/client';
-import { IProject, IProposalWithVotes } from '@/types';
-import { devLog } from '@/utils/devLog';
+import { IProposalWithVotes } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
 const ProposalPage = () => {
   const { id: projectId, proposalId } = useParams();
   const router = useRouter();
   const { profile } = useAuth();
+  const userId = profile?.userId;
+  const { openUserWeightModal, setUserWeight } = useUserWeightModal();
+
+  const { project, proposal, proposals, isProjectFetched, isProposalFetched } =
+    useProposalDetailContext();
+
+  // 设置用户权重到 Context
+  useEffect(() => {
+    if (profile?.weight) {
+      setUserWeight(Number(profile.weight));
+    }
+  }, [profile?.weight, setUserWeight]);
+
+  useEffect(() => {
+    if (project && project?.isPublished) {
+      router.replace(`/project/${projectId}`);
+    }
+  }, [project, router, projectId]);
 
   const [isPageExpanded, setIsPageExpanded] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
@@ -31,33 +49,12 @@ const ProposalPage = () => {
     setIsFiltered((pre) => !pre);
   }, []);
 
-  const { data: project, isFetched: isProjectFetched } =
-    trpc.project.getProjectById.useQuery(
-      { id: Number(projectId) },
-      {
-        enabled: !!projectId,
-        select: (data) => {
-          devLog('getProjectById', data);
-          return data;
-        },
-      },
-    );
-
-  const { data: proposal, isFetched: isProposalFetched } =
-    trpc.proposal.getProposalById.useQuery(
-      { id: Number(proposalId) },
-      {
-        enabled: !!proposalId,
-        select: (data) => {
-          devLog('proposal', data);
-          return data;
-        },
-      },
-    );
-
-  const proposals = project?.proposals || [];
-
-  const { leadingProposalId } = useMemo(() => {
+  const {
+    leadingProposalId,
+    canBePublished,
+    leadingProposal,
+    votesOfProposalMap,
+  } = useMemo(() => {
     return ProposalVoteUtils.getVoteResultOfProject({
       projectId: Number(projectId),
       proposals: proposals || [],
@@ -66,11 +63,26 @@ const ProposalPage = () => {
       ).flatMap((proposal) => proposal.voteRecords || []),
       userId: profile?.userId,
     });
-  }, [proposals, projectId, profile?.userId]);
+  }, [proposals, projectId, profile?.userId, project?.proposals]);
+
+  const voteResultOfLeadingProposal = useMemo(() => {
+    if (!leadingProposal) {
+      return null;
+    }
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: leadingProposal.id,
+      votesOfProposal: votesOfProposalMap[leadingProposal.id],
+      userId,
+    });
+  }, [leadingProposal, votesOfProposalMap, userId]);
 
   const onSubmitProposal = useCallback(() => {
     router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
+
+  const proposalIndex = useMemo(() => {
+    return proposals?.findIndex((p) => p.id === Number(proposalId));
+  }, [proposals, proposalId]);
 
   return (
     <div className=" pb-[20px]">
@@ -85,7 +97,7 @@ const ProposalPage = () => {
           )}
           <span className="font-[600]">/</span>
           {isProposalFetched ? (
-            <span>Proposal {proposalId}</span>
+            <span>Proposal {proposalIndex + 1}</span>
           ) : (
             <Skeleton className="h-[20px] w-[100px]" />
           )}
@@ -95,13 +107,16 @@ const ProposalPage = () => {
       <ProposalDetailCard
         proposal={proposal}
         projectId={Number(projectId)}
-        proposalIndex={Number(proposalId)}
+        proposalIndex={proposalIndex}
         leadingProposalId={leadingProposalId}
       />
 
       {profile && (
         <div className="tablet:block mobile:block mx-[10px] mt-[10px] hidden">
-          <UserWeightCard weight={Number(profile.weight)} />
+          <UserWeightCard
+            weight={Number(profile.weight)}
+            onInfoClick={openUserWeightModal}
+          />
         </div>
       )}
 
@@ -120,14 +135,11 @@ const ProposalPage = () => {
           )}
         >
           <ProposalDetails
-            project={project as IProject}
-            proposal={proposal}
-            proposals={proposals || []}
-            projectId={Number(projectId)}
             isPageExpanded={isPageExpanded}
             isFiltered={isFiltered}
             toggleExpanded={togglePageExpanded}
             toggleFiltered={toggleFiltered}
+            proposalIndex={proposalIndex}
           />
         </div>
 
@@ -139,10 +151,20 @@ const ProposalPage = () => {
         >
           {profile && (
             <div className="tablet:hidden mobile:hidden">
-              <UserWeightCard weight={Number(profile.weight)} />
+              <UserWeightCard
+                weight={Number(profile.weight)}
+                onInfoClick={openUserWeightModal}
+              />
             </div>
           )}
-          <SubmitProposalCard onSubmitProposal={onSubmitProposal} />
+          <SubmitProposalCard
+            onSubmitProposal={onSubmitProposal}
+            showFullOnTablet={true}
+            canBePublished={canBePublished}
+            latestVotingEndedAt={
+              voteResultOfLeadingProposal?.latestVotingEndedAt || null
+            }
+          />
         </div>
       </div>
     </div>

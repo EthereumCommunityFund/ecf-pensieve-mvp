@@ -50,6 +50,13 @@ export const voteRecords = pgTable(
         table.proposalId,
         table.key,
       ),
+      creatorProjectKeyNullProposalIdx: index(
+        'vote_records_creator_project_key_null_proposal_idx',
+      ).on(table.creator, table.projectId, table.key),
+      itemProposalKeyIdx: index('vote_records_item_proposal_key_idx').on(
+        table.itemProposalId,
+        table.key,
+      ),
     };
   },
 );

@@ -31,17 +31,22 @@ type LogData = {
   proposalCreatorId?: string;
 };
 
-export async function addActiveLog({
-  userId,
-  action,
-  type,
-  targetId,
-  projectId,
-  items,
-  proposalCreatorId,
-}: LogData) {
+export async function addActiveLog(
+  {
+    userId,
+    action,
+    type,
+    targetId,
+    projectId,
+    items,
+    proposalCreatorId,
+  }: LogData,
+  tx?: any,
+) {
   try {
-    const [insertedLog] = await db
+    const currentDb = tx ?? db;
+
+    const [insertedLog] = await currentDb
       .insert(activeLogs)
       .values({
         userId,
@@ -62,24 +67,33 @@ export async function addActiveLog({
 }
 
 const createLogActions = (type: LogType) => ({
-  create: (data: Omit<LogData, 'type' | 'action'>) =>
-    addActiveLog({
-      ...data,
-      type,
-      action: LogAction.CREATE,
-    }),
-  update: (data: Omit<LogData, 'type' | 'action'>) =>
-    addActiveLog({
-      ...data,
-      type,
-      action: LogAction.UPDATE,
-    }),
-  delete: (data: Omit<LogData, 'type' | 'action'>) =>
-    addActiveLog({
-      ...data,
-      type,
-      action: LogAction.DELETE,
-    }),
+  create: (data: Omit<LogData, 'type' | 'action'>, tx?: any) =>
+    addActiveLog(
+      {
+        ...data,
+        type,
+        action: LogAction.CREATE,
+      },
+      tx,
+    ),
+  update: (data: Omit<LogData, 'type' | 'action'>, tx?: any) =>
+    addActiveLog(
+      {
+        ...data,
+        type,
+        action: LogAction.UPDATE,
+      },
+      tx,
+    ),
+  delete: (data: Omit<LogData, 'type' | 'action'>, tx?: any) =>
+    addActiveLog(
+      {
+        ...data,
+        type,
+        action: LogAction.DELETE,
+      },
+      tx,
+    ),
 });
 
 export const logUserActivity = {

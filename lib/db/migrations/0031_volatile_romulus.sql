@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ADD COLUMN "has_proposal_keys" text[] DEFAULT '{}' NOT NULL;

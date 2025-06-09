@@ -1,25 +1,23 @@
 'use client';
 
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { IRef } from '@/components/pages/project/create/types';
-import { useProposalVotes as useProposalVotesHook } from '@/components/pages/project/proposal/detail/useProposalVotes';
-import { StorageKey_DoNotShowCancelModal } from '@/constants/storage';
+import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
-import { IProject, IProposal } from '@/types';
-import { IItemSubCategoryEnum } from '@/types/item';
-import { safeGetLocalStorage } from '@/utils/localStorage';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
 
 import ActionSectionHeader from './ActionSectionHeader';
-import { TableFieldCategory } from './constants';
-import CancelVoteModal from './table/CancelVoteModal';
+import { useProposalDetailContext } from './context/proposalDetailContext';
+import { useProposalTableStates } from './hooks/useProposalTableStates';
+import CancelVoteModal from './modal/CancelVoteModal';
+import ReferenceModal from './modal/ReferenceModal';
+import SwitchVoteModal from './modal/SwitchVoteModal';
 import CategoryHeader from './table/CategoryHeader';
 import ProposalTable from './table/ProposalTable';
-import ReferenceModal from './table/ReferenceModal';
-import SwitchVoteModal from './table/SwitchVoteModal';
-import { createTableColumns } from './table/tableColumns';
-import { prepareTableData } from './table/utils';
+import { useCreateProposalTableColumns } from './table/tableColumns';
+import { prepareProposalTableData } from './table/utils';
 import TableSectionHeader from './TableSectionHeader';
 
 export interface ITableProposalItem {
@@ -29,55 +27,61 @@ export interface ITableProposalItem {
   reference: string;
   support: number;
   fieldType?: string;
+  // Group information for visual grouping
+  group?: string;
+  groupTitle?: string;
+  accountability?: string[];
+  legitimacy?: string[];
 }
 
 export interface ProposalDetailsProps {
-  proposal?: IProposal;
-  proposals: IProposal[];
-  project?: IProject;
-  projectId: number;
   isFiltered: boolean;
   toggleFiltered: () => void;
   isPageExpanded: boolean;
   toggleExpanded: () => void;
+  proposalIndex: number;
 }
 
-const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
-  [IItemSubCategoryEnum.Organization]: true,
-  [IItemSubCategoryEnum.Team]: true,
-  [IItemSubCategoryEnum.BasicProfile]: true,
-  [IItemSubCategoryEnum.Development]: true,
-  [IItemSubCategoryEnum.Finances]: true,
-  [IItemSubCategoryEnum.Token]: true,
-  [IItemSubCategoryEnum.Governance]: true,
-};
-
 const ProposalDetails = ({
-  proposal,
-  projectId,
-  project,
-  proposals,
   isPageExpanded,
   toggleExpanded,
   isFiltered,
   toggleFiltered,
+  proposalIndex,
 }: ProposalDetailsProps) => {
   const { profile, showAuthPrompt } = useAuth();
 
-  const [expandedSubCat, setExpandedSubCat] = useState(DefaultExpandedSubCat);
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const {
+    proposal,
+    userVotesOfProposalMap,
+    onCancelVote,
+    onSwitchVote,
+    switchVotePending,
 
-  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
-  const [currentReferenceKey, setCurrentReferenceKey] = useState('');
+    isSwitchModalOpen,
+    isCancelModalOpen,
+    isReferenceModalOpen,
+    currentReferenceKey,
+    currentVoteItem,
+    sourceProposal,
+    sourceProposalIndex,
+    setIsSwitchModalOpen,
+    setIsCancelModalOpen,
+    setIsReferenceModalOpen,
+    setCurrentReferenceKey,
+  } = useProposalDetailContext();
 
-  const [currentVoteItem, setCurrentVoteItem] =
-    useState<ITableProposalItem | null>(null);
-  const [sourceProposal, setSourceProposal] = useState<IProposal | null>(null);
-
-  const [doNotShowCancelModal, setDoNotShowCancelModal] =
-    useState<boolean>(false);
+  // Use the new table states hook for column pinning functionality
+  const {
+    expandedRows,
+    metricsVisibleSubCat,
+    columnPinning,
+    toggleRowExpanded,
+    toggleMetricsVisible,
+    toggleColumnPinning,
+    isColumnPinned,
+    setExpandedRows,
+  } = useProposalTableStates();
 
   const isOverallLoading = !proposal;
 
@@ -87,175 +91,263 @@ const ProposalDetails = ({
     return proposal.creator.userId === profile.userId;
   }, [proposal, profile]);
 
-  const {
-    userVotesOfProposalMap,
-    isFetchVoteInfoLoading,
-    isVoteActionPending,
-    getItemVoteResult,
-    onCancelVote,
-    onSwitchVote,
-    handleVoteAction,
-    switchVoteMutation,
-    cancelVoteMutation,
-    inActionKeys,
-  } = useProposalVotesHook(proposal, projectId, proposals);
-
-  useEffect(() => {
-    const savedValue = safeGetLocalStorage(StorageKey_DoNotShowCancelModal);
-    setDoNotShowCancelModal(savedValue === 'true');
-  }, []);
-
-  const toggleRowExpanded = useCallback((key: string) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  }, []);
-
-  const onVoteAction = useCallback(
-    async (item: ITableProposalItem) => {
-      if (!profile) {
-        console.warn('not login');
-        showAuthPrompt();
-        return;
-      }
-      if (isProposalCreator) {
-        console.warn(
-          'is proposal creator, cannot vote/switch vote/cancel vote',
-        );
-        return;
-      }
-      await handleVoteAction(item, doNotShowCancelModal, {
-        setCurrentVoteItem,
-        setIsCancelModalOpen,
-        setIsSwitchModalOpen,
-        setSourceProposal,
-      });
-    },
-    [
-      profile,
-      handleVoteAction,
-      doNotShowCancelModal,
-      showAuthPrompt,
-      isProposalCreator,
-    ],
-  );
-
   const handleCancelVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
       await onCancelVote(
-        userVotesOfProposalMap[currentVoteItem!.key].id,
-        currentVoteItem.key,
+        Number(userVotesOfProposalMap[currentVoteItem!.key as IPocItemKey]?.id),
+        currentVoteItem.key as IPocItemKey,
       );
       setIsCancelModalOpen(false);
     } catch (err) {
       // TODO toast
       console.error(err);
     }
-  }, [currentVoteItem, userVotesOfProposalMap, onCancelVote]);
+  }, [
+    currentVoteItem,
+    userVotesOfProposalMap,
+    onCancelVote,
+    setIsCancelModalOpen,
+  ]);
 
   const handleSwitchVoteConfirm = useCallback(async () => {
     try {
       if (!currentVoteItem) return;
-      await onSwitchVote(currentVoteItem.key);
+      await onSwitchVote(currentVoteItem);
       setIsSwitchModalOpen(false);
     } catch (err) {
       // TODO toast
       console.error(err);
     }
-  }, [currentVoteItem, onSwitchVote]);
+  }, [currentVoteItem, onSwitchVote, setIsSwitchModalOpen]);
 
-  const onShowReference = useCallback((key: string) => {
-    setCurrentReferenceKey(key);
-    setIsReferenceModalOpen(true);
-  }, []);
+  const onShowReference = useCallback(
+    (key: string) => {
+      setCurrentReferenceKey(key);
+      setIsReferenceModalOpen(true);
+    },
+    [setCurrentReferenceKey, setIsReferenceModalOpen],
+  );
 
-  const tableData = useMemo(() => prepareTableData(proposal), [proposal]);
+  const tableDataMap = useMemo(() => {
+    return proposal
+      ? prepareProposalTableData(proposal)
+      : prepareProposalTableData(undefined);
+  }, [proposal]);
 
+  // 批量切换某个分类下所有行的展开状态
+  const toggleAllRowsInCategory = useCallback(
+    (subCat: IItemSubCategoryEnum) => {
+      // 获取该分类下所有行的key
+      const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
+
+      setExpandedRows((prev) => {
+        // 检查该分类下是否有任何行已展开
+        const hasExpandedRows = categoryRows.some(
+          (rowKey) => prev[rowKey as IPocItemKey],
+        );
+
+        // 如果有展开的行，则全部收起；如果都收起，则全部展开
+        const newExpandedState = !hasExpandedRows;
+
+        const newExpandedRows = { ...prev };
+        categoryRows.forEach((rowKey) => {
+          newExpandedRows[rowKey as IPocItemKey] = newExpandedState;
+        });
+
+        return newExpandedRows;
+      });
+    },
+    [tableDataMap, setExpandedRows],
+  );
+
+  // 检查某个分类下是否有任何行已展开
+  const hasExpandedRowsInCategory = useCallback(
+    (subCat: IItemSubCategoryEnum) => {
+      const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
+      return categoryRows.some((rowKey) => expandedRows[rowKey as IPocItemKey]);
+    },
+    [tableDataMap, expandedRows],
+  );
+
+  // 只保留变化不频繁的稳定参数
   const coreTableMeta = useMemo(
     () => ({
       expandedRows,
       toggleRowExpanded,
       onShowReference,
-      project,
-      proposal,
-      onVoteAction,
       isProposalCreator,
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      inActionKeys,
-      getItemVoteResult,
+      toggleMetricsVisible,
+      toggleColumnPinning,
+      isColumnPinned,
     }),
     [
       expandedRows,
       toggleRowExpanded,
       onShowReference,
-      project,
-      proposal,
-      onVoteAction,
       isProposalCreator,
-      isFetchVoteInfoLoading,
-      isVoteActionPending,
-      inActionKeys,
-      getItemVoteResult,
+      toggleMetricsVisible,
+      toggleColumnPinning,
+      isColumnPinned,
     ],
   );
 
-  const columns = useMemo(() => {
-    return createTableColumns({ isPageExpanded, isProposalCreator });
-  }, [isPageExpanded, isProposalCreator]);
+  // Create column definitions for each subcategory at the top level
+  const basicProfileColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.BasicProfile],
+    category: IItemSubCategoryEnum.BasicProfile,
+    columnPinning: columnPinning[IItemSubCategoryEnum.BasicProfile],
+  });
+
+  const developmentColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Development],
+    category: IItemSubCategoryEnum.Development,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Development],
+  });
+
+  const organizationColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Organization],
+    category: IItemSubCategoryEnum.Organization,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Organization],
+  });
+
+  const teamColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Team],
+    category: IItemSubCategoryEnum.Team,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Team],
+  });
+
+  const financesColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Finances],
+    category: IItemSubCategoryEnum.Finances,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Finances],
+  });
+
+  const tokenColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Token],
+    category: IItemSubCategoryEnum.Token,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Token],
+  });
+
+  const governanceColumns = useCreateProposalTableColumns({
+    isPageExpanded,
+    isProposalCreator,
+    showMetrics: !!metricsVisibleSubCat[IItemSubCategoryEnum.Governance],
+    category: IItemSubCategoryEnum.Governance,
+    columnPinning: columnPinning[IItemSubCategoryEnum.Governance],
+  });
+
+  const columnsMap = useMemo(
+    () => ({
+      [IItemSubCategoryEnum.BasicProfile]: basicProfileColumns,
+      [IItemSubCategoryEnum.Development]: developmentColumns,
+      [IItemSubCategoryEnum.Organization]: organizationColumns,
+      [IItemSubCategoryEnum.Team]: teamColumns,
+      [IItemSubCategoryEnum.Finances]: financesColumns,
+      [IItemSubCategoryEnum.Token]: tokenColumns,
+      [IItemSubCategoryEnum.Governance]: governanceColumns,
+    }),
+    [
+      basicProfileColumns,
+      developmentColumns,
+      organizationColumns,
+      teamColumns,
+      financesColumns,
+      tokenColumns,
+      governanceColumns,
+    ],
+  );
 
   const basicProfileTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.BasicProfile],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.BasicProfile],
+    columns: columnsMap[IItemSubCategoryEnum.BasicProfile],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.BasicProfile],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.BasicProfile },
   });
 
   const technicalDevelopmentTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Development],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Development],
+    columns: columnsMap[IItemSubCategoryEnum.Development],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Development],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Development },
   });
 
   const organizationTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Organization],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Organization],
+    columns: columnsMap[IItemSubCategoryEnum.Organization],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Organization],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Organization },
   });
 
   const teamTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Team],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Team],
+    columns: columnsMap[IItemSubCategoryEnum.Team],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Team],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Team },
   });
 
   const financialTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Finances],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Finances],
+    columns: columnsMap[IItemSubCategoryEnum.Finances],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Finances],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Finances },
   });
 
   const tokenTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Token],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Token],
+    columns: columnsMap[IItemSubCategoryEnum.Token],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Token],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Token },
   });
 
   const governanceTable = useReactTable({
-    data: tableData[IItemSubCategoryEnum.Governance],
-    columns,
+    data: tableDataMap[IItemSubCategoryEnum.Governance],
+    columns: columnsMap[IItemSubCategoryEnum.Governance],
     getCoreRowModel: getCoreRowModel(),
-    meta: coreTableMeta,
+    enableColumnPinning: true,
+    state: {
+      columnPinning: columnPinning[IItemSubCategoryEnum.Governance],
+    },
+    meta: { ...coreTableMeta, category: IItemSubCategoryEnum.Governance },
   });
 
-  const tables = useMemo(() => {
+  const tableInstanceMap = useMemo(() => {
     return {
       [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
       [IItemSubCategoryEnum.Development]: technicalDevelopmentTable,
@@ -275,25 +367,6 @@ const ProposalDetails = ({
     governanceTable,
   ]);
 
-  const toggleCategory = useCallback((category: IItemSubCategoryEnum) => {
-    setExpandedSubCat((prev) => {
-      const newExpanded = { ...prev };
-      newExpanded[category] = !newExpanded[category];
-      return newExpanded;
-    });
-  }, []);
-
-  const getAnimationStyle = (isExpanded: boolean) => ({
-    height: isExpanded ? 'auto' : '0',
-    opacity: isExpanded ? 1 : 0,
-    overflow: 'hidden',
-    transition: 'opacity 0.2s ease',
-    transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)',
-    transformOrigin: 'top',
-    transitionProperty: 'opacity, transform',
-    transitionDuration: '0.2s',
-  });
-
   return (
     <div className="flex flex-col gap-[20px]">
       <ActionSectionHeader
@@ -304,7 +377,7 @@ const ProposalDetails = ({
       />
 
       <div className="flex flex-col gap-[40px]">
-        {TableFieldCategory.map((cat) => (
+        {ProposalTableFieldCategory.map((cat) => (
           <div key={cat.key} className="flex flex-col gap-[20px]">
             <TableSectionHeader
               title={cat.title}
@@ -316,15 +389,18 @@ const ProposalDetails = ({
                   title={subCat.title}
                   description={subCat.description}
                   category={subCat.key}
-                  isExpanded={expandedSubCat[subCat.key]}
-                  onToggle={() => toggleCategory(subCat.key)}
+                  isExpanded={hasExpandedRowsInCategory(subCat.key)}
+                  onToggle={() => toggleAllRowsInCategory(subCat.key)}
+                  metricsVisible={!!metricsVisibleSubCat[subCat.key]}
+                  onToggleMetrics={toggleMetricsVisible}
                 />
-                <div style={getAnimationStyle(expandedSubCat[subCat.key])}>
+                <div>
                   <ProposalTable
-                    table={tables[subCat.key]}
+                    table={tableInstanceMap[subCat.key]}
                     isLoading={isOverallLoading}
                     expandedRows={expandedRows}
                     isPageExpanded={isPageExpanded}
+                    metricsVisible={!!metricsVisibleSubCat[subCat.key]}
                   />
                 </div>
               </div>
@@ -337,16 +413,18 @@ const ProposalDetails = ({
         isOpen={isSwitchModalOpen}
         onClose={() => setIsSwitchModalOpen(false)}
         onConfirm={handleSwitchVoteConfirm}
-        isLoading={switchVoteMutation.isPending}
+        isLoading={switchVotePending}
         proposalItem={currentVoteItem || undefined}
         sourceProposal={sourceProposal || undefined}
+        proposalIndex={proposalIndex}
+        sourceProposalIndex={sourceProposalIndex}
       />
 
       <CancelVoteModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         onConfirm={handleCancelVoteConfirm}
-        isLoading={cancelVoteMutation.isPending}
+        isLoading={false}
         proposalItem={currentVoteItem || undefined}
       />
 

@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
+import { addToast } from '@/components/base';
 import { ITableProposalItem } from '@/components/pages/project/proposal/detail/ProposalDetails';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -17,6 +18,8 @@ export function useProposalVotes(
 ) {
   const { profile } = useAuth();
   const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
+  // 用于跟踪每个key的操作状态，防止重复操作
+  const operationInProgress = useRef<Record<string, boolean>>({});
 
   const proposalQueryOptions = useMemo(
     () => ({
@@ -158,101 +161,89 @@ export function useProposalVotes(
 
   const createVoteMutation = trpc.vote.createVote.useMutation();
   const switchVoteMutation = trpc.vote.switchVote.useMutation();
-  const cancelVoteMutation = trpc.vote.cancelVote.useMutation();
 
-  const setKeyActive = (key: string, active: boolean) => {
+  const setKeyActive = useCallback((key: string, active: boolean) => {
+    operationInProgress.current[key] = active;
+
     setInActionKeys((pre) => ({
       ...pre,
       [key]: active,
     }));
-  };
+  }, []);
+
+  const refetchVoteData = useCallback(async () => {
+    try {
+      await Promise.all([refetchVotesOfProposal(), refetchVotesOfProject()]);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [refetchVotesOfProposal, refetchVotesOfProject]);
 
   const onCreateVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
       if (!profile) return;
+
+      if (operationInProgress.current[key]) {
+        devLog('onCreateVote already in progress for key:', key);
+        return;
+      }
+
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
-      createVoteMutation.mutate(payload, {
-        onSuccess: async (data) => {
-          await Promise.all([
-            refetchVotesOfProposal(),
-            refetchVotesOfProject(),
-          ]);
-          setKeyActive(key, false);
-        },
-        onError: (error) => {
-          setKeyActive(key, false);
-          devLog('onVote error', error);
-        },
-      });
+      devLog('onCreateVote payload', payload);
+
+      try {
+        await createVoteMutation.mutateAsync(payload);
+        devLog('onCreateVote success', payload);
+        await refetchVoteData();
+      } catch (error) {
+        devLog('onVote error', error);
+        addToast({
+          title: 'Vote Failed',
+          description: (error as Error)?.message || 'Unknown error',
+          color: 'danger',
+        });
+      } finally {
+        setKeyActive(key, false);
+      }
     },
-    [
-      profile,
-      proposal,
-      createVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
+    [profile, proposal, createVoteMutation, refetchVoteData, setKeyActive],
   );
 
   const onSwitchVote = useCallback(
     async (key: string) => {
       if (!proposal) return;
       if (!profile) return;
+
+      if (operationInProgress.current[key]) {
+        devLog('onSwitchVote already in progress for key:', key);
+        return;
+      }
+
       setKeyActive(key, true);
       const payload = { proposalId: proposal.id, key };
-      switchVoteMutation.mutate(payload, {
-        onSuccess: async (data) => {
-          await Promise.all([
-            refetchVotesOfProposal(),
-            refetchVotesOfProject(),
-          ]);
-          setKeyActive(key, false);
-        },
-        onError: (error) => {
-          setKeyActive(key, false);
-          // devLog('onSwitchVote error', error);
-        },
-      });
+      devLog('onSwitchVote payload', payload);
+
+      try {
+        await switchVoteMutation.mutateAsync(payload);
+        await refetchVoteData();
+      } catch (error) {
+        addToast({
+          title: 'Switch Vote Failed',
+          description: (error as Error)?.message || 'Unknown error',
+          color: 'danger',
+        });
+      } finally {
+        setKeyActive(key, false);
+      }
     },
-    [
-      profile,
-      proposal,
-      switchVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
+    [profile, proposal, switchVoteMutation, refetchVoteData, setKeyActive],
   );
 
-  const onCancelVote = useCallback(
-    async (id: number, key: string) => {
-      if (!profile) return;
-      setKeyActive(key, true);
-      cancelVoteMutation.mutate(
-        { id },
-        {
-          onSuccess: async (data) => {
-            await Promise.all([
-              refetchVotesOfProposal(),
-              refetchVotesOfProject(),
-            ]);
-            setKeyActive(key, false);
-          },
-          onError: (error) => {
-            setKeyActive(key, false);
-            // devLog('onCancelVote error', error);
-          },
-        },
-      );
-    },
-    [
-      profile,
-      cancelVoteMutation,
-      refetchVotesOfProposal,
-      refetchVotesOfProject,
-    ],
-  );
+  const onCancelVote = useCallback(async (id: number, key: string) => {
+    devLog('can not cancel vote', id, key);
+  }, []);
 
   const findSourceProposal = useCallback(
     (key: string): IProposal | null => {
@@ -271,15 +262,17 @@ export function useProposalVotes(
         setCurrentVoteItem: (item: ITableProposalItem) => void;
         setIsCancelModalOpen: (open: boolean) => void;
         setIsSwitchModalOpen: (open: boolean) => void;
-        setSourceProposal: (proposal: IProposal | null) => void;
+        setSourceProposalInfo: (
+          proposal: IProposal | null,
+          index: number,
+        ) => void;
       },
     ) => {
-      devLog('onVoteAction item', item);
       const {
         setCurrentVoteItem,
         setIsCancelModalOpen,
         setIsSwitchModalOpen,
-        setSourceProposal,
+        setSourceProposalInfo,
       } = callbacks;
 
       setCurrentVoteItem(item);
@@ -288,12 +281,14 @@ export function useProposalVotes(
         return;
       }
       if (isUserVotedItemOfProposal(item.key)) {
-        if (doNotShowCancelModal) {
-          await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
-        } else {
-          setIsCancelModalOpen(true);
-        }
+        console.warn('Can not cancel vote');
         return;
+        // if (doNotShowCancelModal) {
+        //   await onCancelVote(userVotesOfProposalMap[item.key].id, item.key);
+        // } else {
+        //   setIsCancelModalOpen(true);
+        // }
+        // return;
       }
 
       if (
@@ -301,16 +296,18 @@ export function useProposalVotes(
         !isUserVotedItemOfProposal(item.key)
       ) {
         const sourceProposalData = findSourceProposal(item.key);
-        setSourceProposal(sourceProposalData);
+        const sourceProposalIndex = proposals?.findIndex(
+          (p) => p.id === sourceProposalData?.id,
+        );
+        setSourceProposalInfo(sourceProposalData, sourceProposalIndex || 0);
         setIsSwitchModalOpen(true);
       }
     },
     [
+      proposals,
       isUserVotedItemOfProject,
       isUserVotedItemOfProposal,
       onCreateVote,
-      onCancelVote,
-      userVotesOfProposalMap,
       findSourceProposal,
     ],
   );
@@ -329,12 +326,9 @@ export function useProposalVotes(
     isFetchVoteInfoLoading:
       isVotesOfProposalFetching || isVotesOfProjectFetching,
     isVoteActionPending:
-      createVoteMutation.isPending ||
-      switchVoteMutation.isPending ||
-      cancelVoteMutation.isPending,
+      createVoteMutation.isPending || switchVoteMutation.isPending,
     createVoteMutation,
     switchVoteMutation,
-    cancelVoteMutation,
     inActionKeys,
     onCreateVote,
     onSwitchVote,
