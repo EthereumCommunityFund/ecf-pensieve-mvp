@@ -36,11 +36,20 @@ export default function SelectCategories({
   }, [outerValue]);
 
   const handleChange = useCallback(
-    (value: FilmOptionType[]) => {
+    (newValue: FilmOptionType[]) => {
+      const seenValues = new Set<string>();
+      const uniqueValues = newValue.filter((item) => {
+        if (seenValues.has(item.value)) {
+          return false;
+        }
+        seenValues.add(item.value);
+        return true;
+      });
+
       if (!outerValue) {
-        setValue(value);
+        setValue(uniqueValues);
       }
-      onChange(value.map((item) => item.value) || []);
+      onChange(uniqueValues.map((item) => item.value) || []);
     },
     [onChange, outerValue],
   );
@@ -106,6 +115,7 @@ export default function SelectCategories({
       clearOnBlur
       handleHomeEndKeys
       options={options}
+      isOptionEqualToValue={(option, value) => option.value === value.value}
       slotProps={{
         popper: {
           sx: {
