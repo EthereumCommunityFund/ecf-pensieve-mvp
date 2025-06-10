@@ -3,6 +3,24 @@ import { isAddress } from 'viem';
 import dayjs from '@/lib/dayjs';
 import { formatNumber as formatNumberUtil } from '@/utils/formatters';
 
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+let hostUrl: string | undefined;
+
+export const getHost = (): string => {
+  if (typeof window === 'undefined') {
+    return IS_PROD ? 'https://pensieve.ecf.network' : 'http://localhost:3000';
+  }
+
+  if (hostUrl) {
+    return hostUrl;
+  }
+
+  const { protocol, host } = window.location;
+  hostUrl = `${protocol}//${host}`;
+  return hostUrl;
+};
+
 /**
  * @deprecated Use the formatNumber function from @/utils/formatters instead
  */
