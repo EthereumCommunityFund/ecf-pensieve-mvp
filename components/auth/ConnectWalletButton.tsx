@@ -3,8 +3,8 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 import React, { useCallback } from 'react';
 import { useAccount } from 'wagmi';
 
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/base';
+import { useAuth } from '@/context/AuthContext';
 
 export interface IConnectWalletButtonProps {
   isLoading?: boolean;

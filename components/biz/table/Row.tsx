@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { cn } from '@heroui/react';
+import { ReactNode } from 'react';
 
 export interface TableRowProps {
   children: ReactNode;

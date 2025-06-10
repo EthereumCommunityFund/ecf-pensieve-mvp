@@ -17,7 +17,6 @@ import {
   addRewardNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
-import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
@@ -419,10 +418,10 @@ export const projectRouter = router({
             }
 
             processedCount++;
-
-            if (updatedProject) {
+            //Todo: need to update social image
+            /*if (updatedProject) {
               await sendProjectPublishTweet(updatedProject);
-            }
+            }*/
           } catch (error) {
             console.error(
               `Failed to process project ${project.project_id}:`,

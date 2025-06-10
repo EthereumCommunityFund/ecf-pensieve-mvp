@@ -5,12 +5,6 @@
     "emitDecoratorMetadata": true,
     "outDir": ""
   },
-  "include": [
-    "../stories/**/*",
-    "*.ts",
-    "*.tsx"
-  ],
-  "exclude": [
-    "../node_modules/**/*"
-  ]
+  "include": ["../stories/**/*", "*.ts", "*.tsx"],
+  "exclude": ["../node_modules/**/*"]
 }

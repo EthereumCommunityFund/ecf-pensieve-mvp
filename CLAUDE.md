@@ -7,10 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **重要：**项目的语言使用规则如下：
 
 ### 用户沟通
+
 - 与用户的所有对话必须**完全使用中文**
 - 提交信息和用户文档必须使用中文
 
 ### 代码文案
+
 - **代码中的所有文案（错误信息、验证信息、API 响应消息等）必须使用英文**
 - 代码注释必须使用英文
 - 变量和函数的命名使用英文
