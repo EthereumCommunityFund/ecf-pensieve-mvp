@@ -31,6 +31,14 @@
 }
 
 @font-face {
+  font-family: 'Open Sans';
+  src: url('/fonts/OpenSans-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
   font-family: 'Saira';
   src: url('/fonts/Saira-Regular.ttf') format('truetype');
   font-weight: 400;
@@ -58,6 +66,14 @@
   font-family: 'Saira';
   src: url('/fonts/Saira-Bold.ttf') format('truetype');
   font-weight: 700;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Saira';
+  src: url('/fonts/Saira-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
   font-style: normal;
   font-display: fallback;
 }
@@ -94,6 +110,14 @@
   font-display: fallback;
 }
 
+@font-face {
+  font-family: 'Mona Sans';
+  src: url('/fonts/MonaSans-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: fallback;
+}
+
 
 /* Font utility classes */
 .font-saria {
@@ -122,4 +146,8 @@
 
 .font-bold {
   font-weight: 700;
+}
+
+.font-extra-bold {
+  font-weight: 800;
 }
