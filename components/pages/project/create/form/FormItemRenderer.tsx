@@ -30,6 +30,7 @@ import { IProjectFormData } from '../types';
 import FounderFormItem from './FounderFormItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
+import WebsiteFormItem from './WebsiteFormItem';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
@@ -319,7 +320,51 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'websites': {
-      return <div>websites</div>;
+      const websitesArray = Array.isArray(field.value) ? field.value : [];
+
+      return (
+        <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px]">
+          <div className="flex flex-col gap-2.5 pt-[10px]">
+            {websitesArray.map((website: any, index: number) => {
+              const websiteError =
+                fieldState.error && Array.isArray(fieldState.error)
+                  ? fieldState.error[index]
+                  : undefined;
+              return (
+                <WebsiteFormItem
+                  key={index}
+                  index={index}
+                  remove={() => {
+                    const newWebsites = websitesArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newWebsites);
+                  }}
+                  register={register}
+                  errors={websiteError}
+                  websitesKey={field.name as 'websites'}
+                  isPrimary={index === 0}
+                  canRemove={websitesArray.length > 1}
+                />
+              );
+            })}
+          </div>
+          <div className="pt-[10px]">
+            <Button
+              color="secondary"
+              size="md"
+              className="mobile:w-full px-[20px]"
+              onPress={() => {
+                field.onChange([...websitesArray, { url: '', title: '' }]);
+              }}
+              isDisabled={isDisabled}
+            >
+              Add an Entry
+            </Button>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
     }
 
     case 'roadmap':

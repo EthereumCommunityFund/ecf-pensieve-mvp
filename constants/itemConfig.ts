@@ -161,6 +161,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     placeholder: 'Type in a URL',
     startContentText: 'https://',
     showReference: true,
+    showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
     validationSchema: itemValidationSchemas.websites,
