@@ -38,6 +38,7 @@ const ProposalListItem = ({
 
   const {
     totalValidPointsOfProposal,
+    totalSupportedPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
     formattedPercentageOfProposal,
@@ -112,7 +113,7 @@ const ProposalListItem = ({
             Total Points Supported:
           </span>
           <span className="text-black/50">
-            {totalSupportedUserWeightOfProposal}
+            {totalSupportedPointsOfProposal}
           </span>
         </p>
       </div>

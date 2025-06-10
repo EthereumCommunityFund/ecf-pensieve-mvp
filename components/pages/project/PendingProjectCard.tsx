@@ -104,6 +104,7 @@ const PendingProjectCard = ({
   const {
     formattedPercentageOfProposal,
     totalValidPointsOfProposal,
+    totalSupportedPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     totalValidQuorumOfProposal,
     isProposalValidated,
@@ -188,6 +189,7 @@ const PendingProjectCard = ({
           canBePublished={canBePublished}
           formattedPercentageOfProposal={formattedPercentageOfProposal}
           totalValidPointsOfProposal={totalValidPointsOfProposal}
+          totalSupportedPointsOfProposal={totalSupportedPointsOfProposal}
           totalSupportedUserWeightOfProposal={
             totalSupportedUserWeightOfProposal
           }
@@ -204,6 +206,7 @@ interface IProgressCardProps {
   canBePublished: boolean;
   formattedPercentageOfProposal: string;
   totalValidPointsOfProposal: number;
+  totalSupportedPointsOfProposal: number;
   totalSupportedUserWeightOfProposal: number;
   totalValidQuorumOfProposal: number;
   projectId: string;
@@ -213,6 +216,7 @@ const ProgressCard = ({
   canBePublished,
   formattedPercentageOfProposal,
   totalValidPointsOfProposal,
+  totalSupportedPointsOfProposal,
   totalSupportedUserWeightOfProposal,
   totalValidQuorumOfProposal,
   projectId,
@@ -250,7 +254,7 @@ const ProgressCard = ({
         <div className="flex items-center gap-[4px]">
           <span className="text-[13px]">Total Supported</span>
           <span className="text-black/60">
-            {totalSupportedUserWeightOfProposal}
+            {totalSupportedPointsOfProposal}
           </span>
         </div>
       </div>
@@ -292,7 +296,7 @@ const ProgressCard = ({
       <div className="flex items-center justify-between">
         <span className="text-[13px]">Total Supported</span>
         <span className="font-[600] text-black/60">
-          {totalSupportedUserWeightOfProposal}
+          {totalSupportedPointsOfProposal}
         </span>
       </div>
     </div>

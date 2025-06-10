@@ -22,6 +22,7 @@ export interface IVoteResultOfProposal {
   proposalId: number;
   votesOfKeyInProposalMap: Record<string, IVote[]>;
   totalValidPointsOfProposal: number;
+  totalSupportedPointsOfProposal: number;
   totalSupportedUserWeightOfProposal: number;
   totalValidQuorumOfProposal: number;
   percentageOfProposal: number;
@@ -75,6 +76,7 @@ const DefaultProposalResult: IVoteResultOfProposal = {
   proposalId: 0,
   votesOfKeyInProposalMap: {},
   totalValidPointsOfProposal: 0,
+  totalSupportedPointsOfProposal: 0,
   totalSupportedUserWeightOfProposal: 0,
   totalValidQuorumOfProposal: 0,
   percentageOfProposal: 0,
@@ -194,6 +196,11 @@ const ProposalVoteUtils = {
       return acc + validPointsForKey;
     }, 0);
 
+    const totalSupportedPointsOfProposal = votesOfProposal.reduce(
+      (acc, vote) => acc + Number(vote.weight || 0),
+      0,
+    );
+
     const userWeightMap = votesOfProposal.reduce(
       (acc, vote) => {
         const userId = vote.creator.userId;
@@ -236,6 +243,7 @@ const ProposalVoteUtils = {
       proposalId,
       votesOfKeyInProposalMap,
       totalValidPointsOfProposal,
+      totalSupportedPointsOfProposal,
       totalSupportedUserWeightOfProposal,
       totalValidQuorumOfProposal,
       percentageOfProposal,

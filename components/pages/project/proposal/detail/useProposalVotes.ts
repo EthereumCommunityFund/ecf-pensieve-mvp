@@ -8,7 +8,7 @@ import { IProposal, IVote } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
 
-type VoteArrayType = IVote[] | undefined;
+export type VoteArrayType = IVote[] | undefined;
 const ONE_MINUTE_MS = 60 * 1000;
 
 export function useProposalVotes(
@@ -18,7 +18,6 @@ export function useProposalVotes(
 ) {
   const { profile } = useAuth();
   const [inActionKeys, setInActionKeys] = useState<Record<string, boolean>>({});
-  // 用于跟踪每个key的操作状态，防止重复操作
   const operationInProgress = useRef<Record<string, boolean>>({});
 
   const proposalQueryOptions = useMemo(
