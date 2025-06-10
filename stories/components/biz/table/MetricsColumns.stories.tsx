@@ -167,7 +167,7 @@ export const EmptyStatesComparison: Story = {
             <LegitimacyCol.Cell width={250} legitimacy={[]} isLast />
           </tr>
           <tr>
-            <PropertyCol.Cell width={200} itemKey="websiteUrl">
+            <PropertyCol.Cell width={200} itemKey="websites">
               Website URL
             </PropertyCol.Cell>
             <AccountabilityCol.Cell

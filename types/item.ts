@@ -31,7 +31,7 @@ export type IBasicsKey = Extract<
   | 'categories'
   | 'mainDescription'
   | 'logoUrl'
-  | 'websiteUrl'
+  | 'websites'
   | 'appUrl'
   | 'tags'
   | 'whitePaper'
@@ -129,6 +129,7 @@ export type IFormDisplayType =
   | 'link'
   | 'date'
   | 'founderList'
+  | 'websites'
   | 'autoComplete'
   | 'roadmap';
 

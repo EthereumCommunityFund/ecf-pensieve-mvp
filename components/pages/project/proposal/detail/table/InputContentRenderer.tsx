@@ -10,6 +10,7 @@ import {
   parseMultipleValue,
   parseValue,
 } from '@/utils/item';
+import { normalizeUrl } from '@/utils/url';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -75,6 +76,19 @@ const InputContentRenderer: React.FC<IProps> = ({
                   .map((founder: any) => `${founder.name}-${founder.title}`)
                   .join(', ')
               : parsedFounderList}
+          </>
+        );
+      }
+      case 'websites': {
+        const parsedWebsites = parseValue(value);
+        return (
+          <>
+            {parsedWebsites
+              .map(
+                (website: any) =>
+                  `${website.title}: ${normalizeUrl(website.url)}`,
+              )
+              .join(', ')}
           </>
         );
       }

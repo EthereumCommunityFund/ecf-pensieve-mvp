@@ -80,11 +80,10 @@ export const transformProjectData = (
       formData.logoUrl || '',
       fieldApplicability,
     ),
-    websiteUrl: transformFormValue(
-      'websiteUrl',
-      normalizeUrl(formData.websiteUrl) || '',
-      fieldApplicability,
-    ),
+    websites: formData.websites.map((website) => ({
+      url: website.url,
+      title: website.title,
+    })),
     appUrl: emptyToUndefined(
       transformFormValue(
         'appUrl',
@@ -206,10 +205,17 @@ export const transformProposalData = (
       ),
     },
     {
-      key: 'websiteUrl',
+      key: 'websites',
       value: transformFormValue(
-        'websiteUrl',
-        normalizeUrl(formData.websiteUrl) || '',
+        'websites',
+        formData.websites?.length > 0
+          ? JSON.stringify(
+              formData.websites.map((website) => ({
+                url: website.url,
+                title: website.title,
+              })),
+            )
+          : '',
         fieldApplicability,
       ),
     },
@@ -353,7 +359,10 @@ export const convertProjectToFormData = (
     categories: project.categories,
     mainDescription: project.mainDescription,
     logoUrl: project.logoUrl,
-    websiteUrl: project.websiteUrl,
+    websites: project.websites.map((website: any) => ({
+      url: website.url,
+      title: website.title,
+    })),
     appUrl: project.appUrl || null,
     tags: project.tags,
     whitePaper: project.whitePaper || '',
