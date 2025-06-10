@@ -69,14 +69,9 @@ const RightContent: FC<RightContentProps> = memo(
               <span className="font-mona text-[15px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
                 Your Contribution Points
               </span>
-              <button
-                onClick={handleInfoIconClick}
-                className="-m-1 cursor-pointer rounded-sm p-1 opacity-50 transition-opacity duration-200 hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                aria-label="View weight information"
-                title="Click to learn more about your weight"
-              >
+              <Button isIconOnly size="sm" onPress={handleInfoIconClick}>
                 <InfoIcon size={20} />
-              </button>
+              </Button>
             </div>
             <span className="font-mona text-[18px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
               {formatWeight(userWeight)}
