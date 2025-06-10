@@ -68,7 +68,7 @@ const ProjectDetailCardSkeleton = () => {
       <Skeleton className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-[10px]">
-        <Skeleton className="h-[25px] w-[180px] mobile:w-[150px]" />
+        <Skeleton className="mobile:w-[150px] h-[25px] w-[180px]" />
         <Skeleton className="h-[23px] w-full" />
 
         <div className="flex flex-wrap gap-[8px]">
