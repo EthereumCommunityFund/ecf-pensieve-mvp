@@ -8,12 +8,16 @@ import {
   ESSENTIAL_ITEM_WEIGHT_SUM,
 } from '@/lib/constants';
 import { IProposal } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils from '@/utils/proposal';
 
-import ProgressLine from '../../ProgressLine';
-import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
+import { ActiveLeadingLabel } from '../common/LeadingLabel';
+import ProgressLine from '../../ProgressLine';
 
-import { useProposalVotes } from './useProposalVotes';
+import { VoteArrayType } from './useProposalVotes';
 
 interface IProposalDetailCardProps {
   proposal?: IProposal;
@@ -23,20 +27,42 @@ interface IProposalDetailCardProps {
 }
 
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
-  const { proposal, projectId, proposalIndex, leadingProposalId } = props;
+  const { profile } = useAuth();
+  const { proposal, proposalIndex, leadingProposalId } = props;
 
-  const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
-  const { openProposalProgressModal } = useProposalProgressModal();
+  const proposalQueryOptions = useMemo(
+    () => ({
+      enabled: !!proposal && !!proposal.id,
+      select: (data: VoteArrayType) => {
+        devLog('getVotesByProposalId', data);
+        return data;
+      },
+    }),
+    [proposal],
+  );
+
+  const { data: votesOfProposal } = trpc.vote.getVotesByProposalId.useQuery(
+    { proposalId: Number(proposal?.id) },
+    proposalQueryOptions,
+  );
 
   const {
-    percentageOfProposal,
     totalValidPointsOfProposal,
+    totalSupportedPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     formattedPercentageOfProposal,
     totalValidQuorumOfProposal,
     isUserVotedInProposal,
     isProposalValidated,
-  } = voteResultOfProposal;
+  } = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: Number(proposal?.id),
+      votesOfProposal: votesOfProposal || [],
+      userId: profile?.userId,
+    });
+  }, [votesOfProposal, proposal, profile]);
+
+  const { openProposalProgressModal } = useProposalProgressModal();
 
   const isLeading = !!leadingProposalId && leadingProposalId === proposal?.id;
 
@@ -127,7 +153,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
             {/* Total Supported */}
             <div className="flex items-center gap-[10px] text-[14px] font-[600] leading-[19px] text-black/50">
               <span>Total Points Supported:</span>
-              <span>{totalSupportedUserWeightOfProposal}</span>
+              <span>{totalSupportedPointsOfProposal}</span>
             </div>
           </div>
 

@@ -694,7 +694,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription:
       'Links to income and revenue statements with descriptive labels.',
     weight: ALL_POC_ITEM_MAP.income_and_revenue_statements.weight,
-    formDisplayType: 'stringMultiple', // TODO: type need to be updated
+    formDisplayType: 'stringMultiple',
     placeholder: 'Add income/revenue statement URL',
     showReference: true,
     accountability: [

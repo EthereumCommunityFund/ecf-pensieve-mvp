@@ -14,7 +14,6 @@ import {
 
 interface ModalHeaderProps {
   onClose: () => void;
-  onShare?: () => void;
   breadcrumbs?: {
     section: string;
     item: string;
@@ -23,7 +22,6 @@ interface ModalHeaderProps {
 
 const ModalHeader: FC<ModalHeaderProps> = ({
   onClose,
-  onShare,
   breadcrumbs = { section: 'Section', item: 'Itemname' },
 }) => {
   const copyLink = useMemo(() => {

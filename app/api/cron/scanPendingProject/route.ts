@@ -12,10 +12,11 @@ async function handleCronJob(request: Request) {
       status: 401,
     });
   }
+
   const context = await createTRPCContext({ headers: new Headers() });
   const caller = projectRouter.createCaller(context);
-  await caller.scanPendingProject();
-  return NextResponse.json({ success: true });
+  const result = await caller.scanPendingProject();
+  return NextResponse.json({ success: true, result });
 }
 
 export async function GET(request: Request) {

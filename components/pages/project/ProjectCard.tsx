@@ -127,7 +127,6 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
           </div>
         </div>
 
-        {/* TODO： Like logic */}
         <div className="flex-col items-center justify-center gap-[4px] text-center">
           {/* <Button
             isIconOnly

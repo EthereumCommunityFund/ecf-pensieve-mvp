@@ -17,6 +17,7 @@ import {
   addRewardNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 
@@ -331,13 +332,19 @@ export const projectRouter = router({
                 (itemsTopWeight[key] || 0) + (voteRecord.weight ?? 0);
             }
 
-            await tx
+            const [updatedProject] = await tx
               .update(projects)
               .set({
                 isPublished: true,
                 itemsTopWeight,
               })
-              .where(eq(projects.id, projectId));
+              .where(eq(projects.id, projectId))
+              .returning({
+                id: projects.id,
+                name: projects.name,
+                tagline: projects.tagline,
+                logoUrl: projects.logoUrl,
+              });
 
             const originalProposal = await tx.query.proposals.findFirst({
               where: eq(proposals.id, proposalId),
@@ -412,6 +419,10 @@ export const projectRouter = router({
             }
 
             processedCount++;
+
+            if (updatedProject) {
+              await sendProjectPublishTweet(updatedProject);
+            }
           } catch (error) {
             console.error(
               `Failed to process project ${project.project_id}:`,
