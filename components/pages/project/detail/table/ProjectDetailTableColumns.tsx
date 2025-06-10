@@ -295,12 +295,10 @@ export const useProjectTableColumns = ({
           <ActionsCol.Cell
             item={item}
             onView={(contentType?: 'viewItemProposal' | 'submitPropose') => {
-              // TODO 查看逻辑, 类型优化
-              if (onOpenModal && contentType) {
-                onOpenModal(item.key as IPocItemKey, contentType);
-              } else {
-                // console.log('Menu for item:', item.key);
-              }
+              onOpenModal?.(
+                item.key as IPocItemKey,
+                contentType || 'viewItemProposal',
+              );
             }}
           />
         );

@@ -8,7 +8,6 @@ import {
 } from '@heroui/react';
 import React from 'react';
 
-// TODO： input ui
 const BaseInput = React.forwardRef<HTMLInputElement, InputProps>(
   (props, ref) => {
     const { classNames, ...rest } = props;

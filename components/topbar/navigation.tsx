@@ -41,13 +41,6 @@ export const navigationItems: NavigationItem[] = [
     activeIcon: <GitPullLightIcon />,
     matchPath: '/projects/pending',
   },
-  // {
-  //   name: 'Contribute',
-  //   href: '/contribute',
-  //   icon: '/images/home/PenNib-Light.png',
-  //   activeIcon: '/images/home/PenNib-Dark.png',
-  //   matchPath: '/contribute',
-  // },
 ] as const;
 
 export function Navigation() {
