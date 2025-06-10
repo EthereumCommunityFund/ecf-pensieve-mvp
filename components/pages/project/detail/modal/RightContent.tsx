@@ -64,10 +64,10 @@ const RightContent: FC<RightContentProps> = memo(
         {/* Your Weight Section */}
         <div className="tablet:hidden mobile:hidden flex flex-col gap-3.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-3.5">
           {/* Header with title and info icon */}
-          <div className="flex justify-between gap-2.5 border-b border-dashed border-[rgba(0,0,0,0.1)] pb-2.5">
+          <div className="flex flex-col gap-[5px] border-b border-dashed border-[rgba(0,0,0,0.1)] pb-2.5">
             <div className="flex items-center gap-[5px]">
-              <span className="font-mona text-[18px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
-                Your Weight
+              <span className="font-mona text-[15px] font-semibold leading-[1.41] tracking-[1.39%] text-black">
+                Your Contribution Points
               </span>
               <button
                 onClick={handleInfoIconClick}
@@ -89,9 +89,9 @@ const RightContent: FC<RightContentProps> = memo(
               Current Item Weight: {displayedItemWeight}
             </span>
             {isUserWeightExceedsItemWeight && (
-              <span className="font-sans text-[13px] leading-[1.54] text-black opacity-80">
-                Your weight exceeds the item's threshold, allowing you to
-                surpass the weight of any submission you vote on.
+              <span className="font-sans text-[13px] leading-[20px] text-black/80">
+                Your CP exceeds the item’s threshold, allowing you to surpass
+                the weight of any submission you vote on.
               </span>
             )}
           </div>
