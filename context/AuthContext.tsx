@@ -395,7 +395,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
-        // TODO: what if api error, can retry again?
         handleError(
           `${CreateProfileErrorPrefix}: ${error.message || 'Please try again'}`,
         );

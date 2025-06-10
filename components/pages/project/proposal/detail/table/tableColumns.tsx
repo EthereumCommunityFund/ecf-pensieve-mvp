@@ -155,47 +155,6 @@ export const useCreateProposalTableColumns = ({
       },
     });
 
-    // TODO 预留字段，用于显示字段类型
-    const fieldTypeColumn = columnHelper.accessor('fieldType', {
-      id: 'fieldType',
-      header: (info) => {
-        const { toggleColumnPinning, isColumnPinned } = info.table.options
-          .meta as TableCellsMeta;
-
-        // If column pinning is supported, use TooltipThWithPin
-        if (toggleColumnPinning && isColumnPinned && category) {
-          return (
-            <TooltipThWithPin
-              title="Field Type"
-              tooltipContext="The type of the field for the project item"
-              columnId="fieldType"
-              category={category}
-              isPinned={isColumnPinned(category, 'fieldType')}
-              onTogglePin={toggleColumnPinning}
-            />
-          );
-        }
-
-        // Fallback to regular TooltipTh
-        return (
-          <TooltipTh
-            title="Field Type"
-            tooltipContext="The type of the field for the project item"
-          />
-        );
-      },
-      size: 220,
-      cell: (info) => {
-        const key = info.row.original.key;
-        const itemConfig = AllItemConfig[key as IEssentialItemKey];
-        return (
-          <div className="font-mona flex items-center overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
-            {itemConfig?.formDisplayType}
-          </div>
-        );
-      },
-    });
-
     const inputColumn = columnHelper.accessor('input', {
       header: (info) => {
         const { toggleColumnPinning, isColumnPinned } = info.table.options

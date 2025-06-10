@@ -4,11 +4,11 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
+import TooltipTh from '@/components/biz/table/TooltipTh';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord } from '@/types';
 import { IPocItemKey } from '@/types/item';
-import TooltipTh from '@/components/biz/table/TooltipTh';
 
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
@@ -145,7 +145,6 @@ export const useCommonColumnsOfModal = () => {
           (project?.itemsTopWeight as Record<IPocItemKey, number>)?.[itemKey] ||
           0;
 
-        // TODO 抽取到 context里面去
         const { leadingProposal = null, allItemProposals = [] } =
           proposalsByProjectIdAndKey || {};
 

@@ -66,7 +66,7 @@ const InputContentRenderer: React.FC<IProps> = ({
         );
       case 'date':
         return <>{dayjs(value).format('MMM, DD, YYYY')}</>;
-      // TODO, founderList的展示UI需要调整，目前是展示name-title，需要展示类似表格的形式
+      // update to edit table UI in the future
       case 'founderList': {
         const parsedFounderList = parseValue(value);
         return (
@@ -106,7 +106,6 @@ const InputContentRenderer: React.FC<IProps> = ({
 
   const isValueEmpty = isInputValueEmpty(value);
 
-  // TODO 确认NA的判断
   if (isValueEmpty || isInputValueNA(value)) {
     return !isEssential ? (
       <span className="font-mona text-[14px] font-[600]">{`---`}</span>

@@ -214,7 +214,6 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'budget_plans',
           'expense_statements',
           'runway',
-          // 'income_and_revenue_statements', // TODO: type need to be updated
         ],
         groups: [],
       },
