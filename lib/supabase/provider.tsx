@@ -58,6 +58,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeSupabase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
