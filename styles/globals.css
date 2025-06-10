@@ -1,0 +1,44 @@
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f5f5f5;
+  --foreground: #171717;
+  --primary-green: #28c196;
+  --primary-foreground: #ffffff;
+  --font-open-sans: 'Open Sans', sans-serif;
+  --font-saira: 'Saira', sans-serif;
+  --font-mona-sans: 'Mona Sans', sans-serif;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-open-sans), Arial, sans-serif;
+}
+
+@layer components {
+  .btn-base {
+    @apply h-8 px-[10px] py-1 text-sm font-semibold rounded-[5px] cursor-pointer transition-colors duration-200;
+  }
+
+  .btn-ghost {
+    @apply btn-base text-[rgba(0,0,0,0.5)] hover:bg-[rgba(0,0,0,0.05)] hover:text-black;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-black text-white hover:bg-gray-800 flex items-center gap-2;
+  }
+}
+
+#active-contributions {
+  svg {
+    rect {
+      rx: 3px;
+      ry: 3px;
+    }
+  }
+}

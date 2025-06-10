@@ -1,0 +1,233 @@
+import * as yup from 'yup';
+
+import { IFounder, IWebsite } from '@/components/pages/project/create/types';
+import { normalizeUrl } from '@/utils/url';
+
+// TypeScript declaration merging for custom Yup methods
+declare module 'yup' {
+  interface StringSchema<
+    TType extends yup.Maybe<string> = string | undefined,
+    TContext = yup.AnyObject,
+    TDefault = undefined,
+    TFlags extends yup.Flags = '',
+  > {
+    isContractAddressList(message?: string): this;
+  }
+}
+
+yup.addMethod(
+  yup.string,
+  'isContractAddressList',
+  function (
+    message: string = 'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas.',
+  ) {
+    return this.test({
+      name: 'is-contract-address-list',
+      message,
+      test: function (value: string | undefined | null) {
+        if (value == null || value.trim() === '') {
+          return true; // handled by required validator
+        }
+        const addresses = value
+          .split(',')
+          .map((addr) => addr.trim())
+          .filter((addr) => addr.length > 0);
+        if (addresses.length === 0) {
+          return false;
+        }
+        return addresses.every((addr) => /^0x[a-fA-F0-9]{40}$/.test(addr));
+      },
+    });
+  },
+);
+
+const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
+  name: yup.string().required('Founder name is required'),
+  title: yup.string().required('Founder title is required'),
+});
+
+const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
+  url: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Project website is required'),
+  title: yup.string().required('Project website title is required'),
+});
+
+export const itemValidationSchemas = {
+  // Basics
+  name: yup
+    .string()
+    .required('Project name is required')
+    .max(250, 'Project name cannot exceed 250 characters'),
+
+  tagline: yup
+    .string()
+    .required('Tagline is required')
+    .max(250, 'Tagline cannot exceed 250 characters'),
+
+  categories: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one category')
+    .required('Categories are required'),
+
+  tags: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one tag')
+    .required('Tags are required'),
+
+  mainDescription: yup.string().required('Main description is required'),
+
+  logoUrl: yup
+    .string()
+    .url('Invalid Logo URL')
+    .required('Project logo is required'),
+
+  websites: yup
+    .array()
+    .of(websiteSchema)
+    .min(1, 'At least one website is required')
+    .required('Project website is required'),
+
+  appUrl: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('App URL is required when applicable'),
+
+  whitePaper: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Whitepaper URL is required when applicable'),
+
+  dateFounded: yup.date().required('Foundation date is required'),
+
+  dateLaunch: yup.date().required('Launch date is required when applicable'),
+
+  adoption_plan: yup.string().required('Adoption plan is required'),
+
+  launch_plan: yup.string().required('Launch plan is required'),
+
+  roadmap: yup.string().required('Roadmap is required'),
+
+  // Technicals
+  devStatus: yup.string().required('Development status is required'),
+
+  openSource: yup
+    .string()
+    .required('Please select whether the project is open source'),
+
+  codeRepo: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Code repository URL is required when applicable'),
+
+  dappSmartContracts: yup
+    .string()
+    .isContractAddressList(
+      'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas. An empty field is allowed if not applicable.',
+    )
+    .required('Dapp smart contract address is required when applicable'),
+
+  audit_status: yup.string().required('Audit status is required'),
+
+  dapp_category: yup.string().required('Dapp category is required'),
+
+  protocol_built_on: yup.string().required('Protocol built on is required'),
+
+  // Organization
+  orgStructure: yup.string().required('Organization structure is required'),
+
+  publicGoods: yup
+    .string()
+    .required('Please select whether the project is a public good'),
+
+  founders: yup
+    .array()
+    .of(founderSchema)
+    .min(1, 'At least one founder is required')
+    .required('Founder information is required'),
+
+  core_team: yup
+    .array()
+    .of(founderSchema)
+    .min(1, 'At least one core team member is required')
+    .required('Core team information is required'),
+
+  team_incentives: yup.string().required('Team incentives is required'),
+
+  ownership_of_project: yup
+    .string()
+    .required('Ownership of project is required'),
+
+  governance_structure: yup
+    .string()
+    .required('Governance structure is required'),
+
+  physical_entity: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'At least one physical entity is required')
+    .required('Physical entity information is required'),
+
+  // Financial
+  fundingStatus: yup
+    .string()
+    .required('Funding status is required when applicable'),
+
+  tokenContract: yup
+    .string()
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
+    .required('Token contract address is required when applicable'),
+
+  project_funded_date: yup.date().required('Project funded date is required'),
+
+  budget_plans: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Budget plans URL is required'),
+
+  expense_statements: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Expense statements URL is required'),
+
+  runway: yup.string().required('Runway is required'),
+
+  income_and_revenue_statements: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'At least one income/revenue statement is required')
+    .required('Income and revenue statements are required'),
+
+  token_sales: yup.string().required('Token sales status is required'),
+
+  token_type: yup.string().required('Token type is required'),
+
+  token_issuance_mechanism: yup
+    .string()
+    .required('Token issuance mechanism is required'),
+
+  token_launch_date: yup.date().required('Token launch date is required'),
+
+  total: yup.string().required('Total investment is required'),
+
+  treasury_vault_address: yup
+    .string()
+    .matches(
+      /^(0x[a-fA-F0-9]{40}|N\/A)$/,
+      'Invalid format. Use Ethereum address or N/A',
+    )
+    .required('Treasury vault address is required when applicable'),
+
+  treasury_mechanism: yup.string().required('Treasury mechanism is required'),
+};
+
+export { founderSchema };

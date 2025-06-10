@@ -1,0 +1,2 @@
+ALTER TABLE "projects" ALTER COLUMN "white_paper" DROP NOT NULL;--> statement-breakpoint
+ALTER TABLE "vote_records" ADD CONSTRAINT "vote_records_creator_project_key_unique" UNIQUE("creator","project_id","key");

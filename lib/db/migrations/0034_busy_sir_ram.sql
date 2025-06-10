@@ -1,0 +1,1 @@
+ALTER TABLE "vote_records" DROP CONSTRAINT "vote_records_creator_project_key_unique";
