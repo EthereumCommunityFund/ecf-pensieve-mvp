@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-import { IFounderInput } from '@/components/pages/project/create/types';
+import { IFounder } from '@/components/pages/project/create/types';
 import { normalizeUrl } from '@/utils/url';
 
 // TypeScript declaration merging for custom Yup methods
@@ -41,7 +41,7 @@ yup.addMethod(
   },
 );
 
-const founderSchema: yup.ObjectSchema<IFounderInput> = yup.object().shape({
+const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
 });
