@@ -3,6 +3,7 @@
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useCallback, useMemo } from 'react';
 
+import { addToast } from '@/components/base/toast';
 import { IRef } from '@/components/pages/project/create/types';
 import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -99,9 +100,13 @@ const ProposalDetails = ({
         currentVoteItem.key as IPocItemKey,
       );
       setIsCancelModalOpen(false);
-    } catch (err) {
-      // TODO toast
+    } catch (err: any) {
       console.error(err);
+      addToast({
+        title: 'Failed to cancel vote',
+        description: err.message || 'Please try again later',
+        color: 'danger',
+      });
     }
   }, [
     currentVoteItem,
@@ -115,9 +120,13 @@ const ProposalDetails = ({
       if (!currentVoteItem) return;
       await onSwitchVote(currentVoteItem);
       setIsSwitchModalOpen(false);
-    } catch (err) {
-      // TODO toast
+    } catch (err: any) {
       console.error(err);
+      addToast({
+        title: 'Failed to switch vote',
+        description: err.message || 'Please try again later',
+        color: 'danger',
+      });
     }
   }, [currentVoteItem, onSwitchVote, setIsSwitchModalOpen]);
 

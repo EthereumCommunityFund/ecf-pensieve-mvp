@@ -31,17 +31,24 @@ const UserWeightModal: FC<IUserWeightModalProps> = memo(
         <ModalContent className="flex flex-col items-center overflow-hidden rounded-[10px] bg-white">
           {/* Header */}
           <div className="flex items-center justify-between gap-[5px] self-stretch border-b border-black/10 px-[20px] py-[10px]">
-            <h2 className="text-[16px] font-[600] leading-[1.36] text-black/80">
+            <h2
+              className="text-[16px] font-semibold leading-[1.36181640625] text-black/80"
+              style={{ fontFamily: 'Open Sans' }}
+            >
               About: Your Contribution Points
             </h2>
-            <div className="flex items-center gap-[10px] p-[5px]">
+            <div className="flex items-center gap-[10px] rounded-[4px] p-[5px]">
               <div className="size-[20px]">
                 <button
                   onClick={onClose}
                   className="flex size-full items-center justify-center transition-opacity hover:opacity-70"
                   aria-label="Close modal"
                 >
-                  <X size={20} weight="bold" className="text-black" />
+                  <X
+                    size={11.25}
+                    weight="bold"
+                    className="stroke-[1.5px] text-black"
+                  />
                 </button>
               </div>
             </div>
@@ -50,21 +57,34 @@ const UserWeightModal: FC<IUserWeightModalProps> = memo(
           {/* Body */}
           <div className="flex flex-col gap-[20px] self-stretch p-[20px]">
             <div className="flex flex-col gap-[10px] self-stretch">
-              <p className="self-stretch text-[14px] font-[400] leading-[1.43] text-black/80">
-                Your Contribution Points (CP) reflects your influence in
-                projects on the voting and proposing of information. Your CP can
-                increase based on contributions.
+              <p
+                className="self-stretch text-left text-[14px] font-normal leading-[1.4285714285714286] text-black/80"
+                style={{ fontFamily: 'Open Sans' }}
+              >
+                Contribution points are a form of merit-based metric used to
+                track and reward users' involvement and contributions to the
+                ecosystem.
+                <br />
+                <br />
+                Your CP increase based on the contributions.
+                <br />
+                <br />
+                Your CP grants you influence in the knowledge base in voting and
+                proposing information
               </p>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex items-center gap-[10px] self-stretch bg-white px-[20px] pb-[20px] pt-[10px]">
-            <p className="flex-1 text-center text-[13px] font-[400] leading-[1.36] text-black/50">
+          <div className="flex items-center gap-[10px] self-stretch bg-[#F5F5F5] px-[20px] pb-[20px] pt-[10px]">
+            <p
+              className="flex-1 text-center text-[13px] font-normal leading-[1.36181640625] text-black/50"
+              style={{ fontFamily: 'Open Sans' }}
+            >
               You can learn more about ECF mechanisms{' '}
               <Link
                 href="/"
-                className="font-[400] text-black/50 underline transition-colors hover:text-black/70"
+                className="font-normal text-black/50 underline transition-colors hover:text-black/70"
               >
                 here
               </Link>

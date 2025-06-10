@@ -1,0 +1,1 @@
+ALTER TABLE "projects" RENAME COLUMN "website_url" TO "websites";

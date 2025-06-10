@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import UserProfileSection from '../auth/UserProfileSection';
-import ECFTypography from '../base/typography';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';
@@ -74,33 +73,6 @@ export function Topbar() {
                 className="h-auto w-[171px]"
               />
             </Link>
-
-            <div className="tablet:hidden flex h-[32px] w-[300px] cursor-pointer items-center gap-2 rounded-lg bg-[rgba(0,0,0,0.05)] p-2.5">
-              <Image
-                src="/images/common/search.png"
-                alt="Search"
-                width={20}
-                height={20}
-              />
-              {/* <input
-								type="text"
-								placeholder="Quick Search"
-								className="flex-1 w-auto h-[20px] bg-transparent border-0 focus:ring-0 focus:outline-none text-sm placeholder:text-[rgba(0,0,0,0.3)]"
-							/> */}
-              {/* TODO: global search modal */}
-              <ECFTypography
-                type="body2"
-                className="flex-1 font-semibold opacity-30"
-              >
-                Quick Search
-              </ECFTypography>
-
-              <div className="flex h-[22px] items-center rounded-[7px] bg-[rgba(0,0,0,0.1)] px-1">
-                <span className="text-[12px] font-semibold leading-[20px] text-black opacity-40">
-                  ⌘K
-                </span>
-              </div>
-            </div>
 
             <Navigation />
           </div>

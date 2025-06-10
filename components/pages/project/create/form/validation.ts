@@ -12,7 +12,7 @@ export const projectSchema = yup
     categories: itemValidationSchemas.categories,
     mainDescription: itemValidationSchemas.mainDescription,
     logoUrl: itemValidationSchemas.logoUrl,
-    websiteUrl: itemValidationSchemas.websiteUrl,
+    websites: itemValidationSchemas.websites,
     appUrl: itemValidationSchemas.appUrl,
     tags: itemValidationSchemas.tags,
     whitePaper: itemValidationSchemas.whitePaper,

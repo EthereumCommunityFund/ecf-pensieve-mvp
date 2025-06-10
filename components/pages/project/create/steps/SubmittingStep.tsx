@@ -130,7 +130,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
       {
         id: 'description',
         children: (
-          <p className="mobile:pt-[20px] border-t border-black/10 pt-[40px] text-[16px] font-[400] leading-[1.6] text-black">
+          <p className="text-[16px] font-[400] leading-[1.6] text-black">
             This {isProject ? 'project' : 'proposal'} will now{' '}
             <span className="font-[600] text-black/80">
               proceed with community verification

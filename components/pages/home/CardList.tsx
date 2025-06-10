@@ -8,21 +8,21 @@ const CardListData = [
   {
     title: 'Propose & Contribute to Projects',
     description:
-      'Propose projects, participate with the community to verify on proposals, then contribute on project pages and gain rewards! ',
+      'Propose projects, collaborate with the community to verify proposals, contribute to project pages, and earn rewards!',
     bgImage: '/images/home/CardBgPenNib.png',
     actionName: 'Propose a Project',
   },
   {
-    title: 'Explore the Index',
+    title: 'Curate the Knowledge Base',
     description:
-      'Use your gained experience around the index to support quality contributors and boost projects you care about.',
+      'Leverage your gained experience to support quality contributors and promote projects you care about.',
     bgImage: '/images/home/CardBgPuzzlePiece.png',
     actionName: 'Explore The Index',
   },
   {
-    title: 'Coming soon',
+    title: 'Claim Contribution Rewards',
     description:
-      'Any web3 projects you contributed to is part of web3 history and illuminating for future. Find the project and claim your contributions here.',
+      'Any web3 project you’ve contributed to is part of its history and shapes the future. Find the project and claim your contributions here.',
     bgImage: '/images/home/CardBgTreasureChest.png',
     actionName: 'Coming Soon',
   },
@@ -104,18 +104,12 @@ const CardItem = (props: ICardItemProps) => {
       }}
     >
       <div className="flex flex-col gap-[14px]">
-        <ECFTypography
-          type={'subtitle1'}
-          className="font-saria text-[var(--primary-green)]"
-        >
+        <p className="text-[24px] font-[700] leading-[34px] text-black">
           {props.title}
-        </ECFTypography>
-        <ECFTypography
-          type={'body1'}
-          className="mobile:min-h-0 leading-[25.6px] text-[rgba(0,0,0,0.8)]"
-        >
+        </p>
+        <p className="text-[16px] font-[400] leading-[1.6] text-black/80">
           {props.description}
-        </ECFTypography>
+        </p>
       </div>
 
       <div

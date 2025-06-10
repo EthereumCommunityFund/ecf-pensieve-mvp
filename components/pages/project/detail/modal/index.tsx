@@ -98,11 +98,6 @@ const ModalContentSection: FC<{
       [itemKey],
     );
 
-    const handleShare = useCallback(() => {
-      // TODO: 分享逻辑
-      console.log('Share clicked');
-    }, []);
-
     return (
       <ModalProvider
         itemKey={itemKey}
@@ -122,7 +117,6 @@ const ModalContentSection: FC<{
           {/* Header */}
           <ModalHeader
             onClose={onClose}
-            onShare={handleShare}
             breadcrumbs={{
               section: 'Section',
               item: itemName,

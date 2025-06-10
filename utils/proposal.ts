@@ -22,6 +22,7 @@ export interface IVoteResultOfProposal {
   proposalId: number;
   votesOfKeyInProposalMap: Record<string, IVote[]>;
   totalValidPointsOfProposal: number;
+  totalSupportedPointsOfProposal: number;
   totalSupportedUserWeightOfProposal: number;
   totalValidQuorumOfProposal: number;
   percentageOfProposal: number;
@@ -75,6 +76,7 @@ const DefaultProposalResult: IVoteResultOfProposal = {
   proposalId: 0,
   votesOfKeyInProposalMap: {},
   totalValidPointsOfProposal: 0,
+  totalSupportedPointsOfProposal: 0,
   totalSupportedUserWeightOfProposal: 0,
   totalValidQuorumOfProposal: 0,
   percentageOfProposal: 0,
@@ -133,11 +135,11 @@ const ProposalVoteUtils = {
 
     const itemVotedMemberCount = votesOfKeyInProposalMap[key]?.length || 0;
     const itemPoints = getItemPoints(key);
-    const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey].weight || 0;
+    const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey]?.weight || 0;
     const isItemReachPointsNeeded = itemPoints >= itemPointsNeeded;
     const isItemReachQuorum =
       itemVotedMemberCount >=
-      (ALL_POC_ITEM_MAP[key as IPocItemKey].quorum || 0);
+      (ALL_POC_ITEM_MAP[key as IPocItemKey]?.quorum || 0);
     const isItemValidated = isItemReachQuorum && isItemReachPointsNeeded;
 
     return {
@@ -181,7 +183,8 @@ const ProposalVoteUtils = {
     const totalValidPointsOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey].weight || 0;
+      const itemPointsNeeded =
+        ALL_POC_ITEM_MAP[key as IPocItemKey]?.weight || 0;
       const totalVotesWeightForKey = votes.reduce(
         (sum, vote) => sum + Number(vote.weight || 0),
         0,
@@ -192,6 +195,11 @@ const ProposalVoteUtils = {
       );
       return acc + validPointsForKey;
     }, 0);
+
+    const totalSupportedPointsOfProposal = votesOfProposal.reduce(
+      (acc, vote) => acc + Number(vote.weight || 0),
+      0,
+    );
 
     const userWeightMap = votesOfProposal.reduce(
       (acc, vote) => {
@@ -212,7 +220,7 @@ const ProposalVoteUtils = {
     const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const quorum = ALL_POC_ITEM_MAP[key as IPocItemKey].quorum || 0;
+      const quorum = ALL_POC_ITEM_MAP[key as IPocItemKey]?.quorum || 0;
       return acc + Math.min(votes.length, quorum);
     }, 0);
 
@@ -235,6 +243,7 @@ const ProposalVoteUtils = {
       proposalId,
       votesOfKeyInProposalMap,
       totalValidPointsOfProposal,
+      totalSupportedPointsOfProposal,
       totalSupportedUserWeightOfProposal,
       totalValidQuorumOfProposal,
       percentageOfProposal,

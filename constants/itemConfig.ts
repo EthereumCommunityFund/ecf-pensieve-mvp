@@ -148,22 +148,23 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     legitimacy: [],
     validationSchema: itemValidationSchemas.logoUrl,
   },
-  websiteUrl: {
-    key: 'websiteUrl',
+  websites: {
+    key: 'websites',
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
-    isEssential: POC_ITEMS.websiteUrl.isEssential,
+    isEssential: POC_ITEMS.websites.isEssential,
     label: 'Website',
     description: 'provide the main website for this project',
     shortDescription: 'The main online address of the project.',
-    weight: ALL_POC_ITEM_MAP.websiteUrl.weight,
-    formDisplayType: 'link',
+    weight: ALL_POC_ITEM_MAP.websites.weight,
+    formDisplayType: 'websites',
     placeholder: 'Type in a URL',
     startContentText: 'https://',
     showReference: true,
+    showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
-    validationSchema: itemValidationSchemas.websiteUrl,
+    validationSchema: itemValidationSchemas.websites,
   },
   appUrl: {
     key: 'appUrl',
@@ -693,7 +694,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription:
       'Links to income and revenue statements with descriptive labels.',
     weight: ALL_POC_ITEM_MAP.income_and_revenue_statements.weight,
-    formDisplayType: 'stringMultiple', // TODO: type need to be updated
+    formDisplayType: 'stringMultiple',
     placeholder: 'Add income/revenue statement URL',
     showReference: true,
     accountability: [

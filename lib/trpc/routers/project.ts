@@ -34,7 +34,14 @@ export const projectRouter = router({
           .min(1, 'At least one category is required'),
         mainDescription: z.string().min(1, 'Main description cannot be empty'),
         logoUrl: z.string().min(1, 'Logo URL cannot be empty'),
-        websiteUrl: z.string().min(1, 'Website URL cannot be empty'),
+        websites: z
+          .array(
+            z.object({
+              title: z.string().min(1, 'Website title cannot be empty'),
+              url: z.string().min(1, 'Website URL cannot be empty'),
+            }),
+          )
+          .min(1, 'At least one website is required'),
         appUrl: z.string().optional(),
         dateFounded: z.date(),
         dateLaunch: z.date().optional(),

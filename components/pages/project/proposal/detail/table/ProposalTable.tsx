@@ -43,6 +43,7 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
         ))}
       </colgroup>
     ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [table, tableColumns, columnPinning], // Ensure re-calc when column definitions or pinning state change
   );
 
@@ -110,7 +111,8 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
         </tr>
       </thead>
     ),
-    [table, tableColumns, columnPinning], // Ensure re-calc when column definitions or pinning state change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table, tableColumns, columnPinning],
   );
 
   if (showSkeleton) {

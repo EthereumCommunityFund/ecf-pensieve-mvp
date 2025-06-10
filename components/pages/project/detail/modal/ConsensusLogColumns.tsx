@@ -4,7 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, SubmitterCol } from '@/components/biz/table';
-import { QuestionIcon } from '@/components/icons';
+import TooltipTh from '@/components/biz/table/TooltipTh';
 
 import { IConsensusLogRowData } from '../types';
 
@@ -27,12 +27,10 @@ export const useConsensusLogColumns = ({
     const dateTimeColumn = columnHelper.accessor('dateTime', {
       id: 'dateTime',
       header: () => (
-        <div className="flex items-center gap-[5px]">
-          <span className="font-sans text-[14px] font-semibold text-[#333] opacity-60">
-            Date / Time
-          </span>
-          <QuestionIcon size={18} className="opacity-40" />
-        </div>
+        <TooltipTh
+          title="Date / Time"
+          tooltipContext="Time stamps of the votes"
+        />
       ),
       size: 180,
       cell: (info) => {
@@ -135,12 +133,10 @@ export const useConsensusLogColumns = ({
     const weightColumn = columnHelper.accessor('weight', {
       id: 'weight',
       header: () => (
-        <div className="flex items-center gap-[5px]">
-          <span className="font-sans text-[14px] font-semibold text-[#333] opacity-60">
-            Weight-at-time
-          </span>
-          <QuestionIcon size={18} className="opacity-40" />
-        </div>
+        <TooltipTh
+          title="Weight-at-time"
+          tooltipContext="The weight an item held at the moment a vote was submitted "
+        />
       ),
       size: 200,
       cell: (info) => {

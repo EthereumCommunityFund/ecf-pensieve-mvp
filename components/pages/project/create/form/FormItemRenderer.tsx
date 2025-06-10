@@ -30,6 +30,7 @@ import { IProjectFormData } from '../types';
 import FounderFormItem from './FounderFormItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
+import WebsiteFormItem from './WebsiteFormItem';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
@@ -56,7 +57,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     componentsProps = {},
   } = itemConfig;
 
-  const { register } = useFormContext<IProjectFormData>();
+  const { register, formState } = useFormContext<IProjectFormData>();
+  const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
@@ -310,13 +312,63 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               }}
               isDisabled={isDisabled}
             >
-              Add Entry
+              Add Entry(FormItemRenderer)
             </Button>
           </div>
           {errorMessageElement}
         </div>
       );
     }
+
+    case 'websites': {
+      const websitesArray = Array.isArray(field.value) ? field.value : [];
+
+      return (
+        <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px]">
+          <div className="flex flex-col gap-2.5 pt-[10px]">
+            {websitesArray.map((website: any, index: number) => {
+              const websiteError =
+                fieldState.error && Array.isArray(fieldState.error)
+                  ? fieldState.error[index]
+                  : undefined;
+              return (
+                <WebsiteFormItem
+                  key={`${field.name}-${index}`}
+                  index={index}
+                  remove={() => {
+                    const newWebsites = websitesArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newWebsites);
+                  }}
+                  register={register}
+                  errors={websiteError}
+                  websitesKey={field.name as 'websites'}
+                  isPrimary={index === 0}
+                  canRemove={websitesArray.length > 1}
+                  touchedFields={touchedFields}
+                />
+              );
+            })}
+          </div>
+          <div className="pt-[10px]">
+            <Button
+              color="secondary"
+              size="md"
+              className="mobile:w-full px-[20px]"
+              onPress={() => {
+                field.onChange([...websitesArray, { url: '', title: '' }]);
+              }}
+              isDisabled={isDisabled}
+            >
+              Add an Entry
+            </Button>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
     case 'roadmap':
       return (
         <div className="rounded-md border border-dashed border-gray-300 p-4 text-center text-gray-500">

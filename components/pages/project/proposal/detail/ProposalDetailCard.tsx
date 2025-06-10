@@ -3,17 +3,21 @@ import { FC, useCallback, useMemo } from 'react';
 
 import { useProposalProgressModal } from '@/components/biz/modal/proposalProgress/Context';
 import { InfoIcon } from '@/components/icons';
+import { useAuth } from '@/context/AuthContext';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
   ESSENTIAL_ITEM_WEIGHT_SUM,
 } from '@/lib/constants';
+import { trpc } from '@/lib/trpc/client';
 import { IProposal } from '@/types';
+import { devLog } from '@/utils/devLog';
+import ProposalVoteUtils from '@/utils/proposal';
 
 import ProgressLine from '../../ProgressLine';
 import { ActiveLeadingLabel } from '../common/LeadingLabel';
 import VotedLabel from '../common/VotedLabel';
 
-import { useProposalVotes } from './useProposalVotes';
+import { VoteArrayType } from './useProposalVotes';
 
 interface IProposalDetailCardProps {
   proposal?: IProposal;
@@ -23,20 +27,42 @@ interface IProposalDetailCardProps {
 }
 
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
-  const { proposal, projectId, proposalIndex, leadingProposalId } = props;
+  const { profile } = useAuth();
+  const { proposal, proposalIndex, leadingProposalId } = props;
 
-  const { voteResultOfProposal } = useProposalVotes(proposal, projectId);
-  const { openProposalProgressModal } = useProposalProgressModal();
+  const proposalQueryOptions = useMemo(
+    () => ({
+      enabled: !!proposal && !!proposal.id,
+      select: (data: VoteArrayType) => {
+        devLog('getVotesByProposalId', data);
+        return data;
+      },
+    }),
+    [proposal],
+  );
+
+  const { data: votesOfProposal } = trpc.vote.getVotesByProposalId.useQuery(
+    { proposalId: Number(proposal?.id) },
+    proposalQueryOptions,
+  );
 
   const {
-    percentageOfProposal,
     totalValidPointsOfProposal,
+    totalSupportedPointsOfProposal,
     totalSupportedUserWeightOfProposal,
     formattedPercentageOfProposal,
     totalValidQuorumOfProposal,
     isUserVotedInProposal,
     isProposalValidated,
-  } = voteResultOfProposal;
+  } = useMemo(() => {
+    return ProposalVoteUtils.getVoteResultOfProposal({
+      proposalId: Number(proposal?.id),
+      votesOfProposal: votesOfProposal || [],
+      userId: profile?.userId,
+    });
+  }, [votesOfProposal, proposal, profile]);
+
+  const { openProposalProgressModal } = useProposalProgressModal();
 
   const isLeading = !!leadingProposalId && leadingProposalId === proposal?.id;
 
@@ -107,7 +133,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
       </div>
 
       {/* progress */}
-      <div className="mobile:w-full flex w-[440px] flex-col gap-[10px] rounded-[10px] border border-black/10 px-[20px] py-[10px]">
+      <div className="mobile:w-full flex w-[516px] flex-col gap-[10px] rounded-[10px] border border-black/10 px-[20px] py-[10px]">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center justify-between">
             {/* Percentage */}
@@ -126,8 +152,8 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
             </div>
             {/* Total Supported */}
             <div className="flex items-center gap-[10px] text-[14px] font-[600] leading-[19px] text-black/50">
-              <span>Total Supported:</span>
-              <span>{totalSupportedUserWeightOfProposal}</span>
+              <span>Total Points Supported:</span>
+              <span>{totalSupportedPointsOfProposal}</span>
             </div>
           </div>
 
@@ -137,19 +163,25 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           />
         </div>
 
-        <div className="flex items-center justify-between text-[14px] font-[600] leading-[19px] text-black">
+        <div className="flex flex-wrap items-center justify-between text-[14px] font-[600] leading-[19px] text-black">
           <div className="flex items-center gap-[10px]">
-            <span>Points Needed:</span>
-            <span className="text-black/60">
-              {totalValidPointsOfProposal}/{ESSENTIAL_ITEM_WEIGHT_SUM}
-            </span>
+            <span>Min Points</span>
+            <div className="flex gap-[5px]">
+              <span className="">{ESSENTIAL_ITEM_WEIGHT_SUM}</span>
+              <span className="text-black/50">
+                ({totalValidPointsOfProposal} supported)
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-[10px]">
-            <span>Quorum Needed:</span>
-            <span className="text-black/60">
-              {totalValidQuorumOfProposal}/{ESSENTIAL_ITEM_QUORUM_SUM}
-            </span>
+            <span>Min Participation</span>
+            <div className="flex gap-[5px]">
+              <span className="">{ESSENTIAL_ITEM_QUORUM_SUM}</span>
+              <span className="text-black/50">
+                ({totalValidQuorumOfProposal} voted)
+              </span>
+            </div>
           </div>
         </div>
       </div>

@@ -355,6 +355,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               // Generate border classes for over-taken row
                               const getOverTakenBorderClasses = () => {
                                 if (!showRowOverTaken) return '';
+                                const isShowReason =
+                                  tableDataOfDisplayed[0]?.reason;
 
                                 const borderClasses = [];
 
@@ -366,15 +368,21 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 // Add left border and bottom-left rounded corner for first cell
                                 if (isFirstCell) {
                                   borderClasses.push(
-                                    'border-l-1 border-l-[#F7992D] rounded-bl-[10px]',
+                                    'border-l-1 border-l-[#F7992D]',
                                   );
+                                  if (isShowReason) {
+                                    borderClasses.push('rounded-bl-[10px]');
+                                  }
                                 }
 
                                 // Add right border and bottom-right rounded corner for last cell
                                 if (isLastCell) {
                                   borderClasses.push(
-                                    'border-r-1 border-r-[#F7992D] rounded-br-[10px]',
+                                    'border-r-1 border-r-[#F7992D]',
                                   );
+                                  if (isShowReason) {
+                                    borderClasses.push('rounded-br-[10px]');
+                                  }
                                 }
 
                                 return borderClasses.join(' ');
@@ -581,15 +589,21 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               // Add left border and bottom-left rounded corner for first cell
                               if (isFirstCell) {
                                 borderClasses.push(
-                                  'border-l-1 border-l-[#46A287] rounded-bl-[10px]',
+                                  'border-l-1 border-l-[#46A287]',
                                 );
+                                if (isLastRowInTable) {
+                                  borderClasses.push('rounded-bl-[10px]');
+                                }
                               }
 
                               // Add right border and bottom-right rounded corner for last cell
                               if (isLastCell) {
                                 borderClasses.push(
-                                  'border-r-1 border-r-[#46A287] rounded-br-[10px]',
+                                  'border-r-1 border-r-[#46A287]',
                                 );
+                                if (isLastRowInTable) {
+                                  borderClasses.push('rounded-br-[10px]');
+                                }
                               }
 
                               return borderClasses.join(' ');

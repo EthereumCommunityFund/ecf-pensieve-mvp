@@ -1,11 +1,5 @@
 'use client';
-
-import {
-  ToastProvider as HeroToastProvider,
-  HeroUIProvider,
-} from '@heroui/react';
-import '@rainbow-me/rainbowkit/styles.css';
-
+import { HeroUIProvider, ToastProvider } from '@heroui/react';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -17,6 +11,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { NavigationProvider } from '@/hooks/useNavigation';
 import { SupabaseProvider } from '@/lib/supabase/provider';
 import { TRPCProvider } from '@/lib/trpc/provider';
+import '@rainbow-me/rainbowkit/styles.css';
 
 const queryClient = new QueryClient();
 
@@ -31,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <TRPCProvider>
                 <SupabaseProvider>
                   <AuthProvider>
-                    <HeroToastProvider
+                    <ToastProvider
                       placement={'bottom-left'}
                       toastOffset={20}
                       toastProps={{

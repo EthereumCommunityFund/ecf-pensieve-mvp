@@ -52,14 +52,14 @@ export interface ITableProposalItem {
   title: 'Basic Profile',
   items: [
     'name', 'tagline', 'categories', 'mainDescription', 'logoUrl',
-    'websiteUrl', 'appUrl', 'tags', 'whitePaper', 'dateFounded', 'dateLaunch'
+    'websites', 'appUrl', 'tags', 'whitePaper', 'dateFounded', 'dateLaunch'
   ],
   groups: [
     {
       key: IItemGroupEnum.ProjectLinks,
       title: 'Project Links',
       description: 'External links and resources',
-      items: ['websiteUrl', 'appUrl', 'whitePaper'],
+      items: ['websites', 'appUrl', 'whitePaper'],
     },
     {
       key: IItemGroupEnum.ProjectDates,
