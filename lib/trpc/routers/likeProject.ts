@@ -2,22 +2,29 @@ import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { likeRecords, profiles, projects } from '@/lib/db/schema';
+import { likeRecords, projects } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
+import { getUserAvailableWeight } from '@/lib/services/userWeightService';
 
 import { protectedProcedure, router } from '../server';
 
 export const likeProjectRouter = router({
+  getUserAvailableWeight: protectedProcedure.query(async ({ ctx }) => {
+    const availableWeight = await getUserAvailableWeight(ctx.user.id);
+    return { availableWeight };
+  }),
+
   likeProject: protectedProcedure
     .input(
       z.object({
         projectId: z.number(),
+        weight: z.number().positive('Weight must be greater than 0'),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { projectId } = input;
+      const { projectId, weight } = input;
 
-      const [project, existingLikeRecord, userProfile] = await Promise.all([
+      const [project, existingLikeRecord, availableWeight] = await Promise.all([
         ctx.db.query.projects.findFirst({
           where: eq(projects.id, projectId),
         }),
@@ -27,9 +34,7 @@ export const likeProjectRouter = router({
             eq(likeRecords.creator, ctx.user.id),
           ),
         }),
-        ctx.db.query.profiles.findFirst({
-          where: eq(profiles.userId, ctx.user.id),
-        }),
+        getUserAvailableWeight(ctx.user.id),
       ]);
 
       if (!project) {
@@ -42,37 +47,46 @@ export const likeProjectRouter = router({
       if (existingLikeRecord) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Project already liked',
+          message: 'You have already liked this project',
+        });
+      }
+
+      if (availableWeight < weight) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Insufficient weight. Available: ${availableWeight}, Requested: ${weight}`,
         });
       }
 
       return await ctx.db.transaction(async (tx) => {
-        const [newLikeRecord] = await tx
-          .insert(likeRecords)
-          .values({
-            projectId,
-            creator: ctx.user.id,
-          })
-          .returning();
-
-        await tx
-          .update(projects)
-          .set({
-            support: project.support + (userProfile?.weight ?? 0),
-            likeCount: project.likeCount + 1,
-          })
-          .where(eq(projects.id, projectId));
+        const [newLikeRecord] = await Promise.all([
+          tx
+            .insert(likeRecords)
+            .values({
+              projectId,
+              creator: ctx.user.id,
+              weight,
+            })
+            .returning(),
+          tx
+            .update(projects)
+            .set({
+              support: project.support + weight,
+              likeCount: project.likeCount + 1,
+            })
+            .where(eq(projects.id, projectId)),
+        ]);
 
         logUserActivity.like.create(
           {
             userId: ctx.user.id,
-            targetId: newLikeRecord.id,
+            targetId: newLikeRecord[0].id,
             projectId,
           },
           tx,
         );
 
-        return newLikeRecord;
+        return newLikeRecord[0];
       });
     }),
 });
