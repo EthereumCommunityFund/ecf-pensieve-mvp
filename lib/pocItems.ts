@@ -19,7 +19,7 @@ export const POC_ITEMS = {
     isEssential: true,
     accountability_metric: 1,
   },
-  websiteUrl: {
+  websites: {
     isEssential: true,
     accountability_metric: 1,
   },

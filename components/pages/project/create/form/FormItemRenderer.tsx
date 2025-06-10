@@ -310,13 +310,18 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               }}
               isDisabled={isDisabled}
             >
-              Add Entry
+              Add Entry(FormItemRenderer)
             </Button>
           </div>
           {errorMessageElement}
         </div>
       );
     }
+
+    case 'websites': {
+      return <div>websites</div>;
+    }
+
     case 'roadmap':
       return (
         <div className="rounded-md border border-dashed border-gray-300 p-4 text-center text-gray-500">

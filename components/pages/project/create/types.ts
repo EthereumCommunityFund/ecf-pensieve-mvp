@@ -28,6 +28,11 @@ export interface IFounder {
   title: string;
 }
 
+export interface IWebsite {
+  url: string;
+  title: string;
+}
+
 export interface IReferenceData {
   key: string;
   ref: string;
@@ -41,7 +46,7 @@ export interface IProjectFormData
   categories: string[];
   mainDescription: string;
   logoUrl: string | null;
-  websiteUrl: string;
+  websites: IWebsite[];
   appUrl: string | null;
   tags: string[];
   whitePaper: string;
@@ -69,7 +74,7 @@ export interface ICreateProjectPayload {
   categories: string[];
   mainDescription: string;
   logoUrl: string;
-  websiteUrl: string;
+  websites: IWebsite[];
   appUrl?: string;
   tags: string[];
   whitePaper: string;

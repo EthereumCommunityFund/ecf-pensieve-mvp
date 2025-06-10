@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-import { IFounder } from '@/components/pages/project/create/types';
+import { IFounder, IWebsite } from '@/components/pages/project/create/types';
 import { normalizeUrl } from '@/utils/url';
 
 // TypeScript declaration merging for custom Yup methods
@@ -46,6 +46,15 @@ const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   title: yup.string().required('Founder title is required'),
 });
 
+const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
+  url: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Project website is required'),
+  title: yup.string().required('Project website title is required'),
+});
+
 export const itemValidationSchemas = {
   // Basics
   name: yup
@@ -77,10 +86,10 @@ export const itemValidationSchemas = {
     .url('Invalid Logo URL')
     .required('Project logo is required'),
 
-  websiteUrl: yup
-    .string()
-    .transform(normalizeUrl)
-    .url('Please enter a valid URL')
+  websites: yup
+    .array()
+    .of(websiteSchema)
+    .min(1, 'At least one website is required')
     .required('Project website is required'),
 
   appUrl: yup
