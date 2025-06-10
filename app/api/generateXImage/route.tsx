@@ -1,60 +1,149 @@
+import { ImageResponse } from '@vercel/og';
+
+export const runtime = 'edge';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const projectName = searchParams.get('projectName') || 'Test Project';
   const logoUrl = searchParams.get('logoUrl');
 
-  const escapeXml = (text: string) => {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  };
+  try {
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #28C196 0%, #ffffff 100%)',
+            fontSize: 32,
+            fontWeight: 600,
+          }}
+        >
+          {/* ECF Pensieve Brand */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 40,
+              left: 40,
+              color: 'white',
+              fontSize: 24,
+              fontWeight: 'bold',
+            }}
+          >
+            ECF PENSIEVE
+          </div>
 
-  const svg = `
-    <svg width="1200" height="675" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#28C196;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
-        </linearGradient>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grad)"/>
-      
-      <!-- ECF Pensieve Brand -->
-      <text x="40" y="60" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff">ECF PENSIEVE</text>
-      
-      <!-- Project Logo (if provided)  -->
-      ${
-        logoUrl
-          ? `
-        <defs>
-          <clipPath id="circle-clip">
-            <circle cx="600" cy="270" r="150"/>
-          </clipPath>
-        </defs>
-        <image href="${escapeXml(logoUrl)}" x="450" y="120" width="300" height="300" clip-path="url(#circle-clip)" preserveAspectRatio="xMidYMid slice"/>
-      `
-          : ''
-      }
-      
-      <!-- Project Name  -->
-      <text x="600" y="480" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#1f2937">${escapeXml(projectName)}</text>
-      
-      <!-- Published Badge  -->
-      <rect x="500" y="510" width="200" height="40" rx="20" fill="#10B981"/>
-      <text x="600" y="534" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">✅ PUBLISHED</text>
-      
-      <!-- Subtitle  -->
-      <text x="600" y="610" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#6b7280">Decentralized social consensus &amp; community knowledge bases</text>
-    </svg>
-  `;
+          {/* Project Logo */}
+          {logoUrl && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 300,
+                height: 300,
+                borderRadius: '50%',
+                overflow: 'hidden',
+                marginBottom: 40,
+                backgroundColor: 'white',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              }}
+            >
+              <img
+                src={logoUrl}
+                alt="Project Logo"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            </div>
+          )}
 
-  return new Response(svg, {
-    headers: {
-      'Content-Type': 'image/svg+xml',
-      'Cache-Control': 'public, max-age=31536000',
-    },
-  });
+          {/* Project Name */}
+          <div
+            style={{
+              color: '#1f2937',
+              fontSize: 48,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              marginBottom: 20,
+              maxWidth: '80%',
+              lineHeight: 1.2,
+            }}
+          >
+            {projectName}
+          </div>
+
+          {/* Published Badge */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#10B981',
+              color: 'white',
+              paddingLeft: 30,
+              paddingRight: 30,
+              paddingTop: 15,
+              paddingBottom: 15,
+              borderRadius: 25,
+              fontSize: 20,
+              fontWeight: 'bold',
+              marginBottom: 30,
+            }}
+          >
+            ✅ PUBLISHED
+          </div>
+
+          {/* Subtitle */}
+          <div
+            style={{
+              color: '#6b7280',
+              fontSize: 18,
+              textAlign: 'center',
+              maxWidth: '70%',
+              lineHeight: 1.4,
+            }}
+          >
+            Decentralized social consensus & community knowledge bases
+          </div>
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 675,
+      },
+    );
+  } catch (error) {
+    console.error('Failed to generate image:', error);
+
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#f3f4f6',
+            fontSize: 32,
+            color: '#374151',
+          }}
+        >
+          Error generating image
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 675,
+      },
+    );
+  }
 }
