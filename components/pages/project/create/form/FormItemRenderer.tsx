@@ -57,7 +57,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     componentsProps = {},
   } = itemConfig;
 
-  const { register } = useFormContext<IProjectFormData>();
+  const { register, formState } = useFormContext<IProjectFormData>();
+  const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
@@ -332,7 +333,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   : undefined;
               return (
                 <WebsiteFormItem
-                  key={index}
+                  key={`${field.name}-${index}`}
                   index={index}
                   remove={() => {
                     const newWebsites = websitesArray.filter(
@@ -345,6 +346,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   websitesKey={field.name as 'websites'}
                   isPrimary={index === 0}
                   canRemove={websitesArray.length > 1}
+                  touchedFields={touchedFields}
                 />
               );
             })}
