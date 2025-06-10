@@ -83,9 +83,9 @@ const ProjectsPage = () => {
         <div className="w-full flex-1">
           <div className="border-b border-black/10 px-2.5 py-2 opacity-80">
             <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
-            <ECFTypography type={'body2'} className="mt-[5px]">
+            {/* <ECFTypography type={'body2'} className="mt-[5px]">
               Page Completion Rate (Transparency) * User Supported Votes
-            </ECFTypography>
+            </ECFTypography> */}
           </div>
 
           {/* Project list */}
