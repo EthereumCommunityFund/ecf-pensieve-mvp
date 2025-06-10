@@ -23,8 +23,13 @@ export enum IFormTypeEnum {
 
 export type IStepStatus = 'Inactive' | 'Active' | 'Finished';
 
-export interface IFounderInput {
+export interface IFounder {
   name: string;
+  title: string;
+}
+
+export interface IWebsite {
+  url: string;
   title: string;
 }
 
@@ -41,7 +46,7 @@ export interface IProjectFormData
   categories: string[];
   mainDescription: string;
   logoUrl: string | null;
-  websiteUrl: string;
+  websites: IWebsite[];
   appUrl: string | null;
   tags: string[];
   whitePaper: string;
@@ -55,7 +60,7 @@ export interface IProjectFormData
   dappSmartContracts: string;
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
-  founders: IFounderInput[];
+  founders: IFounder[];
 }
 
 export interface IRef {
@@ -69,7 +74,7 @@ export interface ICreateProjectPayload {
   categories: string[];
   mainDescription: string;
   logoUrl: string;
-  websiteUrl: string;
+  websites: IWebsite[];
   appUrl?: string;
   tags: string[];
   whitePaper: string;
@@ -83,10 +88,7 @@ export interface ICreateProjectPayload {
   dappSmartContracts: string;
   orgStructure: string;
   publicGoods: boolean;
-  founders: {
-    name: string;
-    title: string;
-  }[];
+  founders: IFounder[];
 
   refs?: IRef[];
 }

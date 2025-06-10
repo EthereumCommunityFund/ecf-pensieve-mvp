@@ -30,7 +30,7 @@ maintaining the original order while inserting group headers where needed.
 \`\`\`typescript
 const rows = [
   { key: 'name', property: 'Project Name', group: undefined },
-  { key: 'websiteUrl', property: 'Website URL', group: 'ProjectLinks', groupTitle: 'Project Links' },
+  { key: 'websites', property: 'Website URL', group: 'ProjectLinks', groupTitle: 'Project Links' },
   { key: 'appUrl', property: 'App URL', group: 'ProjectLinks', groupTitle: 'Project Links' },
   { key: 'dateFounded', property: 'Date Founded', group: 'ProjectDates', groupTitle: 'Project Dates' },
 ];
@@ -52,7 +52,7 @@ const mockTableRows = [
   { key: 'name', property: 'Project Name', input: 'Example Project' },
   { key: 'tagline', property: 'Tagline', input: 'A great project' },
   {
-    key: 'websiteUrl',
+    key: 'websites',
     property: 'Website URL',
     input: 'https://example.com',
     group: 'ProjectLinks',

@@ -29,7 +29,7 @@ export const projects = pgTable(
     categories: text('categories').array().notNull(),
     mainDescription: text('main_description').notNull(),
     logoUrl: text('logo_url').notNull(),
-    websiteUrl: text('website_url').notNull(),
+    websites: jsonb('websites').array().notNull(),
     appUrl: text('app_url'),
     dateFounded: timestamp('date_founded', {
       withTimezone: false,

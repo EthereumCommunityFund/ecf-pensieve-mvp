@@ -133,11 +133,11 @@ const ProposalVoteUtils = {
 
     const itemVotedMemberCount = votesOfKeyInProposalMap[key]?.length || 0;
     const itemPoints = getItemPoints(key);
-    const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey].weight || 0;
+    const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey]?.weight || 0;
     const isItemReachPointsNeeded = itemPoints >= itemPointsNeeded;
     const isItemReachQuorum =
       itemVotedMemberCount >=
-      (ALL_POC_ITEM_MAP[key as IPocItemKey].quorum || 0);
+      (ALL_POC_ITEM_MAP[key as IPocItemKey]?.quorum || 0);
     const isItemValidated = isItemReachQuorum && isItemReachPointsNeeded;
 
     return {
@@ -181,7 +181,8 @@ const ProposalVoteUtils = {
     const totalValidPointsOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const itemPointsNeeded = ALL_POC_ITEM_MAP[key as IPocItemKey].weight || 0;
+      const itemPointsNeeded =
+        ALL_POC_ITEM_MAP[key as IPocItemKey]?.weight || 0;
       const totalVotesWeightForKey = votes.reduce(
         (sum, vote) => sum + Number(vote.weight || 0),
         0,
@@ -212,7 +213,7 @@ const ProposalVoteUtils = {
     const totalValidQuorumOfProposal = Object.entries(
       votesOfKeyInProposalMap,
     ).reduce((acc, [key, votes]) => {
-      const quorum = ALL_POC_ITEM_MAP[key as IPocItemKey].quorum || 0;
+      const quorum = ALL_POC_ITEM_MAP[key as IPocItemKey]?.quorum || 0;
       return acc + Math.min(votes.length, quorum);
     }, 0);
 

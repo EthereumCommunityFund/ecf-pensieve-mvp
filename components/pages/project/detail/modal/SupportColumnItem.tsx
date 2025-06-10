@@ -1,4 +1,4 @@
-import { CircularProgress, cn } from '@heroui/react';
+import { CircularProgress, cn, Tooltip } from '@heroui/react';
 import { FC, memo, useCallback, useMemo } from 'react'; // Added useMemo
 
 import { Button } from '@/components/base';
@@ -7,6 +7,7 @@ import { useProjectDetailContext } from '@/components/pages/project/context/proj
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
+import { formatWeight } from '@/utils/weight';
 
 import { IKeyItemDataForTable } from '../table/ProjectDetailTableColumns';
 
@@ -92,68 +93,92 @@ const SupportColumnItem: FC<IProps> = ({
   return (
     <div className="flex flex-1 items-center justify-between">
       <div className="flex items-center justify-start gap-[10px]">
-        <CircularProgress
-          aria-label="Loading..."
-          color="warning"
-          showValueLabel={true}
-          size="sm"
-          minValue={0}
-          maxValue={maxValue}
-          value={itemPoints}
-          strokeWidth={3}
-          formatOptions={{
-            style: 'decimal',
-          }}
+        <Tooltip
+          content="Supported CP"
           classNames={{
-            base: '',
-            label: '',
-            value: cn(
-              'font-[600] font-mona',
-              itemPoints > 999
-                ? 'text-[9px]'
-                : itemPoints > 99
-                  ? 'text-[12px]'
-                  : 'text-[14px]',
-            ),
-            svg: 'size-[36px] rotate-[180deg]',
-            track: 'stroke-[#D9D9D9]',
-            indicator: 'stroke-[#64C0A5]',
+            content: 'p-[10px] rounded-[5px] border border-black/10',
           }}
-        />
-
-        <div
-          className={cn(
-            'flex items-center justify-start gap-[5px]',
-            isReachQuorum ? 'opacity-50' : 'opacity-30',
-          )}
+          closeDelay={0}
         >
-          <UsersIcon />
-          <span className="font-mona text-[14px] font-[600] leading-[19px] text-black">
+          <div className="flex items-center gap-[5px]">
+            <CircularProgress
+              aria-label="Loading..."
+              color="warning"
+              showValueLabel={false}
+              size="sm"
+              minValue={0}
+              maxValue={maxValue}
+              value={itemPoints}
+              strokeWidth={8}
+              formatOptions={{
+                style: 'decimal',
+              }}
+              classNames={{
+                base: '',
+                label: '',
+                svg: 'size-[18px] rotate-[180deg]',
+                track: 'stroke-[#D9D9D9]',
+                indicator: 'stroke-[#64C0A5]',
+              }}
+            />
+            <span
+              className={cn(
+                'font-mona text-[13px] font-[600] leading-[19px] min-w-[30px]',
+                itemPoints >= itemPointsNeeded
+                  ? 'text-[#64C0A5]'
+                  : 'text-black/50',
+              )}
+            >
+              {formatWeight(itemPoints)}
+            </span>
+          </div>
+        </Tooltip>
+        <div className={cn('flex items-center justify-start gap-[5px]')}>
+          <Tooltip
+            content="Minimum Participation Required"
+            classNames={{
+              content: 'p-[10px] rounded-[5px] border border-black/10',
+            }}
+            closeDelay={0}
+          >
+            <div className={'opacity-30'}>
+              <UsersIcon />
+            </div>
+          </Tooltip>
+          <span className="font-mona text-[13px] font-[600] leading-[19px] text-black/50">
             {votedMemberCount}
             {showQuorum && `/${QUORUM_AMOUNT}`}
           </span>
         </div>
       </div>
 
-      <Button
-        color="secondary"
-        size="sm"
-        isIconOnly
-        isLoading={internalIsLoading} // Use internalIsLoading
-        disabled={internalIsLoading || isUserVotedCurrentItemProposal} // Use internalIsLoading
-        onPress={handleAction}
-        className={cn(
-          'px-[5px] border-none',
-          isUserVotedCurrentItemProposal ? '' : 'opacity-30',
-          isUserVotedCurrentItemProposal ? 'cursor-not-allowed' : '', // Use internalIsLoading
-        )}
+      <Tooltip
+        content="Vote on Input"
+        classNames={{
+          content: 'p-[10px] rounded-[5px] border border-black/10',
+        }}
+        closeDelay={0}
       >
-        {isUserVotedCurrentItemProposal ? (
-          <CheckedGreenIcon />
-        ) : (
-          <CaretUpIcon />
-        )}
-      </Button>
+        <Button
+          color="secondary"
+          size="sm"
+          isIconOnly
+          isLoading={internalIsLoading} // Use internalIsLoading
+          disabled={internalIsLoading || isUserVotedCurrentItemProposal} // Use internalIsLoading
+          onPress={handleAction}
+          className={cn(
+            'px-[5px] border-none',
+            isUserVotedCurrentItemProposal ? '' : 'opacity-30',
+            isUserVotedCurrentItemProposal ? 'cursor-not-allowed' : '', // Use internalIsLoading
+          )}
+        >
+          {isUserVotedCurrentItemProposal ? (
+            <CheckedGreenIcon />
+          ) : (
+            <CaretUpIcon />
+          )}
+        </Button>
+      </Tooltip>
     </div>
   );
 };

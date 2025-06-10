@@ -202,7 +202,7 @@
 
 * **`createProject`** (protected)
     * **描述**: 创建一个新的项目。此操作是事务性的，会同时创建项目本身、一个包含所有核心条目的初始提案，并为创建者自动对这些条目投票，最后给予创建者第一部分奖励。
-    * **输入 (`input`)**: 项目详细信息对象，包含 `name`, `tagline`, `categories`, `mainDescription`, `logoUrl`, `websiteUrl`, `dateFounded`, `devStatus`, `openSource`, `orgStructure`, `publicGoods`, `founders` (数组), `tags`, `whitePaper`, `dappSmartContracts`。可选字段包括 `appUrl`, `dateLaunch`, `fundingStatus`, `codeRepo`, `tokenContract`, `refs` (参考链接数组)。
+    * **输入 (`input`)**: 项目详细信息对象，包含 `name`, `tagline`, `categories`, `mainDescription`, `logoUrl`, `websites`, `dateFounded`, `devStatus`, `openSource`, `orgStructure`, `publicGoods`, `founders` (数组), `tags`, `whitePaper`, `dappSmartContracts`。可选字段包括 `appUrl`, `dateLaunch`, `fundingStatus`, `codeRepo`, `tokenContract`, `refs` (参考链接数组)。
     * **输出**: 创建成功的 `projects` 对象。
     * **调用逻辑**: 前端在用户填写完项目创建表单后调用。成功后，通常会跳转到项目详情页或用户项目列表。
     * **后端主要操作**:

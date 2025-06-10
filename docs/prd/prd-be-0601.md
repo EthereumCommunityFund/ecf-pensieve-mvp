@@ -109,7 +109,7 @@
   * categories: string[] (项目分类数组, 必填, 至少一项)
   * mainDescription: string (主要描述, 必填, 非空)
   * logoUrl: string (Logo链接, 必填, 非空)
-  * websiteUrl: string (网站链接, 必填, 非空)
+  * websites: string (网站链接, 必填, 非空)
   * appUrl?: string (应用链接, 可选)
   * dateFounded: Date (成立日期, 必填)
   * dateLaunch?: Date (上线日期, 可选)
