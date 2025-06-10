@@ -25,6 +25,7 @@ interface WebsiteFormItemProps {
   websitesKey: 'websites';
   isPrimary: boolean;
   canRemove: boolean;
+  touchedFields: any;
 }
 
 const WebsiteFormItem: React.FC<WebsiteFormItemProps> = ({
@@ -35,7 +36,10 @@ const WebsiteFormItem: React.FC<WebsiteFormItemProps> = ({
   websitesKey,
   isPrimary,
   canRemove,
+  touchedFields,
 }) => {
+  const titleTouched = touchedFields.websites?.[index]?.title;
+  const urlTouched = touchedFields.websites?.[index]?.url;
   return (
     <div className="mobile:flex-col flex items-start gap-[10px]">
       <Input
@@ -44,8 +48,8 @@ const WebsiteFormItem: React.FC<WebsiteFormItemProps> = ({
         labelPlacement="outside"
         placeholder="Type a title"
         {...register(`${websitesKey}.${index}.title`)}
-        isInvalid={!!errors?.title}
-        errorMessage={errors?.title?.message}
+        isInvalid={titleTouched && !!errors?.title}
+        errorMessage={titleTouched ? errors?.title?.message : undefined}
         classNames={{
           label: 'text-[14px] font-[400] text-black leading-[20px]',
         }}
@@ -57,8 +61,8 @@ const WebsiteFormItem: React.FC<WebsiteFormItemProps> = ({
         placeholder="Type a URL"
         startContent={<InputPrefix prefix={'https://'} />}
         {...register(`${websitesKey}.${index}.url`)}
-        isInvalid={!!errors?.url}
-        errorMessage={errors?.url?.message}
+        isInvalid={urlTouched && !!errors?.url}
+        errorMessage={urlTouched ? errors?.url?.message : undefined}
         classNames={{
           inputWrapper: 'pl-0 pr-[10px]',
           label: 'text-[14px] font-[400] text-black leading-[20px]',
