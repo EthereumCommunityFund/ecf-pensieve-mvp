@@ -7,41 +7,6 @@ interface ProjectData {
   logoUrl: string;
 }
 
-let twitterClient: any = null;
-let isInitialized = false;
-
-async function initializeTwitterClient() {
-  if (isInitialized) return twitterClient;
-
-  try {
-    const { TwitterApi } = await import('twitter-api-v2');
-
-    const config = {
-      appKey: process.env.TWITTER_API_KEY || '',
-      appSecret: process.env.TWITTER_API_SECRET || '',
-      accessToken: process.env.TWITTER_ACCESS_TOKEN || '',
-      accessSecret: process.env.TWITTER_ACCESS_SECRET || '',
-    };
-
-    if (
-      config.appKey &&
-      config.appSecret &&
-      config.accessToken &&
-      config.accessSecret
-    ) {
-      twitterClient = new TwitterApi(config);
-      console.log('✅ Twitter client initialized');
-    } else {
-      console.warn('⚠️ Twitter API credentials missing, bot disabled');
-    }
-  } catch (error) {
-    console.error('❌ Failed to initialize Twitter client:', error);
-  }
-
-  isInitialized = true;
-  return twitterClient;
-}
-
 function generateTweetContent(project: ProjectData): string {
   const platformUrl = `${getHost()}/project/${project.id}`;
 
@@ -52,7 +17,7 @@ ${project.tagline}
 
 🔗 View details: ${platformUrl}
 
-#ECFPensieve #Web3 #Innovation`;
+#ECFPensieve`;
 }
 
 async function generateProjectImage(project: ProjectData): Promise<Buffer> {
@@ -66,14 +31,30 @@ async function generateProjectImage(project: ProjectData): Promise<Buffer> {
 async function uploadImageToTwitter(
   imageBuffer: Buffer,
 ): Promise<string | null> {
-  const client = await initializeTwitterClient();
-  if (!client) return null;
-
   try {
-    const mediaUpload = await client.v1.uploadMedia(imageBuffer, {
-      mimeType: 'image/png',
-    });
-    return mediaUpload;
+    const formData = new FormData();
+    formData.append('media', new Blob([imageBuffer], { type: 'image/png' }));
+    formData.append('media_category', 'tweet_image');
+
+    const response = await fetch(
+      'https://upload.twitter.com/1.1/media/upload.json',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
+        },
+        body: formData,
+      },
+    );
+
+    if (response.ok) {
+      const result = await response.json();
+      return result.media_id_string;
+    } else {
+      const error = await response.json();
+      console.error('Failed to upload image to Twitter:', error);
+      return null;
+    }
   } catch (error) {
     console.error('Failed to upload image to Twitter:', error);
     return null;
@@ -83,8 +64,7 @@ async function uploadImageToTwitter(
 export async function sendProjectPublishTweet(
   project: ProjectData,
 ): Promise<boolean> {
-  const client = await initializeTwitterClient();
-  if (!client) {
+  if (!process.env.TWITTER_BEARER_TOKEN) {
     console.log('Twitter service not enabled, skipping tweet');
     return false;
   }
@@ -98,18 +78,37 @@ export async function sendProjectPublishTweet(
 
     const tweetContent = generateTweetContent(project);
 
-    const tweetOptions: any = {};
+    // Prepare tweet data
+    const tweetData: any = {
+      text: tweetContent,
+    };
+
     if (mediaId) {
-      tweetOptions.media = { media_ids: [mediaId] };
+      tweetData.media = { media_ids: [mediaId] };
     }
 
-    const response = await client.v2.tweet(tweetContent, tweetOptions);
+    // Send tweet
+    const response = await fetch('https://api.twitter.com/2/tweets', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tweetData),
+    });
 
-    if (response.data) {
-      console.log(`✅ Tweet sent for project ${project.id}:`, response.data.id);
+    if (response.ok) {
+      const result = await response.json();
+      console.log(`✅ Tweet sent for project ${project.id}:`, result.data?.id);
       return true;
+    } else {
+      const error = await response.json();
+      console.error(
+        `❌ Failed to send tweet for project ${project.id}:`,
+        error,
+      );
+      return false;
     }
-    return false;
   } catch (error) {
     console.error(`❌ Failed to send tweet for project ${project.id}:`, error);
     return false;
