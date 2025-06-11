@@ -267,38 +267,57 @@ export const projectRouter = router({
             prop.id as proposal_id,
             prop.creator as proposal_creator,
             prop.items,
+            prop.created_at as proposal_created_at,
             vr.key as vote_key,
             COUNT(DISTINCT CASE WHEN vr.key = item_key.key THEN vr.creator END) as key_voters,
             SUM(CASE WHEN vr.key = item_key.key THEN vr.weight ELSE 0 END) as key_weight,
             pc.required_weight
           FROM projects p
           JOIN proposals prop ON p.id = prop.project_id
-          JOIN vote_records vr ON prop.id = vr.proposal_id
+          JOIN vote_records vr ON prop.id = vr.proposal_id 
+            AND vr.project_id = p.id
           CROSS JOIN LATERAL (
             SELECT (unnest(prop.items)->>'key') as key
           ) item_key
           JOIN poc_config pc ON vr.key = pc.key AND item_key.key = pc.key
           WHERE p.is_published = false
-          GROUP BY p.id, prop.id, prop.creator, prop.items, vr.key, item_key.key, pc.required_weight
+            AND vr.item_proposal_id IS NULL 
+          GROUP BY p.id, prop.id, prop.creator, prop.items, prop.created_at, vr.key, item_key.key, pc.required_weight
         ),
-        valid_projects AS (
+        valid_proposals AS (
           SELECT 
             project_id,
             proposal_id,
             proposal_creator,
-            items
+            items,
+            proposal_created_at,
+            SUM(key_weight) as total_weight
           FROM project_proposal_votes
           WHERE key_voters >= ${QUORUM_AMOUNT}
             AND key_weight > required_weight
-          GROUP BY project_id, proposal_id, proposal_creator, items
+          GROUP BY project_id, proposal_id, proposal_creator, items, proposal_created_at
           HAVING COUNT(*) = ${ESSENTIAL_ITEM_AMOUNT}
+        ),
+        ranked_proposals AS (
+          SELECT 
+            project_id,
+            proposal_id,
+            proposal_creator,
+            items,
+            total_weight,
+            ROW_NUMBER() OVER (
+              PARTITION BY project_id 
+              ORDER BY total_weight DESC, proposal_created_at DESC
+            ) as rn
+          FROM valid_proposals
         )
-        SELECT DISTINCT
-          vp.project_id,
-          vp.proposal_id,
-          vp.proposal_creator,
-          vp.items
-        FROM valid_projects vp
+        SELECT 
+          project_id,
+          proposal_id,
+          proposal_creator,
+          items
+        FROM ranked_proposals
+        WHERE rn = 1
       `;
 
       const eligibleProjects = await ctx.db.execute(eligibleProjectsQuery);

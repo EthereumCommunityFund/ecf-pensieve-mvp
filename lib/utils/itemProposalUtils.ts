@@ -130,15 +130,21 @@ export const processItemProposalVoteResult = async (
     return;
   }
 
+  console.log('processItemProposalVoteResult', votes);
+
   const voteSum = votes.reduce((acc, vote) => {
     acc += vote.weight ?? 0;
     return acc;
   }, 0);
 
+  console.log('voteSum', voteSum);
+
   const itemsTopWeight = project?.itemsTopWeight as
     | Record<string, number>
     | undefined;
   const keyWeight = itemsTopWeight?.[key] ?? 0;
+
+  console.log('keyWeight', keyWeight);
 
   if (voteSum > keyWeight) {
     const rewardMultiplier = !needCheckQuorum ? 1 : 1 - REWARD_PERCENT;

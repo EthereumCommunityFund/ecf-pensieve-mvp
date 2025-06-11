@@ -304,6 +304,7 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const { itemProposalId, key } = input;
+        console.log('createItemProposalVote', input);
 
         const [itemProposal, userProfile] = await Promise.all([
           ctx.db.query.itemProposals.findFirst({
@@ -472,26 +473,6 @@ export const voteRouter = router({
 
         const originalItemProposalId = voteToSwitch.itemProposalId;
 
-        const [votes, project, leadingProposal] = await Promise.all([
-          ctx.db.query.voteRecords.findMany({
-            where: and(
-              eq(voteRecords.itemProposalId, itemProposalId),
-              eq(voteRecords.key, key),
-            ),
-          }),
-          ctx.db.query.projects.findFirst({
-            where: eq(projects.id, projectId),
-          }),
-          ctx.db.query.projectLogs.findFirst({
-            where: and(
-              eq(projectLogs.projectId, targetItemProposal.projectId),
-              eq(projectLogs.key, key),
-              eq(projectLogs.isNotLeading, false),
-            ),
-            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-          }),
-        ]);
-
         return await ctx.db.transaction(async (tx) => {
           const [updatedVote] = await tx
             .update(voteRecords)
@@ -502,6 +483,26 @@ export const voteRouter = router({
             })
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
+
+          const [votes, project, leadingProposal] = await Promise.all([
+            tx.query.voteRecords.findMany({
+              where: and(
+                eq(voteRecords.itemProposalId, itemProposalId),
+                eq(voteRecords.key, key),
+              ),
+            }),
+            tx.query.projects.findFirst({
+              where: eq(projects.id, projectId),
+            }),
+            tx.query.projectLogs.findFirst({
+              where: and(
+                eq(projectLogs.projectId, targetItemProposal.projectId),
+                eq(projectLogs.key, key),
+                eq(projectLogs.isNotLeading, false),
+              ),
+              orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
+            }),
+          ]);
 
           if (leadingProposal?.itemProposalId === itemProposalId) {
             await processItemProposalUpdate(tx, {
