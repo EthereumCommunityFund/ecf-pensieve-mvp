@@ -291,7 +291,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                 ]}
               />
             ) : (
-              <ModalTableContainer>
+              <ModalTableContainer allowInternalBorderRadius>
                 <table className="w-full border-separate border-spacing-0">
                   {/* Table Header */}
                   <thead>
@@ -370,7 +370,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   borderClasses.push(
                                     'border-l-1 border-l-[#F7992D]',
                                   );
-                                  if (isShowReason) {
+                                  if (!isShowReason) {
                                     borderClasses.push('rounded-bl-[10px]');
                                   }
                                 }
@@ -380,7 +380,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   borderClasses.push(
                                     'border-r-1 border-r-[#F7992D]',
                                   );
-                                  if (isShowReason) {
+                                  if (!isShowReason) {
                                     borderClasses.push('rounded-br-[10px]');
                                   }
                                 }
@@ -504,7 +504,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             </span>
           </div>
         ) : (
-          <ModalTableContainer>
+          <ModalTableContainer allowInternalBorderRadius>
             <table className="w-full border-separate border-spacing-0">
               {/* Table Header */}
               <thead>
@@ -569,11 +569,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               cellIndex === row.getVisibleCells().length - 1;
                             const isLastRowInTable =
                               rowIndex ===
-                                submissionQueueTable.getRowModel().rows.length -
-                                  1 &&
-                              !AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]?.showExpand;
+                              submissionQueueTable.getRowModel().rows.length -
+                                1;
 
                             // Generate border classes for leading row
                             const getLeadingBorderClasses = () => {
