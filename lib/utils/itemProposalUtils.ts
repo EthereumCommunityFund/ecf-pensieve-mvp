@@ -195,7 +195,7 @@ export const processItemProposalVoteResult = async (
         .where(eq(profiles.userId, itemProposal.creator.userId)),
       addRewardNotification(
         createRewardNotification.itemProposalPass(
-          userId,
+          itemProposal.creator.userId,
           itemProposal.projectId,
           itemProposal.id,
           reward,
