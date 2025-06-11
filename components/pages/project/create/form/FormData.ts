@@ -1,4 +1,4 @@
-import { isAutoFillForm, isLocalDev } from '@/constants/env';
+import { isAutoFillForm, isDev } from '@/constants/env';
 import { AllItemConfig } from '@/constants/itemConfig';
 import {
   IBasicsKey,
@@ -147,7 +147,7 @@ export const FakeProjectFormData: IProjectFormData = {
 };
 
 export const getDefaultProjectFormData = (): IProjectFormData => {
-  if (isLocalDev && isAutoFillForm) {
+  if (isDev && isAutoFillForm) {
     return FakeProjectFormData;
   }
   return DEFAULT_CREATE_PROJECT_FORM_DATA;

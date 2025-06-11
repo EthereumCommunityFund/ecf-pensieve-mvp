@@ -5,7 +5,7 @@ import {
   IProjectFormData,
   IReferenceData,
 } from '@/components/pages/project/create/types';
-import { isAutoFillForm, isLocalDev } from '@/constants/env';
+import { isAutoFillForm, isDev } from '@/constants/env';
 import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { transformFormValue } from '@/utils/item';
@@ -405,7 +405,7 @@ export const updateFormWithProjectData = (
 ): void => {
   if (
     formType === IFormTypeEnum.Proposal &&
-    isLocalDev &&
+    isDev &&
     isAutoFillForm &&
     projectData
   ) {
