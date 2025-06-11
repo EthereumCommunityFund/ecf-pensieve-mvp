@@ -6,6 +6,7 @@ import {
   IReferenceData,
 } from '@/components/pages/project/create/types';
 import { isAutoFillForm, isDev } from '@/constants/env';
+import dayjs from '@/lib/dayjs';
 import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { transformFormValue } from '@/utils/item';
@@ -20,9 +21,20 @@ const emptyToUndefined = (value: string): string | undefined => {
 
 /**
  * Helper function to convert empty string to Date or undefined
+ * Ensures dates are treated as UTC
  */
 const emptyToDateOrUndefined = (value: string): Date | undefined => {
-  return value === '' ? undefined : new Date(value);
+  return value === '' ? undefined : dayjs.utc(value).toDate();
+};
+
+/**
+ * Helper function to convert Date to UTC Date for backend storage
+ */
+const dateToUTC = (date: Date | null): Date => {
+  if (!date) return new Date();
+  // Treat the input date as a local date but convert it to UTC
+  // This ensures that a date like "2023-05-15" is stored as "2023-05-15" in UTC
+  return dayjs.utc(dayjs(date).format('YYYY-MM-DD')).toDate();
 };
 
 /**
@@ -98,13 +110,15 @@ export const transformProjectData = (
       fieldApplicability,
     ),
 
-    dateFounded: formData.dateFounded
-      ? new Date(formData.dateFounded)
-      : new Date(),
+    dateFounded: dateToUTC(formData.dateFounded),
     dateLaunch: emptyToDateOrUndefined(
       transformFormValue(
         'dateLaunch',
-        formData.dateLaunch?.toISOString() || '',
+        formData.dateLaunch
+          ? dayjs
+              .utc(dayjs(formData.dateLaunch).format('YYYY-MM-DD'))
+              .toISOString()
+          : '',
         fieldApplicability,
       ),
     ),
@@ -247,7 +261,11 @@ export const transformProposalData = (
       key: 'dateFounded',
       value: transformFormValue(
         'dateFounded',
-        formData.dateFounded?.toISOString() || '',
+        formData.dateFounded
+          ? dayjs
+              .utc(dayjs(formData.dateFounded).format('YYYY-MM-DD'))
+              .toISOString()
+          : '',
         fieldApplicability,
       ),
     },
@@ -255,7 +273,11 @@ export const transformProposalData = (
       key: 'dateLaunch',
       value: transformFormValue(
         'dateLaunch',
-        formData.dateLaunch?.toISOString() || '',
+        formData.dateLaunch
+          ? dayjs
+              .utc(dayjs(formData.dateLaunch).format('YYYY-MM-DD'))
+              .toISOString()
+          : '',
         fieldApplicability,
       ),
     },

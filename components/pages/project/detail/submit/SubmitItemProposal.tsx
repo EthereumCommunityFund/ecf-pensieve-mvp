@@ -14,6 +14,7 @@ import {
   IReferenceData,
 } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
+import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IItemConfig, IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
@@ -209,7 +210,15 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       const formValue = formData[itemConfig.key];
       const isApplicableFalse =
         itemConfig.showApplicable && !fieldApplicability[itemConfig.key];
-      const valueToSubmit = isApplicableFalse ? '' : formValue;
+
+      // Convert date values to UTC for consistent backend storage
+      let valueToSubmit = isApplicableFalse ? '' : formValue;
+      if (itemConfig.formDisplayType === 'date' && formValue instanceof Date) {
+        valueToSubmit = dayjs
+          .utc(dayjs(formValue).format('YYYY-MM-DD'))
+          .toISOString();
+      }
+
       const referenceValue = getFieldReference(itemConfig.key)?.value || '';
 
       setDataForPreview({

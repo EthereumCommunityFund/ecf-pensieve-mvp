@@ -63,12 +63,12 @@ export function formatNumber(
 }
 
 /**
- * Format a date to a readable string format
+ * Format a date to a readable string format in local timezone
  *
  * @param date - The date to format (Date object or ISO string)
  * @param format - The format to use (default: 'MM/DD/YYYY')
  * @param fallback - The fallback value if date is invalid (default: '')
- * @returns Formatted date string
+ * @returns Formatted date string in local timezone
  */
 export function formatDate(
   date: Date | string | null | undefined,
@@ -78,9 +78,34 @@ export function formatDate(
   if (!date) return fallback;
 
   try {
+    // dayjs automatically handles timezone conversion to local time
     return dayjs(date).format(format);
   } catch (error) {
     console.error('Error formatting date:', error);
+    return fallback;
+  }
+}
+
+/**
+ * Format a date to a readable string format with timezone
+ *
+ * @param date - The date to format (Date object or ISO string)
+ * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param fallback - The fallback value if date is invalid (default: '')
+ * @returns Formatted date string with timezone info
+ */
+export function formatDateWithTime(
+  date: Date | string | null | undefined,
+  format: string = 'MM/DD/YYYY HH:mm',
+  fallback: string = '',
+): string {
+  if (!date) return fallback;
+
+  try {
+    // Display in local timezone
+    return dayjs(date).format(format);
+  } catch (error) {
+    console.error('Error formatting date with time:', error);
     return fallback;
   }
 }
