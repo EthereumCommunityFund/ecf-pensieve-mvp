@@ -40,7 +40,7 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
   };
 
   return (
-    <div className="flex w-full items-center justify-between gap-[5px]">
+    <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-[5px]">
         <div>{title}</div>
         <Tooltip

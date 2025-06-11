@@ -138,7 +138,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: isPageExpanded ? 247 : 220,
+      size: 230,
       cell: (info) => {
         const rowKey = info.row.original.key;
         return (
@@ -182,7 +182,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: isPageExpanded ? 480 : 250,
+      size: 240,
       cell: (info) => {
         const { expandedRows, toggleRowExpanded } = info.table.options
           .meta as TableCellsMeta;
@@ -257,8 +257,9 @@ export const useCreateProposalTableColumns = ({
       cell: (info) => {
         const { onShowReference } = info.table.options.meta as TableCellsMeta;
         const value = info.getValue();
+
         return (
-          <div className="mx-auto flex justify-center">
+          <div className="mx-auto flex w-full justify-center">
             {value ? (
               <Button
                 color="secondary"
@@ -323,7 +324,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 228,
+      size: 240,
       cell: (info) => {
         const legitimacy = info.getValue();
         return <LegitimacyCol.Cell legitimacy={legitimacy} />;

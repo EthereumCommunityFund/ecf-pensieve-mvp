@@ -49,6 +49,16 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
         const isFirstColumn = index === 0;
         const isLastColumn = index === columns.length - 1;
 
+        // Check if this is the last left-pinned column or first right-pinned column
+        const columnPinning = table.getState().columnPinning;
+        const leftPinnedColumns = columnPinning.left || [];
+        const rightPinnedColumns = columnPinning.right || [];
+        const isLastLeftPinned =
+          isPinned === 'left' &&
+          leftPinnedColumns[leftPinnedColumns.length - 1] === column.id;
+        const isFirstRightPinned =
+          isPinned === 'right' && rightPinnedColumns[0] === column.id;
+
         return (
           <td
             key={column.id}
@@ -71,6 +81,16 @@ export const EmptyItemsGroup: FC<EmptyItemsGroupProps> = ({
               width: `${column.getSize()}px`,
               ...(isPinned === 'left' && { left: pinnedPosition }),
               ...(isPinned === 'right' && { right: pinnedPosition }),
+              // Add border only for the last left-pinned or first right-pinned column
+              ...(isPinned && {
+                backgroundColor: '#F5F5F5',
+                ...(isLastLeftPinned && {
+                  borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                }),
+                ...(isFirstRightPinned && {
+                  borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                }),
+              }),
             }}
           >
             {/* Render content based on column position */}

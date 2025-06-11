@@ -61,6 +61,18 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                     ? header.column.getAfter('right')
                     : undefined;
 
+              // Check if this is the last left-pinned column or first right-pinned column
+              const columnPinning = table.getState().columnPinning;
+              const leftPinnedColumns = columnPinning.left || [];
+              const rightPinnedColumns = columnPinning.right || [];
+              const isLastLeftPinned =
+                isPinned === 'left' &&
+                leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                  header.column.id;
+              const isFirstRightPinned =
+                isPinned === 'right' &&
+                rightPinnedColumns[0] === header.column.id;
+
               return (
                 <th
                   key={header.id}
@@ -72,14 +84,15 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                     ...(isPinned && {
                       backgroundColor: 'rgba(245, 245, 245, 0.8)',
                       backdropFilter: 'blur(24px)',
-                      borderRight:
-                        isPinned === 'left'
-                          ? '2px solid rgba(0, 0, 0, 0.1)'
-                          : undefined,
-                      borderLeft:
-                        isPinned === 'right'
-                          ? '2px solid rgba(0, 0, 0, 0.1)'
-                          : undefined,
+                      position: 'sticky',
+                      zIndex: 10,
+                      // Add border only for the last left-pinned or first right-pinned column
+                      ...(isLastLeftPinned && {
+                        borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                      }),
+                      ...(isFirstRightPinned && {
+                        borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                      }),
                     }),
                   }}
                   className={cn(
@@ -91,12 +104,11 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                     isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                     isPinned === 'right' &&
                       'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                    // Remove right border only for left-pinned columns that are NOT the last one
+                    isPinned === 'left' && !isLastLeftPinned && 'border-r-0',
                   )}
                 >
-                  <div
-                    className="flex items-center"
-                    style={{ width: '100%', overflow: 'hidden' }}
-                  >
+                  <div className="flex items-center" style={{ width: '100%' }}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -137,6 +149,17 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         ? column.getAfter('right')
                         : undefined;
 
+                  // Check if this is the last left-pinned column or first right-pinned column
+                  const columnPinning = table.getState().columnPinning;
+                  const leftPinnedColumns = columnPinning.left || [];
+                  const rightPinnedColumns = columnPinning.right || [];
+                  const isLastLeftPinned =
+                    isPinned === 'left' &&
+                    leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                      column.id;
+                  const isFirstRightPinned =
+                    isPinned === 'right' && rightPinnedColumns[0] === column.id;
+
                   return (
                     <td
                       key={`skeleton-cell-${column.id}-${rowIndex}`}
@@ -149,14 +172,15 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         }),
                         ...(isPinned && {
                           backgroundColor: '#F5F5F5',
-                          borderRight:
-                            isPinned === 'left'
-                              ? '2px solid rgba(0, 0, 0, 0.1)'
-                              : undefined,
-                          borderLeft:
-                            isPinned === 'right'
-                              ? '2px solid rgba(0, 0, 0, 0.1)'
-                              : undefined,
+                          position: 'sticky',
+                          zIndex: 10,
+                          // Add border only for the last left-pinned or first right-pinned column
+                          ...(isLastLeftPinned && {
+                            borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                          }),
+                          ...(isFirstRightPinned && {
+                            borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                          }),
                         }),
                       }}
                       className={cn(
@@ -172,6 +196,10 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                           'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                         isPinned === 'right' &&
                           'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        // Remove right border only for left-pinned columns that are NOT the last one
+                        isPinned === 'left' &&
+                          !isLastLeftPinned &&
+                          'border-r-0',
                       )}
                     >
                       <div className="flex min-h-[60px] w-full items-center overflow-hidden whitespace-normal break-words px-[10px]">
@@ -196,8 +224,9 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
     >
       <table
         className={cn(
-          'box-border w-full  border-separate border-spacing-0',
-          isPageExpanded ? '' : 'table-fixed',
+          'box-border w-full border-separate border-spacing-0',
+          // Always use table-fixed for consistent column widths
+          'table-fixed',
         )}
       >
         {colGroupDefinition}
@@ -220,6 +249,18 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         ? cell.column.getAfter('right')
                         : undefined;
 
+                  // Check if this is the last left-pinned column or first right-pinned column
+                  const columnPinning = table.getState().columnPinning;
+                  const leftPinnedColumns = columnPinning.left || [];
+                  const rightPinnedColumns = columnPinning.right || [];
+                  const isLastLeftPinned =
+                    isPinned === 'left' &&
+                    leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                      cell.column.id;
+                  const isFirstRightPinned =
+                    isPinned === 'right' &&
+                    rightPinnedColumns[0] === cell.column.id;
+
                   return (
                     <OptimizedTableCell
                       key={cell.id}
@@ -238,6 +279,10 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                           'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                         isPinned === 'right' &&
                           'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        // Remove right border only for left-pinned columns that are NOT the last one
+                        isPinned === 'left' &&
+                          !isLastLeftPinned &&
+                          'border-r-0',
                       )}
                       style={{
                         ...(isPinned === 'left' && { left: pinnedPosition }),
@@ -246,14 +291,15 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
                         }),
                         ...(isPinned && {
                           backgroundColor: '#F5F5F5',
-                          borderRight:
-                            isPinned === 'left'
-                              ? '2px solid rgba(0, 0, 0, 0.1)'
-                              : undefined,
-                          borderLeft:
-                            isPinned === 'right'
-                              ? '2px solid rgba(0, 0, 0, 0.1)'
-                              : undefined,
+                          position: 'sticky',
+                          zIndex: 10,
+                          // Add border only for the last left-pinned or first right-pinned column
+                          ...(isLastLeftPinned && {
+                            borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                          }),
+                          ...(isFirstRightPinned && {
+                            borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                          }),
                         }),
                       }}
                     />
