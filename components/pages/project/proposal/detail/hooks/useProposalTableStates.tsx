@@ -13,6 +13,16 @@ const DefaultMetricsVisibleSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Governance]: false,
 };
 
+// Original column order for maintaining sequence during pinning operations
+const OriginalColumnOrder = [
+  'property',
+  'input',
+  'reference',
+  'accountability', // metrics column
+  'legitimacy', // metrics column
+  'support',
+];
+
 export const useProposalTableStates = () => {
   const [expandedRows, setExpandedRows] = useState<
     Partial<Record<IPocItemKey, boolean>>
@@ -62,6 +72,11 @@ export const useProposalTableStates = () => {
     }));
   }, []);
 
+  // Helper function to maintain column order based on original sequence
+  const maintainColumnOrder = useCallback((columnIds: string[]): string[] => {
+    return OriginalColumnOrder.filter((id) => columnIds.includes(id));
+  }, []);
+
   // Toggle column pinning state
   const toggleColumnPinning = useCallback(
     (
@@ -87,9 +102,13 @@ export const useProposalTableStates = () => {
           // If not pinned, pin to specified position (default left)
           const targetPosition = position || 'left';
           if (targetPosition === 'left') {
-            newPinning.left = [...(currentPinning.left || []), columnId];
+            const newLeftColumns = [...(currentPinning.left || []), columnId];
+            // Maintain original column order for left-pinned columns
+            newPinning.left = maintainColumnOrder(newLeftColumns);
           } else {
-            newPinning.right = [...(currentPinning.right || []), columnId];
+            const newRightColumns = [...(currentPinning.right || []), columnId];
+            // Maintain original column order for right-pinned columns
+            newPinning.right = maintainColumnOrder(newRightColumns);
           }
         }
 
@@ -99,7 +118,7 @@ export const useProposalTableStates = () => {
         };
       });
     },
-    [],
+    [maintainColumnOrder],
   );
 
   // Get whether column is pinned

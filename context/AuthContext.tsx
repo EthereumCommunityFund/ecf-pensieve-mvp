@@ -40,6 +40,7 @@ interface UserState {
   user: User | null;
   profile: IProfile | null;
   newUser: boolean;
+  isNewUserRegistration: boolean;
 }
 
 interface SignatureData {
@@ -56,6 +57,7 @@ interface IAuthContext {
   user: User | null;
   profile: IProfile | null;
   newUser: boolean; // Expose newUser flag
+  isNewUserRegistration: boolean; // Flag for this session's new user registration
   isAuthPromptVisible: boolean;
   connectSource: ConnectSource;
 
@@ -86,6 +88,7 @@ const initialContext: IAuthContext = {
   user: null,
   profile: null,
   newUser: false,
+  isNewUserRegistration: false,
 
   isAuthPromptVisible: false,
   connectSource: 'pageLoad',
@@ -132,6 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user: null,
     profile: null,
     newUser: false,
+    isNewUserRegistration: false,
   });
   const signatureDataRef = useRef<SignatureData>({});
   const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
@@ -176,7 +180,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const resetAuthState = useCallback(() => {
-    setUserState({ session: null, user: null, profile: null, newUser: false });
+    setUserState({
+      session: null,
+      user: null,
+      profile: null,
+      newUser: false,
+      isNewUserRegistration: false,
+    });
     setAuthState((prev) => ({
       ...prev,
       status: 'idle',
@@ -305,7 +315,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     updateAuthState('authenticating');
-    setUserState((prev) => ({ ...prev, newUser: false }));
+    setUserState((prev) => ({
+      ...prev,
+      newUser: false,
+      isNewUserRegistration: false,
+    }));
 
     try {
       const [nonceResult, registrationResult] = await Promise.all([
@@ -393,6 +407,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           inviteCode,
         });
 
+        setUserState((prev) => ({ ...prev, isNewUserRegistration: true }));
         await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
         handleError(
@@ -471,6 +486,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const hideAuthPrompt = useCallback(() => {
     setAuthState((prev) => ({ ...prev, isPromptVisible: false }));
+    // Reset flags when closing auth prompt to ensure correct state for next login
+    setUserState((prev) => ({
+      ...prev,
+      newUser: false,
+      isNewUserRegistration: false,
+    }));
     if (authState.status === 'error') {
       resetAuthState();
     }
@@ -488,6 +509,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user: userState.user,
     profile: userState.profile,
     newUser: userState.newUser,
+    isNewUserRegistration: userState.isNewUserRegistration,
     isAuthPromptVisible: authState.isPromptVisible,
     connectSource: authState.connectSource,
     isAuthenticating: authState.status === 'authenticating',

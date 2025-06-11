@@ -100,7 +100,9 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
         children: (
           <div className="flex items-center gap-[5px]">
             <CheckedCircleIcon />
-            <span>Your proposal is now posted in the Pending Page</span>
+            <span>
+              Your proposal is now posted in the Pending Projects Page
+            </span>
           </div>
         ),
       },

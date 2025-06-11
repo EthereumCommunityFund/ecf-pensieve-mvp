@@ -304,6 +304,7 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const { itemProposalId, key } = input;
+        console.log('createItemProposalVote', input);
 
         const [itemProposal, userProfile] = await Promise.all([
           ctx.db.query.itemProposals.findFirst({
@@ -472,13 +473,7 @@ export const voteRouter = router({
 
         const originalItemProposalId = voteToSwitch.itemProposalId;
 
-        const [votes, project, leadingProposal] = await Promise.all([
-          ctx.db.query.voteRecords.findMany({
-            where: and(
-              eq(voteRecords.itemProposalId, itemProposalId),
-              eq(voteRecords.key, key),
-            ),
-          }),
+        const [project, leadingProposal] = await Promise.all([
           ctx.db.query.projects.findFirst({
             where: eq(projects.id, projectId),
           }),
@@ -502,6 +497,13 @@ export const voteRouter = router({
             })
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
+
+          const votes = await tx.query.voteRecords.findMany({
+            where: and(
+              eq(voteRecords.itemProposalId, itemProposalId),
+              eq(voteRecords.key, key),
+            ),
+          });
 
           if (leadingProposal?.itemProposalId === itemProposalId) {
             await processItemProposalUpdate(tx, {

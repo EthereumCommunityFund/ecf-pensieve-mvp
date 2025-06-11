@@ -81,6 +81,18 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                   ? header.column.getAfter('right')
                   : undefined;
 
+            // Check if this is the last left-pinned column or first right-pinned column
+            const columnPinning = table.getState().columnPinning;
+            const leftPinnedColumns = columnPinning.left || [];
+            const rightPinnedColumns = columnPinning.right || [];
+            const isLastLeftPinned =
+              isPinned === 'left' &&
+              leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                header.column.id;
+            const isFirstRightPinned =
+              isPinned === 'right' &&
+              rightPinnedColumns[0] === header.column.id;
+
             return (
               <TableHeader
                 key={header.id}
@@ -92,6 +104,8 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                   isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                   isPinned === 'right' && 'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
                   'border-b border-t',
+                  // Remove right border only for left-pinned columns that are NOT the last one
+                  isPinned === 'left' && !isLastLeftPinned && 'border-r-0',
                 )}
                 style={{
                   ...(isPinned === 'left' && { left: pinnedPosition }),
@@ -99,14 +113,13 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                   ...(isPinned && {
                     backgroundColor: 'rgba(245, 245, 245, 0.8)',
                     backdropFilter: 'blur(24px)',
-                    borderRight:
-                      isPinned === 'left'
-                        ? '1px solid rgba(0, 0, 0, 0.1)'
-                        : undefined,
-                    borderLeft:
-                      isPinned === 'right'
-                        ? '1px solid rgba(0, 0, 0, 0.1)'
-                        : undefined,
+                    // Add border only for the last left-pinned or first right-pinned column
+                    ...(isLastLeftPinned && {
+                      borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                    }),
+                    ...(isFirstRightPinned && {
+                      borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                    }),
                   }),
                 }}
               >
@@ -145,6 +158,17 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                         ? column.getAfter('right')
                         : undefined;
 
+                  // Check if this is the last left-pinned column or first right-pinned column
+                  const columnPinning = table.getState().columnPinning;
+                  const leftPinnedColumns = columnPinning.left || [];
+                  const rightPinnedColumns = columnPinning.right || [];
+                  const isLastLeftPinned =
+                    isPinned === 'left' &&
+                    leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                      column.id;
+                  const isFirstRightPinned =
+                    isPinned === 'right' && rightPinnedColumns[0] === column.id;
+
                   return (
                     <TableCellSkeleton
                       key={`skeleton-cell-${column.id}-${rowIndex}`}
@@ -160,10 +184,26 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                         isPinned === 'right' &&
                           'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                        // Remove right border only for left-pinned columns that are NOT the last one
+                        isPinned === 'left' &&
+                          !isLastLeftPinned &&
+                          'border-r-0',
                       )}
                       style={{
                         ...(isPinned === 'left' && { left: pinnedPosition }),
                         ...(isPinned === 'right' && { right: pinnedPosition }),
+                        ...(isPinned && {
+                          backgroundColor: '#F5F5F5',
+                          position: 'sticky',
+                          zIndex: 10,
+                          // Add border only for the last left-pinned or first right-pinned column
+                          ...(isLastLeftPinned && {
+                            borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                          }),
+                          ...(isFirstRightPinned && {
+                            borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                          }),
+                        }),
                       }}
                     />
                   );
@@ -251,6 +291,18 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           ? cell.column.getAfter('right')
                           : undefined;
 
+                    // Check if this is the last left-pinned column or first right-pinned column
+                    const columnPinning = table.getState().columnPinning;
+                    const leftPinnedColumns = columnPinning.left || [];
+                    const rightPinnedColumns = columnPinning.right || [];
+                    const isLastLeftPinned =
+                      isPinned === 'left' &&
+                      leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                        cell.column.id;
+                    const isFirstRightPinned =
+                      isPinned === 'right' &&
+                      rightPinnedColumns[0] === cell.column.id;
+
                     return (
                       <OptimizedTableCell
                         key={cell.id}
@@ -272,6 +324,10 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                             'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                           isPinned === 'right' &&
                             'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                          // Remove right border only for left-pinned columns that are NOT the last one
+                          isPinned === 'left' &&
+                            !isLastLeftPinned &&
+                            'border-r-0',
                         )}
                         style={{
                           ...(isPinned === 'left' && { left: pinnedPosition }),
@@ -280,14 +336,13 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           }),
                           ...(isPinned && {
                             backgroundColor: '#F5F5F5',
-                            borderRight:
-                              isPinned === 'left'
-                                ? '1px solid rgba(0, 0, 0, 0.1)'
-                                : undefined,
-                            borderLeft:
-                              isPinned === 'right'
-                                ? '1px solid rgba(0, 0, 0, 0.1)'
-                                : undefined,
+                            // Add border only for the last left-pinned or first right-pinned column
+                            ...(isLastLeftPinned && {
+                              borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                            }),
+                            ...(isFirstRightPinned && {
+                              borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                            }),
                           }),
                         }}
                       />
@@ -336,6 +391,18 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           ? cell.column.getAfter('right')
                           : undefined;
 
+                    // Check if this is the last left-pinned column or first right-pinned column
+                    const columnPinning = table.getState().columnPinning;
+                    const leftPinnedColumns = columnPinning.left || [];
+                    const rightPinnedColumns = columnPinning.right || [];
+                    const isLastLeftPinned =
+                      isPinned === 'left' &&
+                      leftPinnedColumns[leftPinnedColumns.length - 1] ===
+                        cell.column.id;
+                    const isFirstRightPinned =
+                      isPinned === 'right' &&
+                      rightPinnedColumns[0] === cell.column.id;
+
                     return (
                       <OptimizedTableCell
                         key={cell.id}
@@ -352,6 +419,10 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                             'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
                           isPinned === 'right' &&
                             'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
+                          // Remove right border only for left-pinned columns that are NOT the last one
+                          isPinned === 'left' &&
+                            !isLastLeftPinned &&
+                            'border-r-0',
                         )}
                         style={{
                           ...(isPinned === 'left' && { left: pinnedPosition }),
@@ -360,14 +431,13 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           }),
                           ...(isPinned && {
                             backgroundColor: '#F5F5F5',
-                            borderRight:
-                              isPinned === 'left'
-                                ? '2px solid rgba(0, 0, 0, 0.1)'
-                                : undefined,
-                            borderLeft:
-                              isPinned === 'right'
-                                ? '2px solid rgba(0, 0, 0, 0.1)'
-                                : undefined,
+                            // Add border only for the last left-pinned or first right-pinned column
+                            ...(isLastLeftPinned && {
+                              borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                            }),
+                            ...(isFirstRightPinned && {
+                              borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+                            }),
                           }),
                         }}
                       />

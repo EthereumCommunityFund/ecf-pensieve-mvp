@@ -60,6 +60,7 @@ const AuthPrompt: React.FC = () => {
     authenticate,
     createProfile,
     newUser,
+    isNewUserRegistration,
     profile,
     authError,
     connectSource,
@@ -288,7 +289,7 @@ const AuthPrompt: React.FC = () => {
           </div>
 
           <div className="flex justify-between gap-[10px]">
-            <Button
+            {/* <Button
               color="secondary"
               className="flex-1"
               onPress={handleSkip}
@@ -296,7 +297,7 @@ const AuthPrompt: React.FC = () => {
               isLoading={loadingButton === 'skip'}
             >
               Skip
-            </Button>
+            </Button> */}
             <Button
               onPress={handleContinue}
               color="primary"
@@ -352,7 +353,7 @@ const AuthPrompt: React.FC = () => {
         <ModalBody>
           <div className="flex flex-col gap-[10px]">
             <div className="text-[16px] leading-[1.6] text-black/80">
-              {newUser ? `You're All Set` : 'Welcome Back,'}
+              {isNewUserRegistration ? `You're All Set` : 'Welcome Back,'}
             </div>
             <span className="text-[20px] font-[700] leading-[1.2] text-[#28C196]">
               {username}!
@@ -370,7 +371,7 @@ const AuthPrompt: React.FC = () => {
         </ModalBody>
       </>
     );
-  }, [profile, hideAuthPrompt, newUser]);
+  }, [profile, hideAuthPrompt, isNewUserRegistration]);
 
   const renderModalContent = useCallback(() => {
     if (!isConnected) {
