@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import {
@@ -321,7 +321,11 @@ export const projectRouter = router({
             const proposalCreator = String(project.proposal_creator);
 
             const projectVoteRecords = await tx.query.voteRecords.findMany({
-              where: eq(voteRecords.proposalId, proposalId),
+              where: and(
+                eq(voteRecords.projectId, projectId),
+                eq(voteRecords.proposalId, proposalId),
+                isNull(voteRecords.itemProposalId),
+              ),
             });
 
             const itemsTopWeight: Record<string, number> = {};
