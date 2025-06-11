@@ -52,12 +52,12 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
     >
       <td
         colSpan={colSpan}
-        className={`border-b border-black/10 bg-[#E1E1E1] p-[10px] ${
+        className={`border-b border-black/10 bg-[#E1E1E1] p-[20px] ${
           isLastRow ? 'border-b-0' : ''
         }`}
       >
         <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-          <p className="p-[10px] font-[mona] text-[15px] leading-[20px] text-black">
+          <p className="p-[20px] font-[Inter] text-[15px] leading-[24px] text-black">
             <InputContentRenderer
               itemKey={itemKey as IPocItemKey}
               value={inputValue}
