@@ -288,7 +288,7 @@ const AuthPrompt: React.FC = () => {
           </div>
 
           <div className="flex justify-between gap-[10px]">
-            <Button
+            {/* <Button
               color="secondary"
               className="flex-1"
               onPress={handleSkip}
@@ -296,7 +296,7 @@ const AuthPrompt: React.FC = () => {
               isLoading={loadingButton === 'skip'}
             >
               Skip
-            </Button>
+            </Button> */}
             <Button
               onPress={handleContinue}
               color="primary"
