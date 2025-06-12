@@ -340,26 +340,6 @@ export const useProjectTableColumns = ({
 
     const finalColumns = [...baseColumns, ...metricsColumns, ...actionColumns];
 
-    // 添加调试信息
-    console.log(`🏗️ ${category}类别列构建调试:`);
-    console.log('  showMetrics:', showMetrics);
-    console.log(
-      '  baseColumns:',
-      baseColumns.map((c) => c.id),
-    );
-    console.log(
-      '  metricsColumns:',
-      metricsColumns.map((c) => c.id),
-    );
-    console.log(
-      '  actionColumns:',
-      actionColumns.map((c) => c.id),
-    );
-    console.log(
-      '  最终列数组:',
-      finalColumns.map((c) => c.id),
-    );
-
     return finalColumns;
   }, [columnHelper, showMetrics, category]);
 };
