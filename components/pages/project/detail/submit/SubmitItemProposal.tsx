@@ -101,6 +101,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     formState,
     trigger,
     getValues,
+    reset,
   } = methods;
 
   const [editReason, setEditReason] = useState('');
@@ -271,10 +272,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   ]);
 
   useEffect(() => {
-    if (submissionStep === 'success') {
-      return;
-    }
-
+    // Only initialize form when itemKey changes or component mounts
+    // Don't reset when submissionStep changes
     if (displayProposalDataOfKey && displayProposalDataOfKey.key === itemKey) {
       setValue(itemConfig.key, displayProposalDataOfKey.input);
       setReferences([]);
@@ -287,7 +286,6 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   }, [
     itemKey,
     displayProposalDataOfKey,
-    submissionStep,
     setValue,
     itemConfig,
     formState.defaultValues,
@@ -301,7 +299,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       ref: '',
       reason: '',
     });
-  }, []);
+    reset();
+  }, [reset]);
 
   const onCloseModal = useCallback(() => {
     clearStatus();
