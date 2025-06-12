@@ -55,12 +55,15 @@ const PendingProjectsPage = () => {
   return (
     <div className="pb-10">
       <div className="flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
-        <Image
-          src="/images/projects/logo.png"
-          alt="ECF project Logo"
-          width={63}
-          height={63}
-        />
+        <div className="size-[63px] shrink-0">
+          <Image
+            src="/images/projects/logo.png"
+            alt="ECF project Logo"
+            width={63}
+            height={63}
+          />
+        </div>
+
         <div className="flex-1">
           <ECFTypography type={'title'}>Pending Projects</ECFTypography>
           <ECFTypography type={'subtitle2'} className="mt-[10px]">
