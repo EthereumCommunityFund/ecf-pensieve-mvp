@@ -56,7 +56,18 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   const noDataForThisTable = table.options.data.length === 0;
 
   // 创建稳定的pinned列样式和位置计算
-  const columnPinningState = table.getState().columnPinning;
+  // 使用 useMemo 来稳定 columnPinningState，避免每次渲染都重新获取
+  const columnPinningState = React.useMemo(() => {
+    const state = table.getState().columnPinning;
+    return {
+      left: state.left || [],
+      right: state.right || [],
+    };
+  }, [
+    // 使用更精确的依赖项，只在实际的 pinning 状态变化时重新计算
+    JSON.stringify(table.getState().columnPinning.left || []),
+    JSON.stringify(table.getState().columnPinning.right || []),
+  ]);
 
   // 预计算所有列的位置，使用更稳定的计算方法
   const pinnedPositionsMap = React.useMemo(() => {
@@ -88,20 +99,11 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
     return positions;
   }, [
-    // 更精确的依赖项：只依赖必要的状态变化
+    // 只依赖必要的状态变化，避免复杂的动态计算
     JSON.stringify(columnPinningState.left || []),
     JSON.stringify(columnPinningState.right || []),
-    // 使用稳定的列大小字符串
-    table
-      .getAllColumns()
-      .filter((c) =>
-        [
-          ...(columnPinningState.left || []),
-          ...(columnPinningState.right || []),
-        ].includes(c.id),
-      )
-      .map((c) => `${c.id}:${c.getSize()}`)
-      .join(','),
+    // 移除动态的列大小计算，因为它会导致无限重新渲染
+    // 如果列大小发生变化，组件会重新渲染，useMemo 也会重新计算
   ]);
 
   // 检查列是否被固定，完全避免使用TanStack的getIsPinned方法
@@ -200,7 +202,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             const isPinned = getColumnPinStatus(header.column.id);
 
             // Check if this is the last left-pinned column or first right-pinned column
-            const columnPinning = table.getState().columnPinning;
+            const columnPinning = columnPinningState;
             const leftPinnedColumns = columnPinning.left || [];
             const rightPinnedColumns = columnPinning.right || [];
             const isLastLeftPinned =
@@ -258,7 +260,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                   const isPinned = getColumnPinStatus(column.id);
 
                   // Check if this is the last left-pinned column or first right-pinned column
-                  const columnPinning = table.getState().columnPinning;
+                  const columnPinning = columnPinningState;
                   const leftPinnedColumns = columnPinning.left || [];
                   const rightPinnedColumns = columnPinning.right || [];
                   const isLastLeftPinned =
@@ -382,7 +384,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     const isPinned = getColumnPinStatus(cell.column.id);
 
                     // Check if this is the last left-pinned column or first right-pinned column
-                    const columnPinning = table.getState().columnPinning;
+                    const columnPinning = columnPinningState;
                     const leftPinnedColumns = columnPinning.left || [];
                     const rightPinnedColumns = columnPinning.right || [];
                     const isLastLeftPinned =
@@ -460,7 +462,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     const isPinned = getColumnPinStatus(cell.column.id);
 
                     // Check if this is the last left-pinned column or first right-pinned column
-                    const columnPinning = table.getState().columnPinning;
+                    const columnPinning = columnPinningState;
                     const leftPinnedColumns = columnPinning.left || [];
                     const rightPinnedColumns = columnPinning.right || [];
                     const isLastLeftPinned =
