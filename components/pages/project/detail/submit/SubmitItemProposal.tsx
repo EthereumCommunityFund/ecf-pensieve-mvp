@@ -277,24 +277,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
     if (displayProposalDataOfKey && displayProposalDataOfKey.key === itemKey) {
       setValue(itemConfig.key, displayProposalDataOfKey.input);
-      if (displayProposalDataOfKey.reference) {
-        setReferences([
-          {
-            key: displayProposalDataOfKey.reference.key,
-            value: displayProposalDataOfKey.reference.value,
-            ref: '',
-          },
-        ]);
-      } else {
-        setReferences((prev) =>
-          prev.filter(
-            (ref) =>
-              ref.key !== itemConfig.key &&
-              (!displayProposalDataOfKey ||
-                ref.key !== displayProposalDataOfKey.key),
-          ),
-        );
-      }
+      setReferences([]);
     } else {
       const defaultValue = formState.defaultValues?.[itemConfig.key] ?? '';
       setValue(itemConfig.key, defaultValue);
