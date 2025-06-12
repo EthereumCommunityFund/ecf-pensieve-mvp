@@ -2,7 +2,7 @@
 
 import { cn } from '@heroui/react';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
@@ -58,6 +58,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     toggleAllRowsInCategory,
     toggleColumnPinning,
     isColumnPinned,
+    cleanupInvalidPinnedColumns,
   } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
@@ -130,6 +131,50 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     showMetrics: metricsVisible[IItemSubCategoryEnum.Governance],
     category: IItemSubCategoryEnum.Governance,
   });
+
+  // 在列构建完成后清理无效的固定列
+  useEffect(() => {
+    console.log('🔄 列构建完成，开始清理无效的固定列...');
+
+    // 为每个类别清理无效的固定列
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.BasicProfile,
+      basicProfileColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Development,
+      developmentColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Organization,
+      organizationColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Team,
+      teamColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Finances,
+      financesColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Token,
+      tokenColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Governance,
+      governanceColumns.map((col) => col.id as string),
+    );
+  }, [
+    basicProfileColumns,
+    developmentColumns,
+    organizationColumns,
+    teamColumns,
+    financesColumns,
+    tokenColumns,
+    governanceColumns,
+    cleanupInvalidPinnedColumns,
+  ]);
 
   // Create table instances for each category with their own columns
   const basicProfileTable = useReactTable({
@@ -285,7 +330,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   />
                   {cat.subCategories.map((subCat) => (
                     <CategoryTableSection
-                      key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
+                      key={subCat.key}
                       subCategory={subCat}
                       table={tables[subCat.key]}
                       isLoading={isProposalsLoading}

@@ -80,18 +80,53 @@ const OptimizedTableCell = memo(
   (prevProps, nextProps) => {
     // Custom comparison function for memo
     // Only re-render if essential props have changed
-    return (
-      prevProps.cell.id === nextProps.cell.id &&
-      prevProps.cell.getValue() === nextProps.cell.getValue() &&
-      prevProps.cell.row.original === nextProps.cell.row.original &&
-      prevProps.cellIndex === nextProps.cellIndex &&
-      prevProps.width === nextProps.width &&
-      prevProps.isLast === nextProps.isLast &&
-      prevProps.isLastRow === nextProps.isLastRow &&
-      prevProps.minHeight === nextProps.minHeight &&
-      prevProps.isContainerBordered === nextProps.isContainerBordered &&
-      prevProps.className === nextProps.className
-    );
+
+    // 检查基本属性
+    if (
+      prevProps.cell.id !== nextProps.cell.id ||
+      prevProps.cellIndex !== nextProps.cellIndex ||
+      prevProps.width !== nextProps.width ||
+      prevProps.isLast !== nextProps.isLast ||
+      prevProps.isLastRow !== nextProps.isLastRow ||
+      prevProps.minHeight !== nextProps.minHeight ||
+      prevProps.isContainerBordered !== nextProps.isContainerBordered ||
+      prevProps.className !== nextProps.className
+    ) {
+      return false;
+    }
+
+    // 检查单元格值变化
+    if (prevProps.cell.getValue() !== nextProps.cell.getValue()) {
+      return false;
+    }
+
+    // 检查pinned状态变化
+    const prevIsPinned = prevProps.cell.column.getIsPinned();
+    const nextIsPinned = nextProps.cell.column.getIsPinned();
+    if (prevIsPinned !== nextIsPinned) {
+      return false;
+    }
+
+    // 特别检查样式对象的关键属性（避免JSON.stringify的性能开销）
+    if (prevProps.style || nextProps.style) {
+      const prevStyle = prevProps.style || {};
+      const nextStyle = nextProps.style || {};
+
+      // 检查关键样式属性
+      if (
+        prevStyle.left !== nextStyle.left ||
+        prevStyle.right !== nextStyle.right ||
+        prevStyle.position !== nextStyle.position ||
+        prevStyle.zIndex !== nextStyle.zIndex ||
+        prevStyle.backgroundColor !== nextStyle.backgroundColor ||
+        prevStyle.transform !== nextStyle.transform
+      ) {
+        return false;
+      }
+    }
+
+    // 其他情况下不重新渲染
+    return true;
   },
 );
 

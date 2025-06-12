@@ -55,6 +55,130 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   const showSkeleton = isLoading || !project;
   const noDataForThisTable = table.options.data.length === 0;
 
+  // 创建稳定的pinned列样式和位置计算
+  const columnPinningState = table.getState().columnPinning;
+
+  // 预计算所有列的位置，使用更稳定的计算方法
+  const pinnedPositionsMap = React.useMemo(() => {
+    const positions = new Map();
+
+    const leftColumns = columnPinningState.left || [];
+    const rightColumns = columnPinningState.right || [];
+    const allColumns = table.getAllColumns();
+
+    // 🔑 关键优化：使用更稳定的列查找和大小获取方法
+    const getColumnSize = (columnId: string) => {
+      const column = allColumns.find((col: any) => col.id === columnId);
+      return column ? column.getSize() : 0;
+    };
+
+    // 为左侧固定列计算累积位置
+    let leftOffset = 0;
+    leftColumns.forEach((columnId) => {
+      positions.set(`${columnId}-left`, leftOffset);
+      leftOffset += getColumnSize(columnId);
+    });
+
+    // 为右侧固定列计算累积位置（从右向左）
+    let rightOffset = 0;
+    [...rightColumns].reverse().forEach((columnId) => {
+      positions.set(`${columnId}-right`, rightOffset);
+      rightOffset += getColumnSize(columnId);
+    });
+
+    return positions;
+  }, [
+    // 更精确的依赖项：只依赖必要的状态变化
+    JSON.stringify(columnPinningState.left || []),
+    JSON.stringify(columnPinningState.right || []),
+    // 使用稳定的列大小字符串
+    table
+      .getAllColumns()
+      .filter((c) =>
+        [
+          ...(columnPinningState.left || []),
+          ...(columnPinningState.right || []),
+        ].includes(c.id),
+      )
+      .map((c) => `${c.id}:${c.getSize()}`)
+      .join(','),
+  ]);
+
+  // 检查列是否被固定，完全避免使用TanStack的getIsPinned方法
+  const getColumnPinStatus = React.useCallback(
+    (columnId: string) => {
+      const leftColumns = columnPinningState.left || [];
+      const rightColumns = columnPinningState.right || [];
+
+      if (leftColumns.includes(columnId)) return 'left';
+      if (rightColumns.includes(columnId)) return 'right';
+      return false;
+    },
+    [columnPinningState],
+  );
+
+  // 获取稳定的位置值，完全避免TanStack的内部方法
+  const getPinnedPosition = React.useCallback(
+    (columnId: string) => {
+      const pinStatus = getColumnPinStatus(columnId);
+      if (!pinStatus) return 0;
+
+      const key = `${columnId}-${pinStatus}`;
+      const position = pinnedPositionsMap.get(key);
+      const finalPosition = position !== undefined ? position : 0;
+
+      return finalPosition;
+    },
+    [pinnedPositionsMap, getColumnPinStatus],
+  );
+
+  // 创建完全稳定的pinned样式计算函数
+  const getPinnedStyles = React.useCallback(
+    (
+      columnId: string,
+      isLastLeftPinned: boolean,
+      isFirstRightPinned: boolean,
+    ) => {
+      const pinStatus = getColumnPinStatus(columnId);
+      if (!pinStatus) return {};
+
+      const position = getPinnedPosition(columnId);
+
+      // 使用固定的样式对象，避免动态创建
+      const baseStyles = {
+        position: 'sticky' as const,
+        zIndex: 15,
+        backgroundColor: '#F5F5F5',
+        // 确保边框正确渲染
+        boxSizing: 'border-box' as const,
+        // 🔑 修复：不设置宽度，让每列保持自己的原始宽度
+        // width、minWidth、maxWidth 应该由 column definition 中的设置来控制
+      };
+
+      const positionStyle = {
+        [pinStatus]: `${position}px`,
+      };
+
+      const borderStyle = {
+        ...(pinStatus === 'left' &&
+          isLastLeftPinned && {
+            borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+          }),
+        ...(pinStatus === 'right' &&
+          isFirstRightPinned && {
+            borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
+          }),
+      };
+
+      return {
+        ...baseStyles,
+        ...positionStyle,
+        ...borderStyle,
+      };
+    },
+    [getColumnPinStatus, getPinnedPosition],
+  );
+
   const colGroupDefinition = (
     <colgroup>
       {table.getAllColumns().map((column: any) => (
@@ -73,13 +197,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
       <tr className="bg-[#F5F5F5]">
         {table.getHeaderGroups().map((headerGroup: any) =>
           headerGroup.headers.map((header: any, index: number) => {
-            const isPinned = header.column.getIsPinned();
-            const pinnedPosition =
-              isPinned === 'left'
-                ? header.column.getStart('left')
-                : isPinned === 'right'
-                  ? header.column.getAfter('right')
-                  : undefined;
+            const isPinned = getColumnPinStatus(header.column.id);
 
             // Check if this is the last left-pinned column or first right-pinned column
             const columnPinning = table.getState().columnPinning;
@@ -100,28 +218,15 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                 isLast={index === headerGroup.headers.length - 1}
                 isContainerBordered={true}
                 className={cn(
-                  isPinned && 'sticky z-10',
-                  isPinned === 'left' && 'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
-                  isPinned === 'right' && 'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
-                  'border-b border-t',
+                  'border-b border-t border-black/10',
                   // Remove right border only for left-pinned columns that are NOT the last one
                   isPinned === 'left' && !isLastLeftPinned && 'border-r-0',
                 )}
-                style={{
-                  ...(isPinned === 'left' && { left: pinnedPosition }),
-                  ...(isPinned === 'right' && { right: pinnedPosition }),
-                  ...(isPinned && {
-                    backgroundColor: 'rgba(245, 245, 245, 0.8)',
-                    backdropFilter: 'blur(24px)',
-                    // Add border only for the last left-pinned or first right-pinned column
-                    ...(isLastLeftPinned && {
-                      borderRight: '1px solid rgba(0, 0, 0, 0.1)',
-                    }),
-                    ...(isFirstRightPinned && {
-                      borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
-                    }),
-                  }),
-                }}
+                style={getPinnedStyles(
+                  header.column.id,
+                  isLastLeftPinned,
+                  isFirstRightPinned,
+                )}
               >
                 {header.isPlaceholder
                   ? null
@@ -150,13 +255,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                 isLastRow={rowIndex === 2}
               >
                 {table.getAllColumns().map((column: any, cellIndex: number) => {
-                  const isPinned = column.getIsPinned();
-                  const pinnedPosition =
-                    isPinned === 'left'
-                      ? column.getStart('left')
-                      : isPinned === 'right'
-                        ? column.getAfter('right')
-                        : undefined;
+                  const isPinned = getColumnPinStatus(column.id);
 
                   // Check if this is the last left-pinned column or first right-pinned column
                   const columnPinning = table.getState().columnPinning;
@@ -189,22 +288,11 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                           !isLastLeftPinned &&
                           'border-r-0',
                       )}
-                      style={{
-                        ...(isPinned === 'left' && { left: pinnedPosition }),
-                        ...(isPinned === 'right' && { right: pinnedPosition }),
-                        ...(isPinned && {
-                          backgroundColor: '#F5F5F5',
-                          position: 'sticky',
-                          zIndex: 10,
-                          // Add border only for the last left-pinned or first right-pinned column
-                          ...(isLastLeftPinned && {
-                            borderRight: '1px solid rgba(0, 0, 0, 0.1)',
-                          }),
-                          ...(isFirstRightPinned && {
-                            borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
-                          }),
-                        }),
-                      }}
+                      style={getPinnedStyles(
+                        column.id,
+                        isLastLeftPinned,
+                        isFirstRightPinned,
+                      )}
                     />
                   );
                 })}
@@ -241,7 +329,15 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   );
 
   return (
-    <PageTableContainer className="mt-px overflow-x-auto rounded-b-[10px] border-x border-b border-black/10 bg-white">
+    <PageTableContainer
+      className="mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white"
+      style={{
+        overflowX: 'auto',
+        // 确保 sticky 定位正常工作的容器设置
+        position: 'relative',
+        isolation: 'isolate',
+      }}
+    >
       <table className="box-border w-full table-fixed border-separate border-spacing-0">
         {colGroupDefinition}
         {tableHeaders}
@@ -283,13 +379,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                   }
                 >
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => {
-                    const isPinned = cell.column.getIsPinned();
-                    const pinnedPosition =
-                      isPinned === 'left'
-                        ? cell.column.getStart('left')
-                        : isPinned === 'right'
-                          ? cell.column.getAfter('right')
-                          : undefined;
+                    const isPinned = getColumnPinStatus(cell.column.id);
 
                     // Check if this is the last left-pinned column or first right-pinned column
                     const columnPinning = table.getState().columnPinning;
@@ -319,32 +409,16 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                         isContainerBordered={true}
                         minHeight={60}
                         className={cn(
-                          isPinned && 'sticky z-10',
-                          isPinned === 'left' &&
-                            'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
-                          isPinned === 'right' &&
-                            'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
                           // Remove right border only for left-pinned columns that are NOT the last one
                           isPinned === 'left' &&
                             !isLastLeftPinned &&
                             'border-r-0',
                         )}
-                        style={{
-                          ...(isPinned === 'left' && { left: pinnedPosition }),
-                          ...(isPinned === 'right' && {
-                            right: pinnedPosition,
-                          }),
-                          ...(isPinned && {
-                            backgroundColor: '#F5F5F5',
-                            // Add border only for the last left-pinned or first right-pinned column
-                            ...(isLastLeftPinned && {
-                              borderRight: '1px solid rgba(0, 0, 0, 0.1)',
-                            }),
-                            ...(isFirstRightPinned && {
-                              borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
-                            }),
-                          }),
-                        }}
+                        style={getPinnedStyles(
+                          cell.column.id,
+                          isLastLeftPinned,
+                          isFirstRightPinned,
+                        )}
                       />
                     );
                   })}
@@ -383,13 +457,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
               <React.Fragment key={`empty-${rowIndex}`}>
                 <TableRow isLastRow={rowIndex === emptyRows.length - 1}>
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => {
-                    const isPinned = cell.column.getIsPinned();
-                    const pinnedPosition =
-                      isPinned === 'left'
-                        ? cell.column.getStart('left')
-                        : isPinned === 'right'
-                          ? cell.column.getAfter('right')
-                          : undefined;
+                    const isPinned = getColumnPinStatus(cell.column.id);
 
                     // Check if this is the last left-pinned column or first right-pinned column
                     const columnPinning = table.getState().columnPinning;
@@ -414,32 +482,16 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                         isContainerBordered={true}
                         minHeight={60}
                         className={cn(
-                          isPinned && 'sticky z-10',
-                          isPinned === 'left' &&
-                            'shadow-[2px_0_4px_rgba(0,0,0,0.1)]',
-                          isPinned === 'right' &&
-                            'shadow-[-2px_0_4px_rgba(0,0,0,0.1)]',
                           // Remove right border only for left-pinned columns that are NOT the last one
                           isPinned === 'left' &&
                             !isLastLeftPinned &&
                             'border-r-0',
                         )}
-                        style={{
-                          ...(isPinned === 'left' && { left: pinnedPosition }),
-                          ...(isPinned === 'right' && {
-                            right: pinnedPosition,
-                          }),
-                          ...(isPinned && {
-                            backgroundColor: '#F5F5F5',
-                            // Add border only for the last left-pinned or first right-pinned column
-                            ...(isLastLeftPinned && {
-                              borderRight: '1px solid rgba(0, 0, 0, 0.1)',
-                            }),
-                            ...(isFirstRightPinned && {
-                              borderLeft: '1px solid rgba(0, 0, 0, 0.1)',
-                            }),
-                          }),
-                        }}
+                        style={getPinnedStyles(
+                          cell.column.id,
+                          isLastLeftPinned,
+                          isFirstRightPinned,
+                        )}
                       />
                     );
                   })}

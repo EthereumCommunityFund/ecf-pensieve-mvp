@@ -207,6 +207,60 @@ export const useTableStates = () => {
     });
   }, []);
 
+  // 清理无效的列固定状态（当列不存在时）
+  const cleanupInvalidPinnedColumns = useCallback(
+    (category: IItemSubCategoryEnum, availableColumnIds: string[]) => {
+      setColumnPinning((prev) => {
+        const currentPinning = prev[category];
+        if (!currentPinning) return prev;
+
+        const validLeftColumns = (currentPinning.left || []).filter(
+          (columnId) => availableColumnIds.includes(columnId),
+        );
+        const validRightColumns = (currentPinning.right || []).filter(
+          (columnId) => availableColumnIds.includes(columnId),
+        );
+
+        // 使用maintainColumnOrder确保正确的顺序
+        const orderedLeftColumns = maintainColumnOrder(validLeftColumns);
+        const orderedRightColumns = maintainColumnOrder(validRightColumns);
+
+        // 如果没有变化，不更新状态
+        const leftChanged =
+          orderedLeftColumns.length !== (currentPinning.left || []).length ||
+          !orderedLeftColumns.every(
+            (id, index) => id === (currentPinning.left || [])[index],
+          );
+        const rightChanged =
+          orderedRightColumns.length !== (currentPinning.right || []).length ||
+          !orderedRightColumns.every(
+            (id, index) => id === (currentPinning.right || [])[index],
+          );
+
+        if (!leftChanged && !rightChanged) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [category]: {
+            left: orderedLeftColumns,
+            right: orderedRightColumns,
+          },
+        };
+      });
+    },
+    [maintainColumnOrder],
+  );
+
+  // 重置特定类别的列固定状态
+  const resetColumnPinning = useCallback((category: IItemSubCategoryEnum) => {
+    setColumnPinning((prev) => ({
+      ...prev,
+      [category]: { left: [], right: [] },
+    }));
+  }, []);
+
   return {
     // States
     expandedRows,
@@ -225,5 +279,7 @@ export const useTableStates = () => {
     toggleAllRowsInCategory,
     toggleColumnPinning,
     isColumnPinned,
+    cleanupInvalidPinnedColumns,
+    resetColumnPinning,
   };
 };

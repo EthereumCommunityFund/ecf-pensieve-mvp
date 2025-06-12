@@ -82,6 +82,8 @@ export const useProjectTableColumns = ({
       },
       size: 240,
       minSize: 240,
+      maxSize: 240,
+      enableResizing: false,
       cell: (info) => {
         const { key } = info.row.original;
 
@@ -155,6 +157,9 @@ export const useProjectTableColumns = ({
         );
       },
       size: 140,
+      minSize: 140,
+      maxSize: 140,
+      enableResizing: false,
       cell: (info) => {
         const reference = info.getValue();
         const key = info.row.original.key;
@@ -193,6 +198,9 @@ export const useProjectTableColumns = ({
         );
       },
       size: 150,
+      minSize: 150,
+      maxSize: 150,
+      enableResizing: false,
       cell: (info) => {
         const item = info.row.original;
         const itemConfig = AllItemConfig[item.key as IPocItemKey];
@@ -228,6 +236,9 @@ export const useProjectTableColumns = ({
         );
       },
       size: 240,
+      minSize: 240,
+      maxSize: 240,
+      enableResizing: false,
       cell: (info) => {
         const accountability = info.getValue();
         const { onMetricClick } = info.table.options
@@ -258,6 +269,9 @@ export const useProjectTableColumns = ({
         );
       },
       size: 228,
+      minSize: 228,
+      maxSize: 228,
+      enableResizing: false,
       cell: (info) => {
         const legitimacy = info.getValue();
         const { onMetricClick } = info.table.options
@@ -286,6 +300,9 @@ export const useProjectTableColumns = ({
         );
       },
       size: 160,
+      minSize: 160,
+      maxSize: 160,
+      enableResizing: false,
       cell: (info) => {
         const item = info.row.original;
         const { onOpenModal } = info.table.options
@@ -321,6 +338,28 @@ export const useProjectTableColumns = ({
     // Actions 列
     const actionColumns = [actionsColumn];
 
-    return [...baseColumns, ...metricsColumns, ...actionColumns];
+    const finalColumns = [...baseColumns, ...metricsColumns, ...actionColumns];
+
+    // 添加调试信息
+    console.log(`🏗️ ${category}类别列构建调试:`);
+    console.log('  showMetrics:', showMetrics);
+    console.log(
+      '  baseColumns:',
+      baseColumns.map((c) => c.id),
+    );
+    console.log(
+      '  metricsColumns:',
+      metricsColumns.map((c) => c.id),
+    );
+    console.log(
+      '  actionColumns:',
+      actionColumns.map((c) => c.id),
+    );
+    console.log(
+      '  最终列数组:',
+      finalColumns.map((c) => c.id),
+    );
+
+    return finalColumns;
   }, [columnHelper, showMetrics, category]);
 };
