@@ -21,6 +21,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   const { refetchProposalHistory, refetchProposalsByKey } =
     useProjectDetailContext();
   const [activeTab, setActiveTab] = useState('submission-queue');
+  const [hasUserSelectedTab, setHasUserSelectedTab] = useState(false);
 
   // Get project detail context to access proposalsByProjectIdAndKey and displayProposalDataOfKey
   const {
@@ -30,10 +31,10 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   } = useProjectDetailContext();
 
   useEffect(() => {
-    if (displayProposalDataOfKey) {
+    if (displayProposalDataOfKey && !hasUserSelectedTab) {
       setActiveTab('displayed');
     }
-  }, [displayProposalDataOfKey]);
+  }, [displayProposalDataOfKey, hasUserSelectedTab]);
 
   // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
   const submissionQueueCount = useMemo(() => {
@@ -67,6 +68,8 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
     if (!availableTabKeys.includes(activeTab)) {
       // If current activeTab is not available, set to the first available tab
       setActiveTab(availableTabKeys[0] || 'submission-queue');
+      // This is a forced change due to tab availability, not user selection
+      // Don't set hasUserSelectedTab to true here
     }
   }, [tabs, activeTab]);
 
@@ -76,6 +79,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
         refetchProposalHistory();
       }
       setActiveTab(tabKey);
+      setHasUserSelectedTab(true);
     },
     [refetchProposalHistory],
   );
@@ -90,6 +94,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
 
   const onViewSubmissions = useCallback(() => {
     setActiveTab('submission-queue');
+    setHasUserSelectedTab(true);
   }, []);
 
   const renderTabContent = () => {
