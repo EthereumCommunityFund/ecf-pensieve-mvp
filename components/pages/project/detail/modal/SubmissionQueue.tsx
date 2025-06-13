@@ -180,7 +180,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showRowIsLeading, // 只有 submission queue 的 table 需要考虑 showRowIsLeading
       inActionKeyMap,
       inActionItemProposalIdMap,
-      // showSubmitterModal, // submission queue 的 table 不需要 showSubmitterModal
+      showSubmitterModal,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -196,7 +196,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showRowIsLeading,
     inActionKeyMap,
     inActionItemProposalIdMap,
-    // showSubmitterModal,
+    showSubmitterModal,
   ]);
 
   const displayedTable = useReactTable({

@@ -82,7 +82,7 @@ const SubmitterModal = ({
               Submission Validated on:
             </p>
             <p className="text-[14px] leading-[20px] text-black/80">
-              {formatDate(validatedAt, 'DD/MM/YYYY', '00/00/0000')}
+              {formatDate(validatedAt, 'DD/MM/YYYY HH:mm:ss', '00/00/0000')}
             </p>
           </div>
         </ModalBody>
