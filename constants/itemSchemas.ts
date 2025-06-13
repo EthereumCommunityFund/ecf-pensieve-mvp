@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
 import { IFounder, IWebsite } from '@/components/pages/project/create/types';
+import { IDateConstraints } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
 
 // TypeScript declaration merging for custom Yup methods
@@ -55,6 +56,59 @@ const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
   title: yup.string().required('Project website title is required'),
 });
 
+export const dateFoundedConstraints: IDateConstraints = {
+  maxDate: 'today',
+};
+export const dateLaunchConstraints: IDateConstraints = {
+  maxDate: 'today',
+};
+
+const createDateConstraintValidator = (constraints?: IDateConstraints) => {
+  return function (this: yup.TestContext, value: Date | undefined) {
+    if (!value || !constraints) return true;
+
+    const today = new Date();
+
+    if (constraints.maxDate) {
+      let maxDate: Date;
+      if (constraints.maxDate === 'today') {
+        maxDate = today;
+      } else if (constraints.maxDate === 'yesterday') {
+        maxDate = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      } else if (constraints.maxDate === 'tomorrow') {
+        maxDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      } else {
+        maxDate =
+          typeof constraints.maxDate === 'string'
+            ? new Date(constraints.maxDate)
+            : constraints.maxDate;
+      }
+
+      if (value > maxDate) {
+        return this.createError({
+          message: 'Date cannot be in the future',
+        });
+      }
+    }
+
+    if (constraints.relativeToToday) {
+      if (constraints.relativeToToday.minDaysFromToday !== undefined) {
+        const minAllowedDate = new Date(
+          today.getTime() +
+            constraints.relativeToToday.minDaysFromToday * 24 * 60 * 60 * 1000,
+        );
+        if (value < minAllowedDate) {
+          return this.createError({
+            message: 'Date cannot be more than 20 years ago',
+          });
+        }
+      }
+    }
+
+    return true;
+  };
+};
+
 export const itemValidationSchemas = {
   // Basics
   name: yup
@@ -104,9 +158,23 @@ export const itemValidationSchemas = {
     .url('Please enter a valid URL')
     .required('Whitepaper URL is required when applicable'),
 
-  dateFounded: yup.date().required('Foundation date is required'),
+  dateFounded: yup
+    .date()
+    .test(
+      'date-constraints',
+      'Invalid date',
+      createDateConstraintValidator(dateFoundedConstraints),
+    )
+    .required('Foundation date is required'),
 
-  dateLaunch: yup.date().required('Launch date is required when applicable'),
+  dateLaunch: yup
+    .date()
+    .test(
+      'date-constraints',
+      'Invalid date',
+      createDateConstraintValidator(dateLaunchConstraints),
+    )
+    .required('Launch date is required when applicable'),
 
   adoption_plan: yup.string().required('Adoption plan is required'),
 

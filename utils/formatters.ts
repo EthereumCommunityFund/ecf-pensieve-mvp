@@ -172,7 +172,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     isDateUnavailable?: (date: DateValue) => boolean;
   } = {};
 
-  // 处理最小日期
+  // Handle minimum date
   if (constraints.minDate) {
     const minDate = parseConstraintDate(constraints.minDate);
     if (minDate) {
@@ -180,13 +180,13 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     }
   }
 
-  // 处理相对于今天的最小日期
+  // Handle minimum date relative to today
   if (constraints.relativeToToday?.minDaysFromToday !== undefined) {
     const minDate = dayjs(today)
       .add(constraints.relativeToToday.minDaysFromToday, 'day')
       .toDate();
     const minDateValue = parseDate(dayjs(minDate).format('YYYY-MM-DD'));
-    // 选择更严格的最小日期约束（更晚的日期）
+    // Choose the stricter minimum date constraint (later date)
     if (
       !result.minValue ||
       dayjs(minDateValue.toString()).isAfter(dayjs(result.minValue.toString()))
@@ -195,7 +195,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     }
   }
 
-  // 处理最大日期
+  // Handle maximum date
   if (constraints.maxDate) {
     const maxDate = parseConstraintDate(constraints.maxDate);
     if (maxDate) {
@@ -203,13 +203,13 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     }
   }
 
-  // 处理相对于今天的最大日期
+  // Handle maximum date relative to today
   if (constraints.relativeToToday?.maxDaysFromToday !== undefined) {
     const maxDate = dayjs(today)
       .add(constraints.relativeToToday.maxDaysFromToday, 'day')
       .toDate();
     const maxDateValue = parseDate(dayjs(maxDate).format('YYYY-MM-DD'));
-    // 选择更严格的最大日期约束（更早的日期）
+    // Choose the stricter maximum date constraint (earlier date)
     if (
       !result.maxValue ||
       dayjs(maxDateValue.toString()).isBefore(dayjs(result.maxValue.toString()))
@@ -218,12 +218,12 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     }
   }
 
-  // 处理年份范围
+  // Handle year range
   if (constraints.yearRange) {
     const { min: minYear, max: maxYear } = constraints.yearRange;
     if (minYear) {
       const yearMinDate = parseDate(`${minYear}-01-01`);
-      // 选择更严格的最小日期约束（更晚的日期）
+      // Choose the stricter minimum date constraint (later date)
       if (
         !result.minValue ||
         dayjs(yearMinDate.toString()).isAfter(dayjs(result.minValue.toString()))
@@ -233,7 +233,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     }
     if (maxYear) {
       const yearMaxDate = parseDate(`${maxYear}-12-31`);
-      // 选择更严格的最大日期约束（更早的日期）
+      // Choose the stricter maximum date constraint (earlier date)
       if (
         !result.maxValue ||
         dayjs(yearMaxDate.toString()).isBefore(
@@ -245,7 +245,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     }
   }
 
-  // 处理禁用日期和其他约束
+  // Handle disabled dates and other constraints
   if (
     constraints.disabledDates ||
     constraints.disabledDaysOfWeek ||
@@ -254,7 +254,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     result.isDateUnavailable = (date: DateValue) => {
       const dateObj = dayjs(date.toString()).toDate();
 
-      // 检查禁用的特定日期
+      // Check disabled specific dates
       if (constraints.disabledDates) {
         const isDisabled = constraints.disabledDates.some(
           (disabledDate: Date | string) => {
@@ -268,7 +268,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
         if (isDisabled) return true;
       }
 
-      // 检查禁用的星期几
+      // Check disabled days of week
       if (constraints.disabledDaysOfWeek) {
         const dayOfWeek = dateObj.getDay();
         if (constraints.disabledDaysOfWeek.includes(dayOfWeek)) {
@@ -276,7 +276,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
         }
       }
 
-      // 检查允许的日期范围（如果设置了，则只有在范围内的日期才可用）
+      // Check allowed date ranges (if set, only dates within ranges are available)
       if (
         constraints.enabledDateRanges &&
         constraints.enabledDateRanges.length > 0
@@ -291,7 +291,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
             const rangeStart = dayjs(startDate);
             const rangeEnd = dayjs(endDate);
 
-            // 检查日期是否在范围内（包含边界）
+            // Check if date is within range (inclusive of boundaries)
             return (
               (targetDate.isAfter(rangeStart, 'day') ||
                 targetDate.isSame(rangeStart, 'day')) &&
@@ -307,7 +307,7 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     };
   }
 
-  // 验证最小日期不应该大于最大日期
+  // Validate that minimum date should not be greater than maximum date
   if (result.minValue && result.maxValue) {
     const minDate = dayjs(result.minValue.toString());
     const maxDate = dayjs(result.maxValue.toString());

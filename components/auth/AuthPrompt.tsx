@@ -336,7 +336,6 @@ const AuthPrompt: React.FC = () => {
     handleContinue,
     isCreatingProfile,
     handleCloseAndReset,
-    handleSkip,
     loadingButton,
   ]);
 

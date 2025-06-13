@@ -25,7 +25,7 @@ const ProposalPage = () => {
   const { project, proposal, proposals, isProjectFetched, isProposalFetched } =
     useProposalDetailContext();
 
-  // 设置用户权重到 Context
+  // Set user weight to Context
   useEffect(() => {
     if (profile?.weight) {
       setUserWeight(Number(profile.weight));

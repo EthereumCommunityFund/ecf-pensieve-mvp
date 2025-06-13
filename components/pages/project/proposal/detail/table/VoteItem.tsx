@@ -39,7 +39,7 @@ const VoteItem: FC<IProps> = ({
   isUserVoted,
   isProposalCreator,
 }) => {
-  // 从context获取loading状态
+  // Get loading state from context
   const { isFetchVoteInfoLoading, isVoteActionPending, inActionKeys } =
     useProposalDetailContext();
   const isLoading =

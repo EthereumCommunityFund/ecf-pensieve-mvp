@@ -23,7 +23,7 @@ import { ITableProposalItem } from '../ProposalDetails';
 import { useProposalModalState } from '../hooks/useProposalModalState';
 import { useProposalTableStates } from '../hooks/useProposalTableStates';
 
-// 常量定义
+// Constant definitions
 const DEFAULT_METRICS_VISIBLE_SUB_CAT: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Organization]: false,
   [IItemSubCategoryEnum.Team]: false,
@@ -46,21 +46,21 @@ const DEFAULT_VOTE_RESULT: IVoteResultOfItem = {
   isUserVotedInItem: false,
 };
 
-// Context 类型定义
+// Context type definition
 export interface ProposalDetailContextType {
-  // 基础数据
+  // Basic data
   projectId: number;
   project?: IProject;
   proposal?: IProposal;
   proposals: IProposal[];
 
-  // 加载状态
+  // Loading states
   isProjectFetched: boolean;
   isProposalFetched: boolean;
   isFetchVoteInfoLoading: boolean;
   isVoteActionPending: boolean;
 
-  // 投票相关
+  // Vote related
   inActionKeys: Partial<Record<IPocItemKey, boolean>>;
   userVotesOfProposalMap: Partial<Record<IPocItemKey, IVote>>;
   getItemVoteResult: (IPocItemKey: string) => IVoteResultOfItem;
@@ -69,7 +69,7 @@ export interface ProposalDetailContextType {
   onSwitchVote: (item: ITableProposalItem) => Promise<void>;
   switchVotePending: boolean;
 
-  // 表格状态
+  // Table states
   expandedRows: Partial<Record<IPocItemKey, boolean>>;
   metricsVisibleSubCat: Partial<Record<IItemSubCategoryEnum, boolean>>;
   toggleRowExpanded: (key: IPocItemKey) => void;
@@ -78,7 +78,7 @@ export interface ProposalDetailContextType {
     SetStateAction<Partial<Record<IPocItemKey, boolean>>>
   >;
 
-  // 模态框状态
+  // Modal states
   isSwitchModalOpen: boolean;
   isCancelModalOpen: boolean;
   isReferenceModalOpen: boolean;
@@ -88,7 +88,7 @@ export interface ProposalDetailContextType {
   sourceProposalIndex: number;
   doNotShowCancelModal: boolean;
 
-  // 模态框操作
+  // Modal operations
   setIsSwitchModalOpen: (isOpen: boolean) => void;
   setIsCancelModalOpen: (isOpen: boolean) => void;
   setIsReferenceModalOpen: (isOpen: boolean) => void;
@@ -97,7 +97,7 @@ export interface ProposalDetailContextType {
   setSourceProposalInfo: (proposal: IProposal | null, index: number) => void;
   setDoNotShowCancelModal: (doNotShowCancelModal: boolean) => void;
 
-  // 复合操作
+  // Compound operations
   handleVoteAction: (
     item: ITableProposalItem,
     doNotShowCancelModal: boolean,
@@ -113,21 +113,21 @@ export interface ProposalDetailContextType {
   ) => Promise<void>;
 }
 
-// Context 默认值
+// Context default values
 const createDefaultContext = (): ProposalDetailContextType => ({
-  // 基础数据
+  // Basic data
   projectId: 0,
   project: undefined,
   proposal: undefined,
   proposals: [],
 
-  // 加载状态
+  // Loading states
   isProjectFetched: false,
   isProposalFetched: false,
   isFetchVoteInfoLoading: false,
   isVoteActionPending: false,
 
-  // 投票相关
+  // Vote related
   inActionKeys: {},
   userVotesOfProposalMap: {},
   getItemVoteResult: (key: string) => ({
@@ -139,14 +139,14 @@ const createDefaultContext = (): ProposalDetailContextType => ({
   onSwitchVote: async () => {},
   switchVotePending: false,
 
-  // 表格状态
+  // Table states
   expandedRows: {},
   metricsVisibleSubCat: DEFAULT_METRICS_VISIBLE_SUB_CAT,
   toggleRowExpanded: () => {},
   toggleMetricsVisible: () => {},
   setExpandedRows: () => {},
 
-  // 模态框状态
+  // Modal states
   isSwitchModalOpen: false,
   isCancelModalOpen: false,
   isReferenceModalOpen: false,
@@ -156,7 +156,7 @@ const createDefaultContext = (): ProposalDetailContextType => ({
   sourceProposalIndex: 0,
   doNotShowCancelModal: false,
 
-  // 模态框操作
+  // Modal operations
   setIsSwitchModalOpen: () => {},
   setIsCancelModalOpen: () => {},
   setIsReferenceModalOpen: () => {},
@@ -165,7 +165,7 @@ const createDefaultContext = (): ProposalDetailContextType => ({
   setSourceProposalInfo: () => {},
   setDoNotShowCancelModal: () => {},
 
-  // 复合操作
+  // Compound operations
   handleVoteAction: async () => {},
 });
 
@@ -183,7 +183,7 @@ export const ProposalDetailProvider = ({
   const { profile, showAuthPrompt } = useAuth();
   const { id: projectId, proposalId } = useParams();
 
-  // 模态框状态管理
+  // Modal state management
   const {
     isSwitchModalOpen,
     setIsSwitchModalOpen,
@@ -202,7 +202,7 @@ export const ProposalDetailProvider = ({
     setDoNotShowCancelModal,
   } = useProposalModalState();
 
-  // 表格状态管理
+  // Table state management
   const {
     expandedRows,
     metricsVisibleSubCat,
@@ -211,7 +211,7 @@ export const ProposalDetailProvider = ({
     setExpandedRows,
   } = useProposalTableStates();
 
-  // 项目数据查询配置
+  // Project data query configuration
   const getProjectOptions = useMemo(
     () => ({
       enabled: !!projectId,
@@ -223,14 +223,14 @@ export const ProposalDetailProvider = ({
     [projectId],
   );
 
-  // 项目数据查询
+  // Project data query
   const { data: project, isFetched: isProjectFetched } =
     trpc.project.getProjectById.useQuery(
       { id: Number(projectId) },
       getProjectOptions,
     );
 
-  // 提案数据查询配置
+  // Proposal data query configuration
   const getProposalOptions = useMemo(
     () => ({
       enabled: !!proposalId,
@@ -242,20 +242,20 @@ export const ProposalDetailProvider = ({
     [proposalId],
   );
 
-  // 提案数据查询
+  // Proposal data query
   const { data: proposal, isFetched: isProposalFetched } =
     trpc.proposal.getProposalById.useQuery(
       { id: Number(proposalId) },
       getProposalOptions,
     );
 
-  // 提案列表
+  // Proposal list
   const proposals = useMemo(
     () => project?.proposals || [],
     [project?.proposals],
   );
 
-  // 投票相关 hooks
+  // Vote related hooks
   const {
     userVotesOfProposalMap,
     isFetchVoteInfoLoading,
@@ -268,7 +268,7 @@ export const ProposalDetailProvider = ({
     inActionKeys,
   } = useProposalVotesHook(proposal, Number(projectId), proposals);
 
-  // 投票操作处理
+  // Vote action handling
   const onVoteAction = useCallback(
     async (item: ITableProposalItem) => {
       if (!profile) {
@@ -295,7 +295,7 @@ export const ProposalDetailProvider = ({
     ],
   );
 
-  // 切换投票处理
+  // Switch vote handling
   const onSwitchVote = useCallback(
     async (item: ITableProposalItem) => {
       await originalOnSwitchVote(item.key);
@@ -303,22 +303,22 @@ export const ProposalDetailProvider = ({
     [originalOnSwitchVote],
   );
 
-  // Context 值组装
+  // Context value assembly
   const contextValue = useMemo(
     () => ({
-      // 基础数据
+      // Basic data
       projectId: Number(projectId),
       proposals,
       project,
       proposal,
 
-      // 加载状态
+      // Loading states
       isProjectFetched,
       isProposalFetched,
       isFetchVoteInfoLoading,
       isVoteActionPending,
 
-      // 投票相关
+      // Vote related
       inActionKeys,
       userVotesOfProposalMap,
       getItemVoteResult,
@@ -328,14 +328,14 @@ export const ProposalDetailProvider = ({
       switchVotePending: switchVoteMutation.isPending,
       handleVoteAction,
 
-      // 表格状态
+      // Table states
       expandedRows,
       metricsVisibleSubCat,
       toggleRowExpanded,
       toggleMetricsVisible,
       setExpandedRows,
 
-      // 模态框状态
+      // Modal states
       isSwitchModalOpen,
       isCancelModalOpen,
       isReferenceModalOpen,
@@ -345,7 +345,7 @@ export const ProposalDetailProvider = ({
       sourceProposalIndex,
       doNotShowCancelModal,
 
-      // 模态框操作
+      // Modal operations
       setIsSwitchModalOpen,
       setIsCancelModalOpen,
       setIsReferenceModalOpen,
@@ -355,19 +355,19 @@ export const ProposalDetailProvider = ({
       setDoNotShowCancelModal,
     }),
     [
-      // 基础数据依赖
+      // Basic data dependencies
       projectId,
       proposals,
       project,
       proposal,
 
-      // 加载状态依赖
+      // Loading state dependencies
       isProjectFetched,
       isProposalFetched,
       isFetchVoteInfoLoading,
       isVoteActionPending,
 
-      // 投票相关依赖
+      // Vote related dependencies
       inActionKeys,
       userVotesOfProposalMap,
       getItemVoteResult,
@@ -377,14 +377,14 @@ export const ProposalDetailProvider = ({
       switchVoteMutation.isPending,
       handleVoteAction,
 
-      // 表格状态依赖
+      // Table state dependencies
       expandedRows,
       metricsVisibleSubCat,
       toggleRowExpanded,
       toggleMetricsVisible,
       setExpandedRows,
 
-      // 模态框状态依赖
+      // Modal state dependencies
       isSwitchModalOpen,
       isCancelModalOpen,
       isReferenceModalOpen,
@@ -394,7 +394,7 @@ export const ProposalDetailProvider = ({
       sourceProposalIndex,
       doNotShowCancelModal,
 
-      // 模态框操作依赖
+      // Modal operation dependencies
       setIsSwitchModalOpen,
       setIsCancelModalOpen,
       setIsReferenceModalOpen,

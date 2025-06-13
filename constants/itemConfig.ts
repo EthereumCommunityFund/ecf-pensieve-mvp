@@ -7,7 +7,11 @@ import {
   IItemSubCategoryEnum,
 } from '@/types/item';
 
-import { itemValidationSchemas } from './itemSchemas';
+import {
+  dateFoundedConstraints,
+  dateLaunchConstraints,
+  itemValidationSchemas,
+} from './itemSchemas';
 import { ALL_METRICS } from './metrics';
 
 export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
@@ -217,12 +221,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
-    dateConstraints: {
-      maxDate: 'today',
-      relativeToToday: {
-        minDaysFromToday: -365 * 20,
-      },
-    },
+    dateConstraints: dateFoundedConstraints,
     validationSchema: itemValidationSchemas.dateFounded,
   },
   dateLaunch: {
@@ -242,12 +241,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
     legitimacy: [],
-    dateConstraints: {
-      maxDate: 'today',
-      relativeToToday: {
-        minDaysFromToday: -365 * 20,
-      },
-    },
+    dateConstraints: dateLaunchConstraints,
     validationSchema: itemValidationSchemas.dateLaunch,
   },
   devStatus: {

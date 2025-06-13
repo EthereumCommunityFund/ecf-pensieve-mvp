@@ -17,7 +17,7 @@ import { ModalProvider } from './ModalContext';
 import ModalHeader from './ModalHeader';
 import RightContent from './RightContent';
 
-// 将 Modal 的 backdrop 部分分离出来，使其不受内容变化影响
+// Separate the backdrop part of Modal so it is not affected by content changes
 const StableModalBackdrop: FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -54,7 +54,7 @@ const StableModalBackdrop: FC<{
 
 StableModalBackdrop.displayName = 'StableModalBackdrop';
 
-// 将 Modal 内容部分分离，使其可以独立更新而不影响 backdrop
+// Separate the Modal content part so it can update independently without affecting the backdrop
 const ModalContentSection: FC<{
   itemKey: string;
   contentType: 'viewItemProposal' | 'submitPropose';

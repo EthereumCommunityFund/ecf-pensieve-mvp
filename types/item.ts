@@ -10,7 +10,7 @@ type FilterNonEssentialKeys<T> = {
 
 export type IPocItemKey = keyof typeof POC_ITEMS;
 /**
- * 预留扩展字段，不一定完全从IPocItemKey取key
+ * Reserved extension fields, not necessarily taking keys entirely from IPocItemKey
  */
 export type IItemKey = IPocItemKey;
 export type IEssentialItemKey = FilterEssentialKeys<typeof POC_ITEMS>;
@@ -82,15 +82,15 @@ export enum IItemGroupEnum {
 }
 
 export interface IDateConstraints {
-  minDate?: Date | string | 'today' | 'yesterday' | 'tomorrow'; // 最小日期
-  maxDate?: Date | string | 'today' | 'yesterday' | 'tomorrow'; // 最大日期
-  disabledDates?: Date[] | string[]; // 禁用的特定日期
-  disabledDaysOfWeek?: number[]; // 禁用的星期几 (0-6, 0为周日)
-  enabledDateRanges?: Array<{ start: Date | string; end: Date | string }>; // 只允许的日期范围
-  yearRange?: { min?: number; max?: number }; // 年份范围限制
+  minDate?: Date | string | 'today' | 'yesterday' | 'tomorrow'; // Minimum date
+  maxDate?: Date | string | 'today' | 'yesterday' | 'tomorrow'; // Maximum date
+  disabledDates?: Date[] | string[]; // Specific disabled dates
+  disabledDaysOfWeek?: number[]; // Disabled days of week (0-6, 0 for Sunday)
+  enabledDateRanges?: Array<{ start: Date | string; end: Date | string }>; // Only allowed date ranges
+  yearRange?: { min?: number; max?: number }; // Year range restriction
   relativeToToday?: {
-    minDaysFromToday?: number; // 距离今天的最小天数（负数表示过去，正数表示未来）
-    maxDaysFromToday?: number; // 距离今天的最大天数
+    minDaysFromToday?: number; // Minimum days from today (negative for past, positive for future)
+    maxDaysFromToday?: number; // Maximum days from today
   };
 }
 

@@ -5,8 +5,9 @@ const Banner = () => {
   return (
     <div
       className={cn(
-        'w-full min-h-[167px] mobile:h-[auto] overflow-hidden bg-white rounded-[10px] border border-[rgba(0,0,0,0.1)] p-5 relative ',
+        'w-full min-h-[167px] mobile:h-[auto] overflow-hidden bg-white rounded-[10px] border border-[rgba(0,0,0,0.1)] p-5 relative',
         'bg-[url(/images/home/BannerBg.png)] bg-no-repeat bg-right bg-[length:auto_100%]',
+        'tablet:bg-[length:50%_100%]',
         'mobile:bg-none',
       )}
     >
@@ -19,8 +20,8 @@ const Banner = () => {
           </p>
         </div>
 
-        <p className="font-mona mobile:text-[30px] mt-[10px] text-[38px] font-[600] leading-[1.4]">
-          Welcome to{' '}
+        <p className="font-mona tablet:flex-col mobile:text-[30px] mt-[10px] flex gap-[10px] text-[38px] font-[600] leading-[1.4]">
+          <span>Welcome to </span>
           <span className="font-[800] text-[#64C0A5]">ECF Pensieve</span>{' '}
         </p>
 

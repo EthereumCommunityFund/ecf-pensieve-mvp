@@ -2,7 +2,7 @@
 
 import { cn } from '@heroui/react';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
@@ -58,6 +58,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     toggleAllRowsInCategory,
     toggleColumnPinning,
     isColumnPinned,
+    cleanupInvalidPinnedColumns,
   } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
@@ -130,6 +131,61 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     showMetrics: metricsVisible[IItemSubCategoryEnum.Governance],
     category: IItemSubCategoryEnum.Governance,
   });
+
+  // Clean up invalid fixed columns after columns are built
+  // Clean up invalid fixed columns for each category
+  // Desktop: max width limit, centered
+  // Padding: larger on desktop, smaller on mobile
+  // Top margin and padding
+  // Desktop: horizontal layout, table centered
+  // Tablet and mobile: vertical layout, table full width
+  // Desktop: limit max width to ensure table is not too wide
+  // Tablet and mobile: make full use of available width
+  // Behavior as flex item on desktop
+  useEffect(() => {
+    console.log(
+      '🔄 Column building completed, starting to clean up invalid pinned columns...',
+    );
+
+    // Clean up invalid pinned columns for each category
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.BasicProfile,
+      basicProfileColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Development,
+      developmentColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Organization,
+      organizationColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Team,
+      teamColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Finances,
+      financesColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Token,
+      tokenColumns.map((col) => col.id as string),
+    );
+    cleanupInvalidPinnedColumns(
+      IItemSubCategoryEnum.Governance,
+      governanceColumns.map((col) => col.id as string),
+    );
+  }, [
+    basicProfileColumns,
+    developmentColumns,
+    organizationColumns,
+    teamColumns,
+    financesColumns,
+    tokenColumns,
+    governanceColumns,
+    cleanupInvalidPinnedColumns,
+  ]);
 
   // Create table instances for each category with their own columns
   const basicProfileTable = useReactTable({
@@ -233,29 +289,29 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
 
   return (
     <div className="relative">
-      {/* 主容器 - 确保在所有屏幕尺寸下都居中 */}
+      {/* Main container - ensure centered on all screen sizes */}
       <div
         className={cn(
           'mx-auto w-full',
-          // 桌面端：最大宽度限制，左右居中
+          // Desktop: maximum width limit, centered horizontally
           'lg:max-w-[1400px] pc:max-w-[1200px]',
-          // 内边距：桌面端较大，移动端较小
+          // Padding: desktop larger, mobile smaller
           'px-[20px] tablet:px-[15px] mobile:px-[10px]',
-          // 上边距和内边距
+          // Top margin and padding
           'mt-[20px] pt-[20px]',
         )}
       >
         <div
           className={cn(
             'flex items-start gap-[40px]',
-            // 桌面端：水平布局，表格居中
+            // Desktop: horizontal layout, table centered
             'lg:justify-center pc:justify-center',
-            // 平板和移动端：垂直布局，表格占满宽度
+            // Tablet and mobile: vertical layout, table full width
             'tablet:flex-col tablet:gap-[20px]',
             'mobile:flex-col mobile:gap-[20px]',
           )}
         >
-          {/* 左侧导航菜单 - 仅在桌面端显示 */}
+          {/* Left navigation menu - only show on desktop */}
           <div className="tablet:hidden mobile:hidden w-[200px] shrink-0 self-start">
             <NavigationMenu
               activeCategory={activeCategory}
@@ -263,19 +319,19 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
             />
           </div>
 
-          {/* 表格内容容器 */}
+          {/* Table content container */}
           <div
             className={cn(
               'w-full',
-              // 桌面端：限制最大宽度，确保表格不会过宽
+              // Desktop: limit maximum width, ensure table is not too wide
               'lg:max-w-[1000px] pc:max-w-[900px]',
-              // 平板和移动端：充分利用可用宽度
+              // Tablet and mobile: make full use of available width
               'tablet:max-w-none mobile:max-w-none',
-              // 在桌面端作为 flex 项目时的行为
+              // Behavior as flex item on desktop
               'flex-1',
             )}
           >
-            {/* 分类表格 */}
+            {/* Category tables */}
             <div className="flex flex-col gap-[40px]">
               {ProjectTableFieldCategory.map((cat) => (
                 <div key={cat.key} className="flex flex-col gap-[30px]">
@@ -285,7 +341,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   />
                   {cat.subCategories.map((subCat) => (
                     <CategoryTableSection
-                      key={`${subCat.key}-${metricsVisible[subCat.key] ? 'with-metrics' : 'no-metrics'}`}
+                      key={subCat.key}
                       subCategory={subCat}
                       table={tables[subCat.key]}
                       isLoading={isProposalsLoading}

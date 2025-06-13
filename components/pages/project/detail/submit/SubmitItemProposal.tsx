@@ -101,6 +101,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     formState,
     trigger,
     getValues,
+    reset,
   } = methods;
 
   const [editReason, setEditReason] = useState('');
@@ -271,30 +272,11 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   ]);
 
   useEffect(() => {
-    if (submissionStep === 'success') {
-      return;
-    }
-
+    // Only initialize form when itemKey changes or component mounts
+    // Don't reset when submissionStep changes
     if (displayProposalDataOfKey && displayProposalDataOfKey.key === itemKey) {
       setValue(itemConfig.key, displayProposalDataOfKey.input);
-      if (displayProposalDataOfKey.reference) {
-        setReferences([
-          {
-            key: displayProposalDataOfKey.reference.key,
-            value: displayProposalDataOfKey.reference.value,
-            ref: '',
-          },
-        ]);
-      } else {
-        setReferences((prev) =>
-          prev.filter(
-            (ref) =>
-              ref.key !== itemConfig.key &&
-              (!displayProposalDataOfKey ||
-                ref.key !== displayProposalDataOfKey.key),
-          ),
-        );
-      }
+      setReferences([]);
     } else {
       const defaultValue = formState.defaultValues?.[itemConfig.key] ?? '';
       setValue(itemConfig.key, defaultValue);
@@ -304,7 +286,6 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   }, [
     itemKey,
     displayProposalDataOfKey,
-    submissionStep,
     setValue,
     itemConfig,
     formState.defaultValues,
@@ -318,7 +299,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       ref: '',
       reason: '',
     });
-  }, []);
+    reset();
+  }, [reset]);
 
   const onCloseModal = useCallback(() => {
     clearStatus();

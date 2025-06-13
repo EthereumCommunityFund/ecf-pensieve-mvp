@@ -239,7 +239,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
           isFixed
             ? {
                 top: `${topOffset}px`,
-                left: `${leftOffset}px`, // 使用动态计算的水平位置
+                left: `${leftOffset}px`, // Use dynamically calculated horizontal position
               }
             : undefined
         }

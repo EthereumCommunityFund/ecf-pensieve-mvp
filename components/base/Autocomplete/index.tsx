@@ -88,7 +88,7 @@ export default function SelectCategories({
           backgroundPosition: 'center',
           backgroundSize: '16px 16px',
           '& .MuiSvgIcon-root': {
-            display: 'none', // 隐藏默认图标
+            display: 'none', // Hide default icon
           },
         },
         '& .MuiAutocomplete-clearIndicator': {
@@ -121,56 +121,56 @@ export default function SelectCategories({
       slotProps={{
         popper: {
           sx: {
-            zIndex: 9999, // 确保下拉框显示在最上层
-            marginTop: '4px !important', // 下拉框离输入框 4px 距离
+            zIndex: 9999, // Ensure dropdown shows on top layer
+            marginTop: '4px !important', // 4px distance between dropdown and input
             '& .MuiAutocomplete-paper': {
-              backgroundColor: 'white', // 白色底
+              backgroundColor: 'white', // White background
               border: '1px solid #e4e4e7',
-              borderRadius: '12px', // 圆角处理
+              borderRadius: '12px', // Rounded corners
               boxShadow:
                 '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              maxHeight: '256px', // 限制下拉框最大高度
-              overflow: 'hidden', // 防止内容溢出
+              maxHeight: '256px', // Limit dropdown max height
+              overflow: 'hidden', // Prevent content overflow
             },
             '& .MuiAutocomplete-listbox': {
               backgroundColor: 'transparent',
               border: 'none',
               borderRadius: '0',
               boxShadow: 'none',
-              maxHeight: '256px', // 限制列表最大高度
-              overflow: 'auto', // 添加滚动条
-              padding: '6px', // 添加内边距
+              maxHeight: '256px', // Limit list max height
+              overflow: 'auto', // Add scrollbar
+              padding: '6px', // Add inner padding
               '& .MuiAutocomplete-option': {
                 color: 'rgba(0, 0, 0, 0.8)',
                 fontSize: '14px',
                 fontWeight: '400',
-                minHeight: '30px', // 设置选项最小高度
-                padding: '0 12px', // 设置选项内边距
-                borderRadius: '8px', // 选项圆角
-                margin: '1px 0', // 选项间距
+                minHeight: '30px', // Set option minimum height
+                padding: '0 12px', // Set option inner padding
+                borderRadius: '8px', // Option rounded corners
+                margin: '1px 0', // Option spacing
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 transition: 'all 0.15s ease',
                 '&[aria-selected="true"]': {
-                  backgroundColor: 'transparent', // 已选中不需要底色
+                  backgroundColor: 'transparent', // Selected doesn't need background
                 },
                 '&.Mui-focused, &:hover': {
-                  backgroundColor: '#d4d4d8', // hover 背景色
+                  backgroundColor: '#d4d4d8', // hover background color
                 },
                 '&[aria-selected="true"].Mui-focused, &[aria-selected="true"]:hover':
                   {
-                    backgroundColor: '#d4d4d8', // 已选中项的 hover 状态
+                    backgroundColor: '#d4d4d8', // hover state for selected items
                   },
               },
             },
           },
-          placement: 'bottom-start', // 确保下拉框在输入框下方
+          placement: 'bottom-start', // Ensure dropdown appears below input
           modifiers: [
             {
               name: 'offset',
               options: {
-                offset: [0, 4], // 设置 4px 间距
+                offset: [0, 4], // Set 4px spacing
               },
             },
             {

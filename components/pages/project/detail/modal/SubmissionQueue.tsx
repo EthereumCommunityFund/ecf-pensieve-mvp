@@ -143,7 +143,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
-      showRowOverTaken, // 只有 displayed 的 table 需要考虑 showRowOverTaken
+      showRowOverTaken, // Only displayed table needs to consider showRowOverTaken
       inActionKeyMap,
       inActionItemProposalIdMap,
       showSubmitterModal,
@@ -177,10 +177,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: submissionQueueExpandedRows,
       toggleRowExpanded: toggleSubmissionQueueRowExpanded,
-      showRowIsLeading, // 只有 submission queue 的 table 需要考虑 showRowIsLeading
+      showRowIsLeading, // Only submission queue table needs to consider showRowIsLeading
       inActionKeyMap,
       inActionItemProposalIdMap,
-      // showSubmitterModal, // submission queue 的 table 不需要 showSubmitterModal
+      showSubmitterModal,
     } as ITableMetaOfSubmissionQueue;
   }, [
     project,
@@ -196,7 +196,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     showRowIsLeading,
     inActionKeyMap,
     inActionItemProposalIdMap,
-    // showSubmitterModal,
+    showSubmitterModal,
   ]);
 
   const displayedTable = useReactTable({
@@ -291,7 +291,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                 ]}
               />
             ) : (
-              <ModalTableContainer>
+              <ModalTableContainer allowInternalBorderRadius>
                 <table className="w-full border-separate border-spacing-0">
                   {/* Table Header */}
                   <thead>
@@ -370,7 +370,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   borderClasses.push(
                                     'border-l-1 border-l-[#F7992D]',
                                   );
-                                  if (isShowReason) {
+                                  if (!isShowReason) {
                                     borderClasses.push('rounded-bl-[10px]');
                                   }
                                 }
@@ -380,7 +380,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   borderClasses.push(
                                     'border-r-1 border-r-[#F7992D]',
                                   );
-                                  if (isShowReason) {
+                                  if (!isShowReason) {
                                     borderClasses.push('rounded-br-[10px]');
                                   }
                                 }
@@ -504,7 +504,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             </span>
           </div>
         ) : (
-          <ModalTableContainer>
+          <ModalTableContainer allowInternalBorderRadius>
             <table className="w-full border-separate border-spacing-0">
               {/* Table Header */}
               <thead>
@@ -540,7 +540,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                 {submissionQueueTable
                   .getRowModel()
                   .rows.map((row, rowIndex) => {
-                    // 检查是否是第一行且处于 leading 状态
+                    // Check if it is the first row and in leading state
                     const isFirstRowLeading =
                       showRowOverTaken && showRowIsLeading && rowIndex === 0;
 
@@ -569,11 +569,8 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               cellIndex === row.getVisibleCells().length - 1;
                             const isLastRowInTable =
                               rowIndex ===
-                                submissionQueueTable.getRowModel().rows.length -
-                                  1 &&
-                              !AllItemConfig[
-                                row.original.key as IEssentialItemKey
-                              ]?.showExpand;
+                              submissionQueueTable.getRowModel().rows.length -
+                                1;
 
                             // Generate border classes for leading row
                             const getLeadingBorderClasses = () => {

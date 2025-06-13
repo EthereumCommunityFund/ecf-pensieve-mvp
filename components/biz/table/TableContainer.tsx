@@ -13,6 +13,8 @@ export interface TableContainerProps {
   rounded?: boolean;
   /** Background color variant */
   background?: 'white' | 'transparent';
+  /** Whether to allow internal content borders to override container rounded corners */
+  allowInternalBorderRadius?: boolean;
 }
 
 /**
@@ -67,10 +69,13 @@ export const TableContainer = ({
   bordered = false,
   rounded = false,
   background = 'transparent',
+  allowInternalBorderRadius = false,
   ...props
 }: TableContainerProps) => {
   const containerClasses = cn(
-    'overflow-hidden',
+    // Only add overflow-hidden if not allowing internal border radius
+    // This prevents cutting off internal rounded borders
+    !allowInternalBorderRadius && 'overflow-hidden',
     bordered && 'border border-black/10',
     rounded && 'rounded-[10px]',
     background === 'white' && 'bg-white',

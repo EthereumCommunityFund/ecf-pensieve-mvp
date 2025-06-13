@@ -73,11 +73,11 @@ export const parseValue = (value: any) => {
 };
 
 /**
- * 计算项目数据的状态字段
- * @param itemKey - 项目字段的 key
- * @param hasProposal - 该字段是否已有 proposal
- * @param existingItem - 现有项目数据（可选）
- * @returns 包含三个状态字段的对象
+ * Calculate status fields for project data
+ * @param itemKey - Key of the project field
+ * @param hasProposal - Whether this field already has a proposal
+ * @param existingItem - Existing project data (optional)
+ * @returns Object containing three status fields
  */
 export const calculateItemStatusFields = (
   itemKey: string,
@@ -90,13 +90,13 @@ export const calculateItemStatusFields = (
   const isNotEssential = !AllItemConfig[itemKey as IPocItemKey]?.isEssential;
 
   return {
-    // 非核心字段且目前没有 proposal
+    // Non-essential field and currently has no proposal
     canBePropose: isNotEssential && !hasProposal,
 
-    // 有 validated leading proposal 但不是 leading（权重不够高）
+    // Has validated leading proposal but is not leading (insufficient weight)
     isConsensusInProgress: Boolean(hasValidatedLeadingProposal && isNotLeading),
 
-    // 有 proposal 但还没有 validated leading proposal
+    // Has proposal but no validated leading proposal yet
     isPendingValidation: Boolean(
       isNotEssential && hasProposal && !hasValidatedLeadingProposal,
     ),

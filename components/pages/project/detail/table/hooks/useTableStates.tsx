@@ -12,7 +12,7 @@ const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Development]: true,
   [IItemSubCategoryEnum.Finances]: true,
   [IItemSubCategoryEnum.Token]: true,
-  [IItemSubCategoryEnum.Governance]: true, // 保留以防将来启用
+  [IItemSubCategoryEnum.Governance]: true, // Reserved for future enablement
 };
 
 // Default column pinning configuration - no columns pinned by default
@@ -42,13 +42,13 @@ const OriginalColumnOrder = [
  * Centralizes state management for expandable rows, categories, groups, etc.
  */
 export const useTableStates = () => {
-  // 行展开状态
+  // Row expansion state
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // 分类展开状态管理
+  // Category expansion state management
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
 
-  // 空数据分组展开状态管理
+  // Empty data group expansion state management
   const [emptyItemsExpanded, setEmptyItemsExpanded] = useState<
     Record<IItemSubCategoryEnum, boolean>
   >({
@@ -58,15 +58,15 @@ export const useTableStates = () => {
     [IItemSubCategoryEnum.Development]: false,
     [IItemSubCategoryEnum.Finances]: false,
     [IItemSubCategoryEnum.Token]: false,
-    [IItemSubCategoryEnum.Governance]: false, // 保留以防将来启用
+    [IItemSubCategoryEnum.Governance]: false, // Reserved for future enablement
   });
 
-  // 分组展开状态管理 (默认所有分组都展开)
+  // Group expansion state management (all groups expanded by default)
   const [groupExpanded, setGroupExpanded] = useState<Record<string, boolean>>(
     {},
   );
 
-  // Metrics 列显示状态管理 (默认隐藏) - 按子分类独立管理
+  // Metrics column display state management (hidden by default) - independent management by subcategory
   const [metricsVisible, setMetricsVisible] = useState<
     Record<IItemSubCategoryEnum, boolean>
   >({
@@ -79,13 +79,13 @@ export const useTableStates = () => {
     [IItemSubCategoryEnum.Governance]: false,
   });
 
-  // 列固定状态管理 - 按子分类独立管理，使用默认配置
+  // Column pinning state management - independent management by subcategory, using default configuration
   const [columnPinning, setColumnPinning] =
     useState<Record<IItemSubCategoryEnum, ColumnPinningState>>(
       DefaultColumnPinning,
     );
 
-  // 切换行展开状态
+  // Toggle row expansion state
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
       ...prev,
@@ -93,7 +93,7 @@ export const useTableStates = () => {
     }));
   }, []);
 
-  // 切换分类展开状态
+  // Toggle category expansion state
   const toggleCategory = useCallback((category: IItemSubCategoryEnum) => {
     setExpanded((prev) => {
       const newExpanded = { ...prev };
@@ -102,7 +102,7 @@ export const useTableStates = () => {
     });
   }, []);
 
-  // 切换空数据分组展开状态
+  // Toggle empty data group expansion state
   const toggleEmptyItems = useCallback((category: IItemSubCategoryEnum) => {
     setEmptyItemsExpanded((prev) => ({
       ...prev,
@@ -110,15 +110,15 @@ export const useTableStates = () => {
     }));
   }, []);
 
-  // 切换分组展开状态
+  // Toggle group expansion state
   const toggleGroupExpanded = useCallback((groupKey: string) => {
     setGroupExpanded((prev) => ({
       ...prev,
-      [groupKey]: prev[groupKey] === false ? true : false, // 默认展开，点击后折叠
+      [groupKey]: prev[groupKey] === false ? true : false, // Default expanded, collapse after clicking
     }));
   }, []);
 
-  // 切换特定子分类的 Metrics 列显示状态
+  // Toggle Metrics column display state for specific subcategory
   const toggleMetricsVisible = useCallback((category: IItemSubCategoryEnum) => {
     setMetricsVisible((prev) => ({
       ...prev,
@@ -131,7 +131,7 @@ export const useTableStates = () => {
     return OriginalColumnOrder.filter((id) => columnIds.includes(id));
   }, []);
 
-  // 切换列固定状态
+  // Toggle column pinning state
   const toggleColumnPinning = useCallback(
     (
       category: IItemSubCategoryEnum,
@@ -142,18 +142,18 @@ export const useTableStates = () => {
         const currentPinning = prev[category];
         const newPinning = { ...currentPinning };
 
-        // 检查列是否已经固定
+        // Check if column is already pinned
         const isLeftPinned = currentPinning.left?.includes(columnId);
         const isRightPinned = currentPinning.right?.includes(columnId);
 
         if (isLeftPinned || isRightPinned) {
-          // 如果已固定，则取消固定
+          // If already pinned, unpin it
           newPinning.left =
             currentPinning.left?.filter((id) => id !== columnId) || [];
           newPinning.right =
             currentPinning.right?.filter((id) => id !== columnId) || [];
         } else {
-          // 如果未固定，则固定到指定位置（默认左侧）
+          // If not pinned, pin to specified position (default left)
           const targetPosition = position || 'left';
           if (targetPosition === 'left') {
             const newLeftColumns = [...(currentPinning.left || []), columnId];
@@ -175,7 +175,7 @@ export const useTableStates = () => {
     [maintainColumnOrder],
   );
 
-  // 获取列是否已固定
+  // Get whether column is pinned
   const isColumnPinned = useCallback(
     (
       category: IItemSubCategoryEnum,
@@ -189,13 +189,13 @@ export const useTableStates = () => {
     [columnPinning],
   );
 
-  // 批量切换某个分类下所有行的展开状态
+  // Batch toggle expansion state of all rows in a category
   const toggleAllRowsInCategory = useCallback((categoryRows: string[]) => {
     setExpandedRows((prev) => {
-      // 检查该分类下是否有任何行已展开
+      // Check if any rows in this category are expanded
       const hasExpandedRows = categoryRows.some((rowKey) => prev[rowKey]);
 
-      // 如果有展开的行，则全部收起；如果都收起，则全部展开
+      // If there are expanded rows, collapse all; if all collapsed, expand all
       const newExpandedState = !hasExpandedRows;
 
       const newExpandedRows = { ...prev };
@@ -205,6 +205,60 @@ export const useTableStates = () => {
 
       return newExpandedRows;
     });
+  }, []);
+
+  // Clean up invalid column pinning state (when columns don't exist)
+  const cleanupInvalidPinnedColumns = useCallback(
+    (category: IItemSubCategoryEnum, availableColumnIds: string[]) => {
+      setColumnPinning((prev) => {
+        const currentPinning = prev[category];
+        if (!currentPinning) return prev;
+
+        const validLeftColumns = (currentPinning.left || []).filter(
+          (columnId) => availableColumnIds.includes(columnId),
+        );
+        const validRightColumns = (currentPinning.right || []).filter(
+          (columnId) => availableColumnIds.includes(columnId),
+        );
+
+        // Use maintainColumnOrder to ensure correct order
+        const orderedLeftColumns = maintainColumnOrder(validLeftColumns);
+        const orderedRightColumns = maintainColumnOrder(validRightColumns);
+
+        // If no changes, don't update state
+        const leftChanged =
+          orderedLeftColumns.length !== (currentPinning.left || []).length ||
+          !orderedLeftColumns.every(
+            (id, index) => id === (currentPinning.left || [])[index],
+          );
+        const rightChanged =
+          orderedRightColumns.length !== (currentPinning.right || []).length ||
+          !orderedRightColumns.every(
+            (id, index) => id === (currentPinning.right || [])[index],
+          );
+
+        if (!leftChanged && !rightChanged) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [category]: {
+            left: orderedLeftColumns,
+            right: orderedRightColumns,
+          },
+        };
+      });
+    },
+    [maintainColumnOrder],
+  );
+
+  // Reset column pinning state for specific category
+  const resetColumnPinning = useCallback((category: IItemSubCategoryEnum) => {
+    setColumnPinning((prev) => ({
+      ...prev,
+      [category]: { left: [], right: [] },
+    }));
   }, []);
 
   return {
@@ -225,5 +279,7 @@ export const useTableStates = () => {
     toggleAllRowsInCategory,
     toggleColumnPinning,
     isColumnPinned,
+    cleanupInvalidPinnedColumns,
+    resetColumnPinning,
   };
 };

@@ -80,18 +80,53 @@ const OptimizedTableCell = memo(
   (prevProps, nextProps) => {
     // Custom comparison function for memo
     // Only re-render if essential props have changed
-    return (
-      prevProps.cell.id === nextProps.cell.id &&
-      prevProps.cell.getValue() === nextProps.cell.getValue() &&
-      prevProps.cell.row.original === nextProps.cell.row.original &&
-      prevProps.cellIndex === nextProps.cellIndex &&
-      prevProps.width === nextProps.width &&
-      prevProps.isLast === nextProps.isLast &&
-      prevProps.isLastRow === nextProps.isLastRow &&
-      prevProps.minHeight === nextProps.minHeight &&
-      prevProps.isContainerBordered === nextProps.isContainerBordered &&
-      prevProps.className === nextProps.className
-    );
+
+    // Check basic properties
+    if (
+      prevProps.cell.id !== nextProps.cell.id ||
+      prevProps.cellIndex !== nextProps.cellIndex ||
+      prevProps.width !== nextProps.width ||
+      prevProps.isLast !== nextProps.isLast ||
+      prevProps.isLastRow !== nextProps.isLastRow ||
+      prevProps.minHeight !== nextProps.minHeight ||
+      prevProps.isContainerBordered !== nextProps.isContainerBordered ||
+      prevProps.className !== nextProps.className
+    ) {
+      return false;
+    }
+
+    // Check cell value changes
+    if (prevProps.cell.getValue() !== nextProps.cell.getValue()) {
+      return false;
+    }
+
+    // Check pinned status changes
+    const prevIsPinned = prevProps.cell.column.getIsPinned();
+    const nextIsPinned = nextProps.cell.column.getIsPinned();
+    if (prevIsPinned !== nextIsPinned) {
+      return false;
+    }
+
+    // Specifically check key properties of style object (avoid JSON.stringify performance overhead)
+    if (prevProps.style || nextProps.style) {
+      const prevStyle = prevProps.style || {};
+      const nextStyle = nextProps.style || {};
+
+      // Check key style properties
+      if (
+        prevStyle.left !== nextStyle.left ||
+        prevStyle.right !== nextStyle.right ||
+        prevStyle.position !== nextStyle.position ||
+        prevStyle.zIndex !== nextStyle.zIndex ||
+        prevStyle.backgroundColor !== nextStyle.backgroundColor ||
+        prevStyle.transform !== nextStyle.transform
+      ) {
+        return false;
+      }
+    }
+
+    // Don't re-render in other cases
+    return true;
   },
 );
 
