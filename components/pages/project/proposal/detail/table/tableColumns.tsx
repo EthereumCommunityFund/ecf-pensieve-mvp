@@ -383,7 +383,7 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [isPageExpanded, showMetrics, columnHelper, category]);
+  }, [showMetrics, columnHelper, category]);
 
   return columns;
 };
