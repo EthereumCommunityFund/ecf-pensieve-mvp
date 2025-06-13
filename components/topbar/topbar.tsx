@@ -88,7 +88,7 @@ export function Topbar() {
         <MobileMenu />
 
         <Link
-          href="/public"
+          href="/"
           className="flex h-full min-w-[172px] flex-1 items-center justify-center"
         >
           <Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
