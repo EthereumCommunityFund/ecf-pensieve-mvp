@@ -55,12 +55,12 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
   metricsVisible,
   onToggleMetrics,
 }) => {
-  // 获取当前分类下所有行的 key
+  // Get all row keys under current category
   const getCategoryRowKeys = () => {
     return table.getRowModel().rows.map((row) => row.original.key);
   };
 
-  // 检查当前分类下是否有任何行已展开
+  // Check if any row under current category is expanded
   const hasExpandedRows = () => {
     const rowKeys = getCategoryRowKeys();
     return rowKeys.some((rowKey) => expandedRows[rowKey]);

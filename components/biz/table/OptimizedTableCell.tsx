@@ -81,7 +81,7 @@ const OptimizedTableCell = memo(
     // Custom comparison function for memo
     // Only re-render if essential props have changed
 
-    // 检查基本属性
+    // Check basic properties
     if (
       prevProps.cell.id !== nextProps.cell.id ||
       prevProps.cellIndex !== nextProps.cellIndex ||
@@ -95,24 +95,24 @@ const OptimizedTableCell = memo(
       return false;
     }
 
-    // 检查单元格值变化
+    // Check cell value changes
     if (prevProps.cell.getValue() !== nextProps.cell.getValue()) {
       return false;
     }
 
-    // 检查pinned状态变化
+    // Check pinned status changes
     const prevIsPinned = prevProps.cell.column.getIsPinned();
     const nextIsPinned = nextProps.cell.column.getIsPinned();
     if (prevIsPinned !== nextIsPinned) {
       return false;
     }
 
-    // 特别检查样式对象的关键属性（避免JSON.stringify的性能开销）
+    // Specifically check key properties of style object (avoid JSON.stringify performance overhead)
     if (prevProps.style || nextProps.style) {
       const prevStyle = prevProps.style || {};
       const nextStyle = nextProps.style || {};
 
-      // 检查关键样式属性
+      // Check key style properties
       if (
         prevStyle.left !== nextStyle.left ||
         prevStyle.right !== nextStyle.right ||
@@ -125,7 +125,7 @@ const OptimizedTableCell = memo(
       }
     }
 
-    // 其他情况下不重新渲染
+    // Don't re-render in other cases
     return true;
   },
 );

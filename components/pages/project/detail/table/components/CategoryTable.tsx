@@ -55,8 +55,8 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   const showSkeleton = isLoading || !project;
   const noDataForThisTable = table.options.data.length === 0;
 
-  // 创建稳定的pinned列样式和位置计算
-  // 使用 useMemo 来稳定 columnPinningState，避免每次渲染都重新获取
+  // Create stable pinned column styles and position calculations
+  // Use useMemo to stabilize columnPinningState, avoiding re-fetching on every render
   const leftColumns = JSON.stringify(table.getState().columnPinning.left || []);
   const rightColumns = JSON.stringify(
     table.getState().columnPinning.right || [],
@@ -68,12 +68,12 @@ export const CategoryTable: FC<CategoryTableProps> = ({
       right: state.right || [],
     };
   }, [
-    // 使用序列化的值作为依赖项，避免对象引用变化导致的重复渲染
+    // Use serialized values as dependencies to avoid re-renders caused by object reference changes
     leftColumns,
     rightColumns,
   ]);
 
-  // 预计算所有列的位置，使用更稳定的计算方法
+  // Pre-calculate all column positions using more stable calculation methods
   const pinnedPositionsMap = React.useMemo(() => {
     const positions = new Map();
 
@@ -81,20 +81,20 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     const rightColumns = columnPinningState.right || [];
     const allColumns = table.getAllColumns();
 
-    // 🔑 关键优化：使用更稳定的列查找和大小获取方法
+    // 🔑 Key optimization: Use more stable column lookup and size retrieval methods
     const getColumnSize = (columnId: string) => {
       const column = allColumns.find((col: any) => col.id === columnId);
       return column ? column.getSize() : 0;
     };
 
-    // 为左侧固定列计算累积位置
+    // Calculate cumulative positions for left-pinned columns
     let leftOffset = 0;
     leftColumns.forEach((columnId) => {
       positions.set(`${columnId}-left`, leftOffset);
       leftOffset += getColumnSize(columnId);
     });
 
-    // 为右侧固定列计算累积位置（从右向左）
+    // Calculate cumulative positions for right-pinned columns (from right to left)
     let rightOffset = 0;
     [...rightColumns].reverse().forEach((columnId) => {
       positions.set(`${columnId}-right`, rightOffset);
@@ -104,7 +104,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     return positions;
   }, [columnPinningState.left, columnPinningState.right, table]);
 
-  // 检查列是否被固定，完全避免使用TanStack的getIsPinned方法
+  // Check if column is pinned, completely avoiding TanStack's getIsPinned method
   const getColumnPinStatus = React.useCallback(
     (columnId: string) => {
       const leftColumns = columnPinningState.left || [];
@@ -117,7 +117,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     [columnPinningState],
   );
 
-  // 获取稳定的位置值，完全避免TanStack的内部方法
+  // Get stable position values, completely avoiding TanStack's internal methods
   const getPinnedPosition = React.useCallback(
     (columnId: string) => {
       const pinStatus = getColumnPinStatus(columnId);
@@ -132,7 +132,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     [pinnedPositionsMap, getColumnPinStatus],
   );
 
-  // 创建完全稳定的pinned样式计算函数
+  // Create completely stable pinned style calculation function
   const getPinnedStyles = React.useCallback(
     (
       columnId: string,
@@ -144,15 +144,15 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
       const position = getPinnedPosition(columnId);
 
-      // 使用固定的样式对象，避免动态创建
+      // Use fixed style objects to avoid dynamic creation
       const baseStyles = {
         position: 'sticky' as const,
         zIndex: 15,
         backgroundColor: '#F5F5F5',
-        // 确保边框正确渲染
+        // Ensure borders render correctly
         boxSizing: 'border-box' as const,
-        // 🔑 修复：不设置宽度，让每列保持自己的原始宽度
-        // width、minWidth、maxWidth 应该由 column definition 中的设置来控制
+        // 🔑 Fix: Don't set width, let each column maintain its original width
+        // width, minWidth, maxWidth should be controlled by settings in column definition
       };
 
       const positionStyle = {
@@ -333,7 +333,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
       className="mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white"
       style={{
         overflowX: 'auto',
-        // 确保 sticky 定位正常工作的容器设置
+        // Container settings to ensure sticky positioning works correctly
         position: 'relative',
         isolation: 'isolate',
       }}
@@ -342,7 +342,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
         {colGroupDefinition}
         {tableHeaders}
         <tbody>
-          {/* 渲染分组的非空数据行 */}
+          {/* Render grouped non-empty data rows */}
           {groupedNonEmptyRows.map((item: any, itemIndex: number) => {
             // Check if this is a group header
             if ('isGroupHeader' in item) {
@@ -439,7 +439,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             );
           })}
 
-          {/* 渲染空数据分组标题行 */}
+          {/* Render empty data group header row */}
           {subCategoryKey && (
             <EmptyItemsGroup
               subCategoryKey={subCategoryKey}
@@ -450,7 +450,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             />
           )}
 
-          {/* 渲染空数据行 */}
+          {/* Render empty data rows */}
           {emptyRows.length > 0 &&
             isExpanded &&
             emptyRows.map((row: any, rowIndex: number) => (

@@ -42,11 +42,11 @@ export interface IKeyItemDataForTable {
   accountability?: string[];
   // Legitimacy metrics from item config
   legitimacy?: string[];
-  // not essential item, 还没有 proposal， value 是 empty状态， 所以可以 propose
+  // not essential item, no proposal yet, value is empty, so can propose
   canBePropose: boolean;
-  // 原来是 leading proposal，但现在后端字段里isNotLeading为 true(因为 itemWeight < itemTopWeight)
+  // Was leading proposal, but now backend field isNotLeading is true (because itemWeight < itemTopWeight)
   isConsensusInProgress: boolean;
-  // 有 proposal， 但还没有 validated leading proposal
+  // Has proposal, but no validated leading proposal yet
   isPendingValidation: boolean;
   isEmptyItem?: boolean;
 }

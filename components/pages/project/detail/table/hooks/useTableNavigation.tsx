@@ -9,12 +9,12 @@ import { IItemSubCategoryEnum } from '@/types/item';
  * Handles category navigation, scroll tracking, and active category detection
  */
 export const useTableNavigation = () => {
-  // 当前激活的分类
+  // Currently active category
   const [activeCategory, setActiveCategory] = useState<IItemSubCategoryEnum>(
     IItemSubCategoryEnum.BasicProfile,
   );
 
-  // 分类引用，用于滚动定位
+  // Category refs, used for scroll positioning
   const categoryRefs = useRef<
     Record<IItemSubCategoryEnum, HTMLDivElement | null>
   >({
@@ -24,10 +24,10 @@ export const useTableNavigation = () => {
     [IItemSubCategoryEnum.Team]: null,
     [IItemSubCategoryEnum.Finances]: null,
     [IItemSubCategoryEnum.Token]: null,
-    [IItemSubCategoryEnum.Governance]: null, // 保留以防将来启用
+    [IItemSubCategoryEnum.Governance]: null, // Reserved for future enablement
   });
 
-  // 处理导航菜单点击，滚动到对应分类
+  // Handle navigation menu click, scroll to corresponding category
   const handleCategoryClick = useCallback((category: IItemSubCategoryEnum) => {
     const targetElement = categoryRefs.current[category];
     if (targetElement) {
@@ -39,12 +39,12 @@ export const useTableNavigation = () => {
     }
   }, []);
 
-  // 监听滚动，更新当前激活的分类
+  // Listen to scroll, update currently active category
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100; // 添加偏移量
+      const scrollPosition = window.scrollY + 100; // Add offset
 
-      // 找到当前可见的分类
+      // Find currently visible category
       let currentCategory = IItemSubCategoryEnum.BasicProfile;
 
       Object.entries(categoryRefs.current).forEach(([key, element]) => {

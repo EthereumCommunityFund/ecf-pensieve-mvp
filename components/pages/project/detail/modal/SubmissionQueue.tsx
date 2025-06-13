@@ -143,7 +143,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
-      showRowOverTaken, // 只有 displayed 的 table 需要考虑 showRowOverTaken
+      showRowOverTaken, // Only displayed table needs to consider showRowOverTaken
       inActionKeyMap,
       inActionItemProposalIdMap,
       showSubmitterModal,
@@ -177,7 +177,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       showReferenceModal,
       expandedRows: submissionQueueExpandedRows,
       toggleRowExpanded: toggleSubmissionQueueRowExpanded,
-      showRowIsLeading, // 只有 submission queue 的 table 需要考虑 showRowIsLeading
+      showRowIsLeading, // Only submission queue table needs to consider showRowIsLeading
       inActionKeyMap,
       inActionItemProposalIdMap,
       showSubmitterModal,
@@ -540,7 +540,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                 {submissionQueueTable
                   .getRowModel()
                   .rows.map((row, rowIndex) => {
-                    // 检查是否是第一行且处于 leading 状态
+                    // Check if it is the first row and in leading state
                     const isFirstRowLeading =
                       showRowOverTaken && showRowIsLeading && rowIndex === 0;
 

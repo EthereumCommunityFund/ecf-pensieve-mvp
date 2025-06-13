@@ -30,17 +30,17 @@ interface ConsensusLogProps {
 }
 
 const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
-  // 展开行状态管理
+  // Expanded row state management
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // 获取项目数据
+  // Get project data
   const {
     proposalHistory,
     isProposalHistoryLoading,
     isProposalHistoryFetched,
   } = useProjectDetailContext();
 
-  // 根据 itemKey 从 proposalHistory 中获取真实数据
+  // Get real data from proposalHistory by itemKey
   const tableData: IConsensusLogRowData[] = useMemo(() => {
     if (!itemKey) {
       return [];
@@ -70,10 +70,10 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
         return acc + Number(vote.weight || 0);
       }, 0);
 
-      // 权重变化：当前权重 - 上一个的权重
+      // Weight change: current weight - previous weight
       const weightChange =
         index === sortedHistory.length - 1
-          ? currentWeight // 第一个提案，权重变化就是当前权重
+          ? currentWeight // First proposal, weight change is current weight
           : currentWeight -
             (sortedHistory[index + 1]?.itemProposal?.voteRecords?.reduce(
               (acc: number, vote: any) => acc + Number(vote.weight || 0),
@@ -117,7 +117,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
     });
   }, [itemKey, proposalHistory]);
 
-  // 切换行展开状态
+  // Toggle row expanded state
   const toggleRowExpanded = useCallback((key: string) => {
     setExpandedRows((prev) => ({
       ...prev,

@@ -65,7 +65,7 @@ const Displayed: FC<DisplayedProps> = ({
 }) => {
   const { profile } = useAuth();
 
-  // 获取项目数据
+  // Get project data
   const {
     displayProposalDataListOfProject,
     showReferenceModal,
@@ -83,17 +83,17 @@ const Displayed: FC<DisplayedProps> = ({
     isLeadingProposalNotLeading,
   } = useProjectDetailContext();
 
-  // 展开行状态管理
+  // Expanded row state management
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // 生成唯一标识符的函数 - 与SubmissionQueue组件保持一致
+  // Function to generate unique identifier - consistent with SubmissionQueue component
   const getRowUniqueId = useCallback((rowData: IProjectTableRowData) => {
     return rowData.proposalId
       ? `proposal-${rowData.proposalId}`
       : `key-${rowData.key}`;
   }, []);
 
-  // 切换行展开状态
+  // Toggle row expanded state
   const toggleRowExpanded = useCallback((uniqueId: string) => {
     setExpandedRows((prev) => ({
       ...prev,

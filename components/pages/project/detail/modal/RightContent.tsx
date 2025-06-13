@@ -49,9 +49,10 @@ const RightContent: FC<RightContentProps> = memo(
       return userWeight > displayedItemWeight;
     }, [userWeight, displayedItemWeight]);
 
-    // 处理 InfoIcon 点击事件
+    // Handle InfoIcon click event
+    // Set current user's weight value
+    // Open user weight explanation modal
     const handleInfoIconClick = () => {
-      // 设置当前用户的权重值
       if (profile?.weight !== undefined) {
         setUserWeight(Number(profile.weight));
       }
@@ -85,7 +86,7 @@ const RightContent: FC<RightContentProps> = memo(
             </span>
             {isUserWeightExceedsItemWeight && (
               <span className="font-sans text-[13px] leading-[20px] text-black/80">
-                Your CP exceeds the item’s threshold, allowing you to surpass
+                Your CP exceeds the item's threshold, allowing you to surpass
                 the weight of any submission you vote on.
               </span>
             )}

@@ -35,16 +35,16 @@ export const useCommonColumnsOfModal = () => {
           showRowIsLeading,
         } = info.table.options.meta as ITableMetaOfSubmissionQueue;
 
-        // 生成唯一标识符 - 与SubmissionQueue组件中的逻辑保持一致
+        // Generate unique identifier - consistent with logic in SubmissionQueue component
         const uniqueId = item.proposalId
           ? `proposal-${item.proposalId}`
           : `key-${item.key}`;
         const isRowExpanded = expandedRows[uniqueId];
 
-        // 检查当前行是否是第一行且处于 over-taken 状态
+        // Check if current row is the first and in over-taken state
         const isFirstRowOverTaken = showRowOverTaken && info.row.index === 0;
 
-        // 检查当前行是否是第一行且处于 leading 状态
+        // Check if current row is the first and in leading state
         const isFirstRowLeading = showRowIsLeading && info.row.index === 0;
 
         return (
@@ -155,7 +155,7 @@ export const useCommonColumnsOfModal = () => {
         const votesRecordsOfLeadingProposal =
           leadingProposal?.itemProposal?.voteRecords || [];
 
-        // 1、是否在project leading proposal中投过这个 key 的票
+        // 1. Whether voted for this key in project leading proposal
         const isUserVotedKeyInLeadingProposal =
           !!votesRecordsOfLeadingProposal?.find(
             (vote) => vote.creator === profile?.userId,
@@ -169,9 +169,9 @@ export const useCommonColumnsOfModal = () => {
           (item) => item.creator === profile?.userId,
         );
 
-        // 2、是否在item proposals中投过这个 key 票
+        // 2. Whether voted for this key in item proposals
         const isUserVotedKeyInItemProposals = userVoteRecords.length > 0;
-        // 3、是否投了当前这一条
+        // 3. Whether voted for this one
         const isUserVotedCurrentItemProposal = !!userVoteRecords.find(
           (voteRecord) => voteRecord.itemProposalId === itemProposalId,
         );
@@ -179,12 +179,10 @@ export const useCommonColumnsOfModal = () => {
         const showQuorum =
           !AllItemConfig[itemKey]?.isEssential && !leadingProposal;
 
-        // Implement isUserVoted logic
-        // 基于用户是否在当前 item proposal 中投票
+        // Based on whether user voted in current item proposal
         const isUserVoted = isUserVotedCurrentItemProposal;
 
-        // Implement isProposalCreator logic
-        // 检查当前用户是否为该 item proposal 的创建者
+        // Check if current user is the creator of this item proposal
         const proposalCreator = info.row.original.submitter;
         const isProposalCreator = !!(
           profile?.userId &&

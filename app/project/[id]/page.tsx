@@ -34,7 +34,7 @@ const ProjectPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 使用 Context 获取项目数据
+  // Use Context to get project data
   const {
     project,
     isProjectFetched,
@@ -57,13 +57,13 @@ const ProjectPage = () => {
 
   const [activeTab, setActiveTab] = useState<ITabKey>('project-data');
 
-  // SwitchVoteModal 状态管理
+  // SwitchVoteModal state management
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemKey, setSelectedItemKey] = useState<IPocItemKey | null>(
     null,
   );
 
-  // MerrticDetailModal 状态管理 - 使用 Context
+  // MerrticDetailModal state management - use Context
   const { openMetricModal } = useMetricDetailModal();
 
   useEffect(() => {
@@ -84,11 +84,11 @@ const ProjectPage = () => {
   }, [router, projectId]);
 
   const handleContribute = useCallback(() => {
-    // 处理贡献按钮点击事件
+    // Handle contribute button click event
     console.log('Contribute button clicked');
   }, []);
 
-  // 处理 SwitchVoteModal 打开
+  // Handle SwitchVoteModal open
   const handleOpenModal = useCallback(
     (
       itemKey: IPocItemKey,
@@ -103,7 +103,7 @@ const ProjectPage = () => {
     [],
   );
 
-  // 处理 SwitchVoteModal 关闭
+  // Handle SwitchVoteModal close
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedItemKey(null);
@@ -118,7 +118,7 @@ const ProjectPage = () => {
     setModalContentType('submitPropose');
   }, [profile, showAuthPrompt]);
 
-  // 处理 Metric 点击
+  // Handle Metric click
   const handleMetricClick = useCallback(
     (metric: string) => {
       openMetricModal(metric);

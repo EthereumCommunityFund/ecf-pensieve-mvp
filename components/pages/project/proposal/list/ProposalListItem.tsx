@@ -67,7 +67,7 @@ const ProposalListItem = ({
     router.push(`/project/pending/${projectId}/proposal/${proposal.id}`);
   }, [projectId, proposal.id, router]);
 
-  // 处理 InfoIcon 点击事件
+  // Handle InfoIcon click event
   const handleInfoIconClick = useCallback(() => {
     openProposalProgressModal();
   }, [openProposalProgressModal]);

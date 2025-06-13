@@ -144,19 +144,22 @@ const ProposalDetails = ({
       : prepareProposalTableData(undefined);
   }, [proposal]);
 
-  // 批量切换某个分类下所有行的展开状态
+  // Batch toggle expanded state of all rows under a category
+  // Get all row keys under the category
+  // Check if any row under the category is expanded
+  // If there are expanded rows, collapse all; if all collapsed, expand all
   const toggleAllRowsInCategory = useCallback(
     (subCat: IItemSubCategoryEnum) => {
-      // 获取该分类下所有行的key
+      // Get all row keys under the category
       const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
 
       setExpandedRows((prev) => {
-        // 检查该分类下是否有任何行已展开
+        // Check if any row under the category is expanded
         const hasExpandedRows = categoryRows.some(
           (rowKey) => prev[rowKey as IPocItemKey],
         );
 
-        // 如果有展开的行，则全部收起；如果都收起，则全部展开
+        // If there are expanded rows, collapse all; if all collapsed, expand all
         const newExpandedState = !hasExpandedRows;
 
         const newExpandedRows = { ...prev };
@@ -170,7 +173,7 @@ const ProposalDetails = ({
     [tableDataMap, setExpandedRows],
   );
 
-  // 检查某个分类下是否有任何行已展开
+  // Check if any row under a category is expanded
   const hasExpandedRowsInCategory = useCallback(
     (subCat: IItemSubCategoryEnum) => {
       const categoryRows = tableDataMap[subCat]?.map((row) => row.key) || [];
@@ -179,7 +182,7 @@ const ProposalDetails = ({
     [tableDataMap, expandedRows],
   );
 
-  // 只保留变化不频繁的稳定参数
+  // Only keep stable parameters that do not change frequently
   const coreTableMeta = useMemo(
     () => ({
       expandedRows,

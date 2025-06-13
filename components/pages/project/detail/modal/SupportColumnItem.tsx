@@ -70,14 +70,14 @@ const SupportColumnItem: FC<IProps> = ({
 
   const handleAction = useCallback(() => {
     if (isUserVotedCurrentItemProposal) {
-      // 不能取消 item proposal 的投票
+      // Cannot cancel vote for item proposal
       console.warn('can not cancel item proposal vote');
     } else {
       if (isUserVotedInProposalOrItemProposals) {
-        // 在proposal中投过这个key的票，或者在item proposals中投过这个key的票
+        // Voted for this key in proposal, or in item proposals
         onSwitchItemProposalVote(itemKey, proposalId);
       } else {
-        // 在proposal中没有投过这个key的票，也没有在item proposals中投过这个key的票
+        // Not voted for this key in proposal, nor in item proposals
         onCreateItemProposalVote(itemKey, proposalId);
       }
     }

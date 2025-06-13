@@ -174,8 +174,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   field.onChange(firstKey != null ? String(firstKey) : null);
                 }
               }
-              // 在选择完成后触发 blur 事件进行校验
-              field.onBlur();
+              // Trigger blur event for validation after selection is complete
+              // Also trigger blur event when dropdown is closed
+              // Ensure field.value is an array
+              field.onBlur(); // Trigger validation
             }}
             onClose={() => {
               // 当下拉框关闭时也触发 blur 事件
@@ -276,7 +278,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         <div>
           <div className="flex flex-col gap-2.5 pt-[10px]">
             {foundersArray.map((founder: any, index: number) => {
-              // 从 fieldState 中获取特定索引的错误
+              // Get error for specific index from fieldState
               const founderError =
                 fieldState.error && Array.isArray(fieldState.error)
                   ? fieldState.error[index]

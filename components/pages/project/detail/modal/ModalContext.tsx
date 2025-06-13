@@ -4,9 +4,12 @@ import { createContext, ReactNode, useContext, useMemo } from 'react';
 
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 
-// 定义 Modal 专用的 Context 类型，只包含 Modal 需要的稳定数据
+// Define a dedicated Context type for Modal, only containing stable data needed by Modal
+// Stable data, does not change frequently
+// Stable references extracted from ProjectDetailContext
+// Other stable configurations
+// Use useMemo to stabilize context value and avoid unnecessary re-renders
 interface ModalContextType {
-  // 稳定的数据，不会频繁变化
   itemKey: string | null;
   itemName: string;
 

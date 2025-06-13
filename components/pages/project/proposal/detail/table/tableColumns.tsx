@@ -45,7 +45,7 @@ export interface TableCellsMeta {
   category?: IItemSubCategoryEnum;
 }
 
-// 支持列单元格组件，使用context获取动态数据
+// Support column cell component, uses context to get dynamic data
 const SupportCell = memo(
   ({
     rowData,
