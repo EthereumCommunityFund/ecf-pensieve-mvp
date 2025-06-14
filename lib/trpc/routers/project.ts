@@ -331,127 +331,183 @@ export const projectRouter = router({
       }
 
       const results = await ctx.db.transaction(async (tx) => {
-        let processedCount = 0;
+        const processedCount = eligibleProjects.length;
+
+        const projectIds = eligibleProjects.map((p) => Number(p.project_id));
+        const proposalIds = eligibleProjects.map((p) => Number(p.proposal_id));
+
+        const allVoteRecords = await tx.query.voteRecords.findMany({
+          where: and(
+            sql`${voteRecords.projectId} = ANY(${projectIds})`,
+            sql`${voteRecords.proposalId} = ANY(${proposalIds})`,
+            isNull(voteRecords.itemProposalId),
+          ),
+        });
+
+        const voteRecordsByProject = new Map<number, any[]>();
+        for (const vr of allVoteRecords) {
+          const projectId = vr.projectId;
+          if (!voteRecordsByProject.has(projectId)) {
+            voteRecordsByProject.set(projectId, []);
+          }
+          voteRecordsByProject.get(projectId)!.push(vr);
+        }
+
+        const allProposals = await tx.query.proposals.findMany({
+          where: sql`${proposals.id} = ANY(${proposalIds})`,
+        });
+        const proposalsMap = new Map(allProposals.map((p) => [p.id, p]));
+
+        const projectUpdates: Array<{
+          id: number;
+          itemsTopWeight: Record<string, number>;
+        }> = [];
+        const itemProposalBatch: any[] = [];
+        const voteRecordBatch: any[] = [];
+        const weightUpdates: Array<{ userId: string; amount: number }> = [];
+        const notifications: any[] = [];
 
         for (const project of eligibleProjects) {
-          try {
-            const projectId = Number(project.project_id);
-            const proposalId = Number(project.proposal_id);
-            const proposalCreator = String(project.proposal_creator);
+          const projectId = Number(project.project_id);
+          const proposalId = Number(project.proposal_id);
+          const proposalCreator = String(project.proposal_creator);
 
-            const projectVoteRecords = await tx.query.voteRecords.findMany({
-              where: and(
-                eq(voteRecords.projectId, projectId),
-                eq(voteRecords.proposalId, proposalId),
-                isNull(voteRecords.itemProposalId),
-              ),
-            });
+          const projectVoteRecords = voteRecordsByProject.get(projectId) || [];
 
-            const itemsTopWeight: Record<string, number> = {};
-            for (const voteRecord of projectVoteRecords) {
-              const key = String(voteRecord.key);
-              itemsTopWeight[key] =
-                (itemsTopWeight[key] || 0) + (voteRecord.weight ?? 0);
-            }
-
-            const [updatedProject] = await tx
-              .update(projects)
-              .set({
-                isPublished: true,
-                itemsTopWeight,
-              })
-              .where(eq(projects.id, projectId))
-              .returning({
-                id: projects.id,
-                name: projects.name,
-                tagline: projects.tagline,
-                logoUrl: projects.logoUrl,
-              });
-
-            const originalProposal = await tx.query.proposals.findFirst({
-              where: eq(proposals.id, proposalId),
-            });
-
-            if (originalProposal && originalProposal.items) {
-              const itemProposalMap: Record<string, number> = {};
-
-              const formatRefs = (refs: any, key: string) => {
-                if (!refs || !Array.isArray(refs) || refs.length === 0) {
-                  return null;
-                }
-
-                return refs.find((ref: any) => ref.key === key)?.value || null;
-              };
-
-              for (const item of originalProposal.items as any[]) {
-                if (item.key) {
-                  const [newItemProposal] = await tx
-                    .insert(itemProposals)
-                    .values({
-                      key: item.key,
-                      value: item.value ?? '',
-                      projectId: projectId,
-                      creator: originalProposal.creator,
-                      ref: formatRefs(originalProposal.refs, item.key),
-                    })
-                    .returning();
-
-                  if (newItemProposal) {
-                    itemProposalMap[item.key] = newItemProposal.id;
-                    await tx.insert(projectLogs).values({
-                      projectId,
-                      key: item.key,
-                      itemProposalId: newItemProposal.id,
-                    });
-                  }
-                }
-              }
-
-              for (const voteRecord of projectVoteRecords) {
-                const itemProposalId = itemProposalMap[voteRecord.key];
-
-                if (itemProposalId) {
-                  await tx.insert(voteRecords).values({
-                    key: voteRecord.key,
-                    itemProposalId: itemProposalId,
-                    creator: voteRecord.creator,
-                    weight: voteRecord.weight,
-                    projectId: voteRecord.projectId,
-                  });
-                }
-              }
-            }
-
-            if (proposalCreator) {
-              await updateUserWeight(
-                proposalCreator,
-                ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
-                tx,
-              );
-
-              await addRewardNotification(
-                createRewardNotification.proposalPass(
-                  proposalCreator,
-                  projectId,
-                  proposalId,
-                  ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
-                ),
-                tx,
-              );
-            }
-
-            processedCount++;
-            //Todo: need to update social image
-            /*if (updatedProject) {
-              await sendProjectPublishTweet(updatedProject);
-            }*/
-          } catch (error) {
-            console.error(
-              `Failed to process project ${project.project_id}:`,
-              error,
-            );
-            throw error;
+          const itemsTopWeight: Record<string, number> = {};
+          for (const voteRecord of projectVoteRecords) {
+            const key = voteRecord.key;
+            itemsTopWeight[key] =
+              (itemsTopWeight[key] || 0) + (voteRecord.weight || 0);
           }
+
+          projectUpdates.push({ id: projectId, itemsTopWeight });
+
+          const originalProposal = proposalsMap.get(proposalId);
+          if (originalProposal && originalProposal.items) {
+            const formatRefs = (refs: any, key: string) => {
+              if (!refs || !Array.isArray(refs) || refs.length === 0) {
+                return null;
+              }
+              return refs.find((ref: any) => ref.key === key)?.value || null;
+            };
+
+            const itemProposalMap: Record<string, number> = {};
+            let itemProposalIdCounter = Date.now() * 1000;
+
+            for (const item of originalProposal.items as any[]) {
+              if (item.key) {
+                const tempId = itemProposalIdCounter++;
+                itemProposalMap[item.key] = tempId;
+
+                itemProposalBatch.push({
+                  key: item.key,
+                  value: item.value ?? '',
+                  projectId: projectId,
+                  creator: originalProposal.creator,
+                  ref: formatRefs(originalProposal.refs, item.key),
+                  tempId,
+                });
+              }
+            }
+
+            for (const voteRecord of projectVoteRecords) {
+              const tempItemProposalId = itemProposalMap[voteRecord.key];
+              if (tempItemProposalId) {
+                voteRecordBatch.push({
+                  key: voteRecord.key,
+                  tempItemProposalId,
+                  creator: voteRecord.creator,
+                  weight: voteRecord.weight,
+                  projectId: voteRecord.projectId,
+                });
+              }
+            }
+          }
+
+          if (proposalCreator) {
+            weightUpdates.push({
+              userId: proposalCreator,
+              amount: ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+            });
+
+            notifications.push(
+              createRewardNotification.proposalPass(
+                proposalCreator,
+                projectId,
+                proposalId,
+                ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
+              ),
+            );
+          }
+        }
+
+        for (const update of projectUpdates) {
+          await tx
+            .update(projects)
+            .set({
+              isPublished: true,
+              itemsTopWeight: update.itemsTopWeight,
+            })
+            .where(eq(projects.id, update.id));
+        }
+
+        if (itemProposalBatch.length > 0) {
+          const insertedItemProposals = await tx
+            .insert(itemProposals)
+            .values(itemProposalBatch.map(({ tempId, ...item }) => item))
+            .returning({
+              id: itemProposals.id,
+              key: itemProposals.key,
+              projectId: itemProposals.projectId,
+            });
+
+          const tempToRealIdMap = new Map<number, number>();
+          for (let i = 0; i < insertedItemProposals.length; i++) {
+            tempToRealIdMap.set(
+              itemProposalBatch[i].tempId,
+              insertedItemProposals[i].id,
+            );
+          }
+
+          const projectLogData = insertedItemProposals.map((item) => ({
+            projectId: item.projectId,
+            key: item.key,
+            itemProposalId: item.id,
+          }));
+
+          if (projectLogData.length > 0) {
+            await tx.insert(projectLogs).values(projectLogData);
+          }
+
+          const voteRecordData = voteRecordBatch
+            .map((vr) => {
+              const realItemProposalId = tempToRealIdMap.get(
+                vr.tempItemProposalId,
+              );
+              if (!realItemProposalId) return null;
+
+              return {
+                key: vr.key,
+                itemProposalId: realItemProposalId,
+                creator: vr.creator,
+                weight: vr.weight,
+                projectId: vr.projectId,
+              };
+            })
+            .filter((item): item is NonNullable<typeof item> => item !== null);
+
+          if (voteRecordData.length > 0) {
+            await tx.insert(voteRecords).values(voteRecordData);
+          }
+        }
+
+        for (const update of weightUpdates) {
+          await updateUserWeight(update.userId, update.amount, tx);
+        }
+
+        for (const notification of notifications) {
+          await addRewardNotification(notification, tx);
         }
 
         return processedCount;

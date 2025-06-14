@@ -1,6 +1,9 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm run:*)"],
+    "allow": [
+      "Bash(pnpm run:*)",
+      "mcp__zen__codereview"
+    ],
     "deny": []
   }
 }
