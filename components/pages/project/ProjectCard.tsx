@@ -56,6 +56,8 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
       userId: profile?.userId,
     });
 
+  console.log('leadingProposalId', project.createdAt);
+
   return (
     <div
       className={cn(
@@ -109,7 +111,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
                 {(project.creator as IProfile)?.name}
               </span>{' '}
               <span className="opacity-60">
-                {formatTimeAgo(project.createdAt.getTime())}
+                {formatTimeAgo(new Date(project.createdAt).getTime())}
               </span>
             </p>
             <div className="mt-[10px] flex flex-wrap gap-[8px]">
