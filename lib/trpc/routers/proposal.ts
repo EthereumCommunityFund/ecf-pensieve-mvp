@@ -129,10 +129,6 @@ export const proposalRouter = router({
               userId: ctx.user.id,
               targetId: proposal.id,
               projectId: proposal.projectId,
-              items: input.items.map((item) => ({
-                field: item.key,
-                newValue: item.value,
-              })),
             },
             tx,
           );
