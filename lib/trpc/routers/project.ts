@@ -1,8 +1,10 @@
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 
 import {
+  CACHE_TAGS,
   ESSENTIAL_ITEM_AMOUNT,
   ESSENTIAL_ITEM_WEIGHT_AMOUNT,
   QUORUM_AMOUNT,
@@ -183,29 +185,45 @@ export const projectRouter = router({
         };
       }
 
-      const [results, totalCountResult] = await Promise.all([
-        ctx.db.query.projects.findMany({
-          with: queryOptions,
-          where: whereCondition,
-          orderBy: desc(projects.id),
-          limit,
-        }),
-        ctx.db
-          .select({ count: sql`count(*)::int` })
-          .from(projects)
-          .where(eq(projects.isPublished, isPublished)),
-      ]);
+      const getProjects = async () => {
+        const [results, totalCountResult] = await Promise.all([
+          ctx.db.query.projects.findMany({
+            with: queryOptions,
+            where: whereCondition,
+            orderBy: desc(projects.id),
+            limit,
+          }),
+          ctx.db
+            .select({ count: sql`count(*)::int` })
+            .from(projects)
+            .where(eq(projects.isPublished, isPublished)),
+        ]);
 
-      const nextCursor =
-        results.length === limit ? results[results.length - 1].id : undefined;
+        const nextCursor =
+          results.length === limit ? results[results.length - 1].id : undefined;
 
-      const totalCount = Number(totalCountResult[0]?.count ?? 0);
+        const totalCount = Number(totalCountResult[0]?.count ?? 0);
 
-      return {
-        items: results,
-        nextCursor,
-        totalCount,
+        return {
+          items: results,
+          nextCursor,
+          totalCount,
+        };
       };
+
+      if (isPublished) {
+        const getCachedProjects = nextCache(
+          getProjects,
+          [`projects-published-${limit}-${cursor || 'start'}`],
+          {
+            revalidate: 3600,
+            tags: [CACHE_TAGS.PROJECTS],
+          },
+        );
+        return getCachedProjects();
+      }
+
+      return getProjects();
     }),
 
   getProjectById: publicProcedure
@@ -512,6 +530,10 @@ export const projectRouter = router({
 
         return processedCount;
       });
+
+      if (results > 0) {
+        revalidateTag(CACHE_TAGS.PROJECTS);
+      }
 
       return {
         success: true,

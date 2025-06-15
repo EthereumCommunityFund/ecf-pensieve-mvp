@@ -44,3 +44,7 @@ export const ESSENTIAL_ITEM_QUORUM_SUM = ESSENTIAL_ITEM_LIST.reduce(
   (acc, item) => acc + item.quorum,
   0,
 );
+
+export const CACHE_TAGS = {
+  PROJECTS: 'projects-tag',
+};
