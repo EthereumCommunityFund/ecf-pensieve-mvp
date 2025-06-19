@@ -109,7 +109,13 @@ export default [
       'tailwindcss/no-custom-classname': [
         'warn',
         {
-          whitelist: ['font-mona', 'font-saira', 'font-sans', 'scrollbar-hide', 'text-danger'],
+          whitelist: [
+            'font-mona',
+            'font-saira',
+            'font-sans',
+            'scrollbar-hide',
+            'text-danger',
+          ],
         },
       ],
 
