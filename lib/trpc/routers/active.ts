@@ -2,7 +2,7 @@ import { and, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
-import { activeLogs } from '@/lib/db/schema';
+import { activeLogs, voteRecords } from '@/lib/db/schema';
 
 import { publicProcedure, router } from '../server';
 
@@ -124,6 +124,74 @@ export const activeRouter = router({
 
       return {
         items: mappedItems,
+        nextCursor,
+        totalCount,
+        hasNextPage,
+      };
+    }),
+
+  getUserVotedProjects: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userId, limit, cursor } = input;
+
+      const baseCondition = eq(voteRecords.creator, userId);
+      const whereCondition = cursor
+        ? and(baseCondition, lte(voteRecords.projectId, cursor))
+        : baseCondition;
+
+      const votedProjects = await ctx.db.query.voteRecords.findMany({
+        with: {
+          project: true,
+        },
+        where: whereCondition,
+        orderBy: desc(voteRecords.projectId),
+        limit: limit + 1,
+      });
+
+      const uniqueProjects = votedProjects.reduce(
+        (acc, record) => {
+          if (
+            record.project &&
+            !acc.some((item) => item.project.id === record.project.id)
+          ) {
+            acc.push({
+              project: record.project,
+              lastVoteAt: record.createdAt,
+            });
+          }
+          return acc;
+        },
+        [] as Array<{
+          project: (typeof votedProjects)[0]['project'];
+          lastVoteAt: Date;
+        }>,
+      );
+
+      const hasNextPage = uniqueProjects.length > limit;
+      const items = hasNextPage
+        ? uniqueProjects.slice(0, limit)
+        : uniqueProjects;
+
+      const nextCursor =
+        hasNextPage && items.length > 0
+          ? items[items.length - 1].project.id
+          : undefined;
+
+      const totalCount = await ctx.db
+        .select({ count: sql`COUNT(DISTINCT ${voteRecords.projectId})::int` })
+        .from(voteRecords)
+        .where(baseCondition)
+        .then((res) => Number(res[0]?.count ?? 0));
+
+      return {
+        items,
         nextCursor,
         totalCount,
         hasNextPage,
