@@ -3,6 +3,7 @@ import { relations } from 'drizzle-orm';
 import { activeLogs } from './activeLogs';
 import { invitationCodes } from './invitations';
 import { itemProposals } from './itemProposals';
+import { likeRecords } from './likeRecord';
 import { notifications } from './notifications';
 import { profiles } from './profiles';
 import { projectLogs } from './projectLogs';
@@ -133,5 +134,16 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   proposal: one(proposals, {
     fields: [notifications.proposalId],
     references: [proposals.id],
+  }),
+}));
+
+export const likeRecordsRelations = relations(likeRecords, ({ one }) => ({
+  creator: one(profiles, {
+    fields: [likeRecords.creator],
+    references: [profiles.userId],
+  }),
+  project: one(projects, {
+    fields: [likeRecords.projectId],
+    references: [projects.id],
   }),
 }));
