@@ -1,12 +1,12 @@
 'use client';
 
-import { cn, Image, Skeleton } from '@heroui/react';
+import { Button, cn, Image, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
 import Link from 'next/link';
 
 import ECFTypography from '@/components/base/typography';
 import { useAuth } from '@/context/AuthContext';
-import { formatTimeAgo } from '@/lib/utils';
+import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
@@ -53,12 +53,19 @@ interface IProjectCardProps {
   project: IProject;
   showBorder?: boolean;
   weight?: number;
+  onUpvote?: (projectId: number) => void;
+  userLikeRecord?: {
+    id: number;
+    weight: number | null;
+  } | null;
 }
 
 const ProjectCard = ({
   project,
   showBorder = false,
   weight,
+  onUpvote,
+  userLikeRecord,
 }: IProjectCardProps) => {
   const { profile } = useAuth();
 
@@ -78,14 +85,14 @@ const ProjectCard = ({
     <div
       className={cn(
         showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
-        'pb-[10px] pt-[10px]',
+        'pb-[10px] pt-[10px] ',
       )}
     >
-      <Link
-        href={`/project/${project.id}`}
-        className="mobile:items-start flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]"
-      >
-        <div className="flex flex-1 items-start gap-[14px]">
+      <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5 hover:bg-[rgba(0,0,0,0.05)]">
+        <Link
+          href={`/project/${project.id}`}
+          className="-m-2.5 flex flex-1 cursor-pointer items-start gap-[14px] rounded-[10px] p-2.5 transition-colors duration-200"
+        >
           <div className="mobile:hidden box-content size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)]">
             <Image
               src={project.logoUrl}
@@ -117,7 +124,7 @@ const ProjectCard = ({
             </ECFTypography>
             <ECFTypography
               type={'body2'}
-              className="opacity-68 mt-[4px] leading-[18px]"
+              className="mt-[4px] leading-[18px] opacity-60"
             >
               {project.tagline}
             </ECFTypography>
@@ -143,27 +150,42 @@ const ProjectCard = ({
               ))}
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="flex-col items-center justify-center gap-[4px] text-center">
-          {/* <Button
+        <div className="flex flex-col items-center justify-center gap-[4px] text-center">
+          <Button
             isIconOnly
-            className={cn('rounded-[8px] size-[40px] bg-black/5')}
+            className={cn(
+              'rounded-[8px] size-[40px]',
+              userLikeRecord
+                ? 'bg-[#64C0A5] hover:bg-[#75c2ab]'
+                : 'bg-black/5 hover:bg-black/10',
+            )}
+            onPress={() => {
+              onUpvote?.(project.id);
+            }}
           >
             <Image
-              src="/images/common/CaretUpDark.png"
+              src={
+                userLikeRecord
+                  ? '/images/common/CaretUpLight.png'
+                  : '/images/common/CaretUpDark.png'
+              }
               as={NextImage}
-              alt={'vote'}
+              alt="upvote"
               width={24}
               height={24}
             />
           </Button>
 
-          <p className="font-saria text-[13px] font-semibold leading-[20px] text-black opacity-60">
-            {formatNumber(Math.round(Math.random() * 100000))}
-          </p> */}
+          <ECFTypography
+            type="caption"
+            className="text-[13px] font-semibold leading-[20px] text-black opacity-60"
+          >
+            {formatNumber(project.support || 0)}
+          </ECFTypography>
         </div>
-      </Link>
+      </div>
       {weight && (
         <ECFTypography
           type={'caption'}

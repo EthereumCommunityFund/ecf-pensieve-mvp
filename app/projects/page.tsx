@@ -2,10 +2,12 @@
 
 import { Image } from '@heroui/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { addToast } from '@/components/base';
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
+import UpvoteModal from '@/components/biz/modal/upvote/UpvoteModal';
 import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
@@ -19,16 +21,27 @@ const ProjectsPage = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    trpc.project.getProjects.useInfiniteQuery(
-      {
-        limit: 10,
-        isPublished: true,
-      },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      },
-    );
+  const [upvoteModalOpen, setUpvoteModalOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null,
+  );
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch: refetchProjects,
+  } = trpc.project.getProjects.useInfiniteQuery(
+    {
+      limit: 10,
+      isPublished: true,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
 
   const handleLoadMore = () => {
     if (!isFetchingNextPage) {
@@ -44,9 +57,107 @@ const ProjectsPage = () => {
     router.push('/project/create');
   }, [profile, showAuthPrompt, router]);
 
+  const { data: userWeightData, refetch: refetchUserAvailableWeight } =
+    trpc.likeProject.getUserAvailableWeight.useQuery(undefined, {
+      enabled: !!profile?.userId,
+    });
+
+  const { data: userLikeRecords, refetch: refetchUserVotedProjects } =
+    trpc.active.getUserVotedProjects.useQuery(
+      { userId: profile?.userId || '', limit: 100 },
+      { enabled: !!profile?.userId },
+    );
+
+  const likeProjectMutation = trpc.likeProject.likeProject.useMutation({
+    onSuccess: async () => {
+      setUpvoteModalOpen(false);
+      setSelectedProjectId(null);
+      refetchProjects();
+      refetchUserVotedProjects();
+      refetchUserAvailableWeight();
+      addToast({
+        title: 'Success',
+        description: 'Project Upvoted Successfully',
+        color: 'success',
+      });
+    },
+  });
+
+  const updateLikeProjectMutation =
+    trpc.likeProject.updateLikeProject.useMutation({
+      onSuccess: async () => {
+        setUpvoteModalOpen(false);
+        setSelectedProjectId(null);
+        refetchProjects();
+        refetchUserVotedProjects();
+        refetchUserAvailableWeight();
+        addToast({
+          title: 'Success',
+          description: 'Project Updated Successfully',
+          color: 'success',
+        });
+      },
+    });
+
   const allProjects = useMemo(() => {
     return data?.pages.flatMap((page) => page.items) || [];
   }, [data]);
+
+  // Create a map for efficient projectLikeRecord lookup
+  const projectLikeRecordMap = useMemo(() => {
+    const map = new Map();
+    if (userLikeRecords?.items) {
+      userLikeRecords.items.forEach((record) => {
+        if (record.project?.id) {
+          map.set(record.project.id, record);
+        }
+      });
+    }
+    return map;
+  }, [userLikeRecords]);
+
+  const handleUpvote = useCallback(
+    (projectId: number) => {
+      if (!profile) {
+        showAuthPrompt();
+        return;
+      }
+      setSelectedProjectId(projectId);
+      setUpvoteModalOpen(true);
+    },
+    [profile, showAuthPrompt],
+  );
+
+  const handleConfirmUpvote = useCallback(
+    async (weight: number) => {
+      if (!selectedProjectId) return;
+
+      const hasUserUpvoted = !!projectLikeRecordMap.get(selectedProjectId);
+
+      if (hasUserUpvoted) {
+        await updateLikeProjectMutation.mutateAsync({
+          projectId: selectedProjectId,
+          weight,
+        });
+      } else {
+        await likeProjectMutation.mutateAsync({
+          projectId: selectedProjectId,
+          weight,
+        });
+      }
+    },
+    [
+      selectedProjectId,
+      likeProjectMutation,
+      updateLikeProjectMutation,
+      projectLikeRecordMap,
+    ],
+  );
+
+  const selectedProject = allProjects.find((p) => p.id === selectedProjectId);
+  const userLikeRecord = selectedProjectId
+    ? projectLikeRecordMap.get(selectedProjectId)
+    : null;
 
   useEffect(() => {
     if (allProjects.length > 0) {
@@ -98,13 +209,28 @@ const ProjectsPage = () => {
               </>
             ) : allProjects.length > 0 ? (
               <>
-                {allProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project as IProject}
-                    showBorder={true}
-                  />
-                ))}
+                {allProjects.map((project) => {
+                  const projectLikeRecord = projectLikeRecordMap.get(
+                    project.id,
+                  );
+
+                  return (
+                    <ProjectCard
+                      key={project.id}
+                      project={project as IProject}
+                      showBorder={true}
+                      onUpvote={handleUpvote}
+                      userLikeRecord={
+                        projectLikeRecord
+                          ? {
+                              id: project.id,
+                              weight: projectLikeRecord.weight || 0,
+                            }
+                          : null
+                      }
+                    />
+                  );
+                })}
 
                 {isFetchingNextPage && (
                   <ProjectCardSkeleton showBorder={true} />
@@ -149,6 +275,24 @@ const ProjectsPage = () => {
           <RewardCard />
         </div>
       </div>
+
+      <UpvoteModal
+        isOpen={upvoteModalOpen}
+        onClose={() => {
+          setUpvoteModalOpen(false);
+          setSelectedProjectId(null);
+        }}
+        onConfirm={handleConfirmUpvote}
+        availableCP={
+          (userWeightData?.availableWeight || 0) +
+          (userLikeRecord ? userLikeRecord.weight || 0 : 0)
+        }
+        currentUserWeight={userLikeRecord?.weight || 0}
+        hasUserUpvoted={!!userLikeRecord}
+        isLoading={
+          likeProjectMutation.isPending || updateLikeProjectMutation.isPending
+        }
+      />
     </div>
   );
 };
