@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
@@ -143,7 +143,7 @@ export const activeRouter = router({
 
       const baseCondition = eq(likeRecords.creator, userId);
       const whereCondition = cursor
-        ? and(baseCondition, lte(likeRecords.projectId, cursor))
+        ? and(baseCondition, lt(likeRecords.projectId, cursor))
         : baseCondition;
 
       const likedProjects = await ctx.db.query.likeRecords.findMany({
