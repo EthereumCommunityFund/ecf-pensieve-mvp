@@ -1,4 +1,4 @@
-import { Button, Tooltip } from '@heroui/react';
+import { Button, cn, Tooltip } from '@heroui/react';
 import { FC } from 'react';
 
 import { PushPinSimpleIcon, PushPinSimpleSlashIcon } from '@/components/icons';
@@ -96,7 +96,10 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
             isIconOnly
             size="sm"
             variant="light"
-            className="h-[18px] min-w-[18px] p-0 transition-colors hover:bg-black/5"
+            className={cn(
+              'h-[18px] min-w-[18px] p-0 transition-colors hover:bg-black/5',
+              isPinned ? '' : 'opacity-20',
+            )}
             onPress={handlePinToggle}
           >
             {isPinned ? (
