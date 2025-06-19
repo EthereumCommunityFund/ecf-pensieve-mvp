@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
@@ -135,7 +135,7 @@ export const activeRouter = router({
       z.object({
         userId: z.string(),
         limit: z.number().min(1).max(100).default(50),
-        cursor: z.number().optional(),
+        cursor: z.string().datetime().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -143,15 +143,19 @@ export const activeRouter = router({
 
       const baseCondition = eq(likeRecords.creator, userId);
       const whereCondition = cursor
-        ? and(baseCondition, lt(likeRecords.projectId, cursor))
+        ? and(baseCondition, lte(likeRecords.createdAt, new Date(cursor)))
         : baseCondition;
 
       const likedProjects = await ctx.db.query.likeRecords.findMany({
         with: {
-          project: true,
+          project: {
+            with: {
+              creator: true,
+            },
+          },
         },
         where: whereCondition,
-        orderBy: desc(likeRecords.projectId),
+        orderBy: desc(likeRecords.createdAt),
         limit: limit + 1,
       });
 
@@ -166,7 +170,7 @@ export const activeRouter = router({
 
       const nextCursor =
         hasNextPage && items.length > 0
-          ? items[items.length - 1].projectId
+          ? items[items.length - 1].createdAt.toISOString()
           : undefined;
 
       const totalCount = await ctx.db
