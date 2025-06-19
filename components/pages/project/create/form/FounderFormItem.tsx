@@ -9,7 +9,8 @@ import {
   UseFormRegister,
 } from 'react-hook-form';
 
-import { Button, Input } from '@/components/base';
+// import { Button } from '@/components/base'; // 不再使用 Hero UI Button
+import { QuestionIcon } from '@/components/icons';
 
 import { IProjectFormData } from '../types';
 
@@ -21,8 +22,8 @@ interface FounderFormItemProps {
     | Merge<FieldError, FieldErrorsImpl<IProjectFormData['founders'][number]>>
     | undefined;
   foundersKey: 'founders';
-  isPrimary: boolean;
   canRemove: boolean;
+  showHeader?: boolean;
 }
 
 const FounderFormItem: React.FC<FounderFormItemProps> = ({
@@ -31,58 +32,83 @@ const FounderFormItem: React.FC<FounderFormItemProps> = ({
   register,
   errors,
   foundersKey,
-  isPrimary,
   canRemove,
+  showHeader = false,
 }) => {
+  if (showHeader) {
+    return (
+      <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+        <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+          <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+            Full Name
+          </span>
+          <QuestionIcon size={18} />
+        </div>
+        <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+          <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+            Title Role
+          </span>
+          <QuestionIcon size={18} />
+        </div>
+        <div className="w-[60px] p-[10px]"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mobile:flex-col flex items-start gap-[10px]">
-      <Input
-        className="flex-1"
-        label="Full Name"
-        labelPlacement="outside"
-        placeholder="Type a name"
-        {...register(`${foundersKey}.${index}.name`)}
-        isInvalid={!!errors?.name}
-        errorMessage={errors?.name?.message}
-        classNames={{
-          label: 'text-[14px] font-[600] text-black leading-[20px]',
-        }}
-      />
-      <Input
-        className="flex-1"
-        label="Title / Role"
-        labelPlacement="outside"
-        placeholder="Type their role or title"
-        {...register(`${foundersKey}.${index}.title`)}
-        isInvalid={!!errors?.title}
-        errorMessage={errors?.title?.message}
-        classNames={{
-          label: 'text-[14px] font-[600] text-black leading-[20px]',
-        }}
-      />
-      {canRemove && (
-        <div className="mobile:mt-0 mobile:w-full mt-[28px] flex justify-end">
-          <Button
-            isIconOnly
-            size="sm"
-            className="mobile:hidden size-[32px] border-none bg-transparent p-[4px] text-[13px] font-[400] leading-[16px] text-black"
-            onPress={() => remove(index)}
+    <div className="flex items-stretch border-b border-black/5 bg-white">
+      <div className="flex-1 border-r border-black/10 p-[10px]">
+        <input
+          type="text"
+          placeholder="Type a name"
+          {...register(`${foundersKey}.${index}.name`)}
+          className="h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0"
+          style={{
+            boxShadow: 'none !important',
+            outline: 'none !important',
+            border: 'none !important',
+          }}
+        />
+        {errors?.name && (
+          <span className="text-[13px] text-red-500">
+            {errors.name.message}
+          </span>
+        )}
+      </div>
+      <div className="flex-1 p-[10px]">
+        <input
+          type="text"
+          placeholder="Type their role or title"
+          {...register(`${foundersKey}.${index}.title`)}
+          className="h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0"
+          style={{
+            boxShadow: 'none !important',
+            outline: 'none !important',
+            border: 'none !important',
+          }}
+        />
+        {errors?.title && (
+          <span className="text-[13px] text-red-500">
+            {errors.title.message}
+          </span>
+        )}
+      </div>
+      <div className="flex w-[60px] items-center justify-center">
+        {canRemove && (
+          <button
+            type="button"
+            className="flex size-[40px] cursor-pointer items-center justify-center  rounded-full border-none bg-transparent p-[8px] opacity-30"
+            onClick={() => remove(index)}
             aria-label={`Remove founder ${index + 1}`}
+            style={{
+              outline: 'none',
+              boxShadow: 'none',
+            }}
           >
             <XCircle size={24} />
-          </Button>
-
-          <Button
-            size="sm"
-            className="mobile:flex hidden gap-[5px] border-none bg-transparent p-[5px] text-[13px] font-[400] leading-[16px] text-black"
-            onPress={() => remove(index)}
-            aria-label={`Remove founder ${index + 1}`}
-          >
-            <XCircle size={20} />
-            <span>Remove</span>
-          </Button>
-        </div>
-      )}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

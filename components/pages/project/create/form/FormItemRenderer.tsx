@@ -17,7 +17,7 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
-import { CalendarBlankIcon } from '@/components/icons';
+import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
   buildDatePickerProps,
@@ -276,7 +276,16 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
       return (
         <div>
-          <div className="flex flex-col gap-2.5 pt-[10px]">
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            <FounderFormItem
+              index={0}
+              remove={() => {}}
+              register={register}
+              errors={undefined}
+              foundersKey={field.name as 'founders'}
+              canRemove={false}
+              showHeader={true}
+            />
             {foundersArray.map((founder: any, index: number) => {
               // Get error for specific index from fieldState
               const founderError =
@@ -297,25 +306,30 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   register={register}
                   errors={founderError}
                   foundersKey={field.name as 'founders'}
-                  isPrimary={index === 0}
                   canRemove={foundersArray.length > 1}
                 />
               );
             })}
-          </div>
-
-          <div className="pt-[10px]">
-            <Button
-              color="secondary"
-              size="md"
-              className="mobile:w-full px-[20px]"
-              onPress={() => {
-                field.onChange([...foundersArray, { name: '', title: '' }]);
-              }}
-              isDisabled={isDisabled}
-            >
-              Add Entry(FormItemRenderer)
-            </Button>
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none bg-black/5 px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={() => {
+                  field.onChange([...foundersArray, { name: '', title: '' }]);
+                }}
+                disabled={isDisabled}
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  fontFamily: 'Open Sans, sans-serif',
+                }}
+              >
+                <PlusIcon size={16} />
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add an Entry
+                </span>
+              </button>
+            </div>
           </div>
           {errorMessageElement}
         </div>
