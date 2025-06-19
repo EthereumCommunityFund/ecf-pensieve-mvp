@@ -9,7 +9,7 @@ import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 
 import ActivityItem from './activityItem';
-import ActivityItemSkeleton from './activityItemSkeleton';
+import ActivityItemSkeleton from './ActivityItemSkeleton';
 import { useProfileData } from './dataContext';
 
 const contributionsColorScale = scaleThreshold<number, string>()
