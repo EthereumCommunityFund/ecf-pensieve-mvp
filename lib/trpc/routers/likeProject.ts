@@ -14,25 +14,6 @@ export const likeProjectRouter = router({
     return { availableWeight };
   }),
 
-  getUserProjectLikeRecord: protectedProcedure
-    .input(
-      z.object({
-        projectId: z.number(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { projectId } = input;
-
-      const likeRecord = await ctx.db.query.likeRecords.findFirst({
-        where: and(
-          eq(likeRecords.projectId, projectId),
-          eq(likeRecords.creator, ctx.user.id),
-        ),
-      });
-
-      return likeRecord;
-    }),
-
   likeProject: protectedProcedure
     .input(
       z.object({
