@@ -10,9 +10,20 @@ import { formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
 import ProposalVoteUtils from '@/utils/proposal';
 
-export function ProjectCardSkeleton() {
+interface IProjectCardSkeletonProps {
+  showBorder?: boolean;
+}
+
+export function ProjectCardSkeleton({
+  showBorder = false,
+}: IProjectCardSkeletonProps) {
   return (
-    <div className="py-[10px]">
+    <div
+      className={cn(
+        showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
+        'pb-[10px] pt-[10px]',
+      )}
+    >
       <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5">
         <div className="flex flex-1 items-start gap-[14px]">
           <Skeleton className="mobile:hidden size-[100px] rounded-[10px]" />
@@ -41,9 +52,14 @@ export function ProjectCardSkeleton() {
 interface IProjectCardProps {
   project: IProject;
   showBorder?: boolean;
+  weight?: number;
 }
 
-const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
+const ProjectCard = ({
+  project,
+  showBorder = false,
+  weight,
+}: IProjectCardProps) => {
   const { profile } = useAuth();
 
   const { leadingProposalId, leadingProposalResult } =
@@ -70,7 +86,7 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
         className="mobile:items-start flex cursor-pointer items-center justify-start gap-5 rounded-[10px] p-2.5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.05)]"
       >
         <div className="flex flex-1 items-start gap-[14px]">
-          <div className="mobile:hidden size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)]">
+          <div className="mobile:hidden box-content size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)]">
             <Image
               src={project.logoUrl}
               as={NextImage}
@@ -95,13 +111,13 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
           <div className="mobile:max-w-full flex-1">
             <ECFTypography
               type={'body1'}
-              className="font-semibold leading-[18px]"
+              className="font-semibold leading-[20px]"
             >
               {project.name}
             </ECFTypography>
             <ECFTypography
               type={'body2'}
-              className="mt-[6px] leading-[18px] opacity-65"
+              className="opacity-68 mt-[4px] leading-[18px]"
             >
               {project.tagline}
             </ECFTypography>
@@ -148,6 +164,14 @@ const ProjectCard = ({ project, showBorder = false }: IProjectCardProps) => {
           </p> */}
         </div>
       </Link>
+      {weight && (
+        <ECFTypography
+          type={'caption'}
+          className="mt-[10px] text-right opacity-50"
+        >
+          You allocated {weight}
+        </ECFTypography>
+      )}
     </div>
   );
 };

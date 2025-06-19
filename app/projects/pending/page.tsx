@@ -107,7 +107,9 @@ const PendingProjectsPage = () => {
                   />
                 ))}
 
-                {isFetchingNextPage && <ProjectCardSkeleton />}
+                {isFetchingNextPage && (
+                  <ProjectCardSkeleton showBorder={true} />
+                )}
 
                 {hasNextPage && (
                   <div className="flex justify-center py-4">

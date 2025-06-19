@@ -46,7 +46,7 @@ export default function Upvotes() {
         {isLoading ? (
           <>
             {Array.from({ length: 5 }).map((_, index) => (
-              <ProjectCardSkeleton key={index} />
+              <ProjectCardSkeleton key={index} showBorder={true} />
             ))}
           </>
         ) : upvotedProjects.length > 0 ? (
@@ -56,13 +56,14 @@ export default function Upvotes() {
                 key={item.project?.id}
                 project={item.project as IProject}
                 showBorder={true}
+                weight={item.weight!}
               />
             ))}
 
             {isFetchingNextPage && (
               <>
                 {Array.from({ length: 3 }).map((_, index) => (
-                  <ProjectCardSkeleton key={index} />
+                  <ProjectCardSkeleton key={index} showBorder={true} />
                 ))}
               </>
             )}

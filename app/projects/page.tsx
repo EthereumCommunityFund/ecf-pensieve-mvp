@@ -93,7 +93,7 @@ const ProjectsPage = () => {
             {isLoading ? (
               <>
                 {Array.from({ length: 10 }).map((_, index) => (
-                  <ProjectCardSkeleton key={index} />
+                  <ProjectCardSkeleton key={index} showBorder={true} />
                 ))}
               </>
             ) : allProjects.length > 0 ? (
@@ -106,7 +106,9 @@ const ProjectsPage = () => {
                   />
                 ))}
 
-                {isFetchingNextPage && <ProjectCardSkeleton />}
+                {isFetchingNextPage && (
+                  <ProjectCardSkeleton showBorder={true} />
+                )}
 
                 {hasNextPage && (
                   <div className="flex justify-center py-4">

@@ -81,9 +81,9 @@ const HomeList = () => {
       >
         {isLoading ? (
           <div className="mt-2.5 px-[10px]">
-            <ProjectCardSkeleton />
-            <ProjectCardSkeleton />
-            <ProjectCardSkeleton />
+            <ProjectCardSkeleton showBorder={true} />
+            <ProjectCardSkeleton showBorder={true} />
+            <ProjectCardSkeleton showBorder={false} />
           </div>
         ) : projects.length > 0 ? (
           <ProjectList projectList={projects as IProject[]} />
