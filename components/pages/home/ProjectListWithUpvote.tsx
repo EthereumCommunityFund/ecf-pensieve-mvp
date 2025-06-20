@@ -91,6 +91,21 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
       },
     });
 
+  const withdrawLikeMutation = trpc.likeProject.withdrawLike.useMutation({
+    onSuccess: async () => {
+      onRefetch?.();
+      refetchUserVotedProjects();
+      refetchUserAvailableWeight();
+      setUpvoteModalOpen(false);
+      setSelectedProjectId(null);
+      addToast({
+        title: 'Success',
+        description: 'CP Withdrawn Successfully',
+        color: 'success',
+      });
+    },
+  });
+
   const handleUpvote = useCallback(
     (projectId: number) => {
       if (!profile) {
@@ -128,6 +143,14 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
       projectLikeRecordMap,
     ],
   );
+
+  const handleWithdraw = useCallback(async () => {
+    if (!selectedProjectId) return;
+
+    await withdrawLikeMutation.mutateAsync({
+      projectId: selectedProjectId,
+    });
+  }, [selectedProjectId, withdrawLikeMutation]);
 
   const userLikeRecord = useMemo(() => {
     return selectedProjectId
@@ -167,12 +190,14 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
           setSelectedProjectId(null);
         }}
         onConfirm={handleConfirmUpvote}
+        onWithdraw={handleWithdraw}
         availableCP={userWeightData?.availableWeight || 0}
         currentUserWeight={userLikeRecord?.weight || 0}
         hasUserUpvoted={!!userLikeRecord}
-        isLoading={
+        isConfirmLoading={
           likeProjectMutation.isPending || updateLikeProjectMutation.isPending
         }
+        isWithdrawLoading={withdrawLikeMutation.isPending}
       />
     </>
   );

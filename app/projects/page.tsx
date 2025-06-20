@@ -105,6 +105,21 @@ const ProjectsPage = () => {
       },
     });
 
+  const withdrawLikeMutation = trpc.likeProject.withdrawLike.useMutation({
+    onSuccess: async () => {
+      refetchProjects();
+      refetchUserVotedProjects();
+      refetchUserAvailableWeight();
+      setUpvoteModalOpen(false);
+      setSelectedProjectId(null);
+      addToast({
+        title: 'Success',
+        description: 'CP Withdrawn Successfully',
+        color: 'success',
+      });
+    },
+  });
+
   const allProjects = useMemo(() => {
     return data?.pages.flatMap((page) => page.items) || [];
   }, [data]);
@@ -160,7 +175,14 @@ const ProjectsPage = () => {
     ],
   );
 
-  const selectedProject = allProjects.find((p) => p.id === selectedProjectId);
+  const handleWithdraw = useCallback(async () => {
+    if (!selectedProjectId) return;
+
+    await withdrawLikeMutation.mutateAsync({
+      projectId: selectedProjectId,
+    });
+  }, [selectedProjectId, withdrawLikeMutation]);
+
   const userLikeRecord = selectedProjectId
     ? projectLikeRecordMap.get(selectedProjectId)
     : null;
@@ -289,12 +311,14 @@ const ProjectsPage = () => {
           setSelectedProjectId(null);
         }}
         onConfirm={handleConfirmUpvote}
+        onWithdraw={handleWithdraw}
         availableCP={userWeightData?.availableWeight || 0}
         currentUserWeight={userLikeRecord?.weight || 0}
         hasUserUpvoted={!!userLikeRecord}
-        isLoading={
+        isConfirmLoading={
           likeProjectMutation.isPending || updateLikeProjectMutation.isPending
         }
+        isWithdrawLoading={withdrawLikeMutation.isPending}
       />
     </div>
   );

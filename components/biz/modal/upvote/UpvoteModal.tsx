@@ -16,9 +16,11 @@ interface IUpvoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (weight: number) => Promise<void>;
+  onWithdraw?: () => Promise<void>;
   availableCP: number;
   currentUserWeight?: number;
-  isLoading?: boolean;
+  isConfirmLoading?: boolean;
+  isWithdrawLoading?: boolean;
   hasUserUpvoted?: boolean;
 }
 
@@ -26,9 +28,11 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
+  onWithdraw,
   availableCP,
   currentUserWeight = 0,
-  isLoading = false,
+  isConfirmLoading = false,
+  isWithdrawLoading = false,
   hasUserUpvoted = false,
 }) => {
   const [inputValue, setInputValue] = useState(
@@ -37,8 +41,8 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
   const [isValid, setIsValid] = useState(true);
 
   const isButtonDisabled = useMemo(() => {
-    return !isValid || !inputValue || isLoading;
-  }, [isValid, inputValue, isLoading]);
+    return !isValid || !inputValue || isConfirmLoading;
+  }, [isValid, inputValue, isConfirmLoading]);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -60,6 +64,12 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
     }
   };
 
+  const handleWithdraw = async () => {
+    if (onWithdraw) {
+      await onWithdraw();
+    }
+  };
+
   const handleClose = () => {
     setInputValue(hasUserUpvoted ? currentUserWeight.toString() : '');
     setIsValid(true);
@@ -75,13 +85,13 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
         body: 'p-[20px] mobile:p-[20px]',
         header: 'p-[20px]',
       }}
-      isDismissable={!isLoading}
+      isDismissable={!isConfirmLoading && !isWithdrawLoading}
     >
       <ModalContent>
         <CommonModalHeader
           title="Upvote Project"
           onClose={handleClose}
-          isDisabled={isLoading}
+          isDisabled={isConfirmLoading || isWithdrawLoading}
           classNames={{
             base: 'border-b border-[rgba(0,0,0,0.1)]',
             title: 'text-black/80 text-[16px]',
@@ -99,7 +109,7 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
                 placeholder="Enter amount"
                 value={inputValue}
                 onValueChange={handleInputChange}
-                disabled={isLoading}
+                disabled={isConfirmLoading || isWithdrawLoading}
                 isInvalid={!isValid}
                 errorMessage={
                   !isValid
@@ -123,14 +133,20 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
                   isButtonDisabled && 'opacity-30 cursor-not-allowed',
                 )}
                 disabled={isButtonDisabled}
-                isLoading={isLoading}
+                isLoading={isConfirmLoading}
               >
                 {hasUserUpvoted ? 'Update Vote' : 'Confirm Vote'}
               </Button>
             </div>
 
             {hasUserUpvoted && (
-              <Button color="secondary" className="w-full" disabled={isLoading}>
+              <Button
+                color="secondary"
+                className="w-full"
+                disabled={isWithdrawLoading}
+                isLoading={isWithdrawLoading}
+                onPress={handleWithdraw}
+              >
                 Withdraw all CP
               </Button>
             )}
