@@ -2,6 +2,7 @@
 
 import { X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { cn } from '@heroui/react';
 
 import {
   Button,
@@ -83,14 +84,6 @@ const AgreementModal: React.FC<AgreementModalProps> = ({
     onCancel();
   }, [onCancel]);
 
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-end px-5 py-3">
-      <span className="text-sm text-gray-600">
-        {currentStepIndex + 1}/{AGREEMENT_STEPS.length}
-      </span>
-    </div>
-  );
-
   const renderCloseButton = () => (
     <Button
       onPress={handleCancel}
@@ -113,54 +106,56 @@ const AgreementModal: React.FC<AgreementModalProps> = ({
       hideCloseButton={true}
       size="lg"
       isDismissable={false}
-      backdrop="opaque"
+      backdrop="transparent"
       className="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-xl"
       classNames={{
-        base: 'p-0 w-[420px] mobile:w-[calc(90vw)]',
-        backdrop: 'bg-gray-900/30 backdrop-blur-sm',
+        base: 'p-0 w-[480px] mobile:w-[calc(90vw)] bg-transparent',
+        backdrop: 'bg-transparent backdrop-blur-none',
       }}
     >
-      <ModalContent className="flex max-h-[90vh] flex-col">
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
-          <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
+      <ModalContent>
+        <div className="flex w-full items-center justify-between border-b border-black/10 px-[20px] py-[10px]">
+          <ModalHeader className="p-0 text-[16px] font-semibold text-black/80">
             Sign Up
           </ModalHeader>
           {renderCloseButton()}
         </div>
 
-        <div className="border-b border-gray-200">
-          {renderStepIndicator()}
-          <div className="px-5 pb-4">
-            <h3 className="mb-2 text-base font-medium text-gray-900">
-              {currentStep.title}
-            </h3>
-            <p className="text-sm text-gray-600">Please read and accept</p>
-          </div>
-        </div>
+        <ModalBody className="flex flex-1 flex-col gap-[20px] overflow-hidden">
+          <div className="flex flex-col gap-[10px]">
+            <div className="flex items-center justify-between text-[16px] font-[600] leading-[1.6] text-black/80">
+              <span>{currentStep.title}</span>
+              <span>
+                {currentStepIndex + 1}/{AGREEMENT_STEPS.length}
+              </span>
+            </div>
 
-        <ModalBody className="flex-1 overflow-hidden p-0">
-          <ScrollDetector onScrollToEnd={handleScrollToEnd}>
+            <p className="text-[13px]  text-black/80">Please read and accept</p>
+          </div>
+
+          <ScrollDetector
+            onScrollToEnd={handleScrollToEnd}
+            className="max-h-[345px] rounded-[10px] bg-[#F5F5F5] px-[20px] py-[10px]"
+          >
             {currentStep.content}
           </ScrollDetector>
-        </ModalBody>
 
-        <div className="border-t border-gray-200 p-5">
-          <div className="flex justify-center">
+          <div>
             <Button
-              color="primary"
+              color="secondary"
               onPress={handleAgree}
               disabled={!canProceed}
-              className={`px-8 py-2 ${
-                !canProceed ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-              }`}
-              style={{
-                cursor: !canProceed ? 'not-allowed' : 'pointer',
-              }}
+              className={cn(
+                'w-full border-none',
+                !canProceed
+                  ? 'cursor-not-allowed opacity-30'
+                  : 'cursor-pointer bg-black/5',
+              )}
             >
               {isLastStep ? 'Complete' : 'Agree'}
             </Button>
           </div>
-        </div>
+        </ModalBody>
       </ModalContent>
     </Modal>
   );

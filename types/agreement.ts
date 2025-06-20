@@ -26,4 +26,5 @@ export interface ScrollDetectorProps {
   onScrollToEnd: (hasScrolledToEnd: boolean) => void;
   threshold?: number;
   children: React.ReactNode;
+  className?: string;
 }

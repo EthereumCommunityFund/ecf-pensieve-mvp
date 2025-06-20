@@ -1,10 +1,19 @@
-'use client';
+import { FC, PropsWithChildren } from 'react';
 
-import React from 'react';
+const MainContainer: FC<PropsWithChildren> = ({ children }) => {
+  return (
+    <div className="text-[16px] font-[400] leading-[23px] text-black/80">
+      {children}
+    </div>
+  );
+};
 
-// Privacy Policy Content
-export const PrivacyPolicyContent: React.FC = () => (
-  <div className="space-y-4 p-5 text-sm leading-relaxed text-gray-700">
+const SectionContainer: FC<PropsWithChildren> = ({ children }) => {
+  return <div className="mb-[20px]">{children}</div>;
+};
+
+export const PrivacyPolicyContent = () => (
+  <MainContainer>
     <p>
       <strong>ECF.network</strong> takes your privacy seriously even before full
       deployment. Before testing our PoC platform, we would like to bring
@@ -76,12 +85,11 @@ export const PrivacyPolicyContent: React.FC = () => (
         of our privacy policy to your attention.
       </p>
     </div>
-  </div>
+  </MainContainer>
 );
 
-// About ECF Pensieve Content
-export const AboutECFPensieveContent: React.FC = () => (
-  <div className="space-y-4 p-5 text-sm leading-relaxed text-gray-700">
+export const AboutECFPensieveContent = () => (
+  <MainContainer>
     <p>
       <strong>ecf.network</strong> is a ECF Pensieve knowledge base: where truth
       is validated by communities, not gatekeepers.
@@ -136,12 +144,11 @@ export const AboutECFPensieveContent: React.FC = () => (
         decentralized knowledge sharing.
       </p>
     </div>
-  </div>
+  </MainContainer>
 );
 
-// Disclaimer Content
-export const DisclaimerContent: React.FC = () => (
-  <div className="space-y-4 p-5 text-sm leading-relaxed text-gray-700">
+export const DisclaimerContent = () => (
+  <MainContainer>
     <p>
       Data submitted during alpha is{' '}
       <strong>not guaranteed to be included in the genesis block</strong> at
@@ -206,5 +213,5 @@ export const DisclaimerContent: React.FC = () => (
         support. Thank you for joining the Alpha.
       </p>
     </div>
-  </div>
+  </MainContainer>
 );

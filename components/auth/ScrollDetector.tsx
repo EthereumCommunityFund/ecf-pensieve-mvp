@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef } from 'react';
+import { cn } from '@heroui/react';
 
 import { ScrollDetectorProps } from '@/types/agreement';
 
@@ -8,6 +9,7 @@ const ScrollDetector: React.FC<ScrollDetectorProps> = ({
   onScrollToEnd,
   threshold = 10,
   children,
+  className,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -64,12 +66,8 @@ const ScrollDetector: React.FC<ScrollDetectorProps> = ({
   }, [children, onScrollToEnd]);
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className="max-h-[345px] flex-1 overflow-y-auto"
-    >
+    <div ref={scrollContainerRef} className={cn('overflow-y-auto', className)}>
       {children}
-      {/* 放置在内容底部的观察元素 */}
       <div
         ref={sentinelRef}
         className="h-1 w-full"
