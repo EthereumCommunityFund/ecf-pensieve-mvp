@@ -29,13 +29,19 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
   const { data: userWeightData, refetch: refetchUserAvailableWeight } =
     trpc.likeProject.getUserAvailableWeight.useQuery(undefined, {
       enabled: !!profile,
+      refetchOnWindowFocus: false,
+      staleTime: 0,
     });
 
   // Get user's like records for all projects
   const { data: userLikeRecords, refetch: refetchUserVotedProjects } =
     trpc.active.getUserVotedProjects.useQuery(
       { userId: profile?.userId || '', limit: 100 },
-      { enabled: !!profile?.userId },
+      {
+        enabled: !!profile?.userId,
+        refetchOnWindowFocus: false,
+        staleTime: 0,
+      },
     );
 
   // Create a map for efficient projectLikeRecord lookup
@@ -53,12 +59,12 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
 
   // Like project mutation
   const likeProjectMutation = trpc.likeProject.likeProject.useMutation({
-    onSuccess: () => {
-      setUpvoteModalOpen(false);
-      setSelectedProjectId(null);
+    onSuccess: async () => {
       onRefetch?.();
       refetchUserVotedProjects();
       refetchUserAvailableWeight();
+      setUpvoteModalOpen(false);
+      setSelectedProjectId(null);
       addToast({
         title: 'Success',
         description: 'Project Upvoted Successfully',
@@ -69,12 +75,14 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
 
   const updateLikeProjectMutation =
     trpc.likeProject.updateLikeProject.useMutation({
-      onSuccess: () => {
+      onSuccess: async () => {
+        await Promise.all([
+          onRefetch?.(),
+          refetchUserVotedProjects(),
+          refetchUserAvailableWeight(),
+        ]);
         setUpvoteModalOpen(false);
         setSelectedProjectId(null);
-        onRefetch?.();
-        refetchUserVotedProjects();
-        refetchUserAvailableWeight();
         addToast({
           title: 'Success',
           description: 'Project Updated Successfully',
@@ -121,10 +129,11 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
     ],
   );
 
-  const selectedProject = projectList.find((p) => p.id === selectedProjectId);
-  const userLikeRecord = selectedProjectId
-    ? projectLikeRecordMap.get(selectedProjectId)
-    : null;
+  const userLikeRecord = useMemo(() => {
+    return selectedProjectId
+      ? projectLikeRecordMap.get(selectedProjectId)
+      : null;
+  }, [selectedProjectId, projectLikeRecordMap]);
 
   return (
     <>
@@ -158,10 +167,7 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
           setSelectedProjectId(null);
         }}
         onConfirm={handleConfirmUpvote}
-        availableCP={
-          (userWeightData?.availableWeight || 0) +
-          (userLikeRecord ? userLikeRecord.weight || 0 : 0)
-        }
+        availableCP={userWeightData?.availableWeight || 0}
         currentUserWeight={userLikeRecord?.weight || 0}
         hasUserUpvoted={!!userLikeRecord}
         isLoading={

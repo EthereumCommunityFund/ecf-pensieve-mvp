@@ -46,16 +46,8 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
     const numValue = parseFloat(value);
     let isValidNumber = !isNaN(numValue) && numValue > 0;
 
-    if (hasUserUpvoted) {
-      // For updates: must be greater than current weight and not exceed available + current
-      isValidNumber =
-        isValidNumber &&
-        numValue > currentUserWeight &&
-        numValue <= availableCP;
-    } else {
-      // For new votes: must not exceed available weight
-      isValidNumber = isValidNumber && numValue <= availableCP;
-    }
+    // For both new votes and updates: must be greater than 0 and not exceed available CP
+    isValidNumber = isValidNumber && numValue <= availableCP;
 
     setIsValid(isValidNumber);
   };
@@ -111,9 +103,7 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
                 isInvalid={!isValid}
                 errorMessage={
                   !isValid
-                    ? hasUserUpvoted
-                      ? `Please enter an amount greater than ${currentUserWeight} and not exceeding ${availableCP}`
-                      : `Please enter a valid amount between 1 and ${availableCP}`
+                    ? `Please enter a valid amount between 1 and ${availableCP}`
                     : undefined
                 }
               />

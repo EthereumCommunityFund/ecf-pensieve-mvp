@@ -60,21 +60,27 @@ const ProjectsPage = () => {
   const { data: userWeightData, refetch: refetchUserAvailableWeight } =
     trpc.likeProject.getUserAvailableWeight.useQuery(undefined, {
       enabled: !!profile?.userId,
+      refetchOnWindowFocus: false,
+      staleTime: 0,
     });
 
   const { data: userLikeRecords, refetch: refetchUserVotedProjects } =
     trpc.active.getUserVotedProjects.useQuery(
       { userId: profile?.userId || '', limit: 100 },
-      { enabled: !!profile?.userId },
+      {
+        enabled: !!profile?.userId,
+        refetchOnWindowFocus: false,
+        staleTime: 0,
+      },
     );
 
   const likeProjectMutation = trpc.likeProject.likeProject.useMutation({
     onSuccess: async () => {
-      setUpvoteModalOpen(false);
-      setSelectedProjectId(null);
       refetchProjects();
       refetchUserVotedProjects();
       refetchUserAvailableWeight();
+      setUpvoteModalOpen(false);
+      setSelectedProjectId(null);
       addToast({
         title: 'Success',
         description: 'Project Upvoted Successfully',
@@ -86,11 +92,11 @@ const ProjectsPage = () => {
   const updateLikeProjectMutation =
     trpc.likeProject.updateLikeProject.useMutation({
       onSuccess: async () => {
-        setUpvoteModalOpen(false);
-        setSelectedProjectId(null);
         refetchProjects();
         refetchUserVotedProjects();
         refetchUserAvailableWeight();
+        setUpvoteModalOpen(false);
+        setSelectedProjectId(null);
         addToast({
           title: 'Success',
           description: 'Project Updated Successfully',
@@ -283,10 +289,7 @@ const ProjectsPage = () => {
           setSelectedProjectId(null);
         }}
         onConfirm={handleConfirmUpvote}
-        availableCP={
-          (userWeightData?.availableWeight || 0) +
-          (userLikeRecord ? userLikeRecord.weight || 0 : 0)
-        }
+        availableCP={userWeightData?.availableWeight || 0}
         currentUserWeight={userLikeRecord?.weight || 0}
         hasUserUpvoted={!!userLikeRecord}
         isLoading={
