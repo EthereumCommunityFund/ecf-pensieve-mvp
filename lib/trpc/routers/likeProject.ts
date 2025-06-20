@@ -166,4 +166,68 @@ export const likeProjectRouter = router({
         return updatedLikeRecord[0];
       });
     }),
+
+  withdrawLike: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { projectId } = input;
+
+      const [project, existingLikeRecord] = await Promise.all([
+        ctx.db.query.projects.findFirst({
+          where: eq(projects.id, projectId),
+        }),
+        ctx.db.query.likeRecords.findFirst({
+          where: and(
+            eq(likeRecords.projectId, projectId),
+            eq(likeRecords.creator, ctx.user.id),
+          ),
+        }),
+      ]);
+
+      if (!project) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Project not found',
+        });
+      }
+
+      if (!existingLikeRecord) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You have not liked this project yet',
+        });
+      }
+
+      const withdrawnWeight = existingLikeRecord.weight || 0;
+
+      return await ctx.db.transaction(async (tx) => {
+        await Promise.all([
+          tx
+            .delete(likeRecords)
+            .where(eq(likeRecords.id, existingLikeRecord.id)),
+          tx
+            .update(projects)
+            .set({
+              support: project.support - withdrawnWeight,
+              likeCount: project.likeCount - 1,
+            })
+            .where(eq(projects.id, projectId)),
+        ]);
+
+        logUserActivity.like.delete(
+          {
+            userId: ctx.user.id,
+            targetId: existingLikeRecord.id,
+            projectId,
+          },
+          tx,
+        );
+
+        return { success: true, withdrawnWeight };
+      });
+    }),
 });
