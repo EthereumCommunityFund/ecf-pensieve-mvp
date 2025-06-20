@@ -46,7 +46,7 @@ const AuthButton = ({
 const CloseButton = ({ onPress }: { onPress: () => void }) => (
   <Button
     onPress={onPress}
-    className="size-auto min-w-0 border-none bg-transparent p-0 opacity-60 transition-opacity hover:opacity-100"
+    className="size-[30px] min-w-0 border-none bg-transparent p-0 opacity-60 transition-opacity hover:opacity-100"
     aria-label="Close"
   >
     <X size={20} weight="light" className="text-gray-600 hover:text-gray-900" />
@@ -204,7 +204,7 @@ const AuthPrompt: React.FC = () => {
 
     return (
       <>
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
             {title}
           </ModalHeader>
@@ -241,9 +241,9 @@ const AuthPrompt: React.FC = () => {
     const isAnyLoading = loadingButton !== null;
     return (
       <>
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
-            Welcome to Pensieve!
+            Sign Up
           </ModalHeader>
           <CloseButton onPress={handleCloseAndReset} />
         </div>
@@ -354,9 +354,9 @@ const AuthPrompt: React.FC = () => {
     const username = profile?.name;
     return (
       <>
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
-            Sign in
+            Sign In
           </ModalHeader>
           <CloseButton onPress={hideAuthPrompt} />
         </div>
