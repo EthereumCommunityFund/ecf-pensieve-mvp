@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import {
   Button,
@@ -40,6 +40,11 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
   );
   const [isValid, setIsValid] = useState(true);
 
+  useEffect(() => {
+    setInputValue(hasUserUpvoted ? currentUserWeight.toString() : '');
+    setIsValid(true);
+  }, [hasUserUpvoted, currentUserWeight, isOpen]);
+
   const isButtonDisabled = useMemo(() => {
     return !isValid || !inputValue || isConfirmLoading;
   }, [isValid, inputValue, isConfirmLoading]);
@@ -60,7 +65,6 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
     const weight = parseFloat(inputValue);
     if (isValid && weight > 0) {
       await onConfirm(weight);
-      setInputValue('');
     }
   };
 

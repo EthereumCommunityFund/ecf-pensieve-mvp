@@ -71,6 +71,13 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
         color: 'success',
       });
     },
+    onError: (error) => {
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to upvote project',
+        color: 'danger',
+      });
+    },
   });
 
   const updateLikeProjectMutation =
@@ -89,6 +96,13 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
           color: 'success',
         });
       },
+      onError: (error) => {
+        addToast({
+          title: 'Error',
+          description: error.message || 'Failed to update vote',
+          color: 'danger',
+        });
+      },
     });
 
   const withdrawLikeMutation = trpc.likeProject.withdrawLike.useMutation({
@@ -102,6 +116,13 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
         title: 'Success',
         description: 'CP Withdrawn Successfully',
         color: 'success',
+      });
+    },
+    onError: (error) => {
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to withdraw CP',
+        color: 'danger',
       });
     },
   });

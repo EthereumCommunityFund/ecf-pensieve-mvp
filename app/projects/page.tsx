@@ -76,9 +76,11 @@ const ProjectsPage = () => {
 
   const likeProjectMutation = trpc.likeProject.likeProject.useMutation({
     onSuccess: async () => {
-      refetchProjects();
-      refetchUserVotedProjects();
-      refetchUserAvailableWeight();
+      await Promise.all([
+        refetchProjects(),
+        refetchUserVotedProjects(),
+        refetchUserAvailableWeight(),
+      ]);
       setUpvoteModalOpen(false);
       setSelectedProjectId(null);
       addToast({
@@ -87,14 +89,23 @@ const ProjectsPage = () => {
         color: 'success',
       });
     },
+    onError: (error) => {
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to upvote project',
+        color: 'danger',
+      });
+    },
   });
 
   const updateLikeProjectMutation =
     trpc.likeProject.updateLikeProject.useMutation({
       onSuccess: async () => {
-        refetchProjects();
-        refetchUserVotedProjects();
-        refetchUserAvailableWeight();
+        await Promise.all([
+          refetchProjects(),
+          refetchUserVotedProjects(),
+          refetchUserAvailableWeight(),
+        ]);
         setUpvoteModalOpen(false);
         setSelectedProjectId(null);
         addToast({
@@ -103,19 +114,35 @@ const ProjectsPage = () => {
           color: 'success',
         });
       },
+      onError: (error) => {
+        addToast({
+          title: 'Error',
+          description: error.message || 'Failed to update vote',
+          color: 'danger',
+        });
+      },
     });
 
   const withdrawLikeMutation = trpc.likeProject.withdrawLike.useMutation({
     onSuccess: async () => {
-      refetchProjects();
-      refetchUserVotedProjects();
-      refetchUserAvailableWeight();
+      await Promise.all([
+        refetchProjects(),
+        refetchUserVotedProjects(),
+        refetchUserAvailableWeight(),
+      ]);
       setUpvoteModalOpen(false);
       setSelectedProjectId(null);
       addToast({
         title: 'Success',
         description: 'CP Withdrawn Successfully',
         color: 'success',
+      });
+    },
+    onError: (error) => {
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to withdraw CP',
+        color: 'danger',
       });
     },
   });
