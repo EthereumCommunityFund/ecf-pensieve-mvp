@@ -129,13 +129,6 @@ export const likeProjectRouter = router({
 
       const currentWeight = existingLikeRecord.weight || 0;
 
-      if (weight <= currentWeight) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `New weight must be greater than current weight (${currentWeight})`,
-        });
-      }
-
       const additionalWeight = weight - currentWeight;
       if (availableWeight < additionalWeight) {
         throw new TRPCError({
