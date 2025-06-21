@@ -29,8 +29,7 @@ import { isInputValueEmpty } from '@/utils/item';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
-import TooltipTh from './TooltipTh';
-import TooltipThWithPin from './TooltipThWithPin';
+import { TooltipTh, TooltipThWithPin } from './TooltipThWithPin';
 
 // Simplified expand button that relies on parent state management
 const OptimizedExpandButton = memo(

@@ -57,7 +57,14 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
         }`}
       >
         <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-          <p className="p-[20px] font-[Inter] text-[15px] leading-[24px] text-black">
+          <p
+            className={cn(
+              'font-sans text-[13px] font-[400] text-black',
+              itemConfig!.formDisplayType === 'founderList'
+                ? 'p-[0px]'
+                : 'p-[20px]',
+            )}
+          >
             <InputContentRenderer
               itemKey={itemKey as IPocItemKey}
               value={inputValue}
