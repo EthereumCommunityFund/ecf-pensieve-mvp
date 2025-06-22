@@ -80,18 +80,17 @@ const OrganizationStepForm: React.FC<
               </div>
               <div className="w-[60px] p-[10px]"></div>
             </div>
-            {fields.map((field, index) => {
-              return (
-                <FounderFormItemTable
-                  key={field.id}
-                  index={index}
-                  remove={() => remove(index)}
-                  errors={errors?.founders?.[index]}
-                  foundersKey={foundersKey}
-                  canRemove={fields.length > 1}
-                />
-              );
-            })}
+            {fields.map((field, index) => (
+              <FounderFormItemTable
+                key={field.id}
+                index={index}
+                remove={remove}
+                register={register}
+                errors={errors?.founders?.[index]}
+                foundersKey={foundersKey}
+                canRemove={fields.length > 1}
+              />
+            ))}
             <div className="bg-[#F5F5F5] p-[10px]">
               <button
                 type="button"
@@ -99,7 +98,6 @@ const OrganizationStepForm: React.FC<
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-
                   append({ name: '', title: '' });
 
                   // Focus on the first input field of the new row

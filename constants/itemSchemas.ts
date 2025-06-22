@@ -224,20 +224,22 @@ export const itemValidationSchemas = {
   founders: yup
     .array()
     .test('founders-validation', 'Founder validation failed', function (value) {
-      if (!Array.isArray(value)) return false;
+      if (!Array.isArray(value)) {
+        return false;
+      }
 
       let hasValidFounder = false;
 
       for (let i = 0; i < value.length; i++) {
         const founder = value[i] || {};
         const { name, title } = founder;
-        const hasName = name && name.trim() !== '';
-        const hasTitle = title && title.trim() !== '';
+        const hasName = Boolean(name && name.trim() !== '');
+        const hasTitle = Boolean(title && title.trim() !== '');
 
         // 检查是否有空行（两个字段都为空）
         if (!hasName && !hasTitle) {
           return this.createError({
-            path: `${i}.name`,
+            path: `founders[${i}].name`,
             message: 'Founder name is required',
           });
         }
@@ -245,14 +247,14 @@ export const itemValidationSchemas = {
         // 检查是否有部分填写的行
         if (hasName && !hasTitle) {
           return this.createError({
-            path: `${i}.title`,
+            path: `founders[${i}].title`,
             message: 'Founder title is required',
           });
         }
 
         if (!hasName && hasTitle) {
           return this.createError({
-            path: `${i}.name`,
+            path: `founders[${i}].name`,
             message: 'Founder name is required',
           });
         }
@@ -266,7 +268,7 @@ export const itemValidationSchemas = {
       // 确保至少有一个有效的founder
       if (!hasValidFounder) {
         return this.createError({
-          path: '0.name',
+          path: 'founders[0].name',
           message: 'At least one founder is required',
         });
       }

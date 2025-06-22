@@ -6,14 +6,19 @@ import {
   FieldError,
   FieldErrorsImpl,
   Merge,
-  useFormContext,
+  UseFormRegister,
 } from 'react-hook-form';
+
+import { IProjectFormData } from '../types';
 
 interface FounderFormItemTableProps {
   index: number;
   remove: (index: number) => void;
-  errors: Merge<FieldError, FieldErrorsImpl<any>> | undefined;
-  foundersKey: string;
+  register: UseFormRegister<IProjectFormData>;
+  errors:
+    | Merge<FieldError, FieldErrorsImpl<IProjectFormData['founders'][number]>>
+    | undefined;
+  foundersKey: 'founders';
   canRemove: boolean;
   onRemove?: () => void;
 }
@@ -21,24 +26,15 @@ interface FounderFormItemTableProps {
 const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
   index,
   remove,
+  register,
   errors,
   foundersKey,
   canRemove,
   onRemove,
 }) => {
-  const { register, formState } = useFormContext();
-
   // Use register for controlled inputs to avoid focus issues
   const nameRegister = register(`${foundersKey}.${index}.name`);
   const titleRegister = register(`${foundersKey}.${index}.title`);
-
-  // Get field errors from form state
-  const foundersErrors = formState.errors?.[foundersKey];
-  const founderError = Array.isArray(foundersErrors)
-    ? foundersErrors[index]
-    : undefined;
-  const nameError = founderError?.name;
-  const titleError = founderError?.title;
 
   return (
     <div className="flex items-stretch border-b border-black/5 bg-white">
@@ -47,19 +43,18 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
           type="text"
           placeholder="Type a name"
           {...nameRegister}
-          className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.name || nameError ? 'bg-red-50' : ''}`}
+          className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.name ? 'bg-red-50' : ''}`}
           style={{
             boxShadow: 'none !important',
             outline: 'none !important',
             border: 'none !important',
           }}
         />
-        {(errors?.name || nameError) && (
+        {errors?.name && (
           <span className="text-[13px] text-red-500">
-            {typeof (errors?.name || nameError) === 'string'
-              ? errors?.name || nameError
-              : ((errors?.name || nameError) as any)?.message ||
-                'Invalid input'}
+            {typeof errors?.name === 'string'
+              ? errors?.name
+              : (errors?.name as any)?.message || 'Invalid input'}
           </span>
         )}
       </div>
@@ -68,19 +63,18 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
           type="text"
           placeholder="Type their role or title"
           {...titleRegister}
-          className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.title || titleError ? 'bg-red-50' : ''}`}
+          className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.title ? 'bg-red-50' : ''}`}
           style={{
             boxShadow: 'none !important',
             outline: 'none !important',
             border: 'none !important',
           }}
         />
-        {(errors?.title || titleError) && (
+        {errors?.title && (
           <span className="text-[13px] text-red-500">
-            {typeof (errors?.title || titleError) === 'string'
-              ? errors?.title || titleError
-              : ((errors?.title || titleError) as any)?.message ||
-                'Invalid input'}
+            {typeof errors?.title === 'string'
+              ? errors?.title
+              : (errors?.title as any)?.message || 'Invalid input'}
           </span>
         )}
       </div>
