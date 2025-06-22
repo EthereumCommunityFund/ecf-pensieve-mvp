@@ -27,7 +27,7 @@ import {
 
 import { IProjectFormData } from '../types';
 
-import FounderFormItem from './FounderFormItem';
+import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import WebsiteFormItem from './WebsiteFormItem';
@@ -57,7 +57,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     componentsProps = {},
   } = itemConfig;
 
-  const { register, formState } = useFormContext<IProjectFormData>();
+  const { register, formState, control } = useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
@@ -180,7 +180,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               field.onBlur(); // Trigger validation
             }}
             onClose={() => {
-              // 当下拉框关闭时也触发 blur 事件
+              // Also trigger blur event when dropdown is closed
               field.onBlur();
             }}
             isInvalid={!!error}
@@ -202,7 +202,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       );
     }
     case 'autoComplete': {
-      // 确保 field.value 是数组格式
+      // Ensure field.value is in array format
       const currentValue = Array.isArray(field.value) ? field.value : [];
 
       return (
@@ -212,7 +212,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             value={currentValue}
             onChange={(newValue: string[]) => {
               field.onChange(newValue);
-              field.onBlur(); // 触发验证
+              field.onBlur(); // Trigger validation
             }}
             placeholder={placeholder}
             isDisabled={isDisabled}
@@ -271,39 +271,49 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'founderList': {
-      // 确保有有效的数组数据
-      const foundersArray = Array.isArray(field.value) ? field.value : [];
+      // Ensure valid array data
+      const foundersArray = Array.isArray(field.value)
+        ? field.value
+        : [{ name: '', title: '' }];
+
+      const displayArray = foundersArray;
 
       return (
         <div>
           <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            <FounderFormItem
-              index={0}
-              remove={() => {}}
-              register={register}
-              errors={undefined}
-              foundersKey={field.name as 'founders'}
-              canRemove={false}
-              showHeader={true}
-            />
-            {foundersArray.map((founder: any, index: number) => {
+            {/* Table header - avoid using FounderFormItem to prevent creating redundant Controller */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Full Name
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Title/Role
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
+            {displayArray.map((founder: any, index: number) => {
               // Get error for specific index from fieldState
+              // Display validation error information
               const founderError =
                 fieldState.error && Array.isArray(fieldState.error)
                   ? fieldState.error[index]
                   : undefined;
 
               return (
-                <FounderFormItem
+                <FounderFormItemTable
                   key={index}
                   index={index}
-                  remove={() => {
+                  remove={() => {}}
+                  onRemove={() => {
                     const newFounders = foundersArray.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newFounders);
                   }}
-                  register={register}
                   errors={founderError}
                   foundersKey={field.name as 'founders'}
                   canRemove={foundersArray.length > 1}
@@ -313,9 +323,28 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             <div className="bg-[#F5F5F5] p-[10px]">
               <button
                 type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none bg-black/5 px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={() => {
-                  field.onChange([...foundersArray, { name: '', title: '' }]);
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  // Add new item directly to existing array
+                  const newFounders = [
+                    ...foundersArray,
+                    { name: '', title: '' },
+                  ];
+                  field.onChange(newFounders);
+
+                  // Focus on the first input field of the new row
+                  const newIndex = foundersArray.length;
+                  setTimeout(() => {
+                    const nameInput = document.querySelector(
+                      `input[name="${field.name}.${newIndex}.name"]`,
+                    ) as HTMLInputElement;
+                    if (nameInput) {
+                      nameInput.focus();
+                    }
+                  }, 0);
                 }}
                 disabled={isDisabled}
                 style={{

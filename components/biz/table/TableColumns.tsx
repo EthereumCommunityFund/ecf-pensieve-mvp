@@ -339,6 +339,7 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
+              isExpanded={localExpanded}
               onToggleExpanded={handleToggleExpand}
             />
           </div>
@@ -371,6 +372,7 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
+              isExpanded={localExpanded}
               onToggleExpanded={handleToggleExpand}
             />
           </div>
@@ -394,6 +396,7 @@ const InputCell = ({
           displayFormType={finalDisplayFormType}
           isEssential={itemConfig?.isEssential || false}
           isExpandable={finalIsExpandable}
+          isExpanded={localExpanded}
           onToggleExpanded={handleToggleExpand}
         />
       </div>

@@ -47,6 +47,12 @@ const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   title: yup.string().required('Founder title is required'),
 });
 
+// 创建一个智能的founder验证schema，在提交时严格验证
+const smartFounderSchema = yup.object().shape({
+  name: yup.string().required('Founder name is required'),
+  title: yup.string().required('Founder title is required'),
+});
+
 const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
   url: yup
     .string()
@@ -217,14 +223,114 @@ export const itemValidationSchemas = {
 
   founders: yup
     .array()
-    .of(founderSchema)
-    .min(1, 'At least one founder is required')
+    .test('founders-validation', 'Founder validation failed', function (value) {
+      if (!Array.isArray(value)) return false;
+
+      let hasValidFounder = false;
+
+      for (let i = 0; i < value.length; i++) {
+        const founder = value[i] || {};
+        const { name, title } = founder;
+        const hasName = name && name.trim() !== '';
+        const hasTitle = title && title.trim() !== '';
+
+        // 检查是否有空行（两个字段都为空）
+        if (!hasName && !hasTitle) {
+          return this.createError({
+            path: `${i}.name`,
+            message: 'Founder name is required',
+          });
+        }
+
+        // 检查是否有部分填写的行
+        if (hasName && !hasTitle) {
+          return this.createError({
+            path: `${i}.title`,
+            message: 'Founder title is required',
+          });
+        }
+
+        if (!hasName && hasTitle) {
+          return this.createError({
+            path: `${i}.name`,
+            message: 'Founder name is required',
+          });
+        }
+
+        // 如果两个字段都有内容，标记为有效
+        if (hasName && hasTitle) {
+          hasValidFounder = true;
+        }
+      }
+
+      // 确保至少有一个有效的founder
+      if (!hasValidFounder) {
+        return this.createError({
+          path: '0.name',
+          message: 'At least one founder is required',
+        });
+      }
+
+      return true;
+    })
     .required('Founder information is required'),
 
   core_team: yup
     .array()
-    .of(founderSchema)
-    .min(1, 'At least one core team member is required')
+    .test(
+      'core-team-validation',
+      'Core team validation failed',
+      function (value) {
+        if (!Array.isArray(value)) return false;
+
+        let hasValidMember = false;
+
+        for (let i = 0; i < value.length; i++) {
+          const member = value[i] || {};
+          const { name, title } = member;
+          const hasName = name && name.trim() !== '';
+          const hasTitle = title && title.trim() !== '';
+
+          // 检查是否有空行（两个字段都为空）
+          if (!hasName && !hasTitle) {
+            return this.createError({
+              path: `${i}.name`,
+              message: 'Founder name is required',
+            });
+          }
+
+          // 检查是否有部分填写的行
+          if (hasName && !hasTitle) {
+            return this.createError({
+              path: `${i}.title`,
+              message: 'Founder title is required',
+            });
+          }
+
+          if (!hasName && hasTitle) {
+            return this.createError({
+              path: `${i}.name`,
+              message: 'Founder name is required',
+            });
+          }
+
+          // 如果两个字段都有内容，标记为有效
+          if (hasName && hasTitle) {
+            hasValidMember = true;
+          }
+        }
+
+        // 确保至少有一个有效的core team member
+        if (!hasValidMember) {
+          return this.createError({
+            path: '0.name',
+            message: 'At least one core team member is required',
+          });
+        }
+
+        return true;
+      },
+    )
     .required('Core team information is required'),
 
   team_incentives: yup.string().required('Team incentives is required'),
@@ -298,4 +404,4 @@ export const itemValidationSchemas = {
   treasury_mechanism: yup.string().required('Treasury mechanism is required'),
 };
 
-export { founderSchema };
+export { founderSchema, smartFounderSchema };

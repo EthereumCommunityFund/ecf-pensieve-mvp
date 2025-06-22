@@ -23,6 +23,8 @@ interface ExpandableRowProps {
   isLastRow?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Function to toggle the expanded state */
+  onToggleExpanded?: () => void;
 }
 
 /**
@@ -37,6 +39,7 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
   colSpan,
   isLastRow = false,
   className,
+  onToggleExpanded,
 }) => {
   const itemConfig = AllItemConfig[itemKey as IEssentialItemKey];
 
@@ -57,7 +60,7 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
         }`}
       >
         <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
-          <p
+          <div
             className={cn(
               'font-sans text-[13px] font-[400] text-black',
               itemConfig!.formDisplayType === 'founderList'
@@ -70,10 +73,12 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
               value={inputValue}
               displayFormType={itemConfig!.formDisplayType}
               isEssential={itemConfig!.isEssential}
-              isExpandable={false}
-              onToggleExpanded={undefined}
+              isExpandable={true}
+              isExpanded={true}
+              onToggleExpanded={onToggleExpanded}
+              isInExpandableRow={true}
             />
-          </p>
+          </div>
         </div>
       </td>
     </tr>
