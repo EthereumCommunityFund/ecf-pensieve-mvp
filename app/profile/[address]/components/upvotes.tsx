@@ -1,12 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import { addToast, ECFButton } from '@/components/base';
+import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import UpvoteModal from '@/components/biz/modal/upvote/UpvoteModal';
 import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
-import { useAuth } from '@/context/AuthContext';
+import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 
@@ -14,12 +13,6 @@ import { useProfileData } from './dataContext';
 
 export default function Upvotes() {
   const { user } = useProfileData();
-  const { profile, showAuthPrompt } = useAuth();
-
-  const [upvoteModalOpen, setUpvoteModalOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
-    null,
-  );
 
   const {
     data: upvotesData,
@@ -43,81 +36,14 @@ export default function Upvotes() {
     return upvotesData?.pages.flatMap((page) => page.items) ?? [];
   }, [upvotesData?.pages]);
 
-  // Get user's available weight
-  const { data: userWeightData, refetch: refetchUserAvailableWeight } =
-    trpc.likeProject.getUserAvailableWeight.useQuery(undefined, {
-      enabled: !!profile,
-      refetchOnWindowFocus: false,
-      staleTime: 0,
+  // Use the upvote hook with refresh callback
+  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
+    useUpvote({
+      onSuccess: refetchUpvotedProjects,
     });
 
-  // Like project mutation
-  const likeProjectMutation = trpc.likeProject.likeProject.useMutation({
-    onSuccess: async () => {
-      refetchUpvotedProjects();
-      refetchUserAvailableWeight();
-      setUpvoteModalOpen(false);
-      setSelectedProjectId(null);
-      addToast({
-        title: 'Success',
-        description: 'Project Upvoted Successfully',
-        color: 'success',
-      });
-    },
-    onError: (error) => {
-      addToast({
-        title: 'Error',
-        description: error.message || 'Failed to upvote project',
-        color: 'danger',
-      });
-    },
-  });
-
-  const updateLikeProjectMutation =
-    trpc.likeProject.updateLikeProject.useMutation({
-      onSuccess: async () => {
-        refetchUpvotedProjects();
-        refetchUserAvailableWeight();
-        setUpvoteModalOpen(false);
-        setSelectedProjectId(null);
-        addToast({
-          title: 'Success',
-          description: 'Project Updated Successfully',
-          color: 'success',
-        });
-      },
-      onError: (error) => {
-        addToast({
-          title: 'Error',
-          description: error.message || 'Failed to update vote',
-          color: 'danger',
-        });
-      },
-    });
-
-  const withdrawLikeMutation = trpc.likeProject.withdrawLike.useMutation({
-    onSuccess: async () => {
-      refetchUpvotedProjects();
-      refetchUserAvailableWeight();
-      setUpvoteModalOpen(false);
-      setSelectedProjectId(null);
-      addToast({
-        title: 'Success',
-        description: 'CP Withdrawn Successfully',
-        color: 'success',
-      });
-    },
-    onError: (error) => {
-      addToast({
-        title: 'Error',
-        description: error.message || 'Failed to withdraw CP',
-        color: 'danger',
-      });
-    },
-  });
-
-  // Create a map for efficient projectLikeRecord lookup
-  const projectLikeRecordMap = useMemo(() => {
+  // Create a map for efficient projectLikeRecord lookup for this specific page
+  const localProjectLikeRecordMap = useMemo(() => {
     const map = new Map();
     if (upvotedProjects) {
       upvotedProjects.forEach((record) => {
@@ -128,58 +54,6 @@ export default function Upvotes() {
     }
     return map;
   }, [upvotedProjects]);
-
-  const handleUpvote = useCallback(
-    (projectId: number) => {
-      if (!profile) {
-        showAuthPrompt();
-        return;
-      }
-      setSelectedProjectId(projectId);
-      setUpvoteModalOpen(true);
-    },
-    [profile, showAuthPrompt],
-  );
-
-  const handleConfirmUpvote = useCallback(
-    async (weight: number) => {
-      if (!selectedProjectId) return;
-
-      const hasUserUpvoted = !!projectLikeRecordMap.get(selectedProjectId);
-
-      if (hasUserUpvoted) {
-        await updateLikeProjectMutation.mutateAsync({
-          projectId: selectedProjectId,
-          weight,
-        });
-      } else {
-        await likeProjectMutation.mutateAsync({
-          projectId: selectedProjectId,
-          weight,
-        });
-      }
-    },
-    [
-      selectedProjectId,
-      likeProjectMutation,
-      updateLikeProjectMutation,
-      projectLikeRecordMap,
-    ],
-  );
-
-  const handleWithdraw = useCallback(async () => {
-    if (!selectedProjectId) return;
-
-    await withdrawLikeMutation.mutateAsync({
-      projectId: selectedProjectId,
-    });
-  }, [selectedProjectId, withdrawLikeMutation]);
-
-  const userLikeRecord = useMemo(() => {
-    return selectedProjectId
-      ? projectLikeRecordMap.get(selectedProjectId)
-      : null;
-  }, [selectedProjectId, projectLikeRecordMap]);
 
   const handleLoadMore = () => {
     if (!isFetchingNextPage && hasNextPage) {
@@ -199,7 +73,7 @@ export default function Upvotes() {
         ) : upvotedProjects.length > 0 ? (
           <>
             {upvotedProjects.map((item) => {
-              const projectLikeRecord = projectLikeRecordMap.get(
+              const projectLikeRecord = localProjectLikeRecordMap.get(
                 item.project?.id,
               );
 
@@ -252,22 +126,7 @@ export default function Upvotes() {
         )}
       </div>
 
-      <UpvoteModal
-        isOpen={upvoteModalOpen}
-        onClose={() => {
-          setUpvoteModalOpen(false);
-          setSelectedProjectId(null);
-        }}
-        onConfirm={handleConfirmUpvote}
-        onWithdraw={handleWithdraw}
-        availableCP={userWeightData?.availableWeight || 0}
-        currentUserWeight={userLikeRecord?.weight || 0}
-        hasUserUpvoted={!!userLikeRecord}
-        isConfirmLoading={
-          likeProjectMutation.isPending || updateLikeProjectMutation.isPending
-        }
-        isWithdrawLoading={withdrawLikeMutation.isPending}
-      />
+      {UpvoteModalComponent}
     </div>
   );
 }
