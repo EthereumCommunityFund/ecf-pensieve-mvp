@@ -389,7 +389,10 @@ const InputCell = ({
 
   return (
     <div className="font-mona flex w-full items-center justify-between gap-[10px]">
-      <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
+      <div
+        className="flex-1 overflow-hidden whitespace-normal break-all text-[13px] leading-[19px] text-black/80"
+        style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+      >
         <InputContentRenderer
           itemKey={itemKey}
           value={value}

@@ -44,8 +44,18 @@ const InputContentRenderer: React.FC<IProps> = ({
       case 'string':
       case 'select':
         return <>{formatValue}</>;
-      case 'stringMultiple':
-        return <>{parseMultipleValue(value).join(', ')}</>;
+      case 'stringMultiple': {
+        const multipleValues = parseMultipleValue(value);
+        const joinedText = multipleValues.join(', ');
+
+        // For expandable fields in collapsed state, show truncated text
+        if (isExpandable && !isExpanded) {
+          // Don't truncate here, let the outer expandable logic handle it
+          return <>{joinedText}</>;
+        }
+
+        return <>{joinedText}</>;
+      }
       case 'selectMultiple':
         return <>{parseMultipleValue(value).join(', ')}</>;
       case 'autoComplete':
@@ -251,11 +261,13 @@ const InputContentRenderer: React.FC<IProps> = ({
   if (isExpandable && displayFormType !== 'founderList') {
     return (
       <div
-        className="cursor-pointer overflow-hidden"
+        className="cursor-pointer overflow-hidden break-all"
         style={{
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
+          wordBreak: 'break-all',
+          overflowWrap: 'anywhere',
         }}
         onClick={onToggleExpanded}
       >
