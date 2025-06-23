@@ -21,6 +21,7 @@ import {
 } from '@/components/base';
 import { CreateProfileErrorPrefix, useAuth } from '@/context/AuthContext';
 
+import AgreementModal from './AgreementModal';
 import ConnectWalletButton from './ConnectWalletButton';
 
 type LoadingButtonType = 'skip' | 'continue' | null;
@@ -45,7 +46,7 @@ const AuthButton = ({
 const CloseButton = ({ onPress }: { onPress: () => void }) => (
   <Button
     onPress={onPress}
-    className="size-auto min-w-0 border-none bg-transparent p-0 opacity-60 transition-opacity hover:opacity-100"
+    className="size-[30px] min-w-0 border-none bg-transparent p-0 opacity-60 transition-opacity hover:opacity-100"
     aria-label="Close"
   >
     <X size={20} weight="light" className="text-gray-600 hover:text-gray-900" />
@@ -78,6 +79,7 @@ const AuthPrompt: React.FC = () => {
   const [inputUsername, setInputUsername] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
   const connectionIntentRef = useRef(false);
 
   const isLoading = isAuthenticating || isCreatingProfile || isLoggingIn;
@@ -113,6 +115,7 @@ const AuthPrompt: React.FC = () => {
     if (isAuthPromptVisible) {
       setInputUsername('');
       setInviteCode('');
+      setShowAgreementModal(false);
     }
   }, [isAuthPromptVisible]);
 
@@ -162,16 +165,24 @@ const AuthPrompt: React.FC = () => {
   }, [handleProfileAction]);
 
   const handleContinue = useCallback(() => {
+    setShowAgreementModal(true);
+  }, []);
+
+  const handleAgreementComplete = useCallback(() => {
+    setShowAgreementModal(false);
     return handleProfileAction({
       useInputUsername: true,
       buttonType: 'continue',
     });
   }, [handleProfileAction]);
 
+  const handleAgreementCancel = useCallback(() => {
+    setShowAgreementModal(false);
+  }, []);
+
   const handleCloseAndReset = useCallback(async () => {
     setInputUsername('');
     setInviteCode('');
-    // 先断开钱包连接，再隐藏提示和登出
     try {
       await disconnectAsync();
     } catch (error) {
@@ -193,7 +204,7 @@ const AuthPrompt: React.FC = () => {
 
     return (
       <>
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
             {title}
           </ModalHeader>
@@ -230,9 +241,9 @@ const AuthPrompt: React.FC = () => {
     const isAnyLoading = loadingButton !== null;
     return (
       <>
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
-            Welcome to Pensieve!
+            Sign Up
           </ModalHeader>
           <CloseButton onPress={handleCloseAndReset} />
         </div>
@@ -343,9 +354,9 @@ const AuthPrompt: React.FC = () => {
     const username = profile?.name;
     return (
       <>
-        <div className="flex w-full items-center justify-between border-b border-gray-200 p-5">
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
           <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
-            Sign in
+            Sign In
           </ModalHeader>
           <CloseButton onPress={hideAuthPrompt} />
         </div>
@@ -423,22 +434,30 @@ const AuthPrompt: React.FC = () => {
   ]);
 
   return (
-    <Modal
-      isOpen={isAuthPromptVisible}
-      onClose={hideAuthPrompt}
-      placement="center"
-      hideCloseButton={true}
-      size="md"
-      isDismissable={false}
-      backdrop="opaque"
-      className="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-xl"
-      classNames={{
-        base: 'p-0 w-[420px] mobile:w-[calc(90vw)]',
-        backdrop: 'bg-gray-900/30 backdrop-blur-sm',
-      }}
-    >
-      <ModalContent>{renderModalContent()}</ModalContent>
-    </Modal>
+    <>
+      <Modal
+        isOpen={isAuthPromptVisible}
+        onClose={hideAuthPrompt}
+        placement="center"
+        hideCloseButton={true}
+        size="md"
+        isDismissable={false}
+        backdrop="opaque"
+        className="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-xl"
+        classNames={{
+          base: 'p-0 w-[420px] mobile:w-[calc(90vw)]',
+          backdrop: 'bg-gray-900/30 backdrop-blur-sm',
+        }}
+      >
+        <ModalContent>{renderModalContent()}</ModalContent>
+      </Modal>
+
+      <AgreementModal
+        isOpen={showAgreementModal}
+        onComplete={handleAgreementComplete}
+        onCancel={handleAgreementCancel}
+      />
+    </>
   );
 };
 
