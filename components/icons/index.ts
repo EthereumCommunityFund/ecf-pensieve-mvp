@@ -29,6 +29,7 @@ export { default as PushPinSimpleSlashIcon } from './PushPinSimpleSlash';
 export { default as QuestionIcon } from './Question';
 export { default as SearchIcon } from './Search';
 export { default as ShareIcon } from './Share';
+export { default as TrendDownIcon } from './TrendDownIcon';
 export { default as UsersIcon } from './Users';
 export { default as WalletIcon } from './Wallet';
 export { default as WarningDiamondIcon } from './WarningDiamond';
