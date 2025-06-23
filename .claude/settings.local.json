@@ -7,7 +7,9 @@
       "Bash(git commit:*)",
       "Bash(ls:*)",
       "Bash(git mv:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }

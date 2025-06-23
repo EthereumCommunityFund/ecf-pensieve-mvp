@@ -83,11 +83,6 @@ const ProjectPage = () => {
     router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
-  const handleContribute = useCallback(() => {
-    // Handle contribute button click event
-    console.log('Contribute button clicked');
-  }, []);
-
   // Handle SwitchVoteModal open
   const handleOpenModal = useCallback(
     (
@@ -141,46 +136,6 @@ const ProjectPage = () => {
       </BackHeader>
 
       <ProjectDetailCard project={project} />
-
-      {/* <div className="tablet:px-[10px] mobile:px-[10px] mt-[20px] px-[20px]">
-        <div className="flex items-center justify-between">
-          <Tabs
-            selectedKey={activeTab}
-            onSelectionChange={(key) => {
-              const newTab = key as ITabKey;
-              setActiveTab(newTab);
-              router.push(`/project/${projectId}?tab=${newTab}`, {
-                scroll: false,
-              });
-            }}
-            variant="underlined"
-            disabledKeys={['ecosystem', 'profile', 'review']}
-            classNames={{
-              tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
-              tab: 'w-fit h-[40px] px-[8px] py-[10px] flex justify-center items-centerrounded-[4px]',
-              cursor: 'bg-black h-[3px] bottom-[-5px]',
-              tabContent: 'font-[600] text-[15px] leading-[20.4px]',
-            }}
-          >
-            {tabItems.map(({ key, label }) => (
-              <Tab
-                key={key}
-                title={
-                  <span
-                    className={cn(
-                      'font-[600] text-[15px] leading-[20.4px] font-open-sans',
-                      activeTab === key ? 'opacity-100' : 'opacity-60',
-                    )}
-                  >
-                    {label}
-                  </span>
-                }
-              />
-            ))}
-          </Tabs>
-          <ContributeButton onClick={handleContribute} />
-        </div>
-      </div> */}
 
       {activeTab === 'project-data' && (
         <ProjectDetailTable

@@ -5,6 +5,7 @@ import ECFTypography from '@/components/base/typography';
 import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
+import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 
@@ -19,6 +20,7 @@ export default function Upvotes() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    refetch: refetchUpvotedProjects,
   } = trpc.active.getUserVotedProjects.useInfiniteQuery(
     {
       userId: user?.userId ?? '',
@@ -33,6 +35,25 @@ export default function Upvotes() {
   const upvotedProjects = useMemo(() => {
     return upvotesData?.pages.flatMap((page) => page.items) ?? [];
   }, [upvotesData?.pages]);
+
+  // Use the upvote hook with refresh callback
+  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
+    useUpvote({
+      onSuccess: refetchUpvotedProjects,
+    });
+
+  // Create a map for efficient projectLikeRecord lookup for this specific page
+  const localProjectLikeRecordMap = useMemo(() => {
+    const map = new Map();
+    if (upvotedProjects) {
+      upvotedProjects.forEach((record) => {
+        if (record.project?.id) {
+          map.set(record.project.id, record);
+        }
+      });
+    }
+    return map;
+  }, [upvotedProjects]);
 
   const handleLoadMore = () => {
     if (!isFetchingNextPage && hasNextPage) {
@@ -51,14 +72,29 @@ export default function Upvotes() {
           </>
         ) : upvotedProjects.length > 0 ? (
           <>
-            {upvotedProjects.map((item) => (
-              <ProjectCard
-                key={item.project?.id}
-                project={item.project as IProject}
-                showBorder={true}
-                weight={item.weight!}
-              />
-            ))}
+            {upvotedProjects.map((item) => {
+              const projectLikeRecord = localProjectLikeRecordMap.get(
+                item.project?.id,
+              );
+
+              return (
+                <ProjectCard
+                  key={item.project?.id}
+                  project={item.project as IProject}
+                  showBorder={true}
+                  weight={item.weight!}
+                  onUpvote={handleUpvote}
+                  userLikeRecord={
+                    projectLikeRecord && item.project?.id
+                      ? {
+                          id: item.project.id,
+                          weight: projectLikeRecord.weight || 0,
+                        }
+                      : null
+                  }
+                />
+              );
+            })}
 
             {isFetchingNextPage && (
               <>
@@ -89,6 +125,8 @@ export default function Upvotes() {
           </div>
         )}
       </div>
+
+      {UpvoteModalComponent}
     </div>
   );
 }

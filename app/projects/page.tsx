@@ -11,6 +11,7 @@ import ProjectCard, {
 } from '@/components/pages/project/ProjectCard';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
+import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -19,16 +20,28 @@ const ProjectsPage = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    trpc.project.getProjects.useInfiniteQuery(
-      {
-        limit: 10,
-        isPublished: true,
-      },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      },
-    );
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch: refetchProjects,
+  } = trpc.project.getProjects.useInfiniteQuery(
+    {
+      limit: 10,
+      isPublished: true,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  // Use the upvote hook with refresh callback
+  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
+    useUpvote({
+      onSuccess: refetchProjects,
+    });
 
   const handleLoadMore = () => {
     if (!isFetchingNextPage) {
@@ -98,13 +111,26 @@ const ProjectsPage = () => {
               </>
             ) : allProjects.length > 0 ? (
               <>
-                {allProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project as IProject}
-                    showBorder={true}
-                  />
-                ))}
+                {allProjects.map((project) => {
+                  const projectLikeRecord = getProjectLikeRecord(project.id);
+
+                  return (
+                    <ProjectCard
+                      key={project.id}
+                      project={project as IProject}
+                      showBorder={true}
+                      onUpvote={handleUpvote}
+                      userLikeRecord={
+                        projectLikeRecord
+                          ? {
+                              id: project.id,
+                              weight: projectLikeRecord.weight || 0,
+                            }
+                          : null
+                      }
+                    />
+                  );
+                })}
 
                 {isFetchingNextPage && (
                   <ProjectCardSkeleton showBorder={true} />
@@ -149,6 +175,8 @@ const ProjectsPage = () => {
           <RewardCard />
         </div>
       </div>
+
+      {UpvoteModalComponent}
     </div>
   );
 };

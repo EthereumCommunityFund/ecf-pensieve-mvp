@@ -7,10 +7,10 @@ import { Button } from '@/components/base';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import {
   CaretDownIcon,
-  CaretDownYellowIcon,
   CaretUpGreenIcon,
   ClockClockwiseIcon,
   GitPullBlueIcon,
+  TrendDownIcon,
 } from '@/components/icons';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProposalCreator } from '@/components/pages/project/detail/types';
@@ -327,9 +327,9 @@ const InputCell = ({
       <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center gap-[5px]">
-            <CaretDownYellowIcon size={16} className="text-[#C47D54]" />
+            <TrendDownIcon size={16} className="text-[#C47D54]" />
             <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#C47D54]">
-              Over-taken
+              Support Not Sufficient
             </span>
           </div>
           <div className="text-[13px] leading-[19px]">

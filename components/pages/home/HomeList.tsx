@@ -10,7 +10,7 @@ import { IProject } from '@/types';
 
 import { ProjectCardSkeleton } from '../project/ProjectCard';
 
-import ProjectList from './ProjectList';
+import ProjectListWithUpvote from './ProjectListWithUpvote';
 
 interface ISectionProps {
   title: string;
@@ -60,7 +60,11 @@ const SectionList = (props: ISectionProps) => {
 };
 
 const HomeList = () => {
-  const { data: projectsData, isLoading } = trpc.project.getProjects.useQuery({
+  const {
+    data: projectsData,
+    isLoading,
+    refetch: refetchProjects,
+  } = trpc.project.getProjects.useQuery({
     limit: 10,
     isPublished: true,
   });
@@ -86,7 +90,10 @@ const HomeList = () => {
             <ProjectCardSkeleton showBorder={false} />
           </div>
         ) : projects.length > 0 ? (
-          <ProjectList projectList={projects as IProject[]} />
+          <ProjectListWithUpvote
+            projectList={projects as IProject[]}
+            onRefetch={refetchProjects}
+          />
         ) : (
           <div className="flex justify-center py-8">
             <ECFTypography type="body1">No projects yet</ECFTypography>
