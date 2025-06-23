@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
 import { cn } from '@heroui/react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import { ScrollDetectorProps } from '@/types/agreement';
 

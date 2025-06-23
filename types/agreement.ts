@@ -1,4 +1,3 @@
-// 免责声明相关类型定义
 export interface AgreementStep {
   id: string;
   title: string;
