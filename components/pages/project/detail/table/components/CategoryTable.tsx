@@ -186,6 +186,8 @@ export const CategoryTable: FC<CategoryTableProps> = ({
           key={column.id}
           style={{
             width: `${column.getSize()}px`,
+            minWidth: `${column.getSize()}px`,
+            maxWidth: `${column.getSize()}px`,
           }}
         />
       ))}
@@ -244,8 +246,14 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   if (showSkeleton || noDataForThisTable) {
     return (
-      <PageTableContainer className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white">
-        <table className="box-border w-full table-fixed border-separate border-spacing-0">
+      <PageTableContainer
+        className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white"
+        allowInternalBorderRadius={true}
+      >
+        <table
+          className="box-border w-full border-separate border-spacing-0"
+          style={{ minWidth: 'max-content' }}
+        >
           {colGroupDefinition}
           {tableHeaders}
           <tbody>
@@ -330,15 +338,22 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   return (
     <PageTableContainer
-      className="mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white"
+      className="mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100"
+      allowInternalBorderRadius={true}
       style={{
         overflowX: 'auto',
         // Container settings to ensure sticky positioning works correctly
         position: 'relative',
         isolation: 'isolate',
+        // Force scrollbar to always be visible
+        scrollbarWidth: 'thin',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
-      <table className="box-border w-full table-fixed border-separate border-spacing-0">
+      <table
+        className="box-border w-full border-separate border-spacing-0"
+        style={{ minWidth: 'max-content' }}
+      >
         {colGroupDefinition}
         {tableHeaders}
         <tbody>

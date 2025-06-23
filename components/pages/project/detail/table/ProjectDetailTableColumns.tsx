@@ -83,9 +83,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 240,
-      minSize: 240,
-      maxSize: 240,
+      size: 230,
+      minSize: 230,
+      maxSize: 230,
       enableResizing: false,
       cell: (info) => {
         const { key } = info.row.original;
@@ -112,7 +112,8 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      // size: 300,
+      size: 280,
+      minSize: 200,
       cell: (info) => {
         const item = info.row.original;
         const { expandedRows, toggleRowExpanded, onOpenModal } = info.table
@@ -159,9 +160,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 140,
-      minSize: 140,
-      maxSize: 140,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableResizing: false,
       cell: (info) => {
         const reference = info.getValue();
@@ -200,9 +201,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 150,
-      minSize: 150,
-      maxSize: 150,
+      size: 140,
+      minSize: 140,
+      maxSize: 140,
       enableResizing: false,
       cell: (info) => {
         const item = info.row.original;
@@ -238,9 +239,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 240,
-      minSize: 240,
-      maxSize: 240,
+      size: 250,
+      minSize: 250,
+      maxSize: 250,
       enableResizing: false,
       cell: (info) => {
         const accountability = info.getValue();
@@ -271,9 +272,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 228,
-      minSize: 228,
-      maxSize: 228,
+      size: 250,
+      minSize: 250,
+      maxSize: 250,
       enableResizing: false,
       cell: (info) => {
         const legitimacy = info.getValue();
@@ -302,9 +303,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 160,
-      minSize: 160,
-      maxSize: 160,
+      size: 120,
+      minSize: 120,
+      maxSize: 120,
       enableResizing: false,
       cell: (info) => {
         const item = info.row.original;

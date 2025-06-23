@@ -142,7 +142,10 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 230,
+      size: 250,
+      minSize: 250,
+      maxSize: 250,
+      enableResizing: false,
       cell: (info) => {
         const rowKey = info.row.original.key;
         return (
@@ -304,7 +307,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 240,
+      size: 250,
       cell: (info) => {
         const accountability = info.getValue();
         return <AccountabilityCol.Cell accountability={accountability} />;
@@ -329,7 +332,7 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 240,
+      size: 250,
       cell: (info) => {
         const legitimacy = info.getValue();
         return <LegitimacyCol.Cell legitimacy={legitimacy} />;
