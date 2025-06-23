@@ -107,7 +107,11 @@ export const useCreateProposalTableColumns = ({
   category: IItemSubCategoryEnum;
   columnPinning?: import('@tanstack/react-table').ColumnPinningState;
 }): ColumnDef<ITableProposalItem, any>[] => {
-  const columnHelper = createColumnHelper<ITableProposalItem>();
+  // Use useMemo to avoid recreating columnHelper on every render
+  const columnHelper = useMemo(
+    () => createColumnHelper<ITableProposalItem>(),
+    [],
+  );
 
   const columns = useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
@@ -384,7 +388,7 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [showMetrics, columnHelper, category]);
+  }, [showMetrics, category]);
 
   return columns;
 };

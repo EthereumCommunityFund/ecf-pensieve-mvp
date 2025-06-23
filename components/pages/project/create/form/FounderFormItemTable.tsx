@@ -32,17 +32,13 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
   canRemove,
   onRemove,
 }) => {
-  // Use register for controlled inputs to avoid focus issues
-  const nameRegister = register(`${foundersKey}.${index}.name`);
-  const titleRegister = register(`${foundersKey}.${index}.title`);
-
   return (
     <div className="flex items-stretch border-b border-black/5 bg-white">
       <div className="flex-1 border-r border-black/10 p-[10px]">
         <input
           type="text"
           placeholder="Type a name"
-          {...nameRegister}
+          {...register(`${foundersKey}.${index}.name`)}
           className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.name ? 'bg-red-50' : ''}`}
           style={{
             boxShadow: 'none !important',
@@ -52,9 +48,7 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         />
         {errors?.name && (
           <span className="text-[13px] text-red-500">
-            {typeof errors?.name === 'string'
-              ? errors?.name
-              : (errors?.name as any)?.message || 'Invalid input'}
+            {errors?.name?.message}
           </span>
         )}
       </div>
@@ -62,8 +56,8 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         <input
           type="text"
           placeholder="Type their role or title"
-          {...titleRegister}
-          className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.title ? 'bg-red-50' : ''}`}
+          {...register(`${foundersKey}.${index}.title`)}
+          className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0`}
           style={{
             boxShadow: 'none !important',
             outline: 'none !important',
@@ -72,9 +66,7 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         />
         {errors?.title && (
           <span className="text-[13px] text-red-500">
-            {typeof errors?.title === 'string'
-              ? errors?.title
-              : (errors?.title as any)?.message || 'Invalid input'}
+            {errors?.title?.message}
           </span>
         )}
       </div>

@@ -199,13 +199,7 @@ export const useProjectTableData = () => {
 
     devLog('useProjectTableData', result, emptyCounts);
     return { tableData: result, emptyItemsCounts: emptyCounts };
-  }, [
-    project,
-    displayProposalDataListOfProject,
-    hasProposalKeys,
-    generateEmptyTableData,
-    generateEmptyItemsCounts,
-  ]);
+  }, [project, displayProposalDataListOfProject, hasProposalKeys]);
 
   return {
     tableData,

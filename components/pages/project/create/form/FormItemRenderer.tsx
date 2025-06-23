@@ -1,6 +1,6 @@
 import { Avatar } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
-import { Image as ImageIcon, XCircle } from '@phosphor-icons/react';
+import { Image as ImageIcon } from '@phosphor-icons/react';
 import React from 'react';
 import {
   ControllerFieldState,
@@ -27,6 +27,7 @@ import {
 
 import { IProjectFormData } from '../types';
 
+import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import WebsiteFormItem from './WebsiteFormItem';
@@ -271,16 +272,12 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
     case 'founderList': {
       // Ensure valid array data
-      const foundersArray = Array.isArray(field.value)
-        ? field.value
-        : [{ name: '', title: '' }];
-
-      const displayArray = foundersArray;
+      const foundersArray = Array.isArray(field.value) ? field.value : [];
 
       return (
         <div>
           <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header - avoid using FounderFormItem to prevent creating redundant Controller */}
+            {/* Table header */}
             <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
               <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
                 <span className="text-[14px] font-[600] leading-[19px] text-black/60">
@@ -294,99 +291,28 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               </div>
               <div className="w-[60px] p-[10px]"></div>
             </div>
-            {displayArray.map((founder: any, index: number) => {
+            {foundersArray.map((founder: any, index: number) => {
               // Get error for specific index from fieldState
-              // Display validation error information
               const founderError =
                 fieldState.error && Array.isArray(fieldState.error)
                   ? fieldState.error[index]
                   : undefined;
 
               return (
-                <div
+                <FounderFormItemTable
                   key={index}
-                  className="flex items-stretch border-b border-black/5 bg-white"
-                >
-                  <div className="flex-1 border-r border-black/10 p-[10px]">
-                    <input
-                      type="text"
-                      placeholder="Type a name"
-                      value={founder.name || ''}
-                      onChange={(e) => {
-                        const newFounders = [...foundersArray];
-                        newFounders[index] = {
-                          ...newFounders[index],
-                          name: e.target.value,
-                        };
-                        field.onChange(newFounders);
-                      }}
-                      className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${founderError?.name ? 'bg-red-50' : ''}`}
-                      style={{
-                        boxShadow: 'none !important',
-                        outline: 'none !important',
-                        border: 'none !important',
-                      }}
-                    />
-                    {founderError?.name && (
-                      <span className="text-[13px] text-red-500">
-                        {typeof founderError?.name === 'string'
-                          ? founderError?.name
-                          : (founderError?.name as any)?.message ||
-                            'Invalid input'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 p-[10px]">
-                    <input
-                      type="text"
-                      placeholder="Type their role or title"
-                      value={founder.title || ''}
-                      onChange={(e) => {
-                        const newFounders = [...foundersArray];
-                        newFounders[index] = {
-                          ...newFounders[index],
-                          title: e.target.value,
-                        };
-                        field.onChange(newFounders);
-                      }}
-                      className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${founderError?.title ? 'bg-red-50' : ''}`}
-                      style={{
-                        boxShadow: 'none !important',
-                        outline: 'none !important',
-                        border: 'none !important',
-                      }}
-                    />
-                    {founderError?.title && (
-                      <span className="text-[13px] text-red-500">
-                        {typeof founderError?.title === 'string'
-                          ? founderError?.title
-                          : (founderError?.title as any)?.message ||
-                            'Invalid input'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex w-[60px] items-center justify-center">
-                    {foundersArray.length > 1 && (
-                      <button
-                        type="button"
-                        className="flex size-[40px] cursor-pointer items-center justify-center rounded-full border-none bg-transparent p-[8px] opacity-30"
-                        onClick={() => {
-                          const newFounders = foundersArray.filter(
-                            (_: any, i: number) => i !== index,
-                          );
-                          field.onChange(newFounders);
-                        }}
-                        aria-label={`Remove founder ${index + 1}`}
-                        style={{
-                          outline: 'none',
-                          boxShadow: 'none',
-                        }}
-                      >
-                        <XCircle size={24} />
-                      </button>
-                    )}
-                  </div>
-                </div>
+                  index={index}
+                  remove={() => {
+                    const newFounders = foundersArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newFounders);
+                  }}
+                  register={register}
+                  errors={founderError}
+                  foundersKey={field.name as 'founders'}
+                  canRemove={foundersArray.length > 1}
+                />
               );
             })}
             <div className="bg-[#F5F5F5] p-[10px]">
@@ -403,17 +329,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                     { name: '', title: '' },
                   ];
                   field.onChange(newFounders);
-
-                  // Focus on the first input field of the new row
-                  const newIndex = foundersArray.length;
-                  setTimeout(() => {
-                    const nameInput = document.querySelector(
-                      `input[name="${field.name}.${newIndex}.name"]`,
-                    ) as HTMLInputElement;
-                    if (nameInput) {
-                      nameInput.focus();
-                    }
-                  }, 0);
                 }}
                 disabled={isDisabled}
                 style={{

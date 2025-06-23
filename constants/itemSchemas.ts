@@ -47,7 +47,7 @@ const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   title: yup.string().required('Founder title is required'),
 });
 
-// 创建一个智能的founder验证schema，在提交时严格验证
+// Create a smart founder validation schema with strict validation on submission
 const smartFounderSchema = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
@@ -236,7 +236,7 @@ export const itemValidationSchemas = {
         const hasName = Boolean(name && name.trim() !== '');
         const hasTitle = Boolean(title && title.trim() !== '');
 
-        // 检查是否有空行（两个字段都为空）
+        // Check for empty rows (both fields are empty)
         if (!hasName && !hasTitle) {
           return this.createError({
             path: `founders[${i}].name`,
@@ -244,7 +244,7 @@ export const itemValidationSchemas = {
           });
         }
 
-        // 检查是否有部分填写的行
+        // Check for partially filled rows
         if (hasName && !hasTitle) {
           return this.createError({
             path: `founders[${i}].title`,
@@ -259,13 +259,13 @@ export const itemValidationSchemas = {
           });
         }
 
-        // 如果两个字段都有内容，标记为有效
+        // If both fields have content, mark as valid
         if (hasName && hasTitle) {
           hasValidFounder = true;
         }
       }
 
-      // 确保至少有一个有效的founder
+      // Ensure at least one valid founder exists
       if (!hasValidFounder) {
         return this.createError({
           path: 'founders[0].name',
@@ -293,7 +293,7 @@ export const itemValidationSchemas = {
           const hasName = name && name.trim() !== '';
           const hasTitle = title && title.trim() !== '';
 
-          // 检查是否有空行（两个字段都为空）
+          // Check for empty rows (both fields are empty)
           if (!hasName && !hasTitle) {
             return this.createError({
               path: `${i}.name`,
@@ -301,7 +301,7 @@ export const itemValidationSchemas = {
             });
           }
 
-          // 检查是否有部分填写的行
+          // Check for partially filled rows
           if (hasName && !hasTitle) {
             return this.createError({
               path: `${i}.title`,
@@ -316,13 +316,13 @@ export const itemValidationSchemas = {
             });
           }
 
-          // 如果两个字段都有内容，标记为有效
+          // If both fields have content, mark as valid
           if (hasName && hasTitle) {
             hasValidMember = true;
           }
         }
 
-        // 确保至少有一个有效的core team member
+        // Ensure at least one valid core team member exists
         if (!hasValidMember) {
           return this.createError({
             path: '0.name',

@@ -62,8 +62,11 @@ export const useProjectTableColumns = ({
   showMetrics = false,
   category,
 }: IUseProjectTableColumnsProps) => {
-  // 创建列定义
-  const columnHelper = createColumnHelper<IKeyItemDataForTable>();
+  // Create column helper - use useMemo to avoid recreating on every render
+  const columnHelper = useMemo(
+    () => createColumnHelper<IKeyItemDataForTable>(),
+    [],
+  );
 
   return useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
@@ -322,7 +325,7 @@ export const useProjectTableColumns = ({
       },
     });
 
-    // 基础列
+    // Base columns
     const baseColumns = [
       propertyColumn,
       inputColumn,
@@ -330,16 +333,16 @@ export const useProjectTableColumns = ({
       submitterColumn,
     ];
 
-    // Metrics 列 (条件显示)
+    // Metrics columns (conditionally displayed)
     const metricsColumns = showMetrics
       ? [accountabilityColumn, legitimacyColumn]
       : [];
 
-    // Actions 列
+    // Actions columns
     const actionColumns = [actionsColumn];
 
     const finalColumns = [...baseColumns, ...metricsColumns, ...actionColumns];
 
     return finalColumns;
-  }, [columnHelper, showMetrics, category]);
+  }, [showMetrics, category]);
 };
