@@ -5,10 +5,8 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 
 import ECFTypography from '@/components/base/typography';
-import { useAuth } from '@/context/AuthContext';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
-import ProposalVoteUtils from '@/utils/proposal';
 
 interface IProjectCardSkeletonProps {
   showBorder?: boolean;
@@ -67,20 +65,6 @@ const ProjectCard = ({
   onUpvote,
   userLikeRecord,
 }: IProjectCardProps) => {
-  const { profile } = useAuth();
-
-  const { leadingProposalId, leadingProposalResult } =
-    ProposalVoteUtils.getVoteResultOfProject({
-      projectId: project.id,
-      proposals: project.proposals || [],
-      votesOfProject:
-        project.proposals?.flatMap((proposal) => proposal.voteRecords || []) ||
-        [],
-      userId: profile?.userId,
-    });
-
-  console.log('leadingProposalId', project.createdAt);
-
   return (
     <div
       className={cn(

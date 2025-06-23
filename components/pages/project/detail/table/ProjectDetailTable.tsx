@@ -143,10 +143,6 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   // Tablet and mobile: make full use of available width
   // Behavior as flex item on desktop
   useEffect(() => {
-    console.log(
-      '🔄 Column building completed, starting to clean up invalid pinned columns...',
-    );
-
     // Clean up invalid pinned columns for each category
     cleanupInvalidPinnedColumns(
       IItemSubCategoryEnum.BasicProfile,
