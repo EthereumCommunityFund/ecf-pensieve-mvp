@@ -1,6 +1,4 @@
-export const normalizeUrl = (
-  value: string | null | undefined,
-): string | null | undefined => {
+export const normalizeUrl = (value: string | null | undefined): string => {
   if (!value) {
     return '';
   }

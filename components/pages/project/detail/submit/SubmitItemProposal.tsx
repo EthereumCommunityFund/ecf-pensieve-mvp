@@ -223,7 +223,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       description: 'Please fix the errors before proceeding',
       color: 'warning',
     });
-  }, [addToast]);
+  }, []);
 
   const triggerActualAPISubmission = useCallback(() => {
     if (!dataForPreview) return;

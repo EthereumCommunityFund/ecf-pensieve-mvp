@@ -345,5 +345,6 @@ export const useProjectTableColumns = ({
     const finalColumns = [...baseColumns, ...metricsColumns, ...actionColumns];
 
     return finalColumns;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showMetrics, category]);
 };
