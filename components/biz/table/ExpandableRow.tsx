@@ -63,7 +63,8 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
           <div
             className={cn(
               'font-sans text-[13px] font-[400] text-black',
-              itemConfig!.formDisplayType === 'founderList'
+              itemConfig!.formDisplayType === 'founderList' ||
+                itemConfig!.formDisplayType === 'websites'
                 ? 'p-[0px]'
                 : 'p-[20px]',
             )}
