@@ -25,12 +25,14 @@ export interface ITableRowRendererProps<
   tableInstance: Table<TRowData>;
   columns: ColumnDef<TRowData, TValue>[];
   expandedRows: Partial<Record<IPocItemKey, boolean>>;
+  onToggleExpanded?: (itemKey: IPocItemKey) => void;
 }
 
 const BaseTableRenderer = <TRowData extends IBaeTableRow, TValue = unknown>({
   tableInstance,
   columns,
   expandedRows,
+  onToggleExpanded,
 }: ITableRowRendererProps<TRowData, TValue>): React.ReactElement => {
   return (
     <table className="w-full border-separate border-spacing-0">
@@ -110,6 +112,9 @@ const BaseTableRenderer = <TRowData extends IBaeTableRow, TValue = unknown>({
                 colSpan={row.getVisibleCells().length}
                 isLastRow={
                   rowIndex === tableInstance.getRowModel().rows.length - 1
+                }
+                onToggleExpanded={() =>
+                  onToggleExpanded?.(row.original.key as IPocItemKey)
                 }
               />
               {row.original.reason && (

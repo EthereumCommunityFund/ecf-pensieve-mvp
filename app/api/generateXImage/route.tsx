@@ -53,6 +53,7 @@ export async function GET(request: Request) {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={logoUrl}
                 alt="Project Logo"

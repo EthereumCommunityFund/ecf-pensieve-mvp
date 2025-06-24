@@ -38,6 +38,8 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
             key={column.id}
             style={{
               width: `${column.getSize()}px`,
+              minWidth: `${column.getSize()}px`,
+              maxWidth: `${column.getSize()}px`,
             }}
           />
         ))}
@@ -134,7 +136,10 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
         background="white"
         className="overflow-x-auto rounded-b-[10px] border-t-0"
       >
-        <table className="box-border w-full table-fixed border-separate border-spacing-0">
+        <table
+          className="box-border w-full border-separate border-spacing-0"
+          style={{ minWidth: 'max-content' }}
+        >
           {colGroupDefinition}
           {tableHeaders}
           <tbody>
@@ -223,11 +228,8 @@ const ProposalTable: React.FC<ProposalTableProps> = ({
       className="overflow-x-auto rounded-b-[10px] border-t-0"
     >
       <table
-        className={cn(
-          'box-border w-full border-separate border-spacing-0',
-          // Always use table-fixed for consistent column widths
-          'table-fixed',
-        )}
+        className={cn('box-border w-full border-separate border-spacing-0')}
+        style={{ minWidth: 'max-content' }}
       >
         {colGroupDefinition}
         {tableHeaders}

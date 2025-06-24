@@ -454,7 +454,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       !isConnected &&
       authState.status === 'authenticated'
     ) {
-      performFullLogoutAndReload();
+      // Defer the logout to avoid setState during render
+      setTimeout(() => {
+        performFullLogoutAndReload();
+      }, 0);
     }
     prevIsConnectedRef.current = isConnected;
   }, [isConnected, authState.status, performFullLogoutAndReload]);

@@ -9,7 +9,16 @@
       "Bash(git mv:*)",
       "Bash(rm:*)",
       "WebFetch(domain:github.com)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(claude-code mcp list)",
+      "Bash(npx figma-developer-mcp:*)",
+      "Bash(kill:*)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "mcp__puppeteer__puppeteer_screenshot",
+      "mcp__fetch__imageFetch"
     ],
     "deny": []
   }

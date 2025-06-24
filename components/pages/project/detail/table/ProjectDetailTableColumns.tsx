@@ -62,8 +62,11 @@ export const useProjectTableColumns = ({
   showMetrics = false,
   category,
 }: IUseProjectTableColumnsProps) => {
-  // 创建列定义
-  const columnHelper = createColumnHelper<IKeyItemDataForTable>();
+  // Create column helper - use useMemo to avoid recreating on every render
+  const columnHelper = useMemo(
+    () => createColumnHelper<IKeyItemDataForTable>(),
+    [],
+  );
 
   return useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
@@ -80,9 +83,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 240,
-      minSize: 240,
-      maxSize: 240,
+      size: 230,
+      minSize: 230,
+      maxSize: 230,
       enableResizing: false,
       cell: (info) => {
         const { key } = info.row.original;
@@ -109,7 +112,8 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      // size: 300,
+      size: 280,
+      minSize: 200,
       cell: (info) => {
         const item = info.row.original;
         const { expandedRows, toggleRowExpanded, onOpenModal } = info.table
@@ -156,9 +160,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 140,
-      minSize: 140,
-      maxSize: 140,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableResizing: false,
       cell: (info) => {
         const reference = info.getValue();
@@ -197,9 +201,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 150,
-      minSize: 150,
-      maxSize: 150,
+      size: 140,
+      minSize: 140,
+      maxSize: 140,
       enableResizing: false,
       cell: (info) => {
         const item = info.row.original;
@@ -235,9 +239,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 240,
-      minSize: 240,
-      maxSize: 240,
+      size: 250,
+      minSize: 250,
+      maxSize: 250,
       enableResizing: false,
       cell: (info) => {
         const accountability = info.getValue();
@@ -268,9 +272,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 228,
-      minSize: 228,
-      maxSize: 228,
+      size: 250,
+      minSize: 250,
+      maxSize: 250,
       enableResizing: false,
       cell: (info) => {
         const legitimacy = info.getValue();
@@ -299,9 +303,9 @@ export const useProjectTableColumns = ({
           />
         );
       },
-      size: 160,
-      minSize: 160,
-      maxSize: 160,
+      size: 120,
+      minSize: 120,
+      maxSize: 120,
       enableResizing: false,
       cell: (info) => {
         const item = info.row.original;
@@ -322,7 +326,7 @@ export const useProjectTableColumns = ({
       },
     });
 
-    // 基础列
+    // Base columns
     const baseColumns = [
       propertyColumn,
       inputColumn,
@@ -330,16 +334,17 @@ export const useProjectTableColumns = ({
       submitterColumn,
     ];
 
-    // Metrics 列 (条件显示)
+    // Metrics columns (conditionally displayed)
     const metricsColumns = showMetrics
       ? [accountabilityColumn, legitimacyColumn]
       : [];
 
-    // Actions 列
+    // Actions columns
     const actionColumns = [actionsColumn];
 
     const finalColumns = [...baseColumns, ...metricsColumns, ...actionColumns];
 
     return finalColumns;
-  }, [columnHelper, showMetrics, category]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMetrics, category]);
 };

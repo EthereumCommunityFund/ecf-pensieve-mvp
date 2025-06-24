@@ -10,14 +10,13 @@ import {
 
 import {
   Autocomplete,
-  Button,
   DatePicker,
   Input,
   Select,
   SelectItem,
   Textarea,
 } from '@/components/base';
-import { CalendarBlankIcon } from '@/components/icons';
+import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
   buildDatePickerProps,
@@ -27,10 +26,10 @@ import {
 
 import { IProjectFormData } from '../types';
 
-import FounderFormItem from './FounderFormItem';
+import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
-import WebsiteFormItem from './WebsiteFormItem';
+import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
@@ -57,7 +56,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     componentsProps = {},
   } = itemConfig;
 
-  const { register, formState } = useFormContext<IProjectFormData>();
+  const { register, formState, control } = useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
@@ -180,7 +179,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               field.onBlur(); // Trigger validation
             }}
             onClose={() => {
-              // 当下拉框关闭时也触发 blur 事件
+              // Also trigger blur event when dropdown is closed
               field.onBlur();
             }}
             isInvalid={!!error}
@@ -202,7 +201,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       );
     }
     case 'autoComplete': {
-      // 确保 field.value 是数组格式
+      // Ensure field.value is in array format
       const currentValue = Array.isArray(field.value) ? field.value : [];
 
       return (
@@ -212,7 +211,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             value={currentValue}
             onChange={(newValue: string[]) => {
               field.onChange(newValue);
-              field.onBlur(); // 触发验证
+              field.onBlur(); // Trigger validation
             }}
             placeholder={placeholder}
             isDisabled={isDisabled}
@@ -271,12 +270,26 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'founderList': {
-      // 确保有有效的数组数据
+      // Ensure valid array data
       const foundersArray = Array.isArray(field.value) ? field.value : [];
 
       return (
         <div>
-          <div className="flex flex-col gap-2.5 pt-[10px]">
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Full Name
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Title/Role
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
             {foundersArray.map((founder: any, index: number) => {
               // Get error for specific index from fieldState
               const founderError =
@@ -285,7 +298,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   : undefined;
 
               return (
-                <FounderFormItem
+                <FounderFormItemTable
                   key={index}
                   index={index}
                   remove={() => {
@@ -297,25 +310,38 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   register={register}
                   errors={founderError}
                   foundersKey={field.name as 'founders'}
-                  isPrimary={index === 0}
                   canRemove={foundersArray.length > 1}
                 />
               );
             })}
-          </div>
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
 
-          <div className="pt-[10px]">
-            <Button
-              color="secondary"
-              size="md"
-              className="mobile:w-full px-[20px]"
-              onPress={() => {
-                field.onChange([...foundersArray, { name: '', title: '' }]);
-              }}
-              isDisabled={isDisabled}
-            >
-              Add Entry(FormItemRenderer)
-            </Button>
+                  // Add new item directly to existing array
+                  const newFounders = [
+                    ...foundersArray,
+                    { name: '', title: '' },
+                  ];
+                  field.onChange(newFounders);
+                }}
+                disabled={isDisabled}
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  fontFamily: 'Open Sans, sans-serif',
+                }}
+              >
+                <PlusIcon size={16} />
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add an Entry
+                </span>
+              </button>
+            </div>
           </div>
           {errorMessageElement}
         </div>
@@ -326,15 +352,30 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       const websitesArray = Array.isArray(field.value) ? field.value : [];
 
       return (
-        <div className="rounded-[10px] border border-black/10 bg-[#EFEFEF] p-[10px]">
-          <div className="flex flex-col gap-2.5 pt-[10px]">
+        <div>
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Website Title
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  URL
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
             {websitesArray.map((website: any, index: number) => {
               const websiteError =
                 fieldState.error && Array.isArray(fieldState.error)
                   ? fieldState.error[index]
                   : undefined;
+
               return (
-                <WebsiteFormItem
+                <WebsiteFormItemTable
                   key={`${field.name}-${index}`}
                   index={index}
                   remove={() => {
@@ -352,19 +393,34 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 />
               );
             })}
-          </div>
-          <div className="pt-[10px]">
-            <Button
-              color="secondary"
-              size="md"
-              className="mobile:w-full px-[20px]"
-              onPress={() => {
-                field.onChange([...websitesArray, { url: '', title: '' }]);
-              }}
-              isDisabled={isDisabled}
-            >
-              Add an Entry
-            </Button>
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  // Add new item directly to existing array
+                  const newWebsites = [
+                    ...websitesArray,
+                    { title: '', url: '' },
+                  ];
+                  field.onChange(newWebsites);
+                }}
+                disabled={isDisabled}
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  fontFamily: 'Open Sans, sans-serif',
+                }}
+              >
+                <PlusIcon size={16} />
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add an Entry
+                </span>
+              </button>
+            </div>
           </div>
           {errorMessageElement}
         </div>

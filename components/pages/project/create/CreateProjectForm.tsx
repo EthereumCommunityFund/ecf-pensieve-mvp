@@ -130,7 +130,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       Record<string, boolean>,
       IProjectFormData
     >(projectSchema),
-    mode: 'all',
+    mode: 'all', // Keep original mode for real-time validation
     defaultValues: DefaultProjectFormData,
   });
 

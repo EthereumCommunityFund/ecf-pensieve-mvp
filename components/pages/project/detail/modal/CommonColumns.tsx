@@ -4,7 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
-import TooltipTh from '@/components/biz/table/TooltipTh';
+import { TooltipTh } from '@/components/biz/table/TooltipThWithPin';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord } from '@/types';
