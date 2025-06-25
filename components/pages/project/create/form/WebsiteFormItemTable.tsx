@@ -50,9 +50,11 @@ const WebsiteFormItemTable: React.FC<WebsiteFormItemTableProps> = ({
             border: 'none !important',
           }}
         />
-        {titleTouched && errors?.title && (
+        {errors?.title && (titleTouched || !isPrimary) && (
           <span className="text-[13px] text-red-500">
-            {errors?.title?.message}
+            {typeof errors.title === 'string'
+              ? errors.title
+              : errors.title?.message || 'Title is required'}
           </span>
         )}
       </div>
@@ -68,9 +70,11 @@ const WebsiteFormItemTable: React.FC<WebsiteFormItemTableProps> = ({
             border: 'none !important',
           }}
         />
-        {urlTouched && errors?.url && (
+        {errors?.url && (urlTouched || !isPrimary) && (
           <span className="text-[13px] text-red-500">
-            {errors?.url?.message}
+            {typeof errors.url === 'string'
+              ? errors.url
+              : errors.url?.message || 'URL is required'}
           </span>
         )}
       </div>
