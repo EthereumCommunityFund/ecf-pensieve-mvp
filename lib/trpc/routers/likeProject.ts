@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -85,8 +85,8 @@ export const likeProjectRouter = router({
           tx
             .update(projects)
             .set({
-              support: project.support + weight,
-              likeCount: project.likeCount + 1,
+              support: sql`${projects.support} + ${weight}`,
+              likeCount: sql`${projects.likeCount} + 1`,
             })
             .where(eq(projects.id, projectId)),
           logUserActivity.like.create(
@@ -156,7 +156,7 @@ export const likeProjectRouter = router({
           tx
             .update(projects)
             .set({
-              support: project.support + additionalWeight,
+              support: sql`${projects.support} + ${additionalWeight}`,
             })
             .where(eq(projects.id, projectId)),
           logUserActivity.like.update(
@@ -214,8 +214,8 @@ export const likeProjectRouter = router({
           tx
             .update(projects)
             .set({
-              support: project.support - withdrawnWeight,
-              likeCount: project.likeCount - 1,
+              support: sql`${projects.support} - ${withdrawnWeight}`,
+              likeCount: sql`${projects.likeCount} - 1`,
             })
             .where(eq(projects.id, projectId)),
           logUserActivity.like.delete(
