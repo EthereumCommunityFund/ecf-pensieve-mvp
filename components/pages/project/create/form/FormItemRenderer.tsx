@@ -270,8 +270,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'founderList': {
-      // Ensure valid array data
-      const foundersArray = Array.isArray(field.value) ? field.value : [];
+      // Ensure valid array data with at least one entry
+      const foundersArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value
+          : [{ name: '', title: '' }];
 
       return (
         <div>
@@ -349,7 +352,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'websites': {
-      const websitesArray = Array.isArray(field.value) ? field.value : [];
+      const websitesArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value
+          : [{ url: '', title: '' }];
 
       return (
         <div>

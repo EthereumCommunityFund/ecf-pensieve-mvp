@@ -18,7 +18,8 @@
       "Bash(kill:*)",
       "mcp__puppeteer__puppeteer_navigate",
       "mcp__puppeteer__puppeteer_screenshot",
-      "mcp__fetch__imageFetch"
+      "mcp__fetch__imageFetch",
+      "Bash(gh pr view:*)"
     ],
     "deny": []
   }
