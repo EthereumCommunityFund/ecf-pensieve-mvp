@@ -48,7 +48,9 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         />
         {errors?.name && (
           <span className="text-[13px] text-red-500">
-            {errors?.name?.message}
+            {typeof errors.name === 'string'
+              ? errors.name
+              : errors.name?.message || 'Name is required'}
           </span>
         )}
       </div>
@@ -66,7 +68,9 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         />
         {errors?.title && (
           <span className="text-[13px] text-red-500">
-            {errors?.title?.message}
+            {typeof errors.title === 'string'
+              ? errors.title
+              : errors.title?.message || 'Title is required'}
           </span>
         )}
       </div>
