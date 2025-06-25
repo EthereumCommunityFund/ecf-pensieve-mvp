@@ -1,7 +1,9 @@
 import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
+import { CACHE_TAGS } from '@/lib/constants';
 import { likeRecords, projects } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import { getUserAvailableWeight } from '@/lib/services/userWeightService';
@@ -86,6 +88,8 @@ export const likeProjectRouter = router({
           tx,
         );
 
+        revalidateTag(CACHE_TAGS.PROJECTS);
+
         return newLikeRecord[0];
       });
     }),
@@ -163,6 +167,8 @@ export const likeProjectRouter = router({
           tx,
         );
 
+        revalidateTag(CACHE_TAGS.PROJECTS);
+
         return updatedLikeRecord[0];
       });
     }),
@@ -226,6 +232,8 @@ export const likeProjectRouter = router({
           },
           tx,
         );
+
+        revalidateTag(CACHE_TAGS.PROJECTS);
 
         return { success: true, withdrawnWeight };
       });
