@@ -10,6 +10,24 @@ import { getUserAvailableWeight } from '@/lib/services/userWeightService';
 
 import { protectedProcedure, router } from '../server';
 
+const getProjectAndLikeRecord = async (
+  db: any,
+  projectId: number,
+  userId: string,
+) => {
+  return await Promise.all([
+    db.query.projects.findFirst({
+      where: eq(projects.id, projectId),
+    }),
+    db.query.likeRecords.findFirst({
+      where: and(
+        eq(likeRecords.projectId, projectId),
+        eq(likeRecords.creator, userId),
+      ),
+    }),
+  ]);
+};
+
 export const likeProjectRouter = router({
   getUserAvailableWeight: protectedProcedure.query(async ({ ctx }) => {
     const availableWeight = await getUserAvailableWeight(ctx.user.id);
@@ -26,18 +44,11 @@ export const likeProjectRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { projectId, weight } = input;
 
-      const [project, existingLikeRecord, availableWeight] = await Promise.all([
-        ctx.db.query.projects.findFirst({
-          where: eq(projects.id, projectId),
-        }),
-        ctx.db.query.likeRecords.findFirst({
-          where: and(
-            eq(likeRecords.projectId, projectId),
-            eq(likeRecords.creator, ctx.user.id),
-          ),
-        }),
-        getUserAvailableWeight(ctx.user.id),
-      ]);
+      const [[project, existingLikeRecord], availableWeight] =
+        await Promise.all([
+          getProjectAndLikeRecord(ctx.db, projectId, ctx.user.id),
+          getUserAvailableWeight(ctx.user.id),
+        ]);
 
       if (!project) {
         throw new TRPCError({
@@ -61,15 +72,16 @@ export const likeProjectRouter = router({
       }
 
       return await ctx.db.transaction(async (tx) => {
-        const [newLikeRecord] = await Promise.all([
-          tx
-            .insert(likeRecords)
-            .values({
-              projectId,
-              creator: ctx.user.id,
-              weight,
-            })
-            .returning(),
+        const [newLikeRecord] = await tx
+          .insert(likeRecords)
+          .values({
+            projectId,
+            creator: ctx.user.id,
+            weight,
+          })
+          .returning();
+
+        await Promise.all([
           tx
             .update(projects)
             .set({
@@ -77,20 +89,19 @@ export const likeProjectRouter = router({
               likeCount: project.likeCount + 1,
             })
             .where(eq(projects.id, projectId)),
+          logUserActivity.like.create(
+            {
+              userId: ctx.user.id,
+              targetId: newLikeRecord.id,
+              projectId,
+            },
+            tx,
+          ),
         ]);
-
-        logUserActivity.like.create(
-          {
-            userId: ctx.user.id,
-            targetId: newLikeRecord[0].id,
-            projectId,
-          },
-          tx,
-        );
 
         revalidateTag(CACHE_TAGS.PROJECTS);
 
-        return newLikeRecord[0];
+        return newLikeRecord;
       });
     }),
 
@@ -104,18 +115,11 @@ export const likeProjectRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { projectId, weight } = input;
 
-      const [project, existingLikeRecord, availableWeight] = await Promise.all([
-        ctx.db.query.projects.findFirst({
-          where: eq(projects.id, projectId),
-        }),
-        ctx.db.query.likeRecords.findFirst({
-          where: and(
-            eq(likeRecords.projectId, projectId),
-            eq(likeRecords.creator, ctx.user.id),
-          ),
-        }),
-        getUserAvailableWeight(ctx.user.id),
-      ]);
+      const [[project, existingLikeRecord], availableWeight] =
+        await Promise.all([
+          getProjectAndLikeRecord(ctx.db, projectId, ctx.user.id),
+          getUserAvailableWeight(ctx.user.id),
+        ]);
 
       if (!project) {
         throw new TRPCError({
@@ -132,8 +136,8 @@ export const likeProjectRouter = router({
       }
 
       const currentWeight = existingLikeRecord.weight || 0;
-
       const additionalWeight = weight - currentWeight;
+
       if (availableWeight < additionalWeight) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -142,34 +146,32 @@ export const likeProjectRouter = router({
       }
 
       return await ctx.db.transaction(async (tx) => {
-        const [updatedLikeRecord] = await Promise.all([
-          tx
-            .update(likeRecords)
-            .set({
-              weight,
-            })
-            .where(eq(likeRecords.id, existingLikeRecord.id))
-            .returning(),
+        const [updatedLikeRecord] = await tx
+          .update(likeRecords)
+          .set({ weight })
+          .where(eq(likeRecords.id, existingLikeRecord.id))
+          .returning();
+
+        await Promise.all([
           tx
             .update(projects)
             .set({
               support: project.support + additionalWeight,
             })
             .where(eq(projects.id, projectId)),
+          logUserActivity.like.update(
+            {
+              userId: ctx.user.id,
+              targetId: existingLikeRecord.id,
+              projectId,
+            },
+            tx,
+          ),
         ]);
-
-        logUserActivity.like.update(
-          {
-            userId: ctx.user.id,
-            targetId: existingLikeRecord.id,
-            projectId,
-          },
-          tx,
-        );
 
         revalidateTag(CACHE_TAGS.PROJECTS);
 
-        return updatedLikeRecord[0];
+        return updatedLikeRecord;
       });
     }),
 
@@ -182,17 +184,11 @@ export const likeProjectRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { projectId } = input;
 
-      const [project, existingLikeRecord] = await Promise.all([
-        ctx.db.query.projects.findFirst({
-          where: eq(projects.id, projectId),
-        }),
-        ctx.db.query.likeRecords.findFirst({
-          where: and(
-            eq(likeRecords.projectId, projectId),
-            eq(likeRecords.creator, ctx.user.id),
-          ),
-        }),
-      ]);
+      const [project, existingLikeRecord] = await getProjectAndLikeRecord(
+        ctx.db,
+        projectId,
+        ctx.user.id,
+      );
 
       if (!project) {
         throw new TRPCError({
@@ -222,16 +218,15 @@ export const likeProjectRouter = router({
               likeCount: project.likeCount - 1,
             })
             .where(eq(projects.id, projectId)),
+          logUserActivity.like.delete(
+            {
+              userId: ctx.user.id,
+              targetId: existingLikeRecord.id,
+              projectId,
+            },
+            tx,
+          ),
         ]);
-
-        logUserActivity.like.delete(
-          {
-            userId: ctx.user.id,
-            targetId: existingLikeRecord.id,
-            projectId,
-          },
-          tx,
-        );
 
         revalidateTag(CACHE_TAGS.PROJECTS);
 
