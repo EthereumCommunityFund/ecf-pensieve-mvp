@@ -3,6 +3,7 @@
 import { cn } from '@heroui/react';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { FC, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
@@ -327,6 +328,20 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
               'flex-1',
             )}
           >
+            <div className="mb-[30px] rounded-[10px] bg-[#EBEBEB] p-[10px] text-[13px] text-black/80">
+              <strong>Disclaimer:</strong> Verify critical facts. Validate
+              claims and contribute.{' '}
+              <Link
+                target="_blank"
+                href="https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus/3.-the-pensieve-mechanism-and-penseive-knowledge-base-design#id-3.6-artificial-intelligence-integration-and-risk-management"
+              >
+                <strong className="cursor-pointer underline hover:opacity-80">
+                  Penseive knowledge base
+                </strong>
+              </Link>{' '}
+              is where truth is validated by communities, not gatekeepers.
+            </div>
+
             {/* Category tables */}
             <div className="flex flex-col gap-[40px]">
               {ProjectTableFieldCategory.map((cat) => (
