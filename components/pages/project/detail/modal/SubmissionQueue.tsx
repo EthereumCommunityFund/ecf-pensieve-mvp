@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/biz/table';
 import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
-import { CaretUpDownIcon, ClockClockwiseIcon } from '@/components/icons';
+import { CaretUpDownIcon, TrendDownIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
@@ -144,6 +144,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
       showRowOverTaken, // Only displayed table needs to consider showRowOverTaken
+      isLeadingProposalNotLeading,
       inActionKeyMap,
       inActionItemProposalIdMap,
       showSubmitterModal,
@@ -160,6 +161,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     displayedExpandedRows,
     toggleDisplayedRowExpanded,
     showRowOverTaken,
+    isLeadingProposalNotLeading,
     inActionKeyMap,
     inActionItemProposalIdMap,
     showSubmitterModal,
@@ -227,37 +229,35 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-[20px]">
-      {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
+      {/* Consensus in Progress Banner - Only show when isLeadingProposalNotLeading is true */}
       {isLeadingProposalNotLeading && (
         <>
           {/* Item Info */}
           <div className="flex flex-col gap-[5px]">
-            <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
+            <ItemWeight
+              itemKey={itemKey as IPocItemKey}
+              itemName={itemName}
+              itemWeight={displayedItemWeight}
+            />
           </div>
           <div
             className={cn(
-              'flex gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]',
-              showRowOverTaken ? 'items-start' : 'items-center',
+              'rounded-[10px] border border-[rgba(196,125,84,0.40)] bg-[rgba(247,153,45,0.20)] p-[10px]',
             )}
           >
-            <div className="shrink-0">
-              <ClockClockwiseIcon size={24} />
-            </div>
-            <div className="flex flex-col gap-[5px]">
-              <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
-                Consensus in Progress
+            <div className="flex items-center gap-[10px]">
+              <TrendDownIcon size={16} className="text-[#C47D54]" />
+              <span className="font-mona text-[16px] font-medium leading-[20px] text-[#C47D54]">
+                Support Not Sufficient
               </span>
-              {showRowOverTaken && (
-                <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
-                  <b>
-                    The displayed submission is now outpaced by a leading
-                    submission with more support.{' '}
-                  </b>
-                  To keep the displayed submission in place, additional support
-                  is needed, or if the leading submission surpasses the Item
-                  Weight, it will replace the displayed one.
-                </span>
-              )}
+            </div>
+            <div className="mt-[5px] font-sans text-[13px] font-normal text-black/70">
+              <b>
+                The displayed submission is currently lacking support against
+                the current item weight.{' '}
+              </b>
+              To keep the displayed submission in place, additional support is
+              needed to exceed the item weight.
             </div>
           </div>
         </>
@@ -270,12 +270,12 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           <div className="flex flex-col gap-2.5">
             <div className="flex flex-col gap-[5px]">
               <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-                Displayed:
+                Leading:
               </span>
               <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
                 {isProposalsByKeyLoading
                   ? 'Loading displayed submission...'
-                  : 'This is the validated submission currently shown on the project page.'}
+                  : 'This is the validated submission with its value currently displayed on the project page for this item.'}
               </span>
             </div>
 
@@ -340,7 +340,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               // displayedExpandedRows[getRowUniqueId(row.original)]
                               //   ? 'bg-[#EBEBEB]'
                               //   : '',
-                              showRowOverTaken &&
+                              isLeadingProposalNotLeading &&
                                 'bg-[rgba(247,153,45,0.2)] hover:bg-[rgba(247,153,45,0.2)]',
                             )}
                           >
@@ -354,7 +354,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
                               // Generate border classes for over-taken row
                               const getOverTakenBorderClasses = () => {
-                                if (!showRowOverTaken) return '';
+                                if (!isLeadingProposalNotLeading) return '';
                                 const isShowReason =
                                   tableDataOfDisplayed[0]?.reason;
 

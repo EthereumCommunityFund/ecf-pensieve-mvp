@@ -237,6 +237,7 @@ export interface InputColCellProps extends BaseCellProps {
   onToggleExpand?: () => void;
   showOverTakenStatus?: boolean;
   showLeadingStatus?: boolean;
+  isLeadingProposalNotLeading?: boolean;
   onPropose?: () => void;
   onViewProposals?: () => void;
 }
@@ -280,6 +281,7 @@ const InputCell = ({
   onToggleExpand,
   showOverTakenStatus = false,
   showLeadingStatus = false,
+  isLeadingProposalNotLeading = false,
   onPropose,
   onViewProposals,
 }: InputColCellProps) => {
@@ -328,14 +330,14 @@ const InputCell = ({
   }
 
   // If showing over-taken status, render special UI
-  if (showOverTakenStatus) {
+  if (isLeadingProposalNotLeading) {
     return (
       <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center gap-[5px]">
             <TrendDownIcon size={16} className="text-[#C47D54]" />
             <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#C47D54]">
-              Support Not Sufficient
+              {showOverTakenStatus ? 'Over-taken' : 'Support Not Sufficient'}
             </span>
           </div>
           <div className="text-[13px] leading-[19px]">

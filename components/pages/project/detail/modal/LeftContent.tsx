@@ -62,7 +62,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
     // }
 
     return baseTabs;
-  }, [displayProposalDataOfKey, submissionQueueCount]);
+  }, [submissionQueueCount]);
 
   // Ensure activeTab is always valid when tabs change
   useEffect(() => {

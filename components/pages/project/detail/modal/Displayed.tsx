@@ -20,7 +20,7 @@ import { ClockClockwiseIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
-import { IEssentialItemKey } from '@/types/item';
+import { IEssentialItemKey, IPocItemKey } from '@/types/item';
 
 import {
   IAccountabilityMetric,
@@ -156,7 +156,11 @@ const Displayed: FC<DisplayedProps> = ({
             Item:
           </span>
         </div>
-        <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
+        <ItemWeight
+          itemKey={itemKey as IPocItemKey}
+          itemName={itemName}
+          itemWeight={displayedItemWeight}
+        />
       </div>
 
       {/* Consensus Status Info */}

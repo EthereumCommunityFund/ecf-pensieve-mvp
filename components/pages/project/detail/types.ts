@@ -68,6 +68,7 @@ export interface ITableMetaOfSubmissionQueue {
   profile?: IProfile;
   showRowOverTaken?: boolean;
   showRowIsLeading?: boolean;
+  isLeadingProposalNotLeading?: boolean;
   inActionKeyMap?: Partial<Record<IPocItemKey, boolean>>;
   inActionItemProposalIdMap?: Record<number, boolean>;
   showSubmitterModal?: (submitter: IProposalCreator, validatedAt: Date) => void;

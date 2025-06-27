@@ -33,6 +33,7 @@ export const useCommonColumnsOfModal = () => {
           expandedRows,
           showRowOverTaken,
           showRowIsLeading,
+          isLeadingProposalNotLeading,
         } = info.table.options.meta as ITableMetaOfSubmissionQueue;
 
         // Generate unique identifier - consistent with logic in SubmissionQueue component
@@ -58,6 +59,7 @@ export const useCommonColumnsOfModal = () => {
             }
             showOverTakenStatus={isFirstRowOverTaken}
             showLeadingStatus={isFirstRowLeading}
+            isLeadingProposalNotLeading={isLeadingProposalNotLeading}
           />
         );
       },
