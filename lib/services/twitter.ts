@@ -32,8 +32,8 @@ function generateTweetContent(project: ProjectData): string {
 
   return `🚀 New project published on ECF Pensieve!
 
-📌 ${project.name}
-${project.tagline}
+Name: ${project.name}
+Tagline: ${project.tagline}
 
 🔗 View details: ${platformUrl}
 
@@ -41,7 +41,7 @@ ${project.tagline}
 }
 
 async function generateProjectImage(project: ProjectData): Promise<Buffer> {
-  const imageUrl = `${getHost()}/api/generateXImage?projectName=${encodeURIComponent(project.name)}&logoUrl=${encodeURIComponent(project.logoUrl)}`;
+  const imageUrl = `${getHost()}/api/generateXImage?projectName=${encodeURIComponent(project.name)}&logoUrl=${encodeURIComponent(project.logoUrl)}&tagline=${encodeURIComponent(project.tagline)}`;
 
   const response = await fetch(imageUrl);
   if (!response.ok) {
