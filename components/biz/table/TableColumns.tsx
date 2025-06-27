@@ -768,7 +768,7 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
           className="flex-1 border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
           onPress={() => onView?.('submitPropose')}
         >
-          Propose
+          Propose to Earn
         </Button>
       ) : (
         <Button
