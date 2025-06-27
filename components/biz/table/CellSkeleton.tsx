@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 
 export interface TableCellSkeletonProps {
   width?: number | string;
+  isFirst?: boolean;
   isLast?: boolean;
   isLastRow?: boolean;
   className?: string;
@@ -20,6 +21,7 @@ export interface TableCellSkeletonProps {
 
 export const TableCellSkeleton = ({
   width,
+  isFirst = false,
   isLast = false,
   isLastRow = false,
   className,
@@ -46,6 +48,9 @@ export const TableCellSkeleton = ({
         'border-l-0',
         isLast ? 'border-r-0' : 'border-r border-black/10',
         isLastRow ? 'border-b-0' : 'border-b border-black/10',
+        // Add rounded corners for last row to align with container
+        isLastRow && isFirst && 'rounded-bl-[10px]',
+        isLastRow && isLast && 'rounded-br-[10px]',
       );
     } else {
       // For non-bordered containers: default behavior

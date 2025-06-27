@@ -2,8 +2,8 @@
 
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Tab, { TabSkeleton } from '@/components/base/Tab';
-import { TabItem } from '@/components/base/Tab/types';
+import TabsLabel from '@/components/base/TabsLabel';
+import { TabItemLabel } from '@/components/base/TabsLabel/types';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
@@ -45,8 +45,8 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   }, [proposalsByProjectIdAndKey?.allItemProposals]);
 
   // Generate tabs based on whether displayProposalDataOfKey has value
-  const tabs: TabItem[] = useMemo(() => {
-    const baseTabs: TabItem[] = [
+  const tabs: TabItemLabel[] = useMemo(() => {
+    const baseTabs: TabItemLabel[] = [
       {
         key: 'submission-queue',
         label: 'Submission Queue',
@@ -147,11 +147,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   return (
     <div className="flex flex-col gap-5 p-5">
       {/* Tab Navigation */}
-      {isProposalsByKeyLoading ? (
-        <TabSkeleton tabCount={displayProposalDataOfKey ? 3 : 2} />
-      ) : (
-        <Tab tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
-      )}
+      <TabsLabel tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
       {/* Tab Content */}
       {renderTabContent()}
     </div>

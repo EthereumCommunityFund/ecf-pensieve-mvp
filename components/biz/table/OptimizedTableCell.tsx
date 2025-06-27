@@ -9,6 +9,7 @@ export interface OptimizedTableCellProps {
   cell: any;
   cellIndex: number;
   width?: number | string;
+  isFirst?: boolean;
   isLast?: boolean;
   isLastRow?: boolean;
   className?: string;
@@ -16,6 +17,7 @@ export interface OptimizedTableCellProps {
   minHeight?: number;
   colspan?: number;
   isContainerBordered?: boolean;
+  hasFooter?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ const OptimizedTableCell = memo(
     cell,
     cellIndex,
     width,
+    isFirst = false,
     isLast = false,
     isLastRow = false,
     className,
@@ -34,6 +37,7 @@ const OptimizedTableCell = memo(
     minHeight = 60,
     colspan,
     isContainerBordered = false,
+    hasFooter = false,
   }: OptimizedTableCellProps) => {
     const cellStyle = {
       width: typeof width === 'number' ? `${width}px` : width,
@@ -43,12 +47,32 @@ const OptimizedTableCell = memo(
 
     // Smart border logic based on container type
     const getBorderClasses = () => {
+      // Check if custom border classes are provided for special states
+      const hasCustomBorders =
+        className &&
+        (className.includes('border-t-[#F7992D]') ||
+          className.includes('border-t-[#46A287]') ||
+          className.includes('border-l-[#F7992D]') ||
+          className.includes('border-l-[#46A287]') ||
+          className.includes('border-r-[#F7992D]') ||
+          className.includes('border-r-[#46A287]') ||
+          className.includes('border-b-[#F7992D]') ||
+          className.includes('border-b-[#46A287]'));
+
+      // If custom borders are provided, don't apply default borders to avoid conflicts
+      if (hasCustomBorders) {
+        return '';
+      }
+
       if (isContainerBordered) {
         // For bordered containers: no left border, conditional right border, keep bottom border for row separation
         return cn(
           'border-l-0',
           isLast ? 'border-r-0' : 'border-r border-black/10',
           isLastRow ? 'border-b-0' : 'border-b border-black/10',
+          // Add rounded corners for last row to align with container, but only if there's no footer
+          isLastRow && !hasFooter && isFirst && 'rounded-bl-[10px]',
+          isLastRow && !hasFooter && isLast && 'rounded-br-[10px]',
         );
       } else {
         // For non-bordered containers: default behavior
@@ -86,10 +110,12 @@ const OptimizedTableCell = memo(
       prevProps.cell.id !== nextProps.cell.id ||
       prevProps.cellIndex !== nextProps.cellIndex ||
       prevProps.width !== nextProps.width ||
+      prevProps.isFirst !== nextProps.isFirst ||
       prevProps.isLast !== nextProps.isLast ||
       prevProps.isLastRow !== nextProps.isLastRow ||
       prevProps.minHeight !== nextProps.minHeight ||
       prevProps.isContainerBordered !== nextProps.isContainerBordered ||
+      prevProps.hasFooter !== nextProps.hasFooter ||
       prevProps.className !== nextProps.className
     ) {
       return false;

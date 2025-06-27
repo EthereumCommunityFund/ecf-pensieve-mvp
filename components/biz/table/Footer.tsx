@@ -10,6 +10,7 @@ export interface TableFooterProps {
   onClick?: () => void;
   showIcon?: boolean;
   colSpan?: number;
+  isContainerBordered?: boolean;
 }
 
 export const TableFooter = ({
@@ -19,6 +20,7 @@ export const TableFooter = ({
   onClick,
   showIcon = true,
   colSpan = 4,
+  isContainerBordered = false,
   ...props
 }: TableFooterProps) => {
   return (
@@ -33,7 +35,11 @@ export const TableFooter = ({
       {...props}
     >
       <td
-        className="px-[30px] py-[10px]"
+        className={cn(
+          'px-[30px] py-[10px]',
+          // Add rounded corners for bordered containers
+          isContainerBordered && 'rounded-bl-[10px] rounded-br-[10px]',
+        )}
         colSpan={colSpan} // Span across all columns
       >
         <div className="flex items-center gap-[10px]">

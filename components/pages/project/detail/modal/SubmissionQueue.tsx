@@ -305,8 +305,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 ? undefined
                                 : header.getSize()
                             }
+                            isFirst={index === 0}
                             isLast={index === headerGroup.headers.length - 1}
                             isContainerBordered={true}
+                            allowRoundedCorners={true}
                             className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
                             style={
                               header.getSize() === 0
@@ -365,21 +367,23 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   'border-t-1 border-t-[#F7992D] border-b-1 border-b-[#F7992D]',
                                 );
 
-                                // Add left border and bottom-left rounded corner for first cell
+                                // Add left border for first cell
                                 if (isFirstCell) {
                                   borderClasses.push(
                                     'border-l-1 border-l-[#F7992D]',
                                   );
+                                  // Only add bottom-left rounded corner if no reason is shown
                                   if (!isShowReason) {
                                     borderClasses.push('rounded-bl-[10px]');
                                   }
                                 }
 
-                                // Add right border and bottom-right rounded corner for last cell
+                                // Add right border for last cell
                                 if (isLastCell) {
                                   borderClasses.push(
                                     'border-r-1 border-r-[#F7992D]',
                                   );
+                                  // Only add bottom-right rounded corner if no reason is shown
                                   if (!isShowReason) {
                                     borderClasses.push('rounded-br-[10px]');
                                   }
@@ -398,9 +402,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                       ? undefined
                                       : cell.column.getSize()
                                   }
+                                  isFirst={isFirstCell}
                                   isLast={isLastCell}
                                   isLastRow={isLastRowInTable}
                                   isContainerBordered={true}
+                                  hasFooter={!!tableDataOfDisplayed[0]?.reason}
                                   className={cn(getOverTakenBorderClasses())}
                                   minHeight={60}
                                   style={
@@ -435,6 +441,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                     {tableDataOfDisplayed[0]?.reason && (
                       <TableFooter
                         colSpan={displayedTable.getAllColumns().length}
+                        isContainerBordered={true}
                       >
                         <div className="flex items-center gap-[5px]">
                           <span className="font-sans text-[13px] opacity-50">
@@ -516,8 +523,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                         width={
                           header.getSize() === 0 ? undefined : header.getSize()
                         }
+                        isFirst={index === 0}
                         isLast={index === headerGroup.headers.length - 1}
                         isContainerBordered={true}
+                        allowRoundedCorners={true}
                         className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
                         style={
                           header.getSize() === 0 ? { width: 'auto' } : undefined
@@ -583,21 +592,23 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]',
                               );
 
-                              // Add left border and bottom-left rounded corner for first cell
+                              // Add left border for first cell
                               if (isFirstCell) {
                                 borderClasses.push(
                                   'border-l-1 border-l-[#46A287]',
                                 );
+                                // Only add bottom-left rounded corner if this is the last row in the table
                                 if (isLastRowInTable) {
                                   borderClasses.push('rounded-bl-[10px]');
                                 }
                               }
 
-                              // Add right border and bottom-right rounded corner for last cell
+                              // Add right border for last cell
                               if (isLastCell) {
                                 borderClasses.push(
                                   'border-r-1 border-r-[#46A287]',
                                 );
+                                // Only add bottom-right rounded corner if this is the last row in the table
                                 if (isLastRowInTable) {
                                   borderClasses.push('rounded-br-[10px]');
                                 }
@@ -616,9 +627,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                     ? undefined
                                     : cell.column.getSize()
                                 }
+                                isFirst={isFirstCell}
                                 isLast={isLastCell}
                                 isLastRow={isLastRowInTable}
                                 isContainerBordered={true}
+                                hasFooter={false}
                                 className={cn(getLeadingBorderClasses())}
                                 minHeight={60}
                                 style={
