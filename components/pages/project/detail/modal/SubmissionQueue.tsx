@@ -377,8 +377,13 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   }
                                 }
 
-                                // Add right border for last cell
-                                if (isLastCell) {
+                                // Add right border for all cells except the last one (which gets it by default)
+                                if (!isLastCell) {
+                                  borderClasses.push(
+                                    'border-r-1 border-r-[rgba(0,0,0,0.1)]',
+                                  );
+                                } else {
+                                  // Add right border for last cell as well
                                   borderClasses.push(
                                     'border-r-1 border-r-[#F7992D]',
                                   );
@@ -549,7 +554,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                   .rows.map((row, rowIndex) => {
                     // Check if it is the first row and in leading state
                     const isFirstRowLeading =
-                      showRowOverTaken && showRowIsLeading && rowIndex === 0;
+                      showRowIsLeading && rowIndex === 0;
 
                     return (
                       <React.Fragment key={row.id}>
@@ -567,7 +572,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                             //   ? 'bg-[#EBEBEB]'
                             //   : '',
                             isFirstRowLeading &&
-                              'bg-[rgba(162,208,195,0.2)] hover:bg-[rgba(162,208,195,0.2)]',
+                              'bg-[rgba(70,162,135,0.1)] hover:bg-[rgba(70,162,135,0.1)]',
                           )}
                         >
                           {row.getVisibleCells().map((cell, cellIndex) => {
@@ -601,8 +606,13 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 }
                               }
 
-                              // Add right border for last cell
-                              if (isLastCell) {
+                              // Add right border for all cells except the last one (which gets it by default)
+                              if (!isLastCell) {
+                                borderClasses.push(
+                                  'border-r-1 border-r-[rgba(0,0,0,0.1)]',
+                                );
+                              } else {
+                                // Add right border for last cell as well
                                 borderClasses.push(
                                   'border-r-1 border-r-[#46A287]',
                                 );
