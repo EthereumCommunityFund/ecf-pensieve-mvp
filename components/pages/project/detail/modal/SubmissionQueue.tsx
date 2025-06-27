@@ -291,7 +291,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                 ]}
               />
             ) : (
-              <ModalTableContainer allowInternalBorderRadius>
+              <ModalTableContainer>
                 <table className="w-full border-separate border-spacing-0">
                   {/* Table Header */}
                   <thead>
@@ -308,7 +308,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                             isFirst={index === 0}
                             isLast={index === headerGroup.headers.length - 1}
                             isContainerBordered={true}
-                            allowRoundedCorners={true}
                             className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
                             style={
                               header.getSize() === 0
@@ -511,7 +510,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             </span>
           </div>
         ) : (
-          <ModalTableContainer allowInternalBorderRadius>
+          <ModalTableContainer>
             <table className="w-full border-separate border-spacing-0">
               {/* Table Header */}
               <thead>
@@ -526,7 +525,6 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                         isFirst={index === 0}
                         isLast={index === headerGroup.headers.length - 1}
                         isContainerBordered={true}
-                        allowRoundedCorners={true}
                         className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
                         style={
                           header.getSize() === 0 ? { width: 'auto' } : undefined

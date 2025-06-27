@@ -206,7 +206,6 @@ const Displayed: FC<DisplayedProps> = ({
                       isFirst={index === 0}
                       isLast={index === headerGroup.headers.length - 1}
                       isContainerBordered={true}
-                      allowRoundedCorners={true}
                       className="h-auto bg-[#F5F5F5] py-[5px]"
                       style={
                         header.getSize() === 0 ? { width: 'auto' } : undefined

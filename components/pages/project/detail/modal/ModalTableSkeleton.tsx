@@ -45,7 +45,7 @@ export const ModalTableSkeleton: React.FC<ModalTableSkeletonProps> = ({
   className,
 }) => {
   return (
-    <ModalTableContainer allowInternalBorderRadius className={className}>
+    <ModalTableContainer className={className}>
       <table className="w-full border-separate border-spacing-0">
         {/* Table Header */}
         {showHeader && (
@@ -58,7 +58,6 @@ export const ModalTableSkeleton: React.FC<ModalTableSkeletonProps> = ({
                   isFirst={index === 0}
                   isLast={column.isLast || index === columns.length - 1}
                   isContainerBordered={true}
-                  allowRoundedCorners={true}
                   className="h-auto bg-[#F5F5F5]"
                 >
                   {column.header}

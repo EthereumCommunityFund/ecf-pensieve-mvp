@@ -35,11 +35,7 @@ export const TableFooter = ({
       {...props}
     >
       <td
-        className={cn(
-          'px-[30px] py-[10px]',
-          // Add rounded corners for bordered containers
-          isContainerBordered && 'rounded-bl-[10px] rounded-br-[10px]',
-        )}
+        className={cn('px-[30px] py-[10px]')}
         colSpan={colSpan} // Span across all columns
       >
         <div className="flex items-center gap-[10px]">

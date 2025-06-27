@@ -12,8 +12,6 @@ export interface TableHeaderProps {
   style?: React.CSSProperties;
   /** Whether this table is inside a bordered container */
   isContainerBordered?: boolean;
-  /** Whether to apply rounded corners (for modal tables) */
-  allowRoundedCorners?: boolean;
 }
 
 export const TableHeader = ({
@@ -24,7 +22,6 @@ export const TableHeader = ({
   className,
   style,
   isContainerBordered = false,
-  allowRoundedCorners = false,
   ...props
 }: TableHeaderProps) => {
   const headerStyle = {
@@ -36,13 +33,10 @@ export const TableHeader = ({
   // Smart border logic based on container type
   const getBorderClasses = () => {
     if (isContainerBordered) {
-      // For bordered containers: no left border, conditional right border, and add rounded corners for container alignment
+      // For bordered containers: no left border, conditional right border
       return cn(
         'border-b-0 border-l-0',
         isLast ? 'border-r-0' : 'border-r border-black/10',
-        // Add rounded corners only when explicitly allowed (for modal tables)
-        allowRoundedCorners && isFirst && 'rounded-tl-[10px]',
-        allowRoundedCorners && isLast && 'rounded-tr-[10px]',
       );
     } else {
       // For non-bordered containers: default behavior

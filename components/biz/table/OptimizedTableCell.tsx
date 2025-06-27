@@ -70,9 +70,6 @@ const OptimizedTableCell = memo(
           'border-l-0',
           isLast ? 'border-r-0' : 'border-r border-black/10',
           isLastRow ? 'border-b-0' : 'border-b border-black/10',
-          // Add rounded corners for last row to align with container, but only if there's no footer
-          isLastRow && !hasFooter && isFirst && 'rounded-bl-[10px]',
-          isLastRow && !hasFooter && isLast && 'rounded-br-[10px]',
         );
       } else {
         // For non-bordered containers: default behavior
