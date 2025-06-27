@@ -133,7 +133,12 @@ const PropertyCell = ({
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
-  const { isConsensusInProgress, isPendingValidation, itemTopWeight } = rowData;
+  const {
+    isConsensusInProgress,
+    isPendingValidation,
+    itemTopWeight,
+    canBePropose,
+  } = rowData;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -163,6 +168,7 @@ const PropertyCell = ({
           itemWeight={
             itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
           }
+          isEmptyItem={!!canBePropose}
         />
       )}
     </div>

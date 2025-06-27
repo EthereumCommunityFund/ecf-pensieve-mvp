@@ -1,12 +1,19 @@
 import { Tooltip } from '@heroui/react';
 import { FC } from 'react';
 
+import { CoinVerticalIcon } from '@/components/icons';
+
 interface IProps {
   itemWeight: string | number;
   isGenesis?: boolean;
+  isEmptyItem?: boolean;
 }
 
-const TooltipItemWeight: FC<IProps> = ({ itemWeight, isGenesis }) => {
+const TooltipItemWeight: FC<IProps> = ({
+  itemWeight,
+  isGenesis,
+  isEmptyItem,
+}) => {
   return (
     <Tooltip
       content={<ItemWeightTip itemWeight={itemWeight} isGenesis={isGenesis} />}
@@ -15,9 +22,18 @@ const TooltipItemWeight: FC<IProps> = ({ itemWeight, isGenesis }) => {
       }}
       closeDelay={0}
     >
-      <div className="rounded-[4px] border border-black px-[4px] py-[2px] text-[12px] font-[600] leading-[16px] text-black opacity-50">
-        {itemWeight}
-      </div>
+      {isEmptyItem ? (
+        <div className="flex items-center gap-[2px] opacity-50">
+          <CoinVerticalIcon />
+          <span className="text-[12px] font-[600] leading-[16px] text-black">
+            {itemWeight}
+          </span>
+        </div>
+      ) : (
+        <div className="rounded-[4px] border border-black px-[4px] py-[2px] text-[12px] font-[600] leading-[16px] text-black opacity-50">
+          {itemWeight}
+        </div>
+      )}
     </Tooltip>
   );
 };

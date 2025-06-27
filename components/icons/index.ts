@@ -14,6 +14,7 @@ export { default as CheckedGreenIcon } from './CheckedGreen';
 export { default as CheckSelectIcon } from './CheckSelect';
 export { default as ClockClockwiseIcon } from './ClockClockwise';
 export { default as CodeIcon } from './Code';
+export { default as CoinVerticalIcon } from './CoinVertical';
 export { CopyIcon } from './Copy';
 export { default as FileIcon } from './File';
 export { default as GaugeIcon } from './Gauge';
