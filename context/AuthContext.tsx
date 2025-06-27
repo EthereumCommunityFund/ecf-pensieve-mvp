@@ -144,6 +144,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
 
+  // tRPC utils for cache management
+  const utils = trpc.useUtils();
+
   const generateNonceMutation = trpc.auth.generateNonce.useMutation();
   const verifyMutation = trpc.auth.verify.useMutation();
   const checkRegistrationQuery = trpc.auth.checkRegistration.useQuery(
@@ -198,13 +201,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     updateAuthState('idle');
     await supabase.auth.signOut();
+    // Clear tRPC cache - this is critical for proper logout
+    utils.user.getCurrentUser.setData(undefined, undefined);
     resetAuthState();
     try {
       await disconnectAsync();
     } catch (error) {
       console.error('Error disconnecting wallet during logout:', error);
     }
-  }, [resetAuthState, updateAuthState, disconnectAsync]);
+  }, [resetAuthState, updateAuthState, disconnectAsync, utils]);
 
   const performFullLogoutAndReload = useCallback(async () => {
     try {
@@ -426,26 +431,86 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    const checkInitialSession = async () => {
+    const initializeSupabaseAuth = async () => {
       setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: true }));
       updateAuthState('authenticating');
+
       try {
+        // Get initial session
         const {
           data: { session },
         } = await supabase.auth.getSession();
+
         if (session) {
           setUserState((prev) => ({ ...prev, session, user: session.user }));
           await fetchUserProfile();
         } else {
           resetAuthState();
         }
+
+        // Set up auth state change listener for automatic token refresh and logout handling
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            // Update session state
+            setUserState((prev) => ({
+              ...prev,
+              session,
+              user: session?.user || null,
+            }));
+
+            if (event === 'SIGNED_OUT') {
+              // Clear tRPC cache when signed out
+              utils.user.getCurrentUser.setData(undefined, undefined);
+              resetAuthState();
+            } else if (event === 'TOKEN_REFRESHED' && session) {
+              console.log('Token refreshed successfully');
+              setUserState((prev) => ({
+                ...prev,
+                session,
+                user: session.user,
+              }));
+            } else if (event === 'SIGNED_IN' && session) {
+              setUserState((prev) => ({
+                ...prev,
+                session,
+                user: session.user,
+              }));
+              // Fetch profile if not already authenticated
+              if (authState.status !== 'authenticated') {
+                try {
+                  await fetchUserProfile();
+                } catch (error) {
+                  console.error('Failed to fetch profile on sign in:', error);
+                }
+              }
+            }
+
+            setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
+          },
+        );
+
+        setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
+
+        // Return cleanup function
+        return () => {
+          authListener.subscription.unsubscribe();
+        };
       } catch (error: any) {
+        console.error('Error initializing Supabase auth:', error);
         resetAuthState();
-      } finally {
         setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
       }
     };
-    checkInitialSession();
+
+    const cleanup = initializeSupabaseAuth();
+
+    // Cleanup on unmount
+    return () => {
+      cleanup.then((cleanupFn) => {
+        if (cleanupFn) cleanupFn();
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
