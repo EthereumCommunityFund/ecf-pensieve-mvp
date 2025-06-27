@@ -9,6 +9,7 @@ import { IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
+import AboutItem from './AboutItem';
 import ConsensusLog from './ConsensusLog';
 import Displayed from './Displayed';
 import SubmissionQueue from './SubmissionQueue';
@@ -30,11 +31,11 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
     isProposalsByKeyLoading,
   } = useProjectDetailContext();
 
-  useEffect(() => {
-    if (displayProposalDataOfKey && !hasUserSelectedTab) {
-      setActiveTab('displayed');
-    }
-  }, [displayProposalDataOfKey, hasUserSelectedTab]);
+  // useEffect(() => {
+  //   if (displayProposalDataOfKey && !hasUserSelectedTab) {
+  //     setActiveTab('displayed');
+  //   }
+  // }, [displayProposalDataOfKey, hasUserSelectedTab]);
 
   // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
   const submissionQueueCount = useMemo(() => {
@@ -52,12 +53,13 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
         count: submissionQueueCount,
       },
       { key: 'consensus-log', label: 'Consensus Log' },
+      { key: 'about-item', label: 'About This Item' },
     ];
 
     // Only show 'displayed' tab if displayProposalDataOfKey has value
-    if (displayProposalDataOfKey) {
-      return [{ key: 'displayed', label: 'Displayed' }, ...baseTabs];
-    }
+    // if (displayProposalDataOfKey) {
+    //   return [{ key: 'displayed', label: 'Displayed' }, ...baseTabs];
+    // }
 
     return baseTabs;
   }, [displayProposalDataOfKey, submissionQueueCount]);
@@ -99,15 +101,15 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'displayed':
-        return (
-          <Displayed
-            itemName={itemName}
-            itemWeight={itemWeight}
-            itemKey={itemKey}
-            onViewSubmissions={onViewSubmissions}
-          />
-        );
+      // case 'displayed':
+      //   return (
+      //     <Displayed
+      //       itemName={itemName}
+      //       itemWeight={itemWeight}
+      //       itemKey={itemKey}
+      //       onViewSubmissions={onViewSubmissions}
+      //     />
+      //   );
       case 'submission-queue':
         return (
           <SubmissionQueue
@@ -118,6 +120,8 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
         );
       case 'consensus-log':
         return <ConsensusLog itemKey={itemKey} />;
+      case 'about-item':
+        return <AboutItem itemKey={itemKey as IPocItemKey} />;
       default:
         // Return the first available tab content
         if (displayProposalDataOfKey) {
