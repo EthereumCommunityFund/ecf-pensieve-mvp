@@ -42,6 +42,9 @@ export interface IKeyItemDataForTable {
   accountability?: string[];
   // Legitimacy metrics from item config
   legitimacy?: string[];
+  // Metrics data for table columns
+  accountabilityMetrics?: string[];
+  legitimacyMetrics?: string[];
   // not essential item, no proposal yet, value is empty, so can propose
   canBePropose: boolean;
   // Was leading proposal, but now backend field isNotLeading is true (because itemWeight < itemTopWeight)

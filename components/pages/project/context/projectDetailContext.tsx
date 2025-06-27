@@ -372,6 +372,9 @@ export const ProjectDetailProvider = ({
         isNotLeading: isNotLeading,
         accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
         legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+        accountabilityMetrics:
+          AllItemConfig[key as IPocItemKey]?.accountability || [],
+        legitimacyMetrics: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
         ...statusFields,
       };
       DataMap.set(key, row);
@@ -420,6 +423,9 @@ export const ProjectDetailProvider = ({
         itemTopWeight: getItemTopWeight(key as IPocItemKey),
         accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
         legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+        accountabilityMetrics:
+          AllItemConfig[key as IPocItemKey]?.accountability || [],
+        legitimacyMetrics: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
         support: {
           count: weight,
           voters: voterMemberCount,
@@ -505,6 +511,10 @@ export const ProjectDetailProvider = ({
           accountability:
             AllItemConfig[key as IPocItemKey]?.accountability || [],
           legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+          accountabilityMetrics:
+            AllItemConfig[key as IPocItemKey]?.accountability || [],
+          legitimacyMetrics:
+            AllItemConfig[key as IPocItemKey]?.legitimacy || [],
           ...calculateItemStatusFields(
             key,
             (project?.hasProposalKeys || []).includes(key as IPocItemKey),

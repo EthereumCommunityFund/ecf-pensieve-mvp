@@ -16,7 +16,11 @@ import {
   TableRow,
 } from '@/components/biz/table';
 import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
-import { CaretUpDownIcon, TrendDownIcon } from '@/components/icons';
+import {
+  CollapseItemIcon,
+  ShowMetricsIcon,
+  TrendDownIcon,
+} from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
@@ -46,6 +50,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
   >({});
   const [submissionQueueExpandedRows, setSubmissionQueueExpandedRows] =
     useState<Record<string, boolean>>({});
+  const [showMetricsLeading, setShowMetricsLeading] = useState<boolean>(false);
+  const [showMetricsSubmissionQueue, setShowMetricsSubmissionQueue] =
+    useState<boolean>(false);
 
   const getRowUniqueId = useCallback((rowData: IProjectTableRowData) => {
     return rowData.proposalId
@@ -129,7 +136,18 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }
   }, [hasSubmissionQueueExpandedRows, getSubmissionQueueExpandableRowIds]);
 
-  const columns = useCommonColumnsOfModal();
+  const handleShowMetricsLeading = useCallback(() => {
+    setShowMetricsLeading((prev) => !prev);
+  }, []);
+
+  const handleShowMetricsSubmissionQueue = useCallback(() => {
+    setShowMetricsSubmissionQueue((prev) => !prev);
+  }, []);
+
+  const leadingColumns = useCommonColumnsOfModal(showMetricsLeading);
+  const submissionQueueColumns = useCommonColumnsOfModal(
+    showMetricsSubmissionQueue,
+  );
 
   const displayedTableMeta = useMemo(() => {
     return {
@@ -203,14 +221,14 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   const displayedTable = useReactTable({
     data: tableDataOfDisplayed,
-    columns: columns,
+    columns: leadingColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: displayedTableMeta,
   });
 
   const submissionQueueTable = useReactTable({
     data: tableDataOfSubmissionQueue,
-    columns: columns,
+    columns: submissionQueueColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: submissionQueueTableMeta,
   });
@@ -279,20 +297,94 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
               </span>
             </div>
 
+            {/* Leading Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Collapse Item Button for Leading - Only show when there are expandable rows */}
+              {tableDataOfDisplayed.some((rowData) => {
+                const itemConfig =
+                  AllItemConfig[rowData.key as IEssentialItemKey];
+                return itemConfig?.showExpand;
+              }) && (
+                <button
+                  onClick={() => {
+                    const displayedRowIds: string[] = [];
+                    tableDataOfDisplayed.forEach((rowData) => {
+                      const itemConfig =
+                        AllItemConfig[rowData.key as IEssentialItemKey];
+                      if (itemConfig?.showExpand) {
+                        const uniqueId = rowData.proposalId
+                          ? `proposal-${rowData.proposalId}`
+                          : `key-${rowData.key}`;
+                        displayedRowIds.push(uniqueId);
+                      }
+                    });
+
+                    const hasDisplayedExpandedRows = Object.values(
+                      displayedExpandedRows,
+                    ).some(Boolean);
+                    if (hasDisplayedExpandedRows) {
+                      setDisplayedExpandedRows({});
+                    } else {
+                      const newDisplayedExpanded: Record<string, boolean> = {};
+                      displayedRowIds.forEach((id) => {
+                        newDisplayedExpanded[id] = true;
+                      });
+                      setDisplayedExpandedRows(newDisplayedExpanded);
+                    }
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <CollapseItemIcon size={16} />
+                  <span className="text-[13px] opacity-80">Collapse Item</span>
+                </button>
+              )}
+
+              {/* Show Metrics Button for Leading */}
+              <button
+                onClick={handleShowMetricsLeading}
+                className="flex items-center gap-1"
+              >
+                <ShowMetricsIcon size={16} />
+                <span className="text-[13px] opacity-80">Show Metrics</span>
+              </button>
+            </div>
+
             {/* Displayed Table */}
             {isProposalsByKeyLoading ? (
               <ModalTableSkeleton
                 rowCount={1}
                 columns={[
-                  { header: 'Input', width: 480 },
-                  { header: 'Reference', width: 124 },
-                  { header: 'Submitter', width: 183 },
-                  { header: 'Support', width: 150, isLast: true },
+                  { header: 'Input', width: 320 },
+                  { header: 'Reference', width: 100 },
+                  { header: 'Submitter', width: 160 },
+                  {
+                    header: 'Support',
+                    width: 180,
+                    isLast: !showMetricsLeading,
+                  },
+                  ...(showMetricsLeading
+                    ? [
+                        { header: 'Accountability Metrics', width: 240 },
+                        {
+                          header: 'Legitimacy Metrics',
+                          width: 240,
+                          isLast: true,
+                        },
+                      ]
+                    : []),
                 ]}
               />
             ) : (
-              <ModalTableContainer>
-                <table className="w-full border-separate border-spacing-0">
+              <ModalTableContainer
+                style={{
+                  width: '760px',
+                  overflowX: showMetricsLeading ? 'auto' : 'hidden',
+                }}
+              >
+                <table
+                  className="w-full border-separate border-spacing-0"
+                  style={{ minWidth: showMetricsLeading ? '1240px' : '760px' }}
+                >
                   {/* Table Header */}
                   <thead>
                     {displayedTable.getHeaderGroups().map((headerGroup) => (
@@ -466,35 +558,41 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       )}
       <div className="flex flex-col gap-[10px]">
         {/* Submission Queue Header Section */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-[5px]">
-            <div className="flex items-center gap-2">
-              <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-                Submission Que:
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-                This is the list of submissions available to replace the
-                displayed one.
-              </span>
-            </div>
+        <div className="flex flex-col gap-[5px]">
+          <div className="flex items-center gap-2">
+            <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+              Submission Que:
+            </span>
           </div>
+          <div className="flex items-center gap-2.5">
+            <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+              This is the list of submissions available to replace the displayed
+              one.
+            </span>
+          </div>
+        </div>
 
+        {/* Submission Queue Action Buttons */}
+        <div className="flex items-center gap-2">
           {/* Collapse All Button - Only show when there are expandable rows */}
           {hasExpandableRows && (
             <button
               onClick={handleCollapseAll}
-              className="flex items-center gap-[5px] rounded-[5px] bg-black/5 px-2.5 py-[5px] transition-colors hover:bg-black/10"
+              className="flex items-center gap-1"
             >
-              <CaretUpDownIcon size={16} className="opacity-80" />
-              <span className="font-sans text-[13px] font-semibold text-black opacity-80">
-                {hasSubmissionQueueExpandedRows
-                  ? 'Collapse All Items'
-                  : 'Expand All Items'}
-              </span>
+              <CollapseItemIcon size={16} />
+              <span className="text-[13px] opacity-80">Collapse All Items</span>
             </button>
           )}
+
+          {/* Show Metrics Button for Submission Queue */}
+          <button
+            onClick={handleShowMetricsSubmissionQueue}
+            className="flex items-center gap-1"
+          >
+            <ShowMetricsIcon size={16} />
+            <span className="text-[13px] opacity-80">Show Metrics</span>
+          </button>
         </div>
 
         {/* Table */}
@@ -502,10 +600,20 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           <ModalTableSkeleton
             rowCount={3}
             columns={[
-              { header: 'Input', width: 480 },
-              { header: 'Reference', width: 124 },
-              { header: 'Submitter', width: 183 },
-              { header: 'Support', width: 150, isLast: true },
+              { header: 'Input', width: 320 },
+              { header: 'Reference', width: 100 },
+              { header: 'Submitter', width: 160 },
+              {
+                header: 'Support',
+                width: 180,
+                isLast: !showMetricsSubmissionQueue,
+              },
+              ...(showMetricsSubmissionQueue
+                ? [
+                    { header: 'Accountability Metrics', width: 240 },
+                    { header: 'Legitimacy Metrics', width: 240, isLast: true },
+                  ]
+                : []),
             ]}
           />
         ) : tableDataOfSubmissionQueue.length === 0 ? (
@@ -515,8 +623,18 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             </span>
           </div>
         ) : (
-          <ModalTableContainer>
-            <table className="w-full border-separate border-spacing-0">
+          <ModalTableContainer
+            style={{
+              width: '760px',
+              overflowX: showMetricsSubmissionQueue ? 'auto' : 'hidden',
+            }}
+          >
+            <table
+              className="w-full border-separate border-spacing-0"
+              style={{
+                minWidth: showMetricsSubmissionQueue ? '1240px' : '760px',
+              }}
+            >
               {/* Table Header */}
               <thead>
                 {submissionQueueTable.getHeaderGroups().map((headerGroup) => (

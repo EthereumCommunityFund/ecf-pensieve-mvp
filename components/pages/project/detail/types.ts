@@ -79,6 +79,10 @@ export interface IProjectTableRowData extends IKeyItemDataForTable {
     count: number;
     voters: number;
   };
+  weight?: number;
+  percentage?: number;
+  accountabilityMetrics?: string[];
+  legitimacyMetrics?: string[];
   isExpanded?: boolean;
 }
 

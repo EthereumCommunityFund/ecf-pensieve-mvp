@@ -20,7 +20,8 @@
       "mcp__puppeteer__puppeteer_screenshot",
       "mcp__fetch__imageFetch",
       "Bash(gh pr view:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }

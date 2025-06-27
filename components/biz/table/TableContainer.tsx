@@ -104,7 +104,18 @@ export const ModalTableContainer = ({
       bordered
       rounded
       background="white"
-      className={className}
+      className={cn(
+        // Use the same scrollbar style as CategoryTable
+        // '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100',
+        className,
+      )}
+      style={{
+        scrollbarWidth: 'thin',
+        WebkitOverflowScrolling: 'touch',
+        maxWidth: '100%',
+        width: '100%',
+        ...props.style,
+      }}
       {...props}
     >
       {children}
