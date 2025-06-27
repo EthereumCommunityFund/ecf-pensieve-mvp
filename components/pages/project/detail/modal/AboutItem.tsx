@@ -9,7 +9,13 @@ interface IAboutItemProps {
 
 const AboutItem: FC<IAboutItemProps> = ({ itemKey }) => {
   const itemConfig = AllItemConfig[itemKey];
-  return <div>{itemConfig?.description}</div>;
+  return (
+    <div>
+      {itemConfig?.longDescription ||
+        itemConfig?.shortDescription ||
+        itemConfig?.description}
+    </div>
+  );
 };
 
 export default AboutItem;
