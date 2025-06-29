@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 
 export interface TableCellSkeletonProps {
   width?: number | string;
+  isFirst?: boolean;
   isLast?: boolean;
   isLastRow?: boolean;
   className?: string;
@@ -20,6 +21,7 @@ export interface TableCellSkeletonProps {
 
 export const TableCellSkeleton = ({
   width,
+  isFirst = false,
   isLast = false,
   isLastRow = false,
   className,

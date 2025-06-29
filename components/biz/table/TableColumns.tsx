@@ -133,7 +133,12 @@ const PropertyCell = ({
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
-  const { isConsensusInProgress, isPendingValidation, itemTopWeight } = rowData;
+  const {
+    isConsensusInProgress,
+    isPendingValidation,
+    itemTopWeight,
+    canBePropose,
+  } = rowData;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -163,6 +168,7 @@ const PropertyCell = ({
           itemWeight={
             itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
           }
+          isEmptyItem={!!canBePropose}
         />
       )}
     </div>
@@ -231,6 +237,7 @@ export interface InputColCellProps extends BaseCellProps {
   onToggleExpand?: () => void;
   showOverTakenStatus?: boolean;
   showLeadingStatus?: boolean;
+  isLeadingProposalNotLeading?: boolean;
   onPropose?: () => void;
   onViewProposals?: () => void;
 }
@@ -274,6 +281,7 @@ const InputCell = ({
   onToggleExpand,
   showOverTakenStatus = false,
   showLeadingStatus = false,
+  isLeadingProposalNotLeading = false,
   onPropose,
   onViewProposals,
 }: InputColCellProps) => {
@@ -322,14 +330,14 @@ const InputCell = ({
   }
 
   // If showing over-taken status, render special UI
-  if (showOverTakenStatus) {
+  if (isLeadingProposalNotLeading) {
     return (
       <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center gap-[5px]">
             <TrendDownIcon size={16} className="text-[#C47D54]" />
             <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#C47D54]">
-              Support Not Sufficient
+              {showOverTakenStatus ? 'Over-taken' : 'Support Not Sufficient'}
             </span>
           </div>
           <div className="text-[13px] leading-[19px]">
@@ -761,23 +769,32 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
   const { canBePropose } = item;
 
   return (
-    <div className="flex w-full gap-[10px]">
+    <div className="flex w-full flex-col gap-[5px]">
       {canBePropose ? (
         <Button
           size="sm"
-          className="flex-1 border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
+          className="w-full border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
           onPress={() => onView?.('submitPropose')}
         >
-          Propose
+          Propose to Earn
         </Button>
       ) : (
-        <Button
-          color="secondary"
-          className="h-[30px] flex-1 rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-          onPress={() => onView?.('viewItemProposal')}
-        >
-          View
-        </Button>
+        <>
+          <Button
+            color="secondary"
+            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            onPress={() => onView?.('viewItemProposal')}
+          >
+            View
+          </Button>
+          <Button
+            color="secondary"
+            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            onPress={() => onView?.('submitPropose')}
+          >
+            Propose Entry
+          </Button>
+        </>
       )}
     </div>
   );

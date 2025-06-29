@@ -55,9 +55,10 @@ export const ModalTableSkeleton: React.FC<ModalTableSkeletonProps> = ({
                 <TableHeader
                   key={`skeleton-header-${index}`}
                   width={column.width}
+                  isFirst={index === 0}
                   isLast={column.isLast || index === columns.length - 1}
                   isContainerBordered={true}
-                  className="h-auto bg-[#F5F5F5] px-2.5 py-4"
+                  className="h-auto bg-[#F5F5F5]"
                 >
                   {column.header}
                 </TableHeader>
@@ -77,8 +78,10 @@ export const ModalTableSkeleton: React.FC<ModalTableSkeletonProps> = ({
                 <TableCellSkeleton
                   key={`skeleton-cell-${rowIndex}-${cellIndex}`}
                   width={column.width}
+                  isFirst={cellIndex === 0}
                   isLast={column.isLast || cellIndex === columns.length - 1}
                   isLastRow={rowIndex === rowCount - 1}
+                  isContainerBordered={true}
                   minHeight={60}
                   skeletonWidth={
                     cellIndex === 0

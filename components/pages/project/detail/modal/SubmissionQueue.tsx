@@ -16,7 +16,11 @@ import {
   TableRow,
 } from '@/components/biz/table';
 import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
-import { CaretUpDownIcon, ClockClockwiseIcon } from '@/components/icons';
+import {
+  CollapseItemIcon,
+  ShowMetricsIcon,
+  TrendDownIcon,
+} from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
@@ -46,6 +50,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
   >({});
   const [submissionQueueExpandedRows, setSubmissionQueueExpandedRows] =
     useState<Record<string, boolean>>({});
+  const [showMetricsLeading, setShowMetricsLeading] = useState<boolean>(false);
+  const [showMetricsSubmissionQueue, setShowMetricsSubmissionQueue] =
+    useState<boolean>(false);
 
   const getRowUniqueId = useCallback((rowData: IProjectTableRowData) => {
     return rowData.proposalId
@@ -129,7 +136,18 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     }
   }, [hasSubmissionQueueExpandedRows, getSubmissionQueueExpandableRowIds]);
 
-  const columns = useCommonColumnsOfModal();
+  const handleShowMetricsLeading = useCallback(() => {
+    setShowMetricsLeading((prev) => !prev);
+  }, []);
+
+  const handleShowMetricsSubmissionQueue = useCallback(() => {
+    setShowMetricsSubmissionQueue((prev) => !prev);
+  }, []);
+
+  const leadingColumns = useCommonColumnsOfModal(showMetricsLeading);
+  const submissionQueueColumns = useCommonColumnsOfModal(
+    showMetricsSubmissionQueue,
+  );
 
   const displayedTableMeta = useMemo(() => {
     return {
@@ -144,6 +162,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       expandedRows: displayedExpandedRows,
       toggleRowExpanded: toggleDisplayedRowExpanded,
       showRowOverTaken, // Only displayed table needs to consider showRowOverTaken
+      isLeadingProposalNotLeading,
       inActionKeyMap,
       inActionItemProposalIdMap,
       showSubmitterModal,
@@ -160,6 +179,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     displayedExpandedRows,
     toggleDisplayedRowExpanded,
     showRowOverTaken,
+    isLeadingProposalNotLeading,
     inActionKeyMap,
     inActionItemProposalIdMap,
     showSubmitterModal,
@@ -201,14 +221,14 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   const displayedTable = useReactTable({
     data: tableDataOfDisplayed,
-    columns: columns,
+    columns: leadingColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: displayedTableMeta,
   });
 
   const submissionQueueTable = useReactTable({
     data: tableDataOfSubmissionQueue,
-    columns: columns,
+    columns: submissionQueueColumns,
     getCoreRowModel: getCoreRowModel(),
     meta: submissionQueueTableMeta,
   });
@@ -227,37 +247,35 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-[20px]">
-      {/* Consensus in Progress Banner - Only show when showRowOverTaken is true */}
+      {/* Consensus in Progress Banner - Only show when isLeadingProposalNotLeading is true */}
       {isLeadingProposalNotLeading && (
         <>
           {/* Item Info */}
           <div className="flex flex-col gap-[5px]">
-            <ItemWeight itemName={itemName} itemWeight={displayedItemWeight} />
+            <ItemWeight
+              itemKey={itemKey as IPocItemKey}
+              itemName={itemName}
+              itemWeight={displayedItemWeight}
+            />
           </div>
           <div
             className={cn(
-              'flex gap-[10px] rounded-[10px] border border-black/10 bg-white p-[10px]',
-              showRowOverTaken ? 'items-start' : 'items-center',
+              'rounded-[10px] border border-[rgba(196,125,84,0.40)] bg-[rgba(247,153,45,0.20)] p-[10px]',
             )}
           >
-            <div className="shrink-0">
-              <ClockClockwiseIcon size={24} />
-            </div>
-            <div className="flex flex-col gap-[5px]">
-              <span className="font-mona text-[16px] font-medium leading-[1.25em] text-[#F7992D]">
-                Consensus in Progress
+            <div className="flex items-center gap-[10px]">
+              <TrendDownIcon size={16} className="text-[#C47D54]" />
+              <span className="font-mona text-[16px] font-medium leading-[20px] text-[#C47D54]">
+                Support Not Sufficient
               </span>
-              {showRowOverTaken && (
-                <span className="font-sans text-[13px] font-normal leading-[1.36181640625em] text-black opacity-70">
-                  <b>
-                    The displayed submission is now outpaced by a leading
-                    submission with more support.{' '}
-                  </b>
-                  To keep the displayed submission in place, additional support
-                  is needed, or if the leading submission surpasses the Item
-                  Weight, it will replace the displayed one.
-                </span>
-              )}
+            </div>
+            <div className="mt-[5px] font-sans text-[13px] font-normal text-black/70">
+              <b>
+                The displayed submission is currently lacking support against
+                the current item weight.{' '}
+              </b>
+              To keep the displayed submission in place, additional support is
+              needed to exceed the item weight.
             </div>
           </div>
         </>
@@ -270,13 +288,65 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           <div className="flex flex-col gap-2.5">
             <div className="flex flex-col gap-[5px]">
               <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-                Displayed:
+                Leading:
               </span>
               <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
                 {isProposalsByKeyLoading
                   ? 'Loading displayed submission...'
-                  : 'This is the validated submission currently shown on the project page.'}
+                  : 'This is the validated submission with its value currently displayed on the project page for this item.'}
               </span>
+            </div>
+
+            {/* Leading Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Collapse Item Button for Leading - Only show when there are expandable rows */}
+              {tableDataOfDisplayed.some((rowData) => {
+                const itemConfig =
+                  AllItemConfig[rowData.key as IEssentialItemKey];
+                return itemConfig?.showExpand;
+              }) && (
+                <button
+                  onClick={() => {
+                    const displayedRowIds: string[] = [];
+                    tableDataOfDisplayed.forEach((rowData) => {
+                      const itemConfig =
+                        AllItemConfig[rowData.key as IEssentialItemKey];
+                      if (itemConfig?.showExpand) {
+                        const uniqueId = rowData.proposalId
+                          ? `proposal-${rowData.proposalId}`
+                          : `key-${rowData.key}`;
+                        displayedRowIds.push(uniqueId);
+                      }
+                    });
+
+                    const hasDisplayedExpandedRows = Object.values(
+                      displayedExpandedRows,
+                    ).some(Boolean);
+                    if (hasDisplayedExpandedRows) {
+                      setDisplayedExpandedRows({});
+                    } else {
+                      const newDisplayedExpanded: Record<string, boolean> = {};
+                      displayedRowIds.forEach((id) => {
+                        newDisplayedExpanded[id] = true;
+                      });
+                      setDisplayedExpandedRows(newDisplayedExpanded);
+                    }
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <CollapseItemIcon size={16} />
+                  <span className="text-[13px] opacity-80">Collapse Item</span>
+                </button>
+              )}
+
+              {/* Show Metrics Button for Leading */}
+              <button
+                onClick={handleShowMetricsLeading}
+                className="flex items-center gap-1"
+              >
+                <ShowMetricsIcon size={16} />
+                <span className="text-[13px] opacity-80">Show Metrics</span>
+              </button>
             </div>
 
             {/* Displayed Table */}
@@ -284,15 +354,37 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
               <ModalTableSkeleton
                 rowCount={1}
                 columns={[
-                  { header: 'Input', width: 480 },
-                  { header: 'Reference', width: 124 },
-                  { header: 'Submitter', width: 183 },
-                  { header: 'Support', width: 150, isLast: true },
+                  { header: 'Input', width: 320 },
+                  { header: 'Reference', width: 100 },
+                  { header: 'Submitter', width: 160 },
+                  {
+                    header: 'Support',
+                    width: 180,
+                    isLast: !showMetricsLeading,
+                  },
+                  ...(showMetricsLeading
+                    ? [
+                        { header: 'Accountability Metrics', width: 240 },
+                        {
+                          header: 'Legitimacy Metrics',
+                          width: 240,
+                          isLast: true,
+                        },
+                      ]
+                    : []),
                 ]}
               />
             ) : (
-              <ModalTableContainer allowInternalBorderRadius>
-                <table className="w-full border-separate border-spacing-0">
+              <ModalTableContainer
+                style={{
+                  width: '760px',
+                  overflowX: showMetricsLeading ? 'auto' : 'hidden',
+                }}
+              >
+                <table
+                  className="w-full border-separate border-spacing-0"
+                  style={{ minWidth: showMetricsLeading ? '1240px' : '760px' }}
+                >
                   {/* Table Header */}
                   <thead>
                     {displayedTable.getHeaderGroups().map((headerGroup) => (
@@ -305,6 +397,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 ? undefined
                                 : header.getSize()
                             }
+                            isFirst={index === 0}
                             isLast={index === headerGroup.headers.length - 1}
                             isContainerBordered={true}
                             className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
@@ -340,7 +433,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                               // displayedExpandedRows[getRowUniqueId(row.original)]
                               //   ? 'bg-[#EBEBEB]'
                               //   : '',
-                              showRowOverTaken &&
+                              isLeadingProposalNotLeading &&
                                 'bg-[rgba(247,153,45,0.2)] hover:bg-[rgba(247,153,45,0.2)]',
                             )}
                           >
@@ -354,7 +447,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
                               // Generate border classes for over-taken row
                               const getOverTakenBorderClasses = () => {
-                                if (!showRowOverTaken) return '';
+                                if (!isLeadingProposalNotLeading) return '';
                                 const isShowReason =
                                   tableDataOfDisplayed[0]?.reason;
 
@@ -365,21 +458,28 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                   'border-t-1 border-t-[#F7992D] border-b-1 border-b-[#F7992D]',
                                 );
 
-                                // Add left border and bottom-left rounded corner for first cell
+                                // Add left border for first cell
                                 if (isFirstCell) {
                                   borderClasses.push(
                                     'border-l-1 border-l-[#F7992D]',
                                   );
+                                  // Only add bottom-left rounded corner if no reason is shown
                                   if (!isShowReason) {
                                     borderClasses.push('rounded-bl-[10px]');
                                   }
                                 }
 
-                                // Add right border and bottom-right rounded corner for last cell
-                                if (isLastCell) {
+                                // Add right border for all cells except the last one (which gets it by default)
+                                if (!isLastCell) {
+                                  borderClasses.push(
+                                    'border-r-1 border-r-[rgba(0,0,0,0.1)]',
+                                  );
+                                } else {
+                                  // Add right border for last cell as well
                                   borderClasses.push(
                                     'border-r-1 border-r-[#F7992D]',
                                   );
+                                  // Only add bottom-right rounded corner if no reason is shown
                                   if (!isShowReason) {
                                     borderClasses.push('rounded-br-[10px]');
                                   }
@@ -398,9 +498,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                       ? undefined
                                       : cell.column.getSize()
                                   }
+                                  isFirst={isFirstCell}
                                   isLast={isLastCell}
                                   isLastRow={isLastRowInTable}
                                   isContainerBordered={true}
+                                  hasFooter={!!tableDataOfDisplayed[0]?.reason}
                                   className={cn(getOverTakenBorderClasses())}
                                   minHeight={60}
                                   style={
@@ -435,6 +537,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                     {tableDataOfDisplayed[0]?.reason && (
                       <TableFooter
                         colSpan={displayedTable.getAllColumns().length}
+                        isContainerBordered={true}
                       >
                         <div className="flex items-center gap-[5px]">
                           <span className="font-sans text-[13px] opacity-50">
@@ -455,35 +558,41 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       )}
       <div className="flex flex-col gap-[10px]">
         {/* Submission Queue Header Section */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-[5px]">
-            <div className="flex items-center gap-2">
-              <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-                Submission Que:
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-                This is the list of submissions available to replace the
-                displayed one.
-              </span>
-            </div>
+        <div className="flex flex-col gap-[5px]">
+          <div className="flex items-center gap-2">
+            <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+              Submission Que:
+            </span>
           </div>
+          <div className="flex items-center gap-2.5">
+            <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+              This is the list of submissions available to replace the displayed
+              one.
+            </span>
+          </div>
+        </div>
 
+        {/* Submission Queue Action Buttons */}
+        <div className="flex items-center gap-2">
           {/* Collapse All Button - Only show when there are expandable rows */}
           {hasExpandableRows && (
             <button
               onClick={handleCollapseAll}
-              className="flex items-center gap-[5px] rounded-[5px] bg-black/5 px-2.5 py-[5px] transition-colors hover:bg-black/10"
+              className="flex items-center gap-1"
             >
-              <CaretUpDownIcon size={16} className="opacity-80" />
-              <span className="font-sans text-[13px] font-semibold text-black opacity-80">
-                {hasSubmissionQueueExpandedRows
-                  ? 'Collapse All Items'
-                  : 'Expand All Items'}
-              </span>
+              <CollapseItemIcon size={16} />
+              <span className="text-[13px] opacity-80">Collapse All Items</span>
             </button>
           )}
+
+          {/* Show Metrics Button for Submission Queue */}
+          <button
+            onClick={handleShowMetricsSubmissionQueue}
+            className="flex items-center gap-1"
+          >
+            <ShowMetricsIcon size={16} />
+            <span className="text-[13px] opacity-80">Show Metrics</span>
+          </button>
         </div>
 
         {/* Table */}
@@ -491,10 +600,20 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
           <ModalTableSkeleton
             rowCount={3}
             columns={[
-              { header: 'Input', width: 480 },
-              { header: 'Reference', width: 124 },
-              { header: 'Submitter', width: 183 },
-              { header: 'Support', width: 150, isLast: true },
+              { header: 'Input', width: 320 },
+              { header: 'Reference', width: 100 },
+              { header: 'Submitter', width: 160 },
+              {
+                header: 'Support',
+                width: 180,
+                isLast: !showMetricsSubmissionQueue,
+              },
+              ...(showMetricsSubmissionQueue
+                ? [
+                    { header: 'Accountability Metrics', width: 240 },
+                    { header: 'Legitimacy Metrics', width: 240, isLast: true },
+                  ]
+                : []),
             ]}
           />
         ) : tableDataOfSubmissionQueue.length === 0 ? (
@@ -504,8 +623,18 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             </span>
           </div>
         ) : (
-          <ModalTableContainer allowInternalBorderRadius>
-            <table className="w-full border-separate border-spacing-0">
+          <ModalTableContainer
+            style={{
+              width: '760px',
+              overflowX: showMetricsSubmissionQueue ? 'auto' : 'hidden',
+            }}
+          >
+            <table
+              className="w-full border-separate border-spacing-0"
+              style={{
+                minWidth: showMetricsSubmissionQueue ? '1240px' : '760px',
+              }}
+            >
               {/* Table Header */}
               <thead>
                 {submissionQueueTable.getHeaderGroups().map((headerGroup) => (
@@ -516,6 +645,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                         width={
                           header.getSize() === 0 ? undefined : header.getSize()
                         }
+                        isFirst={index === 0}
                         isLast={index === headerGroup.headers.length - 1}
                         isContainerBordered={true}
                         className="h-auto bg-[#F5F5F5] px-[10px] py-[5px]"
@@ -542,7 +672,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                   .rows.map((row, rowIndex) => {
                     // Check if it is the first row and in leading state
                     const isFirstRowLeading =
-                      showRowOverTaken && showRowIsLeading && rowIndex === 0;
+                      showRowIsLeading && rowIndex === 0;
 
                     return (
                       <React.Fragment key={row.id}>
@@ -560,7 +690,7 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                             //   ? 'bg-[#EBEBEB]'
                             //   : '',
                             isFirstRowLeading &&
-                              'bg-[rgba(162,208,195,0.2)] hover:bg-[rgba(162,208,195,0.2)]',
+                              'bg-[rgba(70,162,135,0.1)] hover:bg-[rgba(70,162,135,0.1)]',
                           )}
                         >
                           {row.getVisibleCells().map((cell, cellIndex) => {
@@ -583,21 +713,28 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                 'border-t-1 border-t-[#46A287] border-b-1 border-b-[#46A287]',
                               );
 
-                              // Add left border and bottom-left rounded corner for first cell
+                              // Add left border for first cell
                               if (isFirstCell) {
                                 borderClasses.push(
                                   'border-l-1 border-l-[#46A287]',
                                 );
+                                // Only add bottom-left rounded corner if this is the last row in the table
                                 if (isLastRowInTable) {
                                   borderClasses.push('rounded-bl-[10px]');
                                 }
                               }
 
-                              // Add right border and bottom-right rounded corner for last cell
-                              if (isLastCell) {
+                              // Add right border for all cells except the last one (which gets it by default)
+                              if (!isLastCell) {
+                                borderClasses.push(
+                                  'border-r-1 border-r-[rgba(0,0,0,0.1)]',
+                                );
+                              } else {
+                                // Add right border for last cell as well
                                 borderClasses.push(
                                   'border-r-1 border-r-[#46A287]',
                                 );
+                                // Only add bottom-right rounded corner if this is the last row in the table
                                 if (isLastRowInTable) {
                                   borderClasses.push('rounded-br-[10px]');
                                 }
@@ -616,9 +753,11 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
                                     ? undefined
                                     : cell.column.getSize()
                                 }
+                                isFirst={isFirstCell}
                                 isLast={isLastCell}
                                 isLastRow={isLastRowInTable}
                                 isContainerBordered={true}
+                                hasFooter={false}
                                 className={cn(getLeadingBorderClasses())}
                                 minHeight={60}
                                 style={
