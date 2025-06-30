@@ -6,25 +6,9 @@ config();
 
 import { eq } from 'drizzle-orm';
 
-import { WEIGHT } from '../lib/constants';
 import { db } from '../lib/db';
 import { projects, ranks } from '../lib/db/schema';
-import { POC_ITEMS } from '../lib/pocItems';
-
-function calculatePublishedGenesisWeight(hasProposalKeys: string[]): number {
-  let totalWeight = 0;
-
-  for (const key of hasProposalKeys) {
-    if (key in POC_ITEMS) {
-      const itemConfig = POC_ITEMS[key as keyof typeof POC_ITEMS];
-      totalWeight += itemConfig.accountability_metric * WEIGHT;
-    } else {
-      console.warn(`Unknown item key: ${key}`);
-    }
-  }
-
-  return totalWeight;
-}
+import { calculatePublishedGenesisWeight } from '../lib/utils/rankUtils';
 
 async function syncProjectRanks() {
   try {
@@ -121,4 +105,4 @@ if (require.main === module) {
     });
 }
 
-export { calculatePublishedGenesisWeight, syncProjectRanks };
+export { syncProjectRanks };

@@ -11,7 +11,7 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { projectLogs, projects, voteRecords } from '@/lib/db/schema';
+import { projectLogs, projects, ranks, voteRecords } from '@/lib/db/schema';
 import { itemProposals } from '@/lib/db/schema/itemProposals';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
@@ -21,6 +21,7 @@ import {
 } from '@/lib/services/notification';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
+import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 
 import { proposalRouter } from './proposal';
 
@@ -468,6 +469,31 @@ export const projectRouter = router({
               itemsTopWeight: update.itemsTopWeight,
             })
             .where(eq(projects.id, update.id));
+        }
+
+        const ranksData = [];
+        for (const project of eligibleProjects) {
+          const projectId = Number(project.project_id);
+
+          const updatedProject = await tx.query.projects.findFirst({
+            where: eq(projects.id, projectId),
+            columns: { hasProposalKeys: true },
+          });
+
+          if (updatedProject) {
+            const publishedGenesisWeight = calculatePublishedGenesisWeight(
+              updatedProject.hasProposalKeys || [],
+            );
+
+            ranksData.push({
+              projectId,
+              publishedGenesisWeight,
+            });
+          }
+        }
+
+        if (ranksData.length > 0) {
+          await tx.insert(ranks).values(ranksData);
         }
 
         if (itemProposalBatch.length > 0) {
