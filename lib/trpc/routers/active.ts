@@ -1,10 +1,86 @@
-import { and, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, or, sql, type Column } from 'drizzle-orm';
 import { z } from 'zod';
 
 import dayjs from '@/lib/dayjs';
 import { activeLogs, likeRecords } from '@/lib/db/schema';
+import { getEstimatedCount } from '@/lib/utils/dbUtils';
 
 import { publicProcedure, router } from '../server';
+
+const DEFAULT_LOOKBACK_YEARS = 1;
+const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 50;
+
+const ActivityType = z.enum(['update', 'proposal', 'project', 'item_proposal']);
+
+type PaginationCondition = {
+  baseCondition: any;
+  cursor?: string;
+  createdAtColumn: Column<any, any, any>;
+};
+
+function buildPaginationCondition({
+  baseCondition,
+  cursor,
+  createdAtColumn,
+}: PaginationCondition) {
+  return cursor
+    ? and(baseCondition, lte(createdAtColumn, new Date(cursor)))
+    : baseCondition;
+}
+
+function buildDateConditions(startDate?: string, endDate?: string) {
+  const conditions = [];
+
+  if (startDate) {
+    try {
+      conditions.push(gte(activeLogs.createdAt, dayjs.utc(startDate).toDate()));
+    } catch {
+      throw new Error('Invalid start date format');
+    }
+  } else {
+    const oneYearAgo = dayjs
+      .utc()
+      .subtract(DEFAULT_LOOKBACK_YEARS, 'year')
+      .toDate();
+    conditions.push(gte(activeLogs.createdAt, oneYearAgo));
+  }
+
+  if (endDate) {
+    try {
+      conditions.push(
+        lte(activeLogs.createdAt, dayjs.utc(endDate).endOf('day').toDate()),
+      );
+    } catch {
+      throw new Error('Invalid end date format');
+    }
+  }
+
+  return conditions;
+}
+
+function buildActivityTypeConditions(type?: z.infer<typeof ActivityType>) {
+  const conditions = [];
+
+  if (type === 'update') {
+    conditions.push(
+      eq(activeLogs.action, 'update'),
+      eq(activeLogs.type, 'item_proposal'),
+    );
+  } else if (type === 'proposal') {
+    const proposalCondition = or(
+      eq(activeLogs.type, 'proposal'),
+      eq(activeLogs.type, 'item_proposal'),
+    );
+    if (proposalCondition) {
+      conditions.push(proposalCondition);
+    }
+  } else if (type) {
+    conditions.push(eq(activeLogs.type, type));
+  }
+
+  return conditions;
+}
 
 export const activeRouter = router({
   getUserDailyActivities: publicProcedure
@@ -20,40 +96,27 @@ export const activeRouter = router({
       const { startDate, endDate } = input;
 
       const conditions = [eq(activeLogs.userId, userId)];
-
-      if (startDate) {
-        conditions.push(
-          gte(activeLogs.createdAt, dayjs.utc(startDate).toDate()),
-        );
-      } else {
-        const oneYearAgo = dayjs.utc().subtract(1, 'year').toDate();
-        conditions.push(gte(activeLogs.createdAt, oneYearAgo));
-      }
-
-      if (endDate) {
-        conditions.push(
-          lte(activeLogs.createdAt, dayjs.utc(endDate).endOf('day').toDate()),
-        );
-      }
+      const dateConditions = buildDateConditions(startDate, endDate);
+      conditions.push(...dateConditions);
 
       const queryCondition = and(...conditions);
 
       const dailyActivities = await ctx.db
         .select({
-          date: sql<string>`TO_CHAR(${activeLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
+          date: sql<Date>`DATE_TRUNC('day', ${activeLogs.createdAt} AT TIME ZONE 'UTC')`,
           count: sql<number>`COUNT(${activeLogs.id})`,
         })
         .from(activeLogs)
         .where(queryCondition)
         .groupBy(
-          sql`TO_CHAR(${activeLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
+          sql`DATE_TRUNC('day', ${activeLogs.createdAt} AT TIME ZONE 'UTC')`,
         )
         .orderBy(
-          sql`TO_CHAR(${activeLogs.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
+          sql`DATE_TRUNC('day', ${activeLogs.createdAt} AT TIME ZONE 'UTC')`,
         );
 
       return dailyActivities.map((activity) => ({
-        day: activity.date,
+        day: dayjs.utc(activity.date).format('YYYY-MM-DD'),
         value: Number(activity.count),
       }));
     }),
@@ -62,9 +125,9 @@ export const activeRouter = router({
     .input(
       z.object({
         userId: z.string(),
-        limit: z.number().min(1).max(100).default(50),
+        limit: z.number().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
         cursor: z.string().datetime().optional(),
-        type: z.string().optional(),
+        type: ActivityType.optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -72,27 +135,16 @@ export const activeRouter = router({
 
       const baseCondition = eq(activeLogs.userId, userId);
       const conditions = [baseCondition];
-
-      if (type === 'update') {
-        conditions.push(
-          eq(activeLogs.action, 'update'),
-          eq(activeLogs.type, 'item_proposal'),
-        );
-      } else if (type === 'proposal') {
-        const proposalTypeCondition = or(
-          eq(activeLogs.type, 'proposal'),
-          eq(activeLogs.type, 'item_proposal'),
-        );
-        if (proposalTypeCondition) {
-          conditions.push(proposalTypeCondition);
-        }
-      } else if (type) {
-        conditions.push(eq(activeLogs.type, type));
+      const typeConditions = buildActivityTypeConditions(type);
+      if (typeConditions.length > 0) {
+        conditions.push(...typeConditions);
       }
 
-      const whereCondition = cursor
-        ? and(...conditions, lte(activeLogs.createdAt, new Date(cursor)))
-        : and(...conditions);
+      const whereCondition = buildPaginationCondition({
+        baseCondition: and(...conditions),
+        cursor,
+        createdAtColumn: activeLogs.createdAt,
+      });
 
       const logs = await ctx.db.query.activeLogs.findMany({
         with: {
@@ -116,11 +168,11 @@ export const activeRouter = router({
         ? items[items.length - 1].createdAt.toISOString()
         : undefined;
 
-      const totalCount = await ctx.db
-        .select({ count: sql`count(*)::int` })
-        .from(activeLogs)
-        .where(baseCondition)
-        .then((res) => Number(res[0]?.count ?? 0));
+      const totalCount = await getEstimatedCount(
+        ctx.db,
+        activeLogs,
+        baseCondition,
+      );
 
       return {
         items: mappedItems,
@@ -134,7 +186,7 @@ export const activeRouter = router({
     .input(
       z.object({
         userId: z.string(),
-        limit: z.number().min(1).max(100).default(50),
+        limit: z.number().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
         cursor: z.string().datetime().optional(),
       }),
     )
@@ -142,9 +194,11 @@ export const activeRouter = router({
       const { userId, limit, cursor } = input;
 
       const baseCondition = eq(likeRecords.creator, userId);
-      const whereCondition = cursor
-        ? and(baseCondition, lte(likeRecords.createdAt, new Date(cursor)))
-        : baseCondition;
+      const whereCondition = buildPaginationCondition({
+        baseCondition,
+        cursor,
+        createdAtColumn: likeRecords.createdAt,
+      });
 
       const likedProjects = await ctx.db.query.likeRecords.findMany({
         with: {
@@ -173,11 +227,11 @@ export const activeRouter = router({
           ? items[items.length - 1].createdAt.toISOString()
           : undefined;
 
-      const totalCount = await ctx.db
-        .select({ count: sql`COUNT(*)::int` })
-        .from(likeRecords)
-        .where(baseCondition)
-        .then((res) => Number(res[0]?.count ?? 0));
+      const totalCount = await getEstimatedCount(
+        ctx.db,
+        likeRecords,
+        baseCondition,
+      );
 
       return {
         items: mappedItems,

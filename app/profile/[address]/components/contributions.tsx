@@ -21,7 +21,24 @@ const tabItems = [
   { key: 'update', label: 'Edits' },
   { key: 'vote', label: 'Votes' },
   { key: 'proposal', label: 'Proposals' },
-];
+] as const;
+
+type TabKey = (typeof tabItems)[number]['key'];
+
+function getActivityType(
+  tabKey: TabKey,
+): 'update' | 'proposal' | 'project' | 'item_proposal' | undefined {
+  switch (tabKey) {
+    case 'update':
+      return 'update';
+    case 'proposal':
+      return 'proposal';
+    case 'all':
+    case 'vote':
+    default:
+      return undefined;
+  }
+}
 
 export default function Contributions() {
   const currentYearStart = dayjs().startOf('year').format('YYYY-MM-DD');
@@ -41,7 +58,7 @@ export default function Contributions() {
       },
     );
 
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
 
   const {
     data: activitiesData,
@@ -53,7 +70,7 @@ export default function Contributions() {
     {
       userId: user?.userId ?? '',
       limit: 50,
-      type: activeTab === 'all' ? undefined : activeTab,
+      type: getActivityType(activeTab),
     },
     {
       enabled: !!user?.userId,
@@ -144,7 +161,7 @@ export default function Contributions() {
         <Tabs
           selectedKey={activeTab}
           onSelectionChange={(key) => {
-            setActiveTab(key as string);
+            setActiveTab(key as TabKey);
           }}
           variant="underlined"
           className="w-full"
