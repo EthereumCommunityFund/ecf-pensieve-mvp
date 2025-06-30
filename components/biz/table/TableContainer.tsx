@@ -107,6 +107,7 @@ export const ModalTableContainer = ({
       className={cn(
         // Use the same scrollbar style as CategoryTable
         // '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100',
+        'tablet:w-auto mobile:w-auto',
         className,
       )}
       style={{

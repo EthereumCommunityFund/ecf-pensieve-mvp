@@ -381,9 +381,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             ) : (
               <ModalTableContainer
                 style={{
-                  width: '760px',
                   overflowX: showMetricsLeading ? 'auto' : 'hidden',
                 }}
+                className="tablet:w-auto mobile:w-auto w-[762px]"
               >
                 <table
                   className="w-full border-separate border-spacing-0"
@@ -646,9 +646,9 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
         ) : (
           <ModalTableContainer
             style={{
-              width: '760px',
               overflowX: showMetricsSubmissionQueue ? 'auto' : 'hidden',
             }}
+            className="tablet:w-auto mobile:w-auto w-[762px]"
           >
             <table
               className="w-full border-separate border-spacing-0"
