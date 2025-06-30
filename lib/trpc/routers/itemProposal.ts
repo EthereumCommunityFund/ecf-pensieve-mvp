@@ -6,6 +6,7 @@ import {
   itemProposals,
   profiles,
   projects,
+  ranks,
   voteRecords,
 } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
@@ -14,6 +15,7 @@ import {
   createRewardNotification,
 } from '@/lib/services/notification';
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
+import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 
 import { protectedProcedure, router } from '../server';
 
@@ -103,8 +105,12 @@ export const itemProposalRouter = router({
               ...project.hasProposalKeys,
               input.key,
             ]);
+            const updatedHasProposalKeys = Array.from(hasProposalKeys);
+            const newPublishedGenesisWeight = calculatePublishedGenesisWeight(
+              updatedHasProposalKeys,
+            );
 
-            await Promise.all([
+            const updatePromises = [
               tx
                 .update(profiles)
                 .set({ weight: finalWeight })
@@ -113,9 +119,14 @@ export const itemProposalRouter = router({
               tx
                 .update(projects)
                 .set({
-                  hasProposalKeys: Array.from(hasProposalKeys),
+                  hasProposalKeys: updatedHasProposalKeys,
                 })
                 .where(eq(projects.id, input.projectId)),
+
+              tx
+                .update(ranks)
+                .set({ publishedGenesisWeight: newPublishedGenesisWeight })
+                .where(eq(ranks.projectId, input.projectId)),
 
               addRewardNotification(
                 createRewardNotification.createItemProposal(
@@ -136,7 +147,9 @@ export const itemProposalRouter = router({
                 },
                 tx,
               ),
-            ]);
+            ];
+
+            await Promise.all(updatePromises);
           } else {
             logUserActivity.itemProposal.update(
               {
