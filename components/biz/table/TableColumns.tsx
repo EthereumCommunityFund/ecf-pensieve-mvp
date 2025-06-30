@@ -16,6 +16,7 @@ import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/Pr
 import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
 import {
@@ -767,6 +768,15 @@ const ActionsHeader = ({
 
 const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
   const { canBePropose } = item;
+  const { profile, showAuthPrompt } = useAuth();
+
+  const handleProposeAction = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    onView?.('submitPropose');
+  }, [profile, showAuthPrompt, onView]);
 
   return (
     <div className="flex w-full flex-col gap-[5px]">
@@ -774,7 +784,7 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
         <Button
           size="sm"
           className="w-full border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
-          onPress={() => onView?.('submitPropose')}
+          onPress={handleProposeAction}
         >
           Propose to Earn
         </Button>
@@ -790,7 +800,7 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
           <Button
             color="secondary"
             className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-            onPress={() => onView?.('submitPropose')}
+            onPress={handleProposeAction}
           >
             Propose Entry
           </Button>
