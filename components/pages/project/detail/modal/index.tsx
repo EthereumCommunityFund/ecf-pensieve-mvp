@@ -132,7 +132,7 @@ const ModalContentSection: FC<{
                 contentType === 'viewItemProposal' ? 'block' : 'hidden',
               )}
             >
-              <LeftContent itemKey={itemKey} />
+              <LeftContent itemKey={itemKey} onSubmitEntry={onSubmitEntry} />
             </div>
 
             <div

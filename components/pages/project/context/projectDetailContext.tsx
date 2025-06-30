@@ -380,8 +380,14 @@ export const ProjectDetailProvider = ({
       DataMap.set(key, row);
     });
 
-    devLog('displayProposalDataListOfProject', Array.from(DataMap.values()));
-    return Array.from(DataMap.values());
+    const result = Array.from(DataMap.values());
+    devLog(
+      'displayProposalDataListOfProject - calculated',
+      result.length,
+      'items',
+    );
+
+    return result;
   }, [
     leadingItemProposalsByProject,
     project?.itemsTopWeight,
@@ -562,11 +568,11 @@ export const ProjectDetailProvider = ({
 
   // Data refresh function
   const refetchAll = useCallback(async () => {
-    await Promise.all([
-      refetchProject(),
-      refetchLeadingProposals(),
-      refetchProposalsByKey(),
-    ]);
+    // First refetch project data to get updated itemsTopWeight
+    await refetchProject();
+
+    // Then refetch leading proposals and current key proposals
+    await Promise.all([refetchLeadingProposals(), refetchProposalsByKey()]);
   }, [refetchProject, refetchLeadingProposals, refetchProposalsByKey]);
 
   // Set item proposal active state
