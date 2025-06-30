@@ -16,9 +16,10 @@ import SubmissionQueue from './SubmissionQueue';
 
 interface LeftContentProps {
   itemKey?: string;
+  onSubmitEntry?: () => void;
 }
 
-const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
+const LeftContent: FC<LeftContentProps> = memo(({ itemKey, onSubmitEntry }) => {
   const { refetchProposalHistory, refetchProposalsByKey } =
     useProjectDetailContext();
   const [activeTab, setActiveTab] = useState('submission-queue');
@@ -116,6 +117,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
             itemName={itemName}
             itemWeight={itemWeight}
             itemKey={itemKey}
+            onSubmitEntry={onSubmitEntry}
           />
         );
       case 'consensus-log':

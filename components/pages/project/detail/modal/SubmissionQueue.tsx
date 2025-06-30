@@ -18,12 +18,14 @@ import {
 import OptimizedTableCell from '@/components/biz/table/OptimizedTableCell';
 import {
   CollapseItemIcon,
+  PlusIcon,
   ShowMetricsIcon,
   TrendDownIcon,
 } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
+import { Button } from '@/components/base';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
@@ -36,12 +38,14 @@ interface ISubmissionQueueProps {
   itemName?: string;
   itemWeight?: number;
   itemKey?: string;
+  onSubmitEntry?: () => void;
 }
 
 const SubmissionQueue: FC<ISubmissionQueueProps> = ({
   itemName = 'ItemName', // Used for display purposes
   itemWeight = 22, // Used for weight calculations
   itemKey, // Used to filter data
+  onSubmitEntry,
 }) => {
   const { profile } = useAuth();
 
@@ -558,18 +562,35 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
       )}
       <div className="flex flex-col gap-[10px]">
         {/* Submission Queue Header Section */}
-        <div className="flex flex-col gap-[5px]">
-          <div className="flex items-center gap-2">
-            <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
-              Submission Que:
-            </span>
+        <div className="flex items-center justify-between gap-[10px]">
+          <div className="flex flex-col gap-[5px]">
+            <div className="flex items-center gap-2">
+              <span className="font-mona text-[16px] font-bold leading-tight text-black opacity-80">
+                Submission Que:
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
+                This is the list of submissions available to replace the
+                displayed one.
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2.5">
-            <span className="font-sans text-[13px] font-normal leading-[1.36] text-black opacity-80">
-              This is the list of submissions available to replace the displayed
-              one.
+          {/* Submit Entry Button */}
+          <Button
+            className={cn(
+              'flex items-center justify-center gap-[10px] rounded-[5px] border border-[rgba(0,0,0,0.1)]',
+              'bg-[#F0F0F0] px-[14px] py-[6px]',
+              'hover:bg-[rgba(0,0,0,0.1)] transition-colors duration-200',
+              'h-auto min-w-0',
+            )}
+            onPress={onSubmitEntry}
+          >
+            <PlusIcon size={16} />
+            <span className="font-sans text-[14px] font-semibold leading-[1.36] text-black">
+              Submit an Entry
             </span>
-          </div>
+          </Button>
         </div>
 
         {/* Submission Queue Action Buttons */}
