@@ -39,11 +39,26 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   onOpenModal,
   onMetricClick,
 }) => {
-  const { project, showReferenceModal, showSubmitterModal } =
-    useProjectDetailContext();
+  const {
+    project,
+    showReferenceModal,
+    showSubmitterModal,
+    isProjectFetched,
+    isLeadingProposalsFetched,
+  } = useProjectDetailContext();
 
   // Custom hooks for data and state management
   const { tableData, emptyItemsCounts } = useProjectTableData();
+
+  // Create a unique key for forcing table re-renders when data changes
+  const tableKey = useMemo(() => {
+    const weightKeysCount = Object.keys(project?.itemsTopWeight || {}).length;
+    const totalWeightSum = Object.values(project?.itemsTopWeight || {}).reduce(
+      (sum, weight) => sum + weight,
+      0,
+    );
+    return `${project?.id || 0}-${weightKeysCount}-${totalWeightSum}`;
+  }, [project?.id, project?.itemsTopWeight]);
   const {
     expandedRows,
     expanded,
@@ -263,26 +278,15 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   });
 
   // Create tables object
-  const tables = useMemo(
-    () => ({
-      [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
-      [IItemSubCategoryEnum.Development]: developmentTable,
-      [IItemSubCategoryEnum.Organization]: organizationTable,
-      [IItemSubCategoryEnum.Team]: teamTable,
-      [IItemSubCategoryEnum.Finances]: financesTable,
-      [IItemSubCategoryEnum.Token]: tokenTable,
-      [IItemSubCategoryEnum.Governance]: governanceTable,
-    }),
-    [
-      basicProfileTable,
-      developmentTable,
-      organizationTable,
-      teamTable,
-      financesTable,
-      tokenTable,
-      governanceTable,
-    ],
-  );
+  const tables = {
+    [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
+    [IItemSubCategoryEnum.Development]: developmentTable,
+    [IItemSubCategoryEnum.Organization]: organizationTable,
+    [IItemSubCategoryEnum.Team]: teamTable,
+    [IItemSubCategoryEnum.Finances]: financesTable,
+    [IItemSubCategoryEnum.Token]: tokenTable,
+    [IItemSubCategoryEnum.Governance]: governanceTable,
+  };
 
   return (
     <div className="relative">
@@ -352,7 +356,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   />
                   {cat.subCategories.map((subCat) => (
                     <CategoryTableSection
-                      key={subCat.key}
+                      key={`${subCat.key}-${tableKey}`}
                       subCategory={subCat}
                       table={tables[subCat.key]}
                       isLoading={isProposalsLoading}
