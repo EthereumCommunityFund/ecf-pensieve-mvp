@@ -52,13 +52,13 @@ export const useTableStates = () => {
   const [emptyItemsExpanded, setEmptyItemsExpanded] = useState<
     Record<IItemSubCategoryEnum, boolean>
   >({
-    [IItemSubCategoryEnum.Organization]: false,
-    [IItemSubCategoryEnum.Team]: false,
-    [IItemSubCategoryEnum.BasicProfile]: false,
-    [IItemSubCategoryEnum.Development]: false,
-    [IItemSubCategoryEnum.Finances]: false,
-    [IItemSubCategoryEnum.Token]: false,
-    [IItemSubCategoryEnum.Governance]: false, // Reserved for future enablement
+    [IItemSubCategoryEnum.Organization]: true,
+    [IItemSubCategoryEnum.Team]: true,
+    [IItemSubCategoryEnum.BasicProfile]: true,
+    [IItemSubCategoryEnum.Development]: true,
+    [IItemSubCategoryEnum.Finances]: true,
+    [IItemSubCategoryEnum.Token]: true,
+    [IItemSubCategoryEnum.Governance]: true, // Reserved for future enablement
   });
 
   // Group expansion state management (all groups expanded by default)

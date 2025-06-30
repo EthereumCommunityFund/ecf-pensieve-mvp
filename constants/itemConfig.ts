@@ -22,7 +22,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.name.isEssential,
     label: 'Project Name',
     description: 'type in the name of the project to propose',
-    shortDescription: 'The unique identifier for the project.',
+    shortDescription: `Your Project's official name`,
+    longDescription: ``,
     weight: ALL_POC_ITEM_MAP.name.weight,
     formDisplayType: 'string',
     placeholder: 'Type in a name',
@@ -39,7 +40,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Tagline',
     description:
       'Write a short and clear sentence that captures the essence of the project.',
-    shortDescription: 'A simple and catchy slogan for the project.',
+    shortDescription:
+      'A one-line phrase that captures the essence of your project.',
+    longDescription: `The project tagline is a short, memorable sentence or phrase that conveys your project’s core mission, value, or vision at a glance. It’s often the first impression you make, so it should be clear, distinctive, and aligned with your messaging. Think of it as your project’s elevator pitch in a single line — suitable for listings, profiles, and promotional materials.`,
     weight: ALL_POC_ITEM_MAP.tagline.weight,
     formDisplayType: 'string',
     placeholder: 'Type in a tagline',
@@ -57,7 +60,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Project Category',
     description:
       "Select the categories that best fit the project's domain or impact area.",
-    shortDescription: 'Categorize the project into relevant categories.',
+    shortDescription: `Defines the project’s architectural and operational model — from centralized to decentralized`,
+    longDescription: `This field helps describe both what your project does (e.g. DeFi, NFTs, DAO tooling) and how it operates structurally — whether it's centralized, partly decentralized, or aiming for full decentralization. A centralized project is typically controlled by a single company or small team, while a decentralized one distributes decision-making and ownership across a broader community (often using tokens or DAOs). Most Web3 projects fall somewhere in between, and it's okay if your structure is still evolving. Choose the option that best reflects your current setup, not just your long-term goal.`,
     weight: ALL_POC_ITEM_MAP.categories.weight,
     formDisplayType: 'selectMultiple',
     placeholder: 'Select categories',
@@ -83,7 +87,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Tags',
     description:
       "Select or create the tags that best describe the project's focus, impact area, or techs.",
-    shortDescription: 'A list of tags for the project.',
+    shortDescription: `Add keywords that describe your project's focus, technology, or ecosystem.`,
+    longDescription: `Project tags are concise labels that help categorize and surface your project in searches and filters. tags can refer to use cases (e.g. DeFi, NFTs, ReFi), technologies used (e.g. zk-rollups, IPFS, ERC-4626), ecosystem affiliations (e.g. Optimism, Gitcoin), or thematic focuses (e.g. Public Goods, Climate, Education). Use this field to highlight the key attributes or areas your project is most closely associated with. tags improve discoverability and help align your project with relevant communities and funding streams.`,
     weight: ALL_POC_ITEM_MAP.tags.weight,
     formDisplayType: 'autoComplete',
     placeholder: 'Select tags',
@@ -125,7 +130,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.mainDescription.isEssential,
     label: 'Project Description',
     description: 'Provide a detailed overview of the project.',
-    shortDescription: 'A comprehensive description of the project.',
+    shortDescription: `Present the core of your project to the community.`,
+    longDescription: `The project description should provide a clear overview of what the project is, what it aims to achieve, and how it plans to get there. It should cover key elements such as the project's mission and goals, target market, unique value proposition (UVP), roadmap and milestones, success metrics, core team, token design (if applicable), and strategies for user adoption.`,
     weight: ALL_POC_ITEM_MAP.mainDescription.weight,
     formDisplayType: 'textarea',
     placeholder: 'Type in a description',
@@ -159,7 +165,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.websites.isEssential,
     label: 'Website',
     description: 'provide the main website for this project',
-    shortDescription: 'The main online address of the project.',
+    shortDescription:
+      'These are relevant links to a project’s website, their social media, among other sources.',
     weight: ALL_POC_ITEM_MAP.websites.weight,
     formDisplayType: 'websites',
     placeholder: 'Type in a URL',
@@ -196,7 +203,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.whitePaper.isEssential,
     label: 'White Paper',
     description: 'provide the white paper for this project',
-    shortDescription: 'The white paper of the project.',
+    shortDescription: `A document released by a crypto project that gives investors technical information about its concept, and a roadmap for how it plans to grow and succeed.`,
+    longDescription: `The whitepaper is a foundational document that outlines the core concept, architecture, and long-term vision of the project. It typically includes technical details about how the system works, the problem it aims to solve, the proposed solution, tokenomics (if any), governance structure, and plans for scalability and security. A well-crafted whitepaper also presents a roadmap, illustrating key milestones and development phases, and may include market analysis, competitive landscape, and risk factors. While originally targeted at investors, whitepapers today also serve developers, contributors, and the broader community as a reference point for understanding the project’s structure, strategy, and legitimacy.`,
     weight: ALL_POC_ITEM_MAP.whitePaper.weight,
     formDisplayType: 'link',
     placeholder: 'Type in a URL',
@@ -214,7 +222,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.dateFounded.isEssential,
     label: 'Date Founded',
     description: 'Select the date at which the project was founded.',
-    shortDescription: 'The date when the project officially began.',
+    shortDescription: 'The official date when the project officially began.',
     weight: ALL_POC_ITEM_MAP.dateFounded.weight,
     formDisplayType: 'date',
     placeholder: 'Select date',
@@ -232,8 +240,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Product Launch Date',
     description:
       'Select the date when the main product or service was launched (if applicable).',
-    shortDescription:
-      'The date when the product was first released to the public.',
+    shortDescription: 'The official date of a product launch.',
     weight: ALL_POC_ITEM_MAP.dateLaunch.weight,
     formDisplayType: 'date',
     placeholder: 'Select date',
@@ -251,7 +258,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.devStatus.isEssential,
     label: 'Development Status',
     description: 'Select the current status of their development',
-    shortDescription: 'The most recent development status of the project.',
+    shortDescription:
+      'Indicates whether the project is currently active or inactive.',
+    longDescription: `This field reflects the operational status of the project — whether it is actively maintained and progressing, or has become inactive, dormant, or discontinued. An active project typically shows signs of ongoing development, community engagement, or recent updates, while an inactive one may have halted progress, been abandoned, or reached a natural end. Providing this status helps set expectations for collaborators, users, and funders.`,
     weight: ALL_POC_ITEM_MAP.devStatus.weight,
     formDisplayType: 'select',
     placeholder: 'Select status',
@@ -280,7 +289,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.openSource.isEssential,
     label: 'Open-source Status',
     description: 'Is this project now open-source?',
-    shortDescription: 'Whether the project follows an open-source model.',
+    shortDescription:
+      'Indicates whether the project’s code is publicly available and reusable.',
+    longDescription: `This field identifies whether the project’s source code is open and accessible to the public. Open source code can typically be inspected, reused, modified, or forked by anyone. However, a project may be partially open source — for example, with core smart contracts published but front-end or backend services remaining closed. Sharing code transparently promotes community trust, collaboration, and security through public audits.`,
     placeholder: 'Select open-source status',
     weight: ALL_POC_ITEM_MAP.openSource.weight,
     formDisplayType: 'select',
@@ -322,7 +333,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.dappSmartContracts.isEssential,
     label: 'Dapp Smart Contracts',
     description: 'Input the projects smart contracts',
-    shortDescription: 'The smart contracts of the project.',
+    shortDescription: `What does your project's smart contract do at high level? Definition of Smart Contract: a set of rules defined in code that can be executed by an underlying blockchain for a fee e.g smart contracts on Ethereum.`,
+    longDescription: `List specific features (imports, functions, modifiers, security implementations) and/or gas optimizations of your smart contract`,
     weight: ALL_POC_ITEM_MAP.dappSmartContracts.weight,
     formDisplayType: 'stringMultiple',
     placeholder: '0x...',
@@ -340,7 +352,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.orgStructure.isEssential,
     label: 'Organization Structure',
     description: "Describe the project's governance model.",
-    shortDescription: 'The organizational and governance model of the project.',
+    shortDescription:
+      'The organization or group responsible for initiating, maintaining, and developing the project.',
+    longDescription: `This field describes how the project is structured and operated — whether it’s run by a formal company, a nonprofit, a DAO, or an informal collective. It helps assess how centralized or decentralized decision-making and accountability are within the organization.`,
     weight: ALL_POC_ITEM_MAP.orgStructure.weight,
     formDisplayType: 'string',
     placeholder: 'Type in the organization structure',
@@ -356,7 +370,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.publicGoods.isEssential,
     label: 'Public-Goods Nature',
     description: 'Is this project a public good?',
-    shortDescription: 'Whether the project contributes to the public domain.',
+    shortDescription:
+      'This Project offers benefits provided to a community that are typically under-provided by the free market.',
+    longDescription: `Public goods are things like open source code, shared infrastructure, openly shared research, documentation, community building or other benefits provided to the community that are typically under-provided by the free market.`,
     weight: ALL_POC_ITEM_MAP.publicGoods.weight,
     placeholder: 'Select public goods',
     formDisplayType: 'select',
@@ -394,7 +410,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.fundingStatus.isEssential,
     label: 'Funding Status',
     description: 'Indicate whether the project has been funded.',
-    shortDescription: 'The sources and status of project funding.',
+    shortDescription: 'This shows if the project is currently fundraising',
+    longDescription: `This field shows whether the project is actively fundraising, already funded, self-funded, or operating without external capital. Understanding the funding status provides insight into the project’s financial sustainability, growth stage, and potential risks. It can also signal whether the team is seeking additional backers or is currently focused on execution.`,
     weight: ALL_POC_ITEM_MAP.fundingStatus.weight,
     formDisplayType: 'select',
     placeholder: 'Select funding status',
@@ -417,7 +434,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     description:
       "Provide the address of the project's token smart contract, if applicable.",
     shortDescription:
-      'The contract address of the project token on the blockchain.',
+      ' A token contract is a smart contract that contains a mapping of addresses and account balances.',
+    longDescription: `A token contract is a smart contract deployed on a blockchain that defines the rules and logic of a project's token. It typically includes a mapping of wallet addresses to their token balances, and governs core functionalities such as transfers, approvals, minting, burning, and in some cases, staking or governance rights. This field should include the token contract address, which allows users, auditors, and explorers to independently verify the token's code and on-chain activity. Providing this information is key for transparency, as it enables others to track supply, distribution, and usage directly on the blockchain. If the project has multiple token contracts (e.g. for wrapped versions or migration), those should also be disclosed.`,
     weight: ALL_POC_ITEM_MAP.tokenContract.weight,
     formDisplayType: 'string',
     placeholder: '0x...',
@@ -452,8 +470,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.launch_plan.isEssential,
     label: 'Launch Plan',
     description: 'Outline how and when the project plans to launch it.',
-    shortDescription:
-      'The plan for the project to be launched by the community.',
+    shortDescription: 'How and when do you intend to Start the Project.',
+    longDescription: `The launch plan serves as a practical guide for initiating the project. It outlines the key tasks, milestones, and deadlines required to go live. Think of it as a structured checklist to ensure all essential steps are completed for a successful launch.`,
     weight: ALL_POC_ITEM_MAP.launch_plan.weight,
     formDisplayType: 'textarea',
     placeholder: 'Type in a plan',
@@ -469,8 +487,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.roadmap.isEssential,
     label: 'Roadmap',
     description: 'Provide the roadmap for this project',
-    shortDescription:
-      'The roadmap for the project to be adopted by the community.',
+    shortDescription: `This is a tool for visualizing the project’s development strategy.`,
+    longDescription: `The roadmap is a doc that shows the main stages of the strategy implementation, deadlines and completion status of each stage. For ease of perception, information is most often presented in graphical form, but sometimes a text format you can use.Do not confuse the roadmap with the marketing plan. Roadmap is a tool for strategic, not tactical planning. The roadmap is to outline long-term goals (for months and sometimes years ahead), and not to describe how to achieve them.`,
     weight: ALL_POC_ITEM_MAP.roadmap.weight,
     formDisplayType: 'textarea',
     placeholder: 'Type in a roadmap',
@@ -484,9 +502,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.Development,
     isEssential: POC_ITEMS.audit_status.isEssential,
     label: 'Audit Status',
-    description:
-      "Describe whether the project's code has been audited. If yes, mention the auditor and the audit date if available.",
-    shortDescription: 'The most recent audit status of the project.',
+    description: `Describe whether the project's code has been audited. If yes, mention the auditor and the audit date if available.`,
+    shortDescription: `This shows if a project at any level has been audited. Below will include the details of their audits.`,
+    longDescription: `This field indicates whether the project has undergone any form of security or technical audit, and at what level — including smart contracts, governance mechanisms, treasury systems, or other critical components. Audit status provides insight into the project’s commitment to transparency, user safety, and risk mitigation. If available, this section should also include links to published audit reports, names of auditing firms or individuals, dates of completion, and the scope of each audit. Projects may have multiple audits over time, and both passed and pending audits can be relevant for evaluating the project's maturity and trustworthiness.`,
     weight: ALL_POC_ITEM_MAP.audit_status.weight,
     formDisplayType: 'textarea',
     placeholder: 'Type status',
@@ -501,7 +519,21 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.dapp_category.isEssential,
     label: 'Dapp Category',
     description: 'Select the category that best describes this dapp',
-    shortDescription: 'The primary category classification of the dapp.',
+    shortDescription: `State if the Project's nature is 1. Financial  2. Partly Financial 3.Non Financial `,
+    longDescription: `1. Financial
+DApps whose core function revolves around handling or transferring value.
+
+Decentralized Exchanges (DEXs), Lending & Borrowing Protocols, Stablecoins / Payment Systems, Yield Aggregators, Derivatives / Perpetuals, Asset Management Tools
+
+2. Partly Financial
+DApps with embedded financial elements, but not purely financial in nature.
+
+NFT Marketplaces, Gaming (Play-to-Earn, In-Game Economies), Auction Platforms, Bridges / Cross-chain Swaps, SocialFi / Creator Economies
+
+3. Non-Financial
+DApps primarily focused on use cases unrelated to direct financial value exchange.
+
+Decentralized Identity / Reputation, File Storage (e.g. IPFS-based platforms), Communication / Messaging, Coordination Tools (e.g. DAO tooling, voting), Knowledge Sharing (e.g. open research platforms), Art, Culture, and Media.`,
     weight: ALL_POC_ITEM_MAP.dapp_category.weight,
     formDisplayType: 'select',
     placeholder: 'Select category',
@@ -531,7 +563,10 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Protocol Built On',
     description:
       'Specify the underlying protocol or blockchain this project is built on',
-    shortDescription: 'The underlying protocol or blockchain platform.',
+    shortDescription: `
+Indicate the core chain(s) or protocol(s) your project is technically built on or dependent on.`,
+    longDescription: `
+This field identifies the underlying infrastructure your project is technically built upon — such as blockchains (e.g. Ethereum, Optimism), base protocols (e.g. Aave, ENS, Lens), or frameworks you’ve deployed contracts on or inherited core logic from. It refers to code-level dependency — not partnerships or general alignment. If your project integrates with a protocol that is no longer active or maintained, please still list it, but consider noting its current status.`,
     weight: ALL_POC_ITEM_MAP.protocol_built_on.weight,
     formDisplayType: 'string',
     placeholder: 'Type protocol name (e.g., Ethereum, Polygon, Solana)',
@@ -551,8 +586,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Core Team',
     description:
       'Provide the core team members of this project with their names and roles',
-    shortDescription:
-      'The list of core team members and their roles in the project.',
+    shortDescription: `This item details a project’s core team members.`,
+    longDescription: `This field highlights the current core team members actively involved in building, maintaining, and evolving the project. Unlike founders — who initiated the project — core team members may have joined later and are responsible for the day-to-day operations, development, strategy, or community coordination. This includes contributors with ongoing responsibilities such as developers, designers, product managers, or community leads. Listing their names, roles, and public addresses (if applicable) adds transparency around who is executing the project and how responsibilities are distributed within the team.`,
     weight: ALL_POC_ITEM_MAP.core_team.weight,
     formDisplayType: 'founderList',
     placeholder: 'Add a team member',
@@ -570,7 +605,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     description:
       'Describe the incentive structure and compensation model for the team',
     shortDescription:
-      'The incentive and compensation structure for team members.',
+      'Describes how the team is motivated and rewarded — through tokens, reputation, or long-term alignment mechanisms.',
+    longDescription: `This field outlines the incentives offered to the project’s team members, which may include token vesting schedules, dividends, reputational rewards, or a sense of belonging within the community. Some projects may also define obligations or commitments tied to these incentives, such as contribution milestones or governance participation. Understanding how the team is incentivized helps assess long-term alignment, retention, and the values driving the project’s internal culture. Select all applicable incentive types.`,
     weight: ALL_POC_ITEM_MAP.team_incentives.weight,
     formDisplayType: 'textarea',
     placeholder: 'Describe team incentives and compensation structure',
@@ -587,8 +623,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Ownership of Project',
     description:
       "Who owns or controls the project? Specify if it's founder-owned, community-owned, owned by a company, DAO, or another structure.",
-    shortDescription:
-      'The ownership structure and distribution model of the project.',
+    shortDescription: `the individuals or groups who have authority, accountability, and decision-making power over the project’s direction, scope, and outcomes`,
     weight: ALL_POC_ITEM_MAP.ownership_of_project.weight,
     formDisplayType: 'textarea',
     placeholder: 'Describe project ownership structure and distribution',
@@ -634,8 +669,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Budget Plans',
     description:
       'Provide a link to the project budget plans and financial projections',
-    shortDescription:
-      'Link to detailed budget plans and financial projections.',
+    shortDescription: `Outlines expected income and expenses over a defined time period.`,
+    longDescription: `The budget plan presents the project’s financial forecast, including projected revenues, expenses, and fund allocation over a set timeframe (e.g. quarterly or yearly). It helps stakeholders assess how resources are being planned and prioritized — whether for development, operations, community incentives, or growth. A clear budget plan reflects strategic thinking and financial discipline, especially for projects seeking funding or managing public goods. Include links to spreadsheets or governance-approved budgets if available.`,
     weight: ALL_POC_ITEM_MAP.budget_plans.weight,
     formDisplayType: 'link',
     placeholder: 'Type in a URL',
@@ -652,7 +687,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Expense Statements',
     description:
       'Provide a link to the project expense statements and financial records',
-    shortDescription: 'Link to expense statements and financial records.',
+    shortDescription: `Details the project’s spending, including specific items, addresses, and burn or runway metrics.`,
+    longDescription: `
+This field provides a breakdown of the project’s expenses, offering transparency into how funds are used. It may include transaction records, wallet addresses, categories of spending (e.g. development, marketing, grants), and token burn rate. When available, also include data related to runway estimates — how long the project can operate at its current spending rate. This disclosure helps the community, funders, and evaluators assess the project’s financial health, efficiency, and commitment to openness.`,
     weight: ALL_POC_ITEM_MAP.expense_statements.weight,
     formDisplayType: 'link',
     placeholder: 'Type in a URL',
@@ -668,8 +705,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.runway.isEssential,
     label: 'Runway',
     description: 'Specify the project runway in months or currency amount',
-    shortDescription:
-      'The estimated time or amount the project can operate with current funding.',
+    shortDescription: `Estimates how long the project can operate based on its current spending and available funds.`,
+    longDescription: `The runway reflects the amount of time a project can continue functioning before running out of funds, given its current burn rate and cash or token reserves. It’s a key financial health indicator that helps stakeholders understand how sustainable the project is without new funding. Runway can be expressed in months or weeks, and should be updated regularly based on treasury balance and evolving expenses.`,
     weight: ALL_POC_ITEM_MAP.runway.weight,
     formDisplayType: 'string',
     placeholder: 'e.g., 12 months or $100,000',
@@ -685,8 +722,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Income & Revenue Statements',
     description:
       'Provide links to income and revenue statements with labels for multiple entries',
-    shortDescription:
-      'Links to income and revenue statements with descriptive labels.',
+    shortDescription: `Reports the project’s income over a defined period, with itemized sources and transaction details.`,
+    longDescription: `This field captures the project’s revenue over time, typically reported on an annual or semi-annual basis. It should include a breakdown of income sources — such as protocol fees, token sales, grants, or service revenues — along with transaction records and, where possible, wallet addresses or on-chain references. Transparent income statements help evaluate the project’s sustainability, business model, and ability to generate value beyond external funding.`,
     weight: ALL_POC_ITEM_MAP.income_and_revenue_statements.weight,
     formDisplayType: 'stringMultiple',
     placeholder: 'Add income/revenue statement URL',
@@ -706,7 +743,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Token Sales',
     description:
       'Indicate whether the project has conducted or plans to conduct token sales',
-    shortDescription: 'Whether the project has or plans token sales.',
+    shortDescription: `Details the public token sale, including timeline, funding goals, participation, and contract address.`,
+    longDescription: `This field captures the key information about the project's public token sales, such as the start and end dates, duration, target vs. raised amount, and participation data (e.g. number of backers, wallet addresses if available). It should also include the token sale smart contract address to allow for on-chain verification. This information is crucial for understanding the scale, distribution, and transparency of the project’s initial fundraising efforts. If multiple sales or rounds took place, they should be listed separately.`,
     weight: ALL_POC_ITEM_MAP.token_sales.weight,
     formDisplayType: 'select',
     placeholder: 'Select token sales status',
@@ -729,7 +767,21 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.token_type.isEssential,
     label: 'Token Type',
     description: 'Select the type of token or specify other type',
-    shortDescription: 'The classification and type of the project token.',
+    shortDescription: `The token type is fundamental to understand a Project's spectrum, from financial viability to community engagement and impact status.`,
+    longDescription: `
+Access Tokens – used to unlock features, participate in a network, or access gated tools/services (e.g. utility tokens in DeFi apps or protocols).
+
+Governance Tokens – give holders voting rights in DAOs or on protocol upgrades and treasury decisions.
+
+Store of Value / Currency Tokens – used for payments, holding Value, or unit of account within an ecosystem (e.g. ETH, stablecoins).
+
+Incentive / Reward Tokens – used to bootstrap growth, incentivize contributors, or reward network participation (e.g. mining/staking rewards).
+
+Identity / Reputation Tokens – non-transferable tokens (SBTs, badges) that represent on-chain identity or contributions.
+
+Asset-Backed Tokens – represent real-world or on-chain assets (e.g. tokenized gold, RWA, shares).
+
+NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital or physical assets (e.g. art, membership, media).`,
     weight: ALL_POC_ITEM_MAP.token_type.weight,
     formDisplayType: 'autoComplete',
     placeholder: 'Select token type',
@@ -764,7 +816,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Token Issuance Mechanism',
     description:
       'Select the token issuance mechanism or specify other mechanism',
-    shortDescription: 'The mechanism used for issuing and distributing tokens.',
+    shortDescription: `Describes how new tokens are created and added to the total supply.`,
+    longDescription: `The issuance mechanism defines the process by which new tokens are minted and introduced into circulation. This can follow models such as fixed supply, inflationary issuance, emission schedules, or event-triggered minting (e.g. rewards, governance). Understanding the issuance method is essential for evaluating a token’s monetary policy, long-term inflation, and potential dilution of existing holders. Please specify if the mechanism is coded in the token contract and whether it's adjustable or fixed.`,
     weight: ALL_POC_ITEM_MAP.token_issuance_mechanism.weight,
     formDisplayType: 'select',
     placeholder: 'Select issuance mechanism',
@@ -809,11 +862,13 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     category: IItemCategoryEnum.Financial,
     subCategory: IItemSubCategoryEnum.Finances,
     isEssential: POC_ITEMS.total.isEssential,
-    label: 'Total Investment (calc)',
+    label: 'Total Grants(calc)',
     description:
       'Calculated total from Contributing Funds investment amounts and previous funding amounts',
     shortDescription:
-      'Automatically calculated total investment amount from all funding sources.',
+      'Shows all grants the project has received, including amounts, dates, and who issued them.',
+    longDescription: `
+This field captures a record of grants received by the project — whether from public goods platforms, foundations, DAOs, or private organizations. It includes key data such as the grant giver’s name, the amount granted, and the date it was received. This information helps assess the project’s funding history, external support, and alignment with funding ecosystems. If possible, include links to grant announcements or on-chain records for verification.`,
     weight: ALL_POC_ITEM_MAP.total.weight,
     formDisplayType: 'string',
     placeholder: 'Calculated automatically',
@@ -828,8 +883,9 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.governance_structure.isEssential,
     label: 'Governance Structure',
     description: 'Select the governance structure or specify other structure',
-    shortDescription:
-      'The governance model and decision-making structure of the project.',
+    shortDescription: `Specify how governance is managed in the Project. Include the name of the DAO, multisig tooling (if any), or off-chain voting system, and a link to the platform or dashboard where proposals and votes take place.
+This helps us understand how decisions are made and who gets to participate.`,
+    longDescription: `A governance model defines how decisions are made within your project — whether through a DAO, a multisig council, or other mechanisms. In decentralized projects, governance is often coordinated by community members who propose and vote on key actions like treasury spending, protocol upgrades, or team changes. This can happen on-chain (via smart contracts and DAO tooling) or off-chain (using tools like Snapshot or forums, with optional execution layers). If your project uses a governance token, it typically plays a central role in enabling participation and influence.`,
     weight: ALL_POC_ITEM_MAP.governance_structure.weight,
     formDisplayType: 'select',
     placeholder: 'Select governance structure',
@@ -860,8 +916,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Physical Entity',
     description:
       'Provide legal name and country information for the physical entity',
-    shortDescription:
-      'Legal entity information including name and jurisdiction.',
+    shortDescription: `Enter the legal name of the entity behind the project and the country where it is registered or operates.`,
+    longDescription: `This field identifies the legal entity or organization responsible for the project, including its official name and country of establishment. It helps determine the legal standing, jurisdiction, and regulatory context in which the project operates. Even if the project is decentralized, many teams choose to set up a legal wrapper (e.g. company, foundation, association) to manage operations, funding, or partnerships. If there is no formal entity, indicate that clearly.`,
     weight: ALL_POC_ITEM_MAP.physical_entity.weight,
     formDisplayType: 'stringMultiple',
     placeholder: 'Add legal entity information',
@@ -880,7 +936,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Treasury Vault Address',
     description:
       'Input the treasury vault blockchain address or select N/A if not applicable',
-    shortDescription: 'The blockchain address of the project treasury vault.',
+    shortDescription: `The vault address is meant to present the smart contract address where the treasury stored and also the people having the authority to get/approve the access to this address.`,
+    longDescription: `It is typically a multisig wallet, a timelocked contract, or a DAO-governed treasury, depending on the project's governance and security setup. This field should include the public address of the vault, and where applicable, information about the individuals, roles, or mechanisms with authority to approve or execute transactions from the vault. In many cases, these may be multisig signers, council members, or smart contract-based executors tied to governance decisions. Vaults may hold funds for operational expenses, grant disbursements, community initiatives, or strategic reserves. Clearly disclosing the vault address and who controls it ensures greater transparency, facilitates external verification, and strengthens trust in the project's financial stewardship.`,
     weight: ALL_POC_ITEM_MAP.treasury_vault_address.weight,
     formDisplayType: 'string',
     placeholder: '0x... or N/A',
@@ -900,8 +957,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     label: 'Treasury Mechanism',
     description:
       'Select the treasury management mechanism or specify other mechanism',
-    shortDescription:
-      'The mechanism used for managing and operating the project treasury.',
+    shortDescription: 'Approval voting with a Yes-No-Abstain scheme (?)',
+    longDescription: `The core component of a treasury system is a decision-making system that allows members of the community collectively reach some conclusions/decisions.`,
     weight: ALL_POC_ITEM_MAP.treasury_mechanism.weight,
     formDisplayType: 'select',
     placeholder: 'Select treasury mechanism',

@@ -110,6 +110,8 @@ export const useProjectTableData = () => {
               property: itemConfig?.label || itemKey,
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              accountabilityMetrics: itemConfig?.accountability || [],
+              legitimacyMetrics: itemConfig?.legitimacy || [],
               ...statusFields,
             };
             result[subCategoryConfig.key].push(enhancedItem);
@@ -137,6 +139,8 @@ export const useProjectTableData = () => {
               property: itemConfig?.label || itemKey,
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              accountabilityMetrics: itemConfig?.accountability || [],
+              legitimacyMetrics: itemConfig?.legitimacy || [],
               ...statusFields,
             };
             if (hasProposal || !isInputValueEmpty(existingItem.input)) {
@@ -175,6 +179,8 @@ export const useProjectTableData = () => {
                 isEmptyItem: true,
                 accountability: itemConfig?.accountability || [],
                 legitimacy: itemConfig?.legitimacy || [],
+                accountabilityMetrics: itemConfig?.accountability || [],
+                legitimacyMetrics: itemConfig?.legitimacy || [],
                 ...(groupInfo && {
                   group: groupInfo.key,
                   groupTitle: groupInfo.title,

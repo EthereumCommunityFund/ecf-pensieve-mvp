@@ -338,7 +338,10 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   return (
     <PageTableContainer
-      className="mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100"
+      className={cn(
+        'mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white',
+        // '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100',
+      )}
       allowInternalBorderRadius={true}
       style={{
         overflowX: 'auto',

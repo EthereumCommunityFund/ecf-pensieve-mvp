@@ -17,6 +17,7 @@ export interface TableHeaderProps {
 export const TableHeader = ({
   children,
   width,
+  isFirst = false,
   isLast = false,
   className,
   style,

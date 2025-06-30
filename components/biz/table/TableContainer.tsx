@@ -13,8 +13,6 @@ export interface TableContainerProps {
   rounded?: boolean;
   /** Background color variant */
   background?: 'white' | 'transparent';
-  /** Whether to allow internal content borders to override container rounded corners */
-  allowInternalBorderRadius?: boolean;
 }
 
 /**
@@ -69,15 +67,12 @@ export const TableContainer = ({
   bordered = false,
   rounded = false,
   background = 'transparent',
-  allowInternalBorderRadius = false,
   ...props
 }: TableContainerProps) => {
   const containerClasses = cn(
-    // Only add overflow-hidden if not allowing internal border radius
-    // This prevents cutting off internal rounded borders
-    !allowInternalBorderRadius && 'overflow-hidden',
+    // If rounded, add overflow-hidden to ensure the container clips the child content
+    rounded && 'overflow-hidden rounded-[10px]',
     bordered && 'border border-black/10',
-    rounded && 'rounded-[10px]',
     background === 'white' && 'bg-white',
     className,
   );
@@ -98,14 +93,29 @@ export const TableContainer = ({
 export const ModalTableContainer = ({
   children,
   className,
+  // Destructure and ignore allowInternalBorderRadius to prevent it from reaching the DOM
+  allowInternalBorderRadius,
   ...props
-}: Omit<TableContainerProps, 'bordered' | 'rounded' | 'background'>) => {
+}: Omit<TableContainerProps, 'bordered' | 'rounded' | 'background'> & {
+  allowInternalBorderRadius?: boolean;
+}) => {
   return (
     <TableContainer
       bordered
       rounded
       background="white"
-      className={className}
+      className={cn(
+        // Use the same scrollbar style as CategoryTable
+        // '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100',
+        className,
+      )}
+      style={{
+        scrollbarWidth: 'thin',
+        WebkitOverflowScrolling: 'touch',
+        maxWidth: '100%',
+        width: '100%',
+        ...props.style,
+      }}
       {...props}
     >
       {children}
@@ -122,8 +132,12 @@ export const ModalTableContainer = ({
 export const PageTableContainer = ({
   children,
   className,
+  // Destructure and ignore allowInternalBorderRadius to prevent it from reaching the DOM
+  allowInternalBorderRadius,
   ...props
-}: Omit<TableContainerProps, 'bordered' | 'rounded' | 'background'>) => {
+}: Omit<TableContainerProps, 'bordered' | 'rounded' | 'background'> & {
+  allowInternalBorderRadius?: boolean;
+}) => {
   return (
     <TableContainer className={className} {...props}>
       {children}
