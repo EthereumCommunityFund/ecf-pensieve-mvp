@@ -267,6 +267,13 @@
       "when": 1749600000000,
       "tag": "0037_fix_websites_type",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1751246680530,
+      "tag": "0038_rich_tiger_shark",
+      "breakpoints": true
     }
   ]
 }
