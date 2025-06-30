@@ -5,7 +5,7 @@ import { FC, memo, useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { useUserWeightModal } from '@/components/biz/modal/userWeightCard/Context';
-import { InfoIcon } from '@/components/icons';
+import { InfoIcon, PlusIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
@@ -111,12 +111,13 @@ const RightContent: FC<RightContentProps> = memo(
               <Button
                 className={cn(
                   'flex items-center justify-center gap-2.5 rounded-[5px] border border-[rgba(0,0,0,0.1)]',
-                  'bg-transparent px-[30px] py-2.5',
+                  'bg-[#F0F0F0] px-[30px] py-2.5',
                   'hover:bg-[rgba(0,0,0,0.1)] transition-colors duration-200',
                   'h-auto min-w-0',
                 )}
                 onPress={onSubmitEntry}
               >
+                <PlusIcon size={16} />
                 <span className="font-sans text-[14px] font-semibold leading-[1.36] text-black">
                   Submit an Entry
                 </span>
