@@ -161,7 +161,7 @@ importers:
         version: 8.6.14(@vitest/browser@3.1.3)(@vitest/runner@3.1.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vitest@3.1.3)
       '@storybook/experimental-nextjs-vite':
         specifier: 8.6.14
-        version: 8.6.14(@babel/core@7.27.1)(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(babel-plugin-macros@3.1.0)(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+        version: 8.6.14(@babel/core@7.27.1)(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(babel-plugin-macros@3.1.0)(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@storybook/react':
         specifier: ^8.6.14
         version: 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)
@@ -194,7 +194,7 @@ importers:
         version: 8.24.0(eslint@9.20.1(jiti@1.21.7))(typescript@5.7.3)
       '@vitest/browser':
         specifier: ^3.1.3
-        version: 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))(vitest@3.1.3)
+        version: 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))(vitest@3.1.3)
       '@vitest/coverage-v8':
         specifier: ^3.1.3
         version: 3.1.3(@vitest/browser@3.1.3)(vitest@3.1.3)
@@ -270,12 +270,15 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
+      tsx:
+        specifier: ^4.20.3
+        version: 4.20.3
       typescript:
         specifier: ^5
         version: 5.7.3
       vitest:
         specifier: ^3.1.3
-        version: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+        version: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
 
 packages:
 
@@ -7749,6 +7752,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tsx@4.20.3:
+    resolution: {integrity: sha512-qjbnuR9Tr+FJOMBqJCW5ehvIo/buZq7vH7qD7JziU98h6l3qGy0a/yPFjwO+y0/T7GFpNgNAvEcPPVfyT8rrPQ==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   tunnel-agent@0.2.0:
     resolution: {integrity: sha512-PXy4q1PH88BK0pcGOEMXFAslyBuRWz1wxLfPXTlYFd41eyUgjOALaVGbWJN1ymjbnBzjWunVSKmrrMMh8oLaZA==}
 
@@ -10583,12 +10591,12 @@ snapshots:
 
   '@istanbuljs/schema@0.1.3': {}
 
-  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))':
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))':
     dependencies:
       glob: 10.4.5
       magic-string: 0.27.0
       react-docgen-typescript: 2.2.2(typescript@5.7.3)
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
     optionalDependencies:
       typescript: 5.7.3
 
@@ -12915,13 +12923,13 @@ snapshots:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
-  '@storybook/builder-vite@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))':
+  '@storybook/builder-vite@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))':
     dependencies:
       '@storybook/csf-plugin': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))
       browser-assert: 1.2.1
       storybook: 8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)
       ts-dedent: 2.2.0
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
 
   '@storybook/components@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))':
     dependencies:
@@ -12968,26 +12976,26 @@ snapshots:
       storybook: 8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)
       ts-dedent: 2.2.0
     optionalDependencies:
-      '@vitest/browser': 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))(vitest@3.1.3)
+      '@vitest/browser': 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))(vitest@3.1.3)
       '@vitest/runner': 3.1.3
-      vitest: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vitest: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@storybook/experimental-nextjs-vite@8.6.14(@babel/core@7.27.1)(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(babel-plugin-macros@3.1.0)(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))':
+  '@storybook/experimental-nextjs-vite@8.6.14(@babel/core@7.27.1)(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(babel-plugin-macros@3.1.0)(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))':
     dependencies:
-      '@storybook/builder-vite': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      '@storybook/builder-vite': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@storybook/react': 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)
-      '@storybook/react-vite': 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      '@storybook/react-vite': 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@storybook/test': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))
       next: 15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
       storybook: 8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)
       styled-jsx: 5.1.6(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react@19.0.0)
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
-      vite-plugin-storybook-nextjs: 1.1.5(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
+      vite-plugin-storybook-nextjs: 1.1.5(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
     optionalDependencies:
       sharp: 0.33.5
       typescript: 5.7.3
@@ -13024,11 +13032,11 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       storybook: 8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)
 
-  '@storybook/react-vite@8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))':
+  '@storybook/react-vite@8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(rollup@4.41.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))':
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.7.3)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@rollup/pluginutils': 5.1.4(rollup@4.41.0)
-      '@storybook/builder-vite': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      '@storybook/builder-vite': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@storybook/react': 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(typescript@5.7.3)
       find-up: 5.0.0
       magic-string: 0.30.17
@@ -13038,7 +13046,7 @@ snapshots:
       resolve: 1.22.10
       storybook: 8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)
       tsconfig-paths: 4.2.0
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
     optionalDependencies:
       '@storybook/test': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))
     transitivePeerDependencies:
@@ -13439,16 +13447,16 @@ snapshots:
       satori: 0.12.2
       yoga-wasm-web: 0.3.3
 
-  '@vitest/browser@3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))(vitest@3.1.3)':
+  '@vitest/browser@3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))(vitest@3.1.3)':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
-      '@vitest/mocker': 3.1.3(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      '@vitest/mocker': 3.1.3(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@vitest/utils': 3.1.3
       magic-string: 0.30.17
       sirv: 3.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vitest: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
       ws: 8.18.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     optionalDependencies:
       playwright: 1.52.0
@@ -13472,9 +13480,9 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vitest: 3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
     optionalDependencies:
-      '@vitest/browser': 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))(vitest@3.1.3)
+      '@vitest/browser': 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))(vitest@3.1.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -13492,13 +13500,13 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.1.3(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))':
+  '@vitest/mocker@3.1.3(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))':
     dependencies:
       '@vitest/spy': 3.1.3
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
 
   '@vitest/pretty-format@2.0.5':
     dependencies:
@@ -18079,6 +18087,13 @@ snapshots:
 
   tslib@2.8.1: {}
 
+  tsx@4.20.3:
+    dependencies:
+      esbuild: 0.25.2
+      get-tsconfig: 4.10.0
+    optionalDependencies:
+      fsevents: 2.3.3
+
   tunnel-agent@0.2.0: {}
 
   tween-functions@1.2.0: {}
@@ -18300,13 +18315,13 @@ snapshots:
       - utf-8-validate
       - zod
 
-  vite-node@3.1.3(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0):
+  vite-node@3.1.3(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.0
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -18321,7 +18336,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite-plugin-storybook-nextjs@1.1.5(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)):
+  vite-plugin-storybook-nextjs@1.1.5(@storybook/test@8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)))(next@15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)):
     dependencies:
       '@next/env': 15.1.7
       '@storybook/test': 8.6.14(storybook@8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10))
@@ -18331,9 +18346,9 @@ snapshots:
       next: 15.1.7(@babel/core@7.27.1)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       storybook: 8.6.14(bufferutil@4.0.9)(prettier@3.5.1)(utf-8-validate@5.0.10)
       ts-dedent: 2.2.0
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
 
-  vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0):
+  vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0):
     dependencies:
       esbuild: 0.25.2
       fdir: 6.4.4(picomatch@4.0.2)
@@ -18346,12 +18361,13 @@ snapshots:
       fsevents: 2.3.3
       jiti: 1.21.7
       terser: 5.39.2
+      tsx: 4.20.3
       yaml: 2.7.0
 
-  vitest@3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0):
+  vitest@3.1.3(@types/debug@4.1.12)(@types/node@20.17.18)(@vitest/browser@3.1.3)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0):
     dependencies:
       '@vitest/expect': 3.1.3
-      '@vitest/mocker': 3.1.3(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))
+      '@vitest/mocker': 3.1.3(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))
       '@vitest/pretty-format': 3.1.3
       '@vitest/runner': 3.1.3
       '@vitest/snapshot': 3.1.3
@@ -18368,13 +18384,13 @@ snapshots:
       tinyglobby: 0.2.13
       tinypool: 1.0.2
       tinyrainbow: 2.0.0
-      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
-      vite-node: 3.1.3(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0)
+      vite: 6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
+      vite-node: 3.1.3(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
       '@types/node': 20.17.18
-      '@vitest/browser': 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(yaml@2.7.0))(vitest@3.1.3)
+      '@vitest/browser': 3.1.3(bufferutil@4.0.9)(playwright@1.52.0)(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@20.17.18)(jiti@1.21.7)(terser@5.39.2)(tsx@4.20.3)(yaml@2.7.0))(vitest@3.1.3)
     transitivePeerDependencies:
       - jiti
       - less
