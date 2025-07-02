@@ -70,13 +70,16 @@ const HomeList = () => {
     console.log('view all project');
   };
 
-  const projects = ranksData?.map((rank: any) => rank.project) || [];
+  const byGenesisProjects =
+    ranksData?.byGenesisWeight?.map((rank: any) => rank.project) || [];
+  const bySupportProjects =
+    ranksData?.bySupport?.map((rank: any) => rank.project) || [];
 
   return (
     <div className="mt-5">
       <SectionList
-        title="Top Ranked Projects"
-        description=""
+        title="Top Transparent Projects"
+        description={`Published Projects are ranked by their completion rate, defined as: completion rate = sum of of published items's genesis itemweight / total sum of all form items' itemweight`}
         buttonText="View All Projects"
         onClick={viewAllProject}
       >
@@ -86,9 +89,9 @@ const HomeList = () => {
             <ProjectCardSkeleton showBorder={true} />
             <ProjectCardSkeleton showBorder={false} />
           </div>
-        ) : projects.length > 0 ? (
+        ) : byGenesisProjects.length > 0 ? (
           <ProjectListWithUpvote
-            projectList={projects as IProject[]}
+            projectList={byGenesisProjects as IProject[]}
             onRefetch={refetchProjects}
           />
         ) : (
@@ -97,7 +100,27 @@ const HomeList = () => {
           </div>
         )}
       </SectionList>
-      <SectionList title="Top Secure Projects" description="LIST COMING SOON" />
+      <SectionList
+        title={`Community’s Pick Projects`}
+        description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
+      >
+        {isLoading ? (
+          <div className="mt-2.5 px-[10px]">
+            <ProjectCardSkeleton showBorder={true} />
+            <ProjectCardSkeleton showBorder={true} />
+            <ProjectCardSkeleton showBorder={false} />
+          </div>
+        ) : bySupportProjects.length > 0 ? (
+          <ProjectListWithUpvote
+            projectList={bySupportProjects as IProject[]}
+            onRefetch={refetchProjects}
+          />
+        ) : (
+          <div className="flex justify-center py-8">
+            <ECFTypography type="body1">No projects yet</ECFTypography>
+          </div>
+        )}
+      </SectionList>
       <SectionList
         title="Top Accountable Projects"
         description="LIST COMING SOON"
