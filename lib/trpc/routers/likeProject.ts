@@ -100,6 +100,7 @@ export const likeProjectRouter = router({
         ]);
 
         revalidateTag(CACHE_TAGS.PROJECTS);
+        revalidateTag(CACHE_TAGS.RANKS);
 
         return newLikeRecord;
       });
@@ -170,6 +171,7 @@ export const likeProjectRouter = router({
         ]);
 
         revalidateTag(CACHE_TAGS.PROJECTS);
+        revalidateTag(CACHE_TAGS.RANKS);
 
         return updatedLikeRecord;
       });
@@ -229,6 +231,7 @@ export const likeProjectRouter = router({
         ]);
 
         revalidateTag(CACHE_TAGS.PROJECTS);
+        revalidateTag(CACHE_TAGS.RANKS);
 
         return { success: true, withdrawnWeight };
       });
