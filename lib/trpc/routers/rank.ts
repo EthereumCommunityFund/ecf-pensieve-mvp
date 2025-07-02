@@ -1,4 +1,4 @@
-import { desc, inArray } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { unstable_cache as nextCache } from 'next/cache';
 
 import { CACHE_TAGS } from '@/lib/constants';
@@ -22,35 +22,18 @@ export const rankRouter = router({
         limit,
       });
 
-      const topProjectsBySupport = await ctx.db
-        .select({ id: projects.id })
-        .from(projects)
-        .orderBy(desc(projects.support))
-        .limit(limit);
-
-      const topProjectIds = topProjectsBySupport.map((p) => p.id);
-
-      const topRanksBySupport =
-        topProjectIds.length > 0
-          ? await ctx.db.query.ranks.findMany({
-              where: inArray(ranks.projectId, topProjectIds),
-              with: {
-                project: {
-                  with: {
-                    creator: true,
-                  },
-                },
-              },
-            })
-          : [];
-
-      const orderedTopRanksBySupport = topProjectIds
-        .map((id) => topRanksBySupport.find((rank) => rank.projectId === id))
-        .filter(Boolean);
+      const topRanksBySupport = await ctx.db.query.projects.findMany({
+        with: {
+          creator: true,
+        },
+        where: eq(projects.isPublished, true),
+        orderBy: desc(projects.support),
+        limit,
+      });
 
       return {
         byGenesisWeight: topRanksByGenesisWeight,
-        bySupport: orderedTopRanksBySupport,
+        bySupport: topRanksBySupport,
       };
     };
 
