@@ -72,7 +72,7 @@ const HomeList = () => {
 
   const byGenesisProjects =
     ranksData?.byGenesisWeight?.map((rank: any) => rank.project) || [];
-  const bySupportProjects = ranksData?.bySupport;
+  const bySupportProjects = ranksData?.bySupport || [];
 
   return (
     <div className="mt-5">
