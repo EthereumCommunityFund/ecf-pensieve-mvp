@@ -2,7 +2,7 @@ import { desc } from 'drizzle-orm';
 import { unstable_cache as nextCache } from 'next/cache';
 
 import { CACHE_TAGS } from '@/lib/constants';
-import { ranks } from '@/lib/db/schema';
+import { projects, ranks } from '@/lib/db/schema';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 export const rankRouter = router({
@@ -10,7 +10,7 @@ export const rankRouter = router({
     const limit = 10;
 
     const getTopRanksData = async () => {
-      const topRanks = await ctx.db.query.ranks.findMany({
+      const topRanksByGenesisWeight = await ctx.db.query.ranks.findMany({
         with: {
           project: {
             with: {
@@ -22,7 +22,22 @@ export const rankRouter = router({
         limit,
       });
 
-      return topRanks;
+      const topRanksBySupport = await ctx.db.query.ranks.findMany({
+        with: {
+          project: {
+            with: {
+              creator: true,
+            },
+          },
+        },
+        orderBy: desc(projects.support),
+        limit,
+      });
+
+      return {
+        byGenesisWeight: topRanksByGenesisWeight,
+        bySupport: topRanksBySupport,
+      };
     };
 
     const getCachedTopRanks = nextCache(getTopRanksData, ['top-ranks'], {
