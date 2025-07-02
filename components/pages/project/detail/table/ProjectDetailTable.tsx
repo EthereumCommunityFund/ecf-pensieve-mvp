@@ -2,6 +2,7 @@
 
 import { cn } from '@heroui/react';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import Link from 'next/link';
 import { FC, useEffect, useMemo } from 'react';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
@@ -38,11 +39,26 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   onOpenModal,
   onMetricClick,
 }) => {
-  const { project, showReferenceModal, showSubmitterModal } =
-    useProjectDetailContext();
+  const {
+    project,
+    showReferenceModal,
+    showSubmitterModal,
+    isProjectFetched,
+    isLeadingProposalsFetched,
+  } = useProjectDetailContext();
 
   // Custom hooks for data and state management
   const { tableData, emptyItemsCounts } = useProjectTableData();
+
+  // Create a unique key for forcing table re-renders when data changes
+  const tableKey = useMemo(() => {
+    const weightKeysCount = Object.keys(project?.itemsTopWeight || {}).length;
+    const totalWeightSum = Object.values(project?.itemsTopWeight || {}).reduce(
+      (sum, weight) => sum + weight,
+      0,
+    );
+    return `${project?.id || 0}-${weightKeysCount}-${totalWeightSum}`;
+  }, [project?.id, project?.itemsTopWeight]);
   const {
     expandedRows,
     expanded,
@@ -143,10 +159,6 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   // Tablet and mobile: make full use of available width
   // Behavior as flex item on desktop
   useEffect(() => {
-    console.log(
-      '🔄 Column building completed, starting to clean up invalid pinned columns...',
-    );
-
     // Clean up invalid pinned columns for each category
     cleanupInvalidPinnedColumns(
       IItemSubCategoryEnum.BasicProfile,
@@ -266,26 +278,15 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   });
 
   // Create tables object
-  const tables = useMemo(
-    () => ({
-      [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
-      [IItemSubCategoryEnum.Development]: developmentTable,
-      [IItemSubCategoryEnum.Organization]: organizationTable,
-      [IItemSubCategoryEnum.Team]: teamTable,
-      [IItemSubCategoryEnum.Finances]: financesTable,
-      [IItemSubCategoryEnum.Token]: tokenTable,
-      [IItemSubCategoryEnum.Governance]: governanceTable,
-    }),
-    [
-      basicProfileTable,
-      developmentTable,
-      organizationTable,
-      teamTable,
-      financesTable,
-      tokenTable,
-      governanceTable,
-    ],
-  );
+  const tables = {
+    [IItemSubCategoryEnum.BasicProfile]: basicProfileTable,
+    [IItemSubCategoryEnum.Development]: developmentTable,
+    [IItemSubCategoryEnum.Organization]: organizationTable,
+    [IItemSubCategoryEnum.Team]: teamTable,
+    [IItemSubCategoryEnum.Finances]: financesTable,
+    [IItemSubCategoryEnum.Token]: tokenTable,
+    [IItemSubCategoryEnum.Governance]: governanceTable,
+  };
 
   return (
     <div className="relative">
@@ -331,6 +332,20 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
               'flex-1',
             )}
           >
+            <div className="mb-[30px] rounded-[10px] bg-[#EBEBEB] p-[10px] text-[13px] text-black/80">
+              <strong>Disclaimer:</strong> Verify critical facts. Validate
+              claims and contribute.{' '}
+              <Link
+                target="_blank"
+                href="https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus/3.-the-pensieve-mechanism-and-penseive-knowledge-base-design#id-3.6-artificial-intelligence-integration-and-risk-management"
+              >
+                <strong className="cursor-pointer underline hover:opacity-80">
+                  Penseive knowledge base
+                </strong>
+              </Link>{' '}
+              is where truth is validated by communities, not gatekeepers.
+            </div>
+
             {/* Category tables */}
             <div className="flex flex-col gap-[40px]">
               {ProjectTableFieldCategory.map((cat) => (
@@ -341,7 +356,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                   />
                   {cat.subCategories.map((subCat) => (
                     <CategoryTableSection
-                      key={subCat.key}
+                      key={`${subCat.key}-${tableKey}`}
                       subCategory={subCat}
                       table={tables[subCat.key]}
                       isLoading={isProposalsLoading}

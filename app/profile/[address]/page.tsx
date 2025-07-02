@@ -1,7 +1,7 @@
 'use client';
 
 import { Skeleton, Tab, Tabs, cn } from '@heroui/react';
-import { GitCommit, UserSquare } from '@phosphor-icons/react';
+import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -10,6 +10,7 @@ import ECFTypography from '@/components/base/typography';
 import Contributions from './components/contributions';
 import { useProfileData } from './components/dataContext';
 import Setting from './components/setting';
+import Upvotes from './components/upvotes';
 
 const tabItems = [
   {
@@ -22,6 +23,11 @@ const tabItems = [
     label: 'Contributions',
     icon: <GitCommit size={32} weight="fill" />,
   },
+  {
+    key: 'upvotes',
+    label: 'My Upvotes',
+    icon: <ArrowSquareUp size={32} />,
+  },
 ];
 
 const ProfileSettingsPage = () => {
@@ -31,17 +37,25 @@ const ProfileSettingsPage = () => {
   const { user } = useProfileData();
   const initialTab = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'contributions'>(
-    initialTab === 'contributions' ? 'contributions' : 'profile',
+  const [activeTab, setActiveTab] = useState<
+    'profile' | 'contributions' | 'upvotes'
+  >(
+    initialTab === 'contributions'
+      ? 'contributions'
+      : initialTab === 'upvotes'
+        ? 'upvotes'
+        : 'profile',
   );
 
   useEffect(() => {
     const currentTab = searchParams.get('tab');
     if (
       currentTab &&
-      (currentTab === 'profile' || currentTab === 'contributions')
+      (currentTab === 'profile' ||
+        currentTab === 'contributions' ||
+        currentTab === 'upvotes')
     ) {
-      setActiveTab(currentTab);
+      setActiveTab(currentTab as 'profile' | 'contributions' | 'upvotes');
     } else if (!currentTab) {
       router.push(`/profile/${address}?tab=profile`, { scroll: false });
     }
@@ -76,7 +90,7 @@ const ProfileSettingsPage = () => {
           <Tabs
             selectedKey={activeTab}
             onSelectionChange={(key) => {
-              const newTab = key as 'profile' | 'contributions';
+              const newTab = key as 'profile' | 'contributions' | 'upvotes';
               setActiveTab(newTab);
               router.push(`/profile/${address}?tab=${newTab}`, {
                 scroll: false,
@@ -116,6 +130,7 @@ const ProfileSettingsPage = () => {
 
         {activeTab === 'profile' && <Setting />}
         {activeTab === 'contributions' && <Contributions />}
+        {activeTab === 'upvotes' && <Upvotes />}
       </div>
     </div>
   );

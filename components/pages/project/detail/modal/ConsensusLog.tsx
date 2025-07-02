@@ -230,6 +230,7 @@ const ConsensusLog: FC<ConsensusLogProps> = ({ itemKey }) => {
                       width={
                         header.getSize() === 0 ? undefined : header.getSize()
                       }
+                      isFirst={index === 0}
                       isLast={index === headerGroup.headers.length - 1}
                       isContainerBordered={true}
                       className="h-auto bg-[#F5F5F5] px-[10px] py-[2.5px]"

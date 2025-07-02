@@ -372,13 +372,22 @@ export const ProjectDetailProvider = ({
         isNotLeading: isNotLeading,
         accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
         legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+        accountabilityMetrics:
+          AllItemConfig[key as IPocItemKey]?.accountability || [],
+        legitimacyMetrics: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
         ...statusFields,
       };
       DataMap.set(key, row);
     });
 
-    devLog('displayProposalDataListOfProject', Array.from(DataMap.values()));
-    return Array.from(DataMap.values());
+    const result = Array.from(DataMap.values());
+    devLog(
+      'displayProposalDataListOfProject - calculated',
+      result.length,
+      'items',
+    );
+
+    return result;
   }, [
     leadingItemProposalsByProject,
     project?.itemsTopWeight,
@@ -420,6 +429,9 @@ export const ProjectDetailProvider = ({
         itemTopWeight: getItemTopWeight(key as IPocItemKey),
         accountability: AllItemConfig[key as IPocItemKey]?.accountability || [],
         legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+        accountabilityMetrics:
+          AllItemConfig[key as IPocItemKey]?.accountability || [],
+        legitimacyMetrics: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
         support: {
           count: weight,
           voters: voterMemberCount,
@@ -505,6 +517,10 @@ export const ProjectDetailProvider = ({
           accountability:
             AllItemConfig[key as IPocItemKey]?.accountability || [],
           legitimacy: AllItemConfig[key as IPocItemKey]?.legitimacy || [],
+          accountabilityMetrics:
+            AllItemConfig[key as IPocItemKey]?.accountability || [],
+          legitimacyMetrics:
+            AllItemConfig[key as IPocItemKey]?.legitimacy || [],
           ...calculateItemStatusFields(
             key,
             (project?.hasProposalKeys || []).includes(key as IPocItemKey),
@@ -552,11 +568,11 @@ export const ProjectDetailProvider = ({
 
   // Data refresh function
   const refetchAll = useCallback(async () => {
-    await Promise.all([
-      refetchProject(),
-      refetchLeadingProposals(),
-      refetchProposalsByKey(),
-    ]);
+    // First refetch project data to get updated itemsTopWeight
+    await refetchProject();
+
+    // Then refetch leading proposals and current key proposals
+    await Promise.all([refetchLeadingProposals(), refetchProposalsByKey()]);
   }, [refetchProject, refetchLeadingProposals, refetchProposalsByKey]);
 
   // Set item proposal active state

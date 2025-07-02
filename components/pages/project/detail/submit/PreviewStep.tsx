@@ -90,6 +90,7 @@ const PreviewStep: FC<IPreviewStepProps> = ({
           tableInstance={tableInstance}
           columns={columns}
           expandedRows={expandedRows}
+          onToggleExpanded={toggleRowExpanded}
         />
       </div>
 

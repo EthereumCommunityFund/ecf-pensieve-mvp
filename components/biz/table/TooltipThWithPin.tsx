@@ -1,4 +1,4 @@
-import { Button, Tooltip } from '@heroui/react';
+import { Button, cn, Tooltip } from '@heroui/react';
 import { FC } from 'react';
 
 import { PushPinSimpleIcon, PushPinSimpleSlashIcon } from '@/components/icons';
@@ -7,8 +7,8 @@ import { IItemSubCategoryEnum } from '@/types/item';
 interface ITooltipThWithPinProps {
   title: string;
   tooltipContext: string;
-  columnId: string;
-  category: IItemSubCategoryEnum;
+  columnId?: string;
+  category?: IItemSubCategoryEnum;
   isPinned?: 'left' | 'right' | false;
   onTogglePin?: (
     category: IItemSubCategoryEnum,
@@ -26,7 +26,7 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
   onTogglePin,
 }) => {
   const handlePinToggle = () => {
-    if (onTogglePin) {
+    if (onTogglePin && columnId && category) {
       // If already pinned, unpin it; otherwise pin to appropriate side based on column type
       if (isPinned) {
         onTogglePin(category, columnId, undefined);
@@ -39,8 +39,16 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
     }
   };
 
+  // Show pin functionality only if onTogglePin is provided and required props are available
+  const showPinFeature = onTogglePin && columnId && category;
+
   return (
-    <div className="flex w-full items-center justify-between">
+    <div
+      className={cn(
+        'flex items-center gap-[5px]',
+        showPinFeature ? 'w-full justify-between' : 'justify-start',
+      )}
+    >
       <div className="flex items-center gap-[5px]">
         <div>{title}</div>
         <Tooltip
@@ -84,7 +92,7 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
         </Tooltip>
       </div>
 
-      {onTogglePin && (
+      {showPinFeature && (
         <Tooltip
           content={isPinned ? `Unpin ${title} column` : `Pin ${title} column`}
           classNames={{
@@ -96,7 +104,10 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
             isIconOnly
             size="sm"
             variant="light"
-            className="h-[18px] min-w-[18px] p-0 transition-colors hover:bg-black/5"
+            className={cn(
+              'h-[18px] min-w-[18px] p-0 transition-colors hover:bg-black/5',
+              isPinned ? '' : 'opacity-20',
+            )}
             onPress={handlePinToggle}
           >
             {isPinned ? (
@@ -113,3 +124,6 @@ const TooltipThWithPin: FC<ITooltipThWithPinProps> = ({
 
 export default TooltipThWithPin;
 export { TooltipThWithPin };
+
+// Export as TooltipTh for backward compatibility and simple tooltip usage
+export { TooltipThWithPin as TooltipTh };

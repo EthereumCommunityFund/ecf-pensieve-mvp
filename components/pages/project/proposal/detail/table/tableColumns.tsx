@@ -107,7 +107,11 @@ export const useCreateProposalTableColumns = ({
   category: IItemSubCategoryEnum;
   columnPinning?: import('@tanstack/react-table').ColumnPinningState;
 }): ColumnDef<ITableProposalItem, any>[] => {
-  const columnHelper = createColumnHelper<ITableProposalItem>();
+  // Use useMemo to avoid recreating columnHelper on every render
+  const columnHelper = useMemo(
+    () => createColumnHelper<ITableProposalItem>(),
+    [],
+  );
 
   const columns = useMemo(() => {
     const propertyColumn = columnHelper.accessor('property', {
@@ -138,7 +142,10 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 230,
+      size: 240,
+      minSize: 240,
+      maxSize: 240,
+      enableResizing: false,
       cell: (info) => {
         const rowKey = info.row.original.key;
         return (
@@ -183,6 +190,8 @@ export const useCreateProposalTableColumns = ({
         );
       },
       size: 240,
+      minSize: 200,
+      enableResizing: true,
       cell: (info) => {
         const { expandedRows, toggleRowExpanded } = info.table.options
           .meta as TableCellsMeta;
@@ -202,6 +211,7 @@ export const useCreateProposalTableColumns = ({
                 displayFormType={displayFormType}
                 isEssential={itemConfig.isEssential}
                 isExpandable={isExpandable}
+                isExpanded={expandedRows[rowKey]}
                 onToggleExpanded={() => toggleRowExpanded(rowKey)}
               />
             </div>
@@ -253,7 +263,10 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 135,
+      size: 120,
+      minSize: 100,
+      maxSize: 150,
+      enableResizing: true,
       cell: (info) => {
         const { onShowReference } = info.table.options.meta as TableCellsMeta;
         const value = info.getValue();
@@ -299,7 +312,10 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 240,
+      size: 200,
+      minSize: 180,
+      maxSize: 230,
+      enableResizing: true,
       cell: (info) => {
         const accountability = info.getValue();
         return <AccountabilityCol.Cell accountability={accountability} />;
@@ -324,7 +340,10 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 240,
+      size: 200,
+      minSize: 180,
+      maxSize: 230,
+      enableResizing: true,
       cell: (info) => {
         const legitimacy = info.getValue();
         return <LegitimacyCol.Cell legitimacy={legitimacy} />;
@@ -359,7 +378,10 @@ export const useCreateProposalTableColumns = ({
           />
         );
       },
-      size: 200,
+      size: 160,
+      minSize: 140,
+      maxSize: 200,
+      enableResizing: true,
       cell: (info) => {
         const { isProposalCreator } = info.table.options.meta as TableCellsMeta;
 
@@ -383,7 +405,8 @@ export const useCreateProposalTableColumns = ({
       ...metricsColumns,
       supportColumn,
     ];
-  }, [showMetrics, columnHelper, category]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMetrics, category]);
 
   return columns;
 };

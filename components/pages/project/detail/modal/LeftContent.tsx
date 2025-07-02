@@ -2,22 +2,24 @@
 
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import Tab, { TabSkeleton } from '@/components/base/Tab';
-import { TabItem } from '@/components/base/Tab/types';
+import TabsLabel from '@/components/base/TabsLabel';
+import { TabItemLabel } from '@/components/base/TabsLabel/types';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 
+import AboutItem from './AboutItem';
 import ConsensusLog from './ConsensusLog';
 import Displayed from './Displayed';
 import SubmissionQueue from './SubmissionQueue';
 
 interface LeftContentProps {
   itemKey?: string;
+  onSubmitEntry?: () => void;
 }
 
-const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
+const LeftContent: FC<LeftContentProps> = memo(({ itemKey, onSubmitEntry }) => {
   const { refetchProposalHistory, refetchProposalsByKey } =
     useProjectDetailContext();
   const [activeTab, setActiveTab] = useState('submission-queue');
@@ -30,11 +32,11 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
     isProposalsByKeyLoading,
   } = useProjectDetailContext();
 
-  useEffect(() => {
-    if (displayProposalDataOfKey && !hasUserSelectedTab) {
-      setActiveTab('displayed');
-    }
-  }, [displayProposalDataOfKey, hasUserSelectedTab]);
+  // useEffect(() => {
+  //   if (displayProposalDataOfKey && !hasUserSelectedTab) {
+  //     setActiveTab('displayed');
+  //   }
+  // }, [displayProposalDataOfKey, hasUserSelectedTab]);
 
   // Calculate submission queue count from proposalsByProjectIdAndKey.allItemProposals
   const submissionQueueCount = useMemo(() => {
@@ -44,23 +46,24 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   }, [proposalsByProjectIdAndKey?.allItemProposals]);
 
   // Generate tabs based on whether displayProposalDataOfKey has value
-  const tabs: TabItem[] = useMemo(() => {
-    const baseTabs: TabItem[] = [
+  const tabs: TabItemLabel[] = useMemo(() => {
+    const baseTabs: TabItemLabel[] = [
       {
         key: 'submission-queue',
         label: 'Submission Queue',
         count: submissionQueueCount,
       },
       { key: 'consensus-log', label: 'Consensus Log' },
+      { key: 'about-item', label: 'About This Item' },
     ];
 
     // Only show 'displayed' tab if displayProposalDataOfKey has value
-    if (displayProposalDataOfKey) {
-      return [{ key: 'displayed', label: 'Displayed' }, ...baseTabs];
-    }
+    // if (displayProposalDataOfKey) {
+    //   return [{ key: 'displayed', label: 'Displayed' }, ...baseTabs];
+    // }
 
     return baseTabs;
-  }, [displayProposalDataOfKey, submissionQueueCount]);
+  }, [submissionQueueCount]);
 
   // Ensure activeTab is always valid when tabs change
   useEffect(() => {
@@ -99,25 +102,28 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'displayed':
-        return (
-          <Displayed
-            itemName={itemName}
-            itemWeight={itemWeight}
-            itemKey={itemKey}
-            onViewSubmissions={onViewSubmissions}
-          />
-        );
+      // case 'displayed':
+      //   return (
+      //     <Displayed
+      //       itemName={itemName}
+      //       itemWeight={itemWeight}
+      //       itemKey={itemKey}
+      //       onViewSubmissions={onViewSubmissions}
+      //     />
+      //   );
       case 'submission-queue':
         return (
           <SubmissionQueue
             itemName={itemName}
             itemWeight={itemWeight}
             itemKey={itemKey}
+            onSubmitEntry={onSubmitEntry}
           />
         );
       case 'consensus-log':
         return <ConsensusLog itemKey={itemKey} />;
+      case 'about-item':
+        return <AboutItem itemKey={itemKey as IPocItemKey} />;
       default:
         // Return the first available tab content
         if (displayProposalDataOfKey) {
@@ -143,11 +149,7 @@ const LeftContent: FC<LeftContentProps> = memo(({ itemKey }) => {
   return (
     <div className="flex flex-col gap-5 p-5">
       {/* Tab Navigation */}
-      {isProposalsByKeyLoading ? (
-        <TabSkeleton tabCount={displayProposalDataOfKey ? 3 : 2} />
-      ) : (
-        <Tab tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
-      )}
+      <TabsLabel tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
       {/* Tab Content */}
       {renderTabContent()}
     </div>

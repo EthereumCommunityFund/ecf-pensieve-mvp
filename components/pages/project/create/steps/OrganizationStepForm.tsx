@@ -3,14 +3,14 @@
 import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 
-import { Button } from '@/components/base';
+import { PlusIcon } from '@/components/icons';
 import { organizationFieldsConfig } from '@/components/pages/project/create/form/FormData';
 import FormItemManager from '@/components/pages/project/create/form/FormItemManager';
 import { useFormPropsWithValue } from '@/components/pages/project/create/form/useFormPropsWithValue';
 import { IItemConfig } from '@/types/item';
 
 import { FormItemUIContainer } from '../form/FormItemUIContainer';
-import FounderFormItem from '../form/FounderFormItem';
+import FounderFormItemTable from '../form/FounderFormItemTable';
 import { IProjectFormData, IStepFormProps } from '../types';
 
 const OrganizationStepForm: React.FC<
@@ -65,30 +65,64 @@ const OrganizationStepForm: React.FC<
             hasFieldReference,
           })}
         >
-          <div className="flex flex-col gap-2.5 pt-[10px]">
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Full Name
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Title/Role
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
             {fields.map((field, index) => (
-              <FounderFormItem
+              <FounderFormItemTable
                 key={field.id}
                 index={index}
                 remove={remove}
                 register={register}
                 errors={errors?.founders?.[index]}
                 foundersKey={foundersKey}
-                isPrimary={index === 0}
                 canRemove={fields.length > 1}
               />
             ))}
-          </div>
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  append({ name: '', title: '' });
 
-          <div className="pt-[10px]">
-            <Button
-              color="secondary"
-              size="md"
-              className="mobile:w-full px-[20px]"
-              onPress={() => append({ name: '', title: '' })}
-            >
-              Add Entry
-            </Button>
+                  // Focus on the first input field of the new row
+                  const newIndex = fields.length;
+                  setTimeout(() => {
+                    const nameInput = document.querySelector(
+                      `input[name="${foundersKey}.${newIndex}.name"]`,
+                    ) as HTMLInputElement;
+                    if (nameInput) {
+                      nameInput.focus();
+                    }
+                  }, 0);
+                }}
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  fontFamily: 'Open Sans, sans-serif',
+                }}
+              >
+                <PlusIcon size={16} />
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add an Entry
+                </span>
+              </button>
+            </div>
           </div>
         </FormItemUIContainer>
       </div>

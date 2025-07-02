@@ -3,8 +3,14 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
-import { InputCol, ReferenceCol, SubmitterCol } from '@/components/biz/table';
-import TooltipTh from '@/components/biz/table/TooltipTh';
+import {
+  AccountabilityCol,
+  InputCol,
+  LegitimacyCol,
+  ReferenceCol,
+  SubmitterCol,
+} from '@/components/biz/table';
+import { TooltipTh } from '@/components/biz/table/TooltipThWithPin';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord } from '@/types';
@@ -14,7 +20,7 @@ import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
 import SupportColumnItem from './SupportColumnItem';
 
-export const useCommonColumnsOfModal = () => {
+export const useCommonColumnsOfModal = (showMetrics = false) => {
   const columnHelper = useMemo(
     () => createColumnHelper<IProjectTableRowData>(),
     [],
@@ -25,7 +31,7 @@ export const useCommonColumnsOfModal = () => {
     const inputColumn = columnHelper.accessor('input', {
       id: 'input',
       header: () => <InputCol.Header />,
-      size: 480,
+      size: 320,
       cell: (info) => {
         const item = info.row.original;
         const {
@@ -33,6 +39,7 @@ export const useCommonColumnsOfModal = () => {
           expandedRows,
           showRowOverTaken,
           showRowIsLeading,
+          isLeadingProposalNotLeading,
         } = info.table.options.meta as ITableMetaOfSubmissionQueue;
 
         // Generate unique identifier - consistent with logic in SubmissionQueue component
@@ -58,6 +65,7 @@ export const useCommonColumnsOfModal = () => {
             }
             showOverTakenStatus={isFirstRowOverTaken}
             showLeadingStatus={isFirstRowLeading}
+            isLeadingProposalNotLeading={isLeadingProposalNotLeading}
           />
         );
       },
@@ -67,7 +75,7 @@ export const useCommonColumnsOfModal = () => {
     const referenceColumn = columnHelper.accessor('reference', {
       id: 'reference',
       header: () => <ReferenceCol.Header />,
-      size: 124,
+      size: 100,
       cell: (info) => {
         const item = info.row.original;
         const referenceValue = info.getValue();
@@ -92,7 +100,7 @@ export const useCommonColumnsOfModal = () => {
     const submitterColumn = columnHelper.accessor('submitter', {
       id: 'submitter',
       header: () => <SubmitterCol.Header />,
-      size: 183,
+      size: 160,
       cell: (info) => {
         const rowData = info.row.original;
         const submitterData = info.getValue();
@@ -120,7 +128,7 @@ export const useCommonColumnsOfModal = () => {
           tooltipContext="Number of supporters for this property"
         />
       ),
-      size: 150,
+      size: 180,
       cell: (info) => {
         const support = info.getValue();
         const {
@@ -222,6 +230,38 @@ export const useCommonColumnsOfModal = () => {
       },
     });
 
-    return [inputColumn, referenceColumn, submitterColumn, supportColumn];
-  }, [columnHelper]);
+    // Metrics columns - only show when showMetrics is true
+    const metricsColumns = showMetrics
+      ? [
+          // Accountability Metrics column
+          columnHelper.accessor('accountabilityMetrics', {
+            id: 'accountabilityMetrics',
+            header: () => <AccountabilityCol.Header />,
+            size: 240,
+            cell: (info) => {
+              const accountability = info.getValue();
+              return <AccountabilityCol.Cell accountability={accountability} />;
+            },
+          }),
+          // Legitimacy Metrics column
+          columnHelper.accessor('legitimacyMetrics', {
+            id: 'legitimacyMetrics',
+            header: () => <LegitimacyCol.Header />,
+            size: 240,
+            cell: (info) => {
+              const legitimacy = info.getValue();
+              return <LegitimacyCol.Cell legitimacy={legitimacy} />;
+            },
+          }),
+        ]
+      : [];
+
+    return [
+      inputColumn,
+      referenceColumn,
+      submitterColumn,
+      ...metricsColumns,
+      supportColumn,
+    ];
+  }, [columnHelper, showMetrics]);
 };

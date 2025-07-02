@@ -4,7 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
 import { InputCol, SubmitterCol } from '@/components/biz/table';
-import TooltipTh from '@/components/biz/table/TooltipTh';
+import { TooltipTh } from '@/components/biz/table/TooltipThWithPin';
 
 import { IConsensusLogRowData } from '../types';
 

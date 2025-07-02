@@ -30,6 +30,10 @@ export const likeRecords = pgTable(
     return {
       projectIdIdx: index('like_records_project_id_idx').on(table.projectId),
       creatorIdx: index('like_records_creator_idx').on(table.creator),
+      projectIdCreatorIdx: index('like_records_project_id_creator_idx').on(
+        table.projectId,
+        table.creator,
+      ),
     };
   },
 );

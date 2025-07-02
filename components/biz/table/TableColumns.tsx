@@ -7,15 +7,16 @@ import { Button } from '@/components/base';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import {
   CaretDownIcon,
-  CaretDownYellowIcon,
   CaretUpGreenIcon,
   ClockClockwiseIcon,
   GitPullBlueIcon,
+  TrendDownIcon,
 } from '@/components/icons';
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useAuth } from '@/context/AuthContext';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import { IProject, IProposal } from '@/types';
 import {
@@ -29,8 +30,7 @@ import { isInputValueEmpty } from '@/utils/item';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
-import TooltipTh from './TooltipTh';
-import TooltipThWithPin from './TooltipThWithPin';
+import { TooltipTh, TooltipThWithPin } from './TooltipThWithPin';
 
 // Simplified expand button that relies on parent state management
 const OptimizedExpandButton = memo(
@@ -134,7 +134,12 @@ const PropertyCell = ({
 }: PropertyColCellProps) => {
   const shouldShowWeight =
     showWeight && itemKey && ALL_POC_ITEM_MAP[itemKey as IPocItemKey]?.weight;
-  const { isConsensusInProgress, isPendingValidation, itemTopWeight } = rowData;
+  const {
+    isConsensusInProgress,
+    isPendingValidation,
+    itemTopWeight,
+    canBePropose,
+  } = rowData;
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -164,6 +169,7 @@ const PropertyCell = ({
           itemWeight={
             itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
           }
+          isEmptyItem={!!canBePropose}
         />
       )}
     </div>
@@ -232,6 +238,7 @@ export interface InputColCellProps extends BaseCellProps {
   onToggleExpand?: () => void;
   showOverTakenStatus?: boolean;
   showLeadingStatus?: boolean;
+  isLeadingProposalNotLeading?: boolean;
   onPropose?: () => void;
   onViewProposals?: () => void;
 }
@@ -275,6 +282,7 @@ const InputCell = ({
   onToggleExpand,
   showOverTakenStatus = false,
   showLeadingStatus = false,
+  isLeadingProposalNotLeading = false,
   onPropose,
   onViewProposals,
 }: InputColCellProps) => {
@@ -323,14 +331,14 @@ const InputCell = ({
   }
 
   // If showing over-taken status, render special UI
-  if (showOverTakenStatus) {
+  if (isLeadingProposalNotLeading) {
     return (
       <div className="font-mona flex w-full items-center justify-between gap-[10px] opacity-70">
         <div className="flex flex-col gap-[5px]">
           <div className="flex items-center gap-[5px]">
-            <CaretDownYellowIcon size={16} className="text-[#C47D54]" />
+            <TrendDownIcon size={16} className="text-[#C47D54]" />
             <span className="font-mona text-[13px] font-semibold leading-[1.54em] text-[#C47D54]">
-              Over-taken
+              {showOverTakenStatus ? 'Over-taken' : 'Support Not Sufficient'}
             </span>
           </div>
           <div className="text-[13px] leading-[19px]">
@@ -340,6 +348,7 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
+              isExpanded={localExpanded}
               onToggleExpanded={handleToggleExpand}
             />
           </div>
@@ -372,6 +381,7 @@ const InputCell = ({
               displayFormType={finalDisplayFormType}
               isEssential={itemConfig?.isEssential || false}
               isExpandable={finalIsExpandable}
+              isExpanded={localExpanded}
               onToggleExpanded={handleToggleExpand}
             />
           </div>
@@ -388,13 +398,17 @@ const InputCell = ({
 
   return (
     <div className="font-mona flex w-full items-center justify-between gap-[10px]">
-      <div className="flex-1 overflow-hidden whitespace-normal break-words text-[13px] leading-[19px] text-black/80">
+      <div
+        className="flex-1 overflow-hidden whitespace-normal break-all text-[13px] leading-[19px] text-black/80"
+        style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+      >
         <InputContentRenderer
           itemKey={itemKey}
           value={value}
           displayFormType={finalDisplayFormType}
           isEssential={itemConfig?.isEssential || false}
           isExpandable={finalIsExpandable}
+          isExpanded={localExpanded}
           onToggleExpanded={handleToggleExpand}
         />
       </div>
@@ -754,25 +768,43 @@ const ActionsHeader = ({
 
 const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
   const { canBePropose } = item;
+  const { profile, showAuthPrompt } = useAuth();
+
+  const handleProposeAction = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    onView?.('submitPropose');
+  }, [profile, showAuthPrompt, onView]);
 
   return (
-    <div className="flex w-full gap-[10px]">
+    <div className="flex w-full flex-col gap-[5px]">
       {canBePropose ? (
         <Button
           size="sm"
-          className="flex-1 border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
-          onPress={() => onView?.('submitPropose')}
+          className="w-full border-none bg-[#64C0A5] text-white hover:bg-[#64C0A5]/80"
+          onPress={handleProposeAction}
         >
-          Propose
+          Propose to Earn
         </Button>
       ) : (
-        <Button
-          color="secondary"
-          className="h-[30px] flex-1 rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
-          onPress={() => onView?.('viewItemProposal')}
-        >
-          View
-        </Button>
+        <>
+          <Button
+            color="secondary"
+            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            onPress={() => onView?.('viewItemProposal')}
+          >
+            View
+          </Button>
+          <Button
+            color="secondary"
+            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            onPress={handleProposeAction}
+          >
+            Propose Entry
+          </Button>
+        </>
       )}
     </div>
   );

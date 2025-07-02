@@ -8,5 +8,6 @@ export * from './profiles';
 export * from './projectLogs';
 export * from './projects';
 export * from './proposals';
+export * from './ranks';
 export * from './relations';
 export * from './voteRecords';

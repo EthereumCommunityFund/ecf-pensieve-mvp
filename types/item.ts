@@ -103,6 +103,7 @@ export interface IItemConfig<K extends IItemKey> {
   label: string;
   description: string;
   shortDescription: string; // For tooltip
+  longDescription?: string; // For show item details in the projectDetail/proposal table
   weight: string | number;
   formDisplayType: IFormDisplayType;
   placeholder: string;

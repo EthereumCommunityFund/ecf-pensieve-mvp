@@ -48,6 +48,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
           if (event === 'SIGNED_OUT') {
             utils.user.getCurrentUser.setData(undefined, undefined);
+            window.location.reload();
           }
         },
       );

@@ -36,3 +36,7 @@ next-env.d.ts
 # other
 README.md
 LICENSE
+stories/
+docs/
+lib/db/migrations/
+.claude

@@ -1,7 +1,7 @@
 import { cn } from '@heroui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useParams } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { IModalContentType } from '@/app/project/[id]/page';
@@ -85,24 +85,30 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     [itemKey],
   );
 
+  const defaultFormValues = useMemo(() => {
+    const defaultValue =
+      itemConfig.formDisplayType === 'founderList'
+        ? [{ name: '', title: '' }]
+        : '';
+    return { [itemConfig.key]: defaultValue };
+  }, [itemConfig.key, itemConfig.formDisplayType]);
+
   const methods = useForm<IFormData>({
-    defaultValues: {
-      [itemConfig.key]: '',
-    },
-    mode: 'all',
-    resolver: yupResolver(createItemValidationSchema(itemKey)),
+    defaultValues: defaultFormValues,
+    mode: 'onSubmit', // Key: Use onSubmit to avoid validation on onChange
+    reValidateMode: 'onSubmit', // Key: Re-validation also only occurs on submit
+    criteriaMode: 'all',
+    shouldUnregister: false, // Key: Prevent field unregistration
+    shouldFocusError: false, // Key: Prevent side effects on focus
+    shouldUseNativeValidation: false, // Key: Disable native validation
+    // Re-enable yupResolver with safer configuration
+    resolver: yupResolver(createItemValidationSchema(itemKey), {
+      abortEarly: false,
+      stripUnknown: false,
+    }),
   });
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    clearErrors,
-    formState,
-    trigger,
-    getValues,
-    reset,
-  } = methods;
+  const { control, clearErrors, reset, handleSubmit } = methods;
 
   const [editReason, setEditReason] = useState('');
   const [submissionStep, setSubmissionStep] = useState<
@@ -117,35 +123,6 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
   const createItemProposalMutation =
     trpc.itemProposal.createItemProposal.useMutation();
-
-  const getApplicableFields = useCallback(
-    (fields: string[]) => {
-      return fields.filter((field) => {
-        if (field in fieldApplicability) {
-          return fieldApplicability[field];
-        }
-        return true;
-      });
-    },
-    [fieldApplicability],
-  );
-
-  const validateFields = useCallback(async (): Promise<boolean> => {
-    const fieldsToValidate = getApplicableFields([itemConfig.key]);
-
-    const isValid =
-      fieldsToValidate.length > 0 ? await trigger(fieldsToValidate) : true;
-
-    if (!isValid) {
-      addToast({
-        title: 'Validation Error',
-        description: 'Please fix the errors before proceeding',
-        color: 'warning',
-      });
-    }
-
-    return isValid;
-  }, [itemConfig.key, getApplicableFields, trigger]);
 
   const handleApplicabilityChange = useCallback(
     (field: string, value: boolean) => {
@@ -203,11 +180,9 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     [references],
   );
 
-  const handleProceedToPreview = useCallback(
-    async (formData: IFormData) => {
-      const isValid = await validateFields();
-      if (!isValid) return;
-
+  // Optimized version based on React Hook Form source code analysis
+  const validateAndProceed = useCallback(
+    (formData: IFormData) => {
       const formValue = formData[itemConfig.key];
       const isApplicableFalse =
         itemConfig.showApplicable && !fieldApplicability[itemConfig.key];
@@ -229,18 +204,26 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       });
       setSubmissionStep('preview');
     },
-    [
-      itemConfig,
-      fieldApplicability,
-      getFieldReference,
-      editReason,
-      validateFields,
-    ],
+    [itemConfig, fieldApplicability, getFieldReference, editReason],
   );
 
-  const onNext = useCallback(() => {
-    handleProceedToPreview(getValues());
-  }, [handleProceedToPreview, getValues]);
+  // After re-enabling yupResolver, remove custom validation logic
+
+  // Use standard React Hook Form handleSubmit with yupResolver
+  const onSubmit = useCallback(
+    (data: IFormData) => {
+      validateAndProceed(data);
+    },
+    [validateAndProceed],
+  );
+
+  const onError = useCallback(() => {
+    addToast({
+      title: 'Validation Error',
+      description: 'Please fix the errors before proceeding',
+      color: 'warning',
+    });
+  }, []);
 
   const triggerActualAPISubmission = useCallback(() => {
     if (!dataForPreview) return;
@@ -271,25 +254,93 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     refetchAll,
   ]);
 
+  // Use useRef to track form initialization state
+  const isFormInitialized = useRef(false);
+  const lastItemKey = useRef<string | null>(null);
+  const lastDisplayDataKey = useRef<string | null>(null);
+
+  // Use useRef to stabilize function references, avoiding useEffect triggers when setting errors
+  const resetRef = useRef(reset);
+  const clearErrorsRef = useRef(clearErrors);
+
+  // Update function references in refs
+  resetRef.current = reset;
+  clearErrorsRef.current = clearErrors;
+
   useEffect(() => {
-    // Only initialize form when itemKey changes or component mounts
-    // Don't reset when submissionStep changes
+    // Check if form initialization is needed
+    const isNewItemKey = lastItemKey.current !== itemKey;
+    const hasDataForCurrentItem =
+      displayProposalDataOfKey && displayProposalDataOfKey.key === itemKey;
+    const currentDataKey = displayProposalDataOfKey?.key || null;
+    const isNewData = lastDisplayDataKey.current !== currentDataKey;
+
+    // Initialize form in these cases:
+    // 1. Form has never been initialized
+    // 2. Switching to a different itemKey
+    // 3. Data has changed (from no data to data, or data content changed)
+    const shouldInitialize =
+      !isFormInitialized.current ||
+      isNewItemKey ||
+      (isNewData && hasDataForCurrentItem);
+
+    if (!shouldInitialize) {
+      return;
+    }
+
+    // Update tracking variables
+    lastItemKey.current = itemKey;
+    lastDisplayDataKey.current = currentDataKey;
+    isFormInitialized.current = true;
+
+    clearErrorsRef.current(); // Clear all error states
+
     if (displayProposalDataOfKey && displayProposalDataOfKey.key === itemKey) {
-      setValue(itemConfig.key, displayProposalDataOfKey.input);
+      // Handle existing data
+      let valueToSet = displayProposalDataOfKey.input;
+
+      // For founderList type, ensure value is in array format
+      if (itemConfig.formDisplayType === 'founderList') {
+        if (typeof valueToSet === 'string') {
+          try {
+            // Try to parse JSON string
+            valueToSet = JSON.parse(valueToSet);
+          } catch (error) {
+            // If parsing fails, set to default value instead of empty array
+            valueToSet = [{ name: '', title: '' }];
+          }
+        }
+
+        // Ensure array format, if not array or empty array, set default value
+        if (!Array.isArray(valueToSet) || valueToSet.length === 0) {
+          valueToSet = [{ name: '', title: '' }];
+        }
+      }
+
+      // Use reset to set entire form values, ensuring all fields are correctly updated
+      resetRef.current({
+        [itemConfig.key]: valueToSet,
+      });
       setReferences([]);
     } else {
-      const defaultValue = formState.defaultValues?.[itemConfig.key] ?? '';
-      setValue(itemConfig.key, defaultValue);
+      const defaultValue =
+        itemConfig.formDisplayType === 'founderList'
+          ? [{ name: '', title: '' }]
+          : '';
+      resetRef.current({
+        [itemConfig.key]: defaultValue,
+      });
       setReferences([]);
       setEditReason('');
     }
   }, [
     itemKey,
-    displayProposalDataOfKey,
-    setValue,
-    itemConfig,
-    formState.defaultValues,
+    displayProposalDataOfKey, // Add this dependency to ensure form re-initialization after data loads
+    itemConfig.formDisplayType,
+    itemConfig.key,
   ]);
+
+  // Removed field value monitoring as new validation method doesn't clear field values, backup mechanism no longer needed
 
   const clearStatus = useCallback(() => {
     setSubmissionStep('form');
@@ -299,8 +350,14 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       ref: '',
       reason: '',
     });
+    clearErrors(); // Clear all error states
     reset();
-  }, [reset]);
+
+    // Reset form initialization state, will re-initialize when modal opens next time
+    isFormInitialized.current = false;
+    lastItemKey.current = null;
+    lastDisplayDataKey.current = null;
+  }, [reset, clearErrors]);
 
   const onCloseModal = useCallback(() => {
     clearStatus();
@@ -315,7 +372,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(handleProceedToPreview)}
+        onSubmit={handleSubmit(onSubmit, onError)}
         className={cn(submissionStep === 'form' ? 'block' : 'hidden')}
       >
         <div className="flex flex-col gap-[20px] p-[20px]">
@@ -348,7 +405,10 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
               color="primary"
               isLoading={false}
               className="w-full"
-              onPress={onNext}
+              type="submit"
+              onPress={() => {
+                // Form submission will be handled by handleSubmit
+              }}
             >
               Next
             </Button>

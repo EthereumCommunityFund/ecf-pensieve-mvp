@@ -79,6 +79,7 @@ const SuccessStep: FC<ISuccessStepProps> = ({
           tableInstance={tableInstance}
           columns={columns}
           expandedRows={expandedRows}
+          onToggleExpanded={toggleRowExpanded}
         />
       </div>
 

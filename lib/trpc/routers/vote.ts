@@ -304,7 +304,6 @@ export const voteRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const { itemProposalId, key } = input;
-        console.log('createItemProposalVote', input);
 
         const [itemProposal, userProfile] = await Promise.all([
           ctx.db.query.itemProposals.findFirst({

@@ -33,6 +33,10 @@ export const DropDownMenuData = {
       name: 'Privacy',
       link: 'https://ecf.network/privacy-policy-and-terms-of-service',
     },
+    {
+      name: 'Feedback',
+      link: 'https://discord.gg/9763r5XRpP',
+    },
   ],
   social: [
     {

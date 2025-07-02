@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
-import { devLog } from '@/utils/devLog';
 import { calculateItemStatusFields, isInputValueEmpty } from '@/utils/item';
 
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
@@ -21,6 +20,13 @@ export const useProjectTableData = () => {
   } = useProjectDetailContext();
 
   const { hasProposalKeys = [] } = project || {};
+
+  // Use ref to track previous data for deep comparison
+  const prevDataRef = useRef<{
+    projectId?: number;
+    displayDataLength?: number;
+    hasProposalKeysLength?: number;
+  }>({});
 
   const generateEmptyTableData = useCallback(() => {
     return ProjectTableFieldCategory.reduce(
@@ -47,6 +53,13 @@ export const useProjectTableData = () => {
   }, []);
 
   const { tableData, emptyItemsCounts } = useMemo(() => {
+    // Check if data actually changed to avoid unnecessary recalculation
+    const currentData = {
+      projectId: project?.id,
+      displayDataLength: displayProposalDataListOfProject?.length || 0,
+      hasProposalKeysLength: hasProposalKeys.length,
+    };
+
     const result = generateEmptyTableData();
     const emptyCounts = generateEmptyItemsCounts();
 
@@ -55,6 +68,7 @@ export const useProjectTableData = () => {
       !displayProposalDataListOfProject ||
       displayProposalDataListOfProject.length === 0
     ) {
+      prevDataRef.current = currentData;
       return {
         tableData: result,
         emptyItemsCounts: emptyCounts,
@@ -110,6 +124,8 @@ export const useProjectTableData = () => {
               property: itemConfig?.label || itemKey,
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              accountabilityMetrics: itemConfig?.accountability || [],
+              legitimacyMetrics: itemConfig?.legitimacy || [],
               ...statusFields,
             };
             result[subCategoryConfig.key].push(enhancedItem);
@@ -137,6 +153,8 @@ export const useProjectTableData = () => {
               property: itemConfig?.label || itemKey,
               accountability: itemConfig?.accountability || [],
               legitimacy: itemConfig?.legitimacy || [],
+              accountabilityMetrics: itemConfig?.accountability || [],
+              legitimacyMetrics: itemConfig?.legitimacy || [],
               ...statusFields,
             };
             if (hasProposal || !isInputValueEmpty(existingItem.input)) {
@@ -175,6 +193,8 @@ export const useProjectTableData = () => {
                 isEmptyItem: true,
                 accountability: itemConfig?.accountability || [],
                 legitimacy: itemConfig?.legitimacy || [],
+                accountabilityMetrics: itemConfig?.accountability || [],
+                legitimacyMetrics: itemConfig?.legitimacy || [],
                 ...(groupInfo && {
                   group: groupInfo.key,
                   groupTitle: groupInfo.title,
@@ -197,10 +217,12 @@ export const useProjectTableData = () => {
       });
     });
 
-    devLog('useProjectTableData', result, emptyCounts);
+    // Update ref with current data
+    prevDataRef.current = currentData;
+
     return { tableData: result, emptyItemsCounts: emptyCounts };
   }, [
-    project,
+    project, // Track project changes
     displayProposalDataListOfProject,
     hasProposalKeys,
     generateEmptyTableData,

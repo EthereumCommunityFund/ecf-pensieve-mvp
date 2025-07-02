@@ -1,6 +1,28 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm run:*)"],
+    "allow": [
+      "Bash(pnpm run:*)",
+      "mcp__zen__codereview",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(git mv:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git checkout:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(claude-code mcp list)",
+      "Bash(npx figma-developer-mcp:*)",
+      "Bash(kill:*)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "mcp__puppeteer__puppeteer_screenshot",
+      "mcp__fetch__imageFetch",
+      "Bash(gh pr view:*)",
+      "Bash(mv:*)",
+      "Bash(npm run build:*)"
+    ],
     "deny": []
   }
 }

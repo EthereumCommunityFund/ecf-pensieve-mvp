@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 
 import { GitPullDarkIcon, GitPullLightIcon } from '@/components/icons';
 import DropDownMenu from '@/components/topbar/dropDownMenu';
+import FeedbackButton from '@/components/topbar/FeedbackButton';
 
 import ECFTypography from '../base/typography';
 
@@ -101,6 +102,8 @@ export function Navigation() {
       ))}
 
       <DropDownMenu />
+
+      <FeedbackButton className="tablet:hidden mobile:hidden" />
     </nav>
   );
 }
