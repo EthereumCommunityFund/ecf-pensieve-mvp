@@ -61,24 +61,21 @@ const SectionList = (props: ISectionProps) => {
 
 const HomeList = () => {
   const {
-    data: projectsData,
+    data: ranksData,
     isLoading,
     refetch: refetchProjects,
-  } = trpc.project.getProjects.useQuery({
-    limit: 10,
-    isPublished: true,
-  });
+  } = trpc.rank.getTopRanks.useQuery();
 
   const viewAllProject = () => {
     console.log('view all project');
   };
 
-  const projects = projectsData?.items || [];
+  const projects = ranksData?.map((rank: any) => rank.project) || [];
 
   return (
     <div className="mt-5">
       <SectionList
-        title="Recent Projects"
+        title="Top Ranked Projects"
         description=""
         buttonText="View All Projects"
         onClick={viewAllProject}

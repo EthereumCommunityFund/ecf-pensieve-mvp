@@ -9,6 +9,7 @@ import { profiles } from './profiles';
 import { projectLogs } from './projectLogs';
 import { projects } from './projects';
 import { proposals } from './proposals';
+import { ranks } from './ranks';
 import { voteRecords } from './voteRecords';
 
 export const profilesRelations = relations(profiles, ({ one, many }) => ({
@@ -34,6 +35,10 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   proposals: many(proposals),
   notifications: many(notifications),
   activeLogs: many(activeLogs),
+  rank: one(ranks, {
+    fields: [projects.id],
+    references: [ranks.projectId],
+  }),
 }));
 
 export const proposalsRelations = relations(proposals, ({ one, many }) => ({
@@ -144,6 +149,13 @@ export const likeRecordsRelations = relations(likeRecords, ({ one }) => ({
   }),
   project: one(projects, {
     fields: [likeRecords.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const ranksRelations = relations(ranks, ({ one }) => ({
+  project: one(projects, {
+    fields: [ranks.projectId],
     references: [projects.id],
   }),
 }));
