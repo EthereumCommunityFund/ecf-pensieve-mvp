@@ -35,13 +35,11 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
   isWithdrawLoading = false,
   hasUserUpvoted = false,
 }) => {
-  const [inputValue, setInputValue] = useState(
-    hasUserUpvoted ? currentUserWeight.toString() : '',
-  );
+  const [inputValue, setInputValue] = useState('');
   const [isValid, setIsValid] = useState(true);
 
   useEffect(() => {
-    setInputValue(hasUserUpvoted ? currentUserWeight.toString() : '');
+    setInputValue('');
     setIsValid(true);
   }, [hasUserUpvoted, currentUserWeight, isOpen]);
 
@@ -136,6 +134,7 @@ const UpvoteModal: FC<IUpvoteModalProps> = ({
               <div className="flex justify-end px-[8px] py-[4px] opacity-60">
                 <p className="text-[14px] font-[600] text-black/80">
                   {availableCP} left
+                  {hasUserUpvoted ? ` ,  ${currentUserWeight} supported` : ''}
                 </p>
               </div>
             </div>
