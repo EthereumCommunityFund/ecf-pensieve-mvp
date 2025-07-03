@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -361,8 +361,8 @@ export const projectRouter = router({
 
         const allVoteRecords = await tx.query.voteRecords.findMany({
           where: and(
-            sql`${voteRecords.projectId} = ANY(${projectIds})`,
-            sql`${voteRecords.proposalId} = ANY(${proposalIds})`,
+            inArray(voteRecords.projectId, projectIds),
+            inArray(voteRecords.proposalId, proposalIds),
             isNull(voteRecords.itemProposalId),
           ),
         });
@@ -377,9 +377,24 @@ export const projectRouter = router({
         }
 
         const allProposals = await tx.query.proposals.findMany({
-          where: sql`${proposals.id} = ANY(${proposalIds})`,
+          where: inArray(proposals.id, proposalIds),
         });
         const proposalsMap = new Map(allProposals.map((p) => [p.id, p]));
+
+        const projectProposalCreators = new Map<number, Set<string>>();
+
+        const allProjectProposals = await tx.query.proposals.findMany({
+          where: inArray(proposals.projectId, projectIds),
+          columns: { creator: true, projectId: true },
+        });
+
+        for (const proposal of allProjectProposals) {
+          const projectId = proposal.projectId;
+          if (!projectProposalCreators.has(projectId)) {
+            projectProposalCreators.set(projectId, new Set());
+          }
+          projectProposalCreators.get(projectId)!.add(proposal.creator);
+        }
 
         const projectUpdates: Array<{
           id: number;
@@ -390,12 +405,12 @@ export const projectRouter = router({
         const weightUpdates: Array<{ userId: string; amount: number }> = [];
         const notifications: any[] = [];
         const projectPublishNotifications: any[] = [];
+        const proposalPassedNotifications: any[] = [];
 
         for (const project of eligibleProjects) {
           const projectId = Number(project.project_id);
           const proposalId = Number(project.proposal_id);
           const proposalCreator = String(project.proposal_creator);
-          const projectCreator = String(project.project_creator);
 
           const projectVoteRecords = voteRecordsByProject.get(projectId) || [];
 
@@ -464,12 +479,23 @@ export const projectRouter = router({
                 ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
               ),
             );
+
+            proposalPassedNotifications.push(
+              createNotification.proposalPassed(
+                proposalCreator,
+                projectId,
+                proposalId,
+              ),
+            );
           }
 
-          if (projectCreator) {
-            projectPublishNotifications.push(
-              createNotification.projectPublished(projectCreator, projectId),
-            );
+          const proposalCreators = projectProposalCreators.get(projectId);
+          if (proposalCreators && proposalCreators.size > 0) {
+            for (const creator of proposalCreators) {
+              projectPublishNotifications.push(
+                createNotification.projectPublished(creator, projectId),
+              );
+            }
           }
         }
 
@@ -567,6 +593,10 @@ export const projectRouter = router({
         }
 
         for (const notification of projectPublishNotifications) {
+          await addNotification(notification, tx);
+        }
+
+        for (const notification of proposalPassedNotifications) {
           await addNotification(notification, tx);
         }
 

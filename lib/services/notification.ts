@@ -4,6 +4,7 @@ import { notifications } from '../db/schema';
 export type NotificationType =
   | 'createProposal'
   | 'proposalPass'
+  | 'proposalPassed'
   | 'createItemProposal'
   | 'itemProposalPass'
   | 'projectPublished'
@@ -116,6 +117,17 @@ export const createNotification = {
     userId,
     projectId,
     type: 'projectPublished' as const,
+  }),
+
+  proposalPassed: (
+    userId: string,
+    projectId: number,
+    proposalId: number,
+  ): NotificationData => ({
+    userId,
+    projectId,
+    proposalId,
+    type: 'proposalPassed' as const,
   }),
 
   proposalSupported: (
