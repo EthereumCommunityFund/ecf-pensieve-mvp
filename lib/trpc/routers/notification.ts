@@ -9,7 +9,7 @@ export const notificationRouter = router({
   getUserNotifications: protectedProcedure
     .input(
       z.object({
-        filter: z.enum(['unread', 'archived']),
+        filter: z.enum(['unread', 'archived']).optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.number().optional(),
       }),
