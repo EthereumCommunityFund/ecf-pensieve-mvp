@@ -8,7 +8,7 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import { SignOut, User } from '@phosphor-icons/react';
+import { ArrowSquareUp, SignOut, User } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { Button } from '@/components/base';
@@ -117,9 +117,18 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             startContent={<User size={18} />}
             textValue="My Profile"
             className="mt-[10px]"
-            href={`/profile/${profile?.address}`}
+            href={`/profile/${profile?.address}?tab=profile`}
           >
             My Profile
+          </DropdownItem>
+          <DropdownItem
+            key="upvotes"
+            startContent={<ArrowSquareUp size={18} />}
+            textValue="My Upvotes"
+            className="mt-[10px]"
+            href={`/profile/${profile?.address}?tab=upvotes`}
+          >
+            My Upvotes
           </DropdownItem>
           <DropdownItem
             key="logout"
