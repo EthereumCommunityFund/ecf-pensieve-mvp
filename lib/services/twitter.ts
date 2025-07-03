@@ -41,7 +41,13 @@ Tagline: ${project.tagline}
 }
 
 async function generateProjectImage(project: ProjectData): Promise<Buffer> {
-  const imageUrl = `${getHost()}/api/generateXImage?projectName=${encodeURIComponent(project.name)}&logoUrl=${encodeURIComponent(project.logoUrl)}&tagline=${encodeURIComponent(project.tagline)}`;
+  const params = new URLSearchParams({
+    projectName: project.name,
+    logoUrl: project.logoUrl,
+    tagline: project.tagline,
+  });
+
+  const imageUrl = `${getHost()}/api/generateXImage?${params.toString()}`;
 
   const response = await fetch(imageUrl);
   if (!response.ok) {

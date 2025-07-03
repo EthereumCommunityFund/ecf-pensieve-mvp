@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -22,6 +22,7 @@ import {
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
+import { sendProjectPublishTweet } from '@/lib/services/twitter';
 
 import { proposalRouter } from './proposal';
 
@@ -559,6 +560,33 @@ export const projectRouter = router({
 
       if (results > 0) {
         revalidateTag(CACHE_TAGS.PROJECTS);
+
+        try {
+          const projectIds = eligibleProjects.map((p) => Number(p.project_id));
+          const publishedProjects = await ctx.db.query.projects.findMany({
+            where: inArray(projects.id, projectIds),
+            columns: {
+              id: true,
+              name: true,
+              tagline: true,
+              logoUrl: true,
+            },
+          });
+
+          for (const project of publishedProjects) {
+            try {
+              await sendProjectPublishTweet(project);
+              console.log(`Tweet sent successfully for project ${project.id}`);
+            } catch (error) {
+              console.error(
+                `Failed to send tweet for project ${project.id}:`,
+                error,
+              );
+            }
+          }
+        } catch (error) {
+          console.error('Failed to send tweet notifications:', error);
+        }
       }
 
       return {
