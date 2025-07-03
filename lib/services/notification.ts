@@ -8,7 +8,8 @@ export type NotificationType =
   | 'itemProposalPass'
   | 'projectPublished'
   | 'proposalSupported'
-  | 'itemProposalSupported';
+  | 'itemProposalSupported'
+  | 'itemProposalPassed';
 
 export interface NotificationData {
   userId: string;
@@ -139,5 +140,16 @@ export const createNotification = {
     itemProposalId,
     voterId,
     type: 'itemProposalSupported' as const,
+  }),
+
+  itemProposalPassed: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+  ): NotificationData => ({
+    userId,
+    projectId,
+    itemProposalId,
+    type: 'itemProposalPassed' as const,
   }),
 };

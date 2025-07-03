@@ -10,7 +10,9 @@ import { profiles, projectLogs, projects, voteRecords } from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addNotification,
   addRewardNotification,
+  createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 
@@ -201,6 +203,13 @@ export const processItemProposalVoteResult = async (
           reward,
         ),
         tx,
+      ),
+      addNotification(
+        createNotification.itemProposalPassed(
+          itemProposal.creator.userId,
+          itemProposal.projectId,
+          itemProposal.id,
+        ),
       ),
     ]);
 
