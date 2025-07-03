@@ -6,7 +6,9 @@ export type NotificationType =
   | 'proposalPass'
   | 'createItemProposal'
   | 'itemProposalPass'
-  | 'projectPublished';
+  | 'projectPublished'
+  | 'proposalSupported'
+  | 'itemProposalSupported';
 
 export interface NotificationData {
   userId: string;
@@ -14,6 +16,7 @@ export interface NotificationData {
   proposalId?: number;
   itemProposalId?: number;
   reward?: number;
+  voterId?: string;
   type: NotificationType;
 }
 
@@ -110,5 +113,31 @@ export const createNotification = {
     userId,
     projectId,
     type: 'projectPublished' as const,
+  }),
+
+  proposalSupported: (
+    userId: string,
+    projectId: number,
+    proposalId: number,
+    voterId: string,
+  ): NotificationData => ({
+    userId,
+    projectId,
+    proposalId,
+    voterId,
+    type: 'proposalSupported' as const,
+  }),
+
+  itemProposalSupported: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+    voterId: string,
+  ): NotificationData => ({
+    userId,
+    projectId,
+    itemProposalId,
+    voterId,
+    type: 'itemProposalSupported' as const,
   }),
 };

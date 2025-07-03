@@ -38,9 +38,30 @@ export const notificationRouter = router({
         orderBy: [desc(notifications.id)],
         limit: limit + 1,
         with: {
-          project: true,
-          proposal: true,
-          itemProposal: true,
+          project: {
+            columns: {
+              id: true,
+              name: true,
+            },
+          },
+          proposal: {
+            columns: {
+              items: true,
+            },
+          },
+          itemProposal: {
+            columns: {
+              key: true,
+            },
+          },
+          voter: {
+            columns: {
+              name: true,
+              userId: true,
+              address: true,
+              avatarUrl: true,
+            },
+          },
         },
       });
 
