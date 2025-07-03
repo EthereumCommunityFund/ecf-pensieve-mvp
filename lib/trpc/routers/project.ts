@@ -16,7 +16,9 @@ import { itemProposals } from '@/lib/db/schema/itemProposals';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
+  addNotification,
   addRewardNotification,
+  createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 import { updateUserWeight } from '@/lib/services/userWeightService';
@@ -334,9 +336,11 @@ export const projectRouter = router({
           project_id,
           proposal_id,
           proposal_creator,
-          items
-        FROM ranked_proposals
-        WHERE rn = 1
+          items,
+          p.creator as project_creator
+        FROM ranked_proposals rp
+        JOIN projects p ON rp.project_id = p.id
+        WHERE rp.rn = 1
       `;
 
       const eligibleProjects = await ctx.db.execute(eligibleProjectsQuery);
@@ -385,11 +389,13 @@ export const projectRouter = router({
         const voteRecordBatch: any[] = [];
         const weightUpdates: Array<{ userId: string; amount: number }> = [];
         const notifications: any[] = [];
+        const projectPublishNotifications: any[] = [];
 
         for (const project of eligibleProjects) {
           const projectId = Number(project.project_id);
           const proposalId = Number(project.proposal_id);
           const proposalCreator = String(project.proposal_creator);
+          const projectCreator = String(project.project_creator);
 
           const projectVoteRecords = voteRecordsByProject.get(projectId) || [];
 
@@ -457,6 +463,12 @@ export const projectRouter = router({
                 proposalId,
                 ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
               ),
+            );
+          }
+
+          if (projectCreator) {
+            projectPublishNotifications.push(
+              createNotification.projectPublished(projectCreator, projectId),
             );
           }
         }
@@ -552,6 +564,10 @@ export const projectRouter = router({
 
         for (const notification of notifications) {
           await addRewardNotification(notification, tx);
+        }
+
+        for (const notification of projectPublishNotifications) {
+          await addNotification(notification, tx);
         }
 
         return processedCount;
