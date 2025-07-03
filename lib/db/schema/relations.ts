@@ -140,6 +140,10 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     fields: [notifications.proposalId],
     references: [proposals.id],
   }),
+  itemProposal: one(itemProposals, {
+    fields: [notifications.itemProposalId],
+    references: [itemProposals.id],
+  }),
 }));
 
 export const likeRecordsRelations = relations(likeRecords, ({ one }) => ({
