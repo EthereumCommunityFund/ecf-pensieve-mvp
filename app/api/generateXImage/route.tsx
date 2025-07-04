@@ -185,6 +185,7 @@ export async function GET(request: Request) {
                 border: '1px solid rgba(0, 0, 0, 0.1)',
                 borderRadius: 10,
                 background: 'white',
+                objectFit: 'cover',
               }}
               alt="Project Logo"
             />
