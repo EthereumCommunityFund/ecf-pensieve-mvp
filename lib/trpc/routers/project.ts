@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -167,7 +167,7 @@ export const projectRouter = router({
 
       const baseCondition = eq(projects.isPublished, isPublished);
       const whereCondition = cursor
-        ? and(baseCondition, gt(projects.id, cursor))
+        ? and(baseCondition, lt(projects.id, cursor))
         : baseCondition;
 
       const queryOptions: any = {
@@ -213,10 +213,10 @@ export const projectRouter = router({
         };
       };
 
-      if (isPublished) {
+      if (isPublished && !cursor) {
         const getCachedProjects = nextCache(
           getProjects,
-          [`projects-published-${limit}-${cursor || 'start'}`],
+          [`projects-published-${limit}-first-page`],
           {
             revalidate: 3600,
             tags: [CACHE_TAGS.PROJECTS],
