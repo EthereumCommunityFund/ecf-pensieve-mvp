@@ -1,6 +1,35 @@
-import { ImageResponse } from '@vercel/og';
+import fs from 'fs';
+import path from 'path';
 
-export const runtime = 'edge';
+import { ImageResponse } from '@vercel/og';
+import type { Font } from 'satori';
+
+export const runtime = 'nodejs';
+
+async function getFonts(): Promise<Font[]> {
+  const fontDir = path.join(process.cwd(), 'public/fonts');
+
+  return [
+    {
+      name: 'MonaSans',
+      data: fs.readFileSync(path.join(fontDir, 'MonaSans-Regular.ttf')),
+      style: 'normal',
+      weight: 400,
+    },
+    {
+      name: 'MonaSans',
+      data: fs.readFileSync(path.join(fontDir, 'MonaSans-SemiBold.ttf')),
+      style: 'normal',
+      weight: 600,
+    },
+    {
+      name: 'MonaSans',
+      data: fs.readFileSync(path.join(fontDir, 'MonaSans-Bold.ttf')),
+      style: 'normal',
+      weight: 700,
+    },
+  ];
+}
 
 function truncateText(text: string, maxLength: number): string {
   if (!text) return '';
@@ -17,9 +46,6 @@ export async function GET(request: Request) {
   const tagline = rawTagline ? truncateText(rawTagline, 440) : '';
 
   try {
-    const fontData = await fetch(
-      new URL('/fonts/MonaSans-Bold.ttf', origin),
-    ).then((res) => res.arrayBuffer());
     return new ImageResponse(
       (
         <div
@@ -35,6 +61,7 @@ export async function GET(request: Request) {
             alignItems: 'flex-start',
             gap: 30,
             display: 'flex',
+            fontFamily: 'MonaSans',
           }}
         >
           <div
@@ -62,7 +89,6 @@ export async function GET(request: Request) {
                   gap: 10,
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`${origin}/pensieve-logo.svg`}
                   width={70}
@@ -73,8 +99,8 @@ export async function GET(request: Request) {
                   style={{
                     color: 'black',
                     fontSize: 40,
-                    fontFamily: 'Mona Sans',
-                    fontWeight: '800',
+                    fontWeight: 'bold',
+                    fontFamily: 'MonaSans',
                     lineHeight: 1,
                     wordWrap: 'break-word',
                   }}
@@ -89,8 +115,8 @@ export async function GET(request: Request) {
                   height: 40,
                   color: 'black',
                   fontSize: 25,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: '500',
+                  fontWeight: 'normal',
+                  fontFamily: 'MonaSans',
                   lineHeight: 1,
                   wordWrap: 'break-word',
                 }}
@@ -110,7 +136,6 @@ export async function GET(request: Request) {
                 justifyContent: 'center',
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`${origin}/CheckCircle.svg`}
                 width={50}
@@ -123,8 +148,8 @@ export async function GET(request: Request) {
                   alignItems: 'center',
                   color: '#2d8f66',
                   fontSize: 26,
-                  fontFamily: 'Inter',
-                  fontWeight: '700',
+                  fontWeight: 'bold',
+                  fontFamily: 'MonaSans',
                   textTransform: 'capitalize',
                   lineHeight: 1,
                   wordWrap: 'break-word',
@@ -152,7 +177,6 @@ export async function GET(request: Request) {
               justifyContent: 'space-between',
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logoUrl!}
               width={200}
@@ -180,8 +204,7 @@ export async function GET(request: Request) {
                   left: 0,
                   color: 'black',
                   fontSize: 32,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: '600',
+                  fontWeight: 'bold',
                   lineHeight: 1,
                   wordWrap: 'break-word',
                 }}
@@ -197,8 +220,8 @@ export async function GET(request: Request) {
                   left: 3,
                   color: 'black',
                   fontSize: 20,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: '400',
+                  fontWeight: 'normal',
+                  fontFamily: 'MonaSans',
                   lineHeight: 1.2,
                   wordWrap: 'break-word',
                   overflow: 'hidden',
@@ -213,41 +236,12 @@ export async function GET(request: Request) {
       ),
       {
         width: 1200,
-        height: 628,
-        fonts: [
-          {
-            name: 'Mona Sans',
-            data: fontData,
-            weight: 800,
-            style: 'normal',
-          },
-        ],
+        height: 630,
+        fonts: await getFonts(),
       },
     );
   } catch (error) {
     console.error('Failed to generate image:', error);
-
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#f3f4f6',
-            fontSize: 32,
-            color: '#374151',
-          }}
-        >
-          Error generating image
-        </div>
-      ),
-      {
-        width: 1200,
-        height: 675,
-      },
-    );
+    return new Response('Failed to generate image', { status: 500 });
   }
 }

@@ -19,10 +19,10 @@ import {
   addRewardNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
-import { sendProjectPublishTweet } from '@/lib/services/twitter';
 
 import { proposalRouter } from './proposal';
 
@@ -358,8 +358,8 @@ export const projectRouter = router({
 
         const allVoteRecords = await tx.query.voteRecords.findMany({
           where: and(
-            sql`${voteRecords.projectId} = ANY(${projectIds})`,
-            sql`${voteRecords.proposalId} = ANY(${proposalIds})`,
+            inArray(voteRecords.projectId, projectIds),
+            inArray(voteRecords.proposalId, proposalIds),
             isNull(voteRecords.itemProposalId),
           ),
         });
@@ -374,7 +374,7 @@ export const projectRouter = router({
         }
 
         const allProposals = await tx.query.proposals.findMany({
-          where: sql`${proposals.id} = ANY(${proposalIds})`,
+          where: inArray(proposals.id, proposalIds),
         });
         const proposalsMap = new Map(allProposals.map((p) => [p.id, p]));
 
@@ -574,14 +574,11 @@ export const projectRouter = router({
           });
 
           for (const project of publishedProjects) {
-            try {
-              await sendProjectPublishTweet(project);
+            const success = await sendProjectPublishTweet(project);
+            if (success) {
               console.log(`Tweet sent successfully for project ${project.id}`);
-            } catch (error) {
-              console.error(
-                `Failed to send tweet for project ${project.id}:`,
-                error,
-              );
+            } else {
+              console.log(`Failed to send tweet for project ${project.id}`);
             }
           }
         } catch (error) {
