@@ -41,7 +41,13 @@ Tagline: ${project.tagline}
 }
 
 async function generateProjectImage(project: ProjectData): Promise<Buffer> {
-  const imageUrl = `${getHost()}/api/generateXImage?projectName=${encodeURIComponent(project.name)}&logoUrl=${encodeURIComponent(project.logoUrl)}&tagline=${encodeURIComponent(project.tagline)}`;
+  const params = new URLSearchParams({
+    projectName: project.name,
+    logoUrl: project.logoUrl,
+    tagline: project.tagline,
+  });
+
+  const imageUrl = `${getHost()}/api/generateXImage?${params.toString()}`;
 
   const response = await fetch(imageUrl);
   if (!response.ok) {
@@ -51,6 +57,7 @@ async function generateProjectImage(project: ProjectData): Promise<Buffer> {
   }
 
   const arrayBuffer = await response.arrayBuffer();
+  console.log('Generated image size:', arrayBuffer.byteLength);
   return Buffer.from(arrayBuffer);
 }
 
@@ -75,7 +82,10 @@ export async function sendProjectPublishTweet(
 
     return true;
   } catch (error) {
-    console.error(`Failed to send tweet for project ${project.id}:`, error);
+    if (error && typeof error === 'object') {
+      console.error('Error object:', JSON.stringify(error, null, 2));
+    }
+
     return false;
   }
 }
