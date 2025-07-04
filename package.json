@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "format": "run-s prettier lint tsc",
@@ -53,6 +53,7 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.0",
+    "satori": "^0.15.2",
     "superjson": "^2.2.2",
     "twitter-api-v2": "^1.17.2",
     "uuid": "^11.1.0",
