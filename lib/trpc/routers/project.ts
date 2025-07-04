@@ -193,7 +193,7 @@ export const projectRouter = router({
             with: queryOptions,
             where: whereCondition,
             orderBy: desc(projects.id),
-            limit,
+            limit: limit + 1,
           }),
           ctx.db
             .select({ count: sql`count(*)::int` })
@@ -201,13 +201,13 @@ export const projectRouter = router({
             .where(eq(projects.isPublished, isPublished)),
         ]);
 
-        const nextCursor =
-          results.length === limit ? results[results.length - 1].id : undefined;
-
+        const hasNextPage = results.length > limit;
+        const items = hasNextPage ? results.slice(0, limit) : results;
+        const nextCursor = hasNextPage ? items[items.length - 1].id : undefined;
         const totalCount = Number(totalCountResult[0]?.count ?? 0);
 
         return {
-          items: results,
+          items,
           nextCursor,
           totalCount,
         };
