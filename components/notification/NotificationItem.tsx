@@ -268,14 +268,14 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
                   <Button
                     size="sm"
                     onPress={handlePrimaryAction}
-                    className="bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
+                    className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
                   >
                     {buttonText}
                   </Button>
                   <Button
                     size="sm"
                     onPress={handleSecondaryAction}
-                    className="bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
+                    className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
                   >
                     {secondaryButtonText}
                   </Button>
@@ -284,7 +284,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
                 <Button
                   size="sm"
                   onPress={handlePrimaryAction}
-                  className="bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
+                  className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
                 >
                   {buttonText}
                 </Button>

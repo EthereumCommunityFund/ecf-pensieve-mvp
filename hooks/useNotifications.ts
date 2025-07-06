@@ -3,9 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
+import { NotificationItemProps } from '@/components/notification/NotificationItem';
+import { mockNotifications } from '@/components/notification/mock/notifications';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-import { NotificationItemProps } from '@/components/notification/NotificationItem';
+
+const useMockData = process.env.NEXT_PUBLIC_MOCK_NOTIFICATIONS === 'true';
 
 export const useNotifications = () => {
   const router = useRouter();
@@ -19,7 +22,7 @@ export const useNotifications = () => {
   } = trpc.notification.getUserNotifications.useQuery(
     { limit: 50 },
     {
-      enabled: !!isAuthenticated,
+      enabled: !!isAuthenticated && !useMockData,
       staleTime: 30000,
       refetchInterval: 60000,
       retry: false,
@@ -34,7 +37,7 @@ export const useNotifications = () => {
   } = trpc.notification.getUserNotifications.useQuery(
     { filter: 'unread', limit: 50 },
     {
-      enabled: !!isAuthenticated,
+      enabled: !!isAuthenticated && !useMockData,
       staleTime: 30000,
       refetchInterval: 30000,
       retry: false,
@@ -173,11 +176,13 @@ export const useNotifications = () => {
 
   // Transform notifications data
   const allNotifications = useMemo(() => {
+    if (useMockData) return mockNotifications;
     if (!allNotificationsData?.notifications) return [];
     return allNotificationsData.notifications.map(transformNotification);
   }, [allNotificationsData, transformNotification]);
 
   const unreadNotifications = useMemo(() => {
+    if (useMockData) return mockNotifications.filter((n) => !n.isRead);
     if (!unreadNotificationsData?.notifications) return [];
     return unreadNotificationsData.notifications.map(transformNotification);
   }, [unreadNotificationsData, transformNotification]);
@@ -185,6 +190,11 @@ export const useNotifications = () => {
   // Action handlers
   const handleNotificationAction = useCallback(
     (notification: NotificationItemProps, isSecondary = false) => {
+      if (useMockData) {
+        console.log('Mock notification action:', notification);
+        return;
+      }
+
       const backendNotification = allNotificationsData?.notifications.find(
         (n) => n.id.toString() === notification.id,
       );
