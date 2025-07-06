@@ -26,6 +26,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
     totalCount,
     isLoading,
     handleNotificationAction,
+    handleNotificationClick,
     handleMarkAllAsRead,
     handleArchiveAll,
     handleSettings,
@@ -80,6 +81,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
               onSecondaryButtonClick={() =>
                 handleNotificationAction(notification, true)
               }
+              onNotificationClick={() => handleNotificationClick(notification)}
             />
           ))
         ) : (

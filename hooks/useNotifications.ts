@@ -117,7 +117,7 @@ export const useNotifications = () => {
               title: 'Your input is now leading',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
-              buttonText: 'View Submissions',
+              buttonText: 'View Submission',
             };
           case 'itemProposalSupported':
             return {
@@ -134,9 +134,8 @@ export const useNotifications = () => {
             return {
               title: 'Your proposal has passed!',
               projectName: notification.project?.name || 'project',
-              buttonText: 'View Proposal',
-              hasMultipleActions: true,
-              secondaryButtonText: 'View Published Project',
+              buttonText: 'View Published Project',
+              hasMultipleActions: false,
             };
           case 'projectPublished':
             return {
@@ -151,7 +150,8 @@ export const useNotifications = () => {
             return {
               title: 'You have gained contribution points',
               itemName: notification.reward?.toString() || '0',
-              buttonText: 'View Contribution',
+              buttonText: '', // 隐藏按钮
+              hideButton: true,
             };
           default:
             return {
@@ -211,26 +211,25 @@ export const useNotifications = () => {
       // Navigate based on notification type and action
       switch (notification.type) {
         case 'itemProposalLostLeading':
-        case 'itemProposalBecameLeading':
-        case 'itemProposalSupported':
           if (backendNotification.projectId) {
             router.push(`/project/${backendNotification.projectId}`);
           }
           break;
-        case 'proposalPassed':
-          if (isSecondary && backendNotification.projectId) {
-            router.push(`/project/${backendNotification.projectId}`);
-          } else if (backendNotification.proposalId) {
-            router.push(`/proposal/${backendNotification.proposalId}`);
+        case 'itemProposalBecameLeading':
+        case 'itemProposalSupported':
+          if (backendNotification.projectId) {
+            router.push(
+              `/project/${backendNotification.projectId}/submissions`,
+            );
           }
           break;
+        case 'proposalPassed':
         case 'projectPublished':
           if (backendNotification.projectId) {
             router.push(`/project/${backendNotification.projectId}`);
           }
           break;
         case 'contributionPoints':
-          router.push('/profile');
           break;
         default:
           if (backendNotification.projectId) {
@@ -238,8 +237,29 @@ export const useNotifications = () => {
           }
           break;
       }
+
+      // 阻止 TypeScript 警告
+      void isSecondary;
     },
     [allNotificationsData, markAsReadMutation, router],
+  );
+
+  // Handle clicking on the notification itself (marks as read)
+  const handleNotificationClick = useCallback(
+    (notification: NotificationItemProps) => {
+      if (useMockData) {
+        console.log('Mock notification click:', notification);
+        return;
+      }
+
+      // Mark as read if unread
+      if (!notification.isRead) {
+        markAsReadMutation.mutate({
+          notificationIds: [parseInt(notification.id)],
+        });
+      }
+    },
+    [markAsReadMutation],
   );
 
   const handleMarkAllAsRead = useCallback(() => {
@@ -272,6 +292,7 @@ export const useNotifications = () => {
 
     // Actions
     handleNotificationAction,
+    handleNotificationClick,
     handleMarkAllAsRead,
     handleArchiveAll,
     handleSettings,

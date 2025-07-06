@@ -35,6 +35,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     totalCount,
     isLoading,
     handleNotificationAction,
+    handleNotificationClick,
     handleMarkAllAsRead,
     handleArchiveAll,
     handleSettings,
@@ -112,6 +113,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     onButtonClick={() => handleNotificationAction(notification)}
                     onSecondaryButtonClick={() =>
                       handleNotificationAction(notification, true)
+                    }
+                    onNotificationClick={() =>
+                      handleNotificationClick(notification)
                     }
                   />
                 ))

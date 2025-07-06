@@ -35,8 +35,10 @@ export interface NotificationItemProps {
   isRead?: boolean;
   hasMultipleActions?: boolean;
   secondaryButtonText?: string;
+  hideButton?: boolean;
   onButtonClick?: () => void;
   onSecondaryButtonClick?: () => void;
+  onNotificationClick?: () => void;
 }
 
 const getIconForType = (type: NotificationItemProps['type']) => {
@@ -221,8 +223,10 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
     isRead = false,
     hasMultipleActions = false,
     secondaryButtonText,
+    hideButton = false,
     onButtonClick,
     onSecondaryButtonClick,
+    onNotificationClick,
   } = props;
 
   const handlePrimaryAction = () => {
@@ -233,16 +237,17 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
     onSecondaryButtonClick?.();
   };
 
-  const bgColor = isRead
-    ? 'bg-[rgba(104,198,172,0.05)]'
-    : 'bg-[rgba(104,198,172,0.05)]';
-  const borderClass = isRead
-    ? 'border-b border-black/10'
-    : 'border-b border-black/10';
+  const handleNotificationClick = () => {
+    onNotificationClick?.();
+  };
+
+  const bgColor = isRead ? 'bg-white' : 'bg-[rgba(104,198,172,0.1)]';
+  const borderClass = 'border-b border-black/10';
 
   return (
     <div
-      className={`flex flex-col gap-[30px] p-[14px] ${bgColor} ${borderClass}`}
+      className={`flex flex-col gap-[30px] p-[14px] ${bgColor} ${borderClass} cursor-pointer`}
+      onClick={handleNotificationClick}
     >
       <div className="flex w-full items-start gap-2.5">
         {/* Icon */}
@@ -262,9 +267,29 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
             </span>
 
             {/* Action Buttons */}
-            <div className="flex gap-2.5">
-              {hasMultipleActions && secondaryButtonText ? (
-                <>
+            {!hideButton && (
+              <div
+                className="flex gap-2.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {hasMultipleActions && secondaryButtonText ? (
+                  <>
+                    <Button
+                      size="sm"
+                      onPress={handlePrimaryAction}
+                      className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
+                    >
+                      {buttonText}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onPress={handleSecondaryAction}
+                      className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
+                    >
+                      {secondaryButtonText}
+                    </Button>
+                  </>
+                ) : (
                   <Button
                     size="sm"
                     onPress={handlePrimaryAction}
@@ -272,24 +297,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
                   >
                     {buttonText}
                   </Button>
-                  <Button
-                    size="sm"
-                    onPress={handleSecondaryAction}
-                    className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
-                  >
-                    {secondaryButtonText}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  size="sm"
-                  onPress={handlePrimaryAction}
-                  className="h-[28px] bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.15)]"
-                >
-                  {buttonText}
-                </Button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
