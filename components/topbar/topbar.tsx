@@ -5,12 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-
 import { useAuth } from '@/context/AuthContext';
-import { trpc } from '@/lib/trpc/client';
 
 import UserProfileSection from '../auth/UserProfileSection';
-import NotificationIcon from '../icons/notification';
+import { NotificationDropdown } from '../biz/NotificationDropdown';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';
@@ -41,19 +39,6 @@ export function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-
-  const { data: notifications, refetch: refetchNotifications } =
-    trpc.notification.getUserNotifications.useQuery(
-      { filter: 'unread', limit: 1 },
-      {
-        refetchInterval: 60000,
-        staleTime: 0,
-        enabled: !!isAuthenticated,
-      },
-    );
-
-  const hasUnreadNotifications =
-    notifications && notifications.notifications.length > 0;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -97,9 +82,7 @@ export function Topbar() {
           </div>
 
           <div className="flex items-center justify-end gap-[10px]">
-            <div className="cursor-pointer">
-              <NotificationIcon isActive={hasUnreadNotifications} />
-            </div>
+            <NotificationDropdown />
             <UserProfileSection />
           </div>
 
@@ -119,9 +102,7 @@ export function Topbar() {
         </Link>
 
         <div className="flex items-center justify-end gap-[10px]">
-          <div className="cursor-pointer">
-            <NotificationIcon isActive={hasUnreadNotifications} />
-          </div>
+          <NotificationDropdown />
           <UserProfileSection />
         </div>
       </div>

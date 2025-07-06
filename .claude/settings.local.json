@@ -21,7 +21,8 @@
       "mcp__fetch__imageFetch",
       "Bash(gh pr view:*)",
       "Bash(mv:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__figma-mcp__get_figma_data"
     ],
     "deny": []
   }
