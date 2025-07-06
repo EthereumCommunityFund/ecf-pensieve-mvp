@@ -5,7 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+
+import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
+
 import UserProfileSection from '../auth/UserProfileSection';
+import NotificationIcon from '../icons/notification';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';
@@ -35,6 +40,20 @@ export function Topbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const { data: notifications, refetch: refetchNotifications } =
+    trpc.notification.getUserNotifications.useQuery(
+      { filter: 'unread', limit: 1 },
+      {
+        refetchInterval: 60000,
+        staleTime: 0,
+        enabled: !!isAuthenticated,
+      },
+    );
+
+  const hasUnreadNotifications =
+    notifications && notifications.notifications.length > 0;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -77,7 +96,12 @@ export function Topbar() {
             <Navigation />
           </div>
 
-          <UserProfileSection />
+          <div className="flex items-center justify-end gap-[10px]">
+            <div className="cursor-pointer">
+              <NotificationIcon isActive={hasUnreadNotifications} />
+            </div>
+            <UserProfileSection />
+          </div>
 
           {/* <AuthSection /> */}
         </div>
@@ -94,8 +118,12 @@ export function Topbar() {
           <Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
         </Link>
 
-        {/*<AuthSection />*/}
-        <UserProfileSection />
+        <div className="flex items-center justify-end gap-[10px]">
+          <div className="cursor-pointer">
+            <NotificationIcon isActive={hasUnreadNotifications} />
+          </div>
+          <UserProfileSection />
+        </div>
       </div>
     </header>
   );
