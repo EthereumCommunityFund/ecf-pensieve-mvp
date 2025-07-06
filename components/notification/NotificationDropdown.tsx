@@ -74,6 +74,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         itemClasses={{
           base: 'p-0 m-0 gap-0 rounded-[10px]',
         }}
+        closeOnSelect={false}
       >
         <DropdownItem
           key="notifications"
