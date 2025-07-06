@@ -13,6 +13,7 @@ import { NotificationIcon } from '../icons';
 import { NotificationActions } from './NotificationActions';
 import { NotificationHeader } from './NotificationHeader';
 import { NotificationItem } from './NotificationItem';
+import { NotificationListSkeleton } from './NotificationItemSkeleton';
 import { NotificationFilter, NotificationTabs } from './NotificationTabs';
 import { useNotifications } from './hooks/useNotifications';
 
@@ -32,7 +33,6 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     unreadCount,
     totalCount,
     isLoading,
-    isAuthenticated,
     handleNotificationAction,
     handleMarkAllAsRead,
     handleArchiveAll,
@@ -92,20 +92,16 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                 activeFilter={activeFilter}
                 allCount={totalCount}
                 unreadCount={unreadCount}
-                onFilterChange={setActiveFilter}
+                onFilterChange={(filter) => {
+                  setActiveFilter(filter);
+                }}
               />
             </div>
 
             {/* Notifications List */}
             <div className="scrollbar-hide h-[376px] flex-1 overflow-y-auto">
-              {!isAuthenticated ? (
-                <div className="flex h-full items-center justify-center text-black/50">
-                  Please log in to view notifications
-                </div>
-              ) : isLoading ? (
-                <div className="flex h-full items-center justify-center text-black/50">
-                  Loading notifications...
-                </div>
+              {isLoading ? (
+                <NotificationListSkeleton count={3} />
               ) : filteredNotifications.length > 0 ? (
                 filteredNotifications.map((notification) => (
                   <NotificationItem

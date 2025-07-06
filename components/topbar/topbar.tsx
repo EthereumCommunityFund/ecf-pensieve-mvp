@@ -82,7 +82,7 @@ export function Topbar() {
           </div>
 
           <div className="flex items-center justify-end gap-[10px]">
-            <NotificationDropdown />
+            {isAuthenticated && <NotificationDropdown />}
             <UserProfileSection />
           </div>
 
@@ -102,7 +102,7 @@ export function Topbar() {
         </Link>
 
         <div className="flex items-center justify-end gap-[10px]">
-          <NotificationDropdown />
+          {isAuthenticated && <NotificationDropdown />}
           <UserProfileSection />
         </div>
       </div>
