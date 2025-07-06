@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 
+import { useNotifications } from '@/hooks/useNotifications';
+
 import { NotificationActions } from './NotificationActions';
 import { NotificationHeader } from './NotificationHeader';
 import { NotificationItem } from './NotificationItem';
 import { NotificationFilter, NotificationTabs } from './NotificationTabs';
-import { useNotifications } from './hooks/useNotifications';
 
 export interface NotificationPanelProps {
   className?: string;

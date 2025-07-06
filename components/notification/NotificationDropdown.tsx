@@ -8,6 +8,8 @@ import {
 } from '@heroui/react';
 import React, { useState } from 'react';
 
+import { useNotifications } from '@/hooks/useNotifications';
+
 import { NotificationIcon } from '../icons';
 
 import { NotificationActions } from './NotificationActions';
@@ -15,7 +17,6 @@ import { NotificationHeader } from './NotificationHeader';
 import { NotificationItem } from './NotificationItem';
 import { NotificationListSkeleton } from './NotificationItemSkeleton';
 import { NotificationFilter, NotificationTabs } from './NotificationTabs';
-import { useNotifications } from './hooks/useNotifications';
 
 export interface NotificationDropdownProps {
   className?: string;

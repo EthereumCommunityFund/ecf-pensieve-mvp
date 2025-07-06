@@ -5,8 +5,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-
-import { NotificationItemProps } from '../NotificationItem';
+import { NotificationItemProps } from '@/components/notification/NotificationItem';
 
 export const useNotifications = () => {
   const router = useRouter();

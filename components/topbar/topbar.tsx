@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 import UserProfileSection from '../auth/UserProfileSection';
-import { NotificationDropdown } from '../biz/NotificationDropdown';
+import { NotificationDropdown } from '../notification/NotificationDropdown';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';

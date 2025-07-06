@@ -1,6 +1,9 @@
 'use client';
 
-import { NotificationDropdown, NotificationPanel } from '@/components/biz';
+import {
+  NotificationDropdown,
+  NotificationPanel,
+} from '@/components/notification';
 
 export default function TestNotificationsPage() {
   return (
