@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import React from 'react';
 
-import { ECFButton } from '@/components/base/button';
-import ECFTypography from '@/components/base/typography';
+import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 
@@ -20,46 +19,65 @@ interface ISectionProps {
   children?: React.ReactNode;
 }
 
-const SectionList = (props: ISectionProps) => {
+const SectionHeader = (props: ISectionProps) => {
   return (
-    <div>
-      <div
-        className="mobile:h-auto mobile:flex-col mobile:items-start mobile:gap-2.5
-				mt-5 flex
-				items-center justify-between
-				px-[20px]"
-      >
-        <div className="mobile:h-auto">
-          <ECFTypography type={'subtitle1'} className="font-bold opacity-80">
-            {props.title}
-          </ECFTypography>
-          {props.description && (
-            <ECFTypography
-              type={'body2'}
-              className="mt-[5px] font-normal leading-[19px] opacity-80"
-            >
-              {props.description}
-            </ECFTypography>
-          )}
-        </div>
-        {props.buttonText && (
-          <Link href="/projects">
-            <ECFButton
-              $size={'small'}
-              onPress={props.onClick}
-              className="mobile:h-[31px] mobile:w-full h-[31px] px-2.5"
-            >
-              {props.buttonText}
-            </ECFButton>
-          </Link>
+    <div className="tablet:items-start mobile:items-start flex flex-1 items-center justify-between gap-[10px] px-[10px] py-[4px]">
+      <div className="">
+        <p className="tablet:text-[18px] mobile:text-[18px] text-[24px] font-[700] leading-[1.4] text-black/80">
+          {props.title}
+        </p>
+        {props.description && (
+          <p className="mt-[5px] text-[14px] font-[400] leading-[19px] text-black/60">
+            {props.description}
+          </p>
         )}
       </div>
-      {props.children}
+      {props.buttonText && (
+        <Link href="/projects">
+          <Button size="sm" onPress={props.onClick} className="font-[400]">
+            {props.buttonText}
+          </Button>
+        </Link>
+      )}
+    </div>
+  );
+};
+
+const ProjectListWrapper = ({
+  isLoading,
+  projectList,
+  onRefetch,
+}: {
+  isLoading: boolean;
+  projectList: IProject[];
+  onRefetch: () => void;
+}) => {
+  return (
+    <div className="flex-1">
+      {isLoading ? (
+        <div className="mt-2.5 px-[10px]">
+          <ProjectCardSkeleton showBorder={true} />
+          <ProjectCardSkeleton showBorder={true} />
+          <ProjectCardSkeleton showBorder={false} />
+        </div>
+      ) : projectList.length > 0 ? (
+        <ProjectListWithUpvote
+          projectList={projectList as IProject[]}
+          onRefetch={onRefetch}
+        />
+      ) : (
+        <div className="flex justify-center py-8">
+          <p className="text-[16px] font-[400] leading-[22px] text-black/60">
+            No projects yet
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
 const HomeList = () => {
+  const limit = 5;
   const {
     data: ranksData,
     isLoading,
@@ -71,60 +89,74 @@ const HomeList = () => {
   };
 
   const byGenesisProjects =
-    ranksData?.byGenesisWeight?.map((rank: any) => rank.project) || [];
-  const bySupportProjects = ranksData?.bySupport || [];
+    ranksData?.byGenesisWeight
+      ?.map((rank: any) => rank.project)
+      .slice(0, limit) || [];
+  const bySupportProjects = ranksData?.bySupport?.slice(0, limit) || [];
 
   return (
     <div className="mt-5">
-      <SectionList
-        title="Top Transparent Projects"
-        description={`Published Projects are ranked by their completion rate, defined as: completion rate = sum of of published items's genesis itemweight / total sum of all form items' itemweight`}
-        buttonText="View All Projects"
-        onClick={viewAllProject}
-      >
-        {isLoading ? (
-          <div className="mt-2.5 px-[10px]">
-            <ProjectCardSkeleton showBorder={true} />
-            <ProjectCardSkeleton showBorder={true} />
-            <ProjectCardSkeleton showBorder={false} />
-          </div>
-        ) : byGenesisProjects.length > 0 ? (
-          <ProjectListWithUpvote
+      <div className="mobile:hidden">
+        <div className="flex items-start justify-between">
+          <SectionHeader
+            title="Top Transparent Projects"
+            description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
+            buttonText="View All Top"
+            onClick={viewAllProject}
+          />
+          <SectionHeader
+            title={`Top Community-trusted`}
+            description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
+            buttonText="View All Top"
+          />
+        </div>
+        <div className="flex items-start justify-between">
+          <ProjectListWrapper
+            isLoading={isLoading}
             projectList={byGenesisProjects as IProject[]}
             onRefetch={refetchProjects}
           />
-        ) : (
-          <div className="flex justify-center py-8">
-            <ECFTypography type="body1">No projects yet</ECFTypography>
-          </div>
-        )}
-      </SectionList>
-      <SectionList
-        title={`Community’s Pick Projects`}
-        description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
-      >
-        {isLoading ? (
-          <div className="mt-2.5 px-[10px]">
-            <ProjectCardSkeleton showBorder={true} />
-            <ProjectCardSkeleton showBorder={true} />
-            <ProjectCardSkeleton showBorder={false} />
-          </div>
-        ) : bySupportProjects.length > 0 ? (
-          <ProjectListWithUpvote
+          <ProjectListWrapper
+            isLoading={isLoading}
             projectList={bySupportProjects as IProject[]}
             onRefetch={refetchProjects}
           />
-        ) : (
-          <div className="flex justify-center py-8">
-            <ECFTypography type="body1">No projects yet</ECFTypography>
-          </div>
-        )}
-      </SectionList>
-      <SectionList
+        </div>
+      </div>
+
+      <div className="mobile:block hidden">
+        <div className="">
+          <SectionHeader
+            title="Top Transparent Projects"
+            description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
+            buttonText="View All Top"
+            onClick={viewAllProject}
+          />
+          <ProjectListWrapper
+            isLoading={isLoading}
+            projectList={byGenesisProjects as IProject[]}
+            onRefetch={refetchProjects}
+          />
+        </div>
+        <div className="">
+          <SectionHeader
+            title={`Top Community-trusted`}
+            description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
+            buttonText="View All Top"
+          />
+          <ProjectListWrapper
+            isLoading={isLoading}
+            projectList={bySupportProjects as IProject[]}
+            onRefetch={refetchProjects}
+          />
+        </div>
+      </div>
+
+      <SectionHeader
         title="Top Accountable Projects"
         description="LIST COMING SOON"
       />
-      <SectionList
+      <SectionHeader
         title="Top Privacy Projects"
         description="LIST COMING SOON"
       />
