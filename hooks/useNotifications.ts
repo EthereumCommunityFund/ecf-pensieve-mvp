@@ -80,7 +80,8 @@ export const useNotifications = () => {
         console.error('Error during refetch:', error);
       }
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error marking notifications as read:', error);
       // 如果出错，重新获取数据以恢复状态
       Promise.all([refetchAll(), refetchUnread(), refetchArchived()]).catch(
         (err) => console.error('Error during error recovery refetch:', err),
@@ -91,10 +92,19 @@ export const useNotifications = () => {
   // Archive all notifications
   const archiveAllMutation =
     trpc.notification.archiveAllNotifications.useMutation({
-      onSuccess: () => {
-        refetchAll();
-        refetchUnread();
-        refetchArchived();
+      onSuccess: async () => {
+        try {
+          await Promise.all([refetchAll(), refetchUnread(), refetchArchived()]);
+        } catch (error) {
+          console.error('Error during refetch after archive all:', error);
+        }
+      },
+      onError: (error) => {
+        console.error('Error archiving all notifications:', error);
+        // 如果出错，重新获取数据以恢复状态
+        Promise.all([refetchAll(), refetchUnread(), refetchArchived()]).catch(
+          (err) => console.error('Error during error recovery refetch:', err),
+        );
       },
     });
 
@@ -368,6 +378,11 @@ export const useNotifications = () => {
   );
 
   const handleMarkAllAsRead = useCallback(() => {
+    // 防止在加载中时重复点击
+    if (markAsReadMutation.isPending) {
+      return;
+    }
+
     const unreadIds = unreadNotifications
       .filter((n) => !n.isRead)
       .map((n) => parseInt(n.id));
@@ -378,6 +393,11 @@ export const useNotifications = () => {
   }, [unreadNotifications, markAsReadMutation]);
 
   const handleArchiveAll = useCallback(() => {
+    // 防止在加载中时重复点击
+    if (archiveAllMutation.isPending) {
+      return;
+    }
+
     archiveAllMutation.mutate();
   }, [archiveAllMutation]);
 
@@ -402,6 +422,10 @@ export const useNotifications = () => {
     isLoading: isAuthenticated
       ? isLoadingAll || isLoadingUnread || isLoadingArchived
       : false,
+
+    // Mutation loading states
+    isMarkingAsRead: markAsReadMutation.isPending,
+    isArchivingAll: archiveAllMutation.isPending,
 
     // Pagination states
     hasNextAllNotifications,

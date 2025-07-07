@@ -42,6 +42,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     unreadCount,
     totalCount,
     isLoading,
+    isMarkingAsRead,
+    isArchivingAll,
     hasNextAllNotifications,
     hasNextUnreadNotifications,
     hasNextArchivedNotifications,
@@ -202,6 +204,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               <NotificationHeader
                 totalCount={totalCount}
                 onMarkAllAsRead={onMarkAllAsRead}
+                isMarkingAsRead={isMarkingAsRead}
               />
 
               {/* Tabs */}
@@ -257,6 +260,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             <NotificationActions
               onSettings={handleSettingsWithClose}
               onArchiveAll={onArchiveAll}
+              isArchivingAll={isArchivingAll}
             />
           </div>
         </DropdownItem>
