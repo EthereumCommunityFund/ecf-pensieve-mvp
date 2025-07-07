@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
@@ -47,10 +48,14 @@ const ProjectListWrapper = ({
   isLoading,
   projectList,
   onRefetch,
+  viewAllButtonText,
+  viewAllButtonOnPress,
 }: {
   isLoading: boolean;
   projectList: IProject[];
   onRefetch: () => void;
+  viewAllButtonText?: string;
+  viewAllButtonOnPress?: () => void;
 }) => {
   return (
     <div className="flex-1">
@@ -58,13 +63,28 @@ const ProjectListWrapper = ({
         <div className="mt-2.5 px-[10px]">
           <ProjectCardSkeleton showBorder={true} />
           <ProjectCardSkeleton showBorder={true} />
+          <ProjectCardSkeleton showBorder={true} />
+          <ProjectCardSkeleton showBorder={true} />
           <ProjectCardSkeleton showBorder={false} />
         </div>
       ) : projectList.length > 0 ? (
-        <ProjectListWithUpvote
-          projectList={projectList as IProject[]}
-          onRefetch={onRefetch}
-        />
+        <>
+          <ProjectListWithUpvote
+            projectList={projectList as IProject[]}
+            onRefetch={onRefetch}
+          />
+          {viewAllButtonText && viewAllButtonOnPress && (
+            <div className="mt-[10px] px-[10px]">
+              <Button
+                size="sm"
+                onPress={viewAllButtonOnPress}
+                className="w-full border-none bg-black/5 "
+              >
+                {viewAllButtonText}
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex justify-center py-8">
           <p className="text-[16px] font-[400] leading-[22px] text-black/60">
@@ -77,6 +97,7 @@ const ProjectListWrapper = ({
 };
 
 const HomeList = () => {
+  const router = useRouter();
   const limit = 5;
   const {
     data: ranksData,
@@ -94,10 +115,18 @@ const HomeList = () => {
       .slice(0, limit) || [];
   const bySupportProjects = ranksData?.bySupport?.slice(0, limit) || [];
 
+  const handleViewTopTransparentProjects = useCallback(() => {
+    router.push('/projects/rank?type=transparent');
+  }, [router]);
+
+  const handleViewTopCommunityTrustedProjects = useCallback(() => {
+    router.push('/projects/rank?type=community-trusted');
+  }, [router]);
+
   return (
-    <div className="mt-5">
+    <div className="tablet:gap-[10px] mt-5 flex flex-col gap-[20px]">
       <div className="mobile:hidden">
-        <div className="flex items-start justify-between">
+        <div className="tablet:gap-[10px] flex items-start justify-between gap-[20px]">
           <SectionHeader
             title="Top Transparent Projects"
             description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
@@ -110,21 +139,25 @@ const HomeList = () => {
             buttonText="View All Top"
           />
         </div>
-        <div className="flex items-start justify-between">
+        <div className="tablet:gap-[10px] flex items-start justify-between gap-[20px]">
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={byGenesisProjects as IProject[]}
             onRefetch={refetchProjects}
+            viewAllButtonText="View More Transparent"
+            viewAllButtonOnPress={handleViewTopTransparentProjects}
           />
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={bySupportProjects as IProject[]}
             onRefetch={refetchProjects}
+            viewAllButtonText="View More Community-trusted"
+            viewAllButtonOnPress={handleViewTopCommunityTrustedProjects}
           />
         </div>
       </div>
 
-      <div className="mobile:block hidden">
+      <div className="mobile:flex hidden flex-col gap-[10px]">
         <div className="">
           <SectionHeader
             title="Top Transparent Projects"
@@ -136,6 +169,8 @@ const HomeList = () => {
             isLoading={isLoading}
             projectList={byGenesisProjects as IProject[]}
             onRefetch={refetchProjects}
+            viewAllButtonText="View More Transparent"
+            viewAllButtonOnPress={handleViewTopTransparentProjects}
           />
         </div>
         <div className="">
@@ -148,6 +183,8 @@ const HomeList = () => {
             isLoading={isLoading}
             projectList={bySupportProjects as IProject[]}
             onRefetch={refetchProjects}
+            viewAllButtonText="View More Community-trusted"
+            viewAllButtonOnPress={handleViewTopCommunityTrustedProjects}
           />
         </div>
       </div>

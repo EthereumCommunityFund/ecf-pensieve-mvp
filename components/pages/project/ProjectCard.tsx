@@ -19,7 +19,7 @@ export function ProjectCardSkeleton({
     <div
       className={cn(
         showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
-        'pb-[10px] pt-[10px]',
+        'py-[10px] mobile:py-[5px]',
       )}
     >
       <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5">
@@ -69,7 +69,7 @@ const ProjectCard = ({
     <div
       className={cn(
         showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
-        'pb-[10px] pt-[10px] ',
+        'py-[10px] mobile:py-[5px]',
       )}
     >
       <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5 hover:bg-[rgba(0,0,0,0.05)]">
