@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { NotificationItemProps } from '@/components/notification/NotificationItem';
 import { mockNotifications } from '@/components/notification/mock/notifications';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
 
 const useMockData = process.env.NEXT_PUBLIC_MOCK_NOTIFICATIONS === 'true';
 
@@ -14,41 +15,82 @@ export const useNotifications = () => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  // Get all notifications
+  // Get all notifications with infinite loading
   const {
     data: allNotificationsData,
     isLoading: isLoadingAll,
+    fetchNextPage: fetchNextAllNotifications,
+    hasNextPage: hasNextAllNotifications,
+    isFetchingNextPage: isFetchingNextAllNotifications,
     refetch: refetchAll,
-  } = trpc.notification.getUserNotifications.useQuery(
-    { limit: 50 },
+  } = trpc.notification.getUserNotifications.useInfiniteQuery(
+    { limit: 100 },
     {
       enabled: !!isAuthenticated && !useMockData,
       staleTime: 30000,
       refetchInterval: 60000,
       retry: false,
+      getNextPageParam: (lastPage) => {
+        console.log('getNextPageParam for all notifications:', {
+          hasMore: lastPage.hasMore,
+          nextCursor: lastPage.nextCursor,
+          notificationsLength: lastPage.notifications.length,
+          returning: lastPage.hasMore ? lastPage.nextCursor : undefined,
+        });
+        return lastPage.hasMore ? lastPage.nextCursor : undefined;
+      },
     },
   );
 
-  // Get unread notifications only
+  // Get unread notifications only with infinite loading
   const {
     data: unreadNotificationsData,
     isLoading: isLoadingUnread,
+    fetchNextPage: fetchNextUnreadNotifications,
+    hasNextPage: hasNextUnreadNotifications,
+    isFetchingNextPage: isFetchingNextUnreadNotifications,
     refetch: refetchUnread,
-  } = trpc.notification.getUserNotifications.useQuery(
-    { filter: 'unread', limit: 50 },
+  } = trpc.notification.getUserNotifications.useInfiniteQuery(
+    { filter: 'unread', limit: 100 },
     {
       enabled: !!isAuthenticated && !useMockData,
       staleTime: 30000,
       refetchInterval: 30000,
       retry: false,
+      getNextPageParam: (lastPage) =>
+        lastPage.hasMore ? lastPage.nextCursor : undefined,
     },
   );
+
+  // Get archived notifications with infinite loading
+  const {
+    data: archivedNotificationsData,
+    isLoading: isLoadingArchived,
+    fetchNextPage: fetchNextArchivedNotifications,
+    hasNextPage: hasNextArchivedNotifications,
+    isFetchingNextPage: isFetchingNextArchivedNotifications,
+    refetch: refetchArchived,
+  } = trpc.notification.getUserNotifications.useInfiniteQuery(
+    { filter: 'archived', limit: 20 },
+    {
+      enabled: !!isAuthenticated && !useMockData,
+      staleTime: 30000,
+      retry: false,
+      getNextPageParam: (lastPage) =>
+        lastPage.hasMore ? lastPage.nextCursor : undefined,
+    },
+  );
+
+  useEffect(() => {
+    devLog('allNotificationsData', allNotificationsData);
+  }, [allNotificationsData]);
 
   // Mark notifications as read
   const markAsReadMutation = trpc.notification.markAsRead.useMutation({
     onSuccess: () => {
       refetchAll();
       refetchUnread();
+      refetchArchived();
     },
   });
 
@@ -58,6 +100,7 @@ export const useNotifications = () => {
       onSuccess: () => {
         refetchAll();
         refetchUnread();
+        refetchArchived();
       },
     });
 
@@ -177,15 +220,27 @@ export const useNotifications = () => {
   // Transform notifications data
   const allNotifications = useMemo(() => {
     if (useMockData) return mockNotifications;
-    if (!allNotificationsData?.notifications) return [];
-    return allNotificationsData.notifications.map(transformNotification);
+    if (!allNotificationsData?.pages) return [];
+    return allNotificationsData.pages
+      .flatMap((page) => page.notifications)
+      .map(transformNotification);
   }, [allNotificationsData, transformNotification]);
 
   const unreadNotifications = useMemo(() => {
     if (useMockData) return mockNotifications.filter((n) => !n.isRead);
-    if (!unreadNotificationsData?.notifications) return [];
-    return unreadNotificationsData.notifications.map(transformNotification);
+    if (!unreadNotificationsData?.pages) return [];
+    return unreadNotificationsData.pages
+      .flatMap((page) => page.notifications)
+      .map(transformNotification);
   }, [unreadNotificationsData, transformNotification]);
+
+  const archivedNotifications = useMemo(() => {
+    if (useMockData) return mockNotifications.filter((n) => n.isRead);
+    if (!archivedNotificationsData?.pages) return [];
+    return archivedNotificationsData.pages
+      .flatMap((page) => page.notifications)
+      .map(transformNotification);
+  }, [archivedNotificationsData, transformNotification]);
 
   // Action handlers
   const handleNotificationAction = useCallback(
@@ -195,9 +250,9 @@ export const useNotifications = () => {
         return;
       }
 
-      const backendNotification = allNotificationsData?.notifications.find(
-        (n) => n.id.toString() === notification.id,
-      );
+      const backendNotification = allNotificationsData?.pages
+        ?.flatMap((page) => page.notifications)
+        .find((n) => n.id.toString() === notification.id);
 
       if (!backendNotification) return;
 
@@ -284,11 +339,32 @@ export const useNotifications = () => {
     // Data
     allNotifications,
     unreadNotifications,
+    archivedNotifications,
     unreadCount: unreadNotifications.length,
     totalCount: allNotifications.length,
 
+    // Raw data for debugging
+    allNotificationsData,
+    unreadNotificationsData,
+    archivedNotificationsData,
+
     // Loading states
-    isLoading: isAuthenticated ? isLoadingAll || isLoadingUnread : false,
+    isLoading: isAuthenticated
+      ? isLoadingAll || isLoadingUnread || isLoadingArchived
+      : false,
+
+    // Pagination states
+    hasNextAllNotifications,
+    hasNextUnreadNotifications,
+    hasNextArchivedNotifications,
+    isFetchingNextAllNotifications,
+    isFetchingNextUnreadNotifications,
+    isFetchingNextArchivedNotifications,
+
+    // Pagination actions
+    fetchNextAllNotifications,
+    fetchNextUnreadNotifications,
+    fetchNextArchivedNotifications,
 
     // Actions
     handleNotificationAction,
@@ -305,6 +381,7 @@ export const useNotifications = () => {
       if (isAuthenticated) {
         refetchAll();
         refetchUnread();
+        refetchArchived();
       }
     },
   };

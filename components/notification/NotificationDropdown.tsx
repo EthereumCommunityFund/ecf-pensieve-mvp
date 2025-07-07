@@ -6,8 +6,9 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from '@heroui/react';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useNotifications } from '@/hooks/useNotifications';
 
 import { NotificationIcon } from '../icons';
@@ -15,7 +16,10 @@ import { NotificationIcon } from '../icons';
 import { NotificationActions } from './NotificationActions';
 import { NotificationHeader } from './NotificationHeader';
 import { NotificationItem } from './NotificationItem';
-import { NotificationListSkeleton } from './NotificationItemSkeleton';
+import {
+  NotificationItemSkeleton,
+  NotificationListSkeleton,
+} from './NotificationItemSkeleton';
 import { NotificationFilter, NotificationTabs } from './NotificationTabs';
 
 export interface NotificationDropdownProps {
@@ -31,9 +35,19 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const {
     allNotifications,
     unreadNotifications,
+    archivedNotifications,
     unreadCount,
     totalCount,
     isLoading,
+    hasNextAllNotifications,
+    hasNextUnreadNotifications,
+    hasNextArchivedNotifications,
+    isFetchingNextAllNotifications,
+    isFetchingNextUnreadNotifications,
+    isFetchingNextArchivedNotifications,
+    fetchNextAllNotifications,
+    fetchNextUnreadNotifications,
+    fetchNextArchivedNotifications,
     handleNotificationAction,
     handleNotificationClick,
     handleMarkAllAsRead,
@@ -46,14 +60,79 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       case 'unread':
         return unreadNotifications;
       case 'archived':
-        return []; // TODO: Add archived filter logic
+        return archivedNotifications;
       case 'all':
       default:
         return allNotifications;
     }
   };
 
+  const getHasNextPage = () => {
+    switch (activeFilter) {
+      case 'unread':
+        return hasNextUnreadNotifications;
+      case 'archived':
+        return hasNextArchivedNotifications;
+      case 'all':
+      default:
+        return hasNextAllNotifications;
+    }
+  };
+
+  const getIsFetchingNextPage = () => {
+    switch (activeFilter) {
+      case 'unread':
+        return isFetchingNextUnreadNotifications;
+      case 'archived':
+        return isFetchingNextArchivedNotifications;
+      case 'all':
+      default:
+        return isFetchingNextAllNotifications;
+    }
+  };
+
+  const fetchNextPage = useCallback(() => {
+    switch (activeFilter) {
+      case 'unread':
+        fetchNextUnreadNotifications();
+        break;
+      case 'archived':
+        fetchNextArchivedNotifications();
+        break;
+      case 'all':
+      default:
+        fetchNextAllNotifications();
+        break;
+    }
+  }, [
+    activeFilter,
+    fetchNextUnreadNotifications,
+    fetchNextArchivedNotifications,
+    fetchNextAllNotifications,
+  ]);
+
   const filteredNotifications = getFilteredNotifications();
+  const hasNextPage = getHasNextPage();
+  const isFetchingNextPage = getIsFetchingNextPage();
+
+  // Intersection Observer for infinite scrolling
+  const { targetRef, isIntersecting } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '50px',
+    enabled: hasNextPage && !isFetchingNextPage,
+  });
+
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [
+    isIntersecting,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    activeFilter,
+  ]);
 
   return (
     <Dropdown
@@ -106,19 +185,38 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               {isLoading ? (
                 <NotificationListSkeleton count={3} />
               ) : filteredNotifications.length > 0 ? (
-                filteredNotifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    {...notification}
-                    onButtonClick={() => handleNotificationAction(notification)}
-                    onSecondaryButtonClick={() =>
-                      handleNotificationAction(notification, true)
-                    }
-                    onNotificationClick={() =>
-                      handleNotificationClick(notification)
-                    }
-                  />
-                ))
+                <>
+                  {filteredNotifications.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      {...notification}
+                      onButtonClick={() =>
+                        handleNotificationAction(notification)
+                      }
+                      onSecondaryButtonClick={() =>
+                        handleNotificationAction(notification, true)
+                      }
+                      onNotificationClick={() =>
+                        handleNotificationClick(notification)
+                      }
+                    />
+                  ))}
+
+                  {/* Load More Trigger */}
+                  {hasNextPage && (
+                    <div ref={targetRef} className="flex min-h-[110px] w-full">
+                      {isFetchingNextPage ? (
+                        <div className="flex flex-col space-y-2">
+                          <NotificationItemSkeleton />
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          Load more trigger (debugging visible)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex h-full items-center justify-center text-black/50">
                   No notifications
