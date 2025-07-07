@@ -1,6 +1,6 @@
-import { NotificationItemProps } from '@/components/notification/NotificationItem';
+import { NotificationItemData } from '@/components/notification/NotificationItem';
 
-export const mockNotifications: NotificationItemProps[] = [
+export const mockNotifications: NotificationItemData[] = [
   {
     id: '1',
     type: 'itemProposalLostLeading',

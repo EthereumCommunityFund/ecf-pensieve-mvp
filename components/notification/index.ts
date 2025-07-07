@@ -16,8 +16,3 @@ export type { NotificationActionsProps } from './NotificationActions';
 
 export { NotificationDropdown } from './NotificationDropdown';
 export type { NotificationDropdownProps } from './NotificationDropdown';
-
-export { NotificationPanel } from './NotificationPanel';
-export type { NotificationPanelProps } from './NotificationPanel';
-
-export { NotificationExample } from './NotificationExample';

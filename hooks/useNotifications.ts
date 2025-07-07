@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { NotificationItemProps } from '@/components/notification/NotificationItem';
+import { NotificationItemData } from '@/components/notification/NotificationItem';
 import { mockNotifications } from '@/components/notification/mock/notifications';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -31,12 +31,6 @@ export const useNotifications = () => {
       refetchInterval: 60000,
       retry: false,
       getNextPageParam: (lastPage) => {
-        console.log('getNextPageParam for all notifications:', {
-          hasMore: lastPage.hasMore,
-          nextCursor: lastPage.nextCursor,
-          notificationsLength: lastPage.notifications.length,
-          returning: lastPage.hasMore ? lastPage.nextCursor : undefined,
-        });
         return lastPage.hasMore ? lastPage.nextCursor : undefined;
       },
     },
@@ -87,10 +81,48 @@ export const useNotifications = () => {
 
   // Mark notifications as read
   const markAsReadMutation = trpc.notification.markAsRead.useMutation({
-    onSuccess: () => {
-      refetchAll();
-      refetchUnread();
-      refetchArchived();
+    onSuccess: async (data) => {
+      console.log('markAsReadMutation success:', data);
+      console.log('Starting refetch operations...');
+
+      try {
+        // 强制重新获取数据，确保UI更新
+        const refetchPromises = [
+          refetchAll(),
+          refetchUnread(),
+          refetchArchived(),
+        ];
+
+        const results = await Promise.allSettled(refetchPromises);
+
+        results.forEach((result, index) => {
+          const queryName = ['refetchAll', 'refetchUnread', 'refetchArchived'][
+            index
+          ];
+          if (result.status === 'fulfilled') {
+            console.log(`${queryName} completed successfully`);
+          } else {
+            console.error(`${queryName} failed:`, result.reason);
+          }
+        });
+
+        console.log('All refetch operations completed');
+      } catch (error) {
+        console.error('Error during refetch:', error);
+      }
+    },
+    onError: (error) => {
+      console.error('markAsReadMutation error:', error);
+      // 如果出错，重新获取数据以恢复状态
+      Promise.all([refetchAll(), refetchUnread(), refetchArchived()]).catch(
+        (err) => console.error('Error during error recovery refetch:', err),
+      );
+    },
+    onMutate: (variables) => {
+      console.log('markAsReadMutation called with:', variables);
+    },
+    onSettled: () => {
+      console.log('markAsReadMutation settled (completed or failed)');
     },
   });
 
@@ -106,10 +138,10 @@ export const useNotifications = () => {
 
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
-    (notification: any): NotificationItemProps => {
+    (notification: any): NotificationItemData => {
       const getNotificationType = (
         type: string,
-      ): NotificationItemProps['type'] => {
+      ): NotificationItemData['type'] => {
         switch (type) {
           case 'itemProposalLostLeading':
             return 'itemProposalLostLeading';
@@ -206,11 +238,21 @@ export const useNotifications = () => {
 
       const content = getNotificationContent(notification);
 
+      const isRead = !!notification.readAt;
+
+      // 调试 readAt 状态
+      console.log(`Notification ${notification.id} transform:`, {
+        id: notification.id,
+        readAt: notification.readAt,
+        isRead,
+        type: notification.type,
+      });
+
       return {
         id: notification.id.toString(),
         type: getNotificationType(notification.type),
         timeAgo: getTimeAgo(notification.createdAt),
-        isRead: !!notification.readAt,
+        isRead,
         ...content,
       };
     },
@@ -221,9 +263,16 @@ export const useNotifications = () => {
   const allNotifications = useMemo(() => {
     if (useMockData) return mockNotifications;
     if (!allNotificationsData?.pages) return [];
-    return allNotificationsData.pages
+    const notifications = allNotificationsData.pages
       .flatMap((page) => page.notifications)
       .map(transformNotification);
+
+    console.log('Notifications loaded:', {
+      total: notifications.length,
+      unread: notifications.filter((n) => !n.isRead).length,
+    });
+
+    return notifications;
   }, [allNotificationsData, transformNotification]);
 
   const unreadNotifications = useMemo(() => {
@@ -244,17 +293,36 @@ export const useNotifications = () => {
 
   // Action handlers
   const handleNotificationAction = useCallback(
-    (notification: NotificationItemProps, isSecondary = false) => {
+    (notification: NotificationItemData, isSecondary = false) => {
       if (useMockData) {
         console.log('Mock notification action:', notification);
         return;
       }
 
-      const backendNotification = allNotificationsData?.pages
+      // Search for the notification in all data sources
+      let backendNotification = allNotificationsData?.pages
         ?.flatMap((page) => page.notifications)
         .find((n) => n.id.toString() === notification.id);
 
-      if (!backendNotification) return;
+      if (!backendNotification) {
+        backendNotification = unreadNotificationsData?.pages
+          ?.flatMap((page) => page.notifications)
+          .find((n) => n.id.toString() === notification.id);
+      }
+
+      if (!backendNotification) {
+        backendNotification = archivedNotificationsData?.pages
+          ?.flatMap((page) => page.notifications)
+          .find((n) => n.id.toString() === notification.id);
+      }
+
+      if (!backendNotification) {
+        console.log(
+          'Could not find notification in any data source:',
+          notification.id,
+        );
+        return;
+      }
 
       // Mark as read if unread
       if (!notification.isRead) {
@@ -273,9 +341,7 @@ export const useNotifications = () => {
         case 'itemProposalBecameLeading':
         case 'itemProposalSupported':
           if (backendNotification.projectId) {
-            router.push(
-              `/project/${backendNotification.projectId}/submissions`,
-            );
+            router.push(`/project/${backendNotification.projectId}`);
           }
           break;
         case 'proposalPassed':
@@ -296,25 +362,65 @@ export const useNotifications = () => {
       // 阻止 TypeScript 警告
       void isSecondary;
     },
-    [allNotificationsData, markAsReadMutation, router],
+    [
+      allNotificationsData,
+      unreadNotificationsData,
+      archivedNotificationsData,
+      markAsReadMutation,
+      router,
+    ],
   );
 
   // Handle clicking on the notification itself (marks as read)
   const handleNotificationClick = useCallback(
-    (notification: NotificationItemProps) => {
+    (notification: NotificationItemData) => {
+      console.log('handleNotificationClick called:', {
+        notification,
+        useMockData,
+        isRead: notification.isRead,
+        id: notification.id,
+        isAuthenticated,
+        markAsReadMutation: {
+          isPending: markAsReadMutation.isPending,
+          isError: markAsReadMutation.isError,
+          error: markAsReadMutation.error,
+        },
+      });
+
       if (useMockData) {
         console.log('Mock notification click:', notification);
         return;
       }
 
+      if (!isAuthenticated) {
+        console.log('User not authenticated, skipping mark as read');
+        return;
+      }
+
+      // 防止重复调用
+      if (markAsReadMutation.isPending) {
+        console.log('Mark as read mutation already in progress, skipping');
+        return;
+      }
+
       // Mark as read if unread
       if (!notification.isRead) {
+        console.log('Calling markAsReadMutation with id:', notification.id);
+        const notificationId = parseInt(notification.id);
+
+        if (isNaN(notificationId)) {
+          console.error('Invalid notification ID:', notification.id);
+          return;
+        }
+
         markAsReadMutation.mutate({
-          notificationIds: [parseInt(notification.id)],
+          notificationIds: [notificationId],
         });
+      } else {
+        console.log('Notification already read, skipping mark as read');
       }
     },
-    [markAsReadMutation],
+    [markAsReadMutation, isAuthenticated, useMockData],
   );
 
   const handleMarkAllAsRead = useCallback(() => {

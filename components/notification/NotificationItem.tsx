@@ -14,7 +14,7 @@ import {
   ThumbsUpIcon,
 } from '../icons';
 
-export interface NotificationItemProps {
+export interface NotificationItemData {
   id: string;
   type:
     | 'itemProposalLostLeading'
@@ -36,12 +36,16 @@ export interface NotificationItemProps {
   hasMultipleActions?: boolean;
   secondaryButtonText?: string;
   hideButton?: boolean;
-  onButtonClick?: () => void;
-  onSecondaryButtonClick?: () => void;
-  onNotificationClick?: () => void;
 }
 
-const getIconForType = (type: NotificationItemProps['type']) => {
+export interface NotificationItemProps {
+  itemData: NotificationItemData;
+  onButtonClick?: (itemData: NotificationItemData) => void;
+  onSecondaryButtonClick?: (itemData: NotificationItemData) => void;
+  onNotificationClick?: (itemData: NotificationItemData) => void;
+}
+
+const getIconForType = (type: NotificationItemData['type']) => {
   switch (type) {
     case 'itemProposalLostLeading':
       return <CaretDoubleDownIcon size={32} className="opacity-30" />;
@@ -64,8 +68,8 @@ const getIconForType = (type: NotificationItemProps['type']) => {
   }
 };
 
-const formatNotificationText = (props: NotificationItemProps) => {
-  const { type, title, itemName, projectName, userName } = props;
+const formatNotificationText = (itemData: NotificationItemData) => {
+  const { type, title, itemName, projectName, userName } = itemData;
 
   switch (type) {
     case 'itemProposalLostLeading':
@@ -215,7 +219,12 @@ const formatNotificationText = (props: NotificationItemProps) => {
   }
 };
 
-export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
+export const NotificationItem: React.FC<NotificationItemProps> = ({
+  itemData,
+  onButtonClick,
+  onSecondaryButtonClick,
+  onNotificationClick,
+}) => {
   const {
     type,
     timeAgo,
@@ -224,21 +233,19 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
     hasMultipleActions = false,
     secondaryButtonText,
     hideButton = false,
-    onButtonClick,
-    onSecondaryButtonClick,
-    onNotificationClick,
-  } = props;
+  } = itemData;
 
   const handlePrimaryAction = () => {
-    onButtonClick?.();
+    onButtonClick?.(itemData);
   };
 
   const handleSecondaryAction = () => {
-    onSecondaryButtonClick?.();
+    onSecondaryButtonClick?.(itemData);
   };
 
   const handleNotificationClick = () => {
-    onNotificationClick?.();
+    console.log('handleNotificationClick', itemData);
+    onNotificationClick?.(itemData);
   };
 
   const bgColor = isRead
@@ -260,7 +267,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
           {/* Text Content */}
           <div className="flex flex-col gap-2.5">
             <div className="flex w-full items-start justify-between gap-5">
-              {formatNotificationText(props)}
+              {formatNotificationText(itemData)}
             </div>
 
             {/* Time */}

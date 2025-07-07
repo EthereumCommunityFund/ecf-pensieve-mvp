@@ -189,16 +189,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   {filteredNotifications.map((notification) => (
                     <NotificationItem
                       key={notification.id}
-                      {...notification}
-                      onButtonClick={() =>
-                        handleNotificationAction(notification)
+                      itemData={notification}
+                      onButtonClick={handleNotificationAction}
+                      onSecondaryButtonClick={(itemData) =>
+                        handleNotificationAction(itemData, true)
                       }
-                      onSecondaryButtonClick={() =>
-                        handleNotificationAction(notification, true)
-                      }
-                      onNotificationClick={() =>
-                        handleNotificationClick(notification)
-                      }
+                      onNotificationClick={handleNotificationClick}
                     />
                   ))}
 
