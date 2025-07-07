@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useCallback } from 'react';
 
@@ -34,11 +33,11 @@ const SectionHeader = (props: ISectionProps) => {
         )}
       </div>
       {props.buttonText && (
-        <Link href="/projects">
+        <div className="">
           <Button size="sm" onPress={props.onClick} className="font-[400]">
             {props.buttonText}
           </Button>
-        </Link>
+        </div>
       )}
     </div>
   );
@@ -133,12 +132,13 @@ const HomeList = () => {
             title="Top Transparent Projects"
             description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
             buttonText="View All Top"
-            onClick={viewAllProject}
+            onClick={handleViewTopTransparentProjects}
           />
           <SectionHeader
             title={`Top Community-trusted`}
             description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
             buttonText="View All Top"
+            onClick={handleViewTopCommunityTrustedProjects}
           />
         </div>
         <div className="tablet:gap-[10px] flex items-start justify-between gap-[20px]">
@@ -165,7 +165,7 @@ const HomeList = () => {
             title="Top Transparent Projects"
             description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
             buttonText="View All Top"
-            onClick={viewAllProject}
+            onClick={handleViewTopTransparentProjects}
           />
           <ProjectListWrapper
             isLoading={isLoading}
@@ -180,6 +180,7 @@ const HomeList = () => {
             title={`Top Community-trusted`}
             description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
             buttonText="View All Top"
+            onClick={handleViewTopCommunityTrustedProjects}
           />
           <ProjectListWrapper
             isLoading={isLoading}
