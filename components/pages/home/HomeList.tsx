@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { formatDateWithTimeGMT } from '@/utils/formatters';
 
 import { ProjectCardSkeleton } from '../project/ProjectCard';
 
@@ -17,6 +18,7 @@ interface ISectionProps {
   buttonText?: string;
   onClick?: () => void;
   children?: React.ReactNode;
+  updatedAt?: Date | string | null;
 }
 
 const SectionHeader = (props: ISectionProps) => {
@@ -29,6 +31,12 @@ const SectionHeader = (props: ISectionProps) => {
         {props.description && (
           <p className="mt-[5px] text-[14px] font-[400] leading-[19px] text-black/60">
             {props.description}
+          </p>
+        )}
+        {props.updatedAt && (
+          <p className="mt-[5px] text-[12px] font-[400] leading-[16px] text-black/40">
+            Updated:{' '}
+            {formatDateWithTimeGMT(props.updatedAt, 'DD-MM-YYYY | HH:mm')} GMT
           </p>
         )}
       </div>
@@ -116,6 +124,30 @@ const HomeList = () => {
       .slice(0, limit) || [];
   const bySupportProjects = ranksData?.bySupport?.slice(0, limit) || [];
 
+  // Get the latest updatedAt time from all ranks for transparent projects
+  const transparentProjectsUpdatedAt = ranksData?.byGenesisWeight?.reduce(
+    (latest, rank) => {
+      if (!rank.updatedAt) return latest;
+      if (!latest) return rank.updatedAt;
+      return new Date(rank.updatedAt) > new Date(latest)
+        ? rank.updatedAt
+        : latest;
+    },
+    null as Date | null,
+  );
+
+  // Get the latest updatedAt time from all projects for community-trusted projects
+  const communityTrustedUpdatedAt = ranksData?.bySupport?.reduce(
+    (latest, project) => {
+      if (!project.updatedAt) return latest;
+      if (!latest) return project.updatedAt;
+      return new Date(project.updatedAt) > new Date(latest)
+        ? project.updatedAt
+        : latest;
+    },
+    null as Date | null,
+  );
+
   const handleViewTopTransparentProjects = useCallback(() => {
     router.push('/projects?type=transparent');
   }, [router]);
@@ -133,12 +165,14 @@ const HomeList = () => {
             description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
             buttonText="View All Top"
             onClick={handleViewTopTransparentProjects}
+            updatedAt={transparentProjectsUpdatedAt}
           />
           <SectionHeader
             title={`Top Community-trusted`}
             description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
             buttonText="View All Top"
             onClick={handleViewTopCommunityTrustedProjects}
+            updatedAt={communityTrustedUpdatedAt}
           />
         </div>
         <div className="tablet:gap-[10px] flex items-start justify-between gap-[20px]">
@@ -166,6 +200,7 @@ const HomeList = () => {
             description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
             buttonText="View All Top"
             onClick={handleViewTopTransparentProjects}
+            updatedAt={transparentProjectsUpdatedAt}
           />
           <ProjectListWrapper
             isLoading={isLoading}
@@ -181,6 +216,7 @@ const HomeList = () => {
             description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
             buttonText="View All Top"
             onClick={handleViewTopCommunityTrustedProjects}
+            updatedAt={communityTrustedUpdatedAt}
           />
           <ProjectListWrapper
             isLoading={isLoading}
