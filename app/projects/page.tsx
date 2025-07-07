@@ -2,7 +2,7 @@
 
 import { Image } from '@heroui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo } from 'react';
+import { Suspense, useCallback, useEffect, useMemo } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -18,7 +18,7 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
-const ProjectsPage = () => {
+const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -237,6 +237,40 @@ const ProjectsPage = () => {
 
       {UpvoteModalComponent}
     </div>
+  );
+};
+
+const ProjectsLoading = () => (
+  <div className="pb-10">
+    <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
+      <div className="size-[63px] animate-pulse rounded-lg bg-gray-200" />
+      <div className="flex-1">
+        <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+        <div className="mt-2.5 h-4 w-48 animate-pulse rounded bg-gray-200" />
+        <div className="mt-2.5 h-10 w-28 animate-pulse rounded bg-gray-200" />
+      </div>
+    </div>
+    <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
+      <div className="w-full flex-1">
+        <div className="border-b border-black/10 px-2.5 py-4">
+          <div className="h-6 w-40 animate-pulse rounded bg-gray-200" />
+        </div>
+        <div className="pb-2.5">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <ProjectCardSkeleton key={index} showBorder={true} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// 主页面组件
+const ProjectsPage = () => {
+  return (
+    <Suspense fallback={<ProjectsLoading />}>
+      <ProjectsContent />
+    </Suspense>
   );
 };
 
