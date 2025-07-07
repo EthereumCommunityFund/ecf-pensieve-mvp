@@ -1,7 +1,7 @@
 'use client';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { ReactNode } from 'react';
 import { cn } from '@heroui/react';
+import { ReactNode } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import { useNavigationContext } from '@/hooks/useNavigation';

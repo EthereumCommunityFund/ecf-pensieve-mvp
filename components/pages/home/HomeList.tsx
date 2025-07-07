@@ -118,11 +118,11 @@ const HomeList = () => {
   const bySupportProjects = ranksData?.bySupport?.slice(0, limit) || [];
 
   const handleViewTopTransparentProjects = useCallback(() => {
-    router.push('/projects/rank?type=transparent');
+    router.push('/projects?type=transparent');
   }, [router]);
 
   const handleViewTopCommunityTrustedProjects = useCallback(() => {
-    router.push('/projects/rank?type=community-trusted');
+    router.push('/projects?type=community-trusted');
   }, [router]);
 
   return (
