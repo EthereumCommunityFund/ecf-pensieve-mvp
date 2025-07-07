@@ -378,7 +378,6 @@ export const useNotifications = () => {
   );
 
   const handleMarkAllAsRead = useCallback(() => {
-    // 防止在加载中时重复点击
     if (markAsReadMutation.isPending) {
       return;
     }
@@ -393,7 +392,6 @@ export const useNotifications = () => {
   }, [unreadNotifications, markAsReadMutation]);
 
   const handleArchiveAll = useCallback(() => {
-    // 防止在加载中时重复点击
     if (archiveAllMutation.isPending) {
       return;
     }
