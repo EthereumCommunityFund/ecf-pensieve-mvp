@@ -82,7 +82,8 @@ export const ProjectListWrapper = ({
             projectList={projectList as IProject[]}
             onRefetch={onRefetch}
           />
-          {viewAllButtonText && viewAllButtonOnPress && (
+          {/* hide view all button */}
+          {/* {viewAllButtonText && viewAllButtonOnPress && (
             <div className="mt-[10px] px-[10px]">
               <Button
                 size="sm"
@@ -92,7 +93,7 @@ export const ProjectListWrapper = ({
                 {viewAllButtonText}
               </Button>
             </div>
-          )}
+          )} */}
         </>
       ) : (
         <div className="flex justify-center py-8">
