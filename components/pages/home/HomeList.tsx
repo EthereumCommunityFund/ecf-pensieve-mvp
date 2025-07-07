@@ -34,7 +34,7 @@ const SectionHeader = (props: ISectionProps) => {
           </p>
         )}
         {props.updatedAt && (
-          <p className="mt-[5px] text-[12px] font-[400] leading-[16px] text-black/40">
+          <p className="mt-[5px] text-[10px] font-[400] leading-[14px] text-black/60">
             Updated:{' '}
             {formatDateWithTimeGMT(props.updatedAt, 'DD-MM-YYYY | HH:mm')} GMT
           </p>
