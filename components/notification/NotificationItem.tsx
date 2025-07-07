@@ -241,7 +241,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = (props) => {
     onNotificationClick?.();
   };
 
-  const bgColor = isRead ? 'bg-white' : 'bg-[rgba(104,198,172,0.1)]';
+  const bgColor = isRead
+    ? 'bg-white'
+    : 'bg-[rgba(104,198,172,0.1)] hover:bg-[rgba(104,198,172,0.15)]';
   const borderClass = 'border-b border-black/10';
 
   return (

@@ -102,7 +102,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             </div>
 
             {/* Notifications List */}
-            <div className="scrollbar-hide h-[376px] flex-1 overflow-y-auto">
+            <div className="scrollbar-hide h-[376px] flex-1 overflow-y-auto pb-[10px]">
               {isLoading ? (
                 <NotificationListSkeleton count={3} />
               ) : filteredNotifications.length > 0 ? (
