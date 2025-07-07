@@ -10,8 +10,8 @@ import { trpc } from '@/lib/trpc/client';
 export const useNotifications = () => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const utils = trpc.useUtils();
 
-  // Get all notifications with infinite loading
   const {
     data: allNotificationsData,
     isLoading: isLoadingAll,
@@ -92,13 +92,6 @@ export const useNotifications = () => {
   // Archive all notifications
   const archiveAllMutation =
     trpc.notification.archiveAllNotifications.useMutation({
-      onSuccess: async () => {
-        try {
-          await Promise.all([refetchAll(), refetchUnread(), refetchArchived()]);
-        } catch (error) {
-          console.error('Error during refetch after archive all:', error);
-        }
-      },
       onError: (error) => {
         console.error('Error archiving all notifications:', error);
         // 如果出错，重新获取数据以恢复状态
@@ -391,13 +384,38 @@ export const useNotifications = () => {
     }
   }, [unreadNotifications, markAsReadMutation]);
 
-  const handleArchiveAll = useCallback(() => {
-    if (archiveAllMutation.isPending) {
+  const handleArchiveAll = useCallback(async () => {
+    if (archiveAllMutation.isPending || markAsReadMutation.isPending) {
       return;
     }
 
-    archiveAllMutation.mutate();
-  }, [archiveAllMutation]);
+    try {
+      const unreadIds = allNotifications
+        .filter((n) => !n.isRead)
+        .map((n) => parseInt(n.id));
+
+      if (unreadIds.length > 0) {
+        await markAsReadMutation.mutateAsync({ notificationIds: unreadIds });
+      }
+
+      await archiveAllMutation.mutateAsync();
+
+      await utils.notification.getUserNotifications.invalidate();
+      await Promise.all([refetchAll(), refetchUnread(), refetchArchived()]);
+    } catch (error) {
+      console.error('Error during archive all operation:', error);
+    }
+  }, [
+    archiveAllMutation,
+    markAsReadMutation,
+    allNotifications,
+    unreadNotifications,
+    archivedNotifications,
+    utils,
+    refetchAll,
+    refetchUnread,
+    refetchArchived,
+  ]);
 
   const handleSettings = useCallback(() => {
     router.push('/settings/notifications');
@@ -423,7 +441,8 @@ export const useNotifications = () => {
 
     // Mutation loading states
     isMarkingAsRead: markAsReadMutation.isPending,
-    isArchivingAll: archiveAllMutation.isPending,
+    isArchivingAll:
+      archiveAllMutation.isPending || markAsReadMutation.isPending,
 
     // Pagination states
     hasNextAllNotifications,
