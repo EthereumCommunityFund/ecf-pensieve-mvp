@@ -5,6 +5,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  useDisclosure,
 } from '@heroui/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -29,8 +30,10 @@ export interface NotificationDropdownProps {
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   className = '',
 }) => {
-  const [activeFilter, setActiveFilter] =
-    useState<NotificationFilter>('unread');
+  const [activeFilter, setActiveFilter] = useState<NotificationFilter>('all');
+
+  // Control dropdown open/close state
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   const {
     allNotifications,
@@ -115,6 +118,36 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const hasNextPage = getHasNextPage();
   const isFetchingNextPage = getIsFetchingNextPage();
 
+  // Wrapper functions to close dropdown after actions
+  const handleNotificationActionWithClose = useCallback(
+    (itemData: any, isSecondary = false) => {
+      handleNotificationAction(itemData, isSecondary);
+      onClose(); // Close dropdown after action
+    },
+    [handleNotificationAction, onClose],
+  );
+
+  const onClickNotification = useCallback(
+    (itemData: any) => {
+      handleNotificationClick(itemData);
+      // onClose(); // Close dropdown after click
+    },
+    [handleNotificationClick],
+  );
+
+  const onMarkAllAsRead = useCallback(() => {
+    handleMarkAllAsRead();
+  }, [handleMarkAllAsRead]);
+
+  const onArchiveAll = useCallback(() => {
+    handleArchiveAll();
+  }, [handleArchiveAll]);
+
+  const handleSettingsWithClose = useCallback(() => {
+    handleSettings();
+    onClose(); // Close dropdown after opening settings
+  }, [handleSettings, onClose]);
+
   // Intersection Observer for infinite scrolling
   const { targetRef, isIntersecting } = useIntersectionObserver({
     threshold: 0.1,
@@ -141,6 +174,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       classNames={{
         content: 'p-0 border-0 bg-white rounded-[10px] shadow-lg',
       }}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
     >
       <DropdownTrigger>
         <div className="cursor-pointer">
@@ -166,7 +201,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             <div className="relative z-10 bg-[rgba(255,255,255,0.9)] backdrop-blur-[10px]">
               <NotificationHeader
                 totalCount={totalCount}
-                onMarkAllAsRead={handleMarkAllAsRead}
+                onMarkAllAsRead={onMarkAllAsRead}
               />
 
               {/* Tabs */}
@@ -190,11 +225,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     <NotificationItem
                       key={notification.id}
                       itemData={notification}
-                      onButtonClick={handleNotificationAction}
+                      onButtonClick={handleNotificationActionWithClose}
                       onSecondaryButtonClick={(itemData) =>
-                        handleNotificationAction(itemData, true)
+                        handleNotificationActionWithClose(itemData, true)
                       }
-                      onNotificationClick={handleNotificationClick}
+                      onNotificationClick={onClickNotification}
                     />
                   ))}
 
@@ -206,9 +241,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                           <NotificationItemSkeleton />
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-500">
-                          Load more trigger (debugging visible)
-                        </div>
+                        <div className="text-sm text-gray-500"></div>
                       )}
                     </div>
                   )}
@@ -222,8 +255,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
             {/* Actions */}
             <NotificationActions
-              onSettings={handleSettings}
-              onArchiveAll={handleArchiveAll}
+              onSettings={handleSettingsWithClose}
+              onArchiveAll={onArchiveAll}
             />
           </div>
         </DropdownItem>

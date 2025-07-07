@@ -244,7 +244,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   };
 
   const handleNotificationClick = () => {
-    console.log('handleNotificationClick', itemData);
     onNotificationClick?.(itemData);
   };
 
