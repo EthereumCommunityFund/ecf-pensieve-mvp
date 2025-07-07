@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -21,6 +21,7 @@ import {
   createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
@@ -168,7 +169,7 @@ export const projectRouter = router({
 
       const baseCondition = eq(projects.isPublished, isPublished);
       const whereCondition = cursor
-        ? and(baseCondition, gt(projects.id, cursor))
+        ? and(baseCondition, lt(projects.id, cursor))
         : baseCondition;
 
       const queryOptions: any = {
@@ -194,7 +195,7 @@ export const projectRouter = router({
             with: queryOptions,
             where: whereCondition,
             orderBy: desc(projects.id),
-            limit,
+            limit: limit + 1,
           }),
           ctx.db
             .select({ count: sql`count(*)::int` })
@@ -202,22 +203,22 @@ export const projectRouter = router({
             .where(eq(projects.isPublished, isPublished)),
         ]);
 
-        const nextCursor =
-          results.length === limit ? results[results.length - 1].id : undefined;
-
+        const hasNextPage = results.length > limit;
+        const items = hasNextPage ? results.slice(0, limit) : results;
+        const nextCursor = hasNextPage ? items[items.length - 1].id : undefined;
         const totalCount = Number(totalCountResult[0]?.count ?? 0);
 
         return {
-          items: results,
+          items,
           nextCursor,
           totalCount,
         };
       };
 
-      if (isPublished) {
+      if (isPublished && !cursor) {
         const getCachedProjects = nextCache(
           getProjects,
-          [`projects-published-${limit}-${cursor || 'start'}`],
+          [`projects-published-${limit}-first-page`],
           {
             revalidate: 3600,
             tags: [CACHE_TAGS.PROJECTS],
@@ -605,6 +606,30 @@ export const projectRouter = router({
 
       if (results > 0) {
         revalidateTag(CACHE_TAGS.PROJECTS);
+
+        try {
+          const projectIds = eligibleProjects.map((p) => Number(p.project_id));
+          const publishedProjects = await ctx.db.query.projects.findMany({
+            where: inArray(projects.id, projectIds),
+            columns: {
+              id: true,
+              name: true,
+              tagline: true,
+              logoUrl: true,
+            },
+          });
+
+          for (const project of publishedProjects) {
+            const success = await sendProjectPublishTweet(project);
+            if (success) {
+              console.log(`Tweet sent successfully for project ${project.id}`);
+            } else {
+              console.log(`Failed to send tweet for project ${project.id}`);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to send tweet notifications:', error);
+        }
       }
 
       return {

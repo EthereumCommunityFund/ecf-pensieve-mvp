@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, gt } from 'drizzle-orm';
 import { unstable_cache as nextCache } from 'next/cache';
 
 import { CACHE_TAGS } from '@/lib/constants';
@@ -26,7 +26,7 @@ export const rankRouter = router({
         with: {
           creator: true,
         },
-        where: eq(projects.isPublished, true),
+        where: and(eq(projects.isPublished, true), gt(projects.support, 0)),
         orderBy: desc(projects.support),
         limit,
       });
