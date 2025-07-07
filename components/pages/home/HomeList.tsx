@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { useCallback } from 'react';
 
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
@@ -44,18 +44,20 @@ const SectionHeader = (props: ISectionProps) => {
   );
 };
 
-const ProjectListWrapper = ({
+export const ProjectListWrapper = ({
   isLoading,
   projectList,
   onRefetch,
   viewAllButtonText,
   viewAllButtonOnPress,
+  emptyMessage,
 }: {
   isLoading: boolean;
   projectList: IProject[];
   onRefetch: () => void;
   viewAllButtonText?: string;
   viewAllButtonOnPress?: () => void;
+  emptyMessage?: string;
 }) => {
   return (
     <div className="flex-1">
@@ -88,7 +90,7 @@ const ProjectListWrapper = ({
       ) : (
         <div className="flex justify-center py-8">
           <p className="text-[16px] font-[400] leading-[22px] text-black/60">
-            No projects yet
+            {emptyMessage || 'No projects yet'}
           </p>
         </div>
       )}

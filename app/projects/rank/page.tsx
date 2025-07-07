@@ -1,134 +1,80 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 
-import { ECFButton } from '@/components/base/button';
-import ECFTypography from '@/components/base/typography';
-import ProjectCard, {
-  ProjectCardSkeleton,
-} from '@/components/pages/project/ProjectCard';
+import { ProjectListWrapper } from '@/components/pages/home/HomeList';
+import BackHeader from '@/components/pages/project/BackHeader';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
-import { useAuth } from '@/context/AuthContext';
-import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 const ProjectsPage = () => {
-  const { profile, showAuthPrompt } = useAuth();
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const type = searchParams.get('type');
 
   const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    data: ranksData,
     isLoading,
     refetch: refetchProjects,
-  } = trpc.project.getProjects.useInfiniteQuery(
-    {
-      limit: 10,
-      isPublished: true,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  } = trpc.rank.getTopRanks.useQuery();
 
-  // Use the upvote hook with refresh callback
-  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
-    useUpvote({
-      onSuccess: refetchProjects,
-    });
-
-  const handleLoadMore = () => {
-    if (!isFetchingNextPage) {
-      fetchNextPage();
+  // Get the appropriate project list based on type
+  const { projectList, title, description, emptyMessage } = useMemo(() => {
+    if (type === 'transparent') {
+      return {
+        projectList:
+          ranksData?.byGenesisWeight?.map((rank: any) => rank.project) || [],
+        title: 'Top Transparent Projects',
+        description: `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`,
+        emptyMessage: 'No transparent projects found',
+      };
+    } else if (type === 'community-trusted') {
+      return {
+        projectList: ranksData?.bySupport || [],
+        title: 'Top Community-trusted',
+        description: `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`,
+        emptyMessage: 'No community-trusted projects found',
+      };
     }
-  };
-
-  const handleProposeProject = useCallback(() => {
-    if (!profile) {
-      showAuthPrompt();
-      return;
-    }
-    router.push('/project/create');
-  }, [profile, showAuthPrompt, router]);
-
-  const allProjects = useMemo(() => {
-    return data?.pages.flatMap((page) => page.items) || [];
-  }, [data]);
+    // Default fallback
+    return {
+      projectList: [],
+      title: 'Top Projects',
+      description: 'Please specify a valid type parameter',
+      emptyMessage: 'Please specify a valid type parameter',
+    };
+  }, [type, ranksData]);
 
   useEffect(() => {
-    if (allProjects.length > 0) {
-      devLog('allProjects', allProjects);
+    if (projectList.length > 0) {
+      devLog('projectList', projectList);
     }
-  }, [allProjects]);
+  }, [projectList]);
 
   return (
     <div className="pb-10">
+      <BackHeader className="px-[10px]" />
       <div className="mobile:flex-col mobile:gap-5 mt-5 flex items-start justify-between gap-10 px-2.5">
         <div className="w-full flex-1">
-          <div className="border-b border-black/10 px-2.5 py-2 opacity-80">
-            <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
+          {/* Header with title and description */}
+          <div className="border-b border-black/10 px-2.5 py-4">
+            <h1 className="text-[24px] font-[700] leading-[1.4] text-black/80">
+              {title}
+            </h1>
+            <p className="mt-[5px] text-[14px] font-[400] leading-[19px] text-black/60">
+              {description}
+            </p>
           </div>
 
           {/* Project list */}
-          <div className="pb-2.5">
-            {isLoading ? (
-              <>
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <ProjectCardSkeleton key={index} showBorder={true} />
-                ))}
-              </>
-            ) : allProjects.length > 0 ? (
-              <>
-                {allProjects.map((project) => {
-                  const projectLikeRecord = getProjectLikeRecord(project.id);
-
-                  return (
-                    <ProjectCard
-                      key={project.id}
-                      project={project as IProject}
-                      showBorder={true}
-                      onUpvote={handleUpvote}
-                      userLikeRecord={
-                        projectLikeRecord
-                          ? {
-                              id: project.id,
-                              weight: projectLikeRecord.weight || 0,
-                            }
-                          : null
-                      }
-                    />
-                  );
-                })}
-
-                {isFetchingNextPage && (
-                  <ProjectCardSkeleton showBorder={true} />
-                )}
-
-                {hasNextPage && (
-                  <div className="flex justify-center py-4">
-                    <ECFButton
-                      onPress={handleLoadMore}
-                      isDisabled={isFetchingNextPage}
-                      $size="small"
-                    >
-                      {isFetchingNextPage ? 'Loading...' : 'Load More'}
-                    </ECFButton>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex justify-center py-[80px]">
-                <ECFTypography type="subtitle1">
-                  No Published Project Yet
-                </ECFTypography>
-              </div>
-            )}
-          </div>
+          <ProjectListWrapper
+            isLoading={isLoading}
+            projectList={projectList as IProject[]}
+            onRefetch={refetchProjects}
+            emptyMessage={emptyMessage}
+          />
         </div>
 
         <div className="mobile:hidden">
@@ -139,8 +85,6 @@ const ProjectsPage = () => {
           <RewardCard />
         </div>
       </div>
-
-      {UpvoteModalComponent}
     </div>
   );
 };

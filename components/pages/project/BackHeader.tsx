@@ -1,19 +1,26 @@
 'use client';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
+import { cn } from '@heroui/react';
 
 import { ECFButton } from '@/components/base/button';
 import { useNavigationContext } from '@/hooks/useNavigation';
 
 interface BackHeaderProps {
   children?: ReactNode;
+  className?: string;
 }
 
-const BackHeader = ({ children }: BackHeaderProps) => {
+const BackHeader = ({ children, className }: BackHeaderProps) => {
   const { onRouterBack } = useNavigationContext();
 
   return (
-    <div className="mobile:px-[10px] flex h-[35px] items-center justify-start gap-[10px] px-[20px]">
+    <div
+      className={cn(
+        'mobile:px-[10px] flex h-[35px] items-center justify-start gap-[10px] px-[20px]',
+        className,
+      )}
+    >
       <div className="mobile:hidden block">
         <ECFButton
           onPress={onRouterBack}
