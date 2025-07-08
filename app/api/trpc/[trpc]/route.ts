@@ -4,18 +4,26 @@ import { NextRequest } from 'next/server';
 import { appRouter } from '@/lib/trpc/routers';
 import { createTRPCContext } from '@/lib/trpc/server';
 
+export const runtime = 'nodejs';
+
 const handler = (req: NextRequest) => {
+  console.log(
+    `tRPC request: ${req.method} ${req.url} at ${new Date().toISOString()}`,
+  );
+
   return fetchRequestHandler({
     endpoint: '/api/trpc',
     req,
     router: appRouter,
     createContext: () => createTRPCContext({ headers: req.headers }),
-    onError:
-      process.env.NODE_ENV === 'development'
-        ? ({ path, error }) => {
-            console.error(`❌ trpc error: ${path}`, `${error.message}`);
-          }
-        : undefined,
+    onError: ({ path, error }) => {
+      console.error(` tRPC error: ${path}`, {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      });
+    },
   });
 };
 
