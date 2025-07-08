@@ -110,6 +110,30 @@ export function formatDateWithTime(
   }
 }
 
+/**
+ * Format a date to a readable string format in GMT timezone
+ *
+ * @param date - The date to format (Date object or ISO string)
+ * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param fallback - The fallback value if date is invalid (default: '')
+ * @returns Formatted date string in GMT timezone
+ */
+export function formatDateWithTimeGMT(
+  date: Date | string | null | undefined,
+  format: string = 'MM/DD/YYYY HH:mm',
+  fallback: string = '',
+): string {
+  if (!date) return fallback;
+
+  try {
+    // Display in GMT timezone
+    return dayjs(date).utc().format(format);
+  } catch (error) {
+    console.error('Error formatting date with time in GMT:', error);
+    return fallback;
+  }
+}
+
 export const dateToDateValue = (
   date: Date | null | undefined,
 ): DateValue | null => {

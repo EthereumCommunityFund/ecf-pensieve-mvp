@@ -1,11 +1,13 @@
 'use client';
 
 import { Image } from '@heroui/react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
+import { ProjectListWrapper } from '@/components/pages/home/HomeList';
+import BackHeader from '@/components/pages/project/BackHeader';
 import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
@@ -16,9 +18,11 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 
-const ProjectsPage = () => {
+const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const type = searchParams.get('type');
 
   const {
     data,
@@ -34,13 +38,21 @@ const ProjectsPage = () => {
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      enabled: !type,
     },
   );
 
-  // Use the upvote hook with refresh callback
+  const {
+    data: ranksData,
+    isLoading: isRankLoading,
+    refetch: refetchRanks,
+  } = trpc.rank.getTopRanks.useQuery(undefined, {
+    enabled: !!type,
+  });
+
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
-      onSuccess: refetchProjects,
+      onSuccess: type ? refetchRanks : refetchProjects,
     });
 
   const handleLoadMore = () => {
@@ -61,101 +73,148 @@ const ProjectsPage = () => {
     return data?.pages.flatMap((page) => page.items) || [];
   }, [data]);
 
+  const { projectList, title, description, emptyMessage, currentIsLoading } =
+    useMemo(() => {
+      if (type === 'transparent') {
+        return {
+          projectList:
+            ranksData?.byGenesisWeight?.map((rank: any) => rank.project) || [],
+          title: 'Top Transparent Projects',
+          description: `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`,
+          emptyMessage: 'No transparent projects found',
+          currentIsLoading: isRankLoading,
+        };
+      } else if (type === 'community-trusted') {
+        return {
+          projectList: ranksData?.bySupport || [],
+          title: 'Top Community-trusted',
+          description: `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`,
+          emptyMessage: 'No community-trusted projects found',
+          currentIsLoading: isRankLoading,
+        };
+      }
+      return {
+        projectList: allProjects,
+        title: 'Recent Projects',
+        description: '',
+        emptyMessage: 'No Published Project Yet',
+        currentIsLoading: isLoading,
+      };
+    }, [type, ranksData, allProjects, isRankLoading, isLoading]);
+
   useEffect(() => {
-    if (allProjects.length > 0) {
-      devLog('allProjects', allProjects);
+    if (projectList.length > 0) {
+      devLog('projectList', projectList);
     }
-  }, [allProjects]);
+  }, [projectList]);
 
   return (
     <div className="pb-10">
-      <div className="flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
-        <Image
-          src="/images/projects/logo.png"
-          alt="ECF project Logo"
-          width={63}
-          height={63}
-        />
-        <div className="flex-1">
-          <ECFTypography type={'title'}>Projects</ECFTypography>
-          <ECFTypography type={'subtitle2'} className="mt-2.5">
-            Explore projects and initiatives here or add your own to the list!
-          </ECFTypography>
-          <ECFButton onPress={handleProposeProject} className="mt-2.5">
-            Propose a Project
-          </ECFButton>
+      {!type ? (
+        <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
+          <Image
+            src="/images/projects/logo.png"
+            alt="ECF project Logo"
+            width={63}
+            height={63}
+          />
+          <div className="flex-1">
+            <ECFTypography type={'title'}>Projects</ECFTypography>
+            <ECFTypography type={'subtitle2'} className="mt-2.5">
+              Explore projects and initiatives here or add your own to the list!
+            </ECFTypography>
+            <ECFButton onPress={handleProposeProject} className="mt-2.5">
+              Propose a Project
+            </ECFButton>
+          </div>
         </div>
-      </div>
+      ) : (
+        <BackHeader className="px-[10px]" />
+      )}
 
-      <div className="mobile:flex-col mobile:gap-5 mt-5 flex items-start justify-between gap-10 px-2.5">
+      <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
         {/* <div className="pc:hidden tablet:hidden flex w-full items-center justify-end gap-2.5 lg:hidden">
           <ECFButton $size="small">Sort</ECFButton>
           <ECFButton $size="small">Filter</ECFButton>
         </div> */}
 
         <div className="w-full flex-1">
-          <div className="border-b border-black/10 px-2.5 py-2 opacity-80">
-            <ECFTypography type={'subtitle1'}>Recent Projects</ECFTypography>
-            {/* <ECFTypography type={'body2'} className="mt-[5px]">
-              Page Completion Rate (Transparency) * User Supported Votes
-            </ECFTypography> */}
-          </div>
-
-          {/* Project list */}
-          <div className="pb-2.5">
-            {isLoading ? (
+          <div className="border-b border-black/10 px-2.5 py-4">
+            {type ? (
               <>
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <ProjectCardSkeleton key={index} showBorder={true} />
-                ))}
-              </>
-            ) : allProjects.length > 0 ? (
-              <>
-                {allProjects.map((project) => {
-                  const projectLikeRecord = getProjectLikeRecord(project.id);
-
-                  return (
-                    <ProjectCard
-                      key={project.id}
-                      project={project as IProject}
-                      showBorder={true}
-                      onUpvote={handleUpvote}
-                      userLikeRecord={
-                        projectLikeRecord
-                          ? {
-                              id: project.id,
-                              weight: projectLikeRecord.weight || 0,
-                            }
-                          : null
-                      }
-                    />
-                  );
-                })}
-
-                {isFetchingNextPage && (
-                  <ProjectCardSkeleton showBorder={true} />
-                )}
-
-                {hasNextPage && (
-                  <div className="flex justify-center py-4">
-                    <ECFButton
-                      onPress={handleLoadMore}
-                      isDisabled={isFetchingNextPage}
-                      $size="small"
-                    >
-                      {isFetchingNextPage ? 'Loading...' : 'Load More'}
-                    </ECFButton>
-                  </div>
-                )}
+                <h1 className="text-[24px] font-[700] leading-[1.4] text-black/80">
+                  {title}
+                </h1>
+                <p className="mt-[5px] text-[14px] font-[400] leading-[19px] text-black/60">
+                  {description}
+                </p>
               </>
             ) : (
-              <div className="flex justify-center py-[80px]">
-                <ECFTypography type="subtitle1">
-                  No Published Project Yet
-                </ECFTypography>
-              </div>
+              <ECFTypography type={'subtitle1'}>{title}</ECFTypography>
             )}
           </div>
+
+          {type ? (
+            <ProjectListWrapper
+              isLoading={currentIsLoading}
+              projectList={projectList as IProject[]}
+              onRefetch={type ? refetchRanks : refetchProjects}
+              emptyMessage={emptyMessage}
+            />
+          ) : (
+            <div className="pb-2.5">
+              {currentIsLoading ? (
+                <>
+                  {Array.from({ length: 10 }).map((_, index) => (
+                    <ProjectCardSkeleton key={index} showBorder={true} />
+                  ))}
+                </>
+              ) : projectList.length > 0 ? (
+                <>
+                  {projectList.map((project) => {
+                    const projectLikeRecord = getProjectLikeRecord(project.id);
+
+                    return (
+                      <ProjectCard
+                        key={project.id}
+                        project={project as IProject}
+                        showBorder={true}
+                        onUpvote={handleUpvote}
+                        userLikeRecord={
+                          projectLikeRecord
+                            ? {
+                                id: project.id,
+                                weight: projectLikeRecord.weight || 0,
+                              }
+                            : null
+                        }
+                      />
+                    );
+                  })}
+
+                  {isFetchingNextPage && (
+                    <ProjectCardSkeleton showBorder={true} />
+                  )}
+
+                  {hasNextPage && (
+                    <div className="flex justify-center py-4">
+                      <ECFButton
+                        onPress={handleLoadMore}
+                        isDisabled={isFetchingNextPage}
+                        $size="small"
+                      >
+                        {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                      </ECFButton>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-center py-[80px]">
+                  <ECFTypography type="subtitle1">{emptyMessage}</ECFTypography>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mobile:hidden">
@@ -178,6 +237,40 @@ const ProjectsPage = () => {
 
       {UpvoteModalComponent}
     </div>
+  );
+};
+
+const ProjectsLoading = () => (
+  <div className="pb-10">
+    <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
+      <div className="size-[63px] animate-pulse rounded-lg bg-gray-200" />
+      <div className="flex-1">
+        <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+        <div className="mt-2.5 h-4 w-48 animate-pulse rounded bg-gray-200" />
+        <div className="mt-2.5 h-10 w-28 animate-pulse rounded bg-gray-200" />
+      </div>
+    </div>
+    <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
+      <div className="w-full flex-1">
+        <div className="border-b border-black/10 px-2.5 py-4">
+          <div className="h-6 w-40 animate-pulse rounded bg-gray-200" />
+        </div>
+        <div className="pb-2.5">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <ProjectCardSkeleton key={index} showBorder={true} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// 主页面组件
+const ProjectsPage = () => {
+  return (
+    <Suspense fallback={<ProjectsLoading />}>
+      <ProjectsContent />
+    </Suspense>
   );
 };
 

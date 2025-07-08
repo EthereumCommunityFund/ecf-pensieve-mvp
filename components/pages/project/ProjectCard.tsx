@@ -19,7 +19,7 @@ export function ProjectCardSkeleton({
     <div
       className={cn(
         showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
-        'pb-[10px] pt-[10px]',
+        'py-[10px] mobile:py-[5px]',
       )}
     >
       <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5">
@@ -69,7 +69,7 @@ const ProjectCard = ({
     <div
       className={cn(
         showBorder && 'border-b border-[rgba(0, 0, 0, 0.1)]',
-        'pb-[10px] pt-[10px] ',
+        'py-[10px] mobile:py-[5px]',
       )}
     >
       <div className="mobile:items-start flex items-center justify-start gap-5 rounded-[10px] p-2.5 hover:bg-[rgba(0,0,0,0.05)]">
@@ -77,7 +77,7 @@ const ProjectCard = ({
           href={`/project/${project.id}`}
           className="-m-2.5 flex flex-1 cursor-pointer items-start gap-[14px] rounded-[10px] p-2.5 transition-colors duration-200"
         >
-          <div className="mobile:hidden box-content size-[100px] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.1)]">
+          <div className="mobile:hidden box-content size-[100px] overflow-hidden rounded-[10px] ">
             <Image
               src={project.logoUrl}
               as={NextImage}
@@ -88,7 +88,7 @@ const ProjectCard = ({
             />
           </div>
 
-          <div className="mobile:block hidden size-[60px] overflow-hidden rounded-[5px] border border-[rgba(0,0,0,0.1)]">
+          <div className="mobile:block hidden size-[60px] overflow-hidden rounded-[5px] ">
             <Image
               src={project.logoUrl}
               as={NextImage}

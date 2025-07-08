@@ -340,7 +340,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                 href="https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus/3.-the-pensieve-mechanism-and-penseive-knowledge-base-design#id-3.6-artificial-intelligence-integration-and-risk-management"
               >
                 <strong className="cursor-pointer underline hover:opacity-80">
-                  Penseive knowledge base
+                  Pensieve knowledge base
                 </strong>
               </Link>{' '}
               is where truth is validated by communities, not gatekeepers.
