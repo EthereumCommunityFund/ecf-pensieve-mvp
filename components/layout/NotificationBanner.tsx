@@ -6,14 +6,20 @@ import InfoIcon from '../icons/Info';
 
 export function NotificationBanner() {
   const bannerRef = useRef<HTMLDivElement>(null);
+  const isVisible = process.env.NEXT_PUBLIC_SHOW_GLOBAL_NOTIFICATION === 'true';
 
   useEffect(() => {
     const updateBannerHeight = () => {
-      if (bannerRef.current) {
+      if (bannerRef.current && isVisible) {
         const height = bannerRef.current.offsetHeight;
         document.documentElement.style.setProperty(
           '--notification-banner-height',
           `${height}px`,
+        );
+      } else {
+        document.documentElement.style.setProperty(
+          '--notification-banner-height',
+          '0px',
         );
       }
     };
@@ -24,7 +30,11 @@ export function NotificationBanner() {
     return () => {
       window.removeEventListener('resize', updateBannerHeight);
     };
-  }, []);
+  }, [isVisible]);
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div
