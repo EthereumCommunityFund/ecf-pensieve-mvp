@@ -277,7 +277,6 @@ export const useNotifications = () => {
           case 'itemProposalLostLeading':
           case 'itemProposalBecameLeading':
           case 'itemProposalSupported':
-            // Navigate to project detail page
             if (projectId) {
               router.push(
                 `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${notification.itemName}`,
@@ -288,45 +287,27 @@ export const useNotifications = () => {
             break;
 
           case 'proposalPassed':
-            // Navigate to project detail or projects list
-            if (projectId) {
-              router.push(`/project/${projectId}`);
-            } else {
-              router.push('/projects');
-            }
+            router.push(projectId ? `/project/${projectId}` : '/projects');
             break;
 
           case 'projectPublished':
-            // Navigate to published project
-            if (projectId) {
-              router.push(`/project/${projectId}`);
-            } else {
-              router.push('/projects');
-            }
+            router.push(projectId ? `/project/${projectId}` : '/projects');
             break;
 
           case 'contributionPoints':
-            // Navigate to projects page for contribution points notifications
             router.push('/projects');
             break;
 
           case 'systemUpdate':
-            // Navigate to home page for system updates
             router.push('/');
             break;
 
           case 'newItemsAvailable':
-            // Navigate to project or projects list
-            if (projectId) {
-              router.push(`/project/${projectId}`);
-            } else {
-              router.push('/projects');
-            }
+            router.push('/');
             break;
 
           default:
-            // Default navigation to projects list
-            router.push('/projects');
+            router.push('/');
             break;
         }
       };
