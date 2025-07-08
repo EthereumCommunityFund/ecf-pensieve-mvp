@@ -279,7 +279,9 @@ export const useNotifications = () => {
           case 'itemProposalSupported':
             // Navigate to project detail page
             if (projectId) {
-              router.push(`/project/${projectId}`);
+              router.push(
+                `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${notification.itemName}`,
+              );
             } else {
               router.push('/projects');
             }
