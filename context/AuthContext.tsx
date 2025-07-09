@@ -18,6 +18,15 @@ import { trpc } from '@/lib/trpc/client';
 import { setSessionToken } from '@/lib/trpc/sessionStore';
 import { IProfile } from '@/types';
 
+const getSessionWithTimeout = async (timeoutMs = 5000) => {
+  return Promise.race([
+    supabase.auth.getSession(),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs),
+    ),
+  ]);
+};
+
 type AuthStatus =
   | 'idle'
   | 'authenticating'
@@ -226,35 +235,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [disconnectAsync, logout]);
 
   const fetchUserProfile = useCallback(async (): Promise<IProfile | null> => {
-    const sessionData = await supabase.auth.getSession();
-    const currentSupabaseUser = sessionData?.data?.session?.user;
-
-    if (!currentSupabaseUser) {
-      return handleError('Get profile failed, please try again.', false, false);
-    }
-
-    // Ensure local state matches Supabase session user
-    if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
-      setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
-    }
-
-    updateAuthState('fetching_profile');
-
     try {
-      const profileData = await getCurrentUserQuery.refetch();
-      if (profileData.error) {
-        throw profileData.error;
+      const sessionData = await getSessionWithTimeout();
+      const currentSupabaseUser = sessionData?.data?.session?.user;
+
+      if (!currentSupabaseUser) {
+        return handleError(
+          'Get profile failed, please try again.',
+          false,
+          false,
+        );
       }
-      if (profileData.data) {
-        setUserState((prev) => ({ ...prev, profile: profileData.data }));
-        updateAuthState('authenticated');
-        return profileData.data;
-      } else {
-        return handleError('Get profile failed, please try again.');
+
+      // Ensure local state matches Supabase session user
+      if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
+        setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
+      }
+
+      updateAuthState('fetching_profile');
+
+      try {
+        const profileData = await getCurrentUserQuery.refetch();
+        if (profileData.error) {
+          throw profileData.error;
+        }
+        if (profileData.data) {
+          setUserState((prev) => ({ ...prev, profile: profileData.data }));
+          updateAuthState('authenticated');
+          return profileData.data;
+        } else {
+          return handleError('Get profile failed, please try again.');
+        }
+      } catch (error: any) {
+        return handleError(
+          `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+        );
       }
     } catch (error: any) {
       return handleError(
-        `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+        `Session fetch failed: ${error.message || 'Please try again later'}`,
+        false,
+        false,
       );
     }
   }, [
@@ -440,9 +461,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         // Get initial session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const sessionResponse = await getSessionWithTimeout();
+        const session = sessionResponse?.data?.session;
 
         if (session) {
           setUserState((prev) => ({ ...prev, session, user: session.user }));
