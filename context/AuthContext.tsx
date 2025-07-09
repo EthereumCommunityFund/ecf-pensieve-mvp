@@ -15,7 +15,17 @@ import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
 import { supabase } from '@/lib/supabase/client';
 import { trpc } from '@/lib/trpc/client';
+import { setSessionToken } from '@/lib/trpc/sessionStore';
 import { IProfile } from '@/types';
+
+const getSessionWithTimeout = async (timeoutMs = 3000) => {
+  return Promise.race([
+    supabase.auth.getSession(),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs),
+    ),
+  ]);
+};
 
 type AuthStatus =
   | 'idle'
@@ -50,6 +60,7 @@ interface SignatureData {
 
 interface IAuthContext {
   // State
+  session: Session | null;
   authStatus: AuthStatus;
   isCheckingInitialAuth: boolean;
   isAuthenticated: boolean;
@@ -81,6 +92,7 @@ interface IAuthContext {
 export const CreateProfileErrorPrefix = '[Create Profile Failed]';
 
 const initialContext: IAuthContext = {
+  session: null,
   authStatus: 'idle',
   isCheckingInitialAuth: true,
   isAuthenticated: false,
@@ -223,35 +235,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [disconnectAsync, logout]);
 
   const fetchUserProfile = useCallback(async (): Promise<IProfile | null> => {
-    const sessionData = await supabase.auth.getSession();
-    const currentSupabaseUser = sessionData?.data?.session?.user;
-
-    if (!currentSupabaseUser) {
-      return handleError('Get profile failed, please try again.', false, false);
-    }
-
-    // Ensure local state matches Supabase session user
-    if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
-      setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
-    }
-
-    updateAuthState('fetching_profile');
-
     try {
-      const profileData = await getCurrentUserQuery.refetch();
-      if (profileData.error) {
-        throw profileData.error;
+      const sessionData = await getSessionWithTimeout();
+      const currentSupabaseUser = sessionData?.data?.session?.user;
+
+      if (!currentSupabaseUser) {
+        return handleError(
+          'Get profile failed, please try again.',
+          false,
+          false,
+        );
       }
-      if (profileData.data) {
-        setUserState((prev) => ({ ...prev, profile: profileData.data }));
-        updateAuthState('authenticated');
-        return profileData.data;
-      } else {
-        return handleError('Get profile failed, please try again.');
+
+      // Ensure local state matches Supabase session user
+      if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
+        setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
+      }
+
+      updateAuthState('fetching_profile');
+
+      try {
+        const profileData = await getCurrentUserQuery.refetch();
+        if (profileData.error) {
+          throw profileData.error;
+        }
+        if (profileData.data) {
+          setUserState((prev) => ({ ...prev, profile: profileData.data }));
+          updateAuthState('authenticated');
+          return profileData.data;
+        } else {
+          return handleError('Get profile failed, please try again.');
+        }
+      } catch (error: any) {
+        return handleError(
+          `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+        );
       }
     } catch (error: any) {
       return handleError(
-        `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+        `Session fetch failed: ${error.message || 'Please try again later'}`,
+        false,
+        false,
       );
     }
   }, [
@@ -437,9 +461,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         // Get initial session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const sessionResponse = await getSessionWithTimeout();
+        const session = sessionResponse?.data?.session;
 
         if (session) {
           setUserState((prev) => ({ ...prev, session, user: session.user }));
@@ -449,51 +472,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         // Set up auth state change listener for automatic token refresh and logout handling
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            // Update session state
-            setUserState((prev) => ({
-              ...prev,
-              session,
-              user: session?.user || null,
-            }));
-
-            if (event === 'SIGNED_OUT') {
-              // Clear tRPC cache when signed out
-              utils.user.getCurrentUser.setData(undefined, undefined);
-              resetAuthState();
-            } else if (event === 'TOKEN_REFRESHED' && session) {
-              console.log('Token refreshed successfully');
-              setUserState((prev) => ({
-                ...prev,
-                session,
-                user: session.user,
-              }));
-            } else if (event === 'SIGNED_IN' && session) {
-              setUserState((prev) => ({
-                ...prev,
-                session,
-                user: session.user,
-              }));
-              // Fetch profile if not already authenticated
-              if (authState.status !== 'authenticated') {
-                try {
-                  await fetchUserProfile();
-                } catch (error) {
-                  console.error('Failed to fetch profile on sign in:', error);
-                }
-              }
-            }
-
-            setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
-          },
-        );
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log('Auth state changed:', event);
+          setSessionToken(session?.access_token || null);
+          setUserState((prev) => ({
+            ...prev,
+            session,
+            user: session?.user || null,
+          }));
+          if (event === 'SIGNED_IN') {
+            fetchUserProfile();
+          }
+          setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
+        });
 
         setAuthState((prev) => ({ ...prev, isCheckingInitialAuth: false }));
 
         // Return cleanup function
         return () => {
-          authListener.subscription.unsubscribe();
+          subscription.unsubscribe();
         };
       } catch (error: any) {
         console.error('Error initializing Supabase auth:', error);
@@ -529,7 +528,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const showAuthPrompt = useCallback(
     async (source: ConnectSource = 'connectButton') => {
-      // 总是先断开钱包连接，确保用户可以重新选择钱包
+      // always disconnect wallet before showing auth prompt
       try {
         await disconnectAsync();
       } catch (error) {
@@ -570,6 +569,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const contextValue: IAuthContext = {
+    session: userState.session,
     authStatus: authState.status,
     isCheckingInitialAuth: authState.isCheckingInitialAuth,
     isAuthenticated: authState.status === 'authenticated',

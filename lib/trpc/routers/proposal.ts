@@ -142,6 +142,13 @@ export const proposalRouter = router({
 
           const logPromises = logEntries.map((entry, index) => {
             const vote = allVotes[index];
+
+            if (!vote) {
+              console.error(
+                `FATAL: vote is undefined at index ${index}! This will cause a crash.`,
+              );
+            }
+
             const logData = {
               userId: ctx.user.id,
               targetId: vote.id,
@@ -160,6 +167,17 @@ export const proposalRouter = router({
           return proposal;
         });
       } catch (error) {
+        console.error('--- FATAL ERROR CAUGHT in createProposal ---');
+        console.error('Caught error object:', error);
+        console.error(
+          'Error message:',
+          error instanceof Error ? error.message : 'Unknown error',
+        );
+        console.error(
+          'Error stack:',
+          error instanceof Error ? error.stack : 'No stack available',
+        );
+
         console.error('Error in createProposal:', {
           userId: ctx.user.id,
           projectId: input.projectId,

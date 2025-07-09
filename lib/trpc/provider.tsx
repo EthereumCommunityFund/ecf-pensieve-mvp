@@ -5,9 +5,8 @@ import { httpBatchLink, TRPCClientError } from '@trpc/client';
 import { useState } from 'react';
 import superJSON from 'superjson';
 
-import { supabase } from '@/lib/supabase/client';
-
 import { trpc } from './client';
+import { getSessionToken } from './sessionStore';
 
 const customRetry = (failureCount: number, error: unknown): boolean => {
   if (error instanceof TRPCClientError) {
@@ -38,14 +37,11 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: superJSON,
           url: `/api/trpc`,
-          async headers() {
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
-
+          headers() {
             const headers: Record<string, string> = {};
-            if (session?.access_token) {
-              headers['authorization'] = `Bearer ${session.access_token}`;
+            const token = getSessionToken();
+            if (token) {
+              headers['authorization'] = `Bearer ${token}`;
             }
             return headers;
           },
