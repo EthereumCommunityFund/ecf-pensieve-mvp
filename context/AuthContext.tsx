@@ -213,6 +213,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     updateAuthState('idle');
     await supabase.auth.signOut();
+    // Clear session token from localStorage
+    setSessionToken(null);
     // Clear tRPC cache - this is critical for proper logout
     utils.user.getCurrentUser.setData(undefined, undefined);
     resetAuthState();
