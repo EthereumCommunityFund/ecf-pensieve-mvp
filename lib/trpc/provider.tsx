@@ -5,9 +5,8 @@ import { httpBatchLink, TRPCClientError } from '@trpc/client';
 import { useState } from 'react';
 import superJSON from 'superjson';
 
-import { supabase } from '@/lib/supabase/client';
-
 import { trpc } from './client';
+import { getSessionToken } from './sessionStore';
 
 const customRetry = (failureCount: number, error: unknown): boolean => {
   if (error instanceof TRPCClientError) {
@@ -38,53 +37,13 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: superJSON,
           url: `/api/trpc`,
-          async headers() {
-            console.log('Making tRPC request...');
-            console.log('headers(): Attempting to get Supabase session...');
-            const {
-              data: { session },
-              error: sessionError,
-            } = await supabase.auth.getSession();
-            console.log('headers(): Supabase session received.');
-
-            if (sessionError) {
-              console.error('Session error:', sessionError);
-            }
-
+          headers() {
             const headers: Record<string, string> = {};
-            if (session?.access_token) {
-              headers['authorization'] = `Bearer ${session.access_token}`;
-              console.log('Auth token added to headers');
-            } else {
-              console.warn('No auth token available');
+            const token = getSessionToken();
+            if (token) {
+              headers['authorization'] = `Bearer ${token}`;
             }
             return headers;
-          },
-          fetch: (url, options) => {
-            console.log('Fetch request:', {
-              url,
-              method: options?.method || 'GET',
-              timestamp: new Date().toISOString(),
-            });
-
-            return fetch(url, options)
-              .then((response) => {
-                console.log('Fetch response:', {
-                  status: response.status,
-                  statusText: response.statusText,
-                  url: response.url,
-                  timestamp: new Date().toISOString(),
-                });
-                return response;
-              })
-              .catch((error) => {
-                console.error('Fetch error:', {
-                  message: error.message,
-                  url,
-                  timestamp: new Date().toISOString(),
-                });
-                throw error;
-              });
           },
         }),
       ],
