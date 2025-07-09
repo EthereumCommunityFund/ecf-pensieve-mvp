@@ -15,17 +15,8 @@ import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
 import { supabase } from '@/lib/supabase/client';
 import { trpc } from '@/lib/trpc/client';
-import { setSessionToken } from '@/lib/trpc/sessionStore';
+import { getSessionWithTimeout } from '@/lib/utils/supabaseUtils';
 import { IProfile } from '@/types';
-
-const getSessionWithTimeout = async (timeoutMs = 3000) => {
-  return Promise.race([
-    supabase.auth.getSession(),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs),
-    ),
-  ]);
-};
 
 type AuthStatus =
   | 'idle'
@@ -213,8 +204,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     updateAuthState('idle');
     await supabase.auth.signOut();
-    // Clear session token from localStorage
-    setSessionToken(null);
     // Clear tRPC cache - this is critical for proper logout
     utils.user.getCurrentUser.setData(undefined, undefined);
     resetAuthState();
@@ -478,7 +467,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
           console.log('Auth state changed:', event);
-          setSessionToken(session?.access_token || null);
           setUserState((prev) => ({
             ...prev,
             session,
