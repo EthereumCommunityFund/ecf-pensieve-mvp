@@ -40,10 +40,12 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           url: `/api/trpc`,
           async headers() {
             console.log('Making tRPC request...');
+            console.log('headers(): Attempting to get Supabase session...');
             const {
               data: { session },
               error: sessionError,
             } = await supabase.auth.getSession();
+            console.log('headers(): Supabase session received.');
 
             if (sessionError) {
               console.error('Session error:', sessionError);
