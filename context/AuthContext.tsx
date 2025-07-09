@@ -18,7 +18,7 @@ import { trpc } from '@/lib/trpc/client';
 import { setSessionToken } from '@/lib/trpc/sessionStore';
 import { IProfile } from '@/types';
 
-const getSessionWithTimeout = async (timeoutMs = 2000) => {
+const getSessionWithTimeout = async (timeoutMs = 3000) => {
   return Promise.race([
     supabase.auth.getSession(),
     new Promise<never>((_, reject) =>
