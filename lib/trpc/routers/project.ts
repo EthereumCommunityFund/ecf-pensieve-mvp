@@ -16,7 +16,9 @@ import { itemProposals } from '@/lib/db/schema/itemProposals';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
+  addNotification,
   addRewardNotification,
+  createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 import { sendProjectPublishTweet } from '@/lib/services/twitter';
@@ -335,9 +337,11 @@ export const projectRouter = router({
           project_id,
           proposal_id,
           proposal_creator,
-          items
-        FROM ranked_proposals
-        WHERE rn = 1
+          items,
+          p.creator as project_creator
+        FROM ranked_proposals rp
+        JOIN projects p ON rp.project_id = p.id
+        WHERE rp.rn = 1
       `;
 
       const eligibleProjects = await ctx.db.execute(eligibleProjectsQuery);
@@ -378,6 +382,21 @@ export const projectRouter = router({
         });
         const proposalsMap = new Map(allProposals.map((p) => [p.id, p]));
 
+        const projectProposalCreators = new Map<number, Set<string>>();
+
+        const allProjectProposals = await tx.query.proposals.findMany({
+          where: inArray(proposals.projectId, projectIds),
+          columns: { creator: true, projectId: true },
+        });
+
+        for (const proposal of allProjectProposals) {
+          const projectId = proposal.projectId;
+          if (!projectProposalCreators.has(projectId)) {
+            projectProposalCreators.set(projectId, new Set());
+          }
+          projectProposalCreators.get(projectId)!.add(proposal.creator);
+        }
+
         const projectUpdates: Array<{
           id: number;
           itemsTopWeight: Record<string, number>;
@@ -386,6 +405,8 @@ export const projectRouter = router({
         const voteRecordBatch: any[] = [];
         const weightUpdates: Array<{ userId: string; amount: number }> = [];
         const notifications: any[] = [];
+        const projectPublishNotifications: any[] = [];
+        const proposalPassedNotifications: any[] = [];
 
         for (const project of eligibleProjects) {
           const projectId = Number(project.project_id);
@@ -459,6 +480,23 @@ export const projectRouter = router({
                 ESSENTIAL_ITEM_WEIGHT_AMOUNT * (1 - REWARD_PERCENT),
               ),
             );
+
+            proposalPassedNotifications.push(
+              createNotification.proposalPassed(
+                proposalCreator,
+                projectId,
+                proposalId,
+              ),
+            );
+          }
+
+          const proposalCreators = projectProposalCreators.get(projectId);
+          if (proposalCreators && proposalCreators.size > 0) {
+            for (const creator of proposalCreators) {
+              projectPublishNotifications.push(
+                createNotification.projectPublished(creator, projectId),
+              );
+            }
           }
         }
 
@@ -553,6 +591,14 @@ export const projectRouter = router({
 
         for (const notification of notifications) {
           await addRewardNotification(notification, tx);
+        }
+
+        for (const notification of projectPublishNotifications) {
+          await addNotification(notification, tx);
+        }
+
+        for (const notification of proposalPassedNotifications) {
+          await addNotification(notification, tx);
         }
 
         return processedCount;

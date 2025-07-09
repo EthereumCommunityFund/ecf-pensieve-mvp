@@ -15,6 +15,7 @@ import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
 
@@ -57,7 +58,6 @@ const ProjectPage = () => {
 
   const [activeTab, setActiveTab] = useState<ITabKey>('project-data');
 
-  // SwitchVoteModal state management
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemKey, setSelectedItemKey] = useState<IPocItemKey | null>(
     null,
@@ -83,7 +83,6 @@ const ProjectPage = () => {
     router.push(`/project/pending/${projectId}/proposal/create`);
   }, [router, projectId]);
 
-  // Handle SwitchVoteModal open
   const handleOpenModal = useCallback(
     (
       itemKey: IPocItemKey,
@@ -98,7 +97,33 @@ const ProjectPage = () => {
     [],
   );
 
-  // Handle SwitchVoteModal close
+  useEffect(() => {
+    const notificationType = searchParams.get('notificationType');
+    const itemName = searchParams.get('itemName');
+
+    if (
+      notificationType === 'viewSubmission' &&
+      itemName &&
+      isProposalsFetched
+    ) {
+      // itemName = notification.itemProposal?.key
+      const itemKey = itemName as IPocItemKey;
+
+      if (itemKey in AllItemConfig) {
+        handleOpenModal(itemKey, 'viewItemProposal');
+
+        //  clear url params to avoid duplicate trigger
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete('notificationType');
+        newParams.delete('itemName');
+
+        router.replace(`/project/${projectId}?${newParams.toString()}`, {
+          scroll: false,
+        });
+      }
+    }
+  }, [searchParams, projectId, router, isProposalsFetched, handleOpenModal]);
+
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedItemKey(null);
@@ -158,6 +183,7 @@ const ProjectPage = () => {
         onSubmitEntry={onSubmitEntry}
         itemKey={selectedItemKey as IPocItemKey}
         setModalContentType={setModalContentType}
+        initialTab="submission-queue"
       />
 
       <ReferenceModal

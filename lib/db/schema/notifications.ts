@@ -32,7 +32,9 @@ export const notifications = pgTable('notifications', {
   ),
   type: text('type').notNull(),
   reward: doublePrecision('reward'),
+  voter_id: uuid('voter_id').references(() => profiles.userId),
   readAt: timestamp('read_at', { withTimezone: true, mode: 'date' }),
+  archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'date' }),
 });
 
 export type Notification = typeof notifications.$inferInsert;
