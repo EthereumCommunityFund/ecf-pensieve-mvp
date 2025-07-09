@@ -96,30 +96,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
 
-  const {
-    status: projectMutationStatus,
-    isSuccess: isProjectMutationSuccess,
-    isPending: isProjectMutationPending,
-    isError: isProjectMutationError,
-    error: projectMutationError,
-  } = createProjectMutation;
-
-  useEffect(() => {
-    console.log('Project Mutation Status Changed:', {
-      status: projectMutationStatus,
-      isSuccess: isProjectMutationSuccess,
-      isPending: isProjectMutationPending,
-      isError: isProjectMutationError,
-      error: projectMutationError,
-    });
-  }, [
-    projectMutationStatus,
-    isProjectMutationSuccess,
-    isProjectMutationPending,
-    isProjectMutationError,
-    projectMutationError,
-  ]);
-
   const isProjectType = formType === IFormTypeEnum.Project;
 
   const [currentStep, setCurrentStep] =
@@ -221,7 +197,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
 
   const onSubmit = useCallback(
     async (formData: IProjectFormData) => {
-      console.log('--- ONSUBMIT CALLED ---');
       if (!profile?.userId) {
         addToast({
           title: 'Error',
@@ -392,7 +367,6 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const handleNext = useCallback(async () => {
-    console.log('--- HANDLENEXT CALLED ---');
     devLog('Form Data (handleNext)', getValues());
     devLog(
       'Transformed Data (handleNext)',
