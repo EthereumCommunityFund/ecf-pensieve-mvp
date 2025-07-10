@@ -73,26 +73,7 @@ const getCachedSitemap = unstable_cache(
       }),
     );
 
-    const pendingProjectUrls: MetadataRoute.Sitemap = data.proposals
-      .filter(
-        (proposal, index, self) =>
-          index === self.findIndex((p) => p.projectId === proposal.projectId),
-      )
-      .map((proposal) => ({
-        url: `${siteUrl}/project/pending/${proposal.projectId}`,
-        lastModified: proposal.createdAt,
-        changeFrequency: 'daily',
-        priority: 0.7,
-      }));
-
-    const result = [
-      ...baseUrls,
-      ...projectUrls,
-      ...profileUrls,
-      ...proposalUrls,
-      ...pendingProjectUrls,
-    ];
-    return result;
+    return [...baseUrls, ...projectUrls, ...profileUrls, ...proposalUrls];
   },
   ['sitemap'],
   { revalidate: 21600 },
