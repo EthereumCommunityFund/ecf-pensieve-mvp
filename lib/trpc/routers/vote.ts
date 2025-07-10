@@ -12,6 +12,10 @@ import {
 } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addNotification,
+  createNotification,
+} from '@/lib/services/notification';
+import {
   checkNeedQuorum,
   handleOriginalProposalUpdate,
   handleVoteRecord,
@@ -122,6 +126,18 @@ export const voteRouter = router({
             },
             tx,
           );
+
+          if (ctx.user.id !== proposalWithProject.creator) {
+            await addNotification(
+              createNotification.proposalSupported(
+                proposalWithProject.creator,
+                projectId,
+                proposalId,
+                ctx.user.id,
+              ),
+              tx,
+            );
+          }
 
           return vote;
         });
@@ -236,6 +252,18 @@ export const voteRouter = router({
             tx,
           );
 
+          if (ctx.user.id !== targetProposal.creator) {
+            await addNotification(
+              createNotification.proposalSupported(
+                targetProposal.creator,
+                targetProposal.projectId,
+                proposalId,
+                ctx.user.id,
+              ),
+              tx,
+            );
+          }
+
           return updatedVote;
         });
       } catch (error) {
@@ -348,6 +376,18 @@ export const voteRouter = router({
             key,
             weight: userProfile?.weight ?? 0,
           });
+
+          if (ctx.user.id !== itemProposal.creator.userId) {
+            await addNotification(
+              createNotification.itemProposalSupported(
+                itemProposal.creator.userId,
+                itemProposal.projectId,
+                itemProposalId,
+                ctx.user.id,
+              ),
+              tx,
+            );
+          }
 
           const [votes, project, leadingProposal] = await Promise.all([
             tx.query.voteRecords.findMany({
@@ -496,6 +536,18 @@ export const voteRouter = router({
             })
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
+
+          if (ctx.user.id !== targetItemProposal.creator.userId) {
+            await addNotification(
+              createNotification.itemProposalSupported(
+                targetItemProposal.creator.userId,
+                projectId,
+                itemProposalId,
+                ctx.user.id,
+              ),
+              tx,
+            );
+          }
 
           const votes = await tx.query.voteRecords.findMany({
             where: and(

@@ -6,11 +6,19 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { profiles, projectLogs, projects, voteRecords } from '@/lib/db/schema';
+import {
+  itemProposals,
+  profiles,
+  projectLogs,
+  projects,
+  voteRecords,
+} from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addNotification,
   addRewardNotification,
+  createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 
@@ -171,6 +179,14 @@ export const processItemProposalVoteResult = async (
             [key]: voteSum,
           },
         }),
+        addNotification(
+          createNotification.itemProposalBecameLeading(
+            itemProposal.creator.userId,
+            itemProposal.projectId,
+            itemProposal.id,
+          ),
+          tx,
+        ),
       ]);
       return;
     }
@@ -199,6 +215,14 @@ export const processItemProposalVoteResult = async (
           itemProposal.projectId,
           itemProposal.id,
           reward,
+        ),
+        tx,
+      ),
+      addNotification(
+        createNotification.itemProposalBecameLeading(
+          itemProposal.creator.userId,
+          itemProposal.projectId,
+          itemProposal.id,
         ),
         tx,
       ),
@@ -273,12 +297,31 @@ export const handleOriginalProposalUpdate = async (
     const keyWeight = itemsTopWeight?.[key] ?? 0;
 
     if (originalVoteSum < keyWeight) {
-      await tx
-        .update(projectLogs)
-        .set({
-          isNotLeading: true,
-        })
-        .where(eq(projectLogs.id, originalLeadingCheck.id));
+      const originalItemProposal = await tx.query.itemProposals.findFirst({
+        where: eq(itemProposals.id, originalItemProposalId),
+        with: {
+          creator: true,
+        },
+      });
+
+      await Promise.all([
+        tx
+          .update(projectLogs)
+          .set({
+            isNotLeading: true,
+          })
+          .where(eq(projectLogs.id, originalLeadingCheck.id)),
+        originalItemProposal
+          ? addNotification(
+              createNotification.itemProposalLostLeading(
+                originalItemProposal.creator.userId,
+                projectId,
+                originalItemProposalId,
+              ),
+              tx,
+            )
+          : Promise.resolve(),
+      ]);
     }
   }
 };

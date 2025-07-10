@@ -52,7 +52,7 @@ export const Button = extendVariants(HButton, {
         'bg-transparent hover:bg-black/10 text-black border border-black/10',
     },
     size: {
-      sm: 'px-[10px] py-[6px] h-[32px] text-[14px] leading-[20px] gap-[10px] font-[600]',
+      sm: 'px-[10px] py-[6px] h-[32px] text-[14px] leading-[20px] gap-[10px] font-[400]',
       md: 'px-[14px] py-[10px] h-[42px] text-[14px] leading-[20px] gap-[10px] font-[600]',
       lg: 'px-[14px] py-[12px] h-[48px] text-[16px] leading-[24px] gap-[10px] font-[600]',
     },

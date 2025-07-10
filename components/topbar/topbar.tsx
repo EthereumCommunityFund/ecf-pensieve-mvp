@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { useAuth } from '@/context/AuthContext';
+
 import UserProfileSection from '../auth/UserProfileSection';
+import { NotificationDropdown } from '../notification/NotificationDropdown';
 
 import MobileMenu from './mobileMenu';
 import { Navigation } from './navigation';
@@ -35,6 +38,7 @@ export function Topbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -77,7 +81,10 @@ export function Topbar() {
             <Navigation />
           </div>
 
-          <UserProfileSection />
+          <div className="flex items-center justify-end gap-[10px]">
+            {isAuthenticated && <NotificationDropdown />}
+            <UserProfileSection />
+          </div>
 
           {/* <AuthSection /> */}
         </div>
@@ -94,8 +101,10 @@ export function Topbar() {
           <Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
         </Link>
 
-        {/*<AuthSection />*/}
-        <UserProfileSection />
+        <div className="flex items-center justify-end gap-[10px]">
+          {isAuthenticated && <NotificationDropdown />}
+          <UserProfileSection />
+        </div>
       </div>
     </header>
   );
