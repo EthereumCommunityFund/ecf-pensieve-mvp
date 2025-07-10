@@ -1,8 +1,8 @@
-import { and, desc, eq, gt } from 'drizzle-orm';
+import { desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache } from 'next/cache';
 
 import { CACHE_TAGS } from '@/lib/constants';
-import { projects, ranks } from '@/lib/db/schema';
+import { profiles, projects, ranks } from '@/lib/db/schema';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 export const rankRouter = router({
@@ -22,18 +22,33 @@ export const rankRouter = router({
         limit,
       });
 
-      const topRanksBySupport = await ctx.db.query.projects.findMany({
-        with: {
-          creator: true,
-        },
-        where: and(eq(projects.isPublished, true), gt(projects.support, 0)),
-        orderBy: desc(projects.support),
-        limit,
-      });
+      const itemsTopWeightSum = sql<number>`
+        CASE
+          WHEN ${projects.itemsTopWeight} IS NULL THEN 0
+          ELSE COALESCE((
+            SELECT SUM(CAST(value AS NUMERIC))
+            FROM jsonb_each_text(${projects.itemsTopWeight})
+          ), 0)
+        END
+      `;
+
+      const topRanksBySupport = await ctx.db
+        .select({
+          ...(({ creator: _, ...rest }) => rest)(getTableColumns(projects)),
+          creator: getTableColumns(profiles),
+          itemsTopWeightSum,
+        })
+        .from(projects)
+        .leftJoin(profiles, eq(projects.creator, profiles.userId))
+        .where(eq(projects.isPublished, true))
+        .orderBy(desc(projects.support), desc(itemsTopWeightSum))
+        .limit(limit);
 
       return {
         byGenesisWeight: topRanksByGenesisWeight,
-        bySupport: topRanksBySupport,
+        bySupport: topRanksBySupport.map(
+          ({ itemsTopWeightSum, ...project }) => project,
+        ),
       };
     };
 
