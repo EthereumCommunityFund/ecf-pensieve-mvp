@@ -43,7 +43,17 @@ const InputContentRenderer: React.FC<IProps> = ({
     switch (displayFormType) {
       case 'string':
       case 'select':
-        return <>{formatValue}</>;
+        return (
+          <div
+            className="overflow-hidden break-all"
+            style={{
+              wordBreak: 'break-all',
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {formatValue}
+          </div>
+        );
       case 'stringMultiple': {
         const multipleValues = parseMultipleValue(value);
         const joinedText = multipleValues.join(', ');
@@ -400,6 +410,22 @@ const InputContentRenderer: React.FC<IProps> = ({
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites'
   ) {
+    // If we're in an expandable row, show full content without line clamp
+    if (isInExpandableRow) {
+      return (
+        <div
+          className="overflow-hidden break-all"
+          style={{
+            wordBreak: 'break-all',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {renderContent()}
+        </div>
+      );
+    }
+
+    // Otherwise, show truncated content with line clamp
     return (
       <div
         className="cursor-pointer overflow-hidden break-all"
