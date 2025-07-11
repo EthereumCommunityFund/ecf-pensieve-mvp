@@ -2,6 +2,8 @@
 
 import React from 'react';
 
+import { NotificationType } from '@/lib/services/notification';
+
 import { Button } from '../base/button';
 import {
   CaretDoubleDownIcon,
@@ -14,18 +16,16 @@ import {
   ThumbsUpIcon,
 } from '../icons';
 
+export type FrontendNotificationType =
+  | NotificationType
+  | 'default'
+  | 'systemUpdate'
+  | 'newItemsAvailable'
+  | 'contributionPoints';
+
 export interface NotificationItemData {
   id: string;
-  type:
-    | 'itemProposalLostLeading'
-    | 'itemProposalBecameLeading'
-    | 'itemProposalSupported'
-    | 'systemUpdate'
-    | 'newItemsAvailable'
-    | 'proposalPassed'
-    | 'projectPublished'
-    | 'contributionPoints'
-    | 'default';
+  type: FrontendNotificationType;
   title: string;
   itemName?: string;
   projectName?: string;
@@ -45,21 +45,27 @@ export interface NotificationItemProps {
   onNotificationClick?: (itemData: NotificationItemData) => void;
 }
 
-const getIconForType = (type: NotificationItemData['type']) => {
+const getIconForType = (type: FrontendNotificationType) => {
   switch (type) {
     case 'itemProposalLostLeading':
       return <CaretDoubleDownIcon size={32} className="opacity-30" />;
     case 'itemProposalBecameLeading':
       return <CaretDoubleUpIcon size={32} />;
     case 'itemProposalSupported':
+    case 'proposalSupported':
       return <ThumbsUpIcon size={32} />;
     case 'systemUpdate':
       return <MegaphoneIcon size={32} />;
     case 'newItemsAvailable':
       return <LegoIcon size={32} />;
     case 'proposalPassed':
+    case 'itemProposalPassed':
+    case 'itemProposalPass':
+    case 'proposalPass':
       return <SealCheckIcon size={32} />;
     case 'projectPublished':
+    case 'createProposal':
+    case 'createItemProposal':
       return <PencilCircleIcon size={32} />;
     case 'contributionPoints':
       return <CoinsIcon size={32} />;
@@ -76,7 +82,7 @@ const formatNotificationText = (itemData: NotificationItemData) => {
       return (
         <div className="flex flex-wrap items-center gap-1">
           <span className="text-[14px] leading-[20px] text-black">
-            Your input has lost sufficient support
+            Your input for
           </span>
           {itemName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
@@ -95,6 +101,9 @@ const formatNotificationText = (itemData: NotificationItemData) => {
               </span>
             </div>
           )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has lost sufficient support
+          </span>
         </div>
       );
     case 'itemProposalBecameLeading':
@@ -209,6 +218,165 @@ const formatNotificationText = (itemData: NotificationItemData) => {
           )}
           <span className="text-[14px] leading-[20px] text-black">
             Contribution Points
+          </span>
+        </div>
+      );
+    case 'systemUpdate':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            We've made some updates to the platform
+          </span>
+        </div>
+      );
+    case 'newItemsAvailable':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            New items are available for proposals
+          </span>
+        </div>
+      );
+    case 'createProposal':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your proposal for
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has been created
+          </span>
+        </div>
+      );
+    case 'proposalPass':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your proposal for
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has passed!
+          </span>
+        </div>
+      );
+    case 'createItemProposal':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your input for
+          </span>
+          {itemName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {itemName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black opacity-50">
+            in
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has been created
+          </span>
+        </div>
+      );
+    case 'itemProposalPass':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your input for
+          </span>
+          {itemName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {itemName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black opacity-50">
+            in
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has passed!
+          </span>
+        </div>
+      );
+    case 'proposalSupported':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          {userName && (
+            <div className="inline-flex items-center justify-center gap-1 rounded-[10px] bg-[#F5F5F5] px-1">
+              <div className="size-5 rounded-full bg-[#A1A1A1]" />
+              <span className="text-[13px] leading-[18px] text-black">
+                {userName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has supported your proposal for
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    case 'itemProposalPassed':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your input for
+          </span>
+          {itemName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {itemName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black opacity-50">
+            in
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has been passed!
           </span>
         </div>
       );

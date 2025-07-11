@@ -1,4 +1,7 @@
-import { NotificationItemData } from '@/components/notification/NotificationItem';
+import {
+  FrontendNotificationType,
+  NotificationItemData,
+} from '@/components/notification/NotificationItem';
 
 const projects = [
   'DeFi Protocol Alpha',
@@ -88,110 +91,128 @@ const timeOptions = [
 const getRandomItem = <T>(arr: T[]): T =>
   arr[Math.floor(Math.random() * arr.length)];
 const getRandomBool = () => Math.random() > 0.5;
+const getRandomId = () => Math.floor(Math.random() * 1000) + 1;
 
-export const mockNotifications: NotificationItemData[] = Array.from(
-  { length: 50 },
-  (_, index) => {
+const notificationTypes: FrontendNotificationType[] = [
+  'itemProposalLostLeading',
+  'itemProposalBecameLeading',
+  'itemProposalSupported',
+  'itemProposalPassed',
+  'itemProposalPass',
+  'proposalPassed',
+  'projectPublished',
+  'proposalSupported',
+  'createProposal',
+  'createItemProposal',
+  'contributionPoints',
+  'systemUpdate',
+  'newItemsAvailable',
+  'default',
+];
+
+export const mockNotifications: NotificationItemData[] = notificationTypes
+  .map((type, index) => {
     const id = (index + 1).toString();
     const isRead = getRandomBool();
     const timeAgo = getRandomItem(timeOptions);
     const projectName = getRandomItem(projects);
     const itemName = getRandomItem(items);
     const userName = getRandomItem(users);
+    const projectId = getRandomId();
+    const proposalId = getRandomId();
 
-    // 根据索引循环使用不同类型
-    const types = [
-      'itemProposalLostLeading',
-      'itemProposalBecameLeading',
-      'itemProposalSupported',
-      'proposalPassed',
-      'projectPublished',
-      'contributionPoints',
-      'systemUpdate',
-      'newItemsAvailable',
-      'default',
-    ];
+    const baseData = {
+      id,
+      timeAgo,
+      isRead,
+      projectName,
+      projectId,
+    };
 
-    const type = types[index % types.length] as NotificationItemData['type'];
-
-    // 根据类型生成相应的通知内容
     switch (type) {
       case 'itemProposalLostLeading':
         return {
-          id,
+          ...baseData,
           type,
-          title: 'Your input has lost sufficient support',
+          title: `Your input has lost sufficient support ${itemName} in ${projectName}`,
           itemName,
-          projectName,
-          timeAgo,
-          isRead,
-          buttonText: 'View in Project',
-        };
+          buttonText: 'View Submission',
+        } as NotificationItemData;
 
       case 'itemProposalBecameLeading':
         return {
-          id,
+          ...baseData,
           type,
-          title: 'Your input is now leading',
+          title: `Your input for ${itemName} in ${projectName} is now leading`,
           itemName,
-          projectName,
-          timeAgo,
-          isRead,
-          buttonText: 'View Submissions',
+          buttonText: 'View Submission',
           hasMultipleActions: getRandomBool(),
-          secondaryButtonText: getRandomBool() ? 'Share Update' : undefined,
-        };
+        } as NotificationItemData;
 
       case 'itemProposalSupported':
         return {
-          id,
+          ...baseData,
           type,
-          title: 'Your input has been supported',
+          title: `${userName} has supported your input for ${itemName} in ${projectName}`,
           itemName,
-          projectName,
           userName,
-          timeAgo,
-          isRead,
           buttonText: 'View Submission',
-        };
+        } as NotificationItemData;
+
+      case 'proposalSupported':
+        return {
+          ...baseData,
+          type,
+          proposalId,
+          title: `${userName} has supported your proposal for ${projectName}`,
+          userName,
+          buttonText: 'View Proposal',
+        } as NotificationItemData;
+
+      case 'itemProposalPassed':
+        return {
+          ...baseData,
+          type,
+          title: `Your item proposal for ${itemName} in ${projectName} has passed!`,
+          itemName,
+          buttonText: 'View Submission',
+        } as NotificationItemData;
 
       case 'proposalPassed':
         return {
-          id,
+          ...baseData,
           type,
-          title: 'Your proposal has passed!',
-          projectName,
-          timeAgo,
-          isRead,
+          proposalId,
+          title: `Your proposal for ${projectName} has passed!`,
           buttonText: 'View Proposal',
           hasMultipleActions: true,
           secondaryButtonText: 'View Published Project',
-        };
+        } as NotificationItemData;
 
       case 'projectPublished':
         return {
-          id,
+          ...baseData,
           type,
-          title: 'Project has been published',
-          projectName,
-          timeAgo,
-          isRead,
+          title: `The pending project ${projectName} you have contributed to has now been published`,
           buttonText: 'View Published Project',
           hasMultipleActions: getRandomBool(),
-          secondaryButtonText: getRandomBool() ? 'Share Project' : undefined,
-        };
+        } as NotificationItemData;
 
       case 'contributionPoints':
+      case 'createProposal':
+      case 'proposalPass':
+      case 'createItemProposal':
+      case 'itemProposalPass':
         const points = [10, 25, 50, 100, 150, 200, 500];
+        const pointValue = getRandomItem(points);
         return {
-          id,
+          ...baseData,
           type,
-          title: 'You have gained contribution points',
-          itemName: getRandomItem(points).toString(),
-          timeAgo,
-          isRead,
+          title: `You have gained ${pointValue} Contribution Points for ${projectName}`,
+          itemName: pointValue.toString(),
           buttonText: 'View Contribution',
-        };
+          hideButton: true,
+        } as NotificationItemData;
 
       case 'systemUpdate':
         const updateMessages = [
@@ -202,25 +223,21 @@ export const mockNotifications: NotificationItemData[] = Array.from(
           'Improved notification system',
         ];
         return {
-          id,
+          ...baseData,
           type,
           title: getRandomItem(updateMessages),
-          timeAgo,
-          isRead,
           buttonText: 'Learn More',
-          hideButton: getRandomBool(),
-        };
+          hideButton: true,
+        } as NotificationItemData;
 
       case 'newItemsAvailable':
         return {
-          id,
+          ...baseData,
           type,
           title: 'New items available for contribution',
-          projectName,
-          timeAgo,
-          isRead,
           buttonText: 'Explore Items',
-        };
+          hideButton: true,
+        } as NotificationItemData;
 
       default:
         const defaultMessages = [
@@ -231,27 +248,24 @@ export const mockNotifications: NotificationItemData[] = Array.from(
           'Platform usage statistics updated',
         ];
         return {
-          id,
-          type,
+          ...baseData,
+          type: 'default',
           title: getRandomItem(defaultMessages),
-          timeAgo,
-          isRead,
           buttonText: 'View Details',
-          hideButton: getRandomBool(),
-        };
+          hideButton: true,
+        } as NotificationItemData;
     }
-  },
-).sort((a, b) => {
-  // 按时间排序：最新的在前
-  const timeToMinutes = (timeStr: string): number => {
-    const num = parseInt(timeStr);
-    if (timeStr.includes('m')) return num;
-    if (timeStr.includes('h')) return num * 60;
-    if (timeStr.includes('d')) return num * 24 * 60;
-    if (timeStr.includes('w')) return num * 7 * 24 * 60;
-    if (timeStr.includes('mo')) return num * 30 * 24 * 60;
-    return 0;
-  };
+  })
+  .sort((a, b) => {
+    const timeToMinutes = (timeStr: string): number => {
+      const num = parseInt(timeStr);
+      if (timeStr.includes('m')) return num;
+      if (timeStr.includes('h')) return num * 60;
+      if (timeStr.includes('d')) return num * 24 * 60;
+      if (timeStr.includes('w')) return num * 7 * 24 * 60;
+      if (timeStr.includes('mo')) return num * 30 * 24 * 60;
+      return 0;
+    };
 
-  return timeToMinutes(a.timeAgo) - timeToMinutes(b.timeAgo);
-});
+    return timeToMinutes(a.timeAgo) - timeToMinutes(b.timeAgo);
+  });

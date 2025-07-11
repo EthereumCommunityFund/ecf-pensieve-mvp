@@ -3,11 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
-import { NotificationItemData } from '@/components/notification/NotificationItem';
+import {
+  FrontendNotificationType,
+  NotificationItemData,
+} from '@/components/notification/NotificationItem';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationType } from '@/lib/services/notification';
 import { trpc } from '@/lib/trpc/client';
 
-export const useNotifications = () => {
+const useRealNotifications = () => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
@@ -104,30 +108,6 @@ export const useNotifications = () => {
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
     (notification: any): NotificationItemData => {
-      const getNotificationType = (
-        type: string,
-      ): NotificationItemData['type'] => {
-        switch (type) {
-          case 'itemProposalLostLeading':
-            return 'itemProposalLostLeading';
-          case 'itemProposalBecameLeading':
-            return 'itemProposalBecameLeading';
-          case 'itemProposalSupported':
-            return 'itemProposalSupported';
-          case 'proposalPassed':
-            return 'proposalPassed';
-          case 'projectPublished':
-            return 'projectPublished';
-          case 'createProposal':
-          case 'proposalPass':
-          case 'createItemProposal':
-          case 'itemProposalPass':
-            return 'contributionPoints';
-          default:
-            return 'default';
-        }
-      };
-
       const getTimeAgo = (date: Date): string => {
         const now = new Date();
         const diffInMs = now.getTime() - date.getTime();
@@ -143,10 +123,12 @@ export const useNotifications = () => {
         }
       };
 
-      const getNotificationContent = (notification: any) => {
-        switch (notification.type) {
+      const getTransformedContent = (notification: any) => {
+        const type = notification.type as NotificationType;
+        switch (type) {
           case 'itemProposalLostLeading':
             return {
+              type,
               title: 'Your input has lost sufficient support',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
@@ -154,6 +136,7 @@ export const useNotifications = () => {
             };
           case 'itemProposalBecameLeading':
             return {
+              type,
               title: 'Your input is now leading',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
@@ -161,7 +144,32 @@ export const useNotifications = () => {
             };
           case 'itemProposalSupported':
             return {
+              type,
               title: 'Your input has been supported',
+              itemName: notification.itemProposal?.key || 'item',
+              projectName: notification.project?.name || 'project',
+              userName:
+                notification.voter?.name ||
+                notification.voter?.address ||
+                'someone',
+              buttonText: 'View Submission',
+            };
+          case 'proposalSupported':
+            return {
+              type,
+              title: 'Your proposal has been supported',
+              itemName: notification.itemProposal?.key || 'item',
+              projectName: notification.project?.name || 'project',
+              userName:
+                notification.voter?.name ||
+                notification.voter?.address ||
+                'someone',
+              buttonText: 'View Submission',
+            };
+          case 'itemProposalPassed':
+            return {
+              type,
+              title: 'Your item proposal has passed',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
               userName:
@@ -172,6 +180,7 @@ export const useNotifications = () => {
             };
           case 'proposalPassed':
             return {
+              type,
               title: 'Your proposal has passed!',
               projectName: notification.project?.name || 'project',
               buttonText: 'View Published Project',
@@ -179,6 +188,7 @@ export const useNotifications = () => {
             };
           case 'projectPublished':
             return {
+              type,
               title: 'Project has been published',
               projectName: notification.project?.name || 'project',
               buttonText: 'View Published Project',
@@ -188,6 +198,7 @@ export const useNotifications = () => {
           case 'createItemProposal':
           case 'itemProposalPass':
             return {
+              type: 'contributionPoints' as FrontendNotificationType,
               title: 'You have gained contribution points',
               itemName: notification.reward?.toString() || '0',
               buttonText: '',
@@ -195,23 +206,22 @@ export const useNotifications = () => {
             };
           default:
             return {
+              type: 'default' as FrontendNotificationType,
               title: 'You have a new notification',
               buttonText: 'View Details',
             };
         }
       };
 
-      const content = getNotificationContent(notification);
-
+      const content = getTransformedContent(notification);
       const isRead = !!notification.readAt;
 
       return {
         id: notification.id.toString(),
-        type: getNotificationType(notification.type),
         timeAgo: getTimeAgo(notification.createdAt),
         isRead,
         ...content,
-      };
+      } as NotificationItemData;
     },
     [],
   );
@@ -272,11 +282,13 @@ export const useNotifications = () => {
       // Navigation logic
       const handleNavigation = () => {
         const projectId = backendNotification?.projectId;
+        const proposalId = backendNotification?.proposalId;
 
         switch (notification.type) {
           case 'itemProposalLostLeading':
           case 'itemProposalBecameLeading':
           case 'itemProposalSupported':
+          case 'itemProposalPassed':
             if (projectId) {
               router.push(
                 `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${notification.itemName}`,
@@ -286,27 +298,44 @@ export const useNotifications = () => {
             }
             break;
 
+          case 'proposalSupported':
+            if (projectId && proposalId) {
+              router.push(
+                `/project/pending/${projectId}/proposal/${proposalId}`,
+              );
+            } else if (projectId) {
+              router.push(`/project/pending/${projectId}`);
+            } else {
+              router.push('/projects');
+            }
+            break;
+
           case 'proposalPassed':
-            router.push(projectId ? `/project/${projectId}` : '/projects');
+          case 'proposalPass':
+            if (projectId && proposalId) {
+              router.push(
+                `/project/pending/${projectId}/proposal/${proposalId}`,
+              );
+            } else if (projectId) {
+              router.push(`/project/pending/${projectId}`);
+            } else {
+              router.push('/projects');
+            }
             break;
 
           case 'projectPublished':
             router.push(projectId ? `/project/${projectId}` : '/projects');
             break;
 
+          case 'createProposal':
+          case 'createItemProposal':
           case 'contributionPoints':
             router.push('/projects');
             break;
 
           case 'systemUpdate':
-            router.push('/');
-            break;
-
           case 'newItemsAvailable':
-            router.push('/');
-            break;
-
-          default:
+          case 'default':
             router.push('/');
             break;
         }
@@ -459,4 +488,9 @@ export const useNotifications = () => {
       }
     },
   };
+};
+
+export const useNotifications = () => {
+  // return useMockNotifications();
+  return useRealNotifications();
 };
