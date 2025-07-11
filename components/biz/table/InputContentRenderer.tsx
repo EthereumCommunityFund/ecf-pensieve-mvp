@@ -86,7 +86,11 @@ const InputContentRenderer: React.FC<IProps> = ({
             href={value}
             target="_blank"
             rel="noreferrer"
-            className="underline"
+            className="break-all underline"
+            style={{
+              wordBreak: 'break-all',
+              overflowWrap: 'anywhere',
+            }}
           >
             {value}
           </Link>

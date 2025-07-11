@@ -1,10 +1,9 @@
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import { IProject } from '@/types';
 import { useUpvote } from '@/hooks/useUpvote';
+import { IProject } from '@/types';
 
 import ProjectCard, { ProjectCardSkeleton } from './ProjectCard';
-
 
 interface ProjectListWrapperProps {
   isLoading: boolean;
