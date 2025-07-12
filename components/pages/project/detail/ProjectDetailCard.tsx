@@ -7,9 +7,13 @@ import { IProject } from '@/types';
 
 interface ProjectDetailCardProps {
   project?: IProject;
+  getLeadingProjectName?: () => string;
 }
 
-const ProjectDetailCard: FC<ProjectDetailCardProps> = ({ project }) => {
+const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
+  project,
+  getLeadingProjectName,
+}) => {
   if (!project) {
     return <ProjectDetailCardSkeleton />;
   }
@@ -31,7 +35,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({ project }) => {
       />
       <div className="flex flex-col gap-[10px]">
         <p className="text-[20px] font-[700] leading-tight text-[#202023]">
-          {project.name}
+          {getLeadingProjectName ? getLeadingProjectName() : project.name}
         </p>
         <p className="text-[14px] font-[400] leading-[1.66] text-[#202023]">
           {project.tagline}

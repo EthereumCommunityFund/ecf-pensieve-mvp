@@ -58,6 +58,7 @@ interface ProjectDetailContextType {
 
   // Utility functions
   getItemTopWeight: (key: IPocItemKey) => number;
+  getLeadingProjectName: () => string;
 
   // Current selected item state
   currentItemKey: string | null;
@@ -148,6 +149,7 @@ const createDefaultContext = (): ProjectDetailContextType => ({
 
   // Utility functions
   getItemTopWeight: () => 0,
+  getLeadingProjectName: () => '',
 
   // Current selected item state
   currentItemKey: null,
@@ -393,6 +395,22 @@ export const ProjectDetailProvider = ({
     project?.itemsTopWeight,
     project?.hasProposalKeys,
   ]);
+
+  // Utility function: Get leading project name
+  const getLeadingProjectName = useCallback(() => {
+    // Try to get the leading name from proposals
+    const nameProposal = displayProposalDataListOfProject?.find(
+      (item) => item.key === 'name',
+    );
+
+    // If we have a leading name proposal that's not marked as "not leading", use it
+    if (nameProposal && !nameProposal.isNotLeading && nameProposal.input) {
+      return nameProposal.input as string;
+    }
+
+    // Otherwise, fallback to the basic project name
+    return project?.name || '';
+  }, [displayProposalDataListOfProject, project?.name]);
 
   // Calculate display data for current selected key
   const displayProposalDataOfKey = useMemo(() => {
@@ -702,6 +720,7 @@ export const ProjectDetailProvider = ({
 
       // Utility functions
       getItemTopWeight,
+      getLeadingProjectName,
 
       // Current selected item state
       currentItemKey,
@@ -780,6 +799,7 @@ export const ProjectDetailProvider = ({
 
       // Utility function dependencies
       getItemTopWeight,
+      getLeadingProjectName,
 
       // Current selected item state dependencies
       currentItemKey,
