@@ -45,3 +45,6 @@ next-env.d.ts
 .cursor
 .docs
 *storybook.log
+
+# YoYo AI version control directory
+.yoyo/

@@ -51,6 +51,10 @@ const ProjectPage = () => {
     selectedValidatedAt,
     showSubmitterModal: handleOpenSubmitterModal,
     closeSubmitterModal: handleCloseSubmitterModal,
+    getLeadingProjectName,
+    getLeadingTagline,
+    getLeadingCategories,
+    getLeadingLogoUrl,
   } = useProjectDetailContext();
 
   const [modalContentType, setModalContentType] =
@@ -153,14 +157,20 @@ const ProjectPage = () => {
           <span>Projects</span>
           <span className="font-[600]">/</span>
           {isProjectFetched ? (
-            <span>{project?.name}</span>
+            <span>{getLeadingProjectName()}</span>
           ) : (
             <Skeleton className="h-[20px] w-[100px]" />
           )}
         </div>
       </BackHeader>
 
-      <ProjectDetailCard project={project} />
+      <ProjectDetailCard
+        project={project}
+        getLeadingProjectName={getLeadingProjectName}
+        getLeadingTagline={getLeadingTagline}
+        getLeadingCategories={getLeadingCategories}
+        getLeadingLogoUrl={getLeadingLogoUrl}
+      />
 
       {activeTab === 'project-data' && (
         <ProjectDetailTable
