@@ -1,5 +1,3 @@
-import { Button } from '@/components/base/button';
-import { InfoIcon } from '@/components/icons';
 import {
   ESSENTIAL_ITEM_LIST,
   ESSENTIAL_ITEM_WEIGHT_SUM,
@@ -24,9 +22,9 @@ const ProposalRequirements = () => {
             <span className="text-[12px] font-[600]">
               For Project Proposals:
             </span>
-            <Button isIconOnly className="size-[20px]">
+            {/* <Button isIconOnly className="size-[20px]">
               <InfoIcon size={20} />
-            </Button>
+            </Button> */}
           </div>
 
           <div className="flex items-center justify-between gap-[14px]">
@@ -42,9 +40,9 @@ const ProposalRequirements = () => {
             <span className="text-[12px] font-[600]">
               Community Verification:
             </span>
-            <Button isIconOnly className="size-[20px]">
+            {/* <Button isIconOnly className="size-[20px]">
               <InfoIcon size={20} />
-            </Button>
+            </Button> */}
           </div>
           <div className="flex items-center justify-between gap-[14px]">
             <span>Quorum Required</span>

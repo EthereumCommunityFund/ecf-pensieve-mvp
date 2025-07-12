@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import BackHeader from '@/components/pages/project/BackHeader';
+import PublishingTip from '@/components/pages/project/proposal/common/PublishingTip';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
 import { useAuth } from '@/context/AuthContext';
@@ -123,6 +124,8 @@ const ProjectPage = () => {
         leadingProposal={leadingProposal}
         canBePublished={canBePublished}
       />
+
+      {canBePublished && <PublishingTip />}
 
       {/* Proposal list */}
       <div
