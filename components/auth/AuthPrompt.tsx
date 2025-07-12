@@ -181,15 +181,19 @@ const AuthPrompt: React.FC = () => {
   }, []);
 
   const handleCloseAndReset = useCallback(async () => {
-    setInputUsername('');
-    setInviteCode('');
-    try {
-      await disconnectAsync();
-    } catch (error) {
-      console.error('Error disconnecting wallet during close:', error);
+    if (connectionIntentRef.current) {
+      setInputUsername('');
+      setInviteCode('');
+      try {
+        await disconnectAsync();
+      } catch (error) {
+        console.error('Error disconnecting wallet during close:', error);
+      }
+      await hideAuthPrompt();
+      await logout();
+    } else {
+      hideAuthPrompt();
     }
-    await hideAuthPrompt();
-    await logout();
   }, [hideAuthPrompt, logout, disconnectAsync]);
 
   const renderConnectWalletContent = useMemo(() => {
