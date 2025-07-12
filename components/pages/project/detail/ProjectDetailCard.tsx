@@ -8,11 +8,17 @@ import { IProject } from '@/types';
 interface ProjectDetailCardProps {
   project?: IProject;
   getLeadingProjectName?: () => string;
+  getLeadingTagline?: () => string;
+  getLeadingCategories?: () => string[];
+  getLeadingLogoUrl?: () => string;
 }
 
 const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
   project,
   getLeadingProjectName,
+  getLeadingTagline,
+  getLeadingCategories,
+  getLeadingLogoUrl,
 }) => {
   if (!project) {
     return <ProjectDetailCardSkeleton />;
@@ -27,8 +33,8 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       )}
     >
       <Image
-        src={project.logoUrl}
-        alt={project.name}
+        src={getLeadingLogoUrl ? getLeadingLogoUrl() : project.logoUrl}
+        alt={getLeadingProjectName ? getLeadingProjectName() : project.name}
         width={100}
         height={100}
         className="overflow-hidden rounded-[10px] border border-black/10 object-cover"
@@ -38,10 +44,13 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
           {getLeadingProjectName ? getLeadingProjectName() : project.name}
         </p>
         <p className="text-[14px] font-[400] leading-[1.66] text-[#202023]">
-          {project.tagline}
+          {getLeadingTagline ? getLeadingTagline() : project.tagline}
         </p>
         <div className="flex flex-wrap gap-[8px]">
-          {project.categories.map((category) => {
+          {(getLeadingCategories
+            ? getLeadingCategories()
+            : project.categories
+          ).map((category) => {
             return (
               <span
                 key={category}

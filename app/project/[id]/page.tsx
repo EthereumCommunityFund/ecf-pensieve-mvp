@@ -52,6 +52,9 @@ const ProjectPage = () => {
     showSubmitterModal: handleOpenSubmitterModal,
     closeSubmitterModal: handleCloseSubmitterModal,
     getLeadingProjectName,
+    getLeadingTagline,
+    getLeadingCategories,
+    getLeadingLogoUrl,
   } = useProjectDetailContext();
 
   const [modalContentType, setModalContentType] =
@@ -164,6 +167,9 @@ const ProjectPage = () => {
       <ProjectDetailCard
         project={project}
         getLeadingProjectName={getLeadingProjectName}
+        getLeadingTagline={getLeadingTagline}
+        getLeadingCategories={getLeadingCategories}
+        getLeadingLogoUrl={getLeadingLogoUrl}
       />
 
       {activeTab === 'project-data' && (

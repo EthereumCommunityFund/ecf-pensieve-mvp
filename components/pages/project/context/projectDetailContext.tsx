@@ -59,6 +59,9 @@ interface ProjectDetailContextType {
   // Utility functions
   getItemTopWeight: (key: IPocItemKey) => number;
   getLeadingProjectName: () => string;
+  getLeadingTagline: () => string;
+  getLeadingCategories: () => string[];
+  getLeadingLogoUrl: () => string;
 
   // Current selected item state
   currentItemKey: string | null;
@@ -150,6 +153,9 @@ const createDefaultContext = (): ProjectDetailContextType => ({
   // Utility functions
   getItemTopWeight: () => 0,
   getLeadingProjectName: () => '',
+  getLeadingTagline: () => '',
+  getLeadingCategories: () => [],
+  getLeadingLogoUrl: () => '',
 
   // Current selected item state
   currentItemKey: null,
@@ -411,6 +417,66 @@ export const ProjectDetailProvider = ({
     // Otherwise, fallback to the basic project name
     return project?.name || '';
   }, [displayProposalDataListOfProject, project?.name]);
+
+  // Utility function: Get leading project tagline
+  const getLeadingTagline = useCallback(() => {
+    // Try to get the leading tagline from proposals
+    const taglineProposal = displayProposalDataListOfProject?.find(
+      (item) => item.key === 'tagline',
+    );
+
+    // If we have a leading tagline proposal that's not marked as "not leading", use it
+    if (
+      taglineProposal &&
+      !taglineProposal.isNotLeading &&
+      taglineProposal.input
+    ) {
+      return taglineProposal.input as string;
+    }
+
+    // Otherwise, fallback to the basic project tagline
+    return project?.tagline || '';
+  }, [displayProposalDataListOfProject, project?.tagline]);
+
+  // Utility function: Get leading project categories
+  const getLeadingCategories = useCallback(() => {
+    // Try to get the leading categories from proposals
+    const categoriesProposal = displayProposalDataListOfProject?.find(
+      (item) => item.key === 'categories',
+    );
+
+    // If we have a leading categories proposal that's not marked as "not leading", use it
+    if (
+      categoriesProposal &&
+      !categoriesProposal.isNotLeading &&
+      categoriesProposal.input
+    ) {
+      return categoriesProposal.input as string[];
+    }
+
+    // Otherwise, fallback to the basic project categories
+    return project?.categories || [];
+  }, [displayProposalDataListOfProject, project?.categories]);
+
+  // Utility function: Get leading project logo URL
+  const getLeadingLogoUrl = useCallback(() => {
+    // Try to get the leading logo URL from proposals
+    const logoUrlProposal = displayProposalDataListOfProject?.find(
+      (item) => item.key === 'logoUrl',
+    );
+
+    // If we have a leading logo URL proposal that's not marked as "not leading", use it
+    if (
+      logoUrlProposal &&
+      !logoUrlProposal.isNotLeading &&
+      logoUrlProposal.input
+    ) {
+      return logoUrlProposal.input as string;
+    }
+
+    // Otherwise, fallback to the basic project logo URL
+    return project?.logoUrl || '';
+  }, [displayProposalDataListOfProject, project?.logoUrl]);
 
   // Calculate display data for current selected key
   const displayProposalDataOfKey = useMemo(() => {
@@ -721,6 +787,9 @@ export const ProjectDetailProvider = ({
       // Utility functions
       getItemTopWeight,
       getLeadingProjectName,
+      getLeadingTagline,
+      getLeadingCategories,
+      getLeadingLogoUrl,
 
       // Current selected item state
       currentItemKey,
@@ -800,6 +869,9 @@ export const ProjectDetailProvider = ({
       // Utility function dependencies
       getItemTopWeight,
       getLeadingProjectName,
+      getLeadingTagline,
+      getLeadingCategories,
+      getLeadingLogoUrl,
 
       // Current selected item state dependencies
       currentItemKey,
