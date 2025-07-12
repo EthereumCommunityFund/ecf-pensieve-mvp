@@ -42,7 +42,8 @@ const SubmitProposalCard: FC<IProps> = ({
             disabled={true}
             className="h-auto cursor-not-allowed whitespace-pre-wrap p-[10px] text-left text-[15px] font-[400] leading-[20px] text-black/80"
           >
-            This pending project is being published...
+            The project is currently being published. This process may take up
+            to 15 minutes.
           </Button>
         </div>
       ) : (
