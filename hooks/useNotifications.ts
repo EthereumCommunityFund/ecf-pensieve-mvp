@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import {
   FrontendNotificationType,
+  IVoterOfNotification,
   NotificationItemData,
 } from '@/components/notification/NotificationItem';
 import { useAuth } from '@/context/AuthContext';
@@ -244,6 +245,7 @@ const useRealNotifications = () => {
         id: notification.id.toString(),
         timeAgo: getTimeAgo(notification.createdAt),
         isRead,
+        voter: notification.voter as IVoterOfNotification,
         ...content,
       } as NotificationItemData;
     },

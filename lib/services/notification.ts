@@ -20,7 +20,7 @@ export interface NotificationData {
   proposalId?: number;
   itemProposalId?: number;
   reward?: number;
-  voterId?: string;
+  voter_id?: string;
   type: NotificationType;
 }
 
@@ -139,7 +139,7 @@ export const createNotification = {
     userId,
     projectId,
     proposalId,
-    voterId,
+    voter_id: voterId,
     type: 'proposalSupported' as const,
   }),
 
@@ -152,7 +152,7 @@ export const createNotification = {
     userId,
     projectId,
     itemProposalId,
-    voterId,
+    voter_id: voterId,
     type: 'itemProposalSupported' as const,
   }),
 
