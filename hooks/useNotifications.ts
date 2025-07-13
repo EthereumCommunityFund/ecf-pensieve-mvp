@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import {
   FrontendNotificationType,
@@ -10,6 +10,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { NotificationType } from '@/lib/services/notification';
 import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
 
 const useRealNotifications = () => {
   const router = useRouter();
@@ -33,6 +34,10 @@ const useRealNotifications = () => {
       getNextPageParam: (lastPage) => {
         return lastPage.hasMore ? lastPage.nextCursor : undefined;
       },
+      select: (data) => {
+        devLog('[Backend] all Notifications Data', data);
+        return data;
+      },
     },
   );
 
@@ -53,6 +58,10 @@ const useRealNotifications = () => {
       retry: false,
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.nextCursor : undefined,
+      select: (data) => {
+        devLog('[Backend]unread Notifications Data', data);
+        return data;
+      },
     },
   );
 
@@ -132,7 +141,7 @@ const useRealNotifications = () => {
               title: 'Your input has lost sufficient support',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
-              buttonText: 'View in Project',
+              buttonText: 'View Submission',
             };
           case 'itemProposalBecameLeading':
             return {
@@ -154,6 +163,9 @@ const useRealNotifications = () => {
                 'someone',
               buttonText: 'View Submission',
             };
+          // 针对pending project的item vote，
+          // TODO：后端接口缺voter和 itemKey, 所以只跳  pending proposal 页面
+          // 每投票一次，就有一次通知，对于 pending project, 有太多通知, 产品功能上需要优化
           case 'proposalSupported':
             return {
               type,
@@ -164,8 +176,10 @@ const useRealNotifications = () => {
                 notification.voter?.name ||
                 notification.voter?.address ||
                 'someone',
-              buttonText: 'View Submission',
+              buttonText: 'View Proposal',
             };
+          // 对于 published project 的 item proposal的投票
+          // TODO 缺乏 voter信息，不缺 itemKey
           case 'itemProposalPassed':
             return {
               type,
@@ -178,6 +192,7 @@ const useRealNotifications = () => {
                 'someone',
               buttonText: 'View Submission',
             };
+          // project proposal发布成功，但没有reward分数，展示View Published Project入口
           case 'proposalPassed':
             return {
               type,
@@ -186,6 +201,7 @@ const useRealNotifications = () => {
               buttonText: 'View Published Project',
               hasMultipleActions: false,
             };
+          // project 发布成功,跟proposalPassed类型，展示View Published Project入口，只是展示文案不同
           case 'projectPublished':
             return {
               type,
@@ -193,9 +209,17 @@ const useRealNotifications = () => {
               projectName: notification.project?.name || 'project',
               buttonText: 'View Published Project',
             };
+          // create project -> contributionPoints
+          // TODO：UI可增加createProposal类型，跳转去project/pending/[projectId]/proposal/[proposal]页面
           case 'createProposal':
+          // falls through
+          // project 发布成功，有 reward 分数，直接展示 `contributionPoints`类型
           case 'proposalPass':
+          // falls through
+          // 只有创建not essential item的时候才会通知 -> contributionPoints
+          // TODO：UI可增加createItemProposal类型
           case 'createItemProposal':
+          // falls through
           case 'itemProposalPass':
             return {
               type: 'contributionPoints' as FrontendNotificationType,
@@ -248,6 +272,18 @@ const useRealNotifications = () => {
       .map(transformNotification);
   }, [archivedNotificationsData, transformNotification]);
 
+  useEffect(() => {
+    if (allNotifications.length > 0) {
+      devLog('[Frontend] transformed all Notifications', allNotifications);
+    }
+    if (unreadNotifications.length > 0) {
+      devLog(
+        '[Frontend] transformed unread Notifications',
+        unreadNotifications,
+      );
+    }
+  }, [allNotifications, unreadNotifications]);
+
   // Action handlers
   const handleNotificationAction = useCallback(
     (notification: NotificationItemData, isSecondary = false) => {
@@ -299,36 +335,17 @@ const useRealNotifications = () => {
             break;
 
           case 'proposalSupported':
-            if (projectId && proposalId) {
-              router.push(
-                `/project/pending/${projectId}/proposal/${proposalId}`,
-              );
-            } else if (projectId) {
-              router.push(`/project/pending/${projectId}`);
-            } else {
-              router.push('/projects');
-            }
+            router.push(`/project/pending/${projectId}/proposal/${proposalId}`);
             break;
 
           case 'proposalPassed':
           case 'proposalPass':
-            if (projectId && proposalId) {
-              router.push(
-                `/project/pending/${projectId}/proposal/${proposalId}`,
-              );
-            } else if (projectId) {
-              router.push(`/project/pending/${projectId}`);
-            } else {
-              router.push('/projects');
-            }
-            break;
-
           case 'projectPublished':
             router.push(projectId ? `/project/${projectId}` : '/projects');
             break;
-
           case 'createProposal':
           case 'createItemProposal':
+          // 缺乏对于的 UI和 Button
           case 'contributionPoints':
             router.push('/projects');
             break;
@@ -421,8 +438,6 @@ const useRealNotifications = () => {
     archiveAllMutation,
     markAsReadMutation,
     allNotifications,
-    unreadNotifications,
-    archivedNotifications,
     utils,
     refetchAll,
     refetchUnread,

@@ -121,6 +121,7 @@ export default [
 
       'react/prop-types': 'off',
       'no-case-declarations': 'off',
+      'no-fallthrough': 'off',
     },
   },
   {
