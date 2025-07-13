@@ -91,7 +91,7 @@ const VoterAvatar = ({ voter }: { voter?: IVoterOfNotification }) => {
         alt={voter.name}
         width={20}
         height={20}
-        className="size-[20px] rounded-full"
+        className="size-[20px] rounded-full object-cover"
       />
       <span className="text-[13px] leading-[18px] text-black">
         {voter.name}
