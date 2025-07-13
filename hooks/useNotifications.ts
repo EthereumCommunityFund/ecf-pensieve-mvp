@@ -468,8 +468,7 @@ const useRealNotifications = () => {
 
     // Mutation loading states
     isMarkingAsRead: markAsReadMutation.isPending,
-    isArchivingAll:
-      archiveAllMutation.isPending || markAsReadMutation.isPending,
+    isArchivingAll: archiveAllMutation.isPending,
 
     // Pagination states
     hasNextAllNotifications,
