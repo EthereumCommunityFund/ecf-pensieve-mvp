@@ -164,9 +164,8 @@ const useRealNotifications = () => {
                 'someone',
               buttonText: 'View Submission',
             };
-          // 针对pending project的item vote，
-          // TODO：后端接口缺voter和 itemKey, 所以只跳  pending proposal 页面
-          // 每投票一次，就有一次通知，对于 pending project, 有太多通知, 产品功能上需要优化
+          // For item votes on pending projects
+          // TODO: Currently there's a notification for each vote, resulting in too many notifications for pending projects. This feature needs optimization
           case 'proposalSupported':
             return {
               type,
@@ -179,8 +178,7 @@ const useRealNotifications = () => {
                 'someone',
               buttonText: 'View Proposal',
             };
-          // 对于 published project 的 item proposal的投票
-          // TODO 缺乏 voter信息，不缺 itemKey
+          // For item votes on published projects
           case 'itemProposalPassed':
             return {
               type,
@@ -193,7 +191,7 @@ const useRealNotifications = () => {
                 'someone',
               buttonText: 'View Submission',
             };
-          // project proposal发布成功，但没有reward分数，展示View Published Project入口
+          // Project proposal published successfully, but without reward points, showing "View Published Project" entry
           case 'proposalPassed':
             return {
               type,
@@ -202,7 +200,7 @@ const useRealNotifications = () => {
               buttonText: 'View Published Project',
               hasMultipleActions: false,
             };
-          // project 发布成功,跟proposalPassed类型，展示View Published Project入口，只是展示文案不同
+          // Project published successfully, same as proposalPassed type, showing "View Published Project" entry, but with different text
           case 'projectPublished':
             return {
               type,
@@ -210,17 +208,14 @@ const useRealNotifications = () => {
               projectName: notification.project?.name || 'project',
               buttonText: 'View Published Project',
             };
-          // create project -> contributionPoints
-          // TODO：UI可增加createProposal类型，跳转去project/pending/[projectId]/proposal/[proposal]页面
+          // Create project -> contributionPoints
+          // TODO: UI can add createProposal type, redirecting to project/pending/[projectId]/proposal/[proposal] page
           case 'createProposal':
-          // falls through
-          // project 发布成功，有 reward 分数，直接展示 `contributionPoints`类型
+          // Project published successfully, with reward points, showing `contributionPoints` type
           case 'proposalPass':
-          // falls through
-          // 只有创建not essential item的时候才会通知 -> contributionPoints
-          // TODO：UI可增加createItemProposal类型
+          // Only create not essential item will be notified -> contributionPoints
+          // TODO: UI can add createItemProposal type
           case 'createItemProposal':
-          // falls through
           case 'itemProposalPass':
             return {
               type: 'contributionPoints' as FrontendNotificationType,
