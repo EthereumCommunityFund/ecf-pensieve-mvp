@@ -231,7 +231,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
       <div
         ref={menuRef}
         className={cn(
-          'flex flex-col gap-[10px]  p-[10px] w-[200px]',
+          'flex flex-col gap-[10px]  p-[10px] w-[160px]',
           isFixed ? 'fixed z-20' : 'relative',
           className,
         )}
@@ -261,7 +261,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
                 )}
               >
                 <div className="font-sans text-[14px] font-bold leading-[1.36181640625em] text-black">
-                  {categoryConfig.title}
+                  {categoryConfig.label || categoryConfig.title}
                 </div>
               </div>
             )}
@@ -283,7 +283,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
                       )}
                     >
                       <div className="font-sans text-[12px] leading-[1.3] text-black">
-                        {subCategoryConfig.title}
+                        {subCategoryConfig.label || subCategoryConfig.title}
                       </div>
                     </div>
                   );
