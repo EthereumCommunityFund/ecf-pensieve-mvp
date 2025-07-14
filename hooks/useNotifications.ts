@@ -1,13 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
-import { NotificationItemData } from '@/components/notification/NotificationItem';
+import {
+  FrontendNotificationType,
+  IVoterOfNotification,
+  NotificationItemData,
+} from '@/components/notification/NotificationItem';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationType } from '@/lib/services/notification';
 import { trpc } from '@/lib/trpc/client';
+import { devLog } from '@/utils/devLog';
 
-export const useNotifications = () => {
+const useRealNotifications = () => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
@@ -29,6 +35,10 @@ export const useNotifications = () => {
       getNextPageParam: (lastPage) => {
         return lastPage.hasMore ? lastPage.nextCursor : undefined;
       },
+      select: (data) => {
+        devLog('[Backend] all Notifications Data', data);
+        return data;
+      },
     },
   );
 
@@ -49,6 +59,10 @@ export const useNotifications = () => {
       retry: false,
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.nextCursor : undefined,
+      select: (data) => {
+        devLog('[Backend]unread Notifications Data', data);
+        return data;
+      },
     },
   );
 
@@ -104,30 +118,6 @@ export const useNotifications = () => {
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
     (notification: any): NotificationItemData => {
-      const getNotificationType = (
-        type: string,
-      ): NotificationItemData['type'] => {
-        switch (type) {
-          case 'itemProposalLostLeading':
-            return 'itemProposalLostLeading';
-          case 'itemProposalBecameLeading':
-            return 'itemProposalBecameLeading';
-          case 'itemProposalSupported':
-            return 'itemProposalSupported';
-          case 'proposalPassed':
-            return 'proposalPassed';
-          case 'projectPublished':
-            return 'projectPublished';
-          case 'createProposal':
-          case 'proposalPass':
-          case 'createItemProposal':
-          case 'itemProposalPass':
-            return 'contributionPoints';
-          default:
-            return 'default';
-        }
-      };
-
       const getTimeAgo = (date: Date): string => {
         const now = new Date();
         const diffInMs = now.getTime() - date.getTime();
@@ -143,17 +133,20 @@ export const useNotifications = () => {
         }
       };
 
-      const getNotificationContent = (notification: any) => {
-        switch (notification.type) {
+      const getTransformedContent = (notification: any) => {
+        const type = notification.type as NotificationType;
+        switch (type) {
           case 'itemProposalLostLeading':
             return {
+              type,
               title: 'Your input has lost sufficient support',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
-              buttonText: 'View in Project',
+              buttonText: 'View Submission',
             };
           case 'itemProposalBecameLeading':
             return {
+              type,
               title: 'Your input is now leading',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
@@ -161,6 +154,7 @@ export const useNotifications = () => {
             };
           case 'itemProposalSupported':
             return {
+              type,
               title: 'Your input has been supported',
               itemName: notification.itemProposal?.key || 'item',
               projectName: notification.project?.name || 'project',
@@ -170,24 +164,61 @@ export const useNotifications = () => {
                 'someone',
               buttonText: 'View Submission',
             };
+          // For item votes on pending projects
+          // TODO: Currently there's a notification for each vote, resulting in too many notifications for pending projects. This feature needs optimization
+          case 'proposalSupported':
+            return {
+              type,
+              title: 'Your proposal has been supported',
+              itemName: notification.itemProposal?.key || 'item',
+              projectName: notification.project?.name || 'project',
+              userName:
+                notification.voter?.name ||
+                notification.voter?.address ||
+                'someone',
+              buttonText: 'View Proposal',
+            };
+          // For item votes on published projects
+          case 'itemProposalPassed':
+            return {
+              type,
+              title: 'Your item proposal has passed',
+              itemName: notification.itemProposal?.key || 'item',
+              projectName: notification.project?.name || 'project',
+              userName:
+                notification.voter?.name ||
+                notification.voter?.address ||
+                'someone',
+              buttonText: 'View Submission',
+            };
+          // Project proposal published successfully, but without reward points, showing "View Published Project" entry
           case 'proposalPassed':
             return {
+              type,
               title: 'Your proposal has passed!',
               projectName: notification.project?.name || 'project',
               buttonText: 'View Published Project',
               hasMultipleActions: false,
             };
+          // Project published successfully, same as proposalPassed type, showing "View Published Project" entry, but with different text
           case 'projectPublished':
             return {
+              type,
               title: 'Project has been published',
               projectName: notification.project?.name || 'project',
               buttonText: 'View Published Project',
             };
+          // Create project -> contributionPoints
+          // TODO: UI can add createProposal type, redirecting to project/pending/[projectId]/proposal/[proposal] page
           case 'createProposal':
+          // Project published successfully, with reward points, showing `contributionPoints` type
           case 'proposalPass':
+          // Only create not essential item will be notified -> contributionPoints
+          // TODO: UI can add createItemProposal type
           case 'createItemProposal':
           case 'itemProposalPass':
             return {
+              type: 'contributionPoints' as FrontendNotificationType,
               title: 'You have gained contribution points',
               itemName: notification.reward?.toString() || '0',
               buttonText: '',
@@ -195,23 +226,23 @@ export const useNotifications = () => {
             };
           default:
             return {
+              type: 'default' as FrontendNotificationType,
               title: 'You have a new notification',
               buttonText: 'View Details',
             };
         }
       };
 
-      const content = getNotificationContent(notification);
-
+      const content = getTransformedContent(notification);
       const isRead = !!notification.readAt;
 
       return {
         id: notification.id.toString(),
-        type: getNotificationType(notification.type),
         timeAgo: getTimeAgo(notification.createdAt),
         isRead,
+        voter: notification.voter as IVoterOfNotification,
         ...content,
-      };
+      } as NotificationItemData;
     },
     [],
   );
@@ -237,6 +268,18 @@ export const useNotifications = () => {
       .flatMap((page) => page.notifications)
       .map(transformNotification);
   }, [archivedNotificationsData, transformNotification]);
+
+  useEffect(() => {
+    if (allNotifications.length > 0) {
+      devLog('[Frontend] transformed all Notifications', allNotifications);
+    }
+    if (unreadNotifications.length > 0) {
+      devLog(
+        '[Frontend] transformed unread Notifications',
+        unreadNotifications,
+      );
+    }
+  }, [allNotifications, unreadNotifications]);
 
   // Action handlers
   const handleNotificationAction = useCallback(
@@ -272,11 +315,13 @@ export const useNotifications = () => {
       // Navigation logic
       const handleNavigation = () => {
         const projectId = backendNotification?.projectId;
+        const proposalId = backendNotification?.proposalId;
 
         switch (notification.type) {
           case 'itemProposalLostLeading':
           case 'itemProposalBecameLeading':
           case 'itemProposalSupported':
+          case 'itemProposalPassed':
             if (projectId) {
               router.push(
                 `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${notification.itemName}`,
@@ -286,27 +331,25 @@ export const useNotifications = () => {
             }
             break;
 
-          case 'proposalPassed':
-            router.push(projectId ? `/project/${projectId}` : '/projects');
+          case 'proposalSupported':
+            router.push(`/project/pending/${projectId}/proposal/${proposalId}`);
             break;
 
+          case 'proposalPassed':
+          case 'proposalPass':
           case 'projectPublished':
             router.push(projectId ? `/project/${projectId}` : '/projects');
             break;
-
+          case 'createProposal':
+          case 'createItemProposal':
+          // 缺乏对于的 UI和 Button
           case 'contributionPoints':
             router.push('/projects');
             break;
 
           case 'systemUpdate':
-            router.push('/');
-            break;
-
           case 'newItemsAvailable':
-            router.push('/');
-            break;
-
-          default:
+          case 'default':
             router.push('/');
             break;
         }
@@ -392,8 +435,6 @@ export const useNotifications = () => {
     archiveAllMutation,
     markAsReadMutation,
     allNotifications,
-    unreadNotifications,
-    archivedNotifications,
     utils,
     refetchAll,
     refetchUnread,
@@ -424,8 +465,7 @@ export const useNotifications = () => {
 
     // Mutation loading states
     isMarkingAsRead: markAsReadMutation.isPending,
-    isArchivingAll:
-      archiveAllMutation.isPending || markAsReadMutation.isPending,
+    isArchivingAll: archiveAllMutation.isPending,
 
     // Pagination states
     hasNextAllNotifications,
@@ -459,4 +499,9 @@ export const useNotifications = () => {
       }
     },
   };
+};
+
+export const useNotifications = () => {
+  // return useMockNotifications();
+  return useRealNotifications();
 };

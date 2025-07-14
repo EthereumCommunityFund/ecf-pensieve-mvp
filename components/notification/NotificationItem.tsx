@@ -1,6 +1,9 @@
 'use client';
 
+import { Image } from '@heroui/react';
 import React from 'react';
+
+import { NotificationType } from '@/lib/services/notification';
 
 import { Button } from '../base/button';
 import {
@@ -14,22 +17,28 @@ import {
   ThumbsUpIcon,
 } from '../icons';
 
+export type FrontendNotificationType =
+  | NotificationType
+  | 'default'
+  | 'systemUpdate'
+  | 'newItemsAvailable'
+  | 'contributionPoints';
+
+export interface IVoterOfNotification {
+  address: string;
+  name: string;
+  avatarUrl?: string | null;
+  userId: string;
+}
+
 export interface NotificationItemData {
   id: string;
-  type:
-    | 'itemProposalLostLeading'
-    | 'itemProposalBecameLeading'
-    | 'itemProposalSupported'
-    | 'systemUpdate'
-    | 'newItemsAvailable'
-    | 'proposalPassed'
-    | 'projectPublished'
-    | 'contributionPoints'
-    | 'default';
+  type: FrontendNotificationType;
   title: string;
   itemName?: string;
   projectName?: string;
   userName?: string;
+  voter?: IVoterOfNotification;
   timeAgo: string;
   buttonText: string;
   isRead?: boolean;
@@ -45,21 +54,27 @@ export interface NotificationItemProps {
   onNotificationClick?: (itemData: NotificationItemData) => void;
 }
 
-const getIconForType = (type: NotificationItemData['type']) => {
+const getIconForType = (type: FrontendNotificationType) => {
   switch (type) {
     case 'itemProposalLostLeading':
       return <CaretDoubleDownIcon size={32} className="opacity-30" />;
     case 'itemProposalBecameLeading':
       return <CaretDoubleUpIcon size={32} />;
     case 'itemProposalSupported':
+    case 'proposalSupported':
       return <ThumbsUpIcon size={32} />;
     case 'systemUpdate':
       return <MegaphoneIcon size={32} />;
     case 'newItemsAvailable':
       return <LegoIcon size={32} />;
     case 'proposalPassed':
+    case 'itemProposalPassed':
+    case 'itemProposalPass':
+    case 'proposalPass':
       return <SealCheckIcon size={32} />;
     case 'projectPublished':
+    case 'createProposal':
+    case 'createItemProposal':
       return <PencilCircleIcon size={32} />;
     case 'contributionPoints':
       return <CoinsIcon size={32} />;
@@ -68,15 +83,34 @@ const getIconForType = (type: NotificationItemData['type']) => {
   }
 };
 
+const VoterAvatar = ({ voter }: { voter?: IVoterOfNotification }) => {
+  return voter ? (
+    <div className="inline-flex h-[28px] items-center justify-center gap-[5px] rounded-[10px] bg-[#F5F5F5] p-[4px]">
+      <Image
+        src={voter.avatarUrl || '/images/user/avatar_p.png'}
+        alt={voter.name}
+        width={20}
+        height={20}
+        className="size-[20px] rounded-full object-cover"
+      />
+      <span className="text-[13px] leading-[18px] text-black">
+        {voter.name}
+      </span>
+    </div>
+  ) : (
+    <div>someone</div>
+  );
+};
+
 const formatNotificationText = (itemData: NotificationItemData) => {
-  const { type, title, itemName, projectName, userName } = itemData;
+  const { type, title, itemName, projectName, voter } = itemData;
 
   switch (type) {
     case 'itemProposalLostLeading':
       return (
         <div className="flex flex-wrap items-center gap-1">
           <span className="text-[14px] leading-[20px] text-black">
-            Your input has lost sufficient support
+            Your input for
           </span>
           {itemName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
@@ -95,6 +129,9 @@ const formatNotificationText = (itemData: NotificationItemData) => {
               </span>
             </div>
           )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has lost sufficient support
+          </span>
         </div>
       );
     case 'itemProposalBecameLeading':
@@ -128,14 +165,7 @@ const formatNotificationText = (itemData: NotificationItemData) => {
     case 'itemProposalSupported':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          {userName && (
-            <div className="inline-flex items-center justify-center gap-1 rounded-[10px] bg-[#F5F5F5] px-1">
-              <div className="size-5 rounded-full bg-[#A1A1A1]" />
-              <span className="text-[13px] leading-[18px] text-black">
-                {userName}
-              </span>
-            </div>
-          )}
+          <VoterAvatar voter={voter} />
           <span className="text-[14px] leading-[20px] text-black">
             has supported your input for
           </span>
@@ -212,6 +242,158 @@ const formatNotificationText = (itemData: NotificationItemData) => {
           </span>
         </div>
       );
+    case 'systemUpdate':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            We've made some updates to the platform
+          </span>
+        </div>
+      );
+    case 'newItemsAvailable':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            New items are available for proposals
+          </span>
+        </div>
+      );
+    case 'createProposal':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your proposal for
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has been created
+          </span>
+        </div>
+      );
+    case 'proposalPass':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your proposal for
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has passed!
+          </span>
+        </div>
+      );
+    case 'createItemProposal':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your input for
+          </span>
+          {itemName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {itemName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black opacity-50">
+            in
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has been created
+          </span>
+        </div>
+      );
+    case 'itemProposalPass':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your input for
+          </span>
+          {itemName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {itemName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black opacity-50">
+            in
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has passed!
+          </span>
+        </div>
+      );
+    case 'proposalSupported':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <VoterAvatar voter={voter} />
+          <span className="text-[14px] leading-[20px] text-black">
+            has supported your proposal for
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    case 'itemProposalPassed':
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-[14px] leading-[20px] text-black">
+            Your input for
+          </span>
+          {itemName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {itemName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black opacity-50">
+            in
+          </span>
+          {projectName && (
+            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+              <span className="text-[13px] leading-[18px] text-black">
+                {projectName}
+              </span>
+            </div>
+          )}
+          <span className="text-[14px] leading-[20px] text-black">
+            has been passed!
+          </span>
+        </div>
+      );
     default:
       return (
         <span className="text-[14px] leading-[20px] text-black">{title}</span>
@@ -231,6 +413,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     buttonText,
     isRead = false,
     hasMultipleActions = false,
+    voter,
     secondaryButtonText,
     hideButton = false,
   } = itemData;
