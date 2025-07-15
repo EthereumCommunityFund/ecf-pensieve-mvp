@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
 import { IFounder, IWebsite } from '@/components/pages/project/create/types';
-import { IDateConstraints } from '@/types/item';
+import { IDateConstraints, IPhysicalEntity } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
 
 // TypeScript declaration merging for custom Yup methods
@@ -61,6 +61,13 @@ const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
     .required('Project website is required'),
   title: yup.string().required('Project website title is required'),
 });
+
+const physicalEntitySchema: yup.ObjectSchema<IPhysicalEntity> = yup
+  .object()
+  .shape({
+    legalName: yup.string().required('Legal name is required'),
+    country: yup.string().required('Country is required'),
+  });
 
 export const dateFoundedConstraints: IDateConstraints = {
   maxDate: 'today',
@@ -347,7 +354,7 @@ export const itemValidationSchemas = {
 
   physical_entity: yup
     .array()
-    .of(yup.string().required())
+    .of(physicalEntitySchema)
     .min(1, 'At least one physical entity is required')
     .required('Physical entity information is required'),
 

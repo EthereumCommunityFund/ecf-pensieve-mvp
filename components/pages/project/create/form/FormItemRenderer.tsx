@@ -29,6 +29,7 @@ import { IProjectFormData } from '../types';
 import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
+import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -432,6 +433,85 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         </div>
       );
     }
+
+    case 'tablePhysicalEntity':
+      const physicalEntityArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value
+          : [{ legalName: '', country: '' }];
+
+      return (
+        <div>
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Legal Name
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Country
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
+            {physicalEntityArray.map((website: any, index: number) => {
+              const errors =
+                fieldState.error && Array.isArray(fieldState.error)
+                  ? fieldState.error[index]
+                  : undefined;
+
+              return (
+                <PhysicalEntityFormItemTable
+                  key={`${field.name}-${index}`}
+                  index={index}
+                  remove={() => {
+                    const newItem = physicalEntityArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newItem);
+                  }}
+                  register={register}
+                  errors={errors}
+                  physicalEntitiesKey={field.name as 'physical_entity'}
+                  isPrimary={index === 0}
+                  canRemove={physicalEntityArray.length > 1}
+                  touchedFields={touchedFields}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const newItem = [
+                    ...physicalEntityArray,
+                    { legalName: '', country: '' },
+                  ];
+                  field.onChange(newItem);
+                }}
+                disabled={isDisabled}
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  fontFamily: 'Open Sans, sans-serif',
+                }}
+              >
+                <PlusIcon size={16} />
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add an Entry
+                </span>
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
 
     case 'roadmap':
       return (
