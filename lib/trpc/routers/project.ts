@@ -11,7 +11,13 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { projectLogs, projects, ranks, voteRecords } from '@/lib/db/schema';
+import {
+  projectLogs,
+  projects,
+  projectSnaps,
+  ranks,
+  voteRecords,
+} from '@/lib/db/schema';
 import { itemProposals } from '@/lib/db/schema/itemProposals';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
@@ -600,6 +606,31 @@ export const projectRouter = router({
 
         for (const notification of proposalPassedNotifications) {
           await addNotification(notification, tx);
+        }
+
+        if (itemProposalBatch.length > 0) {
+          const projectSnapData = new Map<number, any[]>();
+
+          for (const item of itemProposalBatch) {
+            if (!projectSnapData.has(item.projectId)) {
+              projectSnapData.set(item.projectId, []);
+            }
+            projectSnapData.get(item.projectId)!.push({
+              key: item.key,
+              value: item.value,
+            });
+          }
+
+          const projectSnapsToInsert = Array.from(
+            projectSnapData.entries(),
+          ).map(([projectId, items]) => ({
+            projectId,
+            items,
+          }));
+
+          if (projectSnapsToInsert.length > 0) {
+            await tx.insert(projectSnaps).values(projectSnapsToInsert);
+          }
         }
 
         return processedCount;
