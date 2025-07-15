@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import {
   ESSENTIAL_ITEM_LIST,
@@ -41,62 +41,20 @@ export const updateProjectSnaps = async (
   key: string,
   value: string,
 ): Promise<void> => {
-  const latestLogsSubquery = tx
-    .select({
-      id: projectLogs.id,
-      projectId: projectLogs.projectId,
-      key: projectLogs.key,
-      itemProposalId: projectLogs.itemProposalId,
-      createdAt: projectLogs.createdAt,
-      isNotLeading: projectLogs.isNotLeading,
-      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${projectLogs.key} ORDER BY ${projectLogs.createdAt} DESC)`.as(
-        'rn',
-      ),
-    })
-    .from(projectLogs)
-    .where(eq(projectLogs.projectId, projectId))
-    .as('latest_logs');
-
-  const latestLogs = await tx
-    .select({
-      id: latestLogsSubquery.id,
-      projectId: latestLogsSubquery.projectId,
-      key: latestLogsSubquery.key,
-      itemProposalId: latestLogsSubquery.itemProposalId,
-      createdAt: latestLogsSubquery.createdAt,
-      isNotLeading: latestLogsSubquery.isNotLeading,
-      itemProposal: {
-        id: itemProposals.id,
-        key: itemProposals.key,
-        value: itemProposals.value,
-        ref: itemProposals.ref,
-        creator: itemProposals.creator,
-        reason: itemProposals.reason,
-        createdAt: itemProposals.createdAt,
-      },
-    })
-    .from(latestLogsSubquery)
-    .leftJoin(
-      itemProposals,
-      eq(latestLogsSubquery.itemProposalId, itemProposals.id),
-    )
-    .where(eq(latestLogsSubquery.rn, 1));
-
-  const items = latestLogs.map((row: any) => ({
-    key: row.key,
-    value: row.itemProposal?.value || '',
-  }));
-
-  // Update the specific key with the new value
-  const updatedItems = items.filter((item) => item.key !== key);
-  updatedItems.push({ key, value });
-
-  if (updatedItems.length > 0) {
-    await tx.insert(projectSnaps).values({
-      projectId,
-      items: updatedItems,
-    });
+  const projectSnap = await tx.query.projectSnaps.findFirst({
+    where: eq(projectSnaps.projectId, projectId),
+  });
+  if (!projectSnap) {
+    return;
   }
+  const updatedItems = projectSnap.items.filter(
+    (item: any) => item.key !== key,
+  );
+  updatedItems.push({ key, value });
+  await tx
+    .update(projectSnaps)
+    .set({ items: updatedItems })
+    .where(eq(projectSnaps.id, projectSnap.id));
 };
 
 export const handleVoteRecord = async (
