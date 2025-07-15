@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import {
   ESSENTIAL_ITEM_LIST,
@@ -11,6 +11,7 @@ import {
   profiles,
   projectLogs,
   projects,
+  projectSnaps,
   voteRecords,
 } from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
@@ -32,6 +33,64 @@ export const calculateReward = (key: string): number => {
 
 export const isEssentialItem = (key: string): boolean => {
   return ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
+};
+
+export const updateProjectSnaps = async (
+  tx: any,
+  projectId: number,
+): Promise<void> => {
+  const latestLogsSubquery = tx
+    .select({
+      id: projectLogs.id,
+      projectId: projectLogs.projectId,
+      key: projectLogs.key,
+      itemProposalId: projectLogs.itemProposalId,
+      createdAt: projectLogs.createdAt,
+      isNotLeading: projectLogs.isNotLeading,
+      rn: sql<number>`ROW_NUMBER() OVER (PARTITION BY ${projectLogs.key} ORDER BY ${projectLogs.createdAt} DESC)`.as(
+        'rn',
+      ),
+    })
+    .from(projectLogs)
+    .where(eq(projectLogs.projectId, projectId))
+    .as('latest_logs');
+
+  const latestLogs = await tx
+    .select({
+      id: latestLogsSubquery.id,
+      projectId: latestLogsSubquery.projectId,
+      key: latestLogsSubquery.key,
+      itemProposalId: latestLogsSubquery.itemProposalId,
+      createdAt: latestLogsSubquery.createdAt,
+      isNotLeading: latestLogsSubquery.isNotLeading,
+      itemProposal: {
+        id: itemProposals.id,
+        key: itemProposals.key,
+        value: itemProposals.value,
+        ref: itemProposals.ref,
+        creator: itemProposals.creator,
+        reason: itemProposals.reason,
+        createdAt: itemProposals.createdAt,
+      },
+    })
+    .from(latestLogsSubquery)
+    .leftJoin(
+      itemProposals,
+      eq(latestLogsSubquery.itemProposalId, itemProposals.id),
+    )
+    .where(eq(latestLogsSubquery.rn, 1));
+
+  const items = latestLogs.map((row: any) => ({
+    key: row.key,
+    value: row.itemProposal?.value || '',
+  }));
+
+  if (items.length > 0) {
+    await tx.insert(projectSnaps).values({
+      projectId,
+      items,
+    });
+  }
 };
 
 export const handleVoteRecord = async (
@@ -187,6 +246,7 @@ export const processItemProposalVoteResult = async (
           ),
           tx,
         ),
+        updateProjectSnaps(tx, itemProposal.projectId),
       ]);
       return;
     }
@@ -226,6 +286,7 @@ export const processItemProposalVoteResult = async (
         ),
         tx,
       ),
+      updateProjectSnaps(tx, itemProposal.projectId),
     ]);
 
     return { reward, finalWeight, voteSum };
@@ -257,6 +318,8 @@ export const processItemProposalUpdate = async (
       [key]: voteSum,
     },
   });
+
+  await updateProjectSnaps(tx, project.id);
 };
 
 export const handleOriginalProposalUpdate = async (
