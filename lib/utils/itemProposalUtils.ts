@@ -38,6 +38,8 @@ export const isEssentialItem = (key: string): boolean => {
 export const updateProjectSnaps = async (
   tx: any,
   projectId: number,
+  key: string,
+  value: string,
 ): Promise<void> => {
   const latestLogsSubquery = tx
     .select({
@@ -85,10 +87,14 @@ export const updateProjectSnaps = async (
     value: row.itemProposal?.value || '',
   }));
 
-  if (items.length > 0) {
+  // Update the specific key with the new value
+  const updatedItems = items.filter((item) => item.key !== key);
+  updatedItems.push({ key, value });
+
+  if (updatedItems.length > 0) {
     await tx.insert(projectSnaps).values({
       projectId,
-      items,
+      items: updatedItems,
     });
   }
 };
@@ -246,7 +252,7 @@ export const processItemProposalVoteResult = async (
           ),
           tx,
         ),
-        updateProjectSnaps(tx, itemProposal.projectId),
+        updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
       ]);
       return;
     }
@@ -286,7 +292,7 @@ export const processItemProposalVoteResult = async (
         ),
         tx,
       ),
-      updateProjectSnaps(tx, itemProposal.projectId),
+      updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
     ]);
 
     return { reward, finalWeight, voteSum };
@@ -319,7 +325,27 @@ export const processItemProposalUpdate = async (
     },
   });
 
-  await updateProjectSnaps(tx, project.id);
+  // Get the leading proposal for this key to get its value
+  const leadingLog = await tx.query.projectLogs.findFirst({
+    where: and(
+      eq(projectLogs.projectId, project.id),
+      eq(projectLogs.key, key),
+      eq(projectLogs.isNotLeading, false),
+    ),
+    orderBy: (projectLogs: any, { desc }: any) => [desc(projectLogs.createdAt)],
+    with: {
+      itemProposal: true,
+    },
+  });
+
+  if (leadingLog?.itemProposal) {
+    await updateProjectSnaps(
+      tx,
+      project.id,
+      key,
+      leadingLog.itemProposal.value,
+    );
+  }
 };
 
 export const handleOriginalProposalUpdate = async (
