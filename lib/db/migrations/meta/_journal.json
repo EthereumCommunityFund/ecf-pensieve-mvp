@@ -281,6 +281,13 @@
       "when": 1751531392606,
       "tag": "0039_early_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1752543556176,
+      "tag": "0040_ambitious_giant_man",
+      "breakpoints": true
     }
   ]
 }
