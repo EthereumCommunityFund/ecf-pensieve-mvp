@@ -288,6 +288,13 @@
       "when": 1752543556176,
       "tag": "0040_ambitious_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1752620733107,
+      "tag": "0041_light_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
