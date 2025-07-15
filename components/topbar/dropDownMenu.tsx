@@ -11,15 +11,15 @@ export const DropDownMenuData = {
   common: [
     {
       name: 'Whitepaper',
-      link: 'https://ecf.wiki/doc/pensieve-paper-lite-eydqYnuYnP',
-    },
-    {
-      name: 'Docs',
       link: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
     },
+    /*{
+      name: 'Docs',
+      link: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
+    },*/
     {
       name: 'Changelog',
-      link: 'https://ecf.wiki/s/0174d7fe-2818-4587-95ae-fd8b5b27b6ed',
+      link: 'https://ecf.wiki/s/8dc736c1-3f92-4488-b3a9-1ec82bccb1d9',
     },
     {
       name: 'About ECF Network',
