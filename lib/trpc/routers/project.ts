@@ -174,6 +174,7 @@ export const projectRouter = router({
 
       const queryOptions: any = {
         creator: true,
+        projectSnap: true,
       };
 
       if (!isPublished) {

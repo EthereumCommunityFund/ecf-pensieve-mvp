@@ -3,7 +3,7 @@ import { unstable_cache as nextCache } from 'next/cache';
 import { z } from 'zod';
 
 import { CACHE_TAGS } from '@/lib/constants';
-import { profiles, projects, ranks } from '@/lib/db/schema';
+import { profiles, projects, projectSnaps, ranks } from '@/lib/db/schema';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 export const rankRouter = router({
@@ -16,6 +16,7 @@ export const rankRouter = router({
           project: {
             with: {
               creator: true,
+              projectSnap: true,
             },
           },
         },
@@ -41,6 +42,7 @@ export const rankRouter = router({
         })
         .from(projects)
         .leftJoin(profiles, eq(projects.creator, profiles.userId))
+        .leftJoin(projectSnaps, eq(projects.id, projectSnaps.projectId))
         .where(eq(projects.isPublished, true))
         .orderBy(desc(projects.support), desc(itemsTopWeightSum))
         .limit(limit);
@@ -84,6 +86,7 @@ export const rankRouter = router({
             project: {
               with: {
                 creator: true,
+                projectSnap: true,
               },
             },
           },
@@ -152,6 +155,7 @@ export const rankRouter = router({
           })
           .from(projects)
           .leftJoin(profiles, eq(projects.creator, profiles.userId))
+          .leftJoin(projectSnaps, eq(projects.id, projectSnaps.projectId))
           .where(eq(projects.isPublished, true))
           .orderBy(
             desc(projects.support),
