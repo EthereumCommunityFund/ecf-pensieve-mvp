@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import {
   FrontendNotificationType,
@@ -11,7 +11,6 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { NotificationType } from '@/lib/services/notification';
 import { trpc } from '@/lib/trpc/client';
-import { devLog } from '@/utils/devLog';
 
 const useRealNotifications = () => {
   const router = useRouter();
@@ -36,7 +35,6 @@ const useRealNotifications = () => {
         return lastPage.hasMore ? lastPage.nextCursor : undefined;
       },
       select: (data) => {
-        devLog('[Backend] all Notifications Data', data);
         return data;
       },
     },
@@ -60,7 +58,6 @@ const useRealNotifications = () => {
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.nextCursor : undefined,
       select: (data) => {
-        devLog('[Backend]unread Notifications Data', data);
         return data;
       },
     },
@@ -268,18 +265,6 @@ const useRealNotifications = () => {
       .flatMap((page) => page.notifications)
       .map(transformNotification);
   }, [archivedNotificationsData, transformNotification]);
-
-  useEffect(() => {
-    if (allNotifications.length > 0) {
-      devLog('[Frontend] transformed all Notifications', allNotifications);
-    }
-    if (unreadNotifications.length > 0) {
-      devLog(
-        '[Frontend] transformed unread Notifications',
-        unreadNotifications,
-      );
-    }
-  }, [allNotifications, unreadNotifications]);
 
   // Action handlers
   const handleNotificationAction = useCallback(
