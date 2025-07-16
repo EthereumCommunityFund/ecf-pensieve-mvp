@@ -332,7 +332,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     subCategory: IItemSubCategoryEnum.Development,
     isEssential: POC_ITEMS.dappSmartContracts.isEssential,
     label: 'Dapp Smart Contracts',
-    description: 'Input the projects smart contracts',
+    description:
+      'Input the projects smart contracts. Use Add Reference to paste the URL from the block explorer of your choice (Etherscan, Ethexplorer, etc)',
     shortDescription: `What does your project's smart contract do at high level? Definition of Smart Contract: a set of rules defined in code that can be executed by an underlying blockchain for a fee e.g smart contracts on Ethereum.`,
     longDescription: `List specific features (imports, functions, modifiers, security implementations) and/or gas optimizations of your smart contract`,
     weight: ALL_POC_ITEM_MAP.dappSmartContracts.weight,
@@ -432,7 +433,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     isEssential: POC_ITEMS.tokenContract.isEssential,
     label: 'Token Contract',
     description:
-      "Provide the address of the project's token smart contract, if applicable.",
+      "Provide the address of the project's token smart contract, if applicable. Use Add Reference to paste the URL from the block explorer of your choice (Etherscan, Ethexplorer, etc)",
     shortDescription:
       ' A token contract is a smart contract that contains a mapping of addresses and account balances.',
     longDescription: `A token contract is a smart contract deployed on a blockchain that defines the rules and logic of a project's token. It typically includes a mapping of wallet addresses to their token balances, and governs core functionalities such as transfers, approvals, minting, burning, and in some cases, staking or governance rights. This field should include the token contract address, which allows users, auditors, and explorers to independently verify the token's code and on-chain activity. Providing this information is key for transparency, as it enables others to track supply, distribution, and usage directly on the blockchain. If the project has multiple token contracts (e.g. for wrapped versions or migration), those should also be disclosed.`,
