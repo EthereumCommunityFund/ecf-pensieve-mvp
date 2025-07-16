@@ -15,6 +15,7 @@ const BasicsStepForm: React.FC<
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
+  formType,
 }) => {
   const fieldConfigArray = Object.values(basicsFieldsConfig);
 
@@ -29,6 +30,7 @@ const BasicsStepForm: React.FC<
           onChangeApplicability={onChangeApplicability}
           onAddReference={onAddReference}
           hasFieldReference={hasFieldReference}
+          formType={formType}
         />
       ))}
     </div>

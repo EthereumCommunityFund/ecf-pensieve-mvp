@@ -15,6 +15,7 @@ const TechnicalsStepForm: React.FC<
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
+  formType,
 }) => {
   const fieldConfigArray = Object.values(technicalsFieldsConfig);
 
@@ -29,6 +30,7 @@ const TechnicalsStepForm: React.FC<
           onChangeApplicability={onChangeApplicability}
           onAddReference={onAddReference}
           hasFieldReference={hasFieldReference}
+          formType={formType}
         />
       ))}
     </div>

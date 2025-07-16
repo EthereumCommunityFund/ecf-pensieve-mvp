@@ -10,6 +10,7 @@ import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
 import FormItemManager from '@/components/pages/project/create/form/FormItemManager';
 import {
+  IFormTypeEnum,
   IProjectFormData,
   IReferenceData,
 } from '@/components/pages/project/create/types';
@@ -387,6 +388,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
             onChangeApplicability={handleApplicabilityChange}
             onAddReference={handleAddReference}
             hasFieldReference={hasFieldReference}
+            formType={IFormTypeEnum.Project}
           />
 
           <EditReasonUIContainer

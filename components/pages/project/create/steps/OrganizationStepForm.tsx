@@ -25,6 +25,7 @@ const OrganizationStepForm: React.FC<
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
+  formType,
 }) => {
   const { register } = useFormContext<IProjectFormData>();
 
@@ -52,6 +53,7 @@ const OrganizationStepForm: React.FC<
           onChangeApplicability={onChangeApplicability}
           onAddReference={onAddReference}
           hasFieldReference={hasFieldReference}
+          formType={formType}
         />
       ))}
 

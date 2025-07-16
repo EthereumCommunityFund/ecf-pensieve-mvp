@@ -1,7 +1,7 @@
 import { Avatar } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ControllerFieldState,
   ControllerRenderProps,
@@ -25,7 +25,7 @@ import {
   dateValueToDate,
 } from '@/utils/formatters';
 
-import { IProjectFormData } from '../types';
+import { IFormTypeEnum, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
@@ -38,6 +38,7 @@ interface FormItemRendererProps {
   fieldState: ControllerFieldState;
   itemConfig: IItemConfig<IItemKey>;
   fieldApplicability: Record<string, boolean>;
+  formType: IFormTypeEnum;
 }
 
 const FormItemRenderer: React.FC<FormItemRendererProps> = ({
@@ -45,6 +46,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   fieldState,
   itemConfig,
   fieldApplicability,
+  formType,
 }) => {
   const { error } = fieldState;
   const {
@@ -67,6 +69,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
+  const disableNameEdit = useMemo(() => {
+    return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
+  }, [itemKey, formType]);
+
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
@@ -81,7 +87,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             value={field.value || ''}
             placeholder={placeholder}
             isInvalid={!!error}
-            isDisabled={isDisabled}
+            isDisabled={isDisabled || disableNameEdit}
             startContent={
               startContentText ? (
                 <InputPrefix prefix={startContentText} />
