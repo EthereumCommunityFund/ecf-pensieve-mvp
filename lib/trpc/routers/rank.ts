@@ -38,6 +38,7 @@ export const rankRouter = router({
         .select({
           ...(({ creator: _, ...rest }) => rest)(getTableColumns(projects)),
           creator: getTableColumns(profiles),
+          projectSnap: getTableColumns(projectSnaps),
           itemsTopWeightSum,
         })
         .from(projects)
@@ -151,6 +152,7 @@ export const rankRouter = router({
           .select({
             ...(({ creator: _, ...rest }) => rest)(getTableColumns(projects)),
             creator: getTableColumns(profiles),
+            projectSnap: getTableColumns(projectSnaps),
             itemsTopWeightSum,
           })
           .from(projects)
