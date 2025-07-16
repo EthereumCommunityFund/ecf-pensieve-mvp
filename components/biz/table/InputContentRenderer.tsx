@@ -4,16 +4,20 @@ import Link from 'next/link';
 import React, { memo, useCallback } from 'react';
 
 import { TableIcon } from '@/components/icons';
-import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
+import {
+  founderColumns,
+  physicalEntityColumns,
+  websiteColumns,
+} from '@/components/pages/project/create/form/tableConfigs';
+import { IFormDisplayType, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
   isInputValueNA,
   parseMultipleValue,
   parseValue,
 } from '@/utils/item';
-import { normalizeUrl } from '@/utils/url';
 
-import { TableCell, TableContainer, TableHeader, TableRow } from './index';
+import { GenericTableDisplay } from './GenericTableDisplay';
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -58,16 +62,13 @@ const InputContentRenderer: React.FC<IProps> = ({
         const multipleValues = parseMultipleValue(value);
         const joinedText = multipleValues.join(', ');
 
-        // For expandable fields in collapsed state, show truncated text
         if (isExpandable && !isExpanded) {
-          // Don't truncate here, let the outer expandable logic handle it
           return <>{joinedText}</>;
         }
 
         return <>{joinedText}</>;
       }
       case 'selectMultiple':
-        return <>{parseMultipleValue(value).join(', ')}</>;
       case 'autoComplete':
         return <>{parseMultipleValue(value).join(', ')}</>;
       case 'img':
@@ -97,403 +98,27 @@ const InputContentRenderer: React.FC<IProps> = ({
         );
       case 'date':
         return <>{dayjs(value).format('MMM, DD, YYYY')}</>;
-      case 'founderList': {
-        const parsedFounderList = parseValue(value);
 
-        if (!Array.isArray(parsedFounderList)) {
-          return <>{parsedFounderList}</>;
-        }
-
-        // 如果在 ExpandableRow 中，只显示表格内容，不显示按钮
-        if (isInExpandableRow) {
-          return (
-            <div className="w-full">
-              <TableContainer bordered rounded background="white">
-                <table className="w-full border-separate border-spacing-0">
-                  <thead>
-                    <tr className="bg-[#F5F5F5]">
-                      <TableHeader width={214} isContainerBordered>
-                        <div className="flex items-center gap-[5px]">
-                          <span>Name</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </TableHeader>
-                      <TableHeader isLast isContainerBordered>
-                        <div className="flex items-center gap-[5px]">
-                          <span>Title/Role</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </TableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parsedFounderList.map((founder: any, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsedFounderList.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
-                          isLastRow={index === parsedFounderList.length - 1}
-                        >
-                          {founder.name}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsedFounderList.length - 1}
-                        >
-                          {founder.title}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </tbody>
-                </table>
-              </TableContainer>
-            </div>
-          );
-        }
-
-        // 如果是可展开的，在普通单元格中只显示按钮
-        if (isExpandable) {
-          return (
-            <div className="w-full">
-              <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
-              >
-                <TableIcon size={20} color="black" className="opacity-70" />
-                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
-                  {isExpanded ? 'Close Table' : 'View Table'}
-                </span>
-              </button>
-            </div>
-          );
-        }
-        break;
-      }
-      case 'websites': {
-        const parsedWebsites = parseValue(value);
-
-        if (!Array.isArray(parsedWebsites)) {
-          return <>{parsedWebsites}</>;
-        }
-
-        // 如果在 ExpandableRow 中，只显示表格内容，不显示按钮
-        if (isInExpandableRow) {
-          return (
-            <div className="w-full">
-              <TableContainer bordered rounded background="white">
-                <table className="w-full border-separate border-spacing-0">
-                  <thead>
-                    <tr className="bg-[#F5F5F5]">
-                      <TableHeader width={214} isContainerBordered>
-                        <div className="flex items-center gap-[5px]">
-                          <span>Title</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </TableHeader>
-                      <TableHeader isLast isContainerBordered>
-                        <div className="flex items-center gap-[5px]">
-                          <span>URL</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </TableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parsedWebsites.map((website: any, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsedWebsites.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
-                          isLastRow={index === parsedWebsites.length - 1}
-                        >
-                          {website.title}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsedWebsites.length - 1}
-                        >
-                          <Link
-                            href={normalizeUrl(website.url)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline"
-                          >
-                            {normalizeUrl(website.url)}
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </tbody>
-                </table>
-              </TableContainer>
-            </div>
-          );
-        }
-
-        // 如果是可展开的，在普通单元格中只显示按钮
-        if (isExpandable) {
-          return (
-            <div className="w-full">
-              <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
-              >
-                <TableIcon size={20} color="black" className="opacity-70" />
-                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
-                  {isExpanded ? 'Close Table' : 'View Table'}
-                </span>
-              </button>
-            </div>
-          );
-        }
-
-        // 非可展开状态下的默认显示（简单文本格式）
-        return (
-          <>
-            {parsedWebsites
-              .map(
-                (website: any) =>
-                  `${website.title}: ${normalizeUrl(website.url)}`,
-              )
-              .join(', ')}
-          </>
-        );
-      }
+      case 'founderList':
+      case 'websites':
       case 'tablePhysicalEntity': {
-        const parsed = parseValue(value);
+        const parsedData = parseValue(value);
 
-        if (!Array.isArray(parsed)) {
-          return <>{parsed}</>;
+        if (!Array.isArray(parsedData)) {
+          return <>{parsedData}</>;
         }
 
-        // 如果在 ExpandableRow 中，只显示表格内容，不显示按钮
         if (isInExpandableRow) {
+          let columns;
+          if (displayFormType === 'founderList') columns = founderColumns;
+          else if (displayFormType === 'websites') columns = websiteColumns;
+          else columns = physicalEntityColumns;
+
           return (
-            <div className="w-full">
-              <TableContainer bordered rounded background="white">
-                <table className="w-full border-separate border-spacing-0">
-                  <thead>
-                    <tr className="bg-[#F5F5F5]">
-                      <TableHeader width={214} isContainerBordered>
-                        <div className="flex items-center gap-[5px]">
-                          <span>Legal Name</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </TableHeader>
-                      <TableHeader isLast isContainerBordered>
-                        <div className="flex items-center gap-[5px]">
-                          <span>Country</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </TableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parsed.map((item: IPhysicalEntity, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsed.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
-                          isLastRow={index === parsed.length - 1}
-                        >
-                          {item.legalName}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsed.length - 1}
-                        >
-                          {item.country}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </tbody>
-                </table>
-              </TableContainer>
-            </div>
+            <GenericTableDisplay data={parsedData} columns={columns as any} />
           );
         }
 
-        // 如果是可展开的，在普通单元格中只显示按钮
         if (isExpandable) {
           return (
             <div className="w-full">
@@ -510,17 +135,16 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
 
-        // 非可展开状态下的默认显示（简单文本格式）
+        // Default text format for non-expandable
         return (
           <>
-            {parsed
-              .map(
-                (item: IPhysicalEntity) => `${item.legalName}: ${item.country}`,
-              )
+            {parsedData
+              .map((item: any) => Object.values(item).join(': '))
               .join(', ')}
           </>
         );
       }
+
       default:
         return <>{value}</>;
     }
@@ -557,7 +181,6 @@ const InputContentRenderer: React.FC<IProps> = ({
     displayFormType !== 'websites' &&
     displayFormType !== 'tablePhysicalEntity'
   ) {
-    // If we're in an expandable row, show full content without line clamp
     if (isInExpandableRow) {
       return (
         <div
@@ -572,7 +195,6 @@ const InputContentRenderer: React.FC<IProps> = ({
       );
     }
 
-    // Otherwise, show truncated content with line clamp
     return (
       <div
         className="cursor-pointer overflow-hidden break-all"

@@ -16,7 +16,8 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
-import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
+import { IColumnConfig } from '@/components/biz/table/GenericFormItemTable';
+import { CalendarBlankIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
   buildDatePickerProps,
@@ -26,11 +27,14 @@ import {
 
 import { IProjectFormData } from '../types';
 
-import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
-import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
-import WebsiteFormItemTable from './WebsiteFormItemTable';
+import TableFormControl from './TableFormControl';
+import {
+  founderColumns,
+  physicalEntityColumns,
+  websiteColumns,
+} from './tableConfigs';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
@@ -54,11 +58,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     startContentText,
     minRows,
     formDisplayType,
-    componentsProps = {},
   } = itemConfig;
 
   const { register, formState, control } = useFormContext<IProjectFormData>();
-  const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
@@ -174,13 +176,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   field.onChange(firstKey != null ? String(firstKey) : null);
                 }
               }
-              // Trigger blur event for validation after selection is complete
-              // Also trigger blur event when dropdown is closed
-              // Ensure field.value is an array
               field.onBlur(); // Trigger validation
             }}
             onClose={() => {
-              // Also trigger blur event when dropdown is closed
               field.onBlur();
             }}
             isInvalid={!!error}
@@ -202,7 +200,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       );
     }
     case 'autoComplete': {
-      // Ensure field.value is in array format
       const currentValue = Array.isArray(field.value) ? field.value : [];
 
       return (
@@ -270,248 +267,38 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       );
     }
 
-    case 'founderList': {
-      // Ensure valid array data with at least one entry
-      const foundersArray =
-        Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ name: '', title: '' }];
+    case 'founderList':
+    case 'websites':
+    case 'tablePhysicalEntity': {
+      let columns: IColumnConfig<any>[] = [];
+      let defaultRowValue: any = {};
+
+      if (formDisplayType === 'founderList') {
+        columns = founderColumns;
+        defaultRowValue = { name: '', title: '' };
+      } else if (formDisplayType === 'websites') {
+        columns = websiteColumns;
+        defaultRowValue = { url: '', title: '' };
+      } else if (formDisplayType === 'tablePhysicalEntity') {
+        columns = physicalEntityColumns;
+        defaultRowValue = { legalName: '', country: '' };
+      }
 
       return (
         <div>
-          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
-                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Full Name
-                </span>
-              </div>
-              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
-                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Title/Role
-                </span>
-              </div>
-              <div className="w-[60px] p-[10px]"></div>
-            </div>
-            {foundersArray.map((founder: any, index: number) => {
-              // Get error for specific index from fieldState
-              const founderError =
-                fieldState.error && Array.isArray(fieldState.error)
-                  ? fieldState.error[index]
-                  : undefined;
-
-              return (
-                <FounderFormItemTable
-                  key={index}
-                  index={index}
-                  remove={() => {
-                    const newFounders = foundersArray.filter(
-                      (_: any, i: number) => i !== index,
-                    );
-                    field.onChange(newFounders);
-                  }}
-                  register={register}
-                  errors={founderError}
-                  foundersKey={field.name as 'founders'}
-                  canRemove={foundersArray.length > 1}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  // Add new item directly to existing array
-                  const newFounders = [
-                    ...foundersArray,
-                    { name: '', title: '' },
-                  ];
-                  field.onChange(newFounders);
-                }}
-                disabled={isDisabled}
-                style={{
-                  outline: 'none',
-                  boxShadow: 'none',
-                  fontFamily: 'Open Sans, sans-serif',
-                }}
-              >
-                <PlusIcon size={16} />
-                <span className="text-[14px] font-[400] leading-[19px]">
-                  Add an Entry
-                </span>
-              </button>
-            </div>
-          </div>
+          <TableFormControl
+            control={control}
+            register={register}
+            name={field.name as keyof IProjectFormData}
+            errors={formState.errors}
+            columns={columns}
+            defaultRowValue={defaultRowValue}
+            isDisabled={isDisabled}
+          />
           {errorMessageElement}
         </div>
       );
     }
-
-    case 'websites': {
-      const websitesArray =
-        Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ url: '', title: '' }];
-
-      return (
-        <div>
-          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
-                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Website Title
-                </span>
-              </div>
-              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
-                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  URL
-                </span>
-              </div>
-              <div className="w-[60px] p-[10px]"></div>
-            </div>
-            {websitesArray.map((website: any, index: number) => {
-              const websiteError =
-                fieldState.error && Array.isArray(fieldState.error)
-                  ? fieldState.error[index]
-                  : undefined;
-
-              return (
-                <WebsiteFormItemTable
-                  key={`${field.name}-${index}`}
-                  index={index}
-                  remove={() => {
-                    const newWebsites = websitesArray.filter(
-                      (_: any, i: number) => i !== index,
-                    );
-                    field.onChange(newWebsites);
-                  }}
-                  register={register}
-                  errors={websiteError}
-                  websitesKey={field.name as 'websites'}
-                  isPrimary={index === 0}
-                  canRemove={websitesArray.length > 1}
-                  touchedFields={touchedFields}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  // Add new item directly to existing array
-                  const newWebsites = [
-                    ...websitesArray,
-                    { title: '', url: '' },
-                  ];
-                  field.onChange(newWebsites);
-                }}
-                disabled={isDisabled}
-                style={{
-                  outline: 'none',
-                  boxShadow: 'none',
-                  fontFamily: 'Open Sans, sans-serif',
-                }}
-              >
-                <PlusIcon size={16} />
-                <span className="text-[14px] font-[400] leading-[19px]">
-                  Add an Entry
-                </span>
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
-    }
-
-    case 'tablePhysicalEntity':
-      const physicalEntityArray =
-        Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ legalName: '', country: '' }];
-
-      return (
-        <div>
-          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
-                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Legal Name
-                </span>
-              </div>
-              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
-                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Country
-                </span>
-              </div>
-              <div className="w-[60px] p-[10px]"></div>
-            </div>
-            {physicalEntityArray.map((website: any, index: number) => {
-              const errors =
-                fieldState.error && Array.isArray(fieldState.error)
-                  ? fieldState.error[index]
-                  : undefined;
-
-              return (
-                <PhysicalEntityFormItemTable
-                  key={`${field.name}-${index}`}
-                  index={index}
-                  remove={() => {
-                    const newItem = physicalEntityArray.filter(
-                      (_: any, i: number) => i !== index,
-                    );
-                    field.onChange(newItem);
-                  }}
-                  register={register}
-                  errors={errors}
-                  physicalEntitiesKey={field.name as 'physical_entity'}
-                  isPrimary={index === 0}
-                  canRemove={physicalEntityArray.length > 1}
-                  touchedFields={touchedFields}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const newItem = [
-                    ...physicalEntityArray,
-                    { legalName: '', country: '' },
-                  ];
-                  field.onChange(newItem);
-                }}
-                disabled={isDisabled}
-                style={{
-                  outline: 'none',
-                  boxShadow: 'none',
-                  fontFamily: 'Open Sans, sans-serif',
-                }}
-              >
-                <PlusIcon size={16} />
-                <span className="text-[14px] font-[400] leading-[19px]">
-                  Add an Entry
-                </span>
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
 
     case 'roadmap':
       return (
