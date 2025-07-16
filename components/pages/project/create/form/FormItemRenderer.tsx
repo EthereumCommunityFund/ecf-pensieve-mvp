@@ -5,6 +5,7 @@ import React from 'react';
 import {
   ControllerFieldState,
   ControllerRenderProps,
+  useFieldArray,
   useFormContext,
 } from 'react-hook-form';
 
@@ -59,6 +60,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
   const { register, formState, control } = useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: field.name,
+  });
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
@@ -435,10 +440,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'tablePhysicalEntity':
-      const physicalEntityArray =
-        Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ legalName: '', country: '' }];
+      if (fields.length === 0) {
+        append({ legalName: '', country: '' });
+      }
 
       return (
         <div>
@@ -457,7 +461,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               </div>
               <div className="w-[60px] p-[10px]"></div>
             </div>
-            {physicalEntityArray.map((website: any, index: number) => {
+            {fields.map((item, index: number) => {
               const errors =
                 fieldState.error && Array.isArray(fieldState.error)
                   ? fieldState.error[index]
@@ -465,19 +469,16 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <PhysicalEntityFormItemTable
-                  key={`${field.name}-${index}`}
+                  key={item.id}
                   index={index}
                   remove={() => {
-                    const newItem = physicalEntityArray.filter(
-                      (_: any, i: number) => i !== index,
-                    );
-                    field.onChange(newItem);
+                    remove(index);
                   }}
                   register={register}
                   errors={errors}
                   physicalEntitiesKey={field.name as 'physical_entity'}
                   isPrimary={index === 0}
-                  canRemove={physicalEntityArray.length > 1}
+                  canRemove={fields.length > 1}
                   touchedFields={touchedFields}
                 />
               );
@@ -489,11 +490,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  const newItem = [
-                    ...physicalEntityArray,
-                    { legalName: '', country: '' },
-                  ];
-                  field.onChange(newItem);
+                  append({ legalName: '', country: '' });
                 }}
                 disabled={isDisabled}
                 style={{
