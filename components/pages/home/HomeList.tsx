@@ -6,8 +6,8 @@ import React, { useCallback, useEffect } from 'react';
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
-import { formatDateWithTimeGMT } from '@/utils/formatters';
 import { devLog } from '@/utils/devLog';
+import { formatDateWithTimeGMT } from '@/utils/formatters';
 
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
 

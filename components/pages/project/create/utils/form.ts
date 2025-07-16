@@ -164,6 +164,7 @@ export const transformProjectData = (
     founders: formData.founders.map((founder) => ({
       name: founder.name,
       title: founder.title,
+      region: founder.region,
     })),
     refs:
       references.length > 0
@@ -354,6 +355,7 @@ export const transformProposalData = (
               formData.founders.map((founder) => ({
                 name: founder.name,
                 title: founder.title,
+                region: founder.region,
               })),
             )
           : '',
@@ -401,6 +403,7 @@ export const convertProjectToFormData = (
     founders: project.founders.map((founder: any) => ({
       name: founder.name,
       title: founder.title,
+      region: founder.region,
     })),
   };
 };

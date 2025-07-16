@@ -286,7 +286,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       const foundersArray =
         Array.isArray(field.value) && field.value.length > 0
           ? field.value
-          : [{ name: '', title: '' }];
+          : [{ name: '', title: '', region: '' }];
 
       return (
         <div>
@@ -298,9 +298,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   Full Name
                 </span>
               </div>
-              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
                 <span className="text-[14px] font-[600] leading-[19px] text-black/60">
                   Title/Role
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Region
                 </span>
               </div>
               <div className="w-[60px] p-[10px]"></div>
@@ -323,6 +328,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                     field.onChange(newFounders);
                   }}
                   register={register}
+                  control={control}
                   errors={founderError}
                   foundersKey={field.name as 'founders'}
                   canRemove={foundersArray.length > 1}
@@ -340,7 +346,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   // Add new item directly to existing array
                   const newFounders = [
                     ...foundersArray,
-                    { name: '', title: '' },
+                    { name: '', title: '', region: '' },
                   ];
                   field.onChange(newFounders);
                 }}

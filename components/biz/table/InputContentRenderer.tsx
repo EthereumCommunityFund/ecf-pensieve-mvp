@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React, { memo, useCallback } from 'react';
 
 import { TableIcon } from '@/components/icons';
+import { COUNTRIES } from '@/constants/countries';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -14,6 +15,32 @@ import {
 import { normalizeUrl } from '@/utils/url';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
+
+const getRegionLabel = (regionCode?: string) => {
+  if (!regionCode) return 'Unknown';
+
+  // First try to find by value (country code)
+  let country = COUNTRIES.find((c) => c.value === regionCode);
+
+  // If not found, try to find by label (for backward compatibility)
+  if (!country) {
+    country = COUNTRIES.find((c) => c.label === regionCode);
+  }
+
+  // If still not found, return the original value or "Unknown"
+  if (!country) {
+    // Log for debugging in development
+    if (
+      typeof window !== 'undefined' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      console.warn(`Unknown region code: ${regionCode}`);
+    }
+    return regionCode || 'Unknown';
+  }
+
+  return country.label;
+};
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -146,9 +173,43 @@ const InputContentRenderer: React.FC<IProps> = ({
                           </div>
                         </div>
                       </TableHeader>
-                      <TableHeader isLast isContainerBordered>
+                      <TableHeader isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span>Title/Role</span>
+                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 18 18"
+                              fill="none"
+                            >
+                              <circle
+                                cx="9"
+                                cy="9"
+                                r="6.75"
+                                stroke="black"
+                                strokeWidth="1"
+                              />
+                              <circle
+                                cx="9"
+                                cy="6.75"
+                                r="2.25"
+                                stroke="black"
+                                strokeWidth="1"
+                              />
+                              <path
+                                d="M9 12.09L9 12.09"
+                                stroke="black"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Region</span>
                           <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
                             <svg
                               width="18"
@@ -196,11 +257,17 @@ const InputContentRenderer: React.FC<IProps> = ({
                           {founder.name}
                         </TableCell>
                         <TableCell
-                          isLast
                           isContainerBordered
                           isLastRow={index === parsedFounderList.length - 1}
                         >
                           {founder.title}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsedFounderList.length - 1}
+                        >
+                          {getRegionLabel(founder.region)}
                         </TableCell>
                       </TableRow>
                     ))}
