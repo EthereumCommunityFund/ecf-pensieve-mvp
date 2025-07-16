@@ -64,7 +64,8 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
             className={cn(
               'font-sans text-[13px] font-[400] text-black',
               itemConfig!.formDisplayType === 'founderList' ||
-                itemConfig!.formDisplayType === 'websites'
+                itemConfig!.formDisplayType === 'websites' ||
+                itemConfig!.formDisplayType === 'tablePhysicalEntity'
                 ? 'p-[0px]'
                 : 'p-[20px]',
             )}

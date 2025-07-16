@@ -131,6 +131,7 @@ export type IFormDisplayType =
   | 'date'
   | 'founderList'
   | 'websites'
+  | 'tablePhysicalEntity'
   | 'autoComplete'
   | 'roadmap';
 
@@ -171,4 +172,9 @@ export interface ICategoryConfig {
 export interface IProposalItem {
   key: string;
   value: any;
+}
+
+export interface IPhysicalEntity {
+  legalName: string;
+  country: string;
 }

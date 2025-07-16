@@ -9,7 +9,8 @@ export const ProposalTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Basics,
     title: 'Project Overview',
-    description: 'Section Description',
+    description:
+      'This section contains the basic set of information about a project',
     subCategories: [
       {
         key: IItemSubCategoryEnum.BasicProfile,
@@ -95,6 +96,7 @@ export const ProposalTableFieldCategory: ICategoryConfig[] = [
       },
     ],
   },
+  // if there's no essential items, don't show this category
   // {
   //   key: IItemCategoryEnum.Governance,
   //   title: 'Governance & Legal',
@@ -243,18 +245,21 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
       },
     ],
   },
-  // {
-  //   key: IItemCategoryEnum.Governance,
-  //   title: 'Governance & Legal',
-  //   description: '',
-  //   subCategories: [
-  //     {
-  //       key: IItemSubCategoryEnum.Governance,
-  //       title: 'Governance',
-  //       description: '',
-  //       items: [],
-  //       groups: [],
-  //     },
-  //   ],
-  // },
+  {
+    key: IItemCategoryEnum.Governance,
+    title: 'Governance & Legal',
+    label: 'Gov & Legal',
+    description: '',
+    subCategories: [
+      {
+        key: IItemSubCategoryEnum.Governance,
+        title: 'Governance',
+        label: 'Governance',
+        description: '',
+        items: [],
+        itemsNotEssential: ['physical_entity'],
+        groups: [],
+      },
+    ],
+  },
 ];
