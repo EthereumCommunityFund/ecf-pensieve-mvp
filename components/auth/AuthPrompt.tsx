@@ -350,9 +350,17 @@ const AuthPrompt: React.FC = () => {
             <p className="mt-[10px] text-[13px] font-[400] leading-[20px] text-black/80">
               To apply for testing, you could introduce yourself to the
               community in our Discord Server Or speed up the process by
-              catching invitation officer's attention here (link to
-              application). Invitation code will be distributed in ECF Discord
-              in direct messages.
+              catching invitation officer's attention here (
+              <a
+                className={'underline hover:text-black/50'}
+                href={'https://discord.gg/wfrX6dMe'}
+                target={'_blank'}
+                rel="noreferrer"
+              >
+                link to application
+              </a>
+              ). Invitation code will be distributed in ECF Discord in direct
+              messages.
             </p>
           </div>
         </ModalBody>

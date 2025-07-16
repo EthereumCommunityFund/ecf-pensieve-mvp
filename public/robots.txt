@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://pensieve.ecf.network
+
+# Sitemaps
+Sitemap: https://pensieve.ecf.network/sitemap.xml
