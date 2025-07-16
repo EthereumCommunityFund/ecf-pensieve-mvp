@@ -1,7 +1,7 @@
 import { Avatar } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ControllerFieldState,
   ControllerRenderProps,
@@ -24,11 +24,12 @@ import {
   dateValueToDate,
 } from '@/utils/formatters';
 
-import { IProjectFormData } from '../types';
+import { IFormTypeEnum, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
+import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -36,6 +37,7 @@ interface FormItemRendererProps {
   fieldState: ControllerFieldState;
   itemConfig: IItemConfig<IItemKey>;
   fieldApplicability: Record<string, boolean>;
+  formType: IFormTypeEnum;
 }
 
 const FormItemRenderer: React.FC<FormItemRendererProps> = ({
@@ -43,6 +45,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   fieldState,
   itemConfig,
   fieldApplicability,
+  formType,
 }) => {
   const { error } = fieldState;
   const {
@@ -61,6 +64,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
+  const disableNameEdit = useMemo(() => {
+    return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
+  }, [itemKey, formType]);
+
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
@@ -75,7 +82,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             value={field.value || ''}
             placeholder={placeholder}
             isInvalid={!!error}
-            isDisabled={isDisabled}
+            isDisabled={isDisabled || disableNameEdit}
             startContent={
               startContentText ? (
                 <InputPrefix prefix={startContentText} />
@@ -425,6 +432,77 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 <span className="text-[14px] font-[400] leading-[19px]">
                   Add an Entry
                 </span>
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'tablePhysicalEntity': {
+      const physicalEntitiesArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value
+          : [{ legalName: '', country: '' }];
+
+      return (
+        <div>
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Legal Name
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Country
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
+            {physicalEntitiesArray.map((item: any, index: number) => {
+              const errors =
+                fieldState.error && Array.isArray(fieldState.error)
+                  ? fieldState.error[index]
+                  : undefined;
+
+              return (
+                <PhysicalEntityFormItemTable
+                  key={index}
+                  index={index}
+                  remove={() => {
+                    const newEntities = physicalEntitiesArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newEntities);
+                  }}
+                  register={register}
+                  errors={errors}
+                  physicalEntitiesKey={field.name as 'physical_entity'}
+                  isPrimary={index === 0}
+                  canRemove={physicalEntitiesArray.length > 1}
+                  touchedFields={touchedFields}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  field.onChange([
+                    ...physicalEntitiesArray,
+                    { legalName: '', country: '' },
+                  ]);
+                }}
+              >
+                <PlusIcon className="size-[16px]" />
+                Add Physical Entity
               </button>
             </div>
           </div>

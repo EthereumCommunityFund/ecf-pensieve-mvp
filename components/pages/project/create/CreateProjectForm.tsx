@@ -565,6 +565,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     onAddReference: handleAddReference,
     onRemoveReference: handleRemoveReference,
     hasFieldReference,
+    formType,
   };
 
   return (

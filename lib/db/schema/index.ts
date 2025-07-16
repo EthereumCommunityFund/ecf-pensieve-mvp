@@ -7,6 +7,7 @@ export * from './notifications';
 export * from './profiles';
 export * from './projectLogs';
 export * from './projects';
+export * from './projectSnaps';
 export * from './proposals';
 export * from './ranks';
 export * from './relations';

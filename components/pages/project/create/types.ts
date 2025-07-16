@@ -116,6 +116,7 @@ export interface IStepFormProps {
   fieldApplicability: Record<string, boolean>;
   onChangeApplicability: (field: string, value: boolean) => void;
   hasFieldReference: (fieldKey: string) => boolean;
+  formType: IFormTypeEnum;
 }
 
 export type IProjectStepFieldsMap = {

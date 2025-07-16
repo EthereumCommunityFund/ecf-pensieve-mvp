@@ -4,6 +4,7 @@ import { FC, memo, useCallback, useMemo } from 'react'; // Added useMemo
 import { Button } from '@/components/base';
 import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext'; // Added import
+import { useAuth } from '@/context/AuthContext';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord, IProposalsByProjectIdAndKey } from '@/types';
 import { IPocItemKey } from '@/types/item';
@@ -59,6 +60,7 @@ const SupportColumnItem: FC<IProps> = ({
   // isLoading prop is kept from props for now, but internalIsLoading will be primary
 }) => {
   const { inActionItemProposalIdMap } = useProjectDetailContext();
+  const { isAuthenticated, showAuthPrompt } = useAuth();
 
   const internalIsLoading = useMemo(() => {
     return !!(
@@ -69,6 +71,11 @@ const SupportColumnItem: FC<IProps> = ({
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
   const handleAction = useCallback(() => {
+    if (!isAuthenticated) {
+      showAuthPrompt();
+      return;
+    }
+
     if (isUserVotedCurrentItemProposal) {
       // Cannot cancel vote for item proposal
       console.warn('can not cancel item proposal vote');
@@ -88,6 +95,8 @@ const SupportColumnItem: FC<IProps> = ({
     isUserVotedInProposalOrItemProposals,
     isUserVotedCurrentItemProposal,
     onSwitchItemProposalVote,
+    isAuthenticated,
+    showAuthPrompt,
   ]);
 
   return (

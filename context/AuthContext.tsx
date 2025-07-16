@@ -15,17 +15,8 @@ import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
 import { supabase } from '@/lib/supabase/client';
 import { trpc } from '@/lib/trpc/client';
-import { setSessionToken } from '@/lib/trpc/sessionStore';
+import { getSessionWithTimeout } from '@/lib/utils/supabaseUtils';
 import { IProfile } from '@/types';
-
-const getSessionWithTimeout = async (timeoutMs = 3000) => {
-  return Promise.race([
-    supabase.auth.getSession(),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs),
-    ),
-  ]);
-};
 
 type AuthStatus =
   | 'idle'
@@ -213,8 +204,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     updateAuthState('idle');
     await supabase.auth.signOut();
-    // Clear session token from localStorage
-    setSessionToken(null);
     // Clear tRPC cache - this is critical for proper logout
     utils.user.getCurrentUser.setData(undefined, undefined);
     resetAuthState();
@@ -236,57 +225,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [disconnectAsync, logout]);
 
-  const fetchUserProfile = useCallback(async (): Promise<IProfile | null> => {
-    try {
-      const sessionData = await getSessionWithTimeout();
-      const currentSupabaseUser = sessionData?.data?.session?.user;
-
-      if (!currentSupabaseUser) {
-        return handleError(
-          'Get profile failed, please try again.',
-          false,
-          false,
-        );
-      }
-
-      // Ensure local state matches Supabase session user
-      if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
-        setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
-      }
-
-      updateAuthState('fetching_profile');
-
+  const fetchUserProfile = useCallback(
+    async (existingSession?: Session | null): Promise<IProfile | null> => {
       try {
-        const profileData = await getCurrentUserQuery.refetch();
-        if (profileData.error) {
-          throw profileData.error;
-        }
-        if (profileData.data) {
-          setUserState((prev) => ({ ...prev, profile: profileData.data }));
-          updateAuthState('authenticated');
-          return profileData.data;
+        let currentSupabaseUser;
+
+        if (existingSession) {
+          currentSupabaseUser = existingSession.user;
         } else {
-          return handleError('Get profile failed, please try again.');
+          const sessionData = await getSessionWithTimeout();
+          currentSupabaseUser = sessionData?.data?.session?.user;
+        }
+
+        if (!currentSupabaseUser) {
+          return handleError(
+            'Get profile failed, please try again.',
+            false,
+            false,
+          );
+        }
+
+        if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
+          setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
+        }
+
+        updateAuthState('fetching_profile');
+
+        try {
+          const profileData = await getCurrentUserQuery.refetch();
+          if (profileData.error) {
+            throw profileData.error;
+          }
+          if (profileData.data) {
+            setUserState((prev) => ({ ...prev, profile: profileData.data }));
+            updateAuthState('authenticated');
+            return profileData.data;
+          } else {
+            return handleError('Get profile failed, please try again.');
+          }
+        } catch (error: any) {
+          return handleError(
+            `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+          );
         }
       } catch (error: any) {
         return handleError(
-          `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+          `Session fetch failed: ${error.message || 'Please try again later'}`,
+          false,
+          false,
         );
       }
-    } catch (error: any) {
-      return handleError(
-        `Session fetch failed: ${error.message || 'Please try again later'}`,
-        false,
-        false,
-      );
-    }
-  }, [
-    getCurrentUserQuery,
-    userState.user,
-    authState.status,
-    handleError,
-    updateAuthState,
-  ]);
+    },
+    [
+      getCurrentUserQuery,
+      userState.user,
+      authState.status,
+      handleError,
+      updateAuthState,
+    ],
+  );
 
   const handleSupabaseLogin = useCallback(
     async (token: string): Promise<void> => {
@@ -315,7 +312,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           user: sessionData.user,
         }));
 
-        const profile = await fetchUserProfile();
+        const profile = await fetchUserProfile(sessionData.session);
         if (profile) {
           updateAuthState('authenticated');
           setUserState((prev) => ({ ...prev, newUser: false }));
@@ -478,7 +475,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
           console.log('Auth state changed:', event);
-          setSessionToken(session?.access_token || null);
           setUserState((prev) => ({
             ...prev,
             session,

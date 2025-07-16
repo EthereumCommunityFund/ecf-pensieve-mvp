@@ -131,6 +131,7 @@ export type IFormDisplayType =
   | 'date'
   | 'founderList'
   | 'websites'
+  | 'tablePhysicalEntity'
   | 'autoComplete'
   | 'roadmap';
 
@@ -147,6 +148,7 @@ export interface IGroupConfig {
 export interface ISubCategoryConfig {
   key: IItemSubCategoryEnum;
   title: string;
+  label?: string;
   description: string;
   /**
    * essential items that should be shown in the table
@@ -162,6 +164,7 @@ export interface ISubCategoryConfig {
 export interface ICategoryConfig {
   key: IItemCategoryEnum;
   title: string;
+  label?: string;
   description: string;
   subCategories: ISubCategoryConfig[];
 }
@@ -169,4 +172,9 @@ export interface ICategoryConfig {
 export interface IProposalItem {
   key: string;
   value: any;
+}
+
+export interface IPhysicalEntity {
+  legalName: string;
+  country: string;
 }

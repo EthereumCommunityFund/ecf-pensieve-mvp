@@ -6,11 +6,20 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { profiles, projectLogs, projects, voteRecords } from '@/lib/db/schema';
+import {
+  itemProposals,
+  profiles,
+  projectLogs,
+  projects,
+  projectSnaps,
+  voteRecords,
+} from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addNotification,
   addRewardNotification,
+  createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 
@@ -24,6 +33,28 @@ export const calculateReward = (key: string): number => {
 
 export const isEssentialItem = (key: string): boolean => {
   return ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
+};
+
+export const updateProjectSnaps = async (
+  tx: any,
+  projectId: number,
+  key: string,
+  value: string,
+): Promise<void> => {
+  const projectSnap = await tx.query.projectSnaps.findFirst({
+    where: eq(projectSnaps.projectId, projectId),
+  });
+  if (!projectSnap) {
+    return;
+  }
+  const updatedItems = projectSnap.items.filter(
+    (item: any) => item.key !== key,
+  );
+  updatedItems.push({ key, value });
+  await tx
+    .update(projectSnaps)
+    .set({ items: updatedItems })
+    .where(eq(projectSnaps.id, projectSnap.id));
 };
 
 export const handleVoteRecord = async (
@@ -165,12 +196,24 @@ export const processItemProposalVoteResult = async (
             createdAt: new Date(),
           })
           .where(eq(projectLogs.id, oldLog.id)),
-        tx.update(projects).set({
-          itemsTopWeight: {
-            ...(project?.itemsTopWeight ?? {}),
-            [key]: voteSum,
-          },
-        }),
+        tx
+          .update(projects)
+          .set({
+            itemsTopWeight: {
+              ...(project?.itemsTopWeight ?? {}),
+              [key]: voteSum,
+            },
+          })
+          .where(eq(projects.id, itemProposal.projectId)),
+        addNotification(
+          createNotification.itemProposalBecameLeading(
+            itemProposal.creator.userId,
+            itemProposal.projectId,
+            itemProposal.id,
+          ),
+          tx,
+        ),
+        updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
       ]);
       return;
     }
@@ -181,12 +224,15 @@ export const processItemProposalVoteResult = async (
         itemProposalId: itemProposal.id,
         key,
       }),
-      tx.update(projects).set({
-        itemsTopWeight: {
-          ...(project?.itemsTopWeight ?? {}),
-          [key]: voteSum,
-        },
-      }),
+      tx
+        .update(projects)
+        .set({
+          itemsTopWeight: {
+            ...(project?.itemsTopWeight ?? {}),
+            [key]: voteSum,
+          },
+        })
+        .where(eq(projects.id, itemProposal.projectId)),
       tx
         .update(profiles)
         .set({
@@ -202,6 +248,15 @@ export const processItemProposalVoteResult = async (
         ),
         tx,
       ),
+      addNotification(
+        createNotification.itemProposalBecameLeading(
+          itemProposal.creator.userId,
+          itemProposal.projectId,
+          itemProposal.id,
+        ),
+        tx,
+      ),
+      updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
     ]);
 
     return { reward, finalWeight, voteSum };
@@ -227,12 +282,37 @@ export const processItemProposalUpdate = async (
     return acc;
   }, 0);
 
-  await tx.update(projects).set({
-    itemsTopWeight: {
-      ...(project?.itemsTopWeight ?? {}),
-      [key]: voteSum,
+  await tx
+    .update(projects)
+    .set({
+      itemsTopWeight: {
+        ...(project?.itemsTopWeight ?? {}),
+        [key]: voteSum,
+      },
+    })
+    .where(eq(projects.id, project.id));
+
+  // Get the leading proposal for this key to get its value
+  const leadingLog = await tx.query.projectLogs.findFirst({
+    where: and(
+      eq(projectLogs.projectId, project.id),
+      eq(projectLogs.key, key),
+      eq(projectLogs.isNotLeading, false),
+    ),
+    orderBy: (projectLogs: any, { desc }: any) => [desc(projectLogs.createdAt)],
+    with: {
+      itemProposal: true,
     },
   });
+
+  if (leadingLog?.itemProposal) {
+    await updateProjectSnaps(
+      tx,
+      project.id,
+      key,
+      leadingLog.itemProposal.value,
+    );
+  }
 };
 
 export const handleOriginalProposalUpdate = async (
@@ -273,12 +353,31 @@ export const handleOriginalProposalUpdate = async (
     const keyWeight = itemsTopWeight?.[key] ?? 0;
 
     if (originalVoteSum < keyWeight) {
-      await tx
-        .update(projectLogs)
-        .set({
-          isNotLeading: true,
-        })
-        .where(eq(projectLogs.id, originalLeadingCheck.id));
+      const originalItemProposal = await tx.query.itemProposals.findFirst({
+        where: eq(itemProposals.id, originalItemProposalId),
+        with: {
+          creator: true,
+        },
+      });
+
+      await Promise.all([
+        tx
+          .update(projectLogs)
+          .set({
+            isNotLeading: true,
+          })
+          .where(eq(projectLogs.id, originalLeadingCheck.id)),
+        originalItemProposal
+          ? addNotification(
+              createNotification.itemProposalLostLeading(
+                originalItemProposal.creator.userId,
+                projectId,
+                originalItemProposalId,
+              ),
+              tx,
+            )
+          : Promise.resolve(),
+      ]);
     }
   }
 };

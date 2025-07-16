@@ -5,8 +5,9 @@ import { httpBatchLink, TRPCClientError } from '@trpc/client';
 import { useState } from 'react';
 import superJSON from 'superjson';
 
+import { getSessionWithTimeout } from '@/lib/utils/supabaseUtils';
+
 import { trpc } from './client';
-import { getSessionToken } from './sessionStore';
 
 const customRetry = (failureCount: number, error: unknown): boolean => {
   if (error instanceof TRPCClientError) {
@@ -37,11 +38,21 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: superJSON,
           url: `/api/trpc`,
-          headers() {
+          async headers() {
             const headers: Record<string, string> = {};
-            const token = getSessionToken();
-            if (token) {
-              headers['authorization'] = `Bearer ${token}`;
+            // Only try to get session in browser environment
+            if (typeof window !== 'undefined') {
+              try {
+                const {
+                  data: { session },
+                } = await getSessionWithTimeout();
+                if (session?.access_token) {
+                  headers['authorization'] = `Bearer ${session.access_token}`;
+                }
+              } catch (error) {
+                // Ignore errors in getting session
+                console.warn('Failed to get session for tRPC headers:', error);
+              }
             }
             return headers;
           },

@@ -313,7 +313,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
           )}
         >
           {/* Left navigation menu - only show on desktop */}
-          <div className="tablet:hidden mobile:hidden w-[200px] shrink-0 self-start">
+          <div className="tablet:hidden mobile:hidden w-[160px] shrink-0 self-start">
             <NavigationMenu
               activeCategory={activeCategory}
               onCategoryClick={handleCategoryClick}

@@ -8,6 +8,7 @@ import { notifications } from './notifications';
 import { profiles } from './profiles';
 import { projectLogs } from './projectLogs';
 import { projects } from './projects';
+import { projectSnaps } from './projectSnaps';
 import { proposals } from './proposals';
 import { ranks } from './ranks';
 import { voteRecords } from './voteRecords';
@@ -35,6 +36,10 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   proposals: many(proposals),
   notifications: many(notifications),
   activeLogs: many(activeLogs),
+  projectSnap: one(projectSnaps, {
+    fields: [projects.id],
+    references: [projectSnaps.projectId],
+  }),
   rank: one(ranks, {
     fields: [projects.id],
     references: [ranks.projectId],
@@ -140,6 +145,14 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     fields: [notifications.proposalId],
     references: [proposals.id],
   }),
+  itemProposal: one(itemProposals, {
+    fields: [notifications.itemProposalId],
+    references: [itemProposals.id],
+  }),
+  voter: one(profiles, {
+    fields: [notifications.voter_id],
+    references: [profiles.userId],
+  }),
 }));
 
 export const likeRecordsRelations = relations(likeRecords, ({ one }) => ({
@@ -156,6 +169,13 @@ export const likeRecordsRelations = relations(likeRecords, ({ one }) => ({
 export const ranksRelations = relations(ranks, ({ one }) => ({
   project: one(projects, {
     fields: [ranks.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const projectSnapsRelations = relations(projectSnaps, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectSnaps.projectId],
     references: [projects.id],
   }),
 }));

@@ -77,6 +77,7 @@ const AuthPrompt: React.FC = () => {
   const { isConnected, address } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const [inputUsername, setInputUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
@@ -116,18 +117,24 @@ const AuthPrompt: React.FC = () => {
       setInputUsername('');
       setInviteCode('');
       setShowAgreementModal(false);
+      setUsernameError('');
     }
   }, [isAuthPromptVisible]);
 
   const onInputChange = useCallback(
     (value: string) => {
+      if (value.trim() === '' && inputUsername.trim() !== '') {
+        setUsernameError('Username is required.');
+      } else {
+        setUsernameError('');
+      }
       setInputUsername(
         value.length <= maxUsernameLength
           ? value
           : value.slice(0, maxUsernameLength),
       );
     },
-    [maxUsernameLength],
+    [maxUsernameLength, inputUsername],
   );
 
   const handleProfileAction = useCallback(
@@ -165,8 +172,12 @@ const AuthPrompt: React.FC = () => {
   }, [handleProfileAction]);
 
   const handleContinue = useCallback(() => {
+    if (!inputUsername.trim()) {
+      setUsernameError('Username is required.');
+      return;
+    }
     setShowAgreementModal(true);
-  }, []);
+  }, [inputUsername]);
 
   const handleAgreementComplete = useCallback(() => {
     setShowAgreementModal(false);
@@ -181,15 +192,19 @@ const AuthPrompt: React.FC = () => {
   }, []);
 
   const handleCloseAndReset = useCallback(async () => {
-    setInputUsername('');
-    setInviteCode('');
-    try {
-      await disconnectAsync();
-    } catch (error) {
-      console.error('Error disconnecting wallet during close:', error);
+    if (connectionIntentRef.current) {
+      setInputUsername('');
+      setInviteCode('');
+      try {
+        await disconnectAsync();
+      } catch (error) {
+        console.error('Error disconnecting wallet during close:', error);
+      }
+      await hideAuthPrompt();
+      await logout();
+    } else {
+      hideAuthPrompt();
     }
-    await hideAuthPrompt();
-    await logout();
   }, [hideAuthPrompt, logout, disconnectAsync]);
 
   const renderConnectWalletContent = useMemo(() => {
@@ -256,7 +271,7 @@ const AuthPrompt: React.FC = () => {
               htmlFor="usernameInput"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              Username
+              Username <span className="text-red-500">*</span>
             </label>
             <Input
               id="usernameInput"
@@ -271,6 +286,9 @@ const AuthPrompt: React.FC = () => {
               disabled={isCreatingProfile}
               maxLength={maxUsernameLength}
             />
+            {usernameError && (
+              <p className="mt-1 text-sm text-red-500">{usernameError}</p>
+            )}
           </div>
 
           <div>
@@ -314,7 +332,7 @@ const AuthPrompt: React.FC = () => {
               color="primary"
               className="flex-1"
               isDisabled={
-                !inputUsername ||
+                !inputUsername.trim() ||
                 !inviteCode ||
                 inviteCode.length !== 6 ||
                 isAnyLoading

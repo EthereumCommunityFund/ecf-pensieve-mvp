@@ -1,16 +1,15 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
+import { devLog } from '@/utils/devLog';
 
-import { ProjectCardSkeleton } from '../project/ProjectCard';
-
-import ProjectListWithUpvote from './ProjectListWithUpvote';
+import { ProjectListWrapper } from '../project/ProjectListWrapper';
 
 interface ISectionProps {
   title: string;
@@ -51,61 +50,6 @@ const SectionHeader = (props: ISectionProps) => {
   );
 };
 
-export const ProjectListWrapper = ({
-  isLoading,
-  projectList,
-  onRefetch,
-  viewAllButtonText,
-  viewAllButtonOnPress,
-  emptyMessage,
-}: {
-  isLoading: boolean;
-  projectList: IProject[];
-  onRefetch: () => void;
-  viewAllButtonText?: string;
-  viewAllButtonOnPress?: () => void;
-  emptyMessage?: string;
-}) => {
-  return (
-    <div className="flex-1">
-      {isLoading ? (
-        <div className="mt-2.5 px-[10px]">
-          <ProjectCardSkeleton showBorder={true} />
-          <ProjectCardSkeleton showBorder={true} />
-          <ProjectCardSkeleton showBorder={true} />
-          <ProjectCardSkeleton showBorder={true} />
-          <ProjectCardSkeleton showBorder={false} />
-        </div>
-      ) : projectList.length > 0 ? (
-        <>
-          <ProjectListWithUpvote
-            projectList={projectList as IProject[]}
-            onRefetch={onRefetch}
-          />
-          {/* hide view all button */}
-          {/* {viewAllButtonText && viewAllButtonOnPress && (
-            <div className="mt-[10px] px-[10px]">
-              <Button
-                size="sm"
-                onPress={viewAllButtonOnPress}
-                className="w-full border-none bg-black/5 "
-              >
-                {viewAllButtonText}
-              </Button>
-            </div>
-          )} */}
-        </>
-      ) : (
-        <div className="flex justify-center py-8">
-          <p className="text-[16px] font-[400] leading-[22px] text-black/60">
-            {emptyMessage || 'No projects yet'}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const HomeList = () => {
   const router = useRouter();
   const limit = 5;
@@ -115,15 +59,20 @@ const HomeList = () => {
     refetch: refetchProjects,
   } = trpc.rank.getTopRanks.useQuery();
 
-  const viewAllProject = () => {
-    console.log('view all project');
-  };
-
   const byGenesisProjects =
     ranksData?.byGenesisWeight
       ?.map((rank: any) => rank.project)
       .slice(0, limit) || [];
   const bySupportProjects = ranksData?.bySupport?.slice(0, limit) || [];
+
+  useEffect(() => {
+    if (byGenesisProjects.length > 0) {
+      devLog('byGenesisProjects', byGenesisProjects);
+    }
+    if (bySupportProjects.length > 0) {
+      devLog('bySupportProjects', bySupportProjects);
+    }
+  }, [byGenesisProjects, bySupportProjects]);
 
   // Get the latest updatedAt time from all ranks for transparent projects
   const transparentProjectsUpdatedAt = ranksData?.byGenesisWeight?.reduce(
@@ -180,16 +129,18 @@ const HomeList = () => {
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={byGenesisProjects as IProject[]}
-            onRefetch={refetchProjects}
-            viewAllButtonText="View More Transparent"
-            viewAllButtonOnPress={handleViewTopTransparentProjects}
+            onLoadMore={() => {}}
+            isFetchingNextPage={false}
+            emptyMessage="No transparent projects found"
+            onSuccess={refetchProjects}
           />
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={bySupportProjects as IProject[]}
-            onRefetch={refetchProjects}
-            viewAllButtonText="View More Community-trusted"
-            viewAllButtonOnPress={handleViewTopCommunityTrustedProjects}
+            onLoadMore={() => {}}
+            isFetchingNextPage={false}
+            emptyMessage="No community-trusted projects found"
+            onSuccess={refetchProjects}
           />
         </div>
       </div>
@@ -206,9 +157,10 @@ const HomeList = () => {
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={byGenesisProjects as IProject[]}
-            onRefetch={refetchProjects}
-            viewAllButtonText="View More Transparent"
-            viewAllButtonOnPress={handleViewTopTransparentProjects}
+            onLoadMore={() => {}}
+            isFetchingNextPage={false}
+            emptyMessage="No transparent projects found"
+            onSuccess={refetchProjects}
           />
         </div>
         <div className="">
@@ -222,9 +174,10 @@ const HomeList = () => {
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={bySupportProjects as IProject[]}
-            onRefetch={refetchProjects}
-            viewAllButtonText="View More Community-trusted"
-            viewAllButtonOnPress={handleViewTopCommunityTrustedProjects}
+            onLoadMore={() => {}}
+            isFetchingNextPage={false}
+            emptyMessage="No community-trusted projects found"
+            onSuccess={refetchProjects}
           />
         </div>
       </div>

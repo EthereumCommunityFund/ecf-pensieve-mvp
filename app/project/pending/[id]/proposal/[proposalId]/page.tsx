@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useUserWeightModal } from '@/components/biz/modal/userWeightCard/Context';
 import UserWeightCard from '@/components/biz/modal/userWeightCard/UserWeightCard';
 import BackHeader from '@/components/pages/project/BackHeader';
+import PublishingTip from '@/components/pages/project/proposal/common/PublishingTip';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import { useProposalDetailContext } from '@/components/pages/project/proposal/detail/context/proposalDetailContext';
 import ProposalDetailCard from '@/components/pages/project/proposal/detail/ProposalDetailCard';
@@ -119,6 +120,8 @@ const ProposalPage = () => {
           />
         </div>
       )}
+
+      {canBePublished && <PublishingTip classname={'tablet:mx-[10px]'} />}
 
       <div
         className={cn(

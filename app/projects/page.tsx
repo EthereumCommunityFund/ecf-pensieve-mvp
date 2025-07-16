@@ -6,14 +6,11 @@ import { Suspense, useCallback, useEffect, useMemo } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import { ProjectListWrapper } from '@/components/pages/home/HomeList';
 import BackHeader from '@/components/pages/project/BackHeader';
-import ProjectCard, {
-  ProjectCardSkeleton,
-} from '@/components/pages/project/ProjectCard';
+import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
+import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
-import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -43,23 +40,35 @@ const ProjectsContent = () => {
   );
 
   const {
-    data: ranksData,
-    isLoading: isRankLoading,
-    refetch: refetchRanks,
-  } = trpc.rank.getTopRanks.useQuery(undefined, {
-    enabled: !!type,
-  });
+    data: genesisData,
+    fetchNextPage: fetchNextGenesisPage,
+    hasNextPage: hasNextGenesisPage,
+    isFetchingNextPage: isFetchingNextGenesisPage,
+    isLoading: isGenesisLoading,
+    refetch: refetchGenesis,
+  } = trpc.rank.getTopRanksByGenesisWeightPaginated.useInfiniteQuery(
+    { limit: 10 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      enabled: type === 'transparent',
+    },
+  );
 
-  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
-    useUpvote({
-      onSuccess: type ? refetchRanks : refetchProjects,
-    });
-
-  const handleLoadMore = () => {
-    if (!isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
+  const {
+    data: supportData,
+    fetchNextPage: fetchNextSupportPage,
+    hasNextPage: hasNextSupportPage,
+    isFetchingNextPage: isFetchingNextSupportPage,
+    isLoading: isSupportLoading,
+    refetch: refetchSupport,
+  } = trpc.rank.getTopRanksBySupportPaginated.useInfiniteQuery(
+    { limit: 10 },
+    {
+      getNextPageParam: (lastPage: { nextCursor: number | undefined }) =>
+        lastPage.nextCursor,
+      enabled: type === 'community-trusted',
+    },
+  );
 
   const handleProposeProject = useCallback(() => {
     if (!profile) {
@@ -69,38 +78,87 @@ const ProjectsContent = () => {
     router.push('/project/create');
   }, [profile, showAuthPrompt, router]);
 
-  const allProjects = useMemo(() => {
-    return data?.pages.flatMap((page) => page.items) || [];
-  }, [data]);
+  const onUpvoteSuccess = () => {
+    if (type === 'transparent') {
+      refetchGenesis();
+    } else if (type === 'community-trusted') {
+      refetchSupport();
+    } else {
+      refetchProjects();
+    }
+  };
 
-  const { projectList, title, description, emptyMessage, currentIsLoading } =
-    useMemo(() => {
-      if (type === 'transparent') {
-        return {
-          projectList:
-            ranksData?.byGenesisWeight?.map((rank: any) => rank.project) || [],
-          title: 'Top Transparent Projects',
-          description: `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`,
-          emptyMessage: 'No transparent projects found',
-          currentIsLoading: isRankLoading,
-        };
-      } else if (type === 'community-trusted') {
-        return {
-          projectList: ranksData?.bySupport || [],
-          title: 'Top Community-trusted',
-          description: `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`,
-          emptyMessage: 'No community-trusted projects found',
-          currentIsLoading: isRankLoading,
-        };
-      }
+  const handleLoadMore = () => {
+    if (type === 'transparent') {
+      fetchNextGenesisPage();
+    } else if (type === 'community-trusted') {
+      fetchNextSupportPage();
+    } else {
+      fetchNextPage();
+    }
+  };
+
+  const {
+    projectList,
+    title,
+    description,
+    emptyMessage,
+    currentIsLoading,
+    currentHasNextPage,
+    currentIsFetchingNextPage,
+  } = useMemo(() => {
+    if (type === 'transparent') {
+      const list =
+        genesisData?.pages
+          .flatMap((page: { items: any[] }) => page.items)
+          .map((rank) => rank.project) || [];
       return {
-        projectList: allProjects,
-        title: 'Recent Projects',
-        description: '',
-        emptyMessage: 'No Published Project Yet',
-        currentIsLoading: isLoading,
+        projectList: list as IProject[],
+        title: 'Top Transparent Projects',
+        description: `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`,
+        emptyMessage: 'No transparent projects found',
+        currentIsLoading: isGenesisLoading,
+        currentHasNextPage: hasNextGenesisPage,
+        currentIsFetchingNextPage: isFetchingNextGenesisPage,
       };
-    }, [type, ranksData, allProjects, isRankLoading, isLoading]);
+    }
+    if (type === 'community-trusted') {
+      const list = supportData?.pages.flatMap((page) => page.items) || [];
+      return {
+        projectList: list as IProject[],
+        title: 'Top Community-trusted',
+        description: `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`,
+        emptyMessage: 'No community-trusted projects found',
+        currentIsLoading: isSupportLoading,
+        currentHasNextPage: hasNextSupportPage,
+        currentIsFetchingNextPage: isFetchingNextSupportPage,
+      };
+    }
+    const list = data?.pages.flatMap((page) => page.items) || [];
+    return {
+      projectList: list as IProject[],
+      title: 'Recent Projects',
+      description: '',
+      emptyMessage: 'No Published Project Yet',
+      currentIsLoading: isLoading,
+      currentHasNextPage: hasNextPage,
+      currentIsFetchingNextPage: isFetchingNextPage,
+    };
+  }, [
+    type,
+    genesisData,
+    supportData,
+    data,
+    isGenesisLoading,
+    isSupportLoading,
+    isLoading,
+    hasNextGenesisPage,
+    hasNextSupportPage,
+    hasNextPage,
+    isFetchingNextGenesisPage,
+    isFetchingNextSupportPage,
+    isFetchingNextPage,
+  ]);
 
   useEffect(() => {
     if (projectList.length > 0) {
@@ -133,11 +191,6 @@ const ProjectsContent = () => {
       )}
 
       <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
-        {/* <div className="pc:hidden tablet:hidden flex w-full items-center justify-end gap-2.5 lg:hidden">
-          <ECFButton $size="small">Sort</ECFButton>
-          <ECFButton $size="small">Filter</ECFButton>
-        </div> */}
-
         <div className="w-full flex-1">
           <div className="border-b border-black/10 px-2.5 py-4">
             {type ? (
@@ -154,79 +207,18 @@ const ProjectsContent = () => {
             )}
           </div>
 
-          {type ? (
-            <ProjectListWrapper
-              isLoading={currentIsLoading}
-              projectList={projectList as IProject[]}
-              onRefetch={type ? refetchRanks : refetchProjects}
-              emptyMessage={emptyMessage}
-            />
-          ) : (
-            <div className="pb-2.5">
-              {currentIsLoading ? (
-                <>
-                  {Array.from({ length: 10 }).map((_, index) => (
-                    <ProjectCardSkeleton key={index} showBorder={true} />
-                  ))}
-                </>
-              ) : projectList.length > 0 ? (
-                <>
-                  {projectList.map((project) => {
-                    const projectLikeRecord = getProjectLikeRecord(project.id);
-
-                    return (
-                      <ProjectCard
-                        key={project.id}
-                        project={project as IProject}
-                        showBorder={true}
-                        onUpvote={handleUpvote}
-                        userLikeRecord={
-                          projectLikeRecord
-                            ? {
-                                id: project.id,
-                                weight: projectLikeRecord.weight || 0,
-                              }
-                            : null
-                        }
-                      />
-                    );
-                  })}
-
-                  {isFetchingNextPage && (
-                    <ProjectCardSkeleton showBorder={true} />
-                  )}
-
-                  {hasNextPage && (
-                    <div className="flex justify-center py-4">
-                      <ECFButton
-                        onPress={handleLoadMore}
-                        isDisabled={isFetchingNextPage}
-                        $size="small"
-                      >
-                        {isFetchingNextPage ? 'Loading...' : 'Load More'}
-                      </ECFButton>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex justify-center py-[80px]">
-                  <ECFTypography type="subtitle1">{emptyMessage}</ECFTypography>
-                </div>
-              )}
-            </div>
-          )}
+          <ProjectListWrapper
+            isLoading={currentIsLoading}
+            isFetchingNextPage={currentIsFetchingNextPage}
+            hasNextPage={currentHasNextPage}
+            projectList={projectList}
+            emptyMessage={emptyMessage}
+            onLoadMore={handleLoadMore}
+            onSuccess={onUpvoteSuccess}
+          />
         </div>
 
         <div className="mobile:hidden">
-          {/* <div className="flex h-[73px] w-[300px] items-start justify-start gap-5">
-            <ECFButton $size="small" className="min-w-0 px-2.5">
-              Sort
-            </ECFButton>
-            <ECFButton $size="small" className="min-w-0 px-2.5">
-              Filter
-            </ECFButton>
-          </div> */}
-
           <RewardCard />
         </div>
 
@@ -234,8 +226,6 @@ const ProjectsContent = () => {
           <RewardCard />
         </div>
       </div>
-
-      {UpvoteModalComponent}
     </div>
   );
 };
