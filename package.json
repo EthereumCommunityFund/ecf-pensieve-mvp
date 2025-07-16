@@ -16,6 +16,7 @@
     "db:studio": "drizzle-kit studio",
     "sync:ranks": "dotenv -e .env tsx scripts/syncProjectRanks.ts",
     "sync:snap": "dotenv -e .env tsx scripts/syncProjectSnap.ts",
+    "fix:item-weights": "dotenv -e .env tsx scripts/fixItemWeights.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
