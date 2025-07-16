@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
+import { devLog } from '@/utils/devLog';
 
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
 
@@ -63,6 +64,15 @@ const HomeList = () => {
       ?.map((rank: any) => rank.project)
       .slice(0, limit) || [];
   const bySupportProjects = ranksData?.bySupport?.slice(0, limit) || [];
+
+  useEffect(() => {
+    if (byGenesisProjects.length > 0) {
+      devLog('byGenesisProjects', byGenesisProjects);
+    }
+    if (bySupportProjects.length > 0) {
+      devLog('bySupportProjects', bySupportProjects);
+    }
+  }, [byGenesisProjects, bySupportProjects]);
 
   // Get the latest updatedAt time from all ranks for transparent projects
   const transparentProjectsUpdatedAt = ranksData?.byGenesisWeight?.reduce(

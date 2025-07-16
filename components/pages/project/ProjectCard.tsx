@@ -3,10 +3,12 @@
 import { Button, cn, Image, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
 import Link from 'next/link';
+import { useCallback, useMemo } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
+import { IEssentialItemKey } from '@/types/item';
 
 interface IProjectCardSkeletonProps {
   showBorder?: boolean;
@@ -65,6 +67,33 @@ const ProjectCard = ({
   onUpvote,
   userLikeRecord,
 }: IProjectCardProps) => {
+  const projectSnapDataMap = useMemo(() => {
+    if (!!project?.projectSnap?.items && project.projectSnap.items.length > 0) {
+      return project.projectSnap.items.reduce(
+        (prev, cur) => {
+          return {
+            ...prev,
+            [cur.key]: cur.value,
+          };
+        },
+        {} as Record<IEssentialItemKey, any>,
+      );
+    }
+    return {} as Record<IEssentialItemKey, any>;
+  }, [project]);
+
+  const getItemValue = useCallback(
+    (itemKey: IEssentialItemKey) => {
+      return projectSnapDataMap[itemKey] || project[itemKey] || '';
+    },
+    [projectSnapDataMap, project],
+  );
+
+  const logoUrl = getItemValue('logoUrl');
+  const projectName = getItemValue('name');
+  const tagline = getItemValue('tagline');
+  const categories = (getItemValue('categories') || []) as string[];
+
   return (
     <div
       className={cn(
@@ -79,9 +108,9 @@ const ProjectCard = ({
         >
           <div className="mobile:hidden box-content size-[100px] overflow-hidden rounded-[10px] ">
             <Image
-              src={project.logoUrl}
+              src={logoUrl}
               as={NextImage}
-              alt={project.name}
+              alt={projectName}
               className="rounded-none object-cover"
               width={100}
               height={100}
@@ -90,9 +119,9 @@ const ProjectCard = ({
 
           <div className="mobile:block hidden size-[60px] overflow-hidden rounded-[5px] ">
             <Image
-              src={project.logoUrl}
+              src={logoUrl}
               as={NextImage}
-              alt={project.name}
+              alt={projectName}
               className="rounded-none object-cover"
               width={60}
               height={60}
@@ -104,13 +133,13 @@ const ProjectCard = ({
               type={'body1'}
               className="font-semibold leading-[20px]"
             >
-              {project.name}
+              {projectName}
             </ECFTypography>
             <ECFTypography
               type={'body2'}
               className="mt-[4px] leading-[18px] opacity-60"
             >
-              {project.tagline}
+              {tagline}
             </ECFTypography>
             <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
               <span className="opacity-60">by: </span>
@@ -122,7 +151,7 @@ const ProjectCard = ({
               </span>
             </p>
             <div className="mt-[10px] flex flex-wrap gap-[8px]">
-              {project.categories.map((tag) => (
+              {categories.map((tag) => (
                 <div
                   key={tag}
                   className="flex h-[22px] items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)] px-3"

@@ -17,6 +17,14 @@ export type IProposalWithVotes = IProposal & {
 
 export type IProject = RouterOutputs['project']['getProjects']['items'][0] & {
   proposals: IProposalWithVotes[];
+  projectSnap?: IProjectSnap;
+};
+
+export type IProjectSnap = {
+  id: number;
+  projectId: number;
+  items: IProposalItem[];
+  createdAt: Date;
 };
 
 // Profile type for creator information
