@@ -12,7 +12,7 @@ const SABLIER_DOMAINS = [
   'evm-token-list.sablier.io',
 ];
 
-function isSablierDomain(input: string): boolean {
+export function isSablierDomain(input: string): boolean {
   try {
     const urlString = input.startsWith('http') ? input : `https://${input}`;
     const parsedUrl = new URL(urlString);

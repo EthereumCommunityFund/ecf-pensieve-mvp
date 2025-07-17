@@ -2,7 +2,7 @@
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import { X } from '@phosphor-icons/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
@@ -15,7 +15,9 @@ import {
   ModalContent,
 } from '@/components/base';
 import { devLog } from '@/utils/devLog';
+import { isSablierDomain } from '@/utils/sablierDetector';
 import { normalizeUrl } from '@/utils/url';
+import { SablierIcon } from '@/components/icons';
 
 import InputPrefix from './form/InputPrefix';
 import { IReferenceData } from './types';
@@ -66,6 +68,7 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ReferenceFormData>({
     resolver: yupResolver(referenceSchema),
@@ -73,6 +76,15 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
       url: '',
     },
   });
+
+  const urlValue = watch('url');
+
+  const isMatchSablier = useMemo(() => {
+    if (!urlValue) {
+      return false;
+    }
+    return isSablierDomain(normalizeUrl(urlValue));
+  }, [urlValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -126,6 +138,7 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
       <ModalContent>
         <CommonModalHeader
           title={isEditing ? 'Edit Reference' : 'Add Reference'}
+          description={`References are documented sources that verify the accuracy and credibility of an item’s input, aiding community validation.`}
           onClose={onClose}
           classNames={{
             base: 'pb-[20px] border-b border-[rgba(0,0,0,0.1)]',
@@ -162,11 +175,22 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
               )}
             />
 
-            <p className="mt-3 text-[13px] leading-[1.2] text-black/80">
+            {isMatchSablier && (
+              <div className="mt-[10px] flex items-center justify-between">
+                <p className="text-[14px] font-[600] leading-[20px] text-[#207CB2]">
+                  A reference via Sablier.com has been detected.{' '}
+                </p>
+                <a href="https://sablier.com" target="_blank" rel="noreferrer">
+                  <SablierIcon />
+                </a>
+              </div>
+            )}
+
+            {/* <p className="mt-3 text-[13px] leading-[1.2] text-black/80">
               References serve as documented sources that substantiate the
               accuracy and credibility of the input associated with an item.
               This will help with community validation.
-            </p>
+            </p> */}
 
             <div className="mt-5 flex items-center justify-end gap-[10px]">
               <Button
@@ -189,6 +213,30 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
             </div>
           </form>
         </ModalBody>
+
+        <div className="bg-[#F5F5F5] p-[10px]">
+          <div className="text-[13px] font-[400] text-black/80">
+            Backed and partnered with ECF, using these on-chain tools
+            significantly enhances the legitimacy and trust behind your claim:
+          </div>
+          <div className="mt-[10px] flex items-center justify-between gap-[10px]">
+            <div className="flex flex-1 items-center justify-start gap-[10px]">
+              <a href="https://sablier.com" target="_blank" rel="noreferrer">
+                <SablierIcon />
+              </a>
+              <span className="text-[13px] font-[400] text-black/30">
+                More Coming Soon
+              </span>
+            </div>
+            <a
+              href="https://discord.gg/F7Xgd3NsDT"
+              target="_blank"
+              className="text-[11px] font-[600] text-black/60 hover:text-black/80 hover:underline" rel="noreferrer"
+            >
+              Looking to partner with ECF?
+            </a>
+          </div>
+        </div>
       </ModalContent>
     </Modal>
   );

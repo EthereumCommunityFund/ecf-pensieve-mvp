@@ -72,6 +72,7 @@ Modal.displayName = 'Modal';
 
 export const CommonModalHeader: React.FC<{
   title: string;
+  description?: string;
   onClose: () => void;
   isDisabled?: boolean;
   closeIcon?: React.ReactNode;
@@ -80,23 +81,42 @@ export const CommonModalHeader: React.FC<{
     title?: string;
     button?: string;
   };
-}> = ({ title, onClose, isDisabled, classNames = {}, closeIcon }) => {
+}> = ({
+  title,
+  description,
+  onClose,
+  isDisabled,
+  classNames = {},
+  closeIcon,
+}) => {
   return (
     <ModalHeader
-      className={cn('flex items-center justify-between', classNames?.base)}
+      className={cn(
+        'flex justify-between',
+        description ? 'items-start ' : 'items-center',
+        classNames?.base,
+      )}
     >
-      <h3
-        className={cn(
-          'text-[18px] font-[600] text-black overflow-hidden font-mona',
-          classNames?.title,
+      <div>
+        <h3
+          className={cn(
+            'text-[18px] font-[600] text-black overflow-hidden font-mona',
+            classNames?.title,
+          )}
+        >
+          {title}
+        </h3>
+        {description && (
+          <div className="mt-[10px] text-[13px] font-[400] text-black/80">
+            {description}
+          </div>
         )}
-      >
-        {title}
-      </h3>
+      </div>
+
       <Button
         isIconOnly
         className={cn(
-          'size-auto min-h-0 min-w-0 bg-transparent p-0 opacity-30',
+          'size-auto min-h-0 min-w-0 bg-transparent p-0 opacity-30 shrink-0',
           classNames?.button,
         )}
         onPress={onClose}
