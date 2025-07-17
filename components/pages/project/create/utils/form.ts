@@ -448,4 +448,7 @@ export const updateFormWithProjectData = (
       }
     }
   }
+  if (formType === IFormTypeEnum.Proposal && projectData) {
+    setValue('name', projectData.name || '');
+  }
 };

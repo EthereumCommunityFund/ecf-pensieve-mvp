@@ -92,7 +92,18 @@ const ProjectCard = ({
   const logoUrl = getItemValue('logoUrl');
   const projectName = getItemValue('name');
   const tagline = getItemValue('tagline');
-  const categories = (getItemValue('categories') || []) as string[];
+  const categories = useMemo(() => {
+    const cats = getItemValue('categories');
+    if (typeof cats === 'string') {
+      try {
+        const parsed = JSON.parse(cats);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return Array.isArray(cats) ? cats : [];
+  }, [getItemValue]);
 
   return (
     <div

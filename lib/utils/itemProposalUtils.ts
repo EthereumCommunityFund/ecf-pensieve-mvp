@@ -39,7 +39,7 @@ export const updateProjectSnaps = async (
   tx: any,
   projectId: number,
   key: string,
-  value: string,
+  value: any,
 ): Promise<void> => {
   const projectSnap = await tx.query.projectSnaps.findFirst({
     where: eq(projectSnaps.projectId, projectId),
@@ -169,14 +169,13 @@ export const processItemProposalVoteResult = async (
   const itemsTopWeight = project?.itemsTopWeight as
     | Record<string, number>
     | undefined;
-  const keyWeight = itemsTopWeight?.[key] ?? 0;
+  const genesisWeight =
+    POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric * WEIGHT;
+  const keyWeight = itemsTopWeight?.[key] ?? genesisWeight;
 
   if (voteSum > keyWeight) {
     const rewardMultiplier = !needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
-    const reward =
-      POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
-      WEIGHT *
-      rewardMultiplier;
+    const reward = genesisWeight * rewardMultiplier;
 
     const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
 
@@ -196,12 +195,15 @@ export const processItemProposalVoteResult = async (
             createdAt: new Date(),
           })
           .where(eq(projectLogs.id, oldLog.id)),
-        tx.update(projects).set({
-          itemsTopWeight: {
-            ...(project?.itemsTopWeight ?? {}),
-            [key]: voteSum,
-          },
-        }),
+        tx
+          .update(projects)
+          .set({
+            itemsTopWeight: {
+              ...(project?.itemsTopWeight ?? {}),
+              [key]: voteSum,
+            },
+          })
+          .where(eq(projects.id, itemProposal.projectId)),
         addNotification(
           createNotification.itemProposalBecameLeading(
             itemProposal.creator.userId,
@@ -221,12 +223,15 @@ export const processItemProposalVoteResult = async (
         itemProposalId: itemProposal.id,
         key,
       }),
-      tx.update(projects).set({
-        itemsTopWeight: {
-          ...(project?.itemsTopWeight ?? {}),
-          [key]: voteSum,
-        },
-      }),
+      tx
+        .update(projects)
+        .set({
+          itemsTopWeight: {
+            ...(project?.itemsTopWeight ?? {}),
+            [key]: voteSum,
+          },
+        })
+        .where(eq(projects.id, itemProposal.projectId)),
       tx
         .update(profiles)
         .set({
@@ -276,12 +281,15 @@ export const processItemProposalUpdate = async (
     return acc;
   }, 0);
 
-  await tx.update(projects).set({
-    itemsTopWeight: {
-      ...(project?.itemsTopWeight ?? {}),
-      [key]: voteSum,
-    },
-  });
+  await tx
+    .update(projects)
+    .set({
+      itemsTopWeight: {
+        ...(project?.itemsTopWeight ?? {}),
+        [key]: voteSum,
+      },
+    })
+    .where(eq(projects.id, project.id));
 
   // Get the leading proposal for this key to get its value
   const leadingLog = await tx.query.projectLogs.findFirst({
