@@ -11,8 +11,10 @@ import {
   ModalContent,
 } from '@/components/base';
 import { CopyIcon } from '@/components/icons';
+import SablierEntry from '@/components/sablier/SablierEntry';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IPocItemKey } from '@/types/item';
+import { isSablierDomain } from '@/utils/sablierDetector';
 import { normalizeUrl } from '@/utils/url';
 
 interface IReferenceModalProps {
@@ -46,6 +48,10 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
     });
   }, []);
 
+  const isMatchSablier = useMemo(() => {
+    return isSablierDomain(link);
+  }, [link]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -71,6 +77,17 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
             <span className="ml-[10px] font-semibold">{itemKeyLabel}</span>{' '}
           </p>
 
+          {reason && (
+            <div className="flex flex-col gap-[5px]">
+              <p className="text-[14px] font-[600] leading-[20px] text-black">
+                Edit Reason:
+              </p>
+              <p className="text-[14px] leading-[20px] text-black/80">
+                {reason}
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10">
             <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
               <span className="truncate">{link}</span>
@@ -85,14 +102,12 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
             </CopyToClipboard>
           </div>
 
-          {reason && (
-            <div className="flex flex-col gap-[5px]">
-              <p className="text-[14px] font-[600] leading-[20px] text-black">
-                Edit Reason:
-              </p>
-              <p className="text-[14px] leading-[20px] text-black/80">
-                {reason}
-              </p>
+          {isMatchSablier && (
+            <div className="flex flex-col items-center gap-[10px]">
+              <a href={link} target="_blank" className="w-full" rel="noreferrer">
+                <Button className="w-full">View on Sablier</Button>
+              </a>
+              <SablierEntry />
             </div>
           )}
 

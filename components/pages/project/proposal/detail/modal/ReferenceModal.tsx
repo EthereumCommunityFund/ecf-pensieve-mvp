@@ -14,6 +14,8 @@ import { CopyIcon } from '@/components/icons';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
+import SablierEntry from '@/components/sablier/SablierEntry';
+import { isSablierDomain } from '@/utils/sablierDetector';
 
 import { IRef } from '../../../create/types';
 
@@ -45,6 +47,10 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
   const link = useMemo(() => {
     return normalizeUrl(refMap[fieldKey]) || fieldKey;
   }, [refMap, fieldKey]);
+
+  const isMatchSablier = useMemo(() => {
+    return isSablierDomain(link);
+  }, [link]);
 
   const onCopySuccess = useCallback(() => {
     addToast({
@@ -94,6 +100,15 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
               </Button>
             </CopyToClipboard>
           </div>
+
+          {isMatchSablier && (
+            <div className="flex flex-col items-center gap-[10px]">
+              <a href={link} target="_blank" className="w-full" rel="noreferrer">
+                <Button className="w-full">View on Sablier</Button>
+              </a>
+              <SablierEntry />
+            </div>
+          )}
 
           <p className="text-[13px] leading-[1.2] text-black/80">
             References serve as documented sources that substantiate the

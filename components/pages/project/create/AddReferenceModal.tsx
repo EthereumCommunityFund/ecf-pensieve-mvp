@@ -17,7 +17,7 @@ import {
 import { devLog } from '@/utils/devLog';
 import { isSablierDomain } from '@/utils/sablierDetector';
 import { normalizeUrl } from '@/utils/url';
-import { SablierIcon } from '@/components/icons';
+import SablierEntry from '@/components/sablier/SablierEntry';
 
 import InputPrefix from './form/InputPrefix';
 import { IReferenceData } from './types';
@@ -180,9 +180,7 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
                 <p className="text-[14px] font-[600] leading-[20px] text-[#207CB2]">
                   A reference via Sablier.com has been detected.{' '}
                 </p>
-                <a href="https://sablier.com" target="_blank" rel="noreferrer">
-                  <SablierIcon />
-                </a>
+                <SablierEntry />
               </div>
             )}
 
@@ -221,9 +219,7 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
           </div>
           <div className="mt-[10px] flex items-center justify-between gap-[10px]">
             <div className="flex flex-1 items-center justify-start gap-[10px]">
-              <a href="https://sablier.com" target="_blank" rel="noreferrer">
-                <SablierIcon />
-              </a>
+              <SablierEntry />
               <span className="text-[13px] font-[400] text-black/30">
                 More Coming Soon
               </span>
@@ -231,7 +227,8 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
             <a
               href="https://discord.gg/F7Xgd3NsDT"
               target="_blank"
-              className="text-[11px] font-[600] text-black/60 hover:text-black/80 hover:underline" rel="noreferrer"
+              className="text-[11px] font-[600] text-black/60 hover:text-black/80 hover:underline"
+              rel="noreferrer"
             >
               Looking to partner with ECF?
             </a>
