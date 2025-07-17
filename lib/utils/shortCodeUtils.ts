@@ -1,11 +1,9 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
 export function generateShortCode(): string {
   const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
-  return nanoid(6).replace(
-    /[01lIO]/g,
-    () => alphabet[Math.floor(Math.random() * alphabet.length)],
-  );
+  const nanoid = customAlphabet(alphabet, 6);
+  return nanoid();
 }
 
 export async function generateUniqueShortCode(
