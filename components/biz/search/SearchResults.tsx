@@ -74,7 +74,7 @@ export default function SearchResults({
   }
 
   return (
-    <div className="space-y-4 px-4 py-3">
+    <div className="space-y-4 py-3">
       {results.published.items.length > 0 && (
         <div>
           <div className="mb-2">

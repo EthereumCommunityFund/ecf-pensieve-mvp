@@ -1,9 +1,9 @@
 'use client';
 
-import { Modal, ModalBody, ModalContent, ModalHeader } from '@heroui/react';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 
+import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import { trpc } from '@/lib/trpc/client';
 
 import SearchBox from './SearchBox';
@@ -81,14 +81,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="2xl"
       scrollBehavior="inside"
       placement="center"
       className="mx-4"
       hideCloseButton
     >
-      <ModalContent className="max-w-[510px] bg-white shadow-lg">
-        <ModalHeader className="border-b border-gray-200 p-4">
+      <ModalContent className="w-[510px] bg-white shadow-lg">
+        {/* <ModalHeader className="border-b border-gray-200 p-4"></ModalHeader> */}
+        <ModalBody className="max-h-[500px] overflow-y-auto p-0">
           <SearchBox
             value={searchQuery}
             onChange={handleSearch}
@@ -96,8 +96,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             placeholder="Search projects..."
             autoFocus
           />
-        </ModalHeader>
-        <ModalBody className="max-h-[427px] overflow-y-auto p-0">
           {!searchQuery ? (
             <SearchHistory
               history={searchHistory}

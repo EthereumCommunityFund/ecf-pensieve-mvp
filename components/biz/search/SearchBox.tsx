@@ -48,7 +48,6 @@ export default function SearchBox({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        // startContent={<Search className="size-4 text-gray-400" />}
         endContent={
           value && (
             <button
@@ -62,7 +61,7 @@ export default function SearchBox({
         className="w-full"
         classNames={{
           inputWrapper:
-            'bg-gray-100 border-gray-200 rounded-lg px-3 py-2 h-auto data-[focus=true]:border-gray-200 data-[hover=true]:border-gray-200',
+            'bg-gray-100 border-gray-200 rounded-lg px-3 py-2 h-auto focus-within:border-gray-200 focus-within:bg-gray-100 data-[focus=true]:border-gray-200 data-[hover=true]:border-gray-200',
           input: 'text-sm',
         }}
         variant="bordered"

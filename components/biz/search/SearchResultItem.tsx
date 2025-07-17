@@ -69,7 +69,7 @@ export default function SearchResultItem({
 
   return (
     <Link href={projectUrl} onClick={onClose}>
-      <div className="cursor-pointer px-4 py-3 transition-colors hover:bg-gray-50">
+      <div className="cursor-pointer py-3 transition-colors hover:bg-gray-50">
         <div className="flex items-start gap-3">
           {/* Project Icon */}
           <div className="size-10 shrink-0 overflow-hidden rounded-md border border-gray-200">
