@@ -169,14 +169,13 @@ export const processItemProposalVoteResult = async (
   const itemsTopWeight = project?.itemsTopWeight as
     | Record<string, number>
     | undefined;
-  const keyWeight = itemsTopWeight?.[key] ?? 0;
+  const genesisWeight =
+    POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric * WEIGHT;
+  const keyWeight = itemsTopWeight?.[key] ?? genesisWeight;
 
   if (voteSum > keyWeight) {
     const rewardMultiplier = !needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
-    const reward =
-      POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
-      WEIGHT *
-      rewardMultiplier;
+    const reward = genesisWeight * rewardMultiplier;
 
     const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
 
