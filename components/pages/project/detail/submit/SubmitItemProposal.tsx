@@ -18,7 +18,6 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IItemConfig, IPocItemKey } from '@/types/item';
-import { devLog } from '@/utils/devLog';
 import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
@@ -89,7 +88,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   const defaultFormValues = useMemo(() => {
     const defaultValue =
       itemConfig.formDisplayType === 'founderList'
-        ? [{ name: '', title: '' }]
+        ? [{ name: '', title: '', region: '' }]
         : '';
     return { [itemConfig.key]: defaultValue };
   }, [itemConfig.key, itemConfig.formDisplayType]);
@@ -109,7 +108,11 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     }),
   });
 
-  const { control, clearErrors, reset, handleSubmit } = methods;
+  const { control, clearErrors, reset, handleSubmit, watch, getValues } =
+    methods;
+
+  // Watch form values
+  const watchedValues = watch();
 
   const [editReason, setEditReason] = useState('');
   const [submissionStep, setSubmissionStep] = useState<
@@ -185,27 +188,50 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   const validateAndProceed = useCallback(
     (formData: IFormData) => {
       const formValue = formData[itemConfig.key];
+
       const isApplicableFalse =
         itemConfig.showApplicable && !fieldApplicability[itemConfig.key];
 
       // Convert date values to UTC for consistent backend storage
       let valueToSubmit = isApplicableFalse ? '' : formValue;
+
       if (itemConfig.formDisplayType === 'date' && formValue instanceof Date) {
         valueToSubmit = dayjs
           .utc(dayjs(formValue).format('YYYY-MM-DD'))
           .toISOString();
       }
 
+      // For founderList, ensure we always get the current form data, not any cached data
+      if (
+        itemConfig.formDisplayType === 'founderList' &&
+        Array.isArray(valueToSubmit)
+      ) {
+        // Create a clean copy of the founders data to avoid reference issues
+        valueToSubmit = valueToSubmit.map((founder: any) => ({
+          name: founder.name || '',
+          title: founder.title || '',
+          region: founder.region || '',
+        }));
+      }
+
       const referenceValue = getFieldReference(itemConfig.key)?.value || '';
 
-      setDataForPreview({
+      const dataForPreview = {
         value: valueToSubmit,
         ref: referenceValue,
         reason: editReason || '',
-      });
+      };
+
+      setDataForPreview(dataForPreview);
       setSubmissionStep('preview');
     },
-    [itemConfig, fieldApplicability, getFieldReference, editReason],
+    [
+      itemConfig,
+      fieldApplicability,
+      getFieldReference,
+      editReason,
+      displayProposalDataOfKey,
+    ],
   );
 
   // After re-enabling yupResolver, remove custom validation logic
@@ -215,10 +241,10 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     (data: IFormData) => {
       validateAndProceed(data);
     },
-    [validateAndProceed],
+    [validateAndProceed, getValues],
   );
 
-  const onError = useCallback(() => {
+  const onError = useCallback((errors: any) => {
     addToast({
       title: 'Validation Error',
       description: 'Please fix the errors before proceeding',
@@ -236,10 +262,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       ref: dataForPreview.ref,
       reason: dataForPreview.reason,
     };
-    devLog('createItemProposal payload', payload);
     createItemProposalMutation.mutate(payload, {
       onSuccess: (data) => {
-        devLog('createItemProposal success', data);
         setSubmissionStep('success');
         refetchAll();
       },
@@ -296,9 +320,14 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
     clearErrorsRef.current(); // Clear all error states
 
-    if (displayProposalDataOfKey && displayProposalDataOfKey.key === itemKey) {
+    // CRITICAL FIX: Always use default values for new proposals to prevent data contamination
+    // NEVER use displayProposalDataOfKey in SubmitItemProposal - this is for creating NEW proposals
+    // The displayProposalDataOfKey is meant for viewing existing proposals, not creating new ones
+    const isEditingExistingProposal = false;
+
+    if (isEditingExistingProposal) {
       // Handle existing data
-      let valueToSet = displayProposalDataOfKey.input;
+      let valueToSet = displayProposalDataOfKey?.input;
 
       // For founderList type, ensure value is in array format
       if (itemConfig.formDisplayType === 'founderList') {
@@ -308,13 +337,13 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
             valueToSet = JSON.parse(valueToSet);
           } catch (error) {
             // If parsing fails, set to default value instead of empty array
-            valueToSet = [{ name: '', title: '' }];
+            valueToSet = [{ name: '', title: '', region: '' }];
           }
         }
 
         // Ensure array format, if not array or empty array, set default value
         if (!Array.isArray(valueToSet) || valueToSet.length === 0) {
-          valueToSet = [{ name: '', title: '' }];
+          valueToSet = [{ name: '', title: '', region: '' }];
         }
       }
 
@@ -326,7 +355,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     } else {
       const defaultValue =
         itemConfig.formDisplayType === 'founderList'
-          ? [{ name: '', title: '' }]
+          ? [{ name: '', title: '', region: '' }]
           : '';
       resetRef.current({
         [itemConfig.key]: defaultValue,
@@ -408,9 +437,6 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
               isLoading={false}
               className="w-full"
               type="submit"
-              onPress={() => {
-                // Form submission will be handled by handleSubmit
-              }}
             >
               Next
             </Button>

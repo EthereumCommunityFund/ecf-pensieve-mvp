@@ -8,7 +8,6 @@ import {
   FieldErrorsImpl,
   Merge,
   UseFormRegister,
-  useController,
 } from 'react-hook-form';
 
 import { Select, SelectItem } from '@/components/base';
@@ -24,9 +23,11 @@ interface FounderFormItemTableProps {
   errors:
     | Merge<FieldError, FieldErrorsImpl<IProjectFormData['founders'][number]>>
     | undefined;
-  foundersKey: 'founders';
+  foundersKey: string;
   canRemove: boolean;
   onRemove?: () => void;
+  value: any;
+  onChange: (value: any) => void;
 }
 
 const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
@@ -38,20 +39,22 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
   foundersKey,
   canRemove,
   onRemove,
+  value,
+  onChange,
 }) => {
-  // Use controller for region field to handle empty/unknown mapping
-  const { field: regionField, fieldState: regionFieldState } = useController({
-    name: `${foundersKey}.${index}.region`,
-    control,
-    defaultValue: '',
-  });
+  // Handle region value
+  const regionValue = value?.region || '';
+
   return (
     <div className="flex items-stretch border-b border-black/5 bg-white">
       <div className="flex-1 border-r border-black/10 p-[10px]">
         <input
           type="text"
           placeholder="Type a name"
-          {...register(`${foundersKey}.${index}.name`)}
+          value={value?.name || ''}
+          onChange={(e) => {
+            onChange({ ...value, name: e.target.value });
+          }}
           className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.name ? 'bg-red-50' : ''}`}
           style={{
             boxShadow: 'none !important',
@@ -61,9 +64,9 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         />
         {errors?.name && (
           <span className="text-[13px] text-red-500">
-            {typeof errors.name === 'string'
+            {typeof errors?.name === 'string'
               ? errors.name
-              : errors.name?.message || 'Name is required'}
+              : errors?.name?.message || 'Name is required'}
           </span>
         )}
       </div>
@@ -71,7 +74,10 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         <input
           type="text"
           placeholder="Type their role or title"
-          {...register(`${foundersKey}.${index}.title`)}
+          value={value?.title || ''}
+          onChange={(e) => {
+            onChange({ ...value, title: e.target.value });
+          }}
           className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0`}
           style={{
             boxShadow: 'none !important',
@@ -89,10 +95,10 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
       </div>
       <div className="flex-1 p-[10px]">
         <Select
-          selectedKeys={regionField.value ? [regionField.value] : ['']}
+          selectedKeys={regionValue ? [regionValue] : undefined}
           onSelectionChange={(keys) => {
             const selectedKey = Array.from(keys)[0] as string;
-            regionField.onChange(selectedKey || '');
+            onChange({ ...value, region: selectedKey || '' });
           }}
           variant="flat"
           placeholder="Select region"
@@ -109,13 +115,11 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
             <SelectItem key={country.value}>{country.label}</SelectItem>
           ))}
         </Select>
-        {(errors?.region || regionFieldState.error) && (
+        {errors?.region && (
           <span className="text-[13px] text-red-500">
             {typeof errors?.region === 'string'
               ? errors.region
-              : errors?.region?.message ||
-                regionFieldState.error?.message ||
-                'Region is required'}
+              : errors?.region?.message || 'Region is required'}
           </span>
         )}
       </div>

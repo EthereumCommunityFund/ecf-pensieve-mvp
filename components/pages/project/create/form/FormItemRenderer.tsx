@@ -280,7 +280,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       // Ensure valid array data with at least one entry
       const foundersArray =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value
+          ? field.value.map((founder: any) => ({
+              name: founder.name || '',
+              title: founder.title || '',
+              region: founder.region || '',
+            }))
           : [{ name: '', title: '', region: '' }];
 
       return (
@@ -325,8 +329,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   register={register}
                   control={control}
                   errors={founderError}
-                  foundersKey={field.name as 'founders'}
+                  foundersKey={itemConfig.key as any}
                   canRemove={foundersArray.length > 1}
+                  value={founder}
+                  onChange={(updatedFounder) => {
+                    const newFounders = [...foundersArray];
+                    newFounders[index] = updatedFounder;
+                    field.onChange(newFounders);
+                  }}
                 />
               );
             })}

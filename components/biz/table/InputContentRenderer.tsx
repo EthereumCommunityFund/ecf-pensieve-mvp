@@ -29,13 +29,6 @@ const getRegionLabel = (regionCode?: string) => {
 
   // If still not found, return the original value or "Unknown"
   if (!country) {
-    // Log for debugging in development
-    if (
-      typeof window !== 'undefined' &&
-      process.env.NODE_ENV === 'development'
-    ) {
-      console.warn(`Unknown region code: ${regionCode}`);
-    }
     return regionCode || 'Unknown';
   }
 
