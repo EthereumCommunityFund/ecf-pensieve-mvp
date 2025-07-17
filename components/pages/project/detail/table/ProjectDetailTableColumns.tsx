@@ -173,7 +173,6 @@ export const useProjectTableColumns = ({
         const key = info.row.original.key;
         const { showReferenceModal } = info.table.options
           .meta as ITableMetaOfProjectDetail;
-        console.log('reference by info.getValue();', reference);
         const isMatchSablier = isSablierDomain(reference?.value || '');
 
         return (
