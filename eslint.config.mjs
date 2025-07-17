@@ -122,6 +122,7 @@ export default [
       'react/prop-types': 'off',
       'no-case-declarations': 'off',
       'no-fallthrough': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   {
