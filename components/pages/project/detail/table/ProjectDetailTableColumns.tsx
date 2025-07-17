@@ -14,6 +14,7 @@ import {
 } from '@/components/biz/table';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
+import { isSablierDomain } from '@/utils/sablierDetector';
 
 import { IRef } from '../../create/types';
 import { IProposalCreator, ITableMetaOfProjectDetail } from '../types';
@@ -172,10 +173,13 @@ export const useProjectTableColumns = ({
         const key = info.row.original.key;
         const { showReferenceModal } = info.table.options
           .meta as ITableMetaOfProjectDetail;
+        console.log('reference by info.getValue();', reference);
+        const isMatchSablier = isSablierDomain(reference?.value || '');
 
         return (
           <ReferenceCol.Cell
             hasReference={!!info.getValue()}
+            isMatchSablier={isMatchSablier}
             onShowReference={() => {
               showReferenceModal?.(
                 reference?.value || '',

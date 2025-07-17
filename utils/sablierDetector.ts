@@ -14,6 +14,8 @@ const SABLIER_DOMAINS = [
 
 export function isSablierDomain(input: string): boolean {
   try {
+    if (!input) return false;
+
     const urlString = input.startsWith('http') ? input : `https://${input}`;
     const parsedUrl = new URL(urlString);
     const hostname = parsedUrl.hostname.toLowerCase();

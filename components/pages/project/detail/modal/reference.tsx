@@ -104,7 +104,12 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
 
           {isMatchSablier && (
             <div className="flex flex-col items-center gap-[10px]">
-              <a href={link} target="_blank" className="w-full" rel="noreferrer">
+              <a
+                href={link}
+                target="_blank"
+                className="w-full"
+                rel="noreferrer"
+              >
                 <Button className="w-full">View on Sablier</Button>
               </a>
               <SablierEntry />

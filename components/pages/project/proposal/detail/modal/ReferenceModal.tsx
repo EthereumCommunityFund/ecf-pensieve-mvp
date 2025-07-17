@@ -11,11 +11,11 @@ import {
   ModalContent,
 } from '@/components/base';
 import { CopyIcon } from '@/components/icons';
+import SablierEntry from '@/components/sablier/SablierEntry';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey } from '@/types/item';
-import { normalizeUrl } from '@/utils/url';
-import SablierEntry from '@/components/sablier/SablierEntry';
 import { isSablierDomain } from '@/utils/sablierDetector';
+import { normalizeUrl } from '@/utils/url';
 
 import { IRef } from '../../../create/types';
 
@@ -103,7 +103,12 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
 
           {isMatchSablier && (
             <div className="flex flex-col items-center gap-[10px]">
-              <a href={link} target="_blank" className="w-full" rel="noreferrer">
+              <a
+                href={link}
+                target="_blank"
+                className="w-full"
+                rel="noreferrer"
+              >
                 <Button className="w-full">View on Sablier</Button>
               </a>
               <SablierEntry />
