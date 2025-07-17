@@ -39,7 +39,7 @@ export const updateProjectSnaps = async (
   tx: any,
   projectId: number,
   key: string,
-  value: string,
+  value: any,
 ): Promise<void> => {
   const projectSnap = await tx.query.projectSnaps.findFirst({
     where: eq(projectSnaps.projectId, projectId),

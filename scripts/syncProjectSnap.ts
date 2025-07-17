@@ -77,10 +77,23 @@ async function syncProjectSnap() {
         .leftJoin(profiles, eq(itemProposals.creator, profiles.userId))
         .where(eq(latestLogsSubquery.rn, 1));
 
-      const items = latestLogs.map((row) => ({
-        key: row.key,
-        value: row.itemProposal?.value,
-      }));
+      const items = latestLogs.map((row) => {
+        let value = row.itemProposal?.value;
+
+        if (typeof value === 'string' && value !== '') {
+          try {
+            const parsed = JSON.parse(value);
+            value = parsed;
+          } catch {
+            // If parsing fails, keep it as string
+          }
+        }
+
+        return {
+          key: row.key,
+          value,
+        };
+      });
 
       console.log(`Syncing project snap for project ${project.id}`);
 

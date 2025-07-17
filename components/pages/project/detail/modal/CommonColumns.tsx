@@ -15,6 +15,7 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { IItemProposalVoteRecord } from '@/types';
 import { IPocItemKey } from '@/types/item';
+import { isSablierDomain } from '@/utils/sablierDetector';
 
 import { IProjectTableRowData, ITableMetaOfSubmissionQueue } from '../types';
 
@@ -81,6 +82,7 @@ export const useCommonColumnsOfModal = (showMetrics = false) => {
         const referenceValue = info.getValue();
         const { showReferenceModal } = info.table.options
           .meta as ITableMetaOfSubmissionQueue;
+        const isMatchSablier = isSablierDomain(referenceValue?.value || '');
         return (
           <ReferenceCol.Cell
             hasReference={!!referenceValue}
@@ -91,6 +93,7 @@ export const useCommonColumnsOfModal = (showMetrics = false) => {
                 item.reason || '',
               );
             }}
+            isMatchSablier={isMatchSablier}
           />
         );
       },

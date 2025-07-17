@@ -15,6 +15,7 @@ import {
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
+import SablierEntry from '@/components/sablier/SablierEntry';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -446,6 +447,7 @@ export interface ReferenceColHeaderProps extends BaseHeaderProps {
 export interface ReferenceColCellProps extends BaseCellProps {
   hasReference: boolean;
   onShowReference?: () => void;
+  isMatchSablier?: boolean;
 }
 
 const ReferenceHeader = ({
@@ -480,18 +482,22 @@ const ReferenceHeader = ({
 const ReferenceCell = ({
   hasReference,
   onShowReference,
+  isMatchSablier,
 }: ReferenceColCellProps) => {
   return (
     <div className="mx-auto flex justify-center">
       {hasReference ? (
-        <Button
-          color="secondary"
-          size="md"
-          className="w-[104px] text-[13px] font-[400]"
-          onPress={onShowReference}
-        >
-          Reference
-        </Button>
+        <div className="flex flex-col items-center gap-[10px]">
+          {isMatchSablier && <SablierEntry />}
+          <Button
+            color="secondary"
+            size="md"
+            className="w-[104px] text-[13px] font-[400]"
+            onPress={onShowReference}
+          >
+            Reference
+          </Button>
+        </div>
       ) : (
         <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
           empty
