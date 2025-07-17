@@ -288,6 +288,13 @@
       "when": 1752543556176,
       "tag": "0040_ambitious_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1752724825459,
+      "tag": "0041_petite_brother_voodoo",
+      "breakpoints": true
     }
   ]
 }
