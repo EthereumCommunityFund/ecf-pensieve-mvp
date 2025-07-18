@@ -115,7 +115,7 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   tokenContract: null,
   orgStructure: '',
   publicGoods: '',
-  founders: [{ name: '', title: '' }],
+  founders: [{ name: '', title: '', region: '' }],
   tags: [],
   whitePaper: '',
   dappSmartContracts: '',
@@ -141,7 +141,7 @@ export const FakeProjectFormData: IProjectFormData = {
   tokenContract: '0x1234567890123456789012345678901234567890',
   orgStructure: 'DAO',
   publicGoods: 'Yes',
-  founders: [{ name: 'John Doe', title: 'Founder' }],
+  founders: [{ name: 'John Doe', title: 'Founder', region: 'US' }],
   whitePaper: 'https://fake-project.com/whitepaper.pdf',
   dappSmartContracts: '0x1234567890123456789012345678901234567890',
 };

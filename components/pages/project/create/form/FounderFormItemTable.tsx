@@ -3,42 +3,62 @@
 import { XCircle } from '@phosphor-icons/react';
 import React from 'react';
 import {
+  Control,
   FieldError,
   FieldErrorsImpl,
   Merge,
   UseFormRegister,
 } from 'react-hook-form';
 
-import { IProjectFormData } from '../types';
+import { Select, SelectItem } from '@/components/base';
+import { getRegionOptions, isRegionDataValid } from '@/utils/region';
+
+import { IFounder, IProjectFormData } from '../types';
 
 interface FounderFormItemTableProps {
   index: number;
   remove: (index: number) => void;
   register: UseFormRegister<IProjectFormData>;
+  control: Control<IProjectFormData>;
   errors:
     | Merge<FieldError, FieldErrorsImpl<IProjectFormData['founders'][number]>>
     | undefined;
-  foundersKey: 'founders';
+  foundersKey: string;
   canRemove: boolean;
   onRemove?: () => void;
+  value: IFounder;
+  onChange: (value: IFounder) => void;
 }
 
 const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
   index,
   remove,
   register,
+  control,
   errors,
   foundersKey,
   canRemove,
   onRemove,
+  value,
+  onChange,
 }) => {
+  // Handle region value with validation
+  const regionValue = value?.region || '';
+
+  // Check if region data is available
+  const isRegionDataAvailable = isRegionDataValid();
+  const regionOptions = getRegionOptions();
+
   return (
     <div className="flex items-stretch border-b border-black/5 bg-white">
       <div className="flex-1 border-r border-black/10 p-[10px]">
         <input
           type="text"
           placeholder="Type a name"
-          {...register(`${foundersKey}.${index}.name`)}
+          value={value?.name || ''}
+          onChange={(e) => {
+            onChange({ ...value, name: e.target.value });
+          }}
           className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${errors?.name ? 'bg-red-50' : ''}`}
           style={{
             boxShadow: 'none !important',
@@ -48,17 +68,20 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         />
         {errors?.name && (
           <span className="text-[13px] text-red-500">
-            {typeof errors.name === 'string'
+            {typeof errors?.name === 'string'
               ? errors.name
-              : errors.name?.message || 'Name is required'}
+              : errors?.name?.message || 'Name is required'}
           </span>
         )}
       </div>
-      <div className="flex-1 p-[10px]">
+      <div className="flex-1 border-r border-black/10 p-[10px]">
         <input
           type="text"
           placeholder="Type their role or title"
-          {...register(`${foundersKey}.${index}.title`)}
+          value={value?.title || ''}
+          onChange={(e) => {
+            onChange({ ...value, title: e.target.value });
+          }}
           className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0`}
           style={{
             boxShadow: 'none !important',
@@ -71,6 +94,55 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
             {typeof errors.title === 'string'
               ? errors.title
               : errors.title?.message || 'Title is required'}
+          </span>
+        )}
+      </div>
+      <div className="flex-1 p-[10px]">
+        {isRegionDataAvailable ? (
+          <Select
+            selectedKeys={regionValue ? [regionValue] : undefined}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+              onChange({ ...value, region: selectedKey || '' });
+            }}
+            variant="flat"
+            placeholder="Select region"
+            className="h-[20px] min-h-[20px]"
+            classNames={{
+              trigger:
+                'h-[20px] min-h-[20px] border-none bg-transparent shadow-none',
+              value: 'text-[13px] font-[400] leading-[18px] text-black',
+              popoverContent: 'z-[9999]',
+              listbox: 'max-h-[200px] overflow-y-auto',
+              listboxWrapper: 'max-h-[200px]',
+            }}
+            aria-label="Select region"
+          >
+            {regionOptions.map((country) => (
+              <SelectItem
+                key={country.value}
+                classNames={{
+                  base: 'data-[hover=true]:bg-black/5',
+                  title:
+                    'text-[13px] font-[400] whitespace-nowrap overflow-visible text-ellipsis-none',
+                }}
+              >
+                {country.label}
+              </SelectItem>
+            ))}
+          </Select>
+        ) : (
+          <div className="flex h-[20px] items-center">
+            <span className="text-[13px] text-gray-500">
+              Region data unavailable
+            </span>
+          </div>
+        )}
+        {errors?.region && (
+          <span className="text-[13px] text-red-500">
+            {typeof errors?.region === 'string'
+              ? errors.region
+              : errors?.region?.message || 'Region is required'}
           </span>
         )}
       </div>

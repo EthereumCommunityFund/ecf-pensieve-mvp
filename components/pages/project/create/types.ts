@@ -26,6 +26,7 @@ export type IStepStatus = 'Inactive' | 'Active' | 'Finished';
 export interface IFounder {
   name: string;
   title: string;
+  region?: string;
 }
 
 export interface IWebsite {
