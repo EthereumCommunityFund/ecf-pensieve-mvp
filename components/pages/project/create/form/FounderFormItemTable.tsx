@@ -113,11 +113,22 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
                 'h-[20px] min-h-[20px] border-none bg-transparent shadow-none',
               value: 'text-[13px] font-[400] leading-[18px] text-black',
               popoverContent: 'z-[9999]',
+              listbox: 'max-h-[200px] overflow-y-auto',
+              listboxWrapper: 'max-h-[200px]',
             }}
             aria-label="Select region"
           >
             {regionOptions.map((country) => (
-              <SelectItem key={country.value}>{country.label}</SelectItem>
+              <SelectItem
+                key={country.value}
+                classNames={{
+                  base: 'data-[hover=true]:bg-black/5',
+                  title:
+                    'text-[13px] font-[400] whitespace-nowrap overflow-visible text-ellipsis-none',
+                }}
+              >
+                {country.label}
+              </SelectItem>
             ))}
           </Select>
         ) : (
