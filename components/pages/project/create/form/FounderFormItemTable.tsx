@@ -11,9 +11,9 @@ import {
 } from 'react-hook-form';
 
 import { Select, SelectItem } from '@/components/base';
-import { COUNTRIES } from '@/constants/countries';
+import { getRegionOptions, isRegionDataValid } from '@/utils/region';
 
-import { IProjectFormData } from '../types';
+import { IFounder, IProjectFormData } from '../types';
 
 interface FounderFormItemTableProps {
   index: number;
@@ -26,8 +26,8 @@ interface FounderFormItemTableProps {
   foundersKey: string;
   canRemove: boolean;
   onRemove?: () => void;
-  value: any;
-  onChange: (value: any) => void;
+  value: IFounder;
+  onChange: (value: IFounder) => void;
 }
 
 const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
@@ -42,8 +42,12 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
   value,
   onChange,
 }) => {
-  // Handle region value
+  // Handle region value with validation
   const regionValue = value?.region || '';
+
+  // Check if region data is available
+  const isRegionDataAvailable = isRegionDataValid();
+  const regionOptions = getRegionOptions();
 
   return (
     <div className="flex items-stretch border-b border-black/5 bg-white">
@@ -94,27 +98,35 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
         )}
       </div>
       <div className="flex-1 p-[10px]">
-        <Select
-          selectedKeys={regionValue ? [regionValue] : undefined}
-          onSelectionChange={(keys) => {
-            const selectedKey = Array.from(keys)[0] as string;
-            onChange({ ...value, region: selectedKey || '' });
-          }}
-          variant="flat"
-          placeholder="Select region"
-          className="h-[20px] min-h-[20px]"
-          classNames={{
-            trigger:
-              'h-[20px] min-h-[20px] border-none bg-transparent shadow-none',
-            value: 'text-[13px] font-[400] leading-[18px] text-black',
-            popoverContent: 'z-[9999]',
-          }}
-          aria-label="Select region"
-        >
-          {COUNTRIES.map((country) => (
-            <SelectItem key={country.value}>{country.label}</SelectItem>
-          ))}
-        </Select>
+        {isRegionDataAvailable ? (
+          <Select
+            selectedKeys={regionValue ? [regionValue] : undefined}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+              onChange({ ...value, region: selectedKey || '' });
+            }}
+            variant="flat"
+            placeholder="Select region"
+            className="h-[20px] min-h-[20px]"
+            classNames={{
+              trigger:
+                'h-[20px] min-h-[20px] border-none bg-transparent shadow-none',
+              value: 'text-[13px] font-[400] leading-[18px] text-black',
+              popoverContent: 'z-[9999]',
+            }}
+            aria-label="Select region"
+          >
+            {regionOptions.map((country) => (
+              <SelectItem key={country.value}>{country.label}</SelectItem>
+            ))}
+          </Select>
+        ) : (
+          <div className="flex h-[20px] items-center">
+            <span className="text-[13px] text-gray-500">
+              Region data unavailable
+            </span>
+          </div>
+        )}
         {errors?.region && (
           <span className="text-[13px] text-red-500">
             {typeof errors?.region === 'string'

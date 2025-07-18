@@ -4,7 +4,6 @@ import Link from 'next/link';
 import React, { memo, useCallback } from 'react';
 
 import { TableIcon } from '@/components/icons';
-import { COUNTRIES } from '@/constants/countries';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -12,28 +11,10 @@ import {
   parseMultipleValue,
   parseValue,
 } from '@/utils/item';
+import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
-
-const getRegionLabel = (regionCode?: string) => {
-  if (!regionCode) return 'Unknown';
-
-  // First try to find by value (country code)
-  let country = COUNTRIES.find((c) => c.value === regionCode);
-
-  // If not found, try to find by label (for backward compatibility)
-  if (!country) {
-    country = COUNTRIES.find((c) => c.label === regionCode);
-  }
-
-  // If still not found, return the original value or "Unknown"
-  if (!country) {
-    return regionCode || 'Unknown';
-  }
-
-  return country.label;
-};
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -237,33 +218,42 @@ const InputContentRenderer: React.FC<IProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {parsedFounderList.map((founder: any, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsedFounderList.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
+                    {parsedFounderList.map(
+                      (
+                        founder: {
+                          name: string;
+                          title: string;
+                          region?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
                           isLastRow={index === parsedFounderList.length - 1}
                         >
-                          {founder.name}
-                        </TableCell>
-                        <TableCell
-                          isContainerBordered
-                          isLastRow={index === parsedFounderList.length - 1}
-                        >
-                          {founder.title}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsedFounderList.length - 1}
-                        >
-                          {getRegionLabel(founder.region)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedFounderList.length - 1}
+                          >
+                            {founder.name}
+                          </TableCell>
+                          <TableCell
+                            isContainerBordered
+                            isLastRow={index === parsedFounderList.length - 1}
+                          >
+                            {founder.title}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedFounderList.length - 1}
+                          >
+                            {getRegionLabel(founder.region)}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
                   </tbody>
                 </table>
               </TableContainer>
@@ -375,34 +365,39 @@ const InputContentRenderer: React.FC<IProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {parsedWebsites.map((website: any, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsedWebsites.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
+                    {parsedWebsites.map(
+                      (
+                        website: { title: string; url: string },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
                           isLastRow={index === parsedWebsites.length - 1}
                         >
-                          {website.title}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsedWebsites.length - 1}
-                        >
-                          <Link
-                            href={normalizeUrl(website.url)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline"
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedWebsites.length - 1}
                           >
-                            {normalizeUrl(website.url)}
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            {website.title}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedWebsites.length - 1}
+                          >
+                            <Link
+                              href={normalizeUrl(website.url)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(website.url)}
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
                   </tbody>
                 </table>
               </TableContainer>
@@ -432,7 +427,7 @@ const InputContentRenderer: React.FC<IProps> = ({
           <>
             {parsedWebsites
               .map(
-                (website: any) =>
+                (website: { title: string; url: string }) =>
                   `${website.title}: ${normalizeUrl(website.url)}`,
               )
               .join(', ')}
