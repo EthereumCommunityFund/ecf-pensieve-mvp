@@ -18,7 +18,9 @@
     "sync:snap": "dotenv -e .env tsx scripts/syncProjectSnap.ts",
     "fix:item-weights": "dotenv -e .env tsx scripts/fixItemWeights.ts",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:integration": "vitest run",
+    "test:integration:watch": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",

@@ -1,32 +1,26 @@
 import path from 'node:path';
 
-import dotenv from 'dotenv';
 import { defineConfig } from 'vitest/config';
-
-dotenv.config({ path: path.resolve(__dirname, '.env.local.test') });
 
 export default defineConfig({
   test: {
+    name: 'integration',
     include: ['tests/integration/**/*.test.ts'],
-    exclude: ['stories/**/*', '.storybook/**/*'],
     environment: 'node',
     testTimeout: 30000,
     hookTimeout: 30000,
     teardownTimeout: 30000,
-    globalSetup: ['tests/integration/setup.ts'],
     pool: 'forks',
     poolOptions: {
       forks: {
         singleFork: true,
       },
     },
+    workspace: undefined,
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
     },
-  },
-  esbuild: {
-    target: 'node20',
   },
 });
