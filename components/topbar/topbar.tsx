@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 import UserProfileSection from '../auth/UserProfileSection';
+import { SearchModal, StaticSearchBox } from '../biz/search';
 import { NotificationDropdown } from '../notification/NotificationDropdown';
 
 import MobileMenu from './mobileMenu';
@@ -45,12 +46,6 @@ export function Topbar() {
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();
         setIsSearchOpen(true);
-        const searchInput = document.querySelector(
-          'input[type="text"]',
-        ) as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
       }
     };
 
@@ -78,6 +73,8 @@ export function Topbar() {
               />
             </Link>
 
+            <StaticSearchBox onClick={() => setIsSearchOpen(true)} />
+
             <Navigation />
           </div>
 
@@ -102,10 +99,16 @@ export function Topbar() {
         </Link>
 
         <div className="flex items-center justify-end gap-[10px]">
+          <StaticSearchBox onClick={() => setIsSearchOpen(true)} />
           {isAuthenticated && <NotificationDropdown />}
           <UserProfileSection />
         </div>
       </div>
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </header>
   );
 }

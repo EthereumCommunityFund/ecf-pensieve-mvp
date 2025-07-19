@@ -5,6 +5,7 @@ import {
   index,
   jsonb,
   pgTable,
+  text,
   timestamp,
 } from 'drizzle-orm/pg-core';
 
@@ -21,6 +22,7 @@ export const projectSnaps = pgTable(
       .notNull()
       .references(() => projects.id),
     items: jsonb('items').notNull(),
+    name: text('name'),
   },
   (table) => {
     return {
