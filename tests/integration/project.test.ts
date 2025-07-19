@@ -4,7 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { ESSENTIAL_ITEM_WEIGHT_AMOUNT, REWARD_PERCENT } from '@/lib/constants';
 import { db } from '@/lib/db';
-import { invitationCodes, profiles } from '@/lib/db/schema';
+import { invitationCodes, profiles, voteRecords } from '@/lib/db/schema';
 import { notifications } from '@/lib/db/schema/notifications';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authRouter } from '@/lib/trpc/routers/auth';
@@ -208,6 +208,52 @@ describe('Project Integration Tests', () => {
 
       expect(project1Notification).toBeDefined();
       expect(project2Notification).toBeDefined();
+    });
+
+    it('should automatically vote for all project proposal items', async () => {
+      const ctx = { db, supabase, user: { id: testUserId } };
+      const caller = projectRouter.createCaller(ctx);
+
+      const initialProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.address, testAddress),
+      });
+      const initialWeight = initialProfile?.weight || 0;
+
+      const projectData = createValidProjectData();
+      const project = await caller.createProject(projectData);
+
+      const expectedWeightIncrease =
+        ESSENTIAL_ITEM_WEIGHT_AMOUNT * REWARD_PERCENT;
+      const finalWeight = initialWeight + expectedWeightIncrease;
+
+      const projectDetails = await caller.getProjectById({ id: project.id });
+      const proposal = projectDetails.proposals[0];
+      const proposalItems = proposal.items as Array<{
+        key: string;
+        value: any;
+      }>;
+
+      const userVoteRecords = await db.query.voteRecords.findMany({
+        where: eq(voteRecords.proposalId, proposal.id),
+        with: { creator: true },
+      });
+
+      const userVotes = userVoteRecords.filter(
+        (vote) => vote.creator.userId === testUserId,
+      );
+
+      expect(userVotes.length).toBe(proposalItems.length);
+
+      for (const vote of userVotes) {
+        expect(vote.weight).toBe(finalWeight);
+        expect(vote.projectId).toBe(project.id);
+        expect(vote.itemProposalId).toBeNull();
+
+        const correspondingItem = proposalItems.find(
+          (item) => item.key === vote.key,
+        );
+        expect(correspondingItem).toBeDefined();
+      }
     });
   });
 
