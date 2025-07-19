@@ -7,7 +7,6 @@ import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import { trpc } from '@/lib/trpc/client';
 
 import SearchBox from './SearchBox';
-import SearchHistory from './SearchHistory';
 import SearchResults from './SearchResults';
 
 interface SearchModalProps {
@@ -104,13 +103,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             autoFocus
           />
           <div className="max-h-[500px] overflow-y-auto border-t border-black/10">
-            {!debouncedQuery ? (
-              <SearchHistory
-                history={searchHistory}
-                onHistoryClick={handleHistoryClick}
-                onClearHistory={handleClearHistory}
-              />
-            ) : (
+            {debouncedQuery && (
               <SearchResults
                 results={searchResults}
                 isLoading={isLoading || isFetching}
