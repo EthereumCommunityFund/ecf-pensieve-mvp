@@ -22,7 +22,7 @@ describe('Authentication Integration Tests', () => {
       .insert(invitationCodes)
       .values({
         code: 'test-invite-' + Date.now(),
-        maxUses: 5,
+        maxUses: 10,
         currentUses: 0,
       })
       .returning();
@@ -71,6 +71,29 @@ describe('Authentication Integration Tests', () => {
 
       expect(firstResult.nonce).not.toBe(secondResult.nonce);
     });
+
+    it('should set expiration time to 10 minutes from now', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = authRouter.createCaller(ctx);
+
+      const beforeTime = Date.now();
+      await caller.generateNonce({ address: testAddress });
+      const afterTime = Date.now();
+
+      const nonceRecord = await db.query.loginNonces.findFirst({
+        where: eq(loginNonces.address, testAddress),
+      });
+
+      expect(nonceRecord).toBeDefined();
+      expect(nonceRecord!.expiresAt).toBeInstanceOf(Date);
+
+      const expiresAtMs = nonceRecord!.expiresAt.getTime();
+      const expectedMinExpiry = beforeTime + 10 * 60 * 1000;
+      const expectedMaxExpiry = afterTime + 10 * 60 * 1000;
+
+      expect(expiresAtMs).toBeGreaterThanOrEqual(expectedMinExpiry);
+      expect(expiresAtMs).toBeLessThanOrEqual(expectedMaxExpiry);
+    });
   });
 
   describe('checkRegistration', () => {
@@ -114,6 +137,7 @@ describe('Authentication Integration Tests', () => {
       expect(profile).toBeDefined();
       expect(profile!.name).toBe('TestUser');
       expect(profile!.address).toBe(testAddress);
+      expect(profile!.weight).toBe(0);
     });
 
     it('should fail registration without invite code', async () => {
@@ -169,6 +193,113 @@ describe('Authentication Integration Tests', () => {
           inviteCode: 'invalid-code',
         }),
       ).rejects.toThrow('Invalid invite code');
+    });
+  });
+
+  describe('verify - Expired Nonce Validation', () => {
+    it('should fail verification with expired nonce', async () => {
+      const expiredWallet = ethers.Wallet.createRandom();
+      const expiredAddress = expiredWallet.address.toLowerCase();
+
+      const ctx = { db, supabase, user: null };
+      const caller = authRouter.createCaller(ctx);
+
+      const nonceResult = await caller.generateNonce({
+        address: expiredAddress,
+      });
+
+      await db
+        .update(loginNonces)
+        .set({ expiresAt: new Date(Date.now() - 10000) })
+        .where(eq(loginNonces.address, expiredAddress));
+
+      const nonceRecord = await db.query.loginNonces.findFirst({
+        where: eq(loginNonces.address, expiredAddress),
+      });
+      expect(nonceRecord).toBeDefined();
+      expect(new Date(nonceRecord!.expiresAt) < new Date()).toBe(true);
+
+      const message = `Please sign this message to authenticate.\n\nNonce: ${nonceResult.nonce}`;
+      const signature = await expiredWallet.signMessage(message);
+
+      await expect(
+        caller.verify({
+          address: expiredAddress,
+          signature,
+          message,
+        }),
+      ).rejects.toThrow('Nonce has expired, please try again.');
+    });
+  });
+
+  describe('verify - Invalid Nonce Message', () => {
+    it('should fail verification when message does not contain nonce', async () => {
+      const messageWallet = ethers.Wallet.createRandom();
+      const messageAddress = messageWallet.address.toLowerCase();
+
+      const ctx = { db, supabase, user: null };
+      const caller = authRouter.createCaller(ctx);
+
+      await caller.generateNonce({ address: messageAddress });
+
+      const tamperedMessage = `Please sign this message to authenticate.\n\nNonce: different-nonce`;
+      const signature = await messageWallet.signMessage(tamperedMessage);
+
+      await expect(
+        caller.verify({
+          address: messageAddress,
+          signature,
+          message: tamperedMessage,
+        }),
+      ).rejects.toThrow('Invalid nonce in signature message.');
+    });
+  });
+
+  describe('verify - Missing Nonce Data', () => {
+    it('should fail verification when no nonce exists for address', async () => {
+      const noNonceWallet = ethers.Wallet.createRandom();
+      const noNonceAddress = noNonceWallet.address.toLowerCase();
+
+      const ctx = { db, supabase, user: null };
+      const caller = authRouter.createCaller(ctx);
+
+      const fakeMessage = `Please sign this message to authenticate.\n\nNonce: fake-nonce-123`;
+      const signature = await noNonceWallet.signMessage(fakeMessage);
+
+      await expect(
+        caller.verify({
+          address: noNonceAddress,
+          signature,
+          message: fakeMessage,
+        }),
+      ).rejects.toThrow('Invalid or expired nonce, please try again.');
+    });
+
+    it('should fail verification when nonce is manually deleted', async () => {
+      const deletedWallet = ethers.Wallet.createRandom();
+      const deletedAddress = deletedWallet.address.toLowerCase();
+
+      const ctx = { db, supabase, user: null };
+      const caller = authRouter.createCaller(ctx);
+
+      const nonceResult = await caller.generateNonce({
+        address: deletedAddress,
+      });
+
+      await db
+        .delete(loginNonces)
+        .where(eq(loginNonces.address, deletedAddress));
+
+      const message = `Please sign this message to authenticate.\n\nNonce: ${nonceResult.nonce}`;
+      const signature = await deletedWallet.signMessage(message);
+
+      await expect(
+        caller.verify({
+          address: deletedAddress,
+          signature,
+          message,
+        }),
+      ).rejects.toThrow('Invalid or expired nonce, please try again.');
     });
   });
 

@@ -20,7 +20,9 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test:integration": "vitest run",
-    "test:integration:watch": "vitest"
+    "test:integration:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:open": "vitest run --coverage && open coverage/index.html"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",

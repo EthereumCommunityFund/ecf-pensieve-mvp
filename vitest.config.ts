@@ -20,6 +20,17 @@ export default defineConfig({
         singleFork: true,
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json'],
+      include: [
+        'lib/trpc/routers/**/*.ts',
+        'lib/utils.ts',
+        'lib/services/**/*.ts',
+        'lib/utils/**/*.ts',
+      ],
+      exclude: ['**/*.test.ts', '**/*.spec.ts'],
+    },
   },
   resolve: {
     alias: {
