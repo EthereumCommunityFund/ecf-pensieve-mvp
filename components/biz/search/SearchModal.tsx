@@ -23,11 +23,13 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const {
     data: searchResults,
     isLoading,
+    isFetching,
+    isFetched,
     error,
   } = trpc.project.searchProjects.useQuery(
     {
       query: debouncedQuery,
-      limit: 20,
+      limit: 50,
     },
     {
       enabled: debouncedQuery.length > 0,
@@ -85,32 +87,39 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       placement="center"
       className="mx-4"
       hideCloseButton
+      classNames={{
+        base: 'p-0',
+        body: 'p-0 gap-0',
+      }}
     >
       <ModalContent className="w-[510px] bg-white shadow-lg">
         {/* <ModalHeader className="border-b border-gray-200 p-4"></ModalHeader> */}
-        <ModalBody className="max-h-[500px] overflow-y-auto p-0">
+        <ModalBody>
           <SearchBox
             value={searchQuery}
             onChange={handleSearch}
             onSubmit={handleSearchSubmit}
             placeholder="Search projects..."
+            onClose={onClose}
             autoFocus
           />
-          {!searchQuery ? (
-            <SearchHistory
-              history={searchHistory}
-              onHistoryClick={handleHistoryClick}
-              onClearHistory={handleClearHistory}
-            />
-          ) : (
-            <SearchResults
-              results={searchResults}
-              isLoading={isLoading}
-              error={error}
-              query={searchQuery}
-              onClose={onClose}
-            />
-          )}
+          <div className="max-h-[500px] overflow-y-auto border-t border-black/10">
+            {!debouncedQuery ? (
+              <SearchHistory
+                history={searchHistory}
+                onHistoryClick={handleHistoryClick}
+                onClearHistory={handleClearHistory}
+              />
+            ) : (
+              <SearchResults
+                results={searchResults}
+                isLoading={isLoading || isFetching}
+                error={error}
+                query={debouncedQuery}
+                onClose={onClose}
+              />
+            )}
+          </div>
         </ModalBody>
       </ModalContent>
     </Modal>

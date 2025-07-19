@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import SearchEmptyState from './SearchEmptyState';
 import SearchResultItem from './SearchResultItem';
 import SearchResultSkeleton from './SearchResultSkeleton';
@@ -30,6 +32,8 @@ export default function SearchResults({
   query,
   onClose,
 }: SearchResultsProps) {
+  const router = useRouter();
+
   if (isLoading) {
     return (
       <div className="space-y-4 px-4 py-3">
@@ -66,15 +70,15 @@ export default function SearchResults({
       <SearchEmptyState
         query={query}
         onProposeClick={(query) => {
-          // TODO: Implement project proposal logic
-          console.log('Propose project:', query);
+          onClose();
+          router.push(`/project/create`);
         }}
       />
     );
   }
 
   return (
-    <div className="space-y-4 py-3">
+    <div className="space-y-4 p-[14px] py-3">
       {results.published.items.length > 0 && (
         <div>
           <div className="mb-2">

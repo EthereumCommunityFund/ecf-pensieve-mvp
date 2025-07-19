@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@heroui/react';
-import { Clock, X } from 'lucide-react';
+import { Clock, X } from '@phosphor-icons/react';
 
 interface SearchHistoryProps {
   history: string[];

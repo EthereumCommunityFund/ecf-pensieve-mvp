@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@heroui/react';
-import { Plus } from 'lucide-react';
+import { Plus } from '@phosphor-icons/react';
 
 interface SearchEmptyStateProps {
   query: string;
@@ -14,17 +14,10 @@ export default function SearchEmptyState({
 }: SearchEmptyStateProps) {
   return (
     <div className="space-y-2.5 p-4">
-      {/* Search Input Display */}
-      {/* <div className="rounded-lg bg-gray-100 px-2.5 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-black">{query}</span>
-        </div>
-      </div> */}
-
       {/* Empty State Message */}
       <div className="flex items-stretch gap-3.5">
         <div className="flex-1">
-          <div className="rounded-lg bg-white p-4">
+          <div className="rounded-lg bg-white">
             <p className="text-sm text-black opacity-70">
               This project doesn't exist on Pensieve.
             </p>
@@ -38,7 +31,7 @@ export default function SearchEmptyState({
         startContent={<Plus className="size-6" strokeWidth={1.5} />}
         onPress={() => onProposeClick(query)}
       >
-        Propose {query}
+        Propose a Project
       </Button>
     </div>
   );

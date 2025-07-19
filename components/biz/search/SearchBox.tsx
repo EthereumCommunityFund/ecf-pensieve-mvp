@@ -1,13 +1,16 @@
 'use client';
 
 import { Input } from '@heroui/react';
-import { X } from 'lucide-react';
+import { X } from '@phosphor-icons/react';
 import { useEffect, useRef } from 'react';
+
+import { Button } from '@/components/base';
 
 interface SearchBoxProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: (value: string) => void;
+  onClose?: () => void;
   placeholder?: string;
   autoFocus?: boolean;
 }
@@ -16,6 +19,7 @@ export default function SearchBox({
   value,
   onChange,
   onSubmit,
+  onClose,
   placeholder = 'Search...',
   autoFocus = false,
 }: SearchBoxProps) {
@@ -30,6 +34,8 @@ export default function SearchBox({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       onSubmit(value);
+    } else if (e.key === 'Escape') {
+      onClose?.();
     }
   };
 
@@ -38,6 +44,10 @@ export default function SearchBox({
     if (inputRef.current) {
       inputRef.current.focus();
     }
+  };
+
+  const handleEscape = () => {
+    onClose?.();
   };
 
   return (
@@ -49,23 +59,31 @@ export default function SearchBox({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         endContent={
-          value && (
-            <button
-              onClick={handleClear}
-              className="flex size-6 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+          <div className="flex items-center gap-2">
+            {value && (
+              <button
+                onClick={handleClear}
+                className="flex size-6 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+              >
+                <X className="size-4 text-gray-400" />
+              </button>
+            )}
+            <Button
+              onClick={handleEscape}
+              className="h-[22px] min-w-0 rounded-[5px] border-none bg-[#F5F5F5] px-[8px] text-[12px] text-black/40"
             >
-              <X className="size-4 text-gray-400" />
-            </button>
-          )
+              Esc
+            </Button>
+          </div>
         }
-        className="w-full"
-        classNames={{
-          inputWrapper:
-            'bg-gray-100 border-gray-200 rounded-lg px-3 py-2 h-auto focus-within:border-gray-200 focus-within:bg-gray-100 data-[focus=true]:border-gray-200 data-[hover=true]:border-gray-200',
-          input: 'text-sm',
-        }}
-        variant="bordered"
+        variant="flat"
         size="lg"
+        classNames={{
+          base: 'bg-transparent border-none',
+          inputWrapper:
+            'bg-transparent shadow-none group-data-[focus-visible=true]:ring-0 group-data-[focus-visible=true]:ring-offset-0 group-data-[hover=true]:bg-transparent group-data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent data-[focus=true]:bg-transparent',
+          input: 'bg-transparent',
+        }}
       />
     </div>
   );
