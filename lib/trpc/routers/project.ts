@@ -165,6 +165,7 @@ export const projectRouter = router({
           limit: z.number().min(1).max(100).default(50),
           cursor: z.number().optional(),
           isPublished: z.boolean().optional().default(false),
+          categories: z.array(z.string()).optional(),
         })
         .optional(),
     )
@@ -172,11 +173,19 @@ export const projectRouter = router({
       const limit = input?.limit ?? 50;
       const cursor = input?.cursor;
       const isPublished = input?.isPublished ?? false;
+      const categories = input?.categories;
 
-      const baseCondition = eq(projects.isPublished, isPublished);
-      const whereCondition = cursor
-        ? and(baseCondition, lt(projects.id, cursor))
-        : baseCondition;
+      const conditions = [eq(projects.isPublished, isPublished)];
+
+      if (categories && categories.length > 0) {
+        conditions.push(sql`${projects.categories} && ${categories}::text[]`);
+      }
+
+      if (cursor) {
+        conditions.push(lt(projects.id, cursor));
+      }
+
+      const whereCondition = and(...conditions);
 
       const queryOptions: any = {
         creator: true,
@@ -207,7 +216,7 @@ export const projectRouter = router({
           ctx.db
             .select({ count: sql`count(*)::int` })
             .from(projects)
-            .where(eq(projects.isPublished, isPublished)),
+            .where(whereCondition),
         ]);
 
         const hasNextPage = results.length > limit;
@@ -223,14 +232,15 @@ export const projectRouter = router({
       };
 
       if (isPublished && !cursor) {
-        const getCachedProjects = nextCache(
-          getProjects,
-          [`projects-published-${limit}-first-page`],
-          {
-            revalidate: 3600,
-            tags: [CACHE_TAGS.PROJECTS],
-          },
-        );
+        const cacheKey =
+          categories && categories.length > 0
+            ? `projects-published-${limit}-categories-${categories.sort().join('-')}-first-page`
+            : `projects-published-${limit}-first-page`;
+
+        const getCachedProjects = nextCache(getProjects, [cacheKey], {
+          revalidate: 3600,
+          tags: [CACHE_TAGS.PROJECTS],
+        });
         return getCachedProjects();
       }
 

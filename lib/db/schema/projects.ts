@@ -66,6 +66,10 @@ export const projects = pgTable(
         table.id.desc(),
       ),
       createdAtIdx: index('projects_created_at_idx').on(table.createdAt.desc()),
+      categoriesGinIdx: index('projects_categories_gin_idx').using(
+        'gin',
+        table.categories,
+      ),
     };
   },
 );
