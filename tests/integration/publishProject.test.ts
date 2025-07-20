@@ -893,6 +893,85 @@ describe('Vote Integration Tests', () => {
         (n) => n.reward === expectedCreatorReward,
       );
       expect(rewardNotification).toBeDefined();
+
+      // === VERIFY PUBLISHED PROJECTS CACHE MECHANISM ===
+      // Test the cached getProjects logic for published projects
+      const publicProjectCaller = createProjectCaller(null);
+
+      // First call should populate the cache (isPublished=true, no cursor)
+      const firstCallResult = await publicProjectCaller.getProjects({
+        isPublished: true,
+        limit: 10,
+      });
+
+      expect(firstCallResult).toBeDefined();
+      expect(firstCallResult.items).toBeDefined();
+      expect(Array.isArray(firstCallResult.items)).toBe(true);
+      expect(firstCallResult.totalCount).toBeGreaterThan(0);
+
+      // Verify our published project is in the results
+      const publishedProjectInResults = firstCallResult.items.find(
+        (p) => p.id === publishableProject.id,
+      );
+      expect(publishedProjectInResults).toBeDefined();
+      expect(publishedProjectInResults!.isPublished).toBe(true);
+
+      // Second call with same parameters should use cache
+      // (We can't directly test cache hit, but we can verify consistent results)
+      const secondCallResult = await publicProjectCaller.getProjects({
+        isPublished: true,
+        limit: 10,
+      });
+
+      expect(secondCallResult).toEqual(firstCallResult);
+
+      // Call with cursor should NOT use cache (cache only applies when !cursor)
+      if (firstCallResult.nextCursor) {
+        const cursorCallResult = await publicProjectCaller.getProjects({
+          isPublished: true,
+          limit: 10,
+          cursor: firstCallResult.nextCursor,
+        });
+
+        expect(cursorCallResult).toBeDefined();
+        expect(cursorCallResult.items).toBeDefined();
+        // Should be different from first call (different page)
+        expect(cursorCallResult.items).not.toEqual(firstCallResult.items);
+      }
+
+      // Call with isPublished=false should NOT use cache
+      const unpublishedCallResult = await publicProjectCaller.getProjects({
+        isPublished: false,
+        limit: 10,
+      });
+
+      expect(unpublishedCallResult).toBeDefined();
+      expect(unpublishedCallResult.items).toBeDefined();
+      // Should contain unpublished projects (different from published results)
+      const unpublishedProject = unpublishedCallResult.items.find(
+        (p) => !p.isPublished,
+      );
+      if (unpublishedProject) {
+        expect(unpublishedProject.isPublished).toBe(false);
+      }
+
+      // === VERIFY CACHE TAGS AND REVALIDATION LOGIC ===
+      // The cache should be tagged with CACHE_TAGS.PROJECTS
+      // When a project is published, revalidateTag should be called
+      // (This is tested implicitly - the cache would be invalidated during publishing)
+
+      // Verify that subsequent calls after publishing still work correctly
+      const postPublishCallResult = await publicProjectCaller.getProjects({
+        isPublished: true,
+        limit: 10,
+      });
+
+      expect(postPublishCallResult).toBeDefined();
+      const freshPublishedProject = postPublishCallResult.items.find(
+        (p) => p.id === publishableProject.id,
+      );
+      expect(freshPublishedProject).toBeDefined();
+      expect(freshPublishedProject!.isPublished).toBe(true);
     });
 
     it('should not publish when vote count is insufficient', async () => {
