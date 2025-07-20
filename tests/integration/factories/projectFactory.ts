@@ -18,17 +18,17 @@ export interface ValidProjectData {
     title: string;
   }>;
   tags: string[];
-  appUrl?: string;
-  dateLaunch?: Date;
-  fundingStatus?: string;
-  codeRepo?: string;
-  tokenContract?: string;
-  whitePaper?: string;
-  dappSmartContracts?: string;
-  refs?: Array<{
+  appUrl: string | null;
+  dateLaunch: Date | null;
+  fundingStatus: string | null;
+  codeRepo: string | null;
+  tokenContract: string | null;
+  whitePaper: string | null;
+  dappSmartContracts: string | null;
+  refs: Array<{
     key: string;
     value: string;
-  }>;
+  }> | null;
 }
 
 export const createValidProjectData = (
@@ -60,6 +60,14 @@ export const createValidProjectData = (
       },
     ],
     tags: ['blockchain', 'test'],
+    appUrl: null,
+    dateLaunch: null,
+    fundingStatus: null,
+    codeRepo: null,
+    tokenContract: null,
+    whitePaper: null,
+    dappSmartContracts: null,
+    refs: [],
     ...overrides,
   };
 };

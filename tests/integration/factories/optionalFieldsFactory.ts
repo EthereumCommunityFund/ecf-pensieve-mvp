@@ -44,6 +44,14 @@ export const createProjectWithoutOptionalFields = (): ValidProjectData => {
     publicGoods: baseData.publicGoods,
     founders: baseData.founders,
     tags: baseData.tags,
+    appUrl: null,
+    dateLaunch: null,
+    fundingStatus: null,
+    codeRepo: null,
+    tokenContract: null,
+    whitePaper: null,
+    dappSmartContracts: null,
+    refs: null,
   };
 };
 
