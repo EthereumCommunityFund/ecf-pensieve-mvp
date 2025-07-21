@@ -39,6 +39,7 @@ export { default as SablierIcon } from './Sablier';
 export { default as SealCheckIcon } from './SealCheck';
 export { default as SearchIcon } from './Search';
 export { default as ShareIcon } from './Share';
+export { default as ShareLinkIcon } from './ShareLink';
 export { default as ShieldStarIcon } from './ShieldStar';
 export { default as ShowMetricsIcon } from './ShowMetrics';
 export { default as TableIcon } from './Table';
