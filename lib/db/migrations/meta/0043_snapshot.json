@@ -1,6 +1,6 @@
 {
-  "id": "48fc8d22-b4ba-4e88-9414-133f2abde399",
-  "prevId": "61e60cf6-0913-49f7-8471-4fe539af8371",
+  "id": "d5d6bcc8-e3f3-4d55-93a1-822b2126e22c",
+  "prevId": "48fc8d22-b4ba-4e88-9414-133f2abde399",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1356,6 +1356,21 @@
               "expression": "created_at",
               "isExpression": false,
               "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "project_snaps_categories_idx": {
+          "name": "project_snaps_categories_idx",
+          "columns": [
+            {
+              "expression": "categories",
+              "isExpression": false,
+              "asc": true,
               "nulls": "last"
             }
           ],

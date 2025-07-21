@@ -48,4 +48,5 @@ export const ESSENTIAL_ITEM_QUORUM_SUM = ESSENTIAL_ITEM_LIST.reduce(
 export const CACHE_TAGS = {
   PROJECTS: 'projects-tag',
   RANKS: 'ranks-tag',
+  CATEGORIES: 'categories-tag',
 };

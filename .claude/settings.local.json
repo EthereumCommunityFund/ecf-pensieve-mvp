@@ -23,7 +23,9 @@
       "Bash(mv:*)",
       "Bash(npm run build:*)",
       "mcp__figma-mcp__get_figma_data",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npx tsx:*)",
+      "Bash(gh pr diff:*)"
     ],
     "deny": []
   }

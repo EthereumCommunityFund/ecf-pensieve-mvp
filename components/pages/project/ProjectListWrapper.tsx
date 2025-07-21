@@ -13,6 +13,9 @@ interface ProjectListWrapperProps {
   emptyMessage: string;
   onLoadMore: () => void;
   onSuccess: () => void;
+  showCreator?: boolean;
+  showTransparentScore?: boolean;
+  showUpvote?: boolean;
 }
 
 export const ProjectListWrapper = ({
@@ -23,6 +26,9 @@ export const ProjectListWrapper = ({
   emptyMessage,
   onLoadMore,
   onSuccess,
+  showCreator = true,
+  showUpvote = true,
+  showTransparentScore = false,
 }: ProjectListWrapperProps) => {
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
@@ -33,7 +39,13 @@ export const ProjectListWrapper = ({
     return (
       <div className="flex-1 pb-2.5">
         {Array.from({ length: 10 }).map((_, index) => (
-          <ProjectCardSkeleton key={index} showBorder={true} />
+          <ProjectCardSkeleton
+            key={index}
+            showBorder={true}
+            showCreator={showCreator}
+            showTransparentScore={showTransparentScore}
+            showUpvote={showUpvote}
+          />
         ))}
       </div>
     );
@@ -49,13 +61,17 @@ export const ProjectListWrapper = ({
 
   return (
     <div className="flex-1 pb-2.5">
-      {projectList.map((project) => {
+      {projectList.map((project, index) => {
         const projectLikeRecord = getProjectLikeRecord(project.id);
+        const isLastItem = index === projectList.length - 1;
         return (
           <ProjectCard
             key={project.id}
             project={project}
-            showBorder={true}
+            showBorder={!isLastItem}
+            showCreator={showCreator}
+            showUpvote={showUpvote}
+            showTransparentScore={showTransparentScore}
             onUpvote={handleUpvote}
             userLikeRecord={
               projectLikeRecord
@@ -69,7 +85,14 @@ export const ProjectListWrapper = ({
         );
       })}
 
-      {isFetchingNextPage && <ProjectCardSkeleton showBorder={true} />}
+      {isFetchingNextPage && (
+        <ProjectCardSkeleton
+          showBorder={true}
+          showCreator={showCreator}
+          showTransparentScore={showTransparentScore}
+          showUpvote={showUpvote}
+        />
+      )}
 
       {hasNextPage && (
         <div className="flex flex-1 justify-center py-4">
