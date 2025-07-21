@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
 import ECFTypography from '@/components/base/typography';
-import TransparentScore from '@/components/biz/project/TransparentScroe';
+import TransparentScore from '@/components/biz/project/TransparentScore';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
 import { IEssentialItemKey } from '@/types/item';
@@ -217,7 +217,9 @@ const ProjectCard = ({
 
               {showTransparentScore && (
                 <div className="tablet:hidden mobile:hidden mt-[10px]">
-                  <TransparentScore displayedCount={displayedCount} />
+                  <TransparentScore
+                    itemsTopWeight={project?.itemsTopWeight || {}}
+                  />
                 </div>
               )}
             </div>
@@ -262,7 +264,7 @@ const ProjectCard = ({
 
         {showTransparentScore && (
           <div className="tablet:block mobile:block mt-[10px] hidden">
-            <TransparentScore displayedCount={displayedCount} />
+            <TransparentScore itemsTopWeight={project?.itemsTopWeight || {}} />
           </div>
         )}
       </div>
