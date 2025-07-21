@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { trpc } from '@/lib/trpc/client';
@@ -17,25 +17,18 @@ interface ISectionProps {
   buttonText?: string;
   onClick?: () => void;
   children?: React.ReactNode;
-  updatedAt?: Date | string | null;
 }
 
 const SectionHeader = (props: ISectionProps) => {
   return (
-    <div className="tablet:items-start mobile:items-start flex flex-1 items-center justify-between gap-[10px] px-[10px] py-[4px]">
-      <div className="">
+    <div className="mobile:flex-col mobile:items-start flex flex-1 items-center justify-between gap-[10px] px-[10px] py-[4px]">
+      <div>
         <p className="tablet:text-[18px] mobile:text-[18px] text-[24px] font-[700] leading-[1.4] text-black/80">
           {props.title}
         </p>
         {props.description && (
           <p className="mt-[5px] text-[14px] font-[400] leading-[19px] text-black/60">
             {props.description}
-          </p>
-        )}
-        {props.updatedAt && (
-          <p className="mt-[5px] text-[10px] font-[400] leading-[14px] text-black/60">
-            Updated:{' '}
-            {formatDateWithTimeGMT(props.updatedAt, 'DD-MM-YYYY | HH:mm')} GMT
           </p>
         )}
       </div>
@@ -86,6 +79,15 @@ const HomeList = () => {
     null as Date | null,
   );
 
+  const displayUpdatedAtOfTransparent = useMemo(() => {
+    return transparentProjectsUpdatedAt
+      ? `Updated: ${formatDateWithTimeGMT(
+          transparentProjectsUpdatedAt,
+          'DD-MM-YYYY | HH:mm',
+        )} GMT`
+      : '';
+  }, [transparentProjectsUpdatedAt]);
+
   // Get the latest updatedAt time from all projects for community-trusted projects
   const communityTrustedUpdatedAt = ranksData?.bySupport?.reduce(
     (latest, project) => {
@@ -98,6 +100,15 @@ const HomeList = () => {
     null as Date | null,
   );
 
+  const displayUpdatedAtOfTrust = useMemo(() => {
+    return communityTrustedUpdatedAt
+      ? `Updated: ${formatDateWithTimeGMT(
+          communityTrustedUpdatedAt,
+          'DD-MM-YYYY | HH:mm',
+        )} GMT`
+      : '';
+  }, [communityTrustedUpdatedAt]);
+
   const handleViewTopTransparentProjects = useCallback(() => {
     router.push('/projects?type=transparent');
   }, [router]);
@@ -107,25 +118,15 @@ const HomeList = () => {
   }, [router]);
 
   return (
-    <div className="tablet:gap-[10px] mt-5 flex flex-col gap-[20px]">
-      <div className="mobile:hidden">
-        <div className="tablet:gap-[10px] flex items-start justify-between gap-[20px]">
+    <div className="tablet:gap-[10px] mt-5 flex flex-col gap-[10px]">
+      <div className="mobile:flex-col flex gap-[20px]">
+        <div className="flex-1 rounded-[10px] border border-black/10 p-[10px]">
           <SectionHeader
             title="Top Transparent Projects"
             description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
             buttonText="View All Top"
             onClick={handleViewTopTransparentProjects}
-            updatedAt={transparentProjectsUpdatedAt}
           />
-          <SectionHeader
-            title={`Top Community-trusted`}
-            description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
-            buttonText="View All Top"
-            onClick={handleViewTopCommunityTrustedProjects}
-            updatedAt={communityTrustedUpdatedAt}
-          />
-        </div>
-        <div className="tablet:gap-[10px] flex items-start justify-between gap-[20px]">
           <ProjectListWrapper
             isLoading={isLoading}
             projectList={byGenesisProjects as IProject[]}
@@ -133,6 +134,19 @@ const HomeList = () => {
             isFetchingNextPage={false}
             emptyMessage="No transparent projects found"
             onSuccess={refetchProjects}
+            showUpvote={false}
+            showTransparentScore={true}
+          />
+          <p className="text-center text-[10px] font-[400] leading-[14px] text-black/60">
+            {displayUpdatedAtOfTransparent}
+          </p>
+        </div>
+        <div className="flex-1 rounded-[10px] border border-black/10 p-[10px]">
+          <SectionHeader
+            title={`Top Community-trusted`}
+            description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
+            buttonText="View All Top"
+            onClick={handleViewTopCommunityTrustedProjects}
           />
           <ProjectListWrapper
             isLoading={isLoading}
@@ -142,54 +156,32 @@ const HomeList = () => {
             emptyMessage="No community-trusted projects found"
             onSuccess={refetchProjects}
           />
+          <p className="text-center text-[10px] font-[400] leading-[14px] text-black/60">
+            {displayUpdatedAtOfTrust}
+          </p>
         </div>
       </div>
 
-      <div className="mobile:flex hidden flex-col gap-[10px]">
-        <div className="">
-          <SectionHeader
-            title="Top Transparent Projects"
-            description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
-            buttonText="View All Top"
-            onClick={handleViewTopTransparentProjects}
-            updatedAt={transparentProjectsUpdatedAt}
-          />
-          <ProjectListWrapper
-            isLoading={isLoading}
-            projectList={byGenesisProjects as IProject[]}
-            onLoadMore={() => {}}
-            isFetchingNextPage={false}
-            emptyMessage="No transparent projects found"
-            onSuccess={refetchProjects}
-          />
-        </div>
-        <div className="">
-          <SectionHeader
-            title={`Top Community-trusted`}
-            description={`Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`}
-            buttonText="View All Top"
-            onClick={handleViewTopCommunityTrustedProjects}
-            updatedAt={communityTrustedUpdatedAt}
-          />
-          <ProjectListWrapper
-            isLoading={isLoading}
-            projectList={bySupportProjects as IProject[]}
-            onLoadMore={() => {}}
-            isFetchingNextPage={false}
-            emptyMessage="No community-trusted projects found"
-            onSuccess={refetchProjects}
-          />
-        </div>
+      <div className="flex-1 rounded-[10px] border border-black/10 py-[6px]">
+        <SectionHeader
+          title="Top Secure Projects"
+          description="LIST COMING SOON"
+        />
       </div>
 
-      <SectionHeader
-        title="Top Accountable Projects"
-        description="LIST COMING SOON"
-      />
-      <SectionHeader
-        title="Top Privacy Projects"
-        description="LIST COMING SOON"
-      />
+      <div className="flex-1 rounded-[10px] border border-black/10 py-[6px]">
+        <SectionHeader
+          title="Top Accountable Projects"
+          description="LIST COMING SOON"
+        />
+      </div>
+
+      <div className="flex-1 rounded-[10px] border border-black/10 py-[6px]">
+        <SectionHeader
+          title="Top Privacy Projects"
+          description="LIST COMING SOON"
+        />
+      </div>
     </div>
   );
 };

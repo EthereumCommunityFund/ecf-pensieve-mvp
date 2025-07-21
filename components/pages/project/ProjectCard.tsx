@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
 import ECFTypography from '@/components/base/typography';
+import { TotalItemCount } from '@/constants/tableConfig';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
 import { IEssentialItemKey } from '@/types/item';
@@ -53,6 +54,8 @@ interface IProjectCardProps {
   project: IProject;
   showBorder?: boolean;
   weight?: number;
+  showTransparentScore?: boolean;
+  showUpvote?: boolean;
   onUpvote?: (projectId: number) => void;
   userLikeRecord?: {
     id: number;
@@ -64,6 +67,8 @@ const ProjectCard = ({
   project,
   showBorder = false,
   weight,
+  showTransparentScore = false,
+  showUpvote = true,
   onUpvote,
   userLikeRecord,
 }: IProjectCardProps) => {
@@ -81,6 +86,14 @@ const ProjectCard = ({
     }
     return {} as Record<IEssentialItemKey, any>;
   }, [project]);
+
+  const displayedItemCount = useMemo(() => {
+    return project?.projectSnap?.items.length || 20;
+  }, [project]);
+
+  const itemLeftCount = useMemo(() => {
+    return TotalItemCount - displayedItemCount;
+  }, [displayedItemCount]);
 
   const getItemValue = useCallback(
     (itemKey: IEssentialItemKey) => {
@@ -176,39 +189,41 @@ const ProjectCard = ({
           </div>
         </Link>
 
-        <div className="flex flex-col items-center justify-center gap-[4px] text-center">
-          <Button
-            isIconOnly
-            className={cn(
-              'rounded-[8px] size-[40px]',
-              userLikeRecord
-                ? 'bg-[#64C0A5] hover:bg-[#75c2ab]'
-                : 'bg-black/5 hover:bg-black/10',
-            )}
-            onPress={() => {
-              onUpvote?.(project.id);
-            }}
-          >
-            <Image
-              src={
+        {showUpvote && (
+          <div className="flex flex-col items-center justify-center gap-[4px] text-center">
+            <Button
+              isIconOnly
+              className={cn(
+                'rounded-[8px] size-[40px]',
                 userLikeRecord
-                  ? '/images/common/CaretUpLight.png'
-                  : '/images/common/CaretUpDark.png'
-              }
-              as={NextImage}
-              alt="upvote"
-              width={24}
-              height={24}
-            />
-          </Button>
+                  ? 'bg-[#64C0A5] hover:bg-[#75c2ab]'
+                  : 'bg-black/5 hover:bg-black/10',
+              )}
+              onPress={() => {
+                onUpvote?.(project.id);
+              }}
+            >
+              <Image
+                src={
+                  userLikeRecord
+                    ? '/images/common/CaretUpLight.png'
+                    : '/images/common/CaretUpDark.png'
+                }
+                as={NextImage}
+                alt="upvote"
+                width={24}
+                height={24}
+              />
+            </Button>
 
-          <ECFTypography
-            type="caption"
-            className="text-[13px] font-semibold leading-[20px] text-black opacity-60"
-          >
-            {formatNumber(project.support || 0)}
-          </ECFTypography>
-        </div>
+            <ECFTypography
+              type="caption"
+              className="text-[13px] font-semibold leading-[20px] text-black opacity-60"
+            >
+              {formatNumber(project.support || 0)}
+            </ECFTypography>
+          </div>
+        )}
       </div>
       {weight && (
         <ECFTypography

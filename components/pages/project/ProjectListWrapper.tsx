@@ -13,6 +13,8 @@ interface ProjectListWrapperProps {
   emptyMessage: string;
   onLoadMore: () => void;
   onSuccess: () => void;
+  showTransparentScore?: boolean;
+  showUpvote?: boolean;
 }
 
 export const ProjectListWrapper = ({
@@ -23,6 +25,8 @@ export const ProjectListWrapper = ({
   emptyMessage,
   onLoadMore,
   onSuccess,
+  showUpvote = true,
+  showTransparentScore = false,
 }: ProjectListWrapperProps) => {
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
@@ -49,13 +53,16 @@ export const ProjectListWrapper = ({
 
   return (
     <div className="flex-1 pb-2.5">
-      {projectList.map((project) => {
+      {projectList.map((project, index) => {
         const projectLikeRecord = getProjectLikeRecord(project.id);
+        const isLastItem = index === projectList.length - 1;
         return (
           <ProjectCard
             key={project.id}
             project={project}
-            showBorder={true}
+            showBorder={!isLastItem}
+            showUpvote={showUpvote}
+            showTransparentScore={showTransparentScore}
             onUpvote={handleUpvote}
             userLikeRecord={
               projectLikeRecord
