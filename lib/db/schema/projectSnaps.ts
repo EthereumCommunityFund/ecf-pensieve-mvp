@@ -32,7 +32,10 @@ export const projectSnaps = pgTable(
       projectIdCreatedAtIdx: index(
         'project_snaps_project_id_created_at_idx',
       ).on(table.projectId, table.createdAt.desc()),
-      categoriesIdx: index('project_snaps_categories_idx').on(table.categories),
+      categoriesGinIdx: index('project_snaps_categories_gin_idx').using(
+        'gin',
+        table.categories,
+      ),
     };
   },
 );

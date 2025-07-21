@@ -1,5 +1,15 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, ilike, inArray, isNull, lt, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  sql,
+} from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -178,7 +188,19 @@ export const projectRouter = router({
       const conditions = [eq(projects.isPublished, isPublished)];
 
       if (categories && categories.length > 0) {
-        conditions.push(sql`${projects.categories} && ${categories}::text[]`);
+        conditions.push(
+          exists(
+            ctx.db
+              .select()
+              .from(projectSnaps)
+              .where(
+                and(
+                  eq(projectSnaps.projectId, projects.id),
+                  sql`${projectSnaps.categories} && ${categories}::text[]`,
+                ),
+              ),
+          ),
+        );
       }
 
       if (cursor) {
@@ -798,24 +820,16 @@ export const projectRouter = router({
     const getCategories = async () => {
       const result = await ctx.db
         .select({
-          category: sql<string>`c.category`.as('category'),
+          category: sql<string>`unnest(${projectSnaps.categories})`.as(
+            'category',
+          ),
           count: sql<number>`count(distinct ${projectSnaps.projectId})::int`.as(
             'count',
           ),
         })
         .from(projectSnaps)
-        .innerJoin(
-          sql`
-        LATERAL (
-          SELECT jsonb_array_elements_text(item->'value') AS category
-          FROM   jsonb_array_elements(${projectSnaps.items}) AS item
-          WHERE  item->>'key' = 'categories'
-            AND  jsonb_typeof(item->'value') = 'array'
-        ) c
-      `,
-          sql`true`,
-        )
-        .groupBy(sql`c.category`)
+        .where(sql`${projectSnaps.categories} IS NOT NULL`)
+        .groupBy(sql`unnest(${projectSnaps.categories})`)
         .orderBy(sql`count(distinct ${projectSnaps.projectId}) desc`);
 
       return result as unknown as { category: string; count: number }[];
