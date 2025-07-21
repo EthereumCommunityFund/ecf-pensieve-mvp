@@ -179,8 +179,8 @@ const ProjectPage = () => {
 
       <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
         <TransparentScore
-          displayedCount={displayedCount}
           isDataFetched={isProjectFetched}
+          itemsTopWeight={project?.itemsTopWeight || {}}
         />
       </div>
 

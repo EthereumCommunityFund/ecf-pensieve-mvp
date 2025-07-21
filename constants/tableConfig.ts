@@ -3,6 +3,7 @@ import {
   IItemCategoryEnum,
   IItemGroupEnum,
   IItemSubCategoryEnum,
+  IPocItemKey,
 } from '@/types/item';
 
 export const ProposalTableFieldCategory: ICategoryConfig[] = [
@@ -271,3 +272,15 @@ export const TotalItemCount = ProjectTableFieldCategory.reduce(
     ),
   0,
 );
+
+export const AllItemKeysInPage: IPocItemKey[] =
+  ProjectTableFieldCategory.reduce((acc, category) => {
+    return acc.concat(
+      category.subCategories.reduce((subAcc, subCategory) => {
+        return subAcc.concat(
+          subCategory.items || [],
+          subCategory.itemsNotEssential || [],
+        );
+      }, [] as IPocItemKey[]),
+    );
+  }, [] as IPocItemKey[]);
