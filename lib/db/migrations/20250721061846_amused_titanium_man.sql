@@ -1,0 +1,2 @@
+-- Migration already applied during conflict resolution
+-- This file serves as a placeholder to keep migration history in sync
