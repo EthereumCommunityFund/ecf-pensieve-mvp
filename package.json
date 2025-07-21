@@ -18,6 +18,7 @@
     "sync:snap": "dotenv -e .env tsx scripts/syncProjectSnap.ts",
     "update:snap": "dotenv -e .env tsx scripts/updateProjectSnap.ts",
     "fix:item-weights": "dotenv -e .env tsx scripts/fixItemWeights.ts",
+    "add:short-code": "dotenv -e .env tsx scripts/addShortCodeToExistingProjects.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -50,6 +51,7 @@
     "drizzle-orm": "^0.42.0",
     "ethers": "^6.13.5",
     "framer-motion": "^12.4.2",
+    "nanoid": "^5.1.5",
     "next": "15.2.3",
     "postgres": "^3.4.5",
     "react": "^19.0.0",

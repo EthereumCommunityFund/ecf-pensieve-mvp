@@ -41,6 +41,7 @@ import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
+import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 
 import { proposalRouter } from './proposal';
 
@@ -108,12 +109,20 @@ export const projectRouter = router({
 
           const hasProposalKeys = proposalItems.map((item) => item.key);
 
+          const shortCode = await generateUniqueShortCode(async (code) => {
+            const existing = await tx.query.projects.findFirst({
+              where: eq(projects.shortCode, code),
+            });
+            return !!existing;
+          });
+
           const [project] = await tx
             .insert(projects)
             .values({
               ...input,
               creator: ctx.user.id,
               hasProposalKeys,
+              shortCode,
             })
             .returning();
 

@@ -168,6 +168,18 @@ const ProjectsContent = () => {
     isFetchingNextPage,
   ]);
 
+  const showTransparentScore = useMemo(() => {
+    return type === 'transparent';
+  }, [type]);
+
+  const showCreator = useMemo(() => {
+    return type !== 'transparent';
+  }, [type]);
+
+  const showUpvote = useMemo(() => {
+    return type !== 'transparent';
+  }, [type]);
+
   useEffect(() => {
     if (projectList.length > 0) {
       devLog('projectList', projectList);
@@ -226,6 +238,9 @@ const ProjectsContent = () => {
             emptyMessage={emptyMessage}
             onLoadMore={handleLoadMore}
             onSuccess={onUpvoteSuccess}
+            showTransparentScore={showTransparentScore}
+            showUpvote={showUpvote}
+            showCreator={showCreator}
           />
         </div>
 

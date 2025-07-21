@@ -115,8 +115,8 @@ const ProjectCard = ({
     return {} as Record<IEssentialItemKey, any>;
   }, [project]);
 
-  const displayedItemCount = useMemo(() => {
-    return project.hasProposalKeys.length;
+  const displayedCount = useMemo(() => {
+    return Object.keys(project?.itemsTopWeight || {}).length || 0;
   }, [project]);
 
   const getItemValue = useCallback(
@@ -217,7 +217,7 @@ const ProjectCard = ({
 
               {showTransparentScore && (
                 <div className="tablet:hidden mobile:hidden mt-[10px]">
-                  <TransparentScore displayedCount={displayedItemCount} />
+                  <TransparentScore displayedCount={displayedCount} />
                 </div>
               )}
             </div>
@@ -262,7 +262,7 @@ const ProjectCard = ({
 
         {showTransparentScore && (
           <div className="tablet:block mobile:block mt-[10px] hidden">
-            <TransparentScore displayedCount={displayedItemCount} />
+            <TransparentScore displayedCount={displayedCount} />
           </div>
         )}
       </div>

@@ -56,6 +56,7 @@ export const projects = pgTable(
     support: doublePrecision('support').notNull().default(0),
     likeCount: integer('like_count').notNull().default(0),
     hasProposalKeys: text('has_proposal_keys').array().notNull().default([]),
+    shortCode: text('short_code').unique(),
   },
   (table) => {
     return {

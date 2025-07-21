@@ -4,6 +4,7 @@ import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
+import ShareButton from '@/components/biz/share/ShareButton';
 import BackHeader from '@/components/pages/project/BackHeader';
 import PublishingTip from '@/components/pages/project/proposal/common/PublishingTip';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
@@ -194,7 +195,7 @@ const ProjectCard = ({
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
         'p-[20px] mobile:p-[14px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'flex justify-start items-start gap-[20px]',
+        'flex justify-start items-start gap-[20px] relative',
       )}
     >
       <Image
@@ -223,21 +224,30 @@ const ProjectCard = ({
             );
           })}
         </div>
-        <div className="flex items-center gap-[10px] text-[14px] font-[600] text-black">
-          <span>Total Proposals: </span>
-          <span className="text-black/60">{proposals?.length || 0}</span>
+        <div className="mobile:flex-col  mobile:items-start flex items-center  gap-[10px] text-[14px] font-[600] text-black">
+          <div className="flex items-center justify-start">
+            <span>Total Proposals: </span>
+            <span className="text-black/60">{proposals?.length || 0}</span>
+          </div>
+
           {!!leadingProposal && (
-            <>
-              <span className="text-black/20">|</span>
+            <div className="flex items-center justify-start">
+              <span className="mobile:hidden text-black/20">|</span>
               {/* when reach 100%, use `winner` */}
               <span>{canBePublished ? 'Winner' : 'Leading'}:</span>
               <span className="text-black/60">
                 @{leadingProposal.creator.name}
               </span>
-            </>
+            </div>
           )}
         </div>
       </div>
+
+      {project.shortCode && (
+        <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+          <ShareButton shortCode={project.shortCode} />
+        </div>
+      )}
     </div>
   );
 };
@@ -249,7 +259,7 @@ const ProjectCardSkeleton = () => {
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
         'p-[20px] mobile:p-[14px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'flex justify-start items-start gap-[20px]',
+        'flex justify-start items-start gap-[20px] relative',
       )}
     >
       <Skeleton className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10" />
@@ -269,13 +279,18 @@ const ProjectCardSkeleton = () => {
           })}
         </div>
 
-        <div className="mobile:flex-wrap mobile:gap-[8px] flex items-center justify-start gap-[10px]">
+        <div className="mobile:flex-col mobile:items-start mobile:gap-[8px] flex items-center justify-start gap-[10px]">
           <Skeleton className="mobile:w-[90px] h-[20px] w-[110px]" />
-          <Skeleton className="h-[20px] w-[16px]" />
-          <span className="text-black/20">|</span>
+          <Skeleton className="mobile:hidden h-[20px] w-[16px]" />
+          <span className="mobile:hidden text-black/20">|</span>
           <Skeleton className="mobile:w-[50px] h-[20px] w-[60px]" />
           <Skeleton className="mobile:w-[80px] h-[20px] w-[120px]" />
         </div>
+      </div>
+
+      {/* ShareButton skeleton */}
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+        <Skeleton className="size-[32px] rounded-[6px]" />
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface CategorySkeletonProps {
   count?: number;
   className?: string;
@@ -10,8 +12,15 @@ export default function CategorySkeleton({
   return (
     <div className={className}>
       <div className="flex items-center justify-between">
-        <div className="h-[18px] w-40 animate-pulse rounded bg-gray-200" />
-        <div className="h-[18px] w-28 animate-pulse rounded bg-gray-200" />
+        <h3 className="text-[14px] font-[600] leading-[18px] text-black/80">
+          View Project Categories
+        </h3>
+        <Link
+          href="/projects"
+          className="text-[13px] font-[600] leading-[18px] text-black/50 hover:text-black/80 hover:underline"
+        >
+          View All Projects
+        </Link>
       </div>
 
       <div className="mt-[14px] flex flex-wrap gap-[14px]">

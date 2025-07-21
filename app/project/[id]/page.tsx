@@ -2,7 +2,7 @@
 
 import { Skeleton } from '@heroui/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import BackHeader from '@/components/pages/project/BackHeader';
@@ -57,6 +57,10 @@ const ProjectPage = () => {
     getLeadingCategories,
     getLeadingLogoUrl,
   } = useProjectDetailContext();
+
+  const displayedCount = useMemo(() => {
+    return Object.keys(project?.itemsTopWeight || {}).length;
+  }, [project]);
 
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
@@ -175,7 +179,7 @@ const ProjectPage = () => {
 
       <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
         <TransparentScore
-          displayedCount={project?.hasProposalKeys.length || 0}
+          displayedCount={displayedCount}
           isDataFetched={isProjectFetched}
         />
       </div>
