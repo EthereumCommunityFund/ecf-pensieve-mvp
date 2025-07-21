@@ -157,6 +157,8 @@ const HomeList = () => {
             emptyMessage="No community-trusted projects found"
             onSuccess={refetchProjects}
             showCreator={false}
+            showUpvote={true}
+            showTransparentScore={false}
           />
           <p className="text-center text-[10px] font-[400] leading-[14px] text-black/60">
             {displayUpdatedAtOfTrust}

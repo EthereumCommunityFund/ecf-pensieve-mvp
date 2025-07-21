@@ -39,7 +39,13 @@ export const ProjectListWrapper = ({
     return (
       <div className="flex-1 pb-2.5">
         {Array.from({ length: 10 }).map((_, index) => (
-          <ProjectCardSkeleton key={index} showBorder={true} />
+          <ProjectCardSkeleton
+            key={index}
+            showBorder={true}
+            showCreator={showCreator}
+            showTransparentScore={showTransparentScore}
+            showUpvote={showUpvote}
+          />
         ))}
       </div>
     );
@@ -79,7 +85,14 @@ export const ProjectListWrapper = ({
         );
       })}
 
-      {isFetchingNextPage && <ProjectCardSkeleton showBorder={true} />}
+      {isFetchingNextPage && (
+        <ProjectCardSkeleton
+          showBorder={true}
+          showCreator={showCreator}
+          showTransparentScore={showTransparentScore}
+          showUpvote={showUpvote}
+        />
+      )}
 
       {hasNextPage && (
         <div className="flex flex-1 justify-center py-4">
