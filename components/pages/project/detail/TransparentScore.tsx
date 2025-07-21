@@ -11,22 +11,21 @@ import {
   ModalContent,
 } from '@/components/base/modal';
 import { ShieldStarIcon } from '@/components/icons';
+import { TotalItemCount } from '@/constants/tableConfig';
 
 interface ITransparentScoreProps {
-  total: number;
   displayedCount: number;
-  emptyCount: number;
   isDataFetched: boolean;
 }
 
 const TransparentScore: React.FC<ITransparentScoreProps> = ({
-  total,
   displayedCount,
-  emptyCount,
   isDataFetched,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const score = total > 0 ? Math.round((displayedCount / emptyCount) * 100) : 0;
+  const emptyCount = TotalItemCount - displayedCount;
+  const score =
+    TotalItemCount > 0 ? Math.round((displayedCount / emptyCount) * 100) : 0;
 
   return (
     <>

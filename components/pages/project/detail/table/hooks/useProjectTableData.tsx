@@ -230,6 +230,7 @@ export const useProjectTableData = () => {
   ]);
 
   return {
+    isProjectFetched,
     isDataFetched: isProjectFetched && isLeadingProposalsFetched,
     tableData,
     emptyItemsCounts,

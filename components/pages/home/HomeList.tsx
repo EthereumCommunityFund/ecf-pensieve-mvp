@@ -134,6 +134,7 @@ const HomeList = () => {
             isFetchingNextPage={false}
             emptyMessage="No transparent projects found"
             onSuccess={refetchProjects}
+            showCreator={false}
             showUpvote={false}
             showTransparentScore={true}
           />
@@ -155,6 +156,7 @@ const HomeList = () => {
             isFetchingNextPage={false}
             emptyMessage="No community-trusted projects found"
             onSuccess={refetchProjects}
+            showCreator={false}
           />
           <p className="text-center text-[10px] font-[400] leading-[14px] text-black/60">
             {displayUpdatedAtOfTrust}

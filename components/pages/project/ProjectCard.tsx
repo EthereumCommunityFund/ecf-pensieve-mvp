@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
 import ECFTypography from '@/components/base/typography';
-import { TotalItemCount } from '@/constants/tableConfig';
+import TransparentScore from '@/components/biz/project/TransparentScroe';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
 import { IEssentialItemKey } from '@/types/item';
@@ -54,6 +54,7 @@ interface IProjectCardProps {
   project: IProject;
   showBorder?: boolean;
   weight?: number;
+  showCreator?: boolean;
   showTransparentScore?: boolean;
   showUpvote?: boolean;
   onUpvote?: (projectId: number) => void;
@@ -67,6 +68,7 @@ const ProjectCard = ({
   project,
   showBorder = false,
   weight,
+  showCreator = true,
   showTransparentScore = false,
   showUpvote = true,
   onUpvote,
@@ -88,12 +90,8 @@ const ProjectCard = ({
   }, [project]);
 
   const displayedItemCount = useMemo(() => {
-    return project?.projectSnap?.items.length || 20;
+    return project.hasProposalKeys.length;
   }, [project]);
-
-  const itemLeftCount = useMemo(() => {
-    return TotalItemCount - displayedItemCount;
-  }, [displayedItemCount]);
 
   const getItemValue = useCallback(
     (itemKey: IEssentialItemKey) => {
@@ -165,15 +163,18 @@ const ProjectCard = ({
             >
               {tagline}
             </ECFTypography>
-            <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
-              <span className="opacity-60">by: </span>
-              <span className="mx-[6px] font-bold underline">
-                {(project.creator as IProfile)?.name}
-              </span>{' '}
-              <span className="opacity-60">
-                {formatTimeAgo(new Date(project.createdAt).getTime())}
-              </span>
-            </p>
+
+            {showCreator && (
+              <p className="mt-[6px] text-[11px] leading-[18px] text-[rgba(0,0,0,0.8)]">
+                <span className="opacity-60">by: </span>
+                <span className="mx-[6px] font-bold underline">
+                  {(project.creator as IProfile)?.name}
+                </span>{' '}
+                <span className="opacity-60">
+                  {formatTimeAgo(new Date(project.createdAt).getTime())}
+                </span>
+              </p>
+            )}
             <div className="mt-[10px] flex flex-wrap gap-[8px]">
               {categories.map((tag) => (
                 <div
@@ -186,6 +187,12 @@ const ProjectCard = ({
                 </div>
               ))}
             </div>
+
+            {showTransparentScore && (
+              <div className="mt-[10px]">
+                <TransparentScore displayedCount={displayedItemCount} />
+              </div>
+            )}
           </div>
         </Link>
 
@@ -225,6 +232,7 @@ const ProjectCard = ({
           </div>
         )}
       </div>
+
       {weight && (
         <ECFTypography
           type={'caption'}

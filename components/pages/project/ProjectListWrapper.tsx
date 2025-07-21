@@ -13,6 +13,7 @@ interface ProjectListWrapperProps {
   emptyMessage: string;
   onLoadMore: () => void;
   onSuccess: () => void;
+  showCreator?: boolean;
   showTransparentScore?: boolean;
   showUpvote?: boolean;
 }
@@ -25,6 +26,7 @@ export const ProjectListWrapper = ({
   emptyMessage,
   onLoadMore,
   onSuccess,
+  showCreator = true,
   showUpvote = true,
   showTransparentScore = false,
 }: ProjectListWrapperProps) => {
@@ -61,6 +63,7 @@ export const ProjectListWrapper = ({
             key={project.id}
             project={project}
             showBorder={!isLastItem}
+            showCreator={showCreator}
             showUpvote={showUpvote}
             showTransparentScore={showTransparentScore}
             onUpvote={handleUpvote}
