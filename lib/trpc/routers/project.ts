@@ -688,4 +688,43 @@ export const projectRouter = router({
       });
     }
   }),
+
+  getCategories: publicProcedure.query(async ({ ctx }) => {
+    const getCategories = async () => {
+      const result = await ctx.db
+        .select({
+          category: sql<string>`c.category`.as('category'),
+          count: sql<number>`count(distinct ${projectSnaps.projectId})::int`.as(
+            'count',
+          ),
+        })
+        .from(projectSnaps)
+        .innerJoin(
+          sql`
+        LATERAL (
+          SELECT jsonb_array_elements_text(item->'value') AS category
+          FROM   jsonb_array_elements(${projectSnaps.items}) AS item
+          WHERE  item->>'key' = 'categories'
+            AND  jsonb_typeof(item->'value') = 'array'
+        ) c
+      `,
+          sql`true`,
+        )
+        .groupBy(sql`c.category`)
+        .orderBy(sql`count(distinct ${projectSnaps.projectId}) desc`);
+
+      return result as unknown as { category: string; count: number }[];
+    };
+
+    const getCachedCategories = nextCache(
+      getCategories,
+      ['project-categories-stats-from-snaps'],
+      {
+        revalidate: 86400,
+        tags: [CACHE_TAGS.CATEGORIES],
+      },
+    );
+
+    return getCachedCategories();
+  }),
 });
