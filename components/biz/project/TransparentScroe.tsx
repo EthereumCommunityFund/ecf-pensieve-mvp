@@ -9,7 +9,7 @@ interface IProps {
 
 const TransparentScore: FC<IProps> = ({ displayedCount }) => {
   const emptyCount = TotalItemCount - displayedCount;
-  const score = Math.round((displayedCount / emptyCount) * 100);
+  const score = Math.round((displayedCount / TotalItemCount) * 100);
   return (
     <div className="flex items-center justify-between gap-[5px] rounded-[4px] bg-[#EBEBEB] px-[8px] py-[2px]">
       <ShieldStarIcon className="size-[20px]" />

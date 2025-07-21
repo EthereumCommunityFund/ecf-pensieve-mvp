@@ -25,7 +25,9 @@ const TransparentScore: React.FC<ITransparentScoreProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const emptyCount = TotalItemCount - displayedCount;
   const score =
-    TotalItemCount > 0 ? Math.round((displayedCount / emptyCount) * 100) : 0;
+    TotalItemCount > 0
+      ? Math.round((displayedCount / TotalItemCount) * 100)
+      : 0;
 
   return (
     <>
