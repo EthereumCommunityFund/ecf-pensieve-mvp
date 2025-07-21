@@ -192,6 +192,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             isInvalid={!!error}
             isDisabled={isDisabled}
             aria-label={label}
+            classNames={{
+              listboxWrapper: itemKey === 'categories' ? '!max-h-[500px]' : '',
+            }}
           >
             {(options || []).map((option) => (
               <SelectItem
