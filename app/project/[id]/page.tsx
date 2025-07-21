@@ -15,6 +15,7 @@ import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
+import TransparentScore from '@/components/pages/project/detail/TransparentScore';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
@@ -171,6 +172,13 @@ const ProjectPage = () => {
         getLeadingCategories={getLeadingCategories}
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
+
+      <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
+        <TransparentScore
+          displayedCount={project?.hasProposalKeys.length || 0}
+          isDataFetched={isProjectFetched}
+        />
+      </div>
 
       {activeTab === 'project-data' && (
         <ProjectDetailTable

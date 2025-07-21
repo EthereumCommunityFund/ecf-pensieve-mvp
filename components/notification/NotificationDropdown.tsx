@@ -195,7 +195,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       >
         <DropdownItem
           key="notifications"
-          className="rounded-[10px] p-0"
+          className="cursor-default rounded-[10px] p-0"
           textValue="notifications"
         >
           <div className="relative h-[520px] w-[380px] overflow-hidden rounded-[10px] border border-black/10 bg-white">

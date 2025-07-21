@@ -29,7 +29,7 @@ const useRealNotifications = () => {
     {
       enabled: !!isAuthenticated,
       staleTime: 30000,
-      refetchInterval: 60000,
+      refetchInterval: 1000 * 60 * 5,
       retry: false,
       getNextPageParam: (lastPage) => {
         return lastPage.hasMore ? lastPage.nextCursor : undefined;
@@ -53,7 +53,7 @@ const useRealNotifications = () => {
     {
       enabled: !!isAuthenticated,
       staleTime: 30000,
-      refetchInterval: 30000,
+      refetchInterval: 1000 * 60 * 5,
       retry: false,
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.nextCursor : undefined,

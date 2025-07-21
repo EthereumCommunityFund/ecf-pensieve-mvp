@@ -1,28 +1,27 @@
 import { Image } from '@heroui/react';
 import { useRouter } from 'next/navigation';
 
-import ECFTypography from '@/components/base/typography';
 import { useAuth } from '@/context/AuthContext';
 
 const CardListData = [
   {
-    title: 'Propose & Contribute to Projects',
+    title: 'Add Your Favorite Projects',
     description:
-      'Propose projects, collaborate with the community to verify proposals, contribute to project pages, and earn rewards!',
+      'Help expand the Web3 knowledge base. Propose new pages for the projects you use, love, or want others to discover.',
     bgImage: '/images/home/CardBgPenNib.png',
     actionName: 'Propose a Project',
   },
   {
-    title: 'Curate the Knowledge Base',
+    title: 'Vote For Trusted Projects',
     description:
-      'Leverage your gained experience to support quality contributors and promote projects you care about.',
+      'Contribute by validating info, reviewing new entries, and endorsing the projects you trust. Community votes power publication.',
     bgImage: '/images/home/CardBgPuzzlePiece.png',
     actionName: 'Explore The Index',
   },
   {
-    title: 'Claim Contribution Rewards',
+    title: 'Claim Rewards',
     description:
-      'Any web3 project you’ve contributed to is part of its history and shapes the future. Find the project and claim your contributions here.',
+      'Your contributions count. Earn rewards for adding or verifying project pages.',
     bgImage: '/images/home/CardBgTreasureChest.png',
     actionName: 'Coming Soon',
   },
@@ -94,7 +93,7 @@ interface ICardItemProps {
 const CardItem = (props: ICardItemProps) => {
   return (
     <div
-      className="pc:w-auto pc:flex-1 tablet:w-[373px] mobile:w-[300px] mobile:gap-[10px] group relative flex shrink-0 flex-col gap-[20px]
+      className="pc:w-auto pc:flex-1 tablet:w-[373px] mobile:w-[300px] mobile:gap-[10px] group relative flex shrink-0 flex-col gap-[10px]
 				overflow-hidden 
 				rounded-md
 				border border-black/10 
@@ -103,11 +102,11 @@ const CardItem = (props: ICardItemProps) => {
         cursor: props.disabled ? 'not-allowed' : 'pointer',
       }}
     >
-      <div className="flex flex-col gap-[14px]">
-        <p className="text-[24px] font-[700] leading-[34px] text-black">
+      <div className="flex flex-col gap-[10px]">
+        <p className="font-mona text-[18px] font-[700] leading-[25px] text-black">
           {props.title}
         </p>
-        <p className="text-[16px] font-[400] leading-[1.6] text-black/80">
+        <p className="text-[14px] font-[400] leading-[1.6] text-black/80">
           {props.description}
         </p>
       </div>
@@ -141,9 +140,7 @@ const CardAction = (props: ICardActionProps) => {
       {!props.onClick && (
         <div className="size-[8px] rounded-[8px] bg-black"></div>
       )}
-      <ECFTypography type={'body1'} className="font-bold">
-        {props.title}
-      </ECFTypography>
+      <p className="text-[14px] font-[700] text-black">{props.title}</p>
       {props.onClick && (
         <Image
           src="/images/common/ArrowRight.png"

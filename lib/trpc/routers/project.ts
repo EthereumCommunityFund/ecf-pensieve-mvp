@@ -1,5 +1,15 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  sql,
+} from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -166,6 +176,7 @@ export const projectRouter = router({
           limit: z.number().min(1).max(100).default(50),
           cursor: z.number().optional(),
           isPublished: z.boolean().optional().default(false),
+          categories: z.array(z.string()).optional(),
         })
         .optional(),
     )
@@ -173,11 +184,34 @@ export const projectRouter = router({
       const limit = input?.limit ?? 50;
       const cursor = input?.cursor;
       const isPublished = input?.isPublished ?? false;
+      const categories = input?.categories;
 
-      const baseCondition = eq(projects.isPublished, isPublished);
-      const whereCondition = cursor
-        ? and(baseCondition, lt(projects.id, cursor))
-        : baseCondition;
+      const conditions = [eq(projects.isPublished, isPublished)];
+
+      if (categories && categories.length > 0) {
+        conditions.push(
+          exists(
+            ctx.db
+              .select()
+              .from(projectSnaps)
+              .where(
+                and(
+                  eq(projectSnaps.projectId, projects.id),
+                  sql`${projectSnaps.categories} && ARRAY[${sql.join(
+                    categories.map((cat) => sql`${cat}`),
+                    sql`,`,
+                  )}]::text[]`,
+                ),
+              ),
+          ),
+        );
+      }
+
+      if (cursor) {
+        conditions.push(lt(projects.id, cursor));
+      }
+
+      const whereCondition = and(...conditions);
 
       const queryOptions: any = {
         creator: true,
@@ -208,7 +242,7 @@ export const projectRouter = router({
           ctx.db
             .select({ count: sql`count(*)::int` })
             .from(projects)
-            .where(eq(projects.isPublished, isPublished)),
+            .where(whereCondition),
         ]);
 
         const hasNextPage = results.length > limit;
@@ -224,18 +258,124 @@ export const projectRouter = router({
       };
 
       if (isPublished && !cursor) {
-        const getCachedProjects = nextCache(
-          getProjects,
-          [`projects-published-${limit}-first-page`],
-          {
-            revalidate: 3600,
-            tags: [CACHE_TAGS.PROJECTS],
-          },
-        );
+        const cacheKey =
+          categories && categories.length > 0
+            ? `projects-published-${limit}-categories-${categories.sort().join('-')}-first-page`
+            : `projects-published-${limit}-first-page`;
+
+        const getCachedProjects = nextCache(getProjects, [cacheKey], {
+          revalidate: 3600,
+          tags: [CACHE_TAGS.PROJECTS],
+        });
         return getCachedProjects();
       }
 
       return getProjects();
+    }),
+
+  searchProjects: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(1, 'Search query cannot be empty'),
+        limit: z.number().min(1).max(100).default(20),
+        publishedCursor: z.number().optional(),
+        unpublishedCursor: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { query, limit, publishedCursor, unpublishedCursor } = input;
+      const searchTerm = query.trim();
+
+      const publishedSearchCondition = sql`
+        EXISTS (
+          SELECT 1 
+          FROM ${projectSnaps} ps
+          WHERE ps.project_id = ${projects.id}
+          AND ps.name ILIKE ${`%${searchTerm}%`}
+          LIMIT 1
+        )
+      `;
+
+      const unpublishedSearchCondition = ilike(
+        projects.name,
+        `%${searchTerm}%`,
+      );
+
+      const publishedCondition = and(
+        publishedSearchCondition,
+        eq(projects.isPublished, true),
+        publishedCursor ? lt(projects.id, publishedCursor) : undefined,
+      );
+
+      const unpublishedCondition = and(
+        unpublishedSearchCondition,
+        eq(projects.isPublished, false),
+        unpublishedCursor ? lt(projects.id, unpublishedCursor) : undefined,
+      );
+
+      const [
+        publishedResults,
+        unpublishedResults,
+        publishedTotalCount,
+        unpublishedTotalCount,
+      ] = await Promise.all([
+        ctx.db.query.projects.findMany({
+          with: {
+            creator: true,
+            projectSnap: true,
+          },
+          where: publishedCondition,
+          orderBy: desc(projects.id),
+          limit: limit + 1,
+        }),
+        ctx.db.query.projects.findMany({
+          with: {
+            creator: true,
+          },
+          where: unpublishedCondition,
+          orderBy: desc(projects.id),
+          limit: limit + 1,
+        }),
+        ctx.db
+          .select({ count: sql`count(*)::int` })
+          .from(projects)
+          .where(and(publishedSearchCondition, eq(projects.isPublished, true))),
+        ctx.db
+          .select({ count: sql`count(*)::int` })
+          .from(projects)
+          .where(
+            and(unpublishedSearchCondition, eq(projects.isPublished, false)),
+          ),
+      ]);
+
+      const hasNextPagePublished = publishedResults.length > limit;
+      const publishedItems = hasNextPagePublished
+        ? publishedResults.slice(0, limit)
+        : publishedResults;
+      const nextPublishedCursor = hasNextPagePublished
+        ? publishedItems[publishedItems.length - 1].id
+        : undefined;
+
+      const hasNextPageUnpublished = unpublishedResults.length > limit;
+      const unpublishedItems = hasNextPageUnpublished
+        ? unpublishedResults.slice(0, limit)
+        : unpublishedResults;
+      const nextUnpublishedCursor = hasNextPageUnpublished
+        ? unpublishedItems[unpublishedItems.length - 1].id
+        : undefined;
+
+      return {
+        published: {
+          items: publishedItems,
+          nextCursor: nextPublishedCursor,
+          totalCount: Number(publishedTotalCount[0]?.count ?? 0),
+        },
+        unpublished: {
+          items: unpublishedItems,
+          nextCursor: nextUnpublishedCursor,
+          totalCount: Number(unpublishedTotalCount[0]?.count ?? 0),
+        },
+      };
     }),
 
   getProjectById: publicProcedure
@@ -678,5 +818,36 @@ export const projectRouter = router({
         cause: error,
       });
     }
+  }),
+
+  getCategories: publicProcedure.query(async ({ ctx }) => {
+    const getCategories = async () => {
+      const result = await ctx.db
+        .select({
+          category: sql<string>`unnest(${projectSnaps.categories})`.as(
+            'category',
+          ),
+          count: sql<number>`count(distinct ${projectSnaps.projectId})::int`.as(
+            'count',
+          ),
+        })
+        .from(projectSnaps)
+        .where(sql`${projectSnaps.categories} IS NOT NULL`)
+        .groupBy(sql`unnest(${projectSnaps.categories})`)
+        .orderBy(sql`count(distinct ${projectSnaps.projectId}) desc`);
+
+      return result as unknown as { category: string; count: number }[];
+    };
+
+    const getCachedCategories = nextCache(
+      getCategories,
+      ['project-categories-stats-from-snaps'],
+      {
+        revalidate: 86400,
+        tags: [CACHE_TAGS.CATEGORIES],
+      },
+    );
+
+    return getCachedCategories();
   }),
 });
