@@ -81,6 +81,7 @@ export const projectRouter = router({
             z.object({
               name: z.string().min(1, 'Founder name cannot be empty'),
               title: z.string().min(1, 'Founder title cannot be empty'),
+              region: z.string().optional(),
             }),
           )
           .min(1, 'At least one founder is required'),
