@@ -15,7 +15,7 @@ export default function Page() {
 
       <CardList />
 
-      <Categories />
+      <Categories className="mt-[20px]" />
 
       <HomeList />
     </div>

@@ -7,7 +7,13 @@ import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
 
-export default function Categories() {
+import CategorySkeleton from './CategorySkeleton';
+
+interface IProps {
+  className?: string;
+}
+
+export default function Categories({ className = '' }: IProps) {
   const router = useRouter();
   const { data: categories, isLoading } = trpc.project.getCategories.useQuery(
     undefined,
@@ -20,19 +26,11 @@ export default function Categories() {
   );
 
   if (isLoading) {
-    return (
-      <div className="mb-8">
-        <div className="flex animate-pulse flex-wrap gap-2">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-10 w-32 rounded-full bg-gray-200" />
-          ))}
-        </div>
-      </div>
-    );
+    return <CategorySkeleton className={className} />;
   }
 
   return (
-    <div className="mt-[20px]">
+    <div className={className}>
       <div className="flex items-center justify-between">
         <h3 className="text-[14px] font-[600] leading-[18px] text-black/80">
           View Project Categories
@@ -45,7 +43,7 @@ export default function Categories() {
         </Link>
       </div>
 
-      <div className="mt-[10px] flex flex-wrap gap-[14px]">
+      <div className="mt-[14px] flex flex-wrap gap-[14px]">
         {categories?.map((category) => (
           <Button
             key={category.category}
