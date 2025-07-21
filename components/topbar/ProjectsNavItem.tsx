@@ -5,6 +5,7 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 
 import ECFTypography from '@/components/base/typography';
 import { CaretDownIcon } from '@/components/icons';
@@ -24,7 +25,16 @@ interface ProjectsNavItemProps {
 export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const debouncedSetIsOpen = useDebouncedCallback(setIsOpen, 300);
 
+  const handleOpen = () => {
+    debouncedSetIsOpen.cancel();
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    debouncedSetIsOpen(false);
+  };
   const isActiveRoute = pathname === item.matchPath;
 
   const linkContent = (
@@ -39,13 +49,13 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
           width={24}
           height={24}
           className={`
-            size-6 shrink-0
+            !scale-1 size-6
+            shrink-0
             ${
               isActiveRoute
                 ? 'brightness-0 invert' // Active state (white icon)
                 : 'brightness-0' // Default state (black icon)
             }
-            transition-all duration-200
           `}
         />
       ) : (
@@ -74,32 +84,35 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
       placement="bottom"
       showArrow={false}
       offset={10}
+      disableAnimation={true}
       classNames={{
-        content: 'p-[14px]',
+        content:
+          'p-[14px] !transform-none !transition-none motion-reduce:!transform-none motion-reduce:!transition-none',
       }}
     >
       <PopoverTrigger>
         <Link
           href={item.href}
           className={`
-            flex h-8 shrink-0 items-center gap-2 whitespace-nowrap
-            rounded-[10px] px-2.5 transition-all duration-200
+            !scale-1 flex h-8 shrink-0 items-center gap-2
+            whitespace-nowrap rounded-[10px]
+            px-2.5
             ${
               isActiveRoute
                 ? 'bg-black text-white' // Active state
                 : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]' // Default & Hover states
             }
           `}
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
+          onMouseEnter={handleOpen}
+          onMouseLeave={handleClose}
         >
           {linkContent}
         </Link>
       </PopoverTrigger>
       <PopoverContent
         className="w-[600px]"
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
+        onMouseEnter={handleOpen}
+        onMouseLeave={handleClose}
       >
         <Categories />
       </PopoverContent>
