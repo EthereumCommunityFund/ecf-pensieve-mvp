@@ -2,7 +2,7 @@
 
 import { Skeleton } from '@heroui/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import BackHeader from '@/components/pages/project/BackHeader';
@@ -14,8 +14,11 @@ import SubmitterModal from '@/components/pages/project/detail/modal/Submitter';
 import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
 import Review from '@/components/pages/project/detail/Review';
+import { useProjectTableData } from '@/components/pages/project/detail/table/hooks/useProjectTableData';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
+import TransparentScore from '@/components/pages/project/detail/TransparentScore';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { TotalItemCount } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
 
@@ -56,6 +59,14 @@ const ProjectPage = () => {
     getLeadingCategories,
     getLeadingLogoUrl,
   } = useProjectDetailContext();
+
+  const { emptyItemsCounts, isDataFetched } = useProjectTableData();
+
+  const leftCount = useMemo(
+    () =>
+      Object.values(emptyItemsCounts).reduce((sum, count) => sum + count, 0),
+    [emptyItemsCounts],
+  );
 
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
@@ -171,6 +182,15 @@ const ProjectPage = () => {
         getLeadingCategories={getLeadingCategories}
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
+
+      <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
+        <TransparentScore
+          total={TotalItemCount}
+          displayedCount={TotalItemCount - leftCount}
+          emptyCount={leftCount}
+          isDataFetched={isDataFetched}
+        />
+      </div>
 
       {activeTab === 'project-data' && (
         <ProjectDetailTable
