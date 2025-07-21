@@ -183,7 +183,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                       </TableHeader>
                       <TableHeader isLast isContainerBordered>
                         <div className="flex items-center gap-[5px]">
-                          <span>Region</span>
+                          <span>Country/Region</span>
                           <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
                             <svg
                               width="18"

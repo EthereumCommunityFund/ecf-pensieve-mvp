@@ -304,7 +304,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               </div>
               <div className="flex flex-1 items-center gap-[5px] p-[10px]">
                 <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Region
+                  Country/Region
                 </span>
               </div>
               <div className="w-[60px] p-[10px]"></div>
