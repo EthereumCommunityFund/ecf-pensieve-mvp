@@ -2,6 +2,7 @@
 
 import Banner from '@/components/pages/home/Banner';
 import CardList from '@/components/pages/home/CardList';
+import Categories from '@/components/pages/home/Categories';
 import HomeList from '@/components/pages/home/HomeList';
 import ProjectIntro from '@/components/pages/home/ProjectIntro';
 
@@ -13,6 +14,8 @@ export default function Page() {
       <ProjectIntro />
 
       <CardList />
+
+      <Categories />
 
       <HomeList />
     </div>
