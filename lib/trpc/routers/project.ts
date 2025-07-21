@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -245,6 +245,111 @@ export const projectRouter = router({
       }
 
       return getProjects();
+    }),
+
+  searchProjects: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(1, 'Search query cannot be empty'),
+        limit: z.number().min(1).max(100).default(20),
+        publishedCursor: z.number().optional(),
+        unpublishedCursor: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { query, limit, publishedCursor, unpublishedCursor } = input;
+      const searchTerm = query.trim();
+
+      const publishedSearchCondition = sql`
+        EXISTS (
+          SELECT 1 
+          FROM ${projectSnaps} ps
+          WHERE ps.project_id = ${projects.id}
+          AND ps.name ILIKE ${`%${searchTerm}%`}
+          LIMIT 1
+        )
+      `;
+
+      const unpublishedSearchCondition = ilike(
+        projects.name,
+        `%${searchTerm}%`,
+      );
+
+      const publishedCondition = and(
+        publishedSearchCondition,
+        eq(projects.isPublished, true),
+        publishedCursor ? lt(projects.id, publishedCursor) : undefined,
+      );
+
+      const unpublishedCondition = and(
+        unpublishedSearchCondition,
+        eq(projects.isPublished, false),
+        unpublishedCursor ? lt(projects.id, unpublishedCursor) : undefined,
+      );
+
+      const [
+        publishedResults,
+        unpublishedResults,
+        publishedTotalCount,
+        unpublishedTotalCount,
+      ] = await Promise.all([
+        ctx.db.query.projects.findMany({
+          with: {
+            creator: true,
+            projectSnap: true,
+          },
+          where: publishedCondition,
+          orderBy: desc(projects.id),
+          limit: limit + 1,
+        }),
+        ctx.db.query.projects.findMany({
+          with: {
+            creator: true,
+          },
+          where: unpublishedCondition,
+          orderBy: desc(projects.id),
+          limit: limit + 1,
+        }),
+        ctx.db
+          .select({ count: sql`count(*)::int` })
+          .from(projects)
+          .where(and(publishedSearchCondition, eq(projects.isPublished, true))),
+        ctx.db
+          .select({ count: sql`count(*)::int` })
+          .from(projects)
+          .where(
+            and(unpublishedSearchCondition, eq(projects.isPublished, false)),
+          ),
+      ]);
+
+      const hasNextPagePublished = publishedResults.length > limit;
+      const publishedItems = hasNextPagePublished
+        ? publishedResults.slice(0, limit)
+        : publishedResults;
+      const nextPublishedCursor = hasNextPagePublished
+        ? publishedItems[publishedItems.length - 1].id
+        : undefined;
+
+      const hasNextPageUnpublished = unpublishedResults.length > limit;
+      const unpublishedItems = hasNextPageUnpublished
+        ? unpublishedResults.slice(0, limit)
+        : unpublishedResults;
+      const nextUnpublishedCursor = hasNextPageUnpublished
+        ? unpublishedItems[unpublishedItems.length - 1].id
+        : undefined;
+
+      return {
+        published: {
+          items: publishedItems,
+          nextCursor: nextPublishedCursor,
+          totalCount: Number(publishedTotalCount[0]?.count ?? 0),
+        },
+        unpublished: {
+          items: unpublishedItems,
+          nextCursor: nextUnpublishedCursor,
+          totalCount: Number(unpublishedTotalCount[0]?.count ?? 0),
+        },
+      };
     }),
 
   getProjectById: publicProcedure

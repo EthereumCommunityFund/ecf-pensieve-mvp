@@ -292,8 +292,15 @@
     {
       "idx": 41,
       "version": "7",
+      "when": 1752620733107,
+      "tag": "0041_light_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
       "when": 1753055027616,
-      "tag": "0041_zippy_exiles",
+      "tag": "0042_zippy_exiles",
       "breakpoints": true
     }
   ]

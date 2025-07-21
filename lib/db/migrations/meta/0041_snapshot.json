@@ -1,5 +1,5 @@
 {
-  "id": "e4390f21-d9a5-4bae-bb81-2670a150469c",
+  "id": "48fc8d22-b4ba-4e88-9414-133f2abde399",
   "prevId": "61e60cf6-0913-49f7-8471-4fe539af8371",
   "version": "7",
   "dialect": "postgresql",
@@ -1298,6 +1298,18 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categories": {
+          "name": "categories",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
