@@ -263,3 +263,16 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
     ],
   },
 ];
+
+export const TotalItemCount = ProjectTableFieldCategory.reduce(
+  (acc, category) =>
+    acc +
+    category.subCategories.reduce(
+      (subAcc, subCategory) =>
+        subAcc +
+        (subCategory.items?.length || 0) +
+        (subCategory.itemsNotEssential?.length || 0),
+      0,
+    ),
+  0,
+);

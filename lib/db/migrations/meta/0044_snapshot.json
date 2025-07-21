@@ -1,6 +1,6 @@
 {
-  "id": "48fc8d22-b4ba-4e88-9414-133f2abde399",
-  "prevId": "61e60cf6-0913-49f7-8471-4fe539af8371",
+  "id": "1f92c816-285a-4943-ad15-a4bde90d19dc",
+  "prevId": "d5d6bcc8-e3f3-4d55-93a1-822b2126e22c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1232,21 +1232,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "projects_categories_gin_idx": {
-          "name": "projects_categories_gin_idx",
-          "columns": [
-            {
-              "expression": "categories",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "gin",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -1362,6 +1347,21 @@
           "isUnique": false,
           "concurrently": false,
           "method": "btree",
+          "with": {}
+        },
+        "project_snaps_categories_gin_idx": {
+          "name": "project_snaps_categories_gin_idx",
+          "columns": [
+            {
+              "expression": "categories",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
           "with": {}
         }
       },
