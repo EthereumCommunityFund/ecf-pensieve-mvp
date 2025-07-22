@@ -327,22 +327,8 @@
     {
       "idx": 46,
       "version": "7",
-      "when": 1753153711289,
-      "tag": "20250722030831_sloppy_lenny_balinger",
-      "breakpoints": true
-    },
-    {
-      "idx": 47,
-      "version": "7",
-      "when": 1753154030986,
-      "tag": "20250722031350_damp_sasquatch",
-      "breakpoints": true
-    },
-    {
-      "idx": 48,
-      "version": "7",
-      "when": 1753154044666,
-      "tag": "20250722031404_friendly_wonder_man",
+      "when": 1753155000000,
+      "tag": "20250722055000_add_project_snaps_categories",
       "breakpoints": true
     }
   ]
