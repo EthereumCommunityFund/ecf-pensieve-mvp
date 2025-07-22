@@ -45,12 +45,14 @@ yup.addMethod(
 const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
+  region: yup.string().optional(),
 });
 
 // Create a smart founder validation schema with strict validation on submission
 const smartFounderSchema = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
+  region: yup.string().optional(),
 });
 
 const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
@@ -296,7 +298,7 @@ export const itemValidationSchemas = {
 
         for (let i = 0; i < value.length; i++) {
           const member = value[i] || {};
-          const { name, title } = member;
+          const { name, title, region } = member;
           const hasName = name && name.trim() !== '';
           const hasTitle = title && title.trim() !== '';
 

@@ -11,6 +11,7 @@ import {
   parseMultipleValue,
   parseValue,
 } from '@/utils/item';
+import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
@@ -146,9 +147,43 @@ const InputContentRenderer: React.FC<IProps> = ({
                           </div>
                         </div>
                       </TableHeader>
-                      <TableHeader isLast isContainerBordered>
+                      <TableHeader isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span>Title/Role</span>
+                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 18 18"
+                              fill="none"
+                            >
+                              <circle
+                                cx="9"
+                                cy="9"
+                                r="6.75"
+                                stroke="black"
+                                strokeWidth="1"
+                              />
+                              <circle
+                                cx="9"
+                                cy="6.75"
+                                r="2.25"
+                                stroke="black"
+                                strokeWidth="1"
+                              />
+                              <path
+                                d="M9 12.09L9 12.09"
+                                stroke="black"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Country/Region</span>
                           <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
                             <svg
                               width="18"
@@ -183,27 +218,42 @@ const InputContentRenderer: React.FC<IProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {parsedFounderList.map((founder: any, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsedFounderList.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
+                    {parsedFounderList.map(
+                      (
+                        founder: {
+                          name: string;
+                          title: string;
+                          region?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
                           isLastRow={index === parsedFounderList.length - 1}
                         >
-                          {founder.name}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsedFounderList.length - 1}
-                        >
-                          {founder.title}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedFounderList.length - 1}
+                          >
+                            {founder.name}
+                          </TableCell>
+                          <TableCell
+                            isContainerBordered
+                            isLastRow={index === parsedFounderList.length - 1}
+                          >
+                            {founder.title}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedFounderList.length - 1}
+                          >
+                            {getRegionLabel(founder.region)}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
                   </tbody>
                 </table>
               </TableContainer>
@@ -315,34 +365,39 @@ const InputContentRenderer: React.FC<IProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {parsedWebsites.map((website: any, index: number) => (
-                      <TableRow
-                        key={index}
-                        isLastRow={index === parsedWebsites.length - 1}
-                      >
-                        <TableCell
-                          width={214}
-                          isContainerBordered
+                    {parsedWebsites.map(
+                      (
+                        website: { title: string; url: string },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
                           isLastRow={index === parsedWebsites.length - 1}
                         >
-                          {website.title}
-                        </TableCell>
-                        <TableCell
-                          isLast
-                          isContainerBordered
-                          isLastRow={index === parsedWebsites.length - 1}
-                        >
-                          <Link
-                            href={normalizeUrl(website.url)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline"
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedWebsites.length - 1}
                           >
-                            {normalizeUrl(website.url)}
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            {website.title}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedWebsites.length - 1}
+                          >
+                            <Link
+                              href={normalizeUrl(website.url)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(website.url)}
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
                   </tbody>
                 </table>
               </TableContainer>
@@ -372,7 +427,7 @@ const InputContentRenderer: React.FC<IProps> = ({
           <>
             {parsedWebsites
               .map(
-                (website: any) =>
+                (website: { title: string; url: string }) =>
                   `${website.title}: ${normalizeUrl(website.url)}`,
               )
               .join(', ')}

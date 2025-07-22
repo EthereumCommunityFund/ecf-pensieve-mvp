@@ -3,6 +3,7 @@
 import { cn, Image, Skeleton } from '@heroui/react';
 import { FC } from 'react';
 
+import ShareButton from '@/components/biz/share/ShareButton';
 import { IProject } from '@/types';
 
 interface ProjectDetailCardProps {
@@ -29,7 +30,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
         'p-[20px] mobile:p-[14px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'flex justify-start items-start gap-[20px]',
+        'flex justify-start items-start gap-[20px] relative',
       )}
     >
       <Image
@@ -62,6 +63,12 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
           })}
         </div>
       </div>
+
+      {project.shortCode && (
+        <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+          <ShareButton shortCode={project.shortCode} />
+        </div>
+      )}
     </div>
   );
 };
@@ -75,12 +82,12 @@ const ProjectDetailCardSkeleton = () => {
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
         'p-[20px] mobile:p-[14px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'flex justify-start items-start gap-[20px]',
+        'flex justify-start items-start gap-[20px] relative',
       )}
     >
-      <Skeleton className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10" />
+      <Skeleton className="size-[100px] overflow-hidden rounded-[10px] border border-black/10" />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-[10px]">
+      <div className="flex flex-col gap-[10px]">
         <Skeleton className="mobile:w-[150px] h-[25px] w-[180px]" />
         <Skeleton className="h-[23px] w-full" />
 
@@ -94,6 +101,11 @@ const ProjectDetailCardSkeleton = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* ShareButton skeleton */}
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
       </div>
     </div>
   );

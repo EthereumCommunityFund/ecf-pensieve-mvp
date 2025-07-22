@@ -38,6 +38,7 @@ const config: Config = {
   },
   plugins: [
     heroui(),
+    require('@tailwindcss/line-clamp'),
     function ({ addUtilities }: any) {
       addUtilities({
         '.scrollbar-hide': {

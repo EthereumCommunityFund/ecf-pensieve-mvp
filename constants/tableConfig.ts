@@ -3,6 +3,7 @@ import {
   IItemCategoryEnum,
   IItemGroupEnum,
   IItemSubCategoryEnum,
+  IPocItemKey,
 } from '@/types/item';
 
 export const ProposalTableFieldCategory: ICategoryConfig[] = [
@@ -235,12 +236,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         description:
           'Key details about the project’s token, including its purpose, supply, and mechanics',
         items: ['tokenContract'],
-        itemsNotEssential: [
-          'token_sales',
-          'token_type',
-          'token_specifications',
-          'token_launch_date',
-        ],
+        itemsNotEssential: ['token_sales', 'token_type', 'token_launch_date'],
         groups: [],
       },
     ],
@@ -263,3 +259,28 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
     ],
   },
 ];
+
+export const TotalItemCount = ProjectTableFieldCategory.reduce(
+  (acc, category) =>
+    acc +
+    category.subCategories.reduce(
+      (subAcc, subCategory) =>
+        subAcc +
+        (subCategory.items?.length || 0) +
+        (subCategory.itemsNotEssential?.length || 0),
+      0,
+    ),
+  0,
+);
+
+export const AllItemKeysInPage: IPocItemKey[] =
+  ProjectTableFieldCategory.reduce((acc, category) => {
+    return acc.concat(
+      category.subCategories.reduce((subAcc, subCategory) => {
+        return subAcc.concat(
+          subCategory.items || [],
+          subCategory.itemsNotEssential || [],
+        );
+      }, [] as IPocItemKey[]),
+    );
+  }, [] as IPocItemKey[]);

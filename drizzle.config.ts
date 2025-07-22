@@ -11,4 +11,7 @@ export default {
     url: process.env.DATABASE_URL!,
   },
   schemaFilter: ['public'],
+  migrations: {
+    prefix: 'timestamp',
+  },
 } satisfies Config;

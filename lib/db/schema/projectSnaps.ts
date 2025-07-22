@@ -5,6 +5,7 @@ import {
   index,
   jsonb,
   pgTable,
+  text,
   timestamp,
 } from 'drizzle-orm/pg-core';
 
@@ -21,6 +22,8 @@ export const projectSnaps = pgTable(
       .notNull()
       .references(() => projects.id),
     items: jsonb('items').notNull(),
+    name: text('name'),
+    categories: text('categories').array(),
   },
   (table) => {
     return {
@@ -29,6 +32,10 @@ export const projectSnaps = pgTable(
       projectIdCreatedAtIdx: index(
         'project_snaps_project_id_created_at_idx',
       ).on(table.projectId, table.createdAt.desc()),
+      categoriesGinIdx: index('project_snaps_categories_gin_idx').using(
+        'gin',
+        table.categories,
+      ),
     };
   },
 );

@@ -56,6 +56,7 @@ export const projects = pgTable(
     support: doublePrecision('support').notNull().default(0),
     likeCount: integer('like_count').notNull().default(0),
     hasProposalKeys: text('has_proposal_keys').array().notNull().default([]),
+    shortCode: text('short_code').unique(),
   },
   (table) => {
     return {
@@ -66,6 +67,10 @@ export const projects = pgTable(
         table.id.desc(),
       ),
       createdAtIdx: index('projects_created_at_idx').on(table.createdAt.desc()),
+      categoriesGinIdx: index('projects_categories_gin_idx').using(
+        'gin',
+        table.categories,
+      ),
     };
   },
 );

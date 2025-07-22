@@ -24,7 +24,7 @@ import {
   dateValueToDate,
 } from '@/utils/formatters';
 
-import { IFormTypeEnum, IProjectFormData } from '../types';
+import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
@@ -192,6 +192,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             isInvalid={!!error}
             isDisabled={isDisabled}
             aria-label={label}
+            classNames={{
+              listboxWrapper: itemKey === 'categories' ? '!max-h-[500px]' : '',
+            }}
           >
             {(options || []).map((option) => (
               <SelectItem
@@ -278,10 +281,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
     case 'founderList': {
       // Ensure valid array data with at least one entry
-      const foundersArray =
+      const foundersArray: IFounder[] =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ name: '', title: '' }];
+          ? field.value.map((founder: any) => ({
+              name: founder.name || '',
+              title: founder.title || '',
+              region: founder.region,
+            }))
+          : [{ name: '', title: '', region: undefined }];
 
       return (
         <div>
@@ -293,9 +300,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   Full Name
                 </span>
               </div>
-              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
                 <span className="text-[14px] font-[600] leading-[19px] text-black/60">
                   Title/Role
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Country/Region
                 </span>
               </div>
               <div className="w-[60px] p-[10px]"></div>
@@ -318,9 +330,16 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                     field.onChange(newFounders);
                   }}
                   register={register}
+                  control={control}
                   errors={founderError}
-                  foundersKey={field.name as 'founders'}
+                  foundersKey={itemConfig.key as any}
                   canRemove={foundersArray.length > 1}
+                  value={founder}
+                  onChange={(updatedFounder) => {
+                    const newFounders = [...foundersArray];
+                    newFounders[index] = updatedFounder;
+                    field.onChange(newFounders);
+                  }}
                 />
               );
             })}
@@ -335,7 +354,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   // Add new item directly to existing array
                   const newFounders = [
                     ...foundersArray,
-                    { name: '', title: '' },
+                    { name: '', title: '', region: undefined },
                   ];
                   field.onChange(newFounders);
                 }}

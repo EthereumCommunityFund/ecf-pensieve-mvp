@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useMemo } from 'react';
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
+import ProjectFilter from '@/components/pages/project/Filter';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
@@ -20,6 +21,7 @@ const ProjectsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const type = searchParams.get('type');
+  const category = searchParams.get('cat');
 
   const {
     data,
@@ -32,6 +34,7 @@ const ProjectsContent = () => {
     {
       limit: 10,
       isPublished: true,
+      ...(category && { categories: [category] }),
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -137,15 +140,20 @@ const ProjectsContent = () => {
     const list = data?.pages.flatMap((page) => page.items) || [];
     return {
       projectList: list as IProject[],
-      title: 'Recent Projects',
-      description: '',
-      emptyMessage: 'No Published Project Yet',
+      title: category ? `${category} Projects` : 'Recent Projects',
+      description: category
+        ? `Page Completion Rate (Transparency) * User Supported Votes`
+        : '',
+      emptyMessage: category
+        ? `No ${category} projects found`
+        : 'No Published Project Yet',
       currentIsLoading: isLoading,
       currentHasNextPage: hasNextPage,
       currentIsFetchingNextPage: isFetchingNextPage,
     };
   }, [
     type,
+    category,
     genesisData,
     supportData,
     data,
@@ -159,6 +167,18 @@ const ProjectsContent = () => {
     isFetchingNextSupportPage,
     isFetchingNextPage,
   ]);
+
+  const showTransparentScore = useMemo(() => {
+    return type === 'transparent';
+  }, [type]);
+
+  const showCreator = useMemo(() => {
+    return type !== 'transparent';
+  }, [type]);
+
+  const showUpvote = useMemo(() => {
+    return type !== 'transparent';
+  }, [type]);
 
   useEffect(() => {
     if (projectList.length > 0) {
@@ -203,7 +223,10 @@ const ProjectsContent = () => {
                 </p>
               </>
             ) : (
-              <ECFTypography type={'subtitle1'}>{title}</ECFTypography>
+              <div className="flex items-center justify-between">
+                <ECFTypography type={'subtitle1'}>{title}</ECFTypography>
+                <ProjectFilter />
+              </div>
             )}
           </div>
 
@@ -215,6 +238,9 @@ const ProjectsContent = () => {
             emptyMessage={emptyMessage}
             onLoadMore={handleLoadMore}
             onSuccess={onUpvoteSuccess}
+            showTransparentScore={showTransparentScore}
+            showUpvote={showUpvote}
+            showCreator={showCreator}
           />
         </div>
 
