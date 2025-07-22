@@ -123,7 +123,7 @@ const HomeList = () => {
         <div className="flex-1 rounded-[10px] border border-black/10 p-[10px]">
           <SectionHeader
             title="Top Transparent Projects"
-            description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
+            description={`Completion rate = sum of published items' genesis itemweight / sum of items' genesis itemweight (fixed across projects)`}
             buttonText="View All Top"
             onClick={handleViewTopTransparentProjects}
           />
