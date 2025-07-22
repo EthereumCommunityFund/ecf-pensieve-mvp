@@ -1,3 +1,4 @@
+ALTER TABLE "project_snaps" ADD COLUMN IF NOT EXISTS "categories" text[];
 CREATE INDEX "project_snaps_categories_idx" ON "project_snaps" USING btree ("categories");--> statement-breakpoint
 CREATE OR REPLACE FUNCTION update_project_snap_categories()
 RETURNS TRIGGER AS $$

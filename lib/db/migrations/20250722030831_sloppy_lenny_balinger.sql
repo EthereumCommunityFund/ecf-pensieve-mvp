@@ -1,1 +1,0 @@
-CREATE INDEX "projects_categories_gin_idx" ON "projects" USING gin ("categories");
