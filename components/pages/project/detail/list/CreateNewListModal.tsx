@@ -14,8 +14,9 @@ import { FC, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
-import { trpc } from '@/lib/trpc/client';
 import { BookmarkList, CreateListRequest } from '@/types/bookmark';
+
+import { useBookmark } from './useBookmark';
 
 interface CreateNewListModalProps {
   isOpen: boolean;
@@ -35,60 +36,46 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
     privacy: 'private',
   });
 
-  const utils = trpc.useUtils();
+  const { createListMutation, addProjectToListMutation } = useBookmark();
 
-  // Create list mutation
-  const createListMutation = trpc.list.createList.useMutation({
-    onSuccess: async (newList) => {
-      // After successful creation, automatically add the current project to the new list
-      try {
-        await addToListMutation.mutateAsync({
-          listId: newList.id,
-          projectId,
-        });
+  const handleCreateSuccess = async (newList: BookmarkList) => {
+    // After successful creation, automatically add the current project to the new list
+    try {
+      await addProjectToListMutation.mutateAsync({
+        listId: newList.id,
+        projectId,
+      });
 
-        // Refresh related queries
-        utils.list.getUserLists.invalidate();
-        utils.list.getListProjects.invalidate();
+      addToast({ title: 'List created successfully', color: 'success' });
+      onSuccess({
+        ...newList,
+        isProjectInList: true,
+      } as BookmarkList);
+      handleClose();
+    } catch (error) {
+      console.error('Failed to add project to new list:', error);
 
-        addToast({ title: 'List created successfully', color: 'success' });
-        onSuccess({
-          ...newList,
-          isProjectInList: true,
-        } as BookmarkList);
-        handleClose();
-      } catch (error) {
-        console.error('Failed to add project to new list:', error);
-        // Still refresh queries even if adding project failed
-        utils.list.getUserLists.invalidate();
-
-        addToast({
-          title: 'List created but failed to add project',
-          color: 'warning',
-        });
-        // Don't call onSuccess if adding project failed - this prevents parent from incorrectly updating state
-        handleClose();
-      }
-    },
-    onError: (error) => {
-      if (error.data?.code === 'BAD_REQUEST') {
-        addToast({ title: 'Invalid list data', color: 'danger' });
-      } else {
-        addToast({ title: 'Failed to create list', color: 'danger' });
-      }
-    },
-  });
-
-  // Add project to list mutation
-  const addToListMutation = trpc.list.addProjectToList.useMutation();
+      addToast({
+        title: 'List created but failed to add project',
+        color: 'warning',
+      });
+      handleClose();
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) return;
 
-    createListMutation.mutate({
-      name: formData.name.trim(),
-      privacy: formData.privacy,
-    });
+    try {
+      const newList = await createListMutation.mutateAsync({
+        name: formData.name.trim(),
+        privacy: formData.privacy,
+      });
+      await handleCreateSuccess(newList);
+    } catch (error) {
+      console.error('Failed to create list:', error);
+      addToast({ title: 'Failed to create list', color: 'danger' });
+    }
   };
 
   const handleClose = () => {
@@ -100,7 +87,7 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
     formData.name.trim().length > 0 && formData.name.length <= 150;
 
   const isCreating =
-    createListMutation.isPending || addToListMutation.isPending;
+    createListMutation.isPending || addProjectToListMutation.isPending;
 
   return (
     <Modal

@@ -6,7 +6,7 @@ import { FC } from 'react';
 import ShareButton from '@/components/biz/share/ShareButton';
 import { IProject } from '@/types';
 
-import BookmarkButton from './BookmarkButton';
+import BookmarkButton from './list/BookmarkButton';
 
 interface ProjectDetailCardProps {
   project?: IProject;

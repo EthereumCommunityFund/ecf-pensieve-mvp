@@ -2,12 +2,12 @@
 
 import { cn, useDisclosure } from '@heroui/react';
 import { Bookmark } from '@phosphor-icons/react';
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 
 import { Button } from '@/components/base';
-import { trpc } from '@/lib/trpc/client';
 
 import SaveToListModal from './SaveToListModal';
+import { useBookmark } from './useBookmark';
 
 interface BookmarkButtonProps {
   projectId: number;
@@ -19,32 +19,12 @@ const BookmarkButton: FC<BookmarkButtonProps> = ({
   className = '',
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isProjectBookmarked } = useBookmark();
 
-  // Get all user lists
-  const { data: userLists } = trpc.list.getUserLists.useQuery();
+  // Check if the project is bookmarked
+  const { data: bookmarkStatus } = isProjectBookmarked(projectId);
 
-  // Check if the project is in any list
-  const listProjectQueries = trpc.useQueries((t) =>
-    (userLists || []).map((list) =>
-      t.list.getListProjects({
-        listId: list.id,
-        limit: 100, // Large enough number to check if project exists
-      }),
-    ),
-  );
-
-  const isBookmarked = useMemo(() => {
-    // Return false if still loading or no data
-    if (!userLists || listProjectQueries.some((query) => query.isLoading)) {
-      return false;
-    }
-
-    // Check if project is in any list
-    return listProjectQueries.some((query) => {
-      if (!query.data) return false;
-      return query.data.items.some((item) => item.projectId === projectId);
-    });
-  }, [userLists, listProjectQueries, projectId]);
+  const isBookmarked = bookmarkStatus?.isBookmarked ?? false;
 
   return (
     <>

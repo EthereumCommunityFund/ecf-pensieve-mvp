@@ -629,4 +629,111 @@ export const listRouter = router({
         });
       }
     }),
+
+  isProjectBookmarked: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { projectId } = input;
+
+        // First get all user's lists
+        const userLists = await ctx.db.query.lists.findMany({
+          where: eq(lists.creator, ctx.user.id),
+          columns: {
+            id: true,
+          },
+        });
+
+        if (userLists.length === 0) {
+          return {
+            isBookmarked: false,
+            listId: undefined,
+          };
+        }
+
+        // Check if project exists in any of the user's lists
+        const bookmarkedList = await ctx.db.query.listProjects.findFirst({
+          where: and(
+            eq(listProjects.projectId, projectId),
+            sql`${listProjects.listId} IN (${sql.join(
+              userLists.map((list) => sql`${list.id}`),
+              sql`, `,
+            )})`,
+          ),
+        });
+
+        return {
+          isBookmarked: !!bookmarkedList,
+          listId: bookmarkedList?.listId,
+        };
+      } catch (error) {
+        console.error('Failed to check project bookmark status:', {
+          userId: ctx.user.id,
+          projectId: input.projectId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to check project bookmark status',
+        });
+      }
+    }),
+
+  getUserListsWithProjectStatus: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { projectId } = input;
+
+        // Get all user lists
+        const userLists = await ctx.db.query.lists.findMany({
+          where: eq(lists.creator, ctx.user.id),
+          orderBy: [desc(lists.createdAt)],
+        });
+
+        if (userLists.length === 0) {
+          return [];
+        }
+
+        // Get all list-project relationships for this user's lists and this project
+        const listProjectRelations = await ctx.db.query.listProjects.findMany({
+          where: and(
+            eq(listProjects.projectId, projectId),
+            sql`${listProjects.listId} IN (${sql.join(
+              userLists.map((list) => sql`${list.id}`),
+              sql`, `,
+            )})`,
+          ),
+        });
+
+        // Create a Set of list IDs that contain the project
+        const listsWithProject = new Set(
+          listProjectRelations.map((lp) => lp.listId),
+        );
+
+        // Return lists with project status
+        return userLists.map((list) => ({
+          ...list,
+          isProjectInList: listsWithProject.has(list.id),
+        }));
+      } catch (error) {
+        console.error('Failed to get user lists with project status:', {
+          userId: ctx.user.id,
+          projectId: input.projectId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get user lists with project status',
+        });
+      }
+    }),
 });

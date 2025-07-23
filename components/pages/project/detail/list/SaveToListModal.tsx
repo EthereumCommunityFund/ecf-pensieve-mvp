@@ -8,12 +8,12 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Plus, X } from '@phosphor-icons/react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { addToast } from '@/components/base/toast';
-import { trpc } from '@/lib/trpc/client';
 import { BookmarkList } from '@/types/bookmark';
 
+import { useBookmark } from './useBookmark';
 import BookmarkListItem from './BookmarkListItem';
 import CreateNewListModal from './CreateNewListModal';
 
@@ -37,71 +37,15 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     onClose: onCreateModalClose,
   } = useDisclosure();
 
-  // Get all user lists
-  const { data: userLists, isLoading: isLoadingLists } =
-    trpc.list.getUserLists.useQuery();
+  const {
+    getUserListsWithProjectStatus,
+    addProjectToListMutation,
+    removeProjectFromListMutation,
+  } = useBookmark();
 
-  // Query project data for each list to check if the current project is in the list
-  const listProjectQueries = trpc.useQueries((t) =>
-    (userLists || []).map((list) =>
-      t.list.getListProjects(
-        {
-          listId: list.id,
-          limit: 100, // Large enough number to check if project exists
-        },
-        {
-          enabled: !!list.id && isOpen, // Only query when modal is open
-        },
-      ),
-    ),
-  );
-
-  // Handle add/remove project mutations
-  const utils = trpc.useUtils();
-  const addToListMutation = trpc.list.addProjectToList.useMutation({
-    onSuccess: () => {
-      // Invalidate related queries after success
-      utils.list.getUserLists.invalidate();
-      utils.list.getListProjects.invalidate();
-    },
-    onError: (error) => {
-      if (error.data?.code === 'BAD_REQUEST') {
-        addToast({ title: 'Project is already in this list', color: 'danger' });
-      } else {
-        addToast({ title: 'Failed to add project to list', color: 'danger' });
-      }
-    },
-  });
-
-  const removeFromListMutation = trpc.list.removeProjectFromList.useMutation({
-    onSuccess: () => {
-      // Invalidate related queries after success
-      utils.list.getUserLists.invalidate();
-      utils.list.getListProjects.invalidate();
-    },
-    onError: () => {
-      addToast({
-        title: 'Failed to remove project from list',
-        color: 'danger',
-      });
-    },
-  });
-
-  // Calculate enhanced list data (including isProjectInList status)
-  const listsWithProjectStatus = useMemo(() => {
-    if (!userLists) return [];
-
-    return userLists.map((list, index) => {
-      const query = listProjectQueries[index];
-      const isProjectInList =
-        query.data?.items.some((item) => item.projectId === projectId) || false;
-
-      return {
-        ...list,
-        isProjectInList,
-      } as BookmarkList;
-    });
-  }, [userLists, listProjectQueries, projectId]);
+  // Get all user lists with project status
+  const { data: listsWithProjectStatus, isLoading: isLoadingLists } =
+    getUserListsWithProjectStatus(projectId, isOpen);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -114,48 +58,24 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
   // Initialize selected state based on loaded data
   useEffect(() => {
     // Skip if modal is closed or already initialized
-    if (!isOpen || initialLoadComplete) {
+    if (!isOpen || initialLoadComplete || isLoadingLists) {
       return;
     }
 
     // Skip if no lists
-    if (!userLists || userLists.length === 0) {
+    if (!listsWithProjectStatus || listsWithProjectStatus.length === 0) {
+      setInitialLoadComplete(true);
       return;
     }
 
-    // Set up an interval to check query status
-    const checkInterval = setInterval(() => {
-      // Check if all queries have completed (success or error)
-      const allQueriesComplete = listProjectQueries.every(
-        (query) => !query.isLoading && !query.isFetching,
-      );
+    // Calculate the selected lists
+    const alreadySelectedIds = listsWithProjectStatus
+      .filter((list) => list.isProjectInList)
+      .map((list) => list.id);
 
-      // Wait until all queries are complete
-      if (!allQueriesComplete) {
-        return;
-      }
-
-      // Now we can safely calculate the selected lists
-      const alreadySelectedIds: number[] = [];
-      userLists.forEach((list, index) => {
-        const query = listProjectQueries[index];
-        if (query.data?.items.some((item) => item.projectId === projectId)) {
-          alreadySelectedIds.push(list.id);
-        }
-      });
-
-      setSelectedListIds(alreadySelectedIds);
-      setInitialLoadComplete(true);
-
-      // Clear the interval once we've initialized
-      clearInterval(checkInterval);
-    }, 2000); // Check every 2s
-
-    // Cleanup interval on unmount or when dependencies change
-    return () => clearInterval(checkInterval);
-    // We intentionally don't include listProjectQueries in dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialLoadComplete, userLists, projectId]);
+    setSelectedListIds(alreadySelectedIds);
+    setInitialLoadComplete(true);
+  }, [isOpen, initialLoadComplete, isLoadingLists, listsWithProjectStatus]);
 
   const handleListToggle = useCallback(
     async (listId: number) => {
@@ -171,10 +91,13 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
       try {
         if (isCurrentlySelected) {
           // Remove from list
-          await removeFromListMutation.mutateAsync({ listId, projectId });
+          await removeProjectFromListMutation.mutateAsync({
+            listId,
+            projectId,
+          });
         } else {
           // Add to list
-          await addToListMutation.mutateAsync({ listId, projectId });
+          await addProjectToListMutation.mutateAsync({ listId, projectId });
         }
       } catch (error) {
         // Revert optimistic update on error
@@ -183,11 +106,18 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
         } else {
           setSelectedListIds((prev) => prev.filter((id) => id !== listId));
         }
-        // Error handling is already done in mutation onError
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to toggle list';
+        addToast({ title: errorMessage, color: 'danger' });
         console.error('Failed to toggle list:', error);
       }
     },
-    [selectedListIds, projectId, addToListMutation, removeFromListMutation],
+    [
+      selectedListIds,
+      projectId,
+      addProjectToListMutation,
+      removeProjectFromListMutation,
+    ],
   );
 
   const handleCreateNewList = useCallback((newList: BookmarkList) => {
@@ -232,7 +162,8 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
                     Loading lists...
                   </div>
                 </div>
-              ) : listsWithProjectStatus.length === 0 ? (
+              ) : !listsWithProjectStatus ||
+                listsWithProjectStatus.length === 0 ? (
                 <div className="flex justify-center p-4">
                   <div className="text-[14px] text-[#666]">No lists found</div>
                 </div>
