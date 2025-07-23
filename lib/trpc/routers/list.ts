@@ -45,6 +45,7 @@ export const listRouter = router({
               columns: {
                 name: true,
                 avatarUrl: true,
+                userId: true,
               },
             },
           },
