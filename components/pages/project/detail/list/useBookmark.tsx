@@ -7,13 +7,9 @@ import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { CreateListRequest } from '@/types/bookmark';
 
-interface UseBookmarkOptions {
-  onSuccess?: () => void | Promise<void>;
-}
-
-export function useBookmark(options: UseBookmarkOptions = {}) {
+export function useBookmark() {
   const { profile, showAuthPrompt } = useAuth();
-  const { onSuccess } = options;
+  const utils = trpc.useUtils();
 
   // Query hooks
   const getUserListsWithProjectStatus = (
@@ -44,12 +40,7 @@ export function useBookmark(options: UseBookmarkOptions = {}) {
   // Mutation hooks
   const createListMutation = trpc.list.createList.useMutation({
     onSuccess: async () => {
-      await onSuccess?.();
-      addToast({
-        title: 'Success',
-        description: 'List created successfully',
-        color: 'success',
-      });
+      await utils.list.getUserListsWithProjectStatus.invalidate();
     },
     onError: (error) => {
       addToast({
@@ -61,12 +52,12 @@ export function useBookmark(options: UseBookmarkOptions = {}) {
   });
 
   const addProjectToListMutation = trpc.list.addProjectToList.useMutation({
-    onSuccess: async () => {
-      await onSuccess?.();
-      addToast({
-        title: 'Success',
-        description: 'Project added to list successfully',
-        color: 'success',
+    onSuccess: async (_, variables) => {
+      await utils.list.getUserListsWithProjectStatus.invalidate({
+        projectId: variables.projectId,
+      });
+      await utils.list.isProjectBookmarked.invalidate({
+        projectId: variables.projectId,
       });
     },
     onError: (error) => {
@@ -88,12 +79,12 @@ export function useBookmark(options: UseBookmarkOptions = {}) {
 
   const removeProjectFromListMutation =
     trpc.list.removeProjectFromList.useMutation({
-      onSuccess: async () => {
-        await onSuccess?.();
-        addToast({
-          title: 'Success',
-          description: 'Project removed from list successfully',
-          color: 'success',
+      onSuccess: async (_, variables) => {
+        await utils.list.getUserListsWithProjectStatus.invalidate({
+          projectId: variables.projectId,
+        });
+        await utils.list.isProjectBookmarked.invalidate({
+          projectId: variables.projectId,
         });
       },
       onError: (error) => {
