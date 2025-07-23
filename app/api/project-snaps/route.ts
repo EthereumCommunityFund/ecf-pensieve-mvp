@@ -2,8 +2,8 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { LRUCache } from 'lru-cache';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { projectSnaps } from '@/lib/db/schema';
 import { db } from '@/lib/db';
+import { projectSnaps } from '@/lib/db/schema';
 
 export const runtime = 'nodejs';
 
