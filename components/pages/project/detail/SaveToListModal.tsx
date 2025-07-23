@@ -29,6 +29,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
   projectId,
 }) => {
   const [selectedListIds, setSelectedListIds] = useState<number[]>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const {
     isOpen: isCreateModalOpen,
@@ -102,10 +103,18 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     });
   }, [userLists, listProjectQueries, projectId]);
 
-  // Initialize selected state when modal opens
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setSelectedListIds([]);
+      setInitialLoadComplete(false);
+    }
+  }, [isOpen]);
+
+  // Initialize selected state based on loaded data
+  useEffect(() => {
+    // Skip if modal is closed or already initialized
+    if (!isOpen || initialLoadComplete) {
       return;
     }
 
@@ -114,26 +123,39 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
       return;
     }
 
-    // Check if all queries are loaded
-    const allQueriesLoaded = listProjectQueries.every(
-      (query) => !query.isLoading,
-    );
-    if (!allQueriesLoaded) {
-      return;
-    }
+    // Set up an interval to check query status
+    const checkInterval = setInterval(() => {
+      // Check if all queries have completed (success or error)
+      const allQueriesComplete = listProjectQueries.every(
+        (query) => !query.isLoading && !query.isFetching,
+      );
 
-    // Calculate already selected lists
-    const alreadySelectedIds: number[] = [];
-    userLists.forEach((list, index) => {
-      const query = listProjectQueries[index];
-      if (query.data?.items.some((item) => item.projectId === projectId)) {
-        alreadySelectedIds.push(list.id);
+      // Wait until all queries are complete
+      if (!allQueriesComplete) {
+        return;
       }
-    });
 
-    setSelectedListIds(alreadySelectedIds);
+      // Now we can safely calculate the selected lists
+      const alreadySelectedIds: number[] = [];
+      userLists.forEach((list, index) => {
+        const query = listProjectQueries[index];
+        if (query.data?.items.some((item) => item.projectId === projectId)) {
+          alreadySelectedIds.push(list.id);
+        }
+      });
+
+      setSelectedListIds(alreadySelectedIds);
+      setInitialLoadComplete(true);
+
+      // Clear the interval once we've initialized
+      clearInterval(checkInterval);
+    }, 2000); // Check every 2s
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => clearInterval(checkInterval);
+    // We intentionally don't include listProjectQueries in dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, userLists?.length, projectId]); // Use userLists?.length to avoid dependency array size changes
+  }, [isOpen, initialLoadComplete, userLists, projectId]);
 
   const handleListToggle = useCallback(
     async (listId: number) => {
