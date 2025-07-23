@@ -20,26 +20,26 @@ const BookmarkButton: FC<BookmarkButtonProps> = ({
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // 获取用户所有列表
+  // Get all user lists
   const { data: userLists } = trpc.list.getUserLists.useQuery();
 
-  // 检查项目是否在任一列表中
+  // Check if the project is in any list
   const listProjectQueries = trpc.useQueries((t) =>
     (userLists || []).map((list) =>
       t.list.getListProjects({
         listId: list.id,
-        limit: 100, // 足够大的数字来检查项目是否存在
+        limit: 100, // Large enough number to check if project exists
       }),
     ),
   );
 
   const isBookmarked = useMemo(() => {
-    // 如果还在加载或没有数据，返回false
+    // Return false if still loading or no data
     if (!userLists || listProjectQueries.some((query) => query.isLoading)) {
       return false;
     }
 
-    // 检查项目是否在任一列表中
+    // Check if project is in any list
     return listProjectQueries.some((query) => {
       if (!query.data) return false;
       return query.data.items.some((item) => item.projectId === projectId);

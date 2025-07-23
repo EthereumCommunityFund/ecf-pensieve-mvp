@@ -36,30 +36,30 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     onClose: onCreateModalClose,
   } = useDisclosure();
 
-  // 获取用户所有列表
+  // Get all user lists
   const { data: userLists, isLoading: isLoadingLists } =
     trpc.list.getUserLists.useQuery();
 
-  // 为每个列表查询项目数据，检查当前项目是否在列表中
+  // Query project data for each list to check if the current project is in the list
   const listProjectQueries = trpc.useQueries((t) =>
     (userLists || []).map((list) =>
       t.list.getListProjects(
         {
           listId: list.id,
-          limit: 100, // 足够大的数字来检查项目是否存在
+          limit: 100, // Large enough number to check if project exists
         },
         {
-          enabled: !!list.id && isOpen, // 只在modal打开时查询
+          enabled: !!list.id && isOpen, // Only query when modal is open
         },
       ),
     ),
   );
 
-  // 处理添加/移除项目的mutations
+  // Handle add/remove project mutations
   const utils = trpc.useUtils();
   const addToListMutation = trpc.list.addProjectToList.useMutation({
     onSuccess: () => {
-      // 成功后invalidate相关查询
+      // Invalidate related queries after success
       utils.list.getUserLists.invalidate();
       utils.list.getListProjects.invalidate();
     },
@@ -74,7 +74,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
 
   const removeFromListMutation = trpc.list.removeProjectFromList.useMutation({
     onSuccess: () => {
-      // 成功后invalidate相关查询
+      // Invalidate related queries after success
       utils.list.getUserLists.invalidate();
       utils.list.getListProjects.invalidate();
     },
@@ -86,7 +86,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     },
   });
 
-  // 计算增强的列表数据（包含isProjectInList状态）
+  // Calculate enhanced list data (including isProjectInList status)
   const listsWithProjectStatus = useMemo(() => {
     if (!userLists) return [];
 
@@ -102,37 +102,65 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     });
   }, [userLists, listProjectQueries, projectId]);
 
-  // 当modal打开时，初始化选中状态
+  // Initialize selected state when modal opens
   useEffect(() => {
     if (!isOpen) {
       setSelectedListIds([]);
       return;
     }
 
-    if (listsWithProjectStatus.length > 0) {
-      const alreadySelectedIds = listsWithProjectStatus
-        .filter((list) => list.isProjectInList)
-        .map((list) => list.id);
-
-      setSelectedListIds(alreadySelectedIds);
+    // Skip if no lists
+    if (!userLists || userLists.length === 0) {
+      return;
     }
-  }, [isOpen]); // 只在modal打开/关闭时执行
+
+    // Check if all queries are loaded
+    const allQueriesLoaded = listProjectQueries.every(
+      (query) => !query.isLoading,
+    );
+    if (!allQueriesLoaded) {
+      return;
+    }
+
+    // Calculate already selected lists
+    const alreadySelectedIds: number[] = [];
+    userLists.forEach((list, index) => {
+      const query = listProjectQueries[index];
+      if (query.data?.items.some((item) => item.projectId === projectId)) {
+        alreadySelectedIds.push(list.id);
+      }
+    });
+
+    setSelectedListIds(alreadySelectedIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, userLists?.length, projectId]); // Use userLists?.length to avoid dependency array size changes
 
   const handleListToggle = useCallback(
     async (listId: number) => {
       const isCurrentlySelected = selectedListIds.includes(listId);
 
+      // Optimistic update: update UI immediately
+      if (isCurrentlySelected) {
+        setSelectedListIds((prev) => prev.filter((id) => id !== listId));
+      } else {
+        setSelectedListIds((prev) => [...prev, listId]);
+      }
+
       try {
         if (isCurrentlySelected) {
           // Remove from list
           await removeFromListMutation.mutateAsync({ listId, projectId });
-          setSelectedListIds((prev) => prev.filter((id) => id !== listId));
         } else {
           // Add to list
           await addToListMutation.mutateAsync({ listId, projectId });
-          setSelectedListIds((prev) => [...prev, listId]);
         }
       } catch (error) {
+        // Revert optimistic update on error
+        if (isCurrentlySelected) {
+          setSelectedListIds((prev) => [...prev, listId]);
+        } else {
+          setSelectedListIds((prev) => prev.filter((id) => id !== listId));
+        }
         // Error handling is already done in mutation onError
         console.error('Failed to toggle list:', error);
       }
@@ -141,7 +169,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
   );
 
   const handleCreateNewList = useCallback((newList: BookmarkList) => {
-    // 新建列表后自动选中
+    // Auto-select the new list after creation
     setSelectedListIds((prev) => [...prev, newList.id]);
   }, []);
 

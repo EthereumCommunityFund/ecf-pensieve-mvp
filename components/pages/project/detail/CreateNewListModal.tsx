@@ -9,11 +9,11 @@ import {
   Select,
   SelectItem,
 } from '@heroui/react';
-import { FC, useState } from 'react';
 import { CaretDown, Info, X } from '@phosphor-icons/react';
+import { FC, useState } from 'react';
 
-import { addToast } from '@/components/base/toast';
 import { Button } from '@/components/base';
+import { addToast } from '@/components/base/toast';
 import { trpc } from '@/lib/trpc/client';
 import { BookmarkList, CreateListRequest } from '@/types/bookmark';
 
@@ -37,17 +37,17 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
 
   const utils = trpc.useUtils();
 
-  // 创建列表的mutation
+  // Create list mutation
   const createListMutation = trpc.list.createList.useMutation({
     onSuccess: async (newList) => {
-      // 创建成功后，自动将当前项目添加到新列表中
+      // After successful creation, automatically add the current project to the new list
       try {
         await addToListMutation.mutateAsync({
           listId: newList.id,
           projectId,
         });
 
-        // 刷新相关查询
+        // Refresh related queries
         utils.list.getUserLists.invalidate();
         utils.list.getListProjects.invalidate();
 
@@ -59,14 +59,14 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
         handleClose();
       } catch (error) {
         console.error('Failed to add project to new list:', error);
+        // Still refresh queries even if adding project failed
+        utils.list.getUserLists.invalidate();
+
         addToast({
           title: 'List created but failed to add project',
-          color: 'danger',
+          color: 'warning',
         });
-        onSuccess({
-          ...newList,
-          isProjectInList: false,
-        } as BookmarkList);
+        // Don't call onSuccess if adding project failed - this prevents parent from incorrectly updating state
         handleClose();
       }
     },
@@ -79,7 +79,7 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
     },
   });
 
-  // 添加项目到列表的mutation
+  // Add project to list mutation
   const addToListMutation = trpc.list.addProjectToList.useMutation();
 
   const handleSubmit = async () => {

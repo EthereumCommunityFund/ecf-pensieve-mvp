@@ -8,7 +8,7 @@ export interface BookmarkList {
   createdAt: Date;
   updatedAt: Date;
   followCount: number;
-  isProjectInList?: boolean; // 当前项目是否在此列表中
+  isProjectInList?: boolean; // Whether the current project is in this list
 }
 
 export interface CreateListRequest {
