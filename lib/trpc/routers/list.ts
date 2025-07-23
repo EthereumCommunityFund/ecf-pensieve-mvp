@@ -23,10 +23,6 @@ export const listRouter = router({
 
       return items;
     } catch (error) {
-      console.error('Failed to get user lists:', {
-        userId: ctx.user.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get user lists',
@@ -80,10 +76,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to get list:', {
-          slug: input.slug,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to get list',
@@ -202,10 +194,6 @@ export const listRouter = router({
 
       return items.map((item) => item.list);
     } catch (error) {
-      console.error('Failed to get user followed lists:', {
-        userId: ctx.user.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get user followed lists',
@@ -242,11 +230,6 @@ export const listRouter = router({
           return list;
         });
       } catch (error) {
-        console.error('Failed to create list:', {
-          userId: ctx.user.id,
-          input,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create list',
@@ -307,12 +290,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to update list:', {
-          userId: ctx.user.id,
-          listId: input.id,
-          input,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to update list',
@@ -354,11 +331,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to delete list:', {
-          userId: ctx.user.id,
-          listId: input.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to delete list',
@@ -435,12 +407,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to add project to list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          projectId: input.projectId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to add project to list',
@@ -490,12 +456,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to remove project from list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          projectId: input.projectId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to remove project from list',
@@ -568,11 +528,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to follow list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to follow list',
@@ -618,11 +573,6 @@ export const listRouter = router({
           return { success: true };
         });
       } catch (error) {
-        console.error('Failed to unfollow list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to unfollow list',
