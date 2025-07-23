@@ -1,14 +1,16 @@
 'use client';
 
-import { Skeleton, Tab, Tabs, cn } from '@heroui/react';
+import { Skeleton, cn } from '@heroui/react';
 import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
+import BookmarksIcon from '@/components/icons/Bookmarks';
 
 import Contributions from './components/contributions';
 import { useProfileData } from './components/dataContext';
+import MyLists from './components/myLists';
 import Setting from './components/setting';
 import Upvotes from './components/upvotes';
 
@@ -16,17 +18,22 @@ const tabItems = [
   {
     key: 'profile',
     label: 'Profile Settings',
-    icon: <UserSquare size={32} weight="fill" />,
+    icon: <UserSquare size={28} weight="fill" />,
   },
   {
     key: 'contributions',
-    label: 'Contributions',
-    icon: <GitCommit size={32} weight="fill" />,
+    label: 'My Contributions',
+    icon: <GitCommit size={28} weight="fill" />,
   },
   {
     key: 'upvotes',
     label: 'My Upvotes',
-    icon: <ArrowSquareUp size={32} />,
+    icon: <ArrowSquareUp size={28} />,
+  },
+  {
+    key: 'lists',
+    label: 'My Lists',
+    icon: <BookmarksIcon size={28} />,
   },
 ];
 
@@ -38,13 +45,15 @@ const ProfileSettingsPage = () => {
   const initialTab = searchParams.get('tab');
 
   const [activeTab, setActiveTab] = useState<
-    'profile' | 'contributions' | 'upvotes'
+    'profile' | 'contributions' | 'upvotes' | 'lists'
   >(
     initialTab === 'contributions'
       ? 'contributions'
       : initialTab === 'upvotes'
         ? 'upvotes'
-        : 'profile',
+        : initialTab === 'lists'
+          ? 'lists'
+          : 'profile',
   );
 
   useEffect(() => {
@@ -53,9 +62,12 @@ const ProfileSettingsPage = () => {
       currentTab &&
       (currentTab === 'profile' ||
         currentTab === 'contributions' ||
-        currentTab === 'upvotes')
+        currentTab === 'upvotes' ||
+        currentTab === 'lists')
     ) {
-      setActiveTab(currentTab as 'profile' | 'contributions' | 'upvotes');
+      setActiveTab(
+        currentTab as 'profile' | 'contributions' | 'upvotes' | 'lists',
+      );
     } else if (!currentTab) {
       router.push(`/profile/${address}?tab=profile`, { scroll: false });
     }
@@ -63,74 +75,144 @@ const ProfileSettingsPage = () => {
 
   return (
     <div className="mobile:px-[10px] px-[40px]">
-      <div className="tablet:w-full mx-auto flex w-full max-w-[800px] flex-col items-center gap-5 pb-16 pt-8">
-        <div className="mobile:flex-col flex w-full items-center justify-center gap-[10px]">
-          <div className="mobile:w-full mobile:flex-col flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
-            <ECFTypography type="caption" className="opacity-50">
-              Connected Address:
-            </ECFTypography>
-            <ECFTypography type="caption" className="opacity-80">
-              {address}
-            </ECFTypography>
-          </div>
-
-          <div className="mobile:w-full flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
-            <ECFTypography type="caption" className="opacity-50">
-              Contribution Points:
-            </ECFTypography>
-            <Skeleton isLoaded={!!user}>
-              <ECFTypography type="caption" className="opacity-80">
-                {user?.weight ?? 100}
+      <div className="mx-auto flex w-full max-w-[1200px] gap-5 pb-16 pt-8">
+        {/* Left Sidebar Navigation */}
+        <div className="mobile:hidden flex w-[280px] flex-col gap-5">
+          {/* User Info */}
+          {/* <div className="flex flex-col gap-[10px]">
+            <div className="flex flex-col gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+              <ECFTypography type="caption" className="opacity-50">
+                Connected Address:
               </ECFTypography>
-            </Skeleton>
+              <ECFTypography type="caption" className="opacity-80">
+                {address}
+              </ECFTypography>
+            </div>
+
+            <div className="flex flex-col gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+              <ECFTypography type="caption" className="opacity-50">
+                Contribution Points:
+              </ECFTypography>
+              <Skeleton isLoaded={!!user}>
+                <ECFTypography type="caption" className="opacity-80">
+                  {user?.weight ?? 100}
+                </ECFTypography>
+              </Skeleton>
+            </div>
+          </div> */}
+
+          {/* Navigation Menu */}
+          <div className="flex flex-col gap-2">
+            {tabItems.map(({ key, label, icon }) => (
+              <button
+                key={key}
+                onClick={() => {
+                  const newTab = key as
+                    | 'profile'
+                    | 'contributions'
+                    | 'upvotes'
+                    | 'lists';
+                  setActiveTab(newTab);
+                  router.push(`/profile/${address}?tab=${newTab}`, {
+                    scroll: false,
+                  });
+                }}
+                className={cn(
+                  'flex items-center gap-3 rounded-[10px] p-[6px_10px] transition-all duration-200',
+                  activeTab === key
+                    ? 'bg-[#EBEBEB] opacity-100'
+                    : 'bg-transparent opacity-60 hover:bg-[rgba(0,0,0,0.05)] hover:opacity-80',
+                )}
+              >
+                <div className="text-black">{icon}</div>
+                <ECFTypography
+                  type="body1"
+                  className={cn(
+                    'font-semibold',
+                    activeTab === key ? 'opacity-100' : 'opacity-100',
+                  )}
+                >
+                  {label}
+                </ECFTypography>
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="w-full">
-          <Tabs
-            selectedKey={activeTab}
-            onSelectionChange={(key) => {
-              const newTab = key as 'profile' | 'contributions' | 'upvotes';
-              setActiveTab(newTab);
-              router.push(`/profile/${address}?tab=${newTab}`, {
-                scroll: false,
-              });
-            }}
-            variant="underlined"
-            className="w-full"
-            classNames={{
-              tabList: 'w-full border-b border-[rgba(0,0,0,0.1)] gap-[20px]',
-              tab: 'flex-1 flex justify-start items-center',
-              cursor:
-                'bg-black w-[102%] bottom-[-4px] left-[-4px] right-[-4px]',
-              tabContent: 'font-semibold',
-            }}
-          >
+        {/* Mobile Top Header - Only visible on mobile */}
+        <div className="mobile:flex hidden w-full flex-col gap-5">
+          <div className="flex flex-col gap-[10px]">
+            <div className="flex flex-col gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+              <ECFTypography type="caption" className="opacity-50">
+                Connected Address:
+              </ECFTypography>
+              <ECFTypography type="caption" className="opacity-80">
+                {address}
+              </ECFTypography>
+            </div>
+
+            <div className="flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
+              <ECFTypography type="caption" className="opacity-50">
+                Contribution Points:
+              </ECFTypography>
+              <Skeleton isLoaded={!!user}>
+                <ECFTypography type="caption" className="opacity-80">
+                  {user?.weight ?? 100}
+                </ECFTypography>
+              </Skeleton>
+            </div>
+          </div>
+
+          {/* Mobile Navigation - Horizontal Scroll */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {tabItems.map(({ key, label, icon }) => (
-              <Tab
+              <button
                 key={key}
-                title={
-                  <div className="flex items-center gap-[10px]">
-                    {icon}
-                    <ECFTypography
-                      type="body1"
-                      className={cn(
-                        'font-semibold',
-                        activeTab === key ? 'opacity-100' : 'opacity-60',
-                      )}
-                    >
-                      {label}
-                    </ECFTypography>
-                  </div>
-                }
-              />
+                onClick={() => {
+                  const newTab = key as
+                    | 'profile'
+                    | 'contributions'
+                    | 'upvotes'
+                    | 'lists';
+                  setActiveTab(newTab);
+                  router.push(`/profile/${address}?tab=${newTab}`, {
+                    scroll: false,
+                  });
+                }}
+                className={cn(
+                  'flex min-w-max items-center gap-2 rounded-[10px] p-[6px_12px] transition-all duration-200',
+                  activeTab === key
+                    ? 'bg-[#EBEBEB] opacity-100'
+                    : 'bg-transparent opacity-60 hover:bg-[rgba(0,0,0,0.05)] hover:opacity-80',
+                )}
+              >
+                <div className="text-black">{icon}</div>
+                <ECFTypography
+                  type="caption"
+                  className="whitespace-nowrap font-semibold"
+                >
+                  {label}
+                </ECFTypography>
+              </button>
             ))}
-          </Tabs>
+          </div>
         </div>
 
-        {activeTab === 'profile' && <Setting />}
-        {activeTab === 'contributions' && <Contributions />}
-        {activeTab === 'upvotes' && <Upvotes />}
+        {/* Main Content Area */}
+        <div className="mobile:hidden flex-1">
+          {activeTab === 'profile' && <Setting />}
+          {activeTab === 'contributions' && <Contributions />}
+          {activeTab === 'upvotes' && <Upvotes />}
+          {activeTab === 'lists' && <MyLists />}
+        </div>
+
+        {/* Mobile Content - Full width */}
+        <div className="mobile:flex hidden w-full">
+          {activeTab === 'profile' && <Setting />}
+          {activeTab === 'contributions' && <Contributions />}
+          {activeTab === 'upvotes' && <Upvotes />}
+          {activeTab === 'lists' && <MyLists />}
+        </div>
       </div>
     </div>
   );
