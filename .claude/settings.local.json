@@ -26,7 +26,8 @@
       "Bash(pkill:*)",
       "Bash(git log:*)",
       "Bash(npx tsx:*)",
-      "Bash(gh pr diff:*)"
+      "Bash(gh pr diff:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }
