@@ -13,9 +13,9 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { addToast } from '@/components/base/toast';
 import { BookmarkList } from '@/types/bookmark';
 
-import { useBookmark } from './useBookmark';
 import BookmarkListItem from './BookmarkListItem';
 import CreateNewListModal from './CreateNewListModal';
+import { useBookmark } from './useBookmark';
 
 interface SaveToListModalProps {
   isOpen: boolean;
@@ -95,9 +95,11 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
             listId,
             projectId,
           });
+          addToast({ title: 'Removed from list', color: 'success' });
         } else {
           // Add to list
           await addProjectToListMutation.mutateAsync({ listId, projectId });
+          addToast({ title: 'Added to list', color: 'success' });
         }
       } catch (error) {
         // Revert optimistic update on error

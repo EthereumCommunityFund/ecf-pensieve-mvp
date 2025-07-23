@@ -22,7 +22,7 @@ const BookmarkButton: FC<BookmarkButtonProps> = ({
   const { isProjectBookmarked } = useBookmark();
 
   // Check if the project is bookmarked
-  const { data: bookmarkStatus } = isProjectBookmarked(projectId);
+  const { data: bookmarkStatus, isLoading } = isProjectBookmarked(projectId);
 
   const isBookmarked = bookmarkStatus?.isBookmarked ?? false;
 
@@ -35,6 +35,7 @@ const BookmarkButton: FC<BookmarkButtonProps> = ({
           className,
         )}
         onPress={onOpen}
+        disabled={isLoading} // Disable button while loading
       >
         <Bookmark
           className="mobile:size-[20px] size-[24px]"

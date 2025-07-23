@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { listFollows, listProjects, lists, projects } from '@/lib/db/schema';
@@ -590,35 +590,24 @@ export const listRouter = router({
       try {
         const { projectId } = input;
 
-        // First get all user's lists
-        const userLists = await ctx.db.query.lists.findMany({
-          where: eq(lists.creator, ctx.user.id),
-          columns: {
-            id: true,
-          },
-        });
+        const result = await ctx.db
+          .select({ listId: listProjects.listId })
+          .from(lists)
+          .leftJoin(
+            listProjects,
+            and(
+              eq(listProjects.listId, lists.id),
+              eq(listProjects.projectId, projectId),
+            ),
+          )
+          .where(eq(lists.creator, ctx.user.id))
+          .limit(1);
 
-        if (userLists.length === 0) {
-          return {
-            isBookmarked: false,
-            listId: undefined,
-          };
-        }
-
-        // Check if project exists in any of the user's lists
-        const bookmarkedList = await ctx.db.query.listProjects.findFirst({
-          where: and(
-            eq(listProjects.projectId, projectId),
-            sql`${listProjects.listId} IN (${sql.join(
-              userLists.map((list) => sql`${list.id}`),
-              sql`, `,
-            )})`,
-          ),
-        });
+        const listId = result.length > 0 ? result[0].listId : undefined;
 
         return {
-          isBookmarked: !!bookmarkedList,
-          listId: bookmarkedList?.listId,
+          isBookmarked: !!listId,
+          listId: listId ?? undefined,
         };
       } catch (error) {
         console.error('Failed to check project bookmark status:', {
@@ -642,38 +631,25 @@ export const listRouter = router({
     .query(async ({ ctx, input }) => {
       try {
         const { projectId } = input;
+        const { ...listColumns } = getTableColumns(lists);
 
-        // Get all user lists
-        const userLists = await ctx.db.query.lists.findMany({
-          where: eq(lists.creator, ctx.user.id),
-          orderBy: [desc(lists.createdAt)],
-        });
+        const results = await ctx.db
+          .select({
+            ...listColumns,
+            isProjectInList: sql<boolean>`${listProjects.projectId} IS NOT NULL`,
+          })
+          .from(lists)
+          .leftJoin(
+            listProjects,
+            and(
+              eq(listProjects.listId, lists.id),
+              eq(listProjects.projectId, projectId),
+            ),
+          )
+          .where(eq(lists.creator, ctx.user.id))
+          .orderBy(desc(lists.createdAt));
 
-        if (userLists.length === 0) {
-          return [];
-        }
-
-        // Get all list-project relationships for this user's lists and this project
-        const listProjectRelations = await ctx.db.query.listProjects.findMany({
-          where: and(
-            eq(listProjects.projectId, projectId),
-            sql`${listProjects.listId} IN (${sql.join(
-              userLists.map((list) => sql`${list.id}`),
-              sql`, `,
-            )})`,
-          ),
-        });
-
-        // Create a Set of list IDs that contain the project
-        const listsWithProject = new Set(
-          listProjectRelations.map((lp) => lp.listId),
-        );
-
-        // Return lists with project status
-        return userLists.map((list) => ({
-          ...list,
-          isProjectInList: listsWithProject.has(list.id),
-        }));
+        return results;
       } catch (error) {
         console.error('Failed to get user lists with project status:', {
           userId: ctx.user.id,
