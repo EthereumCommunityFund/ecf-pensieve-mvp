@@ -17,7 +17,7 @@ async function syncProjectRanks() {
     const publishedProjects = await db
       .select({
         id: projects.id,
-        hasProposalKeys: projects.hasProposalKeys,
+        itemsTopWeight: projects.itemsTopWeight,
       })
       .from(projects)
       .where(eq(projects.isPublished, true));
@@ -30,11 +30,11 @@ async function syncProjectRanks() {
     for (const project of publishedProjects) {
       try {
         const publishedGenesisWeight = calculatePublishedGenesisWeight(
-          project.hasProposalKeys || [],
+          Object.keys(project.itemsTopWeight || {}),
         );
 
         console.log(
-          `Project ${project.id}: hasProposalKeys=[${project.hasProposalKeys?.join(', ')}], weight=${publishedGenesisWeight}`,
+          `Project ${project.id}: itemsTopWeight=[${Object.keys(project.itemsTopWeight || {}).join(', ')}], weight=${publishedGenesisWeight}`,
         );
 
         const existingRank = await db
@@ -48,7 +48,6 @@ async function syncProjectRanks() {
             .update(ranks)
             .set({
               publishedGenesisWeight,
-              updatedAt: new Date(),
             })
             .where(eq(ranks.projectId, project.id));
 
