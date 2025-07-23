@@ -37,13 +37,20 @@ export async function updateListFollowCount(
 }
 
 export function checkListAccess(
-  list: { privacy: 'private' | 'public'; creator: string },
+  list: {
+    privacy: 'private' | 'public';
+    creator: { userId: string } | string;
+  },
   userId?: string,
 ): boolean {
   if (list.privacy === 'public') {
     return true;
   }
-  return list.creator === userId;
+
+  const creatorId =
+    typeof list.creator === 'string' ? list.creator : list.creator.userId;
+
+  return creatorId === userId;
 }
 
 export function isListOwner(
@@ -94,4 +101,23 @@ export async function isUserFollowingList(
     where: and(eq(listFollows.listId, listId), eq(listFollows.userId, userId)),
   });
   return !!follow;
+}
+
+export async function addDefaultListToUser(
+  userId: string,
+  currentDb?: any,
+): Promise<void> {
+  const dbToUse = currentDb ?? db;
+  const list = await dbToUse.query.lists.findFirst({
+    where: eq(lists.creator, userId),
+  });
+  if (!list) {
+    const slug = await generateUniqueSlug(db);
+    await dbToUse.insert(lists).values({
+      name: 'Bookmarked Projects (Default)',
+      creator: userId,
+      privacy: 'private',
+      slug,
+    });
+  }
 }
