@@ -590,24 +590,20 @@ export const listRouter = router({
       try {
         const { projectId } = input;
 
-        const result = await ctx.db
-          .select({ listId: listProjects.listId })
-          .from(lists)
-          .leftJoin(
-            listProjects,
-            and(
-              eq(listProjects.listId, lists.id),
-              eq(listProjects.projectId, projectId),
-            ),
-          )
-          .where(eq(lists.creator, ctx.user.id))
-          .limit(1);
-
-        const listId = result.length > 0 ? result[0].listId : undefined;
+        // More efficient query - directly check if the project exists in user's lists
+        const result = await ctx.db.query.listProjects.findFirst({
+          where: and(
+            eq(listProjects.projectId, projectId),
+            sql`${listProjects.listId} IN (SELECT id FROM ${lists} WHERE creator = ${ctx.user.id})`,
+          ),
+          columns: {
+            listId: true,
+          },
+        });
 
         return {
-          isBookmarked: !!listId,
-          listId: listId ?? undefined,
+          isBookmarked: !!result,
+          listId: result?.listId,
         };
       } catch (error) {
         console.error('Failed to check project bookmark status:', {

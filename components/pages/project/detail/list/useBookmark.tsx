@@ -4,8 +4,10 @@ import { useCallback, useMemo } from 'react';
 
 import { addToast } from '@/components/base';
 import { useAuth } from '@/context/AuthContext';
+import type { RouterInputs } from '@/lib/trpc/client';
 import { trpc } from '@/lib/trpc/client';
-import { CreateListRequest } from '@/types/bookmark';
+
+type CreateListInput = RouterInputs['list']['createList'];
 
 export function useBookmark() {
   const { profile, showAuthPrompt } = useAuth();
@@ -39,8 +41,13 @@ export function useBookmark() {
 
   // Mutation hooks
   const createListMutation = trpc.list.createList.useMutation({
-    onSuccess: async () => {
-      await utils.list.getUserListsWithProjectStatus.invalidate();
+    onSuccess: () => {
+      utils.list.getUserListsWithProjectStatus.invalidate();
+      addToast({
+        title: 'Success',
+        description: 'List created successfully',
+        color: 'success',
+      });
     },
     onError: (error) => {
       addToast({
@@ -52,16 +59,25 @@ export function useBookmark() {
   });
 
   const addProjectToListMutation = trpc.list.addProjectToList.useMutation({
-    onSuccess: async (_, variables) => {
-      await utils.list.getUserListsWithProjectStatus.invalidate({
+    onSuccess: (_, variables) => {
+      utils.list.getUserListsWithProjectStatus.invalidate({
         projectId: variables.projectId,
       });
-      await utils.list.isProjectBookmarked.invalidate({
+      utils.list.isProjectBookmarked.invalidate({
         projectId: variables.projectId,
+      });
+      addToast({
+        title: 'Success',
+        description: 'Project added to list successfully',
+        color: 'success',
       });
     },
     onError: (error) => {
-      if (error.message?.includes('already in this list')) {
+      // Check for specific error code from backend
+      if (
+        error.data?.code === 'BAD_REQUEST' &&
+        error.message?.includes('already in this list')
+      ) {
         addToast({
           title: 'Info',
           description: 'Project is already in this list',
@@ -79,12 +95,17 @@ export function useBookmark() {
 
   const removeProjectFromListMutation =
     trpc.list.removeProjectFromList.useMutation({
-      onSuccess: async (_, variables) => {
-        await utils.list.getUserListsWithProjectStatus.invalidate({
+      onSuccess: (_, variables) => {
+        utils.list.getUserListsWithProjectStatus.invalidate({
           projectId: variables.projectId,
         });
-        await utils.list.isProjectBookmarked.invalidate({
+        utils.list.isProjectBookmarked.invalidate({
           projectId: variables.projectId,
+        });
+        addToast({
+          title: 'Success',
+          description: 'Project removed from list successfully',
+          color: 'success',
         });
       },
       onError: (error) => {
@@ -98,7 +119,7 @@ export function useBookmark() {
 
   // Action handlers
   const handleCreateList = useCallback(
-    async (data: CreateListRequest) => {
+    async (data: CreateListInput) => {
       if (!profile) {
         showAuthPrompt();
         return;
