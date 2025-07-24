@@ -11,7 +11,9 @@ import {
   GlobeHemisphereWestIcon,
   LockKeyIcon,
 } from '@/components/icons';
+import ProjectCard from '@/components/pages/project/ProjectCard';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 
 const PublicListPage = () => {
   const { slug } = useParams();
@@ -288,56 +290,11 @@ const PublicListPage = () => {
               </div>
             ) : listItems && listItems.length > 0 ? (
               listItems.map((item, index) => (
-                <div
+                <ProjectCard
                   key={item.id}
-                  className="group flex cursor-pointer items-center gap-4 rounded-[10px] bg-[rgba(0,0,0,0.05)] p-4 transition-all hover:bg-[rgba(0,0,0,0.08)]"
-                  onClick={() => {
-                    // Navigate to project detail page
-                    router.push(`/project/${item.project.id}`);
-                  }}
-                >
-                  {/* Project Info */}
-                  <div className="flex flex-1 flex-col gap-1">
-                    <ECFTypography
-                      type="body1"
-                      className="text-[16px] font-semibold leading-[25.6px]"
-                    >
-                      {item.project.name}
-                    </ECFTypography>
-                    <ECFTypography
-                      type="body2"
-                      className="text-[14px] leading-[22.4px] opacity-60"
-                    >
-                      {item.project.tagline || 'No description available'}
-                    </ECFTypography>
-
-                    {/* Creator info */}
-                    <div className="mt-2 flex items-center gap-2">
-                      <Avatar
-                        size="sm"
-                        name={item.project.creator?.name || 'Unknown'}
-                        src={item.project.creator?.avatarUrl || undefined}
-                        className="size-6"
-                      />
-                      <ECFTypography
-                        type="caption"
-                        className="text-[12px] leading-[19.2px] opacity-50"
-                      >
-                        by {item.project.creator?.name ?? 'Unknown'}
-                      </ECFTypography>
-                    </div>
-                  </div>
-
-                  {/* Order Number */}
-                  <div className="flex items-center gap-2">
-                    <ECFTypography
-                      type="caption"
-                      className="text-[12px] leading-[19.2px] opacity-40"
-                    >
-                      #{index + 1}
-                    </ECFTypography>
-                  </div>
-                </div>
+                  project={item.project as IProject}
+                  showCreator={false}
+                />
               ))
             ) : (
               <div className="flex flex-col items-center gap-4 py-12">

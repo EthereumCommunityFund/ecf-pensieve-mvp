@@ -2,15 +2,26 @@
 
 import { useState } from 'react';
 
-import ECFTypography from '@/components/base/typography';
 import { PlusIcon } from '@/components/icons';
 import { trpc } from '@/lib/trpc/client';
+import { RouterOutputs } from '@/types';
+import { devLog } from '@/utils/devLog';
 
-import ListCard from './ListCard';
+import CommonListCard from './CommonListCard';
+import FollowListCard from './FollowListCard';
 import CreateListModal from './modals/CreateListModal';
+import DeleteListModal from './modals/DeleteListModal';
+import EditListModal from './modals/EditListModal';
+import ShareListModal from './modals/ShareListModal';
 
 const MyLists = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedList, setSelectedList] = useState<
+    RouterOutputs['list']['getUserLists'][0] | null
+  >(null);
 
   // Fetch user's own lists
   const { data: userLists, isLoading: userListsLoading } =
@@ -25,7 +36,7 @@ const MyLists = () => {
   const { data: followedLists, isLoading: followedListsLoading } =
     trpc.list.getUserFollowedLists.useQuery(undefined, {
       select: (data) => {
-        console.log('devLog - getUserFollowedLists response:', data);
+        devLog('devLog - getUserFollowedLists response:', data);
         return data;
       },
     });
@@ -33,19 +44,16 @@ const MyLists = () => {
   return (
     <div className="flex w-full flex-col gap-10">
       {/* My Lists Section */}
-      <div className="flex flex-col gap-2">
-        <ECFTypography
-          type="subtitle2"
-          className="text-[18px] font-medium leading-[28.8px] opacity-50"
-        >
+      <div className="flex flex-col gap-[10px]">
+        <p className="font-mona text-[18px] font-[500] leading-[1.6] text-black/50">
           My Lists:
-        </ECFTypography>
+        </p>
 
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-[10px]">
           {/* User's Lists */}
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-[10px]">
             {userListsLoading ? (
-              <div className="flex flex-col gap-10">
+              <div className="flex flex-col gap-[10px]">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
@@ -54,14 +62,30 @@ const MyLists = () => {
                 ))}
               </div>
             ) : userLists && userLists.length > 0 ? (
-              userLists.map((list) => (
-                <ListCard key={list.id} list={list} showManagement={true} />
+              userLists.map((list, index) => (
+                <CommonListCard
+                  key={list.id}
+                  list={list}
+                  showBorderBottom={index < userLists.length - 1}
+                  onEdit={() => {
+                    setSelectedList(list);
+                    setShowEditModal(true);
+                  }}
+                  onShare={() => {
+                    setSelectedList(list);
+                    setShowShareModal(true);
+                  }}
+                  onDelete={() => {
+                    setSelectedList(list);
+                    setShowDeleteModal(true);
+                  }}
+                />
               ))
             ) : (
               <div className="flex flex-col items-center gap-4 py-8">
-                <ECFTypography type="body1" className="text-center opacity-50">
+                <p className="text-center opacity-50">
                   You haven't created any lists yet
-                </ECFTypography>
+                </p>
               </div>
             )}
           </div>
@@ -71,12 +95,9 @@ const MyLists = () => {
             onClick={() => setShowCreateModal(true)}
             className="flex items-center justify-between rounded-[8px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.03)] p-[8px_14px] transition-all hover:bg-[rgba(0,0,0,0.05)]"
           >
-            <ECFTypography
-              type="body1"
-              className="text-[14px] font-semibold leading-[19px]"
-            >
+            <p className="text-[14px] font-semibold leading-[19px]">
               Create New List
-            </ECFTypography>
+            </p>
             <PlusIcon size={20} />
           </button>
         </div>
@@ -84,12 +105,9 @@ const MyLists = () => {
 
       {/* Following Lists Section */}
       <div className="flex flex-col gap-2">
-        <ECFTypography
-          type="subtitle2"
-          className="text-[18px] font-medium leading-[28.8px] opacity-50"
-        >
+        <p className="text-[18px] font-medium leading-[28.8px] opacity-50">
           Following Lists:
-        </ECFTypography>
+        </p>
 
         <div className="flex flex-col gap-10">
           {followedListsLoading ? (
@@ -102,24 +120,59 @@ const MyLists = () => {
               ))}
             </div>
           ) : followedLists && followedLists.length > 0 ? (
-            followedLists.map((list) => (
-              <ListCard key={list.id} list={list} showManagement={false} />
+            followedLists.map((list, index) => (
+              <FollowListCard
+                key={list.id}
+                list={list}
+                showBorderBottom={index < followedLists.length - 1}
+              />
             ))
           ) : (
             <div className="flex flex-col items-center gap-4 py-8">
-              <ECFTypography type="body1" className="text-center opacity-50">
+              <p className="text-center opacity-50">
                 You're not following any lists yet
-              </ECFTypography>
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Create List Modal */}
+      {/* Modals */}
       <CreateListModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
       />
+
+      {selectedList && (
+        <>
+          <EditListModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedList(null);
+            }}
+            list={selectedList}
+          />
+
+          <DeleteListModal
+            isOpen={showDeleteModal}
+            onClose={() => {
+              setShowDeleteModal(false);
+              setSelectedList(null);
+            }}
+            list={selectedList}
+          />
+
+          <ShareListModal
+            isOpen={showShareModal}
+            onClose={() => {
+              setShowShareModal(false);
+              setSelectedList(null);
+            }}
+            list={selectedList}
+          />
+        </>
+      )}
     </div>
   );
 };

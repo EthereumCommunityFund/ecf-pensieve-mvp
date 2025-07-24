@@ -8,7 +8,6 @@ import {
   DropdownTrigger,
 } from '@heroui/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 import {
   DotsThreeVerticalIcon,
@@ -20,28 +19,24 @@ import {
 } from '@/components/icons';
 import { RouterOutputs } from '@/types';
 
-import DeleteListModal from './modals/DeleteListModal';
-import EditListModal from './modals/EditListModal';
-import ShareListModal from './modals/ShareListModal';
-
-interface ListCardProps {
+interface CommonListCardProps {
   list: RouterOutputs['list']['getUserLists'][0];
-  showManagement: boolean; // Whether to show management options (for user's own lists)
   showBorderBottom?: boolean;
+  onEdit: () => void;
+  onShare: () => void;
+  onDelete: () => void;
 }
 
-const ListCard = ({
+const CommonListCard = ({
   list,
-  showManagement,
   showBorderBottom,
-}: ListCardProps) => {
+  onEdit,
+  onShare,
+  onDelete,
+}: CommonListCardProps) => {
   const router = useRouter();
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleCardClick = () => {
-    // Navigate to list detail page
     router.push(`/list/${list.slug}`);
   };
 
@@ -70,43 +65,28 @@ const ListCard = ({
   return (
     <div
       className={cn(
-        'relative flex w-full pb-[10px] ',
+        'relative flex w-full pb-[10px]',
         showBorderBottom ? 'border-b border-black/10' : '',
       )}
     >
-      {/* Main Content */}
       <div className="flex flex-1 cursor-pointer items-center justify-between rounded-[10px] p-[10px] transition-all hover:bg-[rgba(0,0,0,0.02)]">
-        {/* Card Content */}
         <div onClick={handleCardClick} className="">
           <p className="text-[16px] font-semibold leading-[15px]">
             {list.name}
           </p>
 
-          {/* Description */}
           {list.description && (
             <p className="mt-[6px] text-[14px] leading-[18px] opacity-60">
               {list.description}
             </p>
           )}
 
-          {/* Privacy Status */}
           <div className="mt-[10px] flex items-center gap-[5px] opacity-60">
             {getPrivacyIcon()}
             <p className="text-[14px] font-semibold leading-[14px]">
               {getPrivacyText()}
             </p>
           </div>
-
-          {/* For followed lists, show creator info */}
-          {!showManagement && (
-            <div className="flex items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] p-[5px]">
-              <p className="text-[14px] leading-[19px] opacity-80">by:</p>
-              <div className="size-6 rounded-full bg-gray-300" />
-              <p className="text-[14px] leading-[19px] opacity-80">
-                {list.creator}
-              </p>
-            </div>
-          )}
         </div>
 
         <Dropdown>
@@ -121,21 +101,21 @@ const ListCard = ({
           <DropdownMenu aria-label="List actions">
             <DropdownItem
               key="edit"
-              onPress={() => setShowEditModal(true)}
+              onPress={onEdit}
               startContent={<PencilSimpleIcon size={18} />}
             >
               Edit List
             </DropdownItem>
             <DropdownItem
               key="share"
-              onPress={() => setShowShareModal(true)}
+              onPress={onShare}
               startContent={<ShareIcon size={18} />}
             >
               Share List
             </DropdownItem>
             <DropdownItem
               key="delete"
-              onPress={() => setShowDeleteModal(true)}
+              onPress={onDelete}
               startContent={<TrashIcon size={18} />}
               className="text-danger"
               color="danger"
@@ -145,57 +125,8 @@ const ListCard = ({
           </DropdownMenu>
         </Dropdown>
       </div>
-
-      {/* For followed lists, show Leave List option */}
-      {!showManagement && (
-        <div className="absolute right-[10px] top-[10px]">
-          <Dropdown>
-            <DropdownTrigger>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="flex size-[40px] items-center justify-center rounded-[5px] bg-[#E1E1E1] transition-all hover:bg-[#D1D1D1]"
-              >
-                <DotsThreeVerticalIcon size={32} />
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Follow actions">
-              <DropdownItem
-                key="leave"
-                onPress={() => {
-                  // TODO: Implement unfollow functionality
-                  console.log('Unfollow list:', list.id);
-                }}
-                startContent={<TrashIcon size={18} />}
-                className="text-danger"
-                color="danger"
-              >
-                Leave List
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-      )}
-
-      {/* Modals */}
-      <EditListModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        list={list}
-      />
-
-      <DeleteListModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        list={list}
-      />
-
-      <ShareListModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        list={list}
-      />
     </div>
   );
 };
 
-export default ListCard;
+export default CommonListCard;
