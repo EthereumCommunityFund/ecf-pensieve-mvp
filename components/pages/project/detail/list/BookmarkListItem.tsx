@@ -48,7 +48,7 @@ const BookmarkListItem: FC<BookmarkListItemProps> = ({
         </span>
       </div>
       <div className="flex size-[24px] items-center justify-center">
-        {list.privacy === 'private' || list.privacy === 'default' ? (
+        {list.privacy === 'private' ? (
           <Lock className="size-6 text-black" strokeWidth={1.5} />
         ) : (
           <Globe className="size-6 text-black" strokeWidth={1.5} />

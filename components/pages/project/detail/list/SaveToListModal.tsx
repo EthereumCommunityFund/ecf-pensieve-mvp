@@ -169,10 +169,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
               ) : (
                 listsWithProjectStatus
                   .sort((a, b) => {
-                    // Default list (privacy: 'default') should be first
-                    if (a.privacy === 'default') return -1;
-                    if (b.privacy === 'default') return 1;
-                    // Sort by creation date for other lists
+                    // Sort by creation date (newer first)
                     return (
                       new Date(b.createdAt).getTime() -
                       new Date(a.createdAt).getTime()

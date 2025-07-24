@@ -207,7 +207,7 @@ export const listRouter = router({
       z.object({
         name: z.string().min(1, 'List name cannot be empty'),
         description: z.string().optional(),
-        privacy: z.enum(['private', 'public', 'default']),
+        privacy: z.enum(['private', 'public']),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -485,10 +485,10 @@ export const listRouter = router({
             });
           }
 
-          if (list.privacy === 'private' || list.privacy === 'default') {
+          if (list.privacy === 'private') {
             throw new TRPCError({
               code: 'FORBIDDEN',
-              message: 'Cannot follow private or default list',
+              message: 'Cannot follow private list',
             });
           }
 

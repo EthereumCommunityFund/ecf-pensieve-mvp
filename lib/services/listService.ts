@@ -38,7 +38,7 @@ export async function updateListFollowCount(
 
 export function checkListAccess(
   list: {
-    privacy: 'private' | 'public' | 'default';
+    privacy: 'private' | 'public';
     creator: { userId: string } | string;
   },
   userId?: string,
@@ -48,8 +48,8 @@ export function checkListAccess(
     return true;
   }
 
-  // Default lists are only accessible to their owners
-  if (list.privacy === 'default' || list.privacy === 'private') {
+  // Private lists are only accessible to their owners
+  if (list.privacy === 'private') {
     const creatorId =
       typeof list.creator === 'string' ? list.creator : list.creator.userId;
     return creatorId === userId;
@@ -113,16 +113,19 @@ export async function addDefaultListToUser(
   currentDb?: any,
 ): Promise<void> {
   const dbToUse = currentDb ?? db;
-  // Check if user already has a default list
+  // Check if user already has a default bookmarked list
   const defaultList = await dbToUse.query.lists.findFirst({
-    where: and(eq(lists.creator, userId), eq(lists.privacy, 'default')),
+    where: and(
+      eq(lists.creator, userId),
+      eq(lists.name, 'Bookmarked Projects (Default)'),
+    ),
   });
   if (!defaultList) {
     const slug = await generateUniqueSlug(db);
     await dbToUse.insert(lists).values({
       name: 'Bookmarked Projects (Default)',
       creator: userId,
-      privacy: 'default',
+      privacy: 'private',
       slug,
     });
   }
