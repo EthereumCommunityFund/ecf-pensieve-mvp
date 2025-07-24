@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { listFollows, listProjects, lists, projects } from '@/lib/db/schema';
@@ -23,10 +23,6 @@ export const listRouter = router({
 
       return items;
     } catch (error) {
-      console.error('Failed to get user lists:', {
-        userId: ctx.user.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get user lists',
@@ -49,6 +45,7 @@ export const listRouter = router({
               columns: {
                 name: true,
                 avatarUrl: true,
+                userId: true,
               },
             },
           },
@@ -80,10 +77,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to get list:', {
-          slug: input.slug,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to get list',
@@ -202,10 +195,6 @@ export const listRouter = router({
 
       return items.map((item) => item.list);
     } catch (error) {
-      console.error('Failed to get user followed lists:', {
-        userId: ctx.user.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get user followed lists',
@@ -242,11 +231,6 @@ export const listRouter = router({
           return list;
         });
       } catch (error) {
-        console.error('Failed to create list:', {
-          userId: ctx.user.id,
-          input,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create list',
@@ -307,12 +291,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to update list:', {
-          userId: ctx.user.id,
-          listId: input.id,
-          input,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to update list',
@@ -354,11 +332,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to delete list:', {
-          userId: ctx.user.id,
-          listId: input.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to delete list',
@@ -435,12 +408,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to add project to list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          projectId: input.projectId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to add project to list',
@@ -490,12 +457,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to remove project from list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          projectId: input.projectId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to remove project from list',
@@ -568,11 +529,6 @@ export const listRouter = router({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error('Failed to follow list:', {
-          userId: ctx.user.id,
-          listId: input.listId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to follow list',
@@ -618,14 +574,88 @@ export const listRouter = router({
           return { success: true };
         });
       } catch (error) {
-        console.error('Failed to unfollow list:', {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to unfollow list',
+        });
+      }
+    }),
+
+  isProjectBookmarked: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { projectId } = input;
+
+        // More efficient query - directly check if the project exists in user's lists
+        const result = await ctx.db.query.listProjects.findFirst({
+          where: and(
+            eq(listProjects.projectId, projectId),
+            sql`${listProjects.listId} IN (SELECT id FROM ${lists} WHERE creator = ${ctx.user.id})`,
+          ),
+          columns: {
+            listId: true,
+          },
+        });
+
+        return {
+          isBookmarked: !!result,
+          listId: result?.listId,
+        };
+      } catch (error) {
+        console.error('Failed to check project bookmark status:', {
           userId: ctx.user.id,
-          listId: input.listId,
+          projectId: input.projectId,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to unfollow list',
+          message: 'Failed to check project bookmark status',
+        });
+      }
+    }),
+
+  getUserListsWithProjectStatus: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { projectId } = input;
+        const { ...listColumns } = getTableColumns(lists);
+
+        const results = await ctx.db
+          .select({
+            ...listColumns,
+            isProjectInList: sql<boolean>`${listProjects.projectId} IS NOT NULL`,
+          })
+          .from(lists)
+          .leftJoin(
+            listProjects,
+            and(
+              eq(listProjects.listId, lists.id),
+              eq(listProjects.projectId, projectId),
+            ),
+          )
+          .where(eq(lists.creator, ctx.user.id))
+          .orderBy(desc(lists.createdAt));
+
+        return results;
+      } catch (error) {
+        console.error('Failed to get user lists with project status:', {
+          userId: ctx.user.id,
+          projectId: input.projectId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get user lists with project status',
         });
       }
     }),

@@ -19,6 +19,7 @@
     "update:snap": "dotenv -e .env tsx scripts/updateProjectSnap.ts",
     "fix:item-weights": "dotenv -e .env tsx scripts/fixItemWeights.ts",
     "add:short-code": "dotenv -e .env tsx scripts/addShortCodeToExistingProjects.ts",
+    "add:default-list": "dotenv -e .env tsx scripts/addDefaultList.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
