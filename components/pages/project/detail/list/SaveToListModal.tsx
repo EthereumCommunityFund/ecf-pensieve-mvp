@@ -158,31 +158,39 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
             </button>
           </ModalHeader>
           <ModalBody className="flex flex-col justify-between gap-[10px] p-5">
-            <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
-              {isLoadingLists ? (
-                <SaveToListSkeleton />
-              ) : !listsWithProjectStatus ||
-                listsWithProjectStatus.length === 0 ? (
-                <div className="flex justify-center p-4">
-                  <div className="text-[14px] text-[#666]">No lists found</div>
-                </div>
-              ) : (
-                listsWithProjectStatus
-                  .sort((a, b) => {
-                    // Sort by creation date (newer first)
-                    return (
-                      new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime()
-                    );
-                  })
-                  .map((list) => (
-                    <BookmarkListItem
-                      key={list.id}
-                      list={list}
-                      isSelected={selectedListIds.includes(list.id)}
-                      onToggle={handleListToggle}
-                    />
-                  ))
+            <div className="relative">
+              <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
+                {isLoadingLists ? (
+                  <SaveToListSkeleton />
+                ) : !listsWithProjectStatus ||
+                  listsWithProjectStatus.length === 0 ? (
+                  <div className="flex justify-center p-4">
+                    <div className="text-[14px] text-[#666]">
+                      No lists found
+                    </div>
+                  </div>
+                ) : (
+                  listsWithProjectStatus
+                    .sort((a, b) => {
+                      // Sort by creation date (newer first)
+                      return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                      );
+                    })
+                    .map((list) => (
+                      <BookmarkListItem
+                        key={list.id}
+                        list={list}
+                        isSelected={selectedListIds.includes(list.id)}
+                        onToggle={handleListToggle}
+                      />
+                    ))
+                )}
+              </div>
+              {/* Gradient fade overlay at bottom when content overflows */}
+              {listsWithProjectStatus && listsWithProjectStatus.length > 6 && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/100 via-white/90 to-white/20" />
               )}
             </div>
 
