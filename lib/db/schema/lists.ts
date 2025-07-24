@@ -16,9 +16,9 @@ export const lists = pgTable(
     id: bigserial('id', { mode: 'number' }).primaryKey(),
     name: text('name').notNull(),
     description: text('description'),
-    privacy: text('privacy', { enum: ['private', 'public', 'default'] })
+    privacy: text('privacy', { enum: ['private', 'public'] })
       .notNull()
-      .$type<'private' | 'public' | 'default'>(),
+      .$type<'private' | 'public'>(),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),
