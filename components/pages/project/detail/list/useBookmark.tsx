@@ -66,11 +66,11 @@ export function useBookmark() {
       utils.list.isProjectBookmarked.invalidate({
         projectId: variables.projectId,
       });
-      addToast({
-        title: 'Success',
-        description: 'Project added to list successfully',
-        color: 'success',
-      });
+      // addToast({
+      //   title: 'Success',
+      //   description: 'Project added to list successfully',
+      //   color: 'success',
+      // });
     },
     onError: (error) => {
       // Check for specific error code from backend
@@ -102,11 +102,11 @@ export function useBookmark() {
         utils.list.isProjectBookmarked.invalidate({
           projectId: variables.projectId,
         });
-        addToast({
-          title: 'Success',
-          description: 'Project removed from list successfully',
-          color: 'success',
-        });
+        // addToast({
+        //   title: 'Success',
+        //   description: 'Project removed from list successfully',
+        //   color: 'success',
+        // });
       },
       onError: (error) => {
         addToast({

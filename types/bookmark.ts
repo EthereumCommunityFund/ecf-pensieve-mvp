@@ -2,7 +2,7 @@ export interface BookmarkList {
   id: number;
   name: string;
   description?: string | null;
-  privacy: 'private' | 'public';
+  privacy: 'private' | 'public' | 'default';
   creator: string;
   slug: string;
   createdAt: Date;
@@ -14,5 +14,5 @@ export interface BookmarkList {
 export interface CreateListRequest {
   name: string;
   description?: string;
-  privacy: 'private' | 'public';
+  privacy: 'private' | 'public' | 'default';
 }

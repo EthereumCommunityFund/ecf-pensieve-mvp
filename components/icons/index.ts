@@ -1,4 +1,5 @@
 export { default as ArrowUpRightIcon } from './ArrowUpRight';
+export { default as BookmarkSimple } from './BookmarkSimple';
 export { default as BuildingIcon } from './Building';
 export { default as CalendarBlankIcon } from './CalendarBlank';
 export { default as CardsIcon } from './Cards';

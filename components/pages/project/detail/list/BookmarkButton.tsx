@@ -1,10 +1,10 @@
 'use client';
 
 import { cn, useDisclosure } from '@heroui/react';
-import { Bookmark } from '@phosphor-icons/react';
 import { FC } from 'react';
 
 import { Button } from '@/components/base';
+import { BookmarkSimple } from '@/components/icons';
 
 import SaveToListModal from './SaveToListModal';
 import { useBookmark } from './useBookmark';
@@ -31,14 +31,14 @@ const BookmarkButton: FC<BookmarkButtonProps> = ({
       <Button
         isIconOnly
         className={cn(
-          'rounded-[4px] bg-black/5 hover:bg-black/10 size-[40px] p-[8px] mobile:size-[32px] mobile:p-[6px]',
+          'rounded-[5px] bg-[#F5F5F5] hover:bg-[#EBEBEB] size-[40px] p-[8px] mobile:size-[32px] mobile:p-[6px]',
           className,
         )}
         onPress={onOpen}
         disabled={isLoading} // Disable button while loading
       >
-        <Bookmark
-          className="mobile:size-[20px] size-[24px]"
+        <BookmarkSimple
+          className="mobile:size-[20px] size-[24px] text-black"
           weight={isBookmarked ? 'fill' : 'regular'}
         />
       </Button>

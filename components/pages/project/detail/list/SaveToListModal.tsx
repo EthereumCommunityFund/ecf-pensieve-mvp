@@ -15,6 +15,7 @@ import { BookmarkList } from '@/types/bookmark';
 
 import BookmarkListItem from './BookmarkListItem';
 import CreateNewListModal from './CreateNewListModal';
+import SaveToListSkeleton from './SaveToListSkeleton';
 import { useBookmark } from './useBookmark';
 
 interface SaveToListModalProps {
@@ -159,25 +160,32 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
           <ModalBody className="flex flex-col justify-between gap-[10px] p-5">
             <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
               {isLoadingLists ? (
-                <div className="flex justify-center p-4">
-                  <div className="text-[14px] text-[#666]">
-                    Loading lists...
-                  </div>
-                </div>
+                <SaveToListSkeleton />
               ) : !listsWithProjectStatus ||
                 listsWithProjectStatus.length === 0 ? (
                 <div className="flex justify-center p-4">
                   <div className="text-[14px] text-[#666]">No lists found</div>
                 </div>
               ) : (
-                listsWithProjectStatus.map((list) => (
-                  <BookmarkListItem
-                    key={list.id}
-                    list={list}
-                    isSelected={selectedListIds.includes(list.id)}
-                    onToggle={handleListToggle}
-                  />
-                ))
+                listsWithProjectStatus
+                  .sort((a, b) => {
+                    // Default list (privacy: 'default') should be first
+                    if (a.privacy === 'default') return -1;
+                    if (b.privacy === 'default') return 1;
+                    // Sort by creation date for other lists
+                    return (
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime()
+                    );
+                  })
+                  .map((list) => (
+                    <BookmarkListItem
+                      key={list.id}
+                      list={list}
+                      isSelected={selectedListIds.includes(list.id)}
+                      onToggle={handleListToggle}
+                    />
+                  ))
               )}
             </div>
 
