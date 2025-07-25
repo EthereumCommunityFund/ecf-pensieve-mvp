@@ -12,6 +12,7 @@ import {
   projectLogs,
   projects,
   projectSnaps,
+  ranks,
   voteRecords,
 } from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
@@ -22,6 +23,7 @@ import {
   createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 
 export const calculateReward = (key: string): number => {
   const item = POC_ITEMS[key as keyof typeof POC_ITEMS];
@@ -186,6 +188,11 @@ export const processItemProposalVoteResult = async (
       ),
     });
 
+    const newItemsTopWeight = {
+      ...(project?.itemsTopWeight ?? {}),
+      [key]: voteSum,
+    };
+
     if (oldLog) {
       await Promise.all([
         tx
@@ -198,10 +205,7 @@ export const processItemProposalVoteResult = async (
         tx
           .update(projects)
           .set({
-            itemsTopWeight: {
-              ...(project?.itemsTopWeight ?? {}),
-              [key]: voteSum,
-            },
+            itemsTopWeight: newItemsTopWeight,
           })
           .where(eq(projects.id, itemProposal.projectId)),
         addNotification(
@@ -217,6 +221,10 @@ export const processItemProposalVoteResult = async (
       return;
     }
 
+    const newPublishedGenesisWeight = calculatePublishedGenesisWeight(
+      Object.keys(newItemsTopWeight),
+    );
+
     await Promise.all([
       tx.insert(projectLogs).values({
         projectId: itemProposal.projectId,
@@ -226,12 +234,15 @@ export const processItemProposalVoteResult = async (
       tx
         .update(projects)
         .set({
-          itemsTopWeight: {
-            ...(project?.itemsTopWeight ?? {}),
-            [key]: voteSum,
-          },
+          itemsTopWeight: newItemsTopWeight,
         })
         .where(eq(projects.id, itemProposal.projectId)),
+      tx
+        .update(ranks)
+        .set({
+          publishedGenesisWeight: newPublishedGenesisWeight,
+        })
+        .where(eq(ranks.projectId, itemProposal.projectId)),
       tx
         .update(profiles)
         .set({
@@ -291,7 +302,6 @@ export const processItemProposalUpdate = async (
     })
     .where(eq(projects.id, project.id));
 
-  // Get the leading proposal for this key to get its value
   const leadingLog = await tx.query.projectLogs.findFirst({
     where: and(
       eq(projectLogs.projectId, project.id),

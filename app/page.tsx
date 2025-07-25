@@ -8,7 +8,7 @@ import ProjectIntro from '@/components/pages/home/ProjectIntro';
 
 export default function Page() {
   return (
-    <div className="px-[20px] pb-[56px] pt-[20px]">
+    <div className="mobile:px-[10px] px-[20px] pb-[56px] pt-[20px]">
       <Banner />
 
       <ProjectIntro />
