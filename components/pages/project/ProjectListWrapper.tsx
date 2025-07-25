@@ -151,7 +151,7 @@ export const ProjectListWrapper = ({
       )}
 
       {viewAllUrl && (
-        <Link href={viewAllUrl} className="mt-[20px] flex">
+        <Link href={viewAllUrl} className="mt-[10px] flex">
           <Button size="sm" className="w-full font-[400]">
             {viewAllText || 'View All'}
           </Button>

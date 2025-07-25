@@ -211,7 +211,7 @@ const HomeList = () => {
   return (
     <div className="tablet:gap-[10px] mt-5 flex gap-[20px]">
       {/* Left side: Top Transparent Projects with infinite scroll */}
-      <div className="flex-1 rounded-[10px] p-[10px]">
+      <div className="mobile:p-0 flex-1 rounded-[10px] p-[10px]">
         <SectionHeader
           title="Top Transparent Projects"
           description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
@@ -268,9 +268,9 @@ const HomeList = () => {
         </div>
 
         {/* Column 2: Community */}
-        <div className="rounded-[10px] border border-black/10 p-[14px]">
+        <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title="Communities"
+            title="Local Communities"
             description="Discover local and cyber communities"
             icon={<TagIcon />}
           />
@@ -290,7 +290,7 @@ const HomeList = () => {
         </div>
 
         {/* Column 3: Events */}
-        <div className="rounded-[10px] border border-black/10 p-[14px]">
+        <div className="lex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
             title="Events"
             description="Explore event organizations and pop-up events"
@@ -312,7 +312,7 @@ const HomeList = () => {
         </div>
 
         {/* Column 4: Hubs */}
-        <div className="rounded-[10px] border border-black/10 p-[14px]">
+        <div className="lex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
             title="Hubs"
             description="Explore digital and physical hubs"

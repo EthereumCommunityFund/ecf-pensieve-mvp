@@ -16,7 +16,7 @@ interface ISectionHeaderSmallProps {
 
 const SectionHeaderSmall = (props: ISectionHeaderSmallProps) => {
   return (
-    <div className="mb-[13px] px-[10px]">
+    <div className="mb-[10px]">
       <div className="mobile:flex-col mobile:items-start flex flex-1 items-center justify-between gap-[10px] py-[4px]">
         <div>
           <div className="flex items-center gap-[10px]">
