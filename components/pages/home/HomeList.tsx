@@ -16,7 +16,7 @@ import SectionHeaderSmall from './SectionHeaderSmall';
 
 const HomeList = () => {
   const router = useRouter();
-  const limit = 10;
+  const limit = 5;
 
   // Left side: Genesis weight paginated data with infinite scroll
   const {
@@ -32,6 +32,8 @@ const HomeList = () => {
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
     },
   );
 
@@ -87,13 +89,13 @@ const HomeList = () => {
   }, [ranksData?.bySupport, limit]);
 
   useEffect(() => {
-    if (byGenesisProjects.length > 0) {
-      devLog('byGenesisProjects', byGenesisProjects);
+    if (genesisData) {
+      devLog('genesisData', genesisData);
     }
     if (bySupportProjects.length > 0) {
       devLog('bySupportProjects', bySupportProjects);
     }
-  }, [byGenesisProjects, bySupportProjects]);
+  }, [genesisData, bySupportProjects]);
 
   // Get the latest updatedAt time from all ranks for transparent projects
   const transparentProjectsUpdatedAt = ranksData?.byGenesisWeight?.reduce(
