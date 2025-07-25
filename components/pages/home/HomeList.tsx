@@ -87,7 +87,7 @@ const HomeList = () => {
   const { data: communityProjects, isLoading: isLoadingCommunity } =
     trpc.project.getProjects.useQuery({
       limit,
-      categories: ['Community'],
+      categories: ['Local Communities'],
       isPublished: true,
     });
 
