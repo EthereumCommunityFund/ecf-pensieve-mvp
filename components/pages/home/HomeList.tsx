@@ -116,27 +116,6 @@ const HomeList = () => {
       : '';
   }, [transparentProjectsUpdatedAt]);
 
-  // Get the latest updatedAt time from all projects for community-trusted projects
-  const communityTrustedUpdatedAt = ranksData?.bySupport?.reduce(
-    (latest, project) => {
-      if (!project.updatedAt) return latest;
-      if (!latest) return project.updatedAt;
-      return new Date(project.updatedAt) > new Date(latest)
-        ? project.updatedAt
-        : latest;
-    },
-    null as Date | null,
-  );
-
-  const displayUpdatedAtOfTrust = useMemo(() => {
-    return communityTrustedUpdatedAt
-      ? `Updated: ${formatDateWithTimeGMT(
-          communityTrustedUpdatedAt,
-          'DD-MM-YYYY | HH:mm',
-        )} GMT`
-      : '';
-  }, [communityTrustedUpdatedAt]);
-
   const handleViewTopTransparentProjects = useCallback(() => {
     router.push('/projects?type=transparent');
   }, [router]);
@@ -275,7 +254,7 @@ const HomeList = () => {
         </div>
 
         {/* Column 3: Events */}
-        <div className="lex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
+        <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
             title="Events"
             description="Explore event organizations and pop-up events"
@@ -297,7 +276,7 @@ const HomeList = () => {
         </div>
 
         {/* Column 4: Hubs */}
-        <div className="lex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
+        <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
             title="Hubs"
             description="Explore digital and physical hubs"
