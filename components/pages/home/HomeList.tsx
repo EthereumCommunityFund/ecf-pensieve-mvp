@@ -70,6 +70,7 @@ const HomeList = () => {
     fetchNextPage: fetchNextGenesis,
     hasNextPage: hasNextGenesis,
     isFetchingNextPage: isFetchingNextGenesis,
+    refetch: refetchGenesis,
   } = trpc.rank.getTopRanksByGenesisWeightPaginated.useInfiniteQuery(
     {
       limit: 10,
@@ -80,30 +81,42 @@ const HomeList = () => {
   );
 
   // Right side: Support projects (existing)
-  const { data: ranksData, isLoading: isLoadingSupport } =
-    trpc.rank.getTopRanks.useQuery();
+  const {
+    data: ranksData,
+    isLoading: isLoadingSupport,
+    refetch: refetchRanksData,
+  } = trpc.rank.getTopRanks.useQuery();
 
   // Right side: Category-based projects
-  const { data: communityProjects, isLoading: isLoadingCommunity } =
-    trpc.project.getProjects.useQuery({
-      limit,
-      categories: ['Local Communities'],
-      isPublished: true,
-    });
+  const {
+    data: communityProjects,
+    isLoading: isLoadingCommunity,
+    refetch: refetchCommunity,
+  } = trpc.project.getProjects.useQuery({
+    limit,
+    categories: ['Local Communities'],
+    isPublished: true,
+  });
 
-  const { data: eventsProjects, isLoading: isLoadingEvents } =
-    trpc.project.getProjects.useQuery({
-      limit,
-      categories: ['Events'],
-      isPublished: true,
-    });
+  const {
+    data: eventsProjects,
+    isLoading: isLoadingEvents,
+    refetch: refetchEvents,
+  } = trpc.project.getProjects.useQuery({
+    limit,
+    categories: ['Events'],
+    isPublished: true,
+  });
 
-  const { data: hubsProjects, isLoading: isLoadingHubs } =
-    trpc.project.getProjects.useQuery({
-      limit,
-      categories: ['Hubs'],
-      isPublished: true,
-    });
+  const {
+    data: hubsProjects,
+    isLoading: isLoadingHubs,
+    refetch: refetchHubs,
+  } = trpc.project.getProjects.useQuery({
+    limit,
+    categories: ['Hubs'],
+    isPublished: true,
+  });
 
   // Flatten paginated genesis projects
   const byGenesisProjects = useMemo(() => {
@@ -177,6 +190,23 @@ const HomeList = () => {
     router.push('/projects?type=community-trusted');
   }, [router]);
 
+  // Refetch all method to refresh all data
+  const refetchAll = useCallback(async () => {
+    await Promise.all([
+      refetchGenesis(),
+      refetchRanksData(),
+      refetchCommunity(),
+      refetchEvents(),
+      refetchHubs(),
+    ]);
+  }, [
+    refetchGenesis,
+    refetchRanksData,
+    refetchCommunity,
+    refetchEvents,
+    refetchHubs,
+  ]);
+
   // Infinite scroll implementation with IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -225,7 +255,7 @@ const HomeList = () => {
           onLoadMore={() => {}}
           isFetchingNextPage={isFetchingNextGenesis}
           emptyMessage="No transparent projects found"
-          onSuccess={() => {}}
+          onSuccess={refetchAll}
           showCreator={false}
           showUpvote={false}
           showTransparentScore={true}
@@ -258,7 +288,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={() => {}}
+            onSuccess={refetchAll}
             showCreator={false}
             showUpvote={true}
             showTransparentScore={false}
@@ -280,7 +310,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={() => {}}
+            onSuccess={refetchAll}
             showCreator={false}
             showUpvote={true}
             showTransparentScore={false}
@@ -302,7 +332,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={() => {}}
+            onSuccess={refetchAll}
             showCreator={false}
             showUpvote={true}
             showTransparentScore={false}
@@ -324,7 +354,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={() => {}}
+            onSuccess={refetchAll}
             showCreator={false}
             showUpvote={true}
             showTransparentScore={false}
