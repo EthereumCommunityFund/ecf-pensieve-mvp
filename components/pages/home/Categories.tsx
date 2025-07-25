@@ -12,24 +12,6 @@ interface IProps {
 
 export default function Categories({ className = '' }: IProps) {
   const router = useRouter();
-  // const { data: categories, isLoading } = trpc.project.getCategories.useQuery(
-  //   undefined,
-  //   {
-  //     select(data) {
-  //       devLog('getCategories', data);
-  //       return data;
-  //     },
-  //   },
-  // );
-
-  // const displayCategories = useMemo(() => {
-  //   const cats = (categories || []).map((item) => item.category);
-  //   return Array.from(new Set(['Communities', 'Events', 'Hubs', ...cats]));
-  // }, [categories]);
-
-  // if (isLoading) {
-  //   return <CategorySkeleton className={className} />;
-  // }
 
   return (
     <div className={className}>
