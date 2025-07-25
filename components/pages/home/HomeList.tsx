@@ -243,7 +243,7 @@ const HomeList = () => {
       </div>
 
       {/* Right side: 4 columns */}
-      <div className="mobile:hidden flex w-[390px] flex-col gap-[10px]">
+      <div className="tablet:w-[325px] mobile:hidden flex w-[390px] flex-col gap-[10px]">
         {/* Column 1: Top Community-trusted */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall

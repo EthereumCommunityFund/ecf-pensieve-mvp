@@ -123,20 +123,24 @@ export const ProjectListWrapper = ({
       })}
 
       {isFetchingNextPage &&
-        (size === 'sm' ? (
-          <ProjectCardSkeletonSmall
-            showBorder={true}
-            showCreator={showCreator}
-            showUpvote={showUpvote}
-          />
-        ) : (
-          <ProjectCardSkeleton
-            showBorder={true}
-            showCreator={showCreator}
-            showTransparentScore={showTransparentScore}
-            showUpvote={showUpvote}
-          />
-        ))}
+        Array.from({ length: 3 }).map((_, index) =>
+          size === 'sm' ? (
+            <ProjectCardSkeletonSmall
+              key={`fetching-skeleton-${index}`}
+              showBorder={true}
+              showCreator={showCreator}
+              showUpvote={showUpvote}
+            />
+          ) : (
+            <ProjectCardSkeleton
+              key={`fetching-skeleton-${index}`}
+              showBorder={true}
+              showCreator={showCreator}
+              showTransparentScore={showTransparentScore}
+              showUpvote={showUpvote}
+            />
+          ),
+        )}
 
       {hasNextPage && (
         <div className="flex flex-1 justify-center py-4">
