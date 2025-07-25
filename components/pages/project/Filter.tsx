@@ -4,15 +4,12 @@ import { Button, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-import { trpc } from '@/lib/trpc/client';
+import { AllCategories } from '@/constants/category';
 
 export default function ProjectFilter() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const { data: categoriesData, isLoading } =
-    trpc.project.getCategories.useQuery();
 
   const handleCategorySelect = (category: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -31,21 +28,6 @@ export default function ProjectFilter() {
   };
 
   const selectedCategory = searchParams.get('cat');
-
-  if (isLoading) {
-    return (
-      <Button
-        variant="flat"
-        size="sm"
-        className="flex items-center gap-2 bg-gray-100 text-gray-700"
-        disabled
-      >
-        Loading...
-      </Button>
-    );
-  }
-
-  const categories = categoriesData || [];
 
   return (
     <Popover isOpen={isOpen} onOpenChange={setIsOpen} placement="bottom-start">
@@ -108,17 +90,17 @@ export default function ProjectFilter() {
           >
             All Categories
           </Button>
-          {categories.map((category) => (
+          {AllCategories.map((category) => (
             <Button
-              key={category.category}
+              key={category.value}
               variant="light"
               size="sm"
               className={`justify-start ${
-                selectedCategory === category.category ? 'bg-gray-100' : ''
+                selectedCategory === category.value ? 'bg-gray-100' : ''
               }`}
-              onPress={() => handleCategorySelect(category.category)}
+              onPress={() => handleCategorySelect(category.value)}
             >
-              {category.category}
+              {category.label}
             </Button>
           ))}
         </div>

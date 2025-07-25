@@ -109,18 +109,6 @@ export const rankRouter = router({
         };
       };
 
-      if (!cursor) {
-        const getCachedTopRanks = nextCache(
-          getTopRanksData,
-          [`top-ranks-genesis-weight-${limit}-first-page`],
-          {
-            revalidate: 86400,
-            tags: [CACHE_TAGS.RANKS],
-          },
-        );
-        return getCachedTopRanks();
-      }
-
       return getTopRanksData();
     }),
 

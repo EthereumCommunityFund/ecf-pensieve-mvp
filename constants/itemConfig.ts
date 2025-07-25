@@ -7,6 +7,7 @@ import {
   IItemSubCategoryEnum,
 } from '@/types/item';
 
+import { AllCategories } from './category';
 import {
   dateFoundedConstraints,
   dateLaunchConstraints,
@@ -65,18 +66,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     weight: ALL_POC_ITEM_MAP.categories.weight,
     formDisplayType: 'selectMultiple',
     placeholder: 'Select categories',
-    options: [
-      { value: 'Infrastructure', label: 'Infrastructure' },
-      { value: 'Developer tools', label: 'Developer tools' },
-      { value: 'Applications/dApps', label: 'Applications/dApps' },
-      { value: 'Community & Coordination', label: 'Community & Coordination' },
-      { value: 'Security & Privacy', label: 'Security & Privacy' },
-      { value: 'Storage & Data', label: 'Storage & Data' },
-      { value: 'Events', label: 'Events' },
-      { value: 'Local Communities', label: 'Local Communities' },
-      { value: 'Hubs', label: 'Hubs' },
-      { value: 'Other', label: 'Other' },
-    ],
+    options: AllCategories,
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [ALL_METRICS.COMMUNITY_PARTICIPATION],

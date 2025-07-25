@@ -6,7 +6,6 @@ import {
   itemProposals,
   profiles,
   projects,
-  ranks,
   voteRecords,
 } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
@@ -15,7 +14,6 @@ import {
   createRewardNotification,
 } from '@/lib/services/notification';
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
-import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 
 import { protectedProcedure, router } from '../server';
 
@@ -106,9 +104,6 @@ export const itemProposalRouter = router({
               input.key,
             ]);
             const updatedHasProposalKeys = Array.from(hasProposalKeys);
-            const newPublishedGenesisWeight = calculatePublishedGenesisWeight(
-              updatedHasProposalKeys,
-            );
 
             const updatePromises = [
               tx
@@ -122,11 +117,6 @@ export const itemProposalRouter = router({
                   hasProposalKeys: updatedHasProposalKeys,
                 })
                 .where(eq(projects.id, input.projectId)),
-
-              tx
-                .update(ranks)
-                .set({ publishedGenesisWeight: newPublishedGenesisWeight })
-                .where(eq(ranks.projectId, input.projectId)),
 
               addRewardNotification(
                 createRewardNotification.createItemProposal(
