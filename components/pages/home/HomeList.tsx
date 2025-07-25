@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Button } from '@/components/base/button';
+import { CommunityTrustedIcon, TagIcon } from '@/components/icons';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
-import { CommunityTrustedIcon, TagIcon } from '@/components/icons';
 
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
 
@@ -272,7 +272,6 @@ const HomeList = () => {
           <SectionHeaderSmall
             title="Communities"
             description="Discover local and cyber communities"
-            onClick={() => router.push('/projects?category=Community')}
             icon={<TagIcon />}
           />
           <ProjectListWrapper
@@ -286,7 +285,7 @@ const HomeList = () => {
             showUpvote={true}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=Community`}
+            viewAllUrl={`/projects?cat=${encodeURIComponent('Local Communities')}`}
           />
         </div>
 
@@ -295,7 +294,6 @@ const HomeList = () => {
           <SectionHeaderSmall
             title="Events"
             description="Explore event organizations and pop-up events"
-            onClick={() => router.push('/projects?category=Events')}
             icon={<TagIcon />}
           />
           <ProjectListWrapper
@@ -318,7 +316,6 @@ const HomeList = () => {
           <SectionHeaderSmall
             title="Hubs"
             description="Explore digital and physical hubs"
-            onClick={() => router.push('/projects?category=Hubs')}
             icon={<TagIcon />}
           />
           <ProjectListWrapper

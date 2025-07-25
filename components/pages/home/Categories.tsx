@@ -3,12 +3,8 @@
 import { Button } from '@heroui/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
 
-import { trpc } from '@/lib/trpc/client';
-import { devLog } from '@/utils/devLog';
-
-import CategorySkeleton from './CategorySkeleton';
+import { AllCategories } from '@/constants/category';
 
 interface IProps {
   className?: string;
@@ -16,24 +12,24 @@ interface IProps {
 
 export default function Categories({ className = '' }: IProps) {
   const router = useRouter();
-  const { data: categories, isLoading } = trpc.project.getCategories.useQuery(
-    undefined,
-    {
-      select(data) {
-        devLog('getCategories', data);
-        return data;
-      },
-    },
-  );
+  // const { data: categories, isLoading } = trpc.project.getCategories.useQuery(
+  //   undefined,
+  //   {
+  //     select(data) {
+  //       devLog('getCategories', data);
+  //       return data;
+  //     },
+  //   },
+  // );
 
-  const displayCategories = useMemo(() => {
-    const cats = (categories || []).map((item) => item.category);
-    return Array.from(new Set(['Communities', 'Events', 'Hubs', ...cats]));
-  }, [categories]);
+  // const displayCategories = useMemo(() => {
+  //   const cats = (categories || []).map((item) => item.category);
+  //   return Array.from(new Set(['Communities', 'Events', 'Hubs', ...cats]));
+  // }, [categories]);
 
-  if (isLoading) {
-    return <CategorySkeleton className={className} />;
-  }
+  // if (isLoading) {
+  //   return <CategorySkeleton className={className} />;
+  // }
 
   return (
     <div className={className}>
@@ -50,16 +46,16 @@ export default function Categories({ className = '' }: IProps) {
       </div>
 
       <div className="mt-[14px] flex flex-wrap gap-[14px]">
-        {displayCategories?.map((category) => (
+        {AllCategories.map((category) => (
           <Button
-            key={category}
+            key={category.value}
             size="sm"
             className="h-[28px] rounded-full border border-black/10 bg-[#EBEBEB] text-[14px] leading-[18px] text-black/60"
             onPress={() =>
-              router.push(`/projects?cat=${encodeURIComponent(category)}`)
+              router.push(`/projects?cat=${encodeURIComponent(category.value)}`)
             }
           >
-            {category}
+            {category.label}
           </Button>
         ))}
       </div>
