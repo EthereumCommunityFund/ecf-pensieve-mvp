@@ -9,6 +9,7 @@ import {
   ranks,
   voteRecords,
 } from '@/lib/db/schema';
+import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
   addRewardNotification,
@@ -16,7 +17,6 @@ import {
 } from '@/lib/services/notification';
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
-import { POC_ITEMS } from '@/lib/pocItems';
 
 import { protectedProcedure, router } from '../server';
 
@@ -93,11 +93,6 @@ export const itemProposalRouter = router({
           if (!existingProposal) {
             const reward = calculateReward(input.key);
             const finalWeight = (userProfile?.weight ?? 0) + reward;
-
-            await tx
-              .update(profiles)
-              .set({ weight: finalWeight })
-              .where(eq(profiles.userId, ctx.user.id));
 
             const hasProposalKeys = new Set([
               ...project.hasProposalKeys,
