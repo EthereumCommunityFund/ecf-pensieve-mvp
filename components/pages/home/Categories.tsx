@@ -3,6 +3,7 @@
 import { Button } from '@heroui/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
 import { devLog } from '@/utils/devLog';
@@ -25,6 +26,11 @@ export default function Categories({ className = '' }: IProps) {
     },
   );
 
+  const displayCategories = useMemo(() => {
+    const cats = (categories || []).map((item) => item.category);
+    return Array.from(new Set(['Communities', 'Events', 'Hubs', ...cats]));
+  }, [categories]);
+
   if (isLoading) {
     return <CategorySkeleton className={className} />;
   }
@@ -44,18 +50,16 @@ export default function Categories({ className = '' }: IProps) {
       </div>
 
       <div className="mt-[14px] flex flex-wrap gap-[14px]">
-        {categories?.map((category) => (
+        {displayCategories?.map((category) => (
           <Button
-            key={category.category}
+            key={category}
             size="sm"
             className="h-[28px] rounded-full border border-black/10 bg-[#EBEBEB] text-[14px] leading-[18px] text-black/60"
             onPress={() =>
-              router.push(
-                `/projects?cat=${encodeURIComponent(category.category)}`,
-              )
+              router.push(`/projects?cat=${encodeURIComponent(category)}`)
             }
           >
-            {category.category}
+            {category}
           </Button>
         ))}
       </div>
