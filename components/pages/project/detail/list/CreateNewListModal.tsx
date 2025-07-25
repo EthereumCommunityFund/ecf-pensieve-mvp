@@ -199,8 +199,8 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
               onPress={handleSubmit}
               className={`h-[39px] flex-1 rounded-[5px] border border-black/10 px-[30px] py-[10px] text-[14px] font-[600] leading-[1.36em] text-white ${
                 isFormValid && !isCreating
-                  ? 'bg-[#64C0A5]' // Green color when enabled
-                  : 'bg-[#3C3C3C] opacity-20' // Dark with opacity when disabled
+                  ? 'bg-[#64C0A5] hover:bg-[#64C0A5]' // Green color when enabled, maintain on hover
+                  : 'bg-[#3C3C3C] opacity-20 hover:bg-[#3C3C3C]' // Dark with opacity when disabled, maintain on hover
               }`}
               isDisabled={!isFormValid || isCreating}
               isLoading={isCreating}

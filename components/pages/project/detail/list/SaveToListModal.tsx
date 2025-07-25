@@ -8,7 +8,7 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Plus, X } from '@phosphor-icons/react';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { addToast } from '@/components/base/toast';
 import { BookmarkList } from '@/types/bookmark';
@@ -29,9 +29,6 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
   onClose,
   projectId,
 }) => {
-  const [selectedListIds, setSelectedListIds] = useState<number[]>([]);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-
   const {
     isOpen: isCreateModalOpen,
     onOpen: onCreateModalOpen,
@@ -44,71 +41,108 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     removeProjectFromListMutation,
   } = useBookmark();
 
-  // Get all user lists with project status
+  // Only query when modal is open
   const { data: listsWithProjectStatus, isLoading: isLoadingLists } =
     getUserListsWithProjectStatus(projectId, isOpen);
 
-  // Reset state when modal closes
+  // Derive selected lists directly from query data
+  const initialSelectedListIds = useMemo(
+    () =>
+      listsWithProjectStatus
+        ?.filter((list) => list.isProjectInList)
+        .map((list) => list.id) || [],
+    [listsWithProjectStatus],
+  );
+
+  // Local state for optimistic updates
+  const [localSelectedChanges, setLocalSelectedChanges] = useState<{
+    added: Set<number>;
+    removed: Set<number>;
+  }>({ added: new Set(), removed: new Set() });
+
+  // Compute final selected list IDs
+  const selectedListIds = useMemo(
+    () => [
+      ...initialSelectedListIds.filter(
+        (id) => !localSelectedChanges.removed.has(id),
+      ),
+      ...Array.from(localSelectedChanges.added),
+    ],
+    [initialSelectedListIds, localSelectedChanges],
+  );
+
+  // Reset local changes when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setSelectedListIds([]);
-      setInitialLoadComplete(false);
+      setLocalSelectedChanges({ added: new Set(), removed: new Set() });
     }
   }, [isOpen]);
-
-  // Initialize selected state based on loaded data
-  useEffect(() => {
-    // Skip if modal is closed or already initialized
-    if (!isOpen || initialLoadComplete || isLoadingLists) {
-      return;
-    }
-
-    // Skip if no lists
-    if (!listsWithProjectStatus || listsWithProjectStatus.length === 0) {
-      setInitialLoadComplete(true);
-      return;
-    }
-
-    // Calculate the selected lists
-    const alreadySelectedIds = listsWithProjectStatus
-      .filter((list) => list.isProjectInList)
-      .map((list) => list.id);
-
-    setSelectedListIds(alreadySelectedIds);
-    setInitialLoadComplete(true);
-  }, [isOpen, initialLoadComplete, isLoadingLists, listsWithProjectStatus]);
 
   const handleListToggle = useCallback(
     async (listId: number) => {
       const isCurrentlySelected = selectedListIds.includes(listId);
+      const wasInitiallySelected = initialSelectedListIds.includes(listId);
 
-      // Optimistic update: update UI immediately
-      if (isCurrentlySelected) {
-        setSelectedListIds((prev) => prev.filter((id) => id !== listId));
-      } else {
-        setSelectedListIds((prev) => [...prev, listId]);
-      }
+      // Optimistic update
+      setLocalSelectedChanges((prev) => {
+        const newAdded = new Set(prev.added);
+        const newRemoved = new Set(prev.removed);
+
+        if (isCurrentlySelected) {
+          // Removing
+          if (wasInitiallySelected) {
+            newRemoved.add(listId);
+          } else {
+            newAdded.delete(listId);
+          }
+        } else {
+          // Adding
+          if (wasInitiallySelected) {
+            newRemoved.delete(listId);
+          } else {
+            newAdded.add(listId);
+          }
+        }
+
+        return { added: newAdded, removed: newRemoved };
+      });
 
       try {
         if (isCurrentlySelected) {
-          // Remove from list
           await removeProjectFromListMutation.mutateAsync({
             listId,
             projectId,
           });
           addToast({ title: 'Removed from list', color: 'success' });
         } else {
-          // Add to list
           await addProjectToListMutation.mutateAsync({ listId, projectId });
           addToast({ title: 'Added to list', color: 'success' });
         }
       } catch (error) {
         // Revert optimistic update on error
-        if (isCurrentlySelected) {
-          setSelectedListIds((prev) => [...prev, listId]);
-        } else {
-          setSelectedListIds((prev) => prev.filter((id) => id !== listId));
-        }
+        setLocalSelectedChanges((prev) => {
+          const newAdded = new Set(prev.added);
+          const newRemoved = new Set(prev.removed);
+
+          if (isCurrentlySelected) {
+            // Was trying to remove, revert
+            if (wasInitiallySelected) {
+              newRemoved.delete(listId);
+            } else {
+              newAdded.add(listId);
+            }
+          } else {
+            // Was trying to add, revert
+            if (wasInitiallySelected) {
+              newRemoved.add(listId);
+            } else {
+              newAdded.delete(listId);
+            }
+          }
+
+          return { added: newAdded, removed: newRemoved };
+        });
+
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to toggle list';
         addToast({ title: errorMessage, color: 'danger' });
@@ -117,6 +151,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
     },
     [
       selectedListIds,
+      initialSelectedListIds,
       projectId,
       addProjectToListMutation,
       removeProjectFromListMutation,
@@ -125,11 +160,14 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
 
   const handleCreateNewList = useCallback((newList: BookmarkList) => {
     // Auto-select the new list after creation
-    setSelectedListIds((prev) => [...prev, newList.id]);
+    setLocalSelectedChanges((prev) => {
+      const newAdded = new Set(prev.added);
+      newAdded.add(newList.id);
+      return { ...prev, added: newAdded };
+    });
   }, []);
 
   const handleClose = () => {
-    setSelectedListIds([]);
     onClose();
   };
 

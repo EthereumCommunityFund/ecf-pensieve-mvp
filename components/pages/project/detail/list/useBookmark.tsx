@@ -22,8 +22,6 @@ export function useBookmark() {
       { projectId },
       {
         enabled: enabled && !!profile,
-        staleTime: 30 * 1000, // Data is fresh for 30 seconds
-        gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
       },
     );
   };
@@ -33,8 +31,6 @@ export function useBookmark() {
       { projectId },
       {
         enabled: !!profile,
-        staleTime: 30 * 1000,
-        gcTime: 5 * 60 * 1000,
       },
     );
   };
