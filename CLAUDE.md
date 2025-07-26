@@ -243,7 +243,7 @@ pnpm run test:coverage:open
 - **环境配置**: 使用 `.env.local.test` 文件进行测试环境配置
 - **测试超时**: 30秒（适应数据库操作的延迟）
 - **测试模式**: 使用 `forks` 池模式，确保测试隔离
-- **覆盖率目标**: 
+- **覆盖率目标**:
   - `lib/trpc/routers/**/*.ts` - tRPC 路由
   - `lib/services/**/*.ts` - 业务服务层
   - `lib/utils/**/*.ts` - 工具函数
@@ -251,6 +251,7 @@ pnpm run test:coverage:open
 ### 测试前置条件
 
 1. **Supabase 本地实例**: 测试需要本地运行的 Supabase
+
    ```bash
    supabase start
    ```
@@ -284,11 +285,13 @@ describe('Feature Name', () => {
 #### 测试辅助工具
 
 **Factory 函数** (位于 `/tests/integration/factories/`)
+
 - `projectFactory.ts` - 创建测试项目数据
 - `itemProposalFactory.ts` - 创建提案测试数据
 - `invalidProjectFactory.ts` - 创建无效数据用于测试验证
 
 **Helper 函数** (位于 `/tests/integration/helpers/`)
+
 - `testHelpers.ts` - 通用测试辅助函数
 - `pocItemsHelpers.ts` - POC_ITEMS 相关辅助函数
 - `testConstants.ts` - 测试常量定义

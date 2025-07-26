@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { expect } from 'vitest';
 
 import { db } from '@/lib/db';
 import { projects } from '@/lib/db/schema';
@@ -11,8 +12,10 @@ export const publishProject = async (projectId: number) => {
 };
 
 export const createProjectWithUser = async (
-  projectCaller: any,
-  projectData: any,
+  projectCaller: {
+    createProject: (data: any) => Promise<{ id: number }>;
+  },
+  projectData: Record<string, any>,
   projectName: string,
 ) => {
   const project = await projectCaller.createProject({
@@ -23,13 +26,16 @@ export const createProjectWithUser = async (
   return project;
 };
 
-export const expectProposalToBeLeading = (logs: any[], proposalId: number) => {
+export const expectProposalToBeLeading = (
+  logs: Array<{ isNotLeading?: boolean; itemProposalId?: number }>,
+  proposalId: number,
+) => {
   const leadingLog = logs.find((log) => !log.isNotLeading);
   expect(leadingLog?.itemProposalId).toBe(proposalId);
 };
 
 export const expectNotificationOfType = (
-  notifications: any[],
+  notifications: Array<{ type: string; itemProposalId?: number }>,
   type: string,
   itemProposalId?: number,
 ) => {
