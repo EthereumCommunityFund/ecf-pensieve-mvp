@@ -76,22 +76,27 @@ export interface ICreateProjectPayload {
   mainDescription: string;
   logoUrl: string;
   websites: IWebsite[];
-  appUrl?: string;
+  appUrl: string | null;
   tags: string[];
-  whitePaper: string;
+  whitePaper: string | null;
   dateFounded: Date;
-  dateLaunch?: Date;
+  dateLaunch: Date | null;
   devStatus: string;
-  fundingStatus?: string;
+  fundingStatus: string | null;
   openSource: boolean;
-  codeRepo?: string;
-  tokenContract?: string;
-  dappSmartContracts: string;
+  codeRepo: string | null;
+  tokenContract: string | null;
+  dappSmartContracts: string | null;
   orgStructure: string;
   publicGoods: boolean;
   founders: IFounder[];
 
-  refs?: IRef[];
+  refs:
+    | {
+        key: string;
+        value: string;
+      }[]
+    | null;
 }
 export interface ICreateProposalPayload {
   projectId: number;
