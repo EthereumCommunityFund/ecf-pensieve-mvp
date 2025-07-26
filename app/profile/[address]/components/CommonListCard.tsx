@@ -98,27 +98,35 @@ const CommonListCard = ({
               <DotsThreeVerticalIcon size={32} />
             </button>
           </DropdownTrigger>
-          <DropdownMenu aria-label="List actions">
+          <DropdownMenu
+            aria-label="List actions"
+            className="min-w-[171px] rounded-[10px] p-[10px] shadow-lg"
+            itemClasses={{
+              base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px] data-[hover=true]:bg-[#EBEBEB]',
+              title:
+                "text-[16px] font-semibold leading-[1.36] tracking-[0.018em] font-['Open_Sans']",
+            }}
+          >
             <DropdownItem
               key="edit"
               onPress={onEdit}
-              startContent={<PencilSimpleIcon size={18} />}
+              endContent={<PencilSimpleIcon size={18} />}
+              className="bg-[#EBEBEB]"
             >
               Edit List
             </DropdownItem>
             <DropdownItem
               key="share"
               onPress={onShare}
-              startContent={<ShareIcon size={18} />}
+              endContent={<ShareIcon size={18} />}
             >
               Share List
             </DropdownItem>
             <DropdownItem
               key="delete"
               onPress={onDelete}
-              startContent={<TrashIcon size={18} />}
-              className="text-danger"
-              color="danger"
+              endContent={<TrashIcon size={18} />}
+              className="text-[#CD453B]"
             >
               Delete
             </DropdownItem>

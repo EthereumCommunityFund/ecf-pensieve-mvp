@@ -1,18 +1,11 @@
 'use client';
 
-import {
-  Button,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from '@heroui/react';
+import { Modal, ModalBody, ModalContent, ModalHeader } from '@heroui/react';
 import { useEffect, useState } from 'react';
 
+import { addToast } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
-import { CheckCircleIcon, CopyIcon, XIcon } from '@/components/icons';
+import { CopyIcon, XIcon } from '@/components/icons';
 import { RouterOutputs } from '@/types';
 
 interface ShareListModalProps {
@@ -28,6 +21,8 @@ const ShareListModal = ({ isOpen, onClose, list }: ShareListModalProps) => {
   // Generate share URL when modal opens
   useEffect(() => {
     if (isOpen && list) {
+      // Using the format from Figma: pensive.ecf.network/u/12380/list/32088
+      // For now, using slug-based URL as numeric IDs might not be available
       const baseUrl = window.location.origin;
       const url = `${baseUrl}/list/${list.slug}`;
       setShareUrl(url);
@@ -38,7 +33,10 @@ const ShareListModal = ({ isOpen, onClose, list }: ShareListModalProps) => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      addToast({
+        title: 'Copied Successfully',
+        color: 'success',
+      });
     } catch (error) {
       console.error('Failed to copy URL:', error);
     }
@@ -56,136 +54,77 @@ const ShareListModal = ({ isOpen, onClose, list }: ShareListModalProps) => {
       placement="center"
       backdrop="blur"
       classNames={{
-        base: 'max-w-[500px]',
+        base: 'max-w-[400px]',
         closeButton: 'hidden',
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex items-center justify-between p-6 pb-4">
+        <ModalHeader className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] px-[14px] py-[10px]">
           <ECFTypography
             type="subtitle2"
-            className="text-[20px] font-semibold leading-[32px]"
+            className="text-center text-[16px] font-semibold leading-[21.82px] text-black opacity-80"
           >
             Share List
           </ECFTypography>
           <button
             onClick={handleClose}
-            className="flex size-8 items-center justify-center rounded-[5px] opacity-60 transition-opacity hover:opacity-100"
+            className="rounded p-[5px] transition-opacity hover:bg-[rgba(0,0,0,0.05)]"
           >
             <XIcon size={20} />
           </button>
         </ModalHeader>
 
-        <ModalBody className="px-6 py-0">
-          <div className="flex flex-col gap-4">
-            {/* List Info */}
-            <div className="rounded-[8px] bg-[rgba(0,0,0,0.05)] p-4">
+        <ModalBody className="p-[14px]">
+          <div className="flex flex-col gap-[14px]">
+            {/* You are sharing section */}
+            <div className="flex flex-col gap-[10px]">
               <ECFTypography
                 type="body1"
-                className="text-[16px] font-semibold leading-[25.6px]"
+                className="text-[14px] font-semibold leading-[19.12px]"
+              >
+                You are sharing:
+              </ECFTypography>
+              <ECFTypography
+                type="body1"
+                className="text-[14px] leading-[20px] opacity-80"
               >
                 {list.name}
               </ECFTypography>
-              {list.description && (
-                <ECFTypography
-                  type="body2"
-                  className="mt-1 text-[14px] leading-[22.4px] opacity-60"
-                >
-                  {list.description}
-                </ECFTypography>
-              )}
-              <div className="mt-2 flex items-center gap-2">
-                <ECFTypography
-                  type="caption"
-                  className="text-[12px] leading-[19.2px] opacity-50"
-                >
-                  Privacy:
-                </ECFTypography>
-                <ECFTypography
-                  type="caption"
-                  className="text-[12px] font-semibold leading-[19.2px]"
-                >
-                  {list.privacy === 'public' ? 'Public' : 'Private'}
-                </ECFTypography>
-              </div>
             </div>
 
-            {/* Privacy Warning for Private Lists */}
-            {list.privacy === 'private' && (
-              <div className="rounded-[8px] border border-orange-200 bg-orange-50 p-4">
-                <ECFTypography
-                  type="body2"
-                  className="text-[14px] leading-[22.4px] text-orange-800"
+            {/* Share URL Input */}
+            <div className="flex flex-col gap-[10px] bg-[#F5F5F5]">
+              <div className="flex h-[40px] items-center rounded-[8px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] px-[10px]">
+                <div className="flex flex-1 items-center gap-[5px]">
+                  <div className="flex h-full items-center justify-center rounded-l-[10px] bg-[#E1E1E1] px-0">
+                    <ECFTypography
+                      type="body1"
+                      className="p-[10px] text-[14px] font-semibold leading-[19.12px] opacity-50"
+                    >
+                      https://
+                    </ECFTypography>
+                  </div>
+                  <ECFTypography
+                    type="body1"
+                    className="text-[14px] leading-[20px]"
+                  >
+                    {shareUrl.replace(/^https?:\/\//, '')}
+                  </ECFTypography>
+                </div>
+                <button
+                  onClick={handleCopyUrl}
+                  className="transition-opacity hover:opacity-70"
                 >
-                  This is a private list. Only you can access it with this link.
-                </ECFTypography>
+                  <CopyIcon
+                    width={20}
+                    height={20}
+                    className={copied ? 'text-green-600' : 'opacity-50'}
+                  />
+                </button>
               </div>
-            )}
-
-            {/* Share URL */}
-            <div className="flex flex-col gap-2">
-              <ECFTypography
-                type="body1"
-                className="text-[16px] font-semibold leading-[25.6px]"
-              >
-                Share Link
-              </ECFTypography>
-              <div className="flex gap-2">
-                <Input
-                  value={shareUrl}
-                  readOnly
-                  classNames={{
-                    inputWrapper:
-                      'border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.02)] h-[48px]',
-                    input: 'text-[14px] leading-[22.4px]',
-                  }}
-                />
-                <Button
-                  onPress={handleCopyUrl}
-                  isIconOnly
-                  variant="light"
-                  className="size-[48px] shrink-0 border border-[rgba(0,0,0,0.1)] bg-white hover:bg-[rgba(0,0,0,0.05)]"
-                >
-                  {copied ? (
-                    <CheckCircleIcon size={18} className="text-green-600" />
-                  ) : (
-                    <CopyIcon width={18} height={18} />
-                  )}
-                </Button>
-              </div>
-              {copied && (
-                <ECFTypography
-                  type="caption"
-                  className="text-[12px] leading-[19.2px] text-green-600"
-                >
-                  Link copied to clipboard!
-                </ECFTypography>
-              )}
-            </div>
-
-            {/* Share Instructions */}
-            <div className="rounded-[8px] bg-[rgba(0,0,0,0.02)] p-4">
-              <ECFTypography
-                type="body2"
-                className="text-[14px] leading-[22.4px] opacity-80"
-              >
-                Share this link with others to let them view your list.
-                {list.privacy === 'public'
-                  ? ' Anyone with the link can access it.'
-                  : ' Only you can access it, even with the link.'}
-              </ECFTypography>
             </div>
           </div>
         </ModalBody>
-
-        <ModalFooter className="flex justify-end gap-3 p-6 pt-4">
-          <Button
-            onPress={handleClose}
-            className="h-[48px] rounded-[8px] bg-black px-6 text-[16px] font-semibold leading-[25.6px] text-white hover:bg-[rgba(0,0,0,0.8)]"
-          >
-            Done
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from '@heroui/react';
+import { Modal, ModalBody, ModalContent, ModalHeader } from '@heroui/react';
 import { useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
@@ -68,71 +61,44 @@ const DeleteListModal = ({ isOpen, onClose, list }: DeleteListModalProps) => {
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex items-center justify-between p-6 pb-4">
+        <ModalHeader className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] px-5 py-[10px]">
           <ECFTypography
             type="subtitle2"
-            className="text-[20px] font-semibold leading-[32px]"
+            className="text-[16px] font-semibold leading-[21.82px] text-black opacity-80"
           >
             Delete List?
           </ECFTypography>
           <button
             onClick={handleClose}
-            className="flex size-8 items-center justify-center rounded-[5px] opacity-60 transition-opacity hover:opacity-100"
+            className="rounded p-[5px] transition-opacity hover:bg-[rgba(0,0,0,0.05)]"
           >
             <XIcon size={20} />
           </button>
         </ModalHeader>
 
-        <ModalBody className="px-6 py-0">
-          <div className="flex flex-col gap-4">
+        <ModalBody className="p-5">
+          <div className="flex flex-col gap-[14px]">
             {/* Warning Message */}
             <ECFTypography
               type="body1"
-              className="text-[16px] leading-[25.6px] opacity-80"
+              className="text-[14px] leading-[18px] text-black"
             >
               Deleting this list cannot be undone
             </ECFTypography>
 
-            {/* List Info */}
-            <div className="rounded-[8px] bg-[rgba(0,0,0,0.05)] p-4">
-              <ECFTypography
-                type="body1"
-                className="text-[16px] font-semibold leading-[25.6px]"
-              >
-                "{list.name}"
-              </ECFTypography>
-              {list.description && (
-                <ECFTypography
-                  type="body2"
-                  className="mt-1 text-[14px] leading-[22.4px] opacity-60"
-                >
-                  {list.description}
-                </ECFTypography>
+            {/* Delete Button */}
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex h-[48px] w-full items-center justify-between rounded-[5px] border border-[rgba(205,69,59,0.4)] bg-[rgba(205,69,59,0.2)] px-[10px] py-[4px] text-[16px] font-semibold leading-[21.82px] tracking-[0.282px] text-[#CD453B] hover:bg-[rgba(205,69,59,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span>Yes, Delete</span>
+              {!isDeleting && (
+                <TrashIcon size={18} className="text-[#CD453B]" />
               )}
-            </div>
+            </button>
           </div>
         </ModalBody>
-
-        <ModalFooter className="flex justify-end gap-3 p-6 pt-4">
-          <Button
-            variant="light"
-            onPress={handleClose}
-            isDisabled={isDeleting}
-            className="h-[48px] rounded-[8px] bg-[rgba(0,0,0,0.05)] px-6 text-[16px] font-semibold leading-[25.6px] text-black hover:bg-[rgba(0,0,0,0.1)]"
-          >
-            Cancel
-          </Button>
-          <Button
-            color="danger"
-            onPress={handleDelete}
-            isLoading={isDeleting}
-            isDisabled={isDeleting}
-            startContent={!isDeleting ? <TrashIcon size={18} /> : undefined}
-            className="h-[48px] rounded-[8px] bg-red-600 px-6 text-[16px] font-semibold leading-[25.6px] text-white hover:bg-red-700"
-          >
-            Delete
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

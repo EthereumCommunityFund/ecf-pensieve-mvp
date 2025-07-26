@@ -7,33 +7,47 @@ const GlobeHemisphereWest = ({
 }: IconProps) => {
   return (
     <svg
-      width={size}
-      height={size}
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
       viewBox="0 0 20 20"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      {...props}
     >
-      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M7.71 3.47C9.26 3.52 10.81 4.16 12.26 5.39"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5.62 5.41C7.69 6.63 9.76 8.85 11.83 12.07"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M11.38 13.81C14.65 15.74 17.92 17.67 21.19 19.60"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <g clipPath="url(#clip0_3281_3083)">
+        <path
+          d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z"
+          stroke="black"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M5.92773 9.62949L6.96836 7.8123C7.02329 7.71716 7.10234 7.63817 7.19752 7.58331C7.29271 7.52845 7.40068 7.49964 7.51055 7.49981H8.81602C8.92156 7.49998 9.02539 7.47308 9.11758 7.42168L10.0777 6.89356C10.12 6.87083 10.1591 6.84273 10.1941 6.80996L12.2973 4.90918C12.4019 4.81401 12.4712 4.68615 12.4937 4.54652C12.5163 4.40688 12.4908 4.26372 12.4215 4.14043L11.6012 2.6709"
+          stroke="black"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M5.29567 4.1582L4.37535 6.33398C4.31319 6.48128 4.30983 6.64679 4.36598 6.79648L5.26441 9.19258C5.30133 9.29048 5.36223 9.37754 5.44154 9.44579C5.52084 9.51404 5.61601 9.56129 5.71832 9.5832L7.39254 9.94336C7.4854 9.96327 7.5725 10.0041 7.64722 10.0627C7.72195 10.1213 7.78233 10.1962 7.82379 10.2816L8.12066 10.8965C8.17187 11.0021 8.2518 11.0912 8.35128 11.1535C8.45076 11.2158 8.56578 11.2488 8.68316 11.2488H9.76129"
+          stroke="black"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M16.6478 13.4752L12.5556 10.958C12.4812 10.9126 12.3982 10.8831 12.3118 10.8713L10.529 10.6307C10.3951 10.6125 10.2589 10.6383 10.1409 10.7041C10.0229 10.7698 9.92935 10.8721 9.87432 10.9955L8.80401 13.3971C8.75427 13.5088 8.73841 13.6327 8.75841 13.7534C8.77841 13.8741 8.83338 13.9862 8.91651 14.076L10.4587 15.6642C10.5256 15.7361 10.5745 15.8227 10.6017 15.9171C10.6288 16.0114 10.6334 16.1108 10.6149 16.2072L10.3673 17.4916"
+          stroke="black"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_3281_3083">
+          <rect width="20" height="20" fill="white" />
+        </clipPath>
+      </defs>
     </svg>
   );
 };

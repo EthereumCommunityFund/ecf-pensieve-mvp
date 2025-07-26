@@ -181,7 +181,7 @@ const ListDetailPage = () => {
                     onPress={() => setShowEditModal(true)}
                     startContent={<PencilSimple size={18} />}
                   >
-                    Edit List
+                    Edit List ddd
                   </DropdownItem>
                   <DropdownItem
                     key="share"

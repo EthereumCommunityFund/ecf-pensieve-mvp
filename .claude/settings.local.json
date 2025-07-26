@@ -27,7 +27,8 @@
       "Bash(git log:*)",
       "Bash(npx tsx:*)",
       "Bash(gh pr diff:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "WebFetch(domain:www.figma.com)"
     ],
     "deny": []
   }

@@ -1,22 +1,23 @@
 'use client';
 
 import {
-  Button,
   Input,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Radio,
-  RadioGroup,
   Textarea,
 } from '@heroui/react';
 import { useState } from 'react';
 
+import { Button } from '@/components/base';
+import { Select, SelectItem } from '@/components/base/select';
 import ECFTypography from '@/components/base/typography';
 import {
   GlobeHemisphereWestIcon,
+  InfoIcon,
+  LinkIcon,
   LockKeyIcon,
   XIcon,
 } from '@/components/icons';
@@ -27,6 +28,28 @@ interface CreateListModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const privacyOptions = [
+  {
+    value: 'public',
+    label: 'Public',
+    description: 'Anyone can view',
+    icon: GlobeHemisphereWestIcon,
+  },
+  {
+    value: 'private',
+    label: 'Private',
+    description: 'Only you can view',
+    icon: LockKeyIcon,
+  },
+  {
+    value: 'share-only',
+    label: 'Share-only',
+    description: 'Anyone with link can view',
+    icon: LinkIcon,
+    disabled: true,
+  },
+];
 
 const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
   const { isAuthenticated, session } = useAuth();
@@ -96,160 +119,167 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex items-center justify-between p-6 pb-4">
+        <ModalHeader className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] px-5 py-[10px]">
           <ECFTypography
             type="subtitle2"
-            className="text-[20px] font-semibold leading-[32px]"
+            className="text-[16px] font-semibold leading-[21.82px] text-black opacity-80"
           >
             Create a List
           </ECFTypography>
           <button
             onClick={handleClose}
-            className="flex size-8 items-center justify-center rounded-[5px] opacity-60 transition-opacity hover:opacity-100"
+            className="rounded p-[5px] transition-opacity hover:bg-[rgba(0,0,0,0.05)]"
           >
             <XIcon size={20} />
           </button>
         </ModalHeader>
 
-        <ModalBody className="px-6 py-0">
-          <div className="flex flex-col gap-4">
+        <ModalBody className="p-5">
+          <div className="flex flex-col gap-[10px] pb-5">
             {/* List Name */}
-            <div className="flex flex-col gap-2">
-              <ECFTypography
-                type="body1"
-                className="text-[16px] font-semibold leading-[25.6px]"
-              >
-                List Name
-              </ECFTypography>
+            <div className="flex flex-col gap-[10px]">
+              <div className="flex flex-col gap-[5px]">
+                <ECFTypography
+                  type="body1"
+                  className="text-[16px] font-semibold leading-[25.6px]"
+                >
+                  List Name
+                </ECFTypography>
+              </div>
               <div className="relative">
                 <Input
                   value={listName}
                   onChange={(e) => setListName(e.target.value)}
-                  placeholder="Enter list name"
+                  placeholder="type a name for this list"
                   classNames={{
                     inputWrapper:
-                      'border border-[rgba(0,0,0,0.1)] bg-white h-[48px]',
-                    input: 'text-[16px] leading-[25.6px]',
+                      'border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] h-[40px] rounded-[8px] px-[10px]',
+                    input: 'text-[14px] leading-[20px] placeholder:opacity-50',
                   }}
                   maxLength={150}
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <ECFTypography
-                    type="caption"
-                    className="text-[12px] leading-[19.2px] opacity-50"
-                  >
-                    {listName.length}/150
-                  </ECFTypography>
-                </div>
               </div>
+              <ECFTypography
+                type="caption"
+                className="text-right text-[11px] leading-[15px] text-black opacity-80"
+              >
+                {listName.length} / 150
+              </ECFTypography>
             </div>
 
             {/* Description */}
-            <div className="flex flex-col gap-2">
-              <ECFTypography
-                type="body1"
-                className="text-[16px] font-semibold leading-[25.6px]"
-              >
-                Description (Optional)
-              </ECFTypography>
+            <div className="flex flex-col gap-[10px]">
+              <div className="flex flex-col gap-[5px]">
+                <div className="flex items-center gap-[5px]">
+                  <ECFTypography
+                    type="body1"
+                    className="text-[16px] font-semibold leading-[25.6px]"
+                  >
+                    List Description
+                  </ECFTypography>
+                  <ECFTypography
+                    type="body1"
+                    className="text-[16px] font-semibold leading-[25.6px]"
+                  >
+                    (optional)
+                  </ECFTypography>
+                </div>
+              </div>
               <div className="relative">
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe your list..."
+                  placeholder="type a description"
                   classNames={{
                     inputWrapper:
-                      'border border-[rgba(0,0,0,0.1)] bg-white min-h-[120px]',
-                    input: 'text-[16px] leading-[25.6px]',
+                      'border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] min-h-[80px] rounded-[8px] px-[10px] py-[10px]',
+                    input: 'text-[14px] leading-[20px] placeholder:opacity-50',
                   }}
                   maxRows={5}
                   maxLength={5000}
                 />
-                <div className="absolute bottom-3 right-3">
-                  <ECFTypography
-                    type="caption"
-                    className="text-[12px] leading-[19.2px] opacity-50"
-                  >
-                    {description.length}/5000
-                  </ECFTypography>
-                </div>
               </div>
+              <ECFTypography
+                type="caption"
+                className="text-right text-[11px] leading-[15px] text-black opacity-80"
+              >
+                {description.length} / 5000
+              </ECFTypography>
             </div>
 
             {/* Privacy Settings */}
-            <div className="flex flex-col gap-2">
-              <ECFTypography
-                type="body1"
-                className="text-[16px] font-semibold leading-[25.6px]"
-              >
-                Privacy
-              </ECFTypography>
-              <RadioGroup
-                value={privacy}
-                onValueChange={(value) =>
-                  setPrivacy(value as 'public' | 'private')
-                }
-                orientation="vertical"
+            <div className="flex flex-col gap-[10px]">
+              <div className="flex flex-col gap-[5px]">
+                <div className="flex items-center gap-[5px]">
+                  <ECFTypography
+                    type="body1"
+                    className="text-[16px] font-semibold leading-[25.6px]"
+                  >
+                    List Privacy
+                  </ECFTypography>
+                  <InfoIcon size={20} className="opacity-50" />
+                </div>
+              </div>
+              <Select
+                selectedKeys={[privacy]}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
+                  if (selected && selected !== 'share-only') {
+                    setPrivacy(selected as 'public' | 'private');
+                  }
+                }}
+                placeholder="Select privacy"
                 classNames={{
-                  wrapper: 'gap-3',
+                  trigger:
+                    'h-[40px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] rounded-[8px] px-[10px]',
+                  value: 'text-[14px] leading-[20px]',
+                  listbox:
+                    'border border-[rgba(0,0,0,0.1)] rounded-[10px] p-[10px]',
+                  popoverContent: 'p-0',
+                }}
+                renderValue={(items) => {
+                  return items.map((item) => (
+                    <div key={item.key} className="flex items-center">
+                      <span className="text-[14px]">{item.textValue}</span>
+                    </div>
+                  ));
                 }}
               >
-                <Radio
-                  value="private"
-                  classNames={{
-                    base: 'flex items-center gap-3 p-0 m-0',
-                    wrapper: 'm-0',
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <LockKeyIcon size={20} className="opacity-60" />
-                    <div className="flex flex-col gap-1">
-                      <ECFTypography
-                        type="body2"
-                        className="text-[14px] font-semibold leading-[22.4px]"
-                      >
-                        Private
-                      </ECFTypography>
-                      <ECFTypography
-                        type="caption"
-                        className="text-[12px] leading-[19.2px] opacity-60"
-                      >
-                        Only you can see this list
-                      </ECFTypography>
+                {privacyOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    textValue={option.label}
+                    isDisabled={option.disabled}
+                    className={`rounded-[5px] px-[10px] py-[4px] ${
+                      option.disabled ? 'opacity-20' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-[10px]">
+                      <div className="flex flex-col gap-[5px]">
+                        <ECFTypography
+                          type="body1"
+                          className="text-[16px] font-semibold leading-[25.6px]"
+                        >
+                          {option.label}
+                        </ECFTypography>
+                        <ECFTypography
+                          type="caption"
+                          className="text-[13px] leading-[17.7px] tracking-[0.282px] opacity-80"
+                        >
+                          {option.description}
+                        </ECFTypography>
+                      </div>
+                      <option.icon size={26} />
                     </div>
-                  </div>
-                </Radio>
-                <Radio
-                  value="public"
-                  classNames={{
-                    base: 'flex items-center gap-3 p-0 m-0',
-                    wrapper: 'm-0',
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <GlobeHemisphereWestIcon size={20} className="opacity-60" />
-                    <div className="flex flex-col gap-1">
-                      <ECFTypography
-                        type="body2"
-                        className="text-[14px] font-semibold leading-[22.4px]"
-                      >
-                        Public
-                      </ECFTypography>
-                      <ECFTypography
-                        type="caption"
-                        className="text-[12px] leading-[19.2px] opacity-60"
-                      >
-                        Anyone can view this list
-                      </ECFTypography>
-                    </div>
-                  </div>
-                </Radio>
-              </RadioGroup>
+                  </SelectItem>
+                ))}
+              </Select>
             </div>
           </div>
         </ModalBody>
 
-        <ModalFooter className="flex flex-col gap-3 p-6 pt-4">
+        <ModalFooter className="flex flex-col gap-3 px-5 pb-5 pt-0">
           {!isAuthenticated && (
             <ECFTypography
               type="caption"
@@ -258,11 +288,11 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
               Please make sure you are logged in to create a list.
             </ECFTypography>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-[10px]">
             <Button
               variant="light"
               onPress={handleClose}
-              className="h-[48px] rounded-[8px] bg-[rgba(0,0,0,0.05)] px-6 text-[16px] font-semibold leading-[25.6px] text-black hover:bg-[rgba(0,0,0,0.1)]"
+              className="h-[39px] flex-1 rounded-[5px] px-[30px] text-[14px] font-semibold leading-[19.12px]"
             >
               Cancel
             </Button>
@@ -271,7 +301,11 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
               onPress={handleSubmit}
               isLoading={isSubmitting}
               isDisabled={!listName.trim() || isSubmitting || !isAuthenticated}
-              className="h-[48px] rounded-[8px] bg-black px-6 text-[16px] font-semibold leading-[25.6px] text-white hover:bg-[rgba(0,0,0,0.8)]"
+              className={`h-[39px] flex-1 rounded-[5px] px-[30px] text-[14px] font-semibold leading-[19.12px] text-white ${
+                !listName.trim() || isSubmitting
+                  ? 'opacity-20'
+                  : 'hover:bg-[#2C2C2C]'
+              }`}
             >
               Create
             </Button>
