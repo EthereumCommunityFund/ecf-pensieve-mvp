@@ -8,6 +8,7 @@ import {
   projects,
   voteRecords,
 } from '@/lib/db/schema';
+import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
   addRewardNotification,
@@ -40,6 +41,14 @@ export const itemProposalRouter = router({
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Project not found',
+          });
+        }
+
+        const item = POC_ITEMS[input.key as keyof typeof POC_ITEMS];
+        if (!item) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Item not found',
           });
         }
 
@@ -79,26 +88,10 @@ export const itemProposalRouter = router({
             });
           }
 
-          const caller = voteRouter.createCaller({
-            ...ctx,
-            db: tx as any,
-          });
-
-          if (voteRecord) {
-            await caller.switchItemProposalVote({
-              itemProposalId: itemProposal.id,
-              key: input.key,
-            });
-          } else {
-            await caller.createItemProposalVote({
-              itemProposalId: itemProposal.id,
-              key: input.key,
-            });
-          }
-
           if (!existingProposal) {
             const reward = calculateReward(input.key);
             const finalWeight = (userProfile?.weight ?? 0) + reward;
+
             const hasProposalKeys = new Set([
               ...project.hasProposalKeys,
               input.key,
@@ -141,7 +134,7 @@ export const itemProposalRouter = router({
 
             await Promise.all(updatePromises);
           } else {
-            logUserActivity.itemProposal.update(
+            await logUserActivity.itemProposal.update(
               {
                 userId: ctx.user.id,
                 targetId: itemProposal.id,
@@ -150,6 +143,23 @@ export const itemProposalRouter = router({
               },
               tx,
             );
+          }
+
+          const caller = voteRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
+
+          if (voteRecord) {
+            await caller.switchItemProposalVote({
+              itemProposalId: itemProposal.id,
+              key: input.key,
+            });
+          } else {
+            await caller.createItemProposalVote({
+              itemProposalId: itemProposal.id,
+              key: input.key,
+            });
           }
 
           return itemProposal;

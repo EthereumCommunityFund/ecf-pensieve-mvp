@@ -64,14 +64,14 @@ export const projectRouter = router({
             }),
           )
           .min(1, 'At least one website is required'),
-        appUrl: z.string().optional(),
+        appUrl: z.string().nullable(),
         dateFounded: z.date(),
-        dateLaunch: z.date().optional(),
+        dateLaunch: z.date().nullable(),
         devStatus: z.string().min(1, 'Development status cannot be empty'),
-        fundingStatus: z.string().optional(),
+        fundingStatus: z.string().nullable(),
         openSource: z.boolean(),
-        codeRepo: z.string().optional(),
-        tokenContract: z.string().optional(),
+        codeRepo: z.string().nullable(),
+        tokenContract: z.string().nullable(),
         orgStructure: z
           .string()
           .min(1, 'Organization structure cannot be empty'),
@@ -86,8 +86,8 @@ export const projectRouter = router({
           )
           .min(1, 'At least one founder is required'),
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
-        whitePaper: z.string().optional(),
-        dappSmartContracts: z.string().optional(),
+        whitePaper: z.string().nullable(),
+        dappSmartContracts: z.string().nullable(),
         refs: z
           .array(
             z.object({
@@ -95,7 +95,7 @@ export const projectRouter = router({
               value: z.string().min(1, 'Value cannot be empty'),
             }),
           )
-          .optional(),
+          .nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
