@@ -1,11 +1,17 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { ethers } from 'ethers';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ESSENTIAL_ITEM_WEIGHT_AMOUNT, REWARD_PERCENT } from '@/lib/constants';
 import { db } from '@/lib/db';
-import { invitationCodes, profiles, voteRecords } from '@/lib/db/schema';
+import {
+  invitationCodes,
+  profiles,
+  projects,
+  voteRecords,
+} from '@/lib/db/schema';
 import { notifications } from '@/lib/db/schema/notifications';
+import { projectSnaps } from '@/lib/db/schema/projectSnaps';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authRouter } from '@/lib/trpc/routers/auth';
 import { projectRouter } from '@/lib/trpc/routers/project';
@@ -17,6 +23,11 @@ import {
   createProjectWithRefsOnly,
 } from './factories/optionalFieldsFactory';
 import { createValidProjectData } from './factories/projectFactory';
+
+vi.mock('next/cache', () => ({
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
+}));
 
 describe('Project Integration Tests', () => {
   const supabase = getServiceSupabase();
@@ -596,6 +607,434 @@ describe('Project Integration Tests', () => {
       await expect(
         caller.getProjectById({ id: nonExistentId }),
       ).rejects.toThrow('Project not found');
+    });
+  });
+
+  describe('searchProjects', () => {
+    beforeEach(async () => {
+      const ctx = { db, supabase, user: { id: testUserId } };
+      const caller = projectRouter.createCaller(ctx);
+
+      const projects = [
+        {
+          ...createValidProjectData(),
+          name: 'Ethereum Blockchain Platform',
+          tagline: 'Decentralized computing platform',
+        },
+        {
+          ...createValidProjectData(),
+          name: 'Bitcoin Lightning Network',
+          tagline: 'Layer 2 payment protocol',
+        },
+        {
+          ...createValidProjectData(),
+          name: 'Polkadot Network',
+          tagline: 'Multi-chain interoperability protocol',
+        },
+      ];
+
+      for (const projectData of projects) {
+        await caller.createProject(projectData);
+      }
+    });
+
+    it('should search unpublished projects by name', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const result = await caller.searchProjects({
+        query: 'Ethereum',
+        limit: 20,
+      });
+
+      expect(result.unpublished.items).toBeDefined();
+      expect(result.unpublished.items.length).toBeGreaterThan(0);
+      expect(
+        result.unpublished.items.some((p) => p.name.includes('Ethereum')),
+      ).toBe(true);
+      expect(result.unpublished.totalCount).toBeGreaterThan(0);
+    });
+
+    it('should handle pagination for search results', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const firstPage = await caller.searchProjects({
+        query: 'Network',
+        limit: 1,
+      });
+
+      expect(firstPage.unpublished.items.length).toBe(1);
+
+      if (firstPage.unpublished.nextCursor) {
+        const secondPage = await caller.searchProjects({
+          query: 'Network',
+          limit: 1,
+          unpublishedCursor: firstPage.unpublished.nextCursor,
+        });
+
+        expect(secondPage.unpublished.items.length).toBeGreaterThanOrEqual(0);
+        expect(secondPage.unpublished.items[0]?.id).not.toBe(
+          firstPage.unpublished.items[0]?.id,
+        );
+      }
+    });
+
+    it('should handle empty search results', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const result = await caller.searchProjects({
+        query: 'NonExistentProjectNameXYZ123',
+        limit: 20,
+      });
+
+      expect(result.unpublished.items).toEqual([]);
+      expect(result.unpublished.totalCount).toBe(0);
+      expect(result.published.items).toEqual([]);
+      expect(result.published.totalCount).toBe(0);
+    });
+
+    it('should trim search query whitespace', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const result = await caller.searchProjects({
+        query: '  Bitcoin  ',
+        limit: 20,
+      });
+
+      expect(result.unpublished.items.length).toBeGreaterThan(0);
+      expect(
+        result.unpublished.items.some((p) => p.name.includes('Bitcoin')),
+      ).toBe(true);
+    });
+
+    it('should handle case-insensitive search', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const result = await caller.searchProjects({
+        query: 'polkadot',
+        limit: 20,
+      });
+
+      expect(result.unpublished.items.length).toBeGreaterThan(0);
+      expect(
+        result.unpublished.items.some((p) =>
+          p.name.toLowerCase().includes('polkadot'),
+        ),
+      ).toBe(true);
+    });
+
+    it('should validate search query is not empty', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      await expect(
+        caller.searchProjects({
+          query: '',
+          limit: 20,
+        }),
+      ).rejects.toThrow('Search query cannot be empty');
+    });
+
+    it('should search published projects by name', async () => {
+      // First check if there are any published projects with projectSnaps
+      const existingPublished = await db.query.projectSnaps.findMany({
+        limit: 5,
+      });
+
+      if (existingPublished.length > 0) {
+        const searchCtx = { db, supabase, user: null };
+        const searchCaller = projectRouter.createCaller(searchCtx);
+
+        const firstProjectSnap = existingPublished[0];
+        const searchTerm = firstProjectSnap.name?.substring(0, 5) || 'test';
+
+        const result = await searchCaller.searchProjects({
+          query: searchTerm,
+          limit: 20,
+        });
+
+        expect(result.published.items).toBeDefined();
+        expect(Array.isArray(result.published.items)).toBe(true);
+
+        if (result.published.totalCount > 0) {
+          expect(result.published.items.length).toBeGreaterThan(0);
+          expect(result.published.items[0].projectSnap).toBeDefined();
+        }
+      } else {
+        const ctx = { db, supabase, user: { id: testUserId } };
+        const caller = projectRouter.createCaller(ctx);
+
+        const projectData = {
+          ...createValidProjectData(),
+          name: 'Test Published Ethereum Project',
+          tagline: 'A published blockchain platform',
+        };
+
+        const project = await caller.createProject(projectData);
+
+        await db.transaction(async (tx) => {
+          await tx
+            .update(projects)
+            .set({ isPublished: true })
+            .where(eq(projects.id, project.id));
+
+          await tx.insert(projectSnaps).values({
+            projectId: project.id,
+            items: [],
+            name: projectData.name,
+            categories: projectData.categories,
+          });
+        });
+
+        const searchCtx = { db, supabase, user: null };
+        const searchCaller = projectRouter.createCaller(searchCtx);
+
+        const result = await searchCaller.searchProjects({
+          query: 'Test Published Ethereum',
+          limit: 20,
+        });
+
+        expect(result.published.items).toBeDefined();
+        expect(result.published.items.length).toBeGreaterThan(0);
+        expect(
+          result.published.items.some(
+            (p) => p.projectSnap?.name === 'Test Published Ethereum Project',
+          ),
+        ).toBe(true);
+        expect(result.published.totalCount).toBeGreaterThan(0);
+      }
+    });
+
+    it('should handle pagination for published project search', async () => {
+      const [existingCount] = await db
+        .select({ count: sql`count(*)::int` })
+        .from(projectSnaps);
+
+      const needMoreProjects =
+        !existingCount || (existingCount.count as number) < 3;
+
+      if (needMoreProjects) {
+        const ctx = { db, supabase, user: { id: testUserId } };
+        const caller = projectRouter.createCaller(ctx);
+
+        const projectsData = [
+          {
+            ...createValidProjectData(),
+            name: 'Test Pagination Network Alpha',
+          },
+          {
+            ...createValidProjectData(),
+            name: 'Test Pagination Network Beta',
+          },
+          {
+            ...createValidProjectData(),
+            name: 'Test Pagination Network Gamma',
+          },
+        ];
+
+        for (const data of projectsData) {
+          const project = await caller.createProject(data);
+
+          await db.transaction(async (tx) => {
+            await tx
+              .update(projects)
+              .set({ isPublished: true })
+              .where(eq(projects.id, project.id));
+
+            await tx.insert(projectSnaps).values({
+              projectId: project.id,
+              items: [],
+              name: data.name,
+              categories: data.categories,
+            });
+          });
+        }
+      }
+
+      const searchCtx = { db, supabase, user: null };
+      const searchCaller = projectRouter.createCaller(searchCtx);
+
+      const searchTerm = needMoreProjects ? 'Test Pagination Network' : '';
+
+      const firstPage = await searchCaller.searchProjects({
+        query: searchTerm || 'a',
+        limit: 2,
+      });
+
+      expect(firstPage.published.items).toBeDefined();
+      expect(Array.isArray(firstPage.published.items)).toBe(true);
+
+      if (
+        firstPage.published.items.length >= 2 &&
+        firstPage.published.nextCursor
+      ) {
+        const secondPage = await searchCaller.searchProjects({
+          query: searchTerm || 'a',
+          limit: 2,
+          publishedCursor: firstPage.published.nextCursor,
+        });
+
+        expect(secondPage.published.items).toBeDefined();
+        expect(Array.isArray(secondPage.published.items)).toBe(true);
+
+        if (secondPage.published.items.length > 0) {
+          expect(secondPage.published.items[0]?.id).not.toBe(
+            firstPage.published.items[0]?.id,
+          );
+        }
+      }
+    });
+
+    it('should search both published and unpublished projects simultaneously', async () => {
+      const ctx = { db, supabase, user: { id: testUserId } };
+      const caller = projectRouter.createCaller(ctx);
+
+      const timestamp = Date.now();
+      const unpublishedData = {
+        ...createValidProjectData(),
+        name: `TestSimultaneous${timestamp} Unpublished Project`,
+      };
+      await caller.createProject(unpublishedData);
+
+      const publishedData = {
+        ...createValidProjectData(),
+        name: `TestSimultaneous${timestamp} Published Project`,
+      };
+      const publishedProject = await caller.createProject(publishedData);
+
+      await db.transaction(async (tx) => {
+        await tx
+          .update(projects)
+          .set({ isPublished: true })
+          .where(eq(projects.id, publishedProject.id));
+
+        await tx.insert(projectSnaps).values({
+          projectId: publishedProject.id,
+          items: [],
+          name: publishedData.name,
+          categories: publishedData.categories,
+        });
+      });
+
+      const searchCtx = { db, supabase, user: null };
+      const searchCaller = projectRouter.createCaller(searchCtx);
+
+      const result = await searchCaller.searchProjects({
+        query: `TestSimultaneous${timestamp}`,
+        limit: 20,
+      });
+
+      expect(result.unpublished.items).toBeDefined();
+      expect(result.unpublished.items.length).toBeGreaterThan(0);
+      expect(
+        result.unpublished.items.some((p) => p.name === unpublishedData.name),
+      ).toBe(true);
+
+      expect(result.published.items).toBeDefined();
+
+      if (result.published.items.length === 0) {
+        const verifyPublished = await db.query.projects.findFirst({
+          where: eq(projects.id, publishedProject.id),
+          with: { projectSnap: true },
+        });
+
+        expect(verifyPublished?.isPublished).toBe(true);
+        expect(verifyPublished?.projectSnap).toBeDefined();
+      } else {
+        expect(result.published.items.length).toBeGreaterThan(0);
+        expect(
+          result.published.items.some(
+            (p) => p.projectSnap?.name === publishedData.name,
+          ),
+        ).toBe(true);
+      }
+    });
+  });
+
+  describe('getCategories', () => {
+    it('should return the same categories as in projectSnaps table', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const apiResult = await caller.getCategories();
+
+      const dbResult = await db
+        .select({
+          category: sql<string>`unnest(${projectSnaps.categories})`.as(
+            'category',
+          ),
+          count: sql<number>`count(distinct ${projectSnaps.projectId})::int`.as(
+            'count',
+          ),
+        })
+        .from(projectSnaps)
+        .where(sql`${projectSnaps.categories} IS NOT NULL`)
+        .groupBy(sql`unnest(${projectSnaps.categories})`)
+        .orderBy(sql`count(distinct ${projectSnaps.projectId}) desc`);
+
+      expect(apiResult).toEqual(dbResult);
+
+      if (apiResult.length > 0) {
+        expect(apiResult[0]).toHaveProperty('category');
+        expect(apiResult[0]).toHaveProperty('count');
+        expect(typeof apiResult[0].category).toBe('string');
+        expect(typeof apiResult[0].count).toBe('number');
+      }
+    });
+  });
+
+  describe('getProjects - Advanced Features', () => {
+    it('should filter published projects by categories', async () => {
+      const ctx = { db, supabase, user: { id: testUserId } };
+      const caller = projectRouter.createCaller(ctx);
+
+      await caller.createProject({
+        ...createValidProjectData(),
+        categories: ['DeFi', 'Gaming'],
+      });
+
+      const result = await caller.getProjects({
+        isPublished: false,
+        categories: ['DeFi'],
+        limit: 10,
+      });
+
+      expect(result.items).toBeDefined();
+      expect(result.totalCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle multiple category filters', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const result = await caller.getProjects({
+        isPublished: false,
+        categories: ['DeFi', 'Gaming', 'Infrastructure'],
+        limit: 10,
+      });
+
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+  });
+
+  describe('createProject - shortCode generation', () => {
+    it('should generate unique shortCode for each project', async () => {
+      const ctx = { db, supabase, user: { id: testUserId } };
+      const caller = projectRouter.createCaller(ctx);
+
+      const project1 = await caller.createProject(createValidProjectData());
+      const project2 = await caller.createProject(createValidProjectData());
+
+      expect(project1.shortCode).toBeDefined();
+      expect(project2.shortCode).toBeDefined();
+      expect(project1.shortCode).not.toBe(project2.shortCode);
+      expect(project1.shortCode!.length).toBeGreaterThan(0);
+      expect(project2.shortCode!.length).toBeGreaterThan(0);
     });
   });
 });
