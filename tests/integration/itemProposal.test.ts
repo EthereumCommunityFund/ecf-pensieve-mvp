@@ -721,4 +721,300 @@ describe('ItemProposal Integration Tests', () => {
       ).toBe(true);
     });
   });
+
+  describe('Vote Edge Cases', () => {
+    it('should handle createItemProposalVote with non-existent itemProposal', async () => {
+      const voteCaller = createVoteCaller(testUsers[0].userId);
+      const nonExistentId = 999999;
+
+      await expect(
+        voteCaller.createItemProposalVote({
+          itemProposalId: nonExistentId,
+          key: 'name',
+        }),
+      ).rejects.toThrow('Item proposal not found');
+    });
+
+    it('should handle switchItemProposalVote with non-existent itemProposal', async () => {
+      const voteCaller = createVoteCaller(testUsers[0].userId);
+      const nonExistentId = 999999;
+
+      await expect(
+        voteCaller.switchItemProposalVote({
+          itemProposalId: nonExistentId,
+          key: 'name',
+        }),
+      ).rejects.toThrow('Target item proposal not found');
+    });
+
+    it('should handle switchItemProposalVote when no vote exists to switch', async () => {
+      const projectCaller = createProjectCaller(testUsers[0].userId);
+      const newProject = await projectCaller.createProject({
+        ...createValidProjectData(),
+        name: 'No Vote to Switch Test Project',
+      });
+
+      await db
+        .update(projects)
+        .set({ isPublished: true })
+        .where(eq(projects.id, newProject.id));
+
+      const key = getNonEssentialKey('audit_status');
+      const proposalCaller = createItemProposalCaller(testUsers[1].userId);
+
+      const proposal = await proposalCaller.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Audited by CertiK',
+      });
+
+      const voteCaller = createVoteCaller(testUsers[2].userId);
+
+      await expect(
+        voteCaller.switchItemProposalVote({
+          itemProposalId: proposal.id,
+          key,
+        }),
+      ).rejects.toThrow('No conflicting vote found to switch');
+    });
+
+    it('should handle switchItemProposalVote when already voted for target proposal', async () => {
+      const projectCaller = createProjectCaller(testUsers[0].userId);
+      const newProject = await projectCaller.createProject({
+        ...createValidProjectData(),
+        name: 'Already Voted Test Project',
+      });
+
+      await db
+        .update(projects)
+        .set({ isPublished: true })
+        .where(eq(projects.id, newProject.id));
+
+      const key = getNonEssentialKey('token_issuance_mechanism');
+      const proposalCaller = createItemProposalCaller(testUsers[1].userId);
+
+      const proposal = await proposalCaller.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Fair Launch',
+      });
+
+      const voteCaller = createVoteCaller(testUsers[2].userId);
+
+      await voteCaller.createItemProposalVote({
+        itemProposalId: proposal.id,
+        key,
+      });
+
+      await expect(
+        voteCaller.switchItemProposalVote({
+          itemProposalId: proposal.id,
+          key,
+        }),
+      ).rejects.toThrow(
+        'You have already voted for this key in the target item proposal',
+      );
+    });
+
+    it('should fail createItemProposalVote when already voted for same key', async () => {
+      const projectCaller = createProjectCaller(testUsers[0].userId);
+      const newProject = await projectCaller.createProject({
+        ...createValidProjectData(),
+        name: 'Already Voted Key Test Project',
+      });
+
+      await db
+        .update(projects)
+        .set({ isPublished: true })
+        .where(eq(projects.id, newProject.id));
+
+      const key = getNonEssentialKey('audit_status');
+
+      // User1 creates first proposal
+      const proposalCaller1 = createItemProposalCaller(testUsers[1].userId);
+      const proposal1 = await proposalCaller1.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Audited by CertiK',
+      });
+
+      // User2 creates second proposal for same key
+      const proposalCaller2 = createItemProposalCaller(testUsers[2].userId);
+      const proposal2 = await proposalCaller2.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Audited by OpenZeppelin',
+      });
+
+      // User3 votes for proposal1
+      const voteCaller = createVoteCaller(testUsers[3].userId);
+      await voteCaller.createItemProposalVote({
+        itemProposalId: proposal1.id,
+        key,
+      });
+
+      // User3 tries to vote for proposal2 for the same key - should fail
+      await expect(
+        voteCaller.createItemProposalVote({
+          itemProposalId: proposal2.id,
+          key,
+        }),
+      ).rejects.toThrow('You have already voted for this key in this project');
+    });
+
+    it('should handle voting on already leading proposal (leadingProposal?.itemProposalId === itemProposalId)', async () => {
+      const projectCaller = createProjectCaller(testUsers[0].userId);
+      const newProject = await projectCaller.createProject({
+        ...createValidProjectData(),
+        name: 'Leading Proposal Test Project',
+      });
+
+      await db
+        .update(projects)
+        .set({ isPublished: true })
+        .where(eq(projects.id, newProject.id));
+
+      const key = getEssentialKey('tagline');
+      const proposalCaller = createItemProposalCaller(testUsers[0].userId);
+
+      const proposal = await proposalCaller.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Already Leading Tagline',
+      });
+
+      let logs = await getProjectLogs(newProject.id, key);
+      expect(logs.length).toBe(1);
+      expect(logs[0].itemProposalId).toBe(proposal.id);
+      expect(logs[0].isNotLeading).toBe(false);
+
+      const project = await db.query.projects.findFirst({
+        where: eq(projects.id, newProject.id),
+      });
+      const initialTopWeight =
+        (project?.itemsTopWeight as Record<string, number>)?.[key] || 0;
+
+      const voteCaller = createVoteCaller(testUsers[1].userId);
+      await voteCaller.createItemProposalVote({
+        itemProposalId: proposal.id,
+        key,
+      });
+
+      const updatedProject = await db.query.projects.findFirst({
+        where: eq(projects.id, newProject.id),
+      });
+      const newTopWeight =
+        (updatedProject?.itemsTopWeight as Record<string, number>)?.[key] || 0;
+
+      expect(newTopWeight).toBeGreaterThan(initialTopWeight);
+
+      logs = await getProjectLogs(newProject.id, key);
+      expect(logs.length).toBe(1);
+      expect(logs[0].itemProposalId).toBe(proposal.id);
+    });
+
+    it('should handle switch vote to already leading proposal', async () => {
+      const projectCaller = createProjectCaller(testUsers[0].userId);
+      const newProject = await projectCaller.createProject({
+        ...createValidProjectData(),
+        name: 'Switch to Leading Test Project',
+      });
+
+      await db
+        .update(projects)
+        .set({ isPublished: true })
+        .where(eq(projects.id, newProject.id));
+
+      const key = getNonEssentialKey('roadmap');
+
+      // Create proposal1
+      const proposalCaller1 = createItemProposalCaller(testUsers[1].userId);
+      const proposal1 = await proposalCaller1.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Roadmap Option 1',
+      });
+
+      // Create proposal2
+      const proposalCaller2 = createItemProposalCaller(testUsers[2].userId);
+      const proposal2 = await proposalCaller2.createItemProposal({
+        projectId: newProject.id,
+        key,
+        value: 'Roadmap Option 2 - Will be leading',
+      });
+
+      // User3 votes for proposal1
+      const voteCaller3 = createVoteCaller(testUsers[3].userId);
+      await voteCaller3.createItemProposalVote({
+        itemProposalId: proposal1.id,
+        key,
+      });
+
+      // User4 votes for proposal1
+      const voteCaller4 = createVoteCaller(testUsers[4].userId);
+      await voteCaller4.createItemProposalVote({
+        itemProposalId: proposal1.id,
+        key,
+      });
+
+      // Now make proposal2 the leading one with a high-weight voter
+      // User0 (project creator) likely has high weight after creating project
+      const voteCaller0 = createVoteCaller(testUsers[0].userId);
+      await voteCaller0.createItemProposalVote({
+        itemProposalId: proposal2.id,
+        key,
+      });
+
+      // Verify which proposal is leading after votes
+      let logs = await getProjectLogs(newProject.id, key);
+      const leadingLog = logs.find((log) => !log.isNotLeading);
+
+      // Get the current top weight before switching
+      const project = await db.query.projects.findFirst({
+        where: eq(projects.id, newProject.id),
+      });
+      const initialTopWeight =
+        (project?.itemsTopWeight as Record<string, number>)?.[key] || 0;
+
+      // Now switch user4's vote from proposal1 to proposal2
+      // This will trigger different logic depending on which proposal is leading
+      await voteCaller4.switchItemProposalVote({
+        itemProposalId: proposal2.id,
+        key,
+      });
+
+      // Get updated project state
+      const updatedProject = await db.query.projects.findFirst({
+        where: eq(projects.id, newProject.id),
+      });
+      const newTopWeight =
+        (updatedProject?.itemsTopWeight as Record<string, number>)?.[key] || 0;
+
+      // Verify proposal2 is still leading
+      logs = await getProjectLogs(newProject.id, key);
+      const updatedLeadingLog = logs.find((log) => !log.isNotLeading);
+      expect(updatedLeadingLog?.itemProposalId).toBe(proposal2.id);
+
+      // Verify the vote was switched to proposal2
+      const votesForProposal2 = await db.query.voteRecords.findMany({
+        where: and(
+          eq(voteRecords.itemProposalId, proposal2.id),
+          eq(voteRecords.key, key),
+        ),
+      });
+      expect(
+        votesForProposal2.some((v) => v.creator === testUsers[4].userId),
+      ).toBe(true);
+
+      // Verify user4 no longer has a vote for proposal1
+      const votesForProposal1 = await db.query.voteRecords.findMany({
+        where: and(
+          eq(voteRecords.itemProposalId, proposal1.id),
+          eq(voteRecords.key, key),
+          eq(voteRecords.creator, testUsers[4].userId),
+        ),
+      });
+      expect(votesForProposal1.length).toBe(0);
+    });
+  });
 });
