@@ -21,6 +21,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
+import EditListModal from '@/app/profile/[address]/components/modals/EditListModal';
 import ShareListModal from '@/app/profile/[address]/components/modals/ShareListModal';
 import ECFTypography from '@/components/base/typography';
 import {
@@ -37,13 +38,19 @@ import SortableProjectCard from '@/components/pages/list/SortableProjectCard';
 import ProjectCard from '@/components/pages/project/ProjectCard';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+
+import SharedListPage from './SharedListPage';
 
 const PublicListPage = () => {
   const { slug } = useParams();
   const router = useRouter();
+  const { profile } = useAuth();
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showEditListModal, setShowEditListModal] = useState(false);
   const [editedItems, setEditedItems] = useState<any[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const { address: currentUserAddress } = useAccount();
@@ -134,16 +141,6 @@ const PublicListPage = () => {
     router.back();
   };
 
-  const handleFollow = () => {
-    if (!list) return;
-
-    if (isFollowing) {
-      unfollowMutation.mutate({ listId: list.id });
-    } else {
-      followMutation.mutate({ listId: list.id });
-    }
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -163,9 +160,32 @@ const PublicListPage = () => {
     setHasChanges(true);
   }, []);
 
+  // const updateListItemsMutation = trpc.list.updateListItems.useMutation({
+  //   onSuccess: () => {
+  //     setIsEditMode(false);
+  //     setHasChanges(false);
+  //   },
+  //   onError: (error) => {
+  //     console.error('Failed to update list items:', error);
+  //   },
+  // });
+
   const handleSaveChanges = () => {
-    // TODO: Implement save changes logic
-    console.log('Save changes:', editedItems);
+    if (!list) return;
+
+    // TODO: Implement save changes logic when API is ready
+    const updatedItems = editedItems.map((item, index) => ({
+      id: item.id,
+      order: index,
+    }));
+
+    console.log('Save changes:', { listId: list.id, items: updatedItems });
+
+    // updateListItemsMutation.mutate({
+    //   listId: list.id,
+    //   items: updatedItems,
+    // });
+
     setIsEditMode(false);
     setHasChanges(false);
   };
@@ -184,7 +204,15 @@ const PublicListPage = () => {
   };
 
   // Check if current user is the owner
-  const isOwner = list && 'isOwner' in list ? list.isOwner : false;
+  const isOwner =
+    list && list.creator && profile
+      ? list.creator.userId.toLowerCase() === profile.userId
+      : false;
+
+  // If not owner, render SharedListPage
+  if (!isOwner && list) {
+    return <SharedListPage slug={slug as string} />;
+  }
 
   const getPrivacyIcon = () => {
     if (!list) return null;
@@ -261,26 +289,15 @@ const PublicListPage = () => {
             <div className="flex items-center gap-[10px]">
               {/* Back Buttons */}
               {isEditMode ? (
-                <>
-                  <Button
-                    onPress={handleBack}
-                    variant="light"
-                    size="sm"
-                    className="h-[30px] rounded-[5px] bg-[#E1E1E1] px-[8px] text-[14px] font-semibold text-black"
-                    startContent={<ArrowLeftIcon size={20} />}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onPress={handleBack}
-                    variant="light"
-                    size="sm"
-                    className="h-[30px] rounded-[5px] bg-[#E1E1E1] px-[8px] text-[14px] font-semibold text-black"
-                    startContent={<ArrowLeftIcon size={20} />}
-                  >
-                    Back
-                  </Button>
-                </>
+                <Button
+                  onPress={handleBack}
+                  variant="light"
+                  size="sm"
+                  className="h-[30px] rounded-[5px] bg-[#E1E1E1] px-[8px] text-[14px] font-semibold text-black"
+                  startContent={<ArrowLeftIcon size={20} />}
+                >
+                  Back
+                </Button>
               ) : (
                 <div className="flex items-center">
                   <ECFTypography
@@ -334,16 +351,7 @@ const PublicListPage = () => {
                     size="sm"
                     variant="light"
                     className="size-[28px] rounded-[5px] bg-[#E1E1E1] p-[5px] opacity-50 hover:opacity-100"
-                  >
-                    <PencilSimpleIcon size={14} className="opacity-50" />
-                  </Button>
-                )}
-                {isOwner && isEditMode && (
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    className="size-[28px] rounded-[5px] bg-[#E1E1E1] p-[5px]"
+                    onPress={() => setShowEditListModal(true)}
                   >
                     <PencilSimpleIcon size={14} className="opacity-50" />
                   </Button>
@@ -376,29 +384,33 @@ const PublicListPage = () => {
                     <Button
                       onPress={handleDiscardChanges}
                       variant="light"
-                      className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-0 py-1 text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                      className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                      startContent={<XIcon size={20} className="opacity-100" />}
                     >
-                      <XIcon size={20} />
                       Discard Changes
                     </Button>
                     <Button
                       onPress={handleSaveChanges}
                       variant="light"
-                      className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-0 py-1 text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                      className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
                       isDisabled={!hasChanges}
+                      endContent={
+                        <GearSixIcon size={20} className="opacity-100" />
+                      }
                     >
                       Save Changes
-                      <GearSixIcon size={20} />
                     </Button>
                   </div>
                 ) : (
                   <Button
                     onPress={() => setIsEditMode(true)}
                     variant="light"
-                    className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-0 py-1 text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                    className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                    endContent={
+                      <GearSixIcon size={20} className="opacity-100" />
+                    }
                   >
                     Organize List
-                    <GearSixIcon size={20} />
                   </Button>
                 )}
               </div>
@@ -494,6 +506,15 @@ const PublicListPage = () => {
             <ShareListModal
               isOpen={showShareModal}
               onClose={() => setShowShareModal(false)}
+              list={list}
+            />
+          )}
+
+          {/* Edit List Modal */}
+          {list && (
+            <EditListModal
+              isOpen={showEditListModal}
+              onClose={() => setShowEditListModal(false)}
               list={list}
             />
           )}

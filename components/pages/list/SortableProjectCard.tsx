@@ -36,6 +36,11 @@ const SortableProjectCard: React.FC<SortableProjectCardProps> = ({
   return (
     <div ref={setNodeRef} style={style} className="relative">
       <div className="flex items-center gap-[10px]">
+        {/* Project Card */}
+        <div className="flex-1">
+          <ProjectCard project={project} showCreator={false} />
+        </div>
+
         {/* Remove Button */}
         <Button
           isIconOnly
@@ -54,11 +59,6 @@ const SortableProjectCard: React.FC<SortableProjectCardProps> = ({
           className="flex cursor-grab touch-none items-center active:cursor-grabbing"
         >
           <DotsSixVertical size={24} className="text-black" />
-        </div>
-
-        {/* Project Card */}
-        <div className="flex-1">
-          <ProjectCard project={project} showCreator={false} />
         </div>
       </div>
     </div>
