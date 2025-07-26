@@ -1,5 +1,3 @@
-import { POC_ITEMS } from '@/lib/pocItems';
-
 export const createItemProposalData = (overrides?: any) => {
   const defaultData = {
     key: 'roadmap',
@@ -9,32 +7,6 @@ export const createItemProposalData = (overrides?: any) => {
   };
 
   return { ...defaultData, ...overrides };
-};
-
-export const createValueByType = (key: string) => {
-  const item = POC_ITEMS[key as keyof typeof POC_ITEMS];
-  if (!item) return null;
-
-  switch (item.fieldComponent) {
-    case 'TagInput':
-      return ['tag1', 'tag2', 'tag3'];
-    case 'WebsiteInput':
-      return [
-        { title: 'Main Site', url: 'https://example.com' },
-        { title: 'Docs', url: 'https://docs.example.com' },
-      ];
-    case 'FounderInput':
-      return [
-        { name: 'Alice Smith', title: 'CEO' },
-        { name: 'Bob Johnson', title: 'CTO' },
-      ];
-    case 'DatePicker':
-      return new Date().toISOString();
-    case 'CheckboxField':
-      return true;
-    default:
-      return `Sample ${key} value`;
-  }
 };
 
 export const createTestProposals = async (
