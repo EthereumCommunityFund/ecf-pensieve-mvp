@@ -153,7 +153,7 @@ const ProfileListDetailPage = () => {
 
       addToast({
         title: 'Changes saved successfully',
-        type: 'success',
+        color: 'success',
       });
 
       setIsEditMode(false);
@@ -161,7 +161,7 @@ const ProfileListDetailPage = () => {
     } catch (error) {
       addToast({
         title: 'Failed to save changes',
-        type: 'error',
+        color: 'danger',
       });
     } finally {
       setIsSaving(false);
