@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import BookmarksIcon from '@/components/icons/Bookmarks';
 
 import Contributions from './components/contributions';
-import MyLists from './components/myLists';
+import MyLists from './components/list/myLists';
 import Setting from './components/setting';
 import Upvotes from './components/upvotes';
 

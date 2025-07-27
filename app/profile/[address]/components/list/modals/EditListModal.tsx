@@ -64,6 +64,7 @@ const EditListModal = ({ isOpen, onClose, list }: EditListModalProps) => {
     onSuccess: (data) => {
       console.log('devLog - updateList success:', data);
       utils.list.getUserLists.invalidate();
+      utils.list.getListBySlug.invalidate();
       handleClose();
     },
     onError: (error) => {
@@ -243,7 +244,6 @@ const EditListModal = ({ isOpen, onClose, list }: EditListModalProps) => {
                 {privacyOptions.map((option) => (
                   <SelectItem
                     key={option.value}
-                    value={option.value}
                     textValue={option.label}
                     isDisabled={option.disabled}
                     className={`rounded-[5px] px-[10px] py-[4px] ${

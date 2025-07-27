@@ -247,7 +247,6 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
                 {privacyOptions.map((option) => (
                   <SelectItem
                     key={option.value}
-                    value={option.value}
                     textValue={option.label}
                     isDisabled={option.disabled}
                     className={`rounded-[5px] px-[10px] py-[4px] ${

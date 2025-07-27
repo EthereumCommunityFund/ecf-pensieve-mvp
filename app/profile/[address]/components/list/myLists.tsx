@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 
+import CreateListModal from '@/app/profile/[address]/components/list/modals/CreateListModal';
+import DeleteListModal from '@/app/profile/[address]/components/list/modals/DeleteListModal';
+import EditListModal from '@/app/profile/[address]/components/list/modals/EditListModal';
+import ShareListModal from '@/app/profile/[address]/components/list/modals/ShareListModal';
 import { PlusIcon } from '@/components/icons';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
@@ -11,10 +15,6 @@ import CommonListCard from './CommonListCard';
 import CommonListCardSkeleton from './CommonListCardSkeleton';
 import FollowListCard from './FollowListCard';
 import FollowListCardSkeleton from './FollowListCardSkeleton';
-import CreateListModal from './modals/CreateListModal';
-import DeleteListModal from './modals/DeleteListModal';
-import EditListModal from './modals/EditListModal';
-import ShareListModal from './modals/ShareListModal';
 
 interface MyListsProps {
   profileAddress: string;
@@ -33,7 +33,7 @@ const MyLists = ({ profileAddress }: MyListsProps) => {
   const { data: userLists, isLoading: userListsLoading } =
     trpc.list.getUserLists.useQuery(undefined, {
       select: (data) => {
-        console.log('devLog - getUserLists response:', data);
+        devLog('getUserLists response:', data);
         return data;
       },
     });

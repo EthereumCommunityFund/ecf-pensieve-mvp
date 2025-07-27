@@ -16,15 +16,16 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from '@heroui/react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import EditListModal from '@/app/profile/[address]/components/modals/EditListModal';
-import ShareListModal from '@/app/profile/[address]/components/modals/ShareListModal';
+import EditListModal from '@/app/profile/[address]/components/list/modals/EditListModal';
+import ShareListModal from '@/app/profile/[address]/components/list/modals/ShareListModal';
+import { Button } from '@/components/base';
+import { addToast } from '@/components/base/toast';
 import ECFTypography from '@/components/base/typography';
 import {
-  ArrowLeftIcon,
   GearSixIcon,
   GlobeHemisphereWestIcon,
   LockKeyIcon,
@@ -51,6 +52,7 @@ const ProfileListDetailPage = () => {
   const [showEditListModal, setShowEditListModal] = useState(false);
   const [editedItems, setEditedItems] = useState<any[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -132,19 +134,38 @@ const ProfileListDetailPage = () => {
     setHasChanges(true);
   }, []);
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!list) return;
 
-    // TODO: Implement save changes logic when API is ready
-    const updatedItems = editedItems.map((item, index) => ({
-      id: item.id,
-      order: index,
-    }));
+    setIsSaving(true);
 
-    console.log('Save changes:', { listId: list.id, items: updatedItems });
+    try {
+      // TODO: Implement save changes logic when API is ready
+      const updatedItems = editedItems.map((item, index) => ({
+        id: item.id,
+        order: index,
+      }));
 
-    setIsEditMode(false);
-    setHasChanges(false);
+      console.log('Save changes:', { listId: list.id, items: updatedItems });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      addToast({
+        title: 'Changes saved successfully',
+        type: 'success',
+      });
+
+      setIsEditMode(false);
+      setHasChanges(false);
+    } catch (error) {
+      addToast({
+        title: 'Failed to save changes',
+        type: 'error',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDiscardChanges = () => {
@@ -206,8 +227,8 @@ const ProfileListDetailPage = () => {
         </ECFTypography>
         <Button
           onPress={handleBack}
-          variant="light"
-          startContent={<ArrowLeftIcon size={20} />}
+          color="secondary"
+          startContent={<ArrowLeft />}
         >
           Go Back
         </Button>
@@ -220,48 +241,25 @@ const ProfileListDetailPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-[10px]">
-          {/* Back Buttons */}
-          {isEditMode ? (
-            <Button
-              onPress={handleBack}
-              variant="light"
-              size="sm"
-              className="h-[30px] rounded-[5px] bg-[#E1E1E1] px-[8px] text-[14px] font-semibold text-black"
-              startContent={<ArrowLeftIcon size={20} />}
-            >
-              Back
-            </Button>
-          ) : (
-            <div className="flex items-center">
-              <ECFTypography
-                type="body2"
-                className="text-[14px] font-normal leading-[20px] opacity-60"
-              >
-                My Profile
-              </ECFTypography>
-              <ECFTypography
-                type="body2"
-                className="mx-[10px] text-[14px] font-semibold leading-[20px] opacity-60"
-              >
-                /
-              </ECFTypography>
-              <ECFTypography
-                type="body2"
-                className="text-[14px] font-normal leading-[20px] opacity-60"
-              >
-                {list.name}
-              </ECFTypography>
-            </div>
-          )}
+          <Button
+            onPress={handleBack}
+            color="secondary"
+            size="sm"
+            className="h-[30px] rounded-[5px] border-none px-[8px] text-[14px] font-semibold text-black"
+            startContent={<ArrowLeft size={20} />}
+          >
+            Back
+          </Button>
         </div>
 
         <div className="flex items-center gap-[10px]">
           {/* Another Share Button (as shown in Figma) */}
           <Button
             onPress={() => setShowShareModal(true)}
-            variant="light"
             endContent={<LinkIcon size={18} />}
-            className="h-[30px] rounded-[5px] bg-[#EBEBEB] px-[8px] text-[14px] font-semibold text-black opacity-60 hover:opacity-100"
+            size="sm"
+            className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+            isDisabled={list.privacy === 'private'}
           >
             Share List
           </Button>
@@ -282,8 +280,8 @@ const ProfileListDetailPage = () => {
               <Button
                 isIconOnly
                 size="sm"
-                variant="light"
-                className="size-[28px] rounded-[5px] bg-[#E1E1E1] p-[5px] opacity-50 hover:opacity-100"
+                color="secondary"
+                className="size-[28px] rounded-[5px] border-none p-[5px] opacity-50 hover:opacity-100"
                 onPress={() => setShowEditListModal(true)}
               >
                 <PencilSimpleIcon size={14} className="opacity-50" />
@@ -316,27 +314,32 @@ const ProfileListDetailPage = () => {
               <div className="flex items-center gap-[20px]">
                 <Button
                   onPress={handleDiscardChanges}
-                  variant="light"
-                  className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
-                  startContent={<XIcon size={20} className="opacity-100" />}
+                  size="sm"
+                  className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                  endContent={<XIcon size={20} color="#000" />}
                 >
                   Discard Changes
                 </Button>
                 <Button
                   onPress={handleSaveChanges}
-                  variant="light"
-                  className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
-                  isDisabled={!hasChanges}
-                  endContent={<GearSixIcon size={20} className="opacity-100" />}
+                  size="sm"
+                  className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                  isDisabled={!hasChanges || isSaving}
+                  isLoading={isSaving}
+                  endContent={
+                    !isSaving && (
+                      <GearSixIcon size={20} className="opacity-100" />
+                    )
+                  }
                 >
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             ) : (
               <Button
                 onPress={() => setIsEditMode(true)}
-                variant="light"
-                className="flex h-[30px] items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                size="sm"
+                className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
                 endContent={<GearSixIcon size={20} className="opacity-100" />}
               >
                 Organize List

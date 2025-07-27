@@ -105,7 +105,13 @@ const FollowListCard = ({
             </div>
           </div>
 
-          <Dropdown>
+          <Dropdown
+            classNames={{
+              base: 'shadow-none',
+              content: 'p-0',
+            }}
+            placement="bottom-end"
+          >
             <DropdownTrigger>
               <button
                 onClick={(e) => e.stopPropagation()}
@@ -114,13 +120,17 @@ const FollowListCard = ({
                 <DotsThreeVerticalIcon size={32} />
               </button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Follow actions">
+            <DropdownMenu
+              aria-label="Follow actions"
+              itemClasses={{
+                base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
+              }}
+            >
               <DropdownItem
                 key="leave"
                 onPress={handleUnfollow}
                 endContent={<SignOutIcon size={18} color="#CD453B" />}
-                className="text-danger"
-                color="danger"
+                className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
               >
                 Leave List
               </DropdownItem>
