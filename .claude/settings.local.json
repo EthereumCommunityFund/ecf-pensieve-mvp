@@ -26,7 +26,10 @@
       "Bash(pkill:*)",
       "Bash(git log:*)",
       "Bash(npx tsx:*)",
-      "Bash(gh pr diff:*)"
+      "Bash(gh pr diff:*)",
+      "Bash(sed:*)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(pnpm add:*)"
     ],
     "deny": []
   }
