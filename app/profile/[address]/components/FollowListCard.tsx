@@ -6,6 +6,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Image,
 } from '@heroui/react';
 import { useRouter } from 'next/navigation';
 
@@ -13,7 +14,7 @@ import {
   DotsThreeVerticalIcon,
   GlobeHemisphereWestIcon,
   LockKeyIcon,
-  TrashIcon,
+  SignOutIcon,
 } from '@/components/icons';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
@@ -22,7 +23,7 @@ interface FollowListCardProps {
   list: RouterOutputs['list']['getUserFollowedLists'][0] & {
     creator?: {
       name?: string;
-      avatarUrl?: string;
+      avatarUrl?: string | null;
     };
   };
   showBorderBottom?: boolean;
@@ -112,7 +113,7 @@ const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
               <DropdownItem
                 key="leave"
                 onPress={handleUnfollow}
-                startContent={<TrashIcon size={18} />}
+                endContent={<SignOutIcon size={18} color="#CD453B" />}
                 className="text-danger"
                 color="danger"
               >
@@ -122,17 +123,13 @@ const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
           </Dropdown>
         </div>
 
-        <div className="flex w-fit items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] p-[5px]">
+        <div className="flex w-fit items-center gap-[5px]  p-[5px]">
           <p className="text-[14px] leading-[19px] opacity-80">by:</p>
-          {list.creator?.avatarUrl ? (
-            <img
-              src={list.creator.avatarUrl}
-              alt={list.creator.name || 'User'}
-              className="size-6 rounded-full object-cover"
-            />
-          ) : (
-            <div className="size-6 rounded-full bg-gray-300" />
-          )}
+          <Image
+            src={list.creator?.avatarUrl || '/images/user/avatar_p.png'}
+            alt={list.creator?.name || 'User'}
+            className="size-6 rounded-full object-cover"
+          />
           <p className="text-[14px] leading-[19px] opacity-80">
             {list.creator?.name || 'Unknown'}
           </p>

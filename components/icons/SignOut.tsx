@@ -2,7 +2,11 @@ import React from 'react';
 
 import { IconProps } from '@/types/common';
 
-const SignOutIcon: React.FC<IconProps> = ({ size = 24, color = '#000000' }) => {
+const SignOutIcon: React.FC<IconProps> = ({
+  size = 24,
+  color = '#000000',
+  ...props
+}) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -10,6 +14,7 @@ const SignOutIcon: React.FC<IconProps> = ({ size = 24, color = '#000000' }) => {
       height={size}
       viewBox="0 0 24 24"
       fill="none"
+      {...props}
     >
       <path
         d="M4.5 3.75C4.5 3.75 4.5 3.75 4.5 3.75V20.25C4.5 20.25 4.5 20.25 4.5 20.25H10.5"

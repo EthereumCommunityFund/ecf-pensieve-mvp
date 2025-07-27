@@ -109,7 +109,7 @@ const MyLists = () => {
           Following Lists:
         </p>
 
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-[10px]">
           {followedListsLoading ? (
             <div className="flex flex-col gap-10">
               {[1, 2].map((i) => (
