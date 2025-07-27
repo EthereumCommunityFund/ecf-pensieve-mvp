@@ -1,4 +1,4 @@
-import { desc, eq, getTableColumns, lt, sql } from 'drizzle-orm';
+import { desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache } from 'next/cache';
 import { z } from 'zod';
 
@@ -69,7 +69,12 @@ export const rankRouter = router({
       z
         .object({
           limit: z.number().min(1).max(100).default(10),
-          cursor: z.number().optional(),
+          cursor: z
+            .object({
+              weight: z.number(),
+              id: z.number(),
+            })
+            .optional(),
         })
         .optional(),
     )
@@ -79,7 +84,7 @@ export const rankRouter = router({
 
       const getTopRanksData = async () => {
         const whereCondition = cursor
-          ? lt(ranks.publishedGenesisWeight, cursor)
+          ? sql`(${ranks.publishedGenesisWeight} < ${cursor.weight} OR (${ranks.publishedGenesisWeight} = ${cursor.weight} AND ${ranks.id} < ${cursor.id}))`
           : undefined;
 
         const results = await ctx.db.query.ranks.findMany({
@@ -92,14 +97,17 @@ export const rankRouter = router({
             },
           },
           where: whereCondition,
-          orderBy: desc(ranks.publishedGenesisWeight),
+          orderBy: [desc(ranks.publishedGenesisWeight), desc(ranks.id)],
           limit: limit + 1,
         });
 
         const hasNextPage = results.length > limit;
         const items = hasNextPage ? results.slice(0, limit) : results;
         const nextCursor = hasNextPage
-          ? items[items.length - 1].publishedGenesisWeight
+          ? {
+              weight: items[items.length - 1].publishedGenesisWeight,
+              id: items[items.length - 1].id,
+            }
           : undefined;
 
         return {
@@ -108,18 +116,6 @@ export const rankRouter = router({
           hasNextPage,
         };
       };
-
-      if (!cursor) {
-        const getCachedTopRanks = nextCache(
-          getTopRanksData,
-          [`top-ranks-genesis-weight-${limit}-first-page`],
-          {
-            revalidate: 86400,
-            tags: [CACHE_TAGS.RANKS],
-          },
-        );
-        return getCachedTopRanks();
-      }
 
       return getTopRanksData();
     }),
