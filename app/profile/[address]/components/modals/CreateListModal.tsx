@@ -112,7 +112,6 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
       isOpen={isOpen}
       onClose={handleClose}
       placement="center"
-      backdrop="blur"
       classNames={{
         base: 'max-w-[400px]',
         closeButton: 'hidden',

@@ -108,7 +108,6 @@ const EditListModal = ({ isOpen, onClose, list }: EditListModalProps) => {
       isOpen={isOpen}
       onClose={handleClose}
       placement="center"
-      backdrop="blur"
       classNames={{
         base: 'max-w-[400px]',
         closeButton: 'hidden',
