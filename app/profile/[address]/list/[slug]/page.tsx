@@ -16,11 +16,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button, Skeleton } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import SharedListPage from '@/app/list/[slug]/SharedListPage';
 import EditListModal from '@/app/profile/[address]/components/modals/EditListModal';
 import ShareListModal from '@/app/profile/[address]/components/modals/ShareListModal';
 import ECFTypography from '@/components/base/typography';
@@ -33,8 +32,11 @@ import {
   XIcon,
 } from '@/components/icons';
 import LinkIcon from '@/components/icons/Link';
+import ListDetailSkeleton from '@/components/pages/list/ListDetailSkeleton';
 import SortableProjectCard from '@/components/pages/list/SortableProjectCard';
-import ProjectCard from '@/components/pages/project/ProjectCard';
+import ProjectCard, {
+  ProjectCardSkeleton,
+} from '@/components/pages/project/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -164,10 +166,12 @@ const ProfileListDetailPage = () => {
       ? list.creator.userId.toLowerCase() === profile.userId
       : false;
 
-  // If not owner, render SharedListPage
-  if (!isOwner && list) {
-    return <SharedListPage slug={slug as string} />;
-  }
+  // If not owner, redirect to public list page
+  useEffect(() => {
+    if (!isOwner && list) {
+      router.push(`/list/${slug}`);
+    }
+  }, [isOwner, list, slug, router]);
 
   const getPrivacyIcon = () => {
     if (!list) return null;
@@ -184,17 +188,7 @@ const ProfileListDetailPage = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-1 flex-col gap-[10px]">
-        <Skeleton className="h-[40px] w-[200px] rounded-[8px]" />
-        <Skeleton className="h-[150px] w-full rounded-[10px]" />
-        <div className="flex flex-col gap-[10px]">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-[120px] w-full rounded-[10px]" />
-          ))}
-        </div>
-      </div>
-    );
+    return <ListDetailSkeleton />;
   }
 
   if (error || !list) {
@@ -356,7 +350,11 @@ const ProfileListDetailPage = () => {
           {itemsLoading ? (
             <div className="flex flex-col gap-[10px]">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-[120px] w-full rounded-[10px]" />
+                <ProjectCardSkeleton
+                  key={i}
+                  showCreator={false}
+                  showBorder={i < 2}
+                />
               ))}
             </div>
           ) : editedItems && editedItems.length > 0 ? (
@@ -408,30 +406,6 @@ const ProfileListDetailPage = () => {
           )}
         </div>
       </div>
-
-      {/* Additional Info for Private Lists */}
-      {list.privacy === 'private' && (
-        <div className="rounded-[10px] border border-orange-200 bg-orange-50 p-4">
-          <div className="flex items-center gap-3">
-            <LockKeyIcon size={20} className="text-orange-600" />
-            <div className="flex flex-col gap-1">
-              <ECFTypography
-                type="body2"
-                className="text-[14px] font-semibold leading-[22.4px] text-orange-800"
-              >
-                Private List
-              </ECFTypography>
-              <ECFTypography
-                type="caption"
-                className="text-[12px] leading-[19.2px] text-orange-600"
-              >
-                This list is private and can only be accessed by the owner or
-                through direct sharing.
-              </ECFTypography>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Share Modal */}
       {list && (

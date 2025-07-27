@@ -8,7 +8,9 @@ import { RouterOutputs } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 import CommonListCard from './CommonListCard';
+import CommonListCardSkeleton from './CommonListCardSkeleton';
 import FollowListCard from './FollowListCard';
+import FollowListCardSkeleton from './FollowListCardSkeleton';
 import CreateListModal from './modals/CreateListModal';
 import DeleteListModal from './modals/DeleteListModal';
 import EditListModal from './modals/EditListModal';
@@ -59,10 +61,7 @@ const MyLists = ({ profileAddress }: MyListsProps) => {
             {userListsLoading ? (
               <div className="flex flex-col gap-[10px]">
                 {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-[120px] w-full animate-pulse rounded-[10px] bg-[rgba(0,0,0,0.05)]"
-                  />
+                  <CommonListCardSkeleton key={i} showBorderBottom={i < 3} />
                 ))}
               </div>
             ) : userLists && userLists.length > 0 ? (
@@ -116,12 +115,9 @@ const MyLists = ({ profileAddress }: MyListsProps) => {
 
         <div className="flex flex-col gap-[10px]">
           {followedListsLoading ? (
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-[10px]">
               {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-[120px] w-full animate-pulse rounded-[10px] bg-[rgba(0,0,0,0.05)]"
-                />
+                <FollowListCardSkeleton key={i} showBorderBottom={i < 2} />
               ))}
             </div>
           ) : followedLists && followedLists.length > 0 ? (
