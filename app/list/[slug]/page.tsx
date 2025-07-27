@@ -36,9 +36,9 @@ import LinkIcon from '@/components/icons/Link';
 import ProfileSidebar from '@/components/layout/ProfileSidebar';
 import SortableProjectCard from '@/components/pages/list/SortableProjectCard';
 import ProjectCard from '@/components/pages/project/ProjectCard';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
-import { useAuth } from '@/context/AuthContext';
 
 import SharedListPage from './SharedListPage';
 

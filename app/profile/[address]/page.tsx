@@ -70,14 +70,16 @@ const ProfileSettingsPage = () => {
   }, [searchParams, address, router]);
 
   return (
-    <div className="mobile:px-[10px] px-[40px]">
+    <div className="mobile:px-[10px]">
       <div className="mx-auto flex w-full max-w-[1200px] gap-5 pb-16">
         {/* Main Content Area */}
         <div className="mobile:hidden flex-1">
           {activeTab === 'profile' && <Setting />}
           {activeTab === 'contributions' && <Contributions />}
           {activeTab === 'upvotes' && <Upvotes />}
-          {activeTab === 'lists' && <MyLists />}
+          {activeTab === 'lists' && (
+            <MyLists profileAddress={address as string} />
+          )}
         </div>
 
         {/* Mobile Content - Full width */}
@@ -85,7 +87,9 @@ const ProfileSettingsPage = () => {
           {activeTab === 'profile' && <Setting />}
           {activeTab === 'contributions' && <Contributions />}
           {activeTab === 'upvotes' && <Upvotes />}
-          {activeTab === 'lists' && <MyLists />}
+          {activeTab === 'lists' && (
+            <MyLists profileAddress={address as string} />
+          )}
         </div>
       </div>
     </div>

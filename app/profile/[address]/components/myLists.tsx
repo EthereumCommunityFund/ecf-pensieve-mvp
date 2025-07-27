@@ -14,7 +14,11 @@ import DeleteListModal from './modals/DeleteListModal';
 import EditListModal from './modals/EditListModal';
 import ShareListModal from './modals/ShareListModal';
 
-const MyLists = () => {
+interface MyListsProps {
+  profileAddress: string;
+}
+
+const MyLists = ({ profileAddress }: MyListsProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -67,6 +71,7 @@ const MyLists = () => {
                   key={list.id}
                   list={list}
                   showBorderBottom={index < userLists.length - 1}
+                  profileAddress={profileAddress}
                   onEdit={() => {
                     setSelectedList(list);
                     setShowEditModal(true);
@@ -125,6 +130,7 @@ const MyLists = () => {
                 key={list.id}
                 list={list}
                 showBorderBottom={index < followedLists.length - 1}
+                profileAddress={profileAddress}
               />
             ))
           ) : (

@@ -40,7 +40,7 @@ const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
         <UserInfo />
       </div>
 
-      <div className="mobile:flex-col flex flex-1 justify-center">
+      <div className="mobile:flex-col flex flex-1 justify-center gap-[20px]">
         <ProfileSideBar />
         <div className="max-w-[810px] flex-1">{children}</div>
       </div>

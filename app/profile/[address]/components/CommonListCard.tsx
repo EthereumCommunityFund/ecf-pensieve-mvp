@@ -25,6 +25,7 @@ interface CommonListCardProps {
   onEdit: () => void;
   onShare: () => void;
   onDelete: () => void;
+  profileAddress?: string; // Optional address for profile context
 }
 
 const CommonListCard = ({
@@ -33,11 +34,16 @@ const CommonListCard = ({
   onEdit,
   onShare,
   onDelete,
+  profileAddress,
 }: CommonListCardProps) => {
   const router = useRouter();
 
   const handleCardClick = () => {
-    router.push(`/list/${list.slug}`);
+    // If profileAddress is provided, use profile route; otherwise use public route
+    const targetRoute = profileAddress
+      ? `/profile/${profileAddress}/list/${list.slug}`
+      : `/list/${list.slug}`;
+    router.push(targetRoute);
   };
 
   const getPrivacyIcon = () => {

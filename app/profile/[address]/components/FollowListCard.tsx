@@ -27,9 +27,14 @@ interface FollowListCardProps {
     };
   };
   showBorderBottom?: boolean;
+  profileAddress?: string; // Optional address for profile context
 }
 
-const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
+const FollowListCard = ({
+  list,
+  showBorderBottom,
+  profileAddress,
+}: FollowListCardProps) => {
   const router = useRouter();
   const utils = trpc.useContext();
 
@@ -40,7 +45,11 @@ const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
   });
 
   const handleCardClick = () => {
-    router.push(`/list/${list.slug}`);
+    // If profileAddress is provided, use profile route; otherwise use public route
+    const targetRoute = profileAddress
+      ? `/profile/${profileAddress}/list/${list.slug}`
+      : `/list/${list.slug}`;
+    router.push(targetRoute);
   };
 
   const handleUnfollow = () => {
