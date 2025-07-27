@@ -45,11 +45,7 @@ const FollowListCard = ({
   });
 
   const handleCardClick = () => {
-    // If profileAddress is provided, use profile route; otherwise use public route
-    const targetRoute = profileAddress
-      ? `/profile/${profileAddress}/list/${list.slug}`
-      : `/list/${list.slug}`;
-    router.push(targetRoute);
+    router.push(`/list/${list.slug}`);
   };
 
   const handleUnfollow = () => {
