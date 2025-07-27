@@ -69,8 +69,11 @@ const CommonListCard = ({
         showBorderBottom ? 'border-b border-black/10' : '',
       )}
     >
-      <div className="flex flex-1 cursor-pointer items-center justify-between rounded-[10px] p-[10px] transition-all hover:bg-[rgba(0,0,0,0.02)]">
-        <div onClick={handleCardClick} className="">
+      <div
+        onClick={handleCardClick}
+        className="flex flex-1 cursor-pointer items-center justify-between rounded-[10px] p-[10px] transition-all hover:bg-[rgba(0,0,0,0.02)]"
+      >
+        <div>
           <p className="text-[16px] font-semibold leading-[15px]">
             {list.name}
           </p>
