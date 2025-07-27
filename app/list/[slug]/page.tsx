@@ -1,10 +1,10 @@
 'use client';
 
+import { Image } from '@heroui/react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { Image } from '@heroui/react';
-import { ArrowLeft } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';

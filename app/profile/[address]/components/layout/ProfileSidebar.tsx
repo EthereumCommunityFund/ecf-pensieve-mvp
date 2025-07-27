@@ -2,8 +2,13 @@
 
 import { cn } from '@heroui/react';
 import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import BookmarksIcon from '@/components/icons/Bookmarks';
@@ -34,20 +39,33 @@ const tabItems = [
 const ProfileSideBar = () => {
   const { address } = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab');
 
+  // Determine initial tab based on URL
+  const getInitialTab = () => {
+    // Check if current path matches /profile/[address]/list/[slug]
+    if (pathname.includes(`/profile/${address}/list/`)) {
+      return 'lists';
+    }
+
+    if (initialTab === 'contributions') return 'contributions';
+    if (initialTab === 'upvotes') return 'upvotes';
+    if (initialTab === 'lists') return 'lists';
+    return 'profile';
+  };
+
   const [activeTab, setActiveTab] = useState<
     'profile' | 'contributions' | 'upvotes' | 'lists'
-  >(
-    initialTab === 'contributions'
-      ? 'contributions'
-      : initialTab === 'upvotes'
-        ? 'upvotes'
-        : initialTab === 'lists'
-          ? 'lists'
-          : 'profile',
-  );
+  >(getInitialTab());
+
+  // Update activeTab when pathname changes
+  useEffect(() => {
+    if (pathname.includes(`/profile/${address}/list/`)) {
+      setActiveTab('lists');
+    }
+  }, [pathname, address]);
 
   return (
     <>
