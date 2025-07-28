@@ -5,17 +5,19 @@ import { useState } from 'react';
 
 import {
   CaretDownIcon,
-  CheckSquareIcon,
+  CircleXIcon,
   FunnelSimpleIcon,
-  SquareIcon,
 } from '@/components/icons';
 import { AllCategories } from '@/constants/category';
 
-interface FilterState {
-  categories: string[];
-  locations: string[];
-  tags: string[]; // Reserved for future
-}
+import { CustomCheckbox } from './CustomCheckbox';
+import { INITIAL_ITEMS_COUNT, type FilterState } from './types';
+import {
+  hasActiveFilters as checkHasActiveFilters,
+  clearFilterParams,
+  parseFilterStateFromURL,
+  updateFilterParams,
+} from './utils';
 
 export default function ProjectFilter() {
   const [expandedSections, setExpandedSections] = useState<
@@ -33,53 +35,30 @@ export default function ProjectFilter() {
   const locations: string[] = ['Japan', 'China', 'USA'];
 
   // Parse filter state from URL
-  const currentFilters: FilterState = {
-    categories:
-      searchParams.get('categories')?.split(',').filter(Boolean) || [],
-    locations: searchParams.get('locations')?.split(',').filter(Boolean) || [],
-    tags: searchParams.get('tags')?.split(',').filter(Boolean) || [],
-  };
+  const currentFilters: FilterState = parseFilterStateFromURL(searchParams);
 
   const handleFilterChange = (
     type: keyof FilterState,
     value: string,
     checked: boolean,
   ) => {
-    const params = new URLSearchParams(searchParams.toString());
-    let values = [...currentFilters[type]];
-
-    if (checked) {
-      if (!values.includes(value)) {
-        values.push(value);
-      }
-    } else {
-      values = values.filter((v) => v !== value);
-    }
-
-    if (values.length > 0) {
-      params.set(type, values.join(','));
-    } else {
-      params.delete(type);
-    }
-
-    // Remove type parameter when filtering
-    params.delete('type');
-
+    const params = updateFilterParams(
+      searchParams,
+      type,
+      value,
+      checked,
+      currentFilters,
+    );
     router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   const clearFilter = (type: keyof FilterState) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(type);
+    const params = clearFilterParams(searchParams, type);
     router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   const clearAllFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('categories');
-    params.delete('locations');
-    params.delete('tags');
-    params.delete('type');
+    const params = clearFilterParams(searchParams);
     router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
@@ -87,82 +66,34 @@ export default function ProjectFilter() {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const hasActiveFilters =
-    currentFilters.categories.length > 0 ||
-    currentFilters.locations.length > 0 ||
-    currentFilters.tags.length > 0;
+  const hasActiveFilters = checkHasActiveFilters(currentFilters);
 
-  const INITIAL_ITEMS_COUNT = 5;
+  // Webkit scrollbar class
+  const webkitScrollbarClass = 'custom-scrollbar';
 
-  // Custom checkbox component matching the design
-  const CustomCheckbox = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      return <CheckSquareIcon width={24} height={24} className="text-black" />;
-    }
-    return <SquareIcon width={24} height={24} className="text-black/20" />;
-  };
-
-  // 添加自定义滚动条样式类
+  // Custom scrollbar styles
   const scrollbarStyles = {
     scrollbarWidth: 'thin' as const,
     scrollbarColor: '#E1E1E1 transparent',
   };
 
-  // Webkit 滚动条样式
-  const webkitScrollbarClass = 'custom-scrollbar';
-
   return (
-    <div className="w-full ">
+    <div className="flex w-full flex-col gap-[10px]">
       {/* Clear All Filters */}
       {hasActiveFilters && (
-        <div className="mb-4 text-center">
+        <div className="text-center">
           <button
             onClick={clearAllFilters}
             className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/70"
           >
             Clear All Filters
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-            >
-              <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
-                <path
-                  d="M11.25 6.75L6.75 11.25"
-                  stroke="black"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M6.75 6.75L11.25 11.25"
-                  stroke="black"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
-                  stroke="black"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-              <defs>
-                <clipPath id="clip0_4150_4830">
-                  <rect width="18" height="18" fill="white" />
-                </clipPath>
-              </defs>
-            </svg>
+            <CircleXIcon width={18} height={18} className="text-black" />
           </button>
         </div>
       )}
 
       {/* Sub-category Filter */}
-      <div className="py-4">
+      <div className="">
         <div className="mb-2.5 flex h-[30px] items-center justify-between border-b border-black/10 px-0 py-1.5">
           <div className="flex items-center gap-1.5">
             <FunnelSimpleIcon
@@ -187,42 +118,7 @@ export default function ProjectFilter() {
               className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/70"
             >
               Clear this filter
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-              >
-                <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
-                  <path
-                    d="M11.25 6.75L6.75 11.25"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M6.75 6.75L11.25 11.25"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_4150_4830">
-                    <rect width="18" height="18" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
+              <CircleXIcon width={18} height={18} className="text-black" />
             </button>
           </div>
         )}
@@ -241,16 +137,14 @@ export default function ProjectFilter() {
             {AllCategories.slice(
               0,
               expandedSections.categories ? undefined : INITIAL_ITEMS_COUNT,
-            ).map((category, index) => {
+            ).map((category) => {
               const isSelected = currentFilters.categories.includes(
                 category.value,
               );
               return (
                 <label
                   key={category.value}
-                  className={`flex h-[32px] cursor-pointer items-center justify-between rounded-[5px] px-2 ${
-                    isSelected ? '' : index === 0 ? 'bg-[#EBEBEB]' : ''
-                  } hover:bg-[#EBEBEB]/60`}
+                  className={`flex h-[32px] cursor-pointer items-center justify-between rounded-[5px] px-2 hover:bg-[#EBEBEB]/60`}
                   onClick={() =>
                     handleFilterChange(
                       'categories',
@@ -314,42 +208,7 @@ export default function ProjectFilter() {
               className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/70"
             >
               Clear this filter
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-              >
-                <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
-                  <path
-                    d="M11.25 6.75L6.75 11.25"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M6.75 6.75L11.25 11.25"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_4150_4830">
-                    <rect width="18" height="18" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
+              <CircleXIcon width={18} height={18} className="text-black" />
             </button>
           </div>
         )}

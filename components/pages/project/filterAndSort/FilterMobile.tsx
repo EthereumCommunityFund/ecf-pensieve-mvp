@@ -5,19 +5,20 @@ import { useState } from 'react';
 
 import {
   CaretDownIcon,
-  CheckSquareIcon,
+  CircleXIcon,
+  CloseIcon,
   FunnelSimpleIcon,
-  SquareIcon,
 } from '@/components/icons';
 import { AllCategories } from '@/constants/category';
 
-interface FilterState {
-  categories: string[];
-  locations: string[];
-  tags: string[]; // Reserved for future
-}
-
-type FilterSection = 'categories' | 'locations' | 'tags';
+import { CustomCheckbox } from './CustomCheckbox';
+import { type FilterSection, type FilterState } from './types';
+import {
+  hasActiveFilters as checkHasActiveFilters,
+  clearFilterParams,
+  parseFilterStateFromURL,
+  updateFilterParams,
+} from './utils';
 
 export default function ProjectFilterMobile() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,63 +32,30 @@ export default function ProjectFilterMobile() {
   const locations: string[] = ['Japan', 'China', 'USA'];
 
   // Parse filter state from URL
-  const currentFilters: FilterState = {
-    categories:
-      searchParams.get('categories')?.split(',').filter(Boolean) || [],
-    locations: searchParams.get('locations')?.split(',').filter(Boolean) || [],
-    tags: searchParams.get('tags')?.split(',').filter(Boolean) || [],
-  };
+  const currentFilters: FilterState = parseFilterStateFromURL(searchParams);
 
   const handleFilterChange = (
     type: keyof FilterState,
     value: string,
     checked: boolean,
   ) => {
-    const params = new URLSearchParams(searchParams.toString());
-    let values = [...currentFilters[type]];
-
-    if (checked) {
-      if (!values.includes(value)) {
-        values.push(value);
-      }
-    } else {
-      values = values.filter((v) => v !== value);
-    }
-
-    if (values.length > 0) {
-      params.set(type, values.join(','));
-    } else {
-      params.delete(type);
-    }
-
-    // Remove type parameter when filtering
-    params.delete('type');
-
+    const params = updateFilterParams(
+      searchParams,
+      type,
+      value,
+      checked,
+      currentFilters,
+    );
     router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   const clearAllFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('categories');
-    params.delete('locations');
-    params.delete('tags');
-    params.delete('type');
+    const params = clearFilterParams(searchParams);
     router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
     setIsOpen(false);
   };
 
-  const hasActiveFilters =
-    currentFilters.categories.length > 0 ||
-    currentFilters.locations.length > 0 ||
-    currentFilters.tags.length > 0;
-
-  // Custom checkbox component matching the design
-  const CustomCheckbox = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      return <CheckSquareIcon width={24} height={24} className="text-black" />;
-    }
-    return <SquareIcon width={24} height={24} className="text-black/20" />;
-  };
+  const hasActiveFilters = checkHasActiveFilters(currentFilters);
 
   const getSectionLabel = (section: FilterSection): string => {
     switch (section) {
@@ -181,35 +149,7 @@ export default function ProjectFilterMobile() {
               onClick={() => setIsOpen(false)}
               className="flex size-[30px] items-center justify-center rounded-[4px] bg-white p-[5px]"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-              >
-                <g clipPath="url(#clip0_4150_3591)">
-                  <path
-                    d="M15.625 4.375L4.375 15.625"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M15.625 15.625L4.375 4.375"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_4150_3591">
-                    <rect width="20" height="20" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
+              <CloseIcon width={20} height={20} className="text-black" />
             </button>
           </div>
 
@@ -291,42 +231,11 @@ export default function ProjectFilterMobile() {
                     <span className="font-['Open_Sans'] text-[13px] font-semibold text-black/50">
                       Clear All Filters
                     </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                    >
-                      <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
-                        <path
-                          d="M12.5 7.5L7.5 12.5"
-                          stroke="black"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M7.5 7.5L12.5 12.5"
-                          stroke="black"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z"
-                          stroke="black"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_4150_4830">
-                          <rect width="20" height="20" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
+                    <CircleXIcon
+                      width={20}
+                      height={20}
+                      className="text-black"
+                    />
                   </button>
                 )}
               </div>
@@ -346,19 +255,24 @@ export default function ProjectFilterMobile() {
                   {currentFilters[activeSection].length > 0 && (
                     <button
                       onClick={() => {
-                        const params = new URLSearchParams(
-                          searchParams.toString(),
+                        const params = clearFilterParams(
+                          searchParams,
+                          activeSection,
                         );
-                        params.delete(activeSection);
                         router.push(
                           `/projects${
                             params.toString() ? `?${params.toString()}` : ''
                           }`,
                         );
                       }}
-                      className="text-[13px] font-normal text-black/50"
+                      className="flex items-center gap-[5px] text-[13px] font-normal text-black/50"
                     >
                       Clear this filter
+                      <CircleXIcon
+                        width={18}
+                        height={18}
+                        className="text-black"
+                      />
                     </button>
                   )}
                 </div>

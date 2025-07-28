@@ -3,40 +3,14 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-import { CaretDownIcon } from '@/components/icons';
+import {
+  CaretDownIcon,
+  CheckmarkIcon,
+  CloseIcon,
+  SortDescendingIcon,
+} from '@/components/icons';
 
-interface SortOption {
-  value: string;
-  label: string;
-  category: string;
-}
-
-const sortOptions: SortOption[] = [
-  // By Rank
-  { value: 'top-transparent', label: 'Top Transparent', category: 'By Rank' },
-  {
-    value: 'top-community-trusted',
-    label: 'Top Community Trusted',
-    category: 'By Rank',
-  },
-  // By Time
-  { value: 'newest', label: 'Newest Projects', category: 'By Time' },
-  { value: 'oldest', label: 'Oldest Projects', category: 'By Time' },
-  // By Name
-  { value: 'a-z', label: 'Order Alphabetically (A→Z)', category: 'By Name' },
-  { value: 'z-a', label: 'Order Alphabetically (Z→A)', category: 'By Name' },
-  // By Activity
-  {
-    value: 'most-contributed',
-    label: 'Most Contributed',
-    category: 'By Activity',
-  },
-  {
-    value: 'less-contributed',
-    label: 'Less Contributed',
-    category: 'By Activity',
-  },
-];
+import { CATEGORY_MAP, SORT_OPTIONS, type SortOption } from './types';
 
 export default function ProjectSortMobile() {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,12 +36,12 @@ export default function ProjectSortMobile() {
 
   const getButtonLabel = () => {
     if (!currentSort) return 'Sort';
-    const option = sortOptions.find((opt) => opt.value === currentSort);
+    const option = SORT_OPTIONS.find((opt) => opt.value === currentSort);
     return option?.label || 'Sort';
   };
 
   // Group options by category
-  const groupedOptions = sortOptions.reduce(
+  const groupedOptions = SORT_OPTIONS.reduce(
     (acc, option) => {
       if (!acc[option.category]) {
         acc[option.category] = [];
@@ -78,13 +52,6 @@ export default function ProjectSortMobile() {
     {} as Record<string, SortOption[]>,
   );
 
-  const categoryMap: Record<string, string> = {
-    'By Rank': 'By Rank:',
-    'By Time': 'By Time:',
-    'By Name': 'By Name:',
-    'By Activity': 'By Activity:',
-  };
-
   return (
     <>
       {/* Sort Button */}
@@ -93,56 +60,7 @@ export default function ProjectSortMobile() {
         className="flex h-10 grow items-center justify-between rounded-[5px] border border-black/10 bg-white p-[10px]"
       >
         <div className="flex items-center gap-[5px]">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-          >
-            <g clipPath="url(#clip0_3873_28423)">
-              <path
-                d="M3.75 10H9.375"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M3.75 5H14.375"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M3.75 15H8.125"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M11.25 13.125L14.375 16.25L17.5 13.125"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M14.375 16.25V8.75"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-            <defs>
-              <clipPath id="clip0_3873_28423">
-                <rect width="20" height="20" fill="white" />
-              </clipPath>
-            </defs>
-          </svg>
+          <SortDescendingIcon width={20} height={20} className="text-black" />
           <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
             {getButtonLabel()}
           </span>
@@ -227,35 +145,7 @@ export default function ProjectSortMobile() {
               onClick={() => setIsOpen(false)}
               className="flex size-[30px] items-center justify-center rounded-[4px] bg-white p-[5px]"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-              >
-                <g clipPath="url(#clip0_4150_3591)">
-                  <path
-                    d="M15.625 4.375L4.375 15.625"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M15.625 15.625L4.375 4.375"
-                    stroke="black"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_4150_3591">
-                    <rect width="20" height="20" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
+              <CloseIcon width={20} height={20} className="text-black" />
             </button>
           </div>
 
@@ -265,7 +155,7 @@ export default function ProjectSortMobile() {
               {Object.entries(groupedOptions).map(([category, options]) => (
                 <div key={category} className="flex flex-col gap-[8px]">
                   <p className="font-['Open_Sans'] text-[13px] font-semibold text-black/30">
-                    {categoryMap[category] || category}
+                    {CATEGORY_MAP[category] || category}
                   </p>
                   <div className="flex flex-col gap-[5px]">
                     {options.map((option) => {
@@ -282,28 +172,11 @@ export default function ProjectSortMobile() {
                         >
                           <span>{option.label}</span>
                           {isSelected && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                            >
-                              <g clipPath="url(#clip0_4150_3601)">
-                                <path
-                                  d="M2.5 9L6 12.5L14 4.5"
-                                  stroke="black"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </g>
-                              <defs>
-                                <clipPath id="clip0_4150_3601">
-                                  <rect width="16" height="16" fill="white" />
-                                </clipPath>
-                              </defs>
-                            </svg>
+                            <CheckmarkIcon
+                              width={16}
+                              height={16}
+                              className="text-black"
+                            />
                           )}
                         </button>
                       );

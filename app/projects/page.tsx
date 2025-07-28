@@ -7,13 +7,13 @@ import { Suspense, useCallback, useEffect, useMemo } from 'react';
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
-import ProjectFilter from '@/components/pages/project/Filter';
-import ProjectFilterMobile from '@/components/pages/project/FilterMobile';
+import ProjectFilter from '@/components/pages/project/filterAndSort/Filter';
+import ProjectFilterMobile from '@/components/pages/project/filterAndSort/FilterMobile';
+import ProjectSort from '@/components/pages/project/filterAndSort/Sort';
+import ProjectSortMobile from '@/components/pages/project/filterAndSort/SortMobile';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
-import ProjectSort from '@/components/pages/project/Sort';
-import ProjectSortMobile from '@/components/pages/project/SortMobile';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -277,7 +277,7 @@ const ProjectsContent = () => {
           />
         </div>
 
-        <div className="mobile:hidden flex w-[300px] flex-col gap-[20px]">
+        <div className="mobile:hidden flex w-[300px] flex-col gap-[10px]">
           <ProjectSort />
           <ProjectFilter />
           <RewardCard />
