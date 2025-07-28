@@ -224,9 +224,12 @@ export const projectRouter = router({
 
         const sortedResults = await sortedQuery;
         const hasNextPage = sortedResults.length > limit;
+        const items = hasNextPage
+          ? sortedResults.slice(0, limit)
+          : sortedResults;
 
         return {
-          items: sortedResults ?? [],
+          items: items ?? [],
           offset,
           hasNextPage,
         };
