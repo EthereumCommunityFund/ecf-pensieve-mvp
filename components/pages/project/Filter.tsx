@@ -3,6 +3,12 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
+import {
+  CaretDownIcon,
+  CheckSquareIcon,
+  FunnelSimpleIcon,
+  SquareIcon,
+} from '@/components/icons';
 import { AllCategories } from '@/constants/category';
 
 interface FilterState {
@@ -89,302 +95,314 @@ export default function ProjectFilter() {
   const INITIAL_ITEMS_COUNT = 5;
 
   // Custom checkbox component matching the design
-  const CustomCheckbox = ({
-    checked,
-    onChange,
-  }: {
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-  }) => (
-    <div
-      className={`size-4 rounded-full border ${
-        checked ? 'border-black bg-black' : 'border-gray-300 bg-white'
-      } flex cursor-pointer items-center justify-center`}
-      onClick={() => onChange(!checked)}
-    >
-      {checked && (
-        <svg
-          width="10"
-          height="8"
-          viewBox="0 0 10 8"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M1 4L3.5 6.5L9 1"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-    </div>
-  );
+  const CustomCheckbox = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      return <CheckSquareIcon width={24} height={24} className="text-black" />;
+    }
+    return <SquareIcon width={24} height={24} className="text-black/20" />;
+  };
+
+  // 添加自定义滚动条样式类
+  const scrollbarStyles = {
+    scrollbarWidth: 'thin' as const,
+    scrollbarColor: '#E1E1E1 transparent',
+  };
+
+  // Webkit 滚动条样式
+  const webkitScrollbarClass = 'custom-scrollbar';
 
   return (
-    <div className="w-full bg-white">
+    <div className="w-full ">
       {/* Clear All Filters */}
       {hasActiveFilters && (
         <div className="mb-4 text-center">
           <button
             onClick={clearAllFilters}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/70"
           >
             Clear All Filters
             <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="opacity-40"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
             >
-              <circle
-                cx="7"
-                cy="7"
-                r="6"
-                stroke="currentColor"
-                strokeWidth="1.2"
-              />
-              <path
-                d="M9 5L5 9M5 5L9 9"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-              />
+              <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
+                <path
+                  d="M11.25 6.75L6.75 11.25"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M6.75 6.75L11.25 11.25"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+              <defs>
+                <clipPath id="clip0_4150_4830">
+                  <rect width="18" height="18" fill="white" />
+                </clipPath>
+              </defs>
             </svg>
           </button>
         </div>
       )}
 
       {/* Sub-category Filter */}
-      <div className="border-t border-gray-200 py-4">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 8H13M1 4H15M5 12H11"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            <h4 className="text-sm font-semibold">Sub-category</h4>
-            {currentFilters.categories.length > 0 && (
-              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-sm bg-black px-1 text-[10px] font-medium text-white">
-                {currentFilters.categories.length}
-              </span>
-            )}
+      <div className="py-4">
+        <div className="mb-2.5 flex h-[30px] items-center justify-between border-b border-black/10 px-0 py-1.5">
+          <div className="flex items-center gap-1.5">
+            <FunnelSimpleIcon
+              width={20}
+              height={20}
+              className="text-black/60"
+            />
+            <h4 className="text-[14px] font-semibold text-black/60">
+              Sub-category
+            </h4>
           </div>
           {currentFilters.categories.length > 0 && (
+            <span className="mr-0 flex h-[18px] min-w-[20px] items-center justify-center rounded-[2px] bg-[#1E1E1E] px-1.5 text-[13px] font-semibold text-white">
+              {currentFilters.categories.length}
+            </span>
+          )}
+        </div>
+        {currentFilters.categories.length > 0 && (
+          <div className="mb-2.5 text-right">
             <button
               onClick={() => clearFilter('categories')}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+              className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/70"
             >
               Clear this filter
               <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
               >
-                <path
-                  d="M7.5 2.5L2.5 7.5M2.5 2.5L7.5 7.5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
+                <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
+                  <path
+                    d="M11.25 6.75L6.75 11.25"
+                    stroke="black"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6.75 6.75L11.25 11.25"
+                    stroke="black"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
+                    stroke="black"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_4150_4830">
+                    <rect width="18" height="18" fill="white" />
+                  </clipPath>
+                </defs>
               </svg>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        <p className="mb-3 text-xs text-gray-400">
+        <p className="mb-4 text-[12px] text-black/50">
           There are {AllCategories.length} sub-categories
         </p>
 
-        <div className="space-y-2">
-          {AllCategories.slice(
-            0,
-            expandedSections.categories ? undefined : INITIAL_ITEMS_COUNT,
-          ).map((category) => (
-            <label
-              key={category.value}
-              className="flex cursor-pointer items-center gap-2"
-            >
-              <CustomCheckbox
-                checked={currentFilters.categories.includes(category.value)}
-                onChange={(checked) =>
-                  handleFilterChange('categories', category.value, checked)
-                }
-              />
-              <span className="text-sm text-gray-700">{category.label}</span>
-            </label>
-          ))}
+        <div className="relative">
+          <div
+            className={`space-y-[5px] overflow-y-auto pr-2 ${webkitScrollbarClass} ${
+              expandedSections.categories ? 'max-h-[365px]' : 'max-h-[180px]'
+            }`}
+            style={scrollbarStyles}
+          >
+            {AllCategories.slice(
+              0,
+              expandedSections.categories ? undefined : INITIAL_ITEMS_COUNT,
+            ).map((category, index) => {
+              const isSelected = currentFilters.categories.includes(
+                category.value,
+              );
+              return (
+                <label
+                  key={category.value}
+                  className={`flex h-[32px] cursor-pointer items-center justify-between rounded-[5px] px-2 ${
+                    isSelected ? '' : index === 0 ? 'bg-[#EBEBEB]' : ''
+                  } hover:bg-[#EBEBEB]/60`}
+                  onClick={() =>
+                    handleFilterChange(
+                      'categories',
+                      category.value,
+                      !isSelected,
+                    )
+                  }
+                >
+                  <span
+                    className={`text-[14px] ${isSelected ? 'font-semibold text-black' : 'text-black/80'}`}
+                  >
+                    {category.label}
+                  </span>
+                  <CustomCheckbox checked={isSelected} />
+                </label>
+              );
+            })}
+          </div>
         </div>
 
         {AllCategories.length > INITIAL_ITEMS_COUNT && (
           <button
             onClick={() => toggleExpanded('categories')}
-            className="mt-3 flex w-full items-center justify-between text-sm text-gray-600 hover:text-gray-800"
+            className="mt-2.5 flex h-[18px] w-full items-center justify-center gap-1.5 text-[13px] font-semibold text-black/50 hover:text-black/70"
           >
-            <span>Expand</span>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <span>{expandedSections.categories ? 'Show Less' : 'Expand'}</span>
+            <CaretDownIcon
+              width={16}
+              height={16}
               className={`transition-transform ${
                 expandedSections.categories ? 'rotate-180' : ''
               }`}
-            >
-              <path
-                d="M3 4.5L6 7.5L9 4.5"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            />
           </button>
         )}
       </div>
 
       {/* Location Filter */}
-      <div className="border-t border-gray-200 py-4">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 8H13M1 4H15M5 12H11"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            <h4 className="text-sm font-semibold">Location</h4>
-            {currentFilters.locations.length > 0 && (
-              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-sm bg-black px-1 text-[10px] font-medium text-white">
-                {currentFilters.locations.length}
-              </span>
-            )}
+      <div className=" py-4">
+        <div className="mb-2.5 flex h-[30px] items-center justify-between border-b border-black/10 px-0 py-1.5">
+          <div className="flex items-center gap-1.5">
+            <FunnelSimpleIcon
+              width={20}
+              height={20}
+              className="text-black/60"
+            />
+            <h4 className="text-[14px] font-semibold text-black/60">
+              Location
+            </h4>
           </div>
           {currentFilters.locations.length > 0 && (
+            <span className="mr-0 flex h-[18px] min-w-[20px] items-center justify-center rounded-[2px] bg-[#1E1E1E] px-1.5 text-[13px] font-semibold text-white">
+              {currentFilters.locations.length}
+            </span>
+          )}
+        </div>
+        {currentFilters.locations.length > 0 && (
+          <div className="mb-2.5 text-right">
             <button
               onClick={() => clearFilter('locations')}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+              className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/70"
             >
               Clear this filter
               <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
               >
-                <path
-                  d="M7.5 2.5L2.5 7.5M2.5 2.5L7.5 7.5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
+                <g opacity="0.4" clipPath="url(#clip0_4150_4830)">
+                  <path
+                    d="M11.25 6.75L6.75 11.25"
+                    stroke="black"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6.75 6.75L11.25 11.25"
+                    stroke="black"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 15.75C12.7279 15.75 15.75 12.7279 15.75 9C15.75 5.27208 12.7279 2.25 9 2.25C5.27208 2.25 2.25 5.27208 2.25 9C2.25 12.7279 5.27208 15.75 9 15.75Z"
+                    stroke="black"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_4150_4830">
+                    <rect width="18" height="18" fill="white" />
+                  </clipPath>
+                </defs>
               </svg>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="space-y-2">
-          {locations
-            .slice(
-              0,
-              expandedSections.locations ? undefined : INITIAL_ITEMS_COUNT,
-            )
-            .map((location) => (
-              <label
-                key={location}
-                className="flex cursor-pointer items-center gap-2"
-              >
-                <CustomCheckbox
-                  checked={currentFilters.locations.includes(location)}
-                  onChange={(checked) =>
-                    handleFilterChange('locations', location, checked)
-                  }
-                />
-                <span className="text-sm text-gray-700">{location}</span>
-              </label>
-            ))}
+        <div className="relative">
+          <div
+            className={`space-y-[5px] overflow-y-auto pr-2 ${webkitScrollbarClass} ${
+              expandedSections.locations ? 'max-h-[365px]' : 'max-h-[180px]'
+            }`}
+            style={scrollbarStyles}
+          >
+            {locations
+              .slice(
+                0,
+                expandedSections.locations ? undefined : INITIAL_ITEMS_COUNT,
+              )
+              .map((location) => {
+                const isSelected = currentFilters.locations.includes(location);
+                return (
+                  <label
+                    key={location}
+                    className="flex h-[32px] cursor-pointer items-center justify-between rounded-[5px] px-2 hover:bg-[#EBEBEB]/60"
+                    onClick={() =>
+                      handleFilterChange('locations', location, !isSelected)
+                    }
+                  >
+                    <span
+                      className={`text-[14px] ${isSelected ? 'font-semibold text-black' : 'text-black/80'}`}
+                    >
+                      {location}
+                    </span>
+                    <CustomCheckbox checked={isSelected} />
+                  </label>
+                );
+              })}
+          </div>
         </div>
 
         {locations.length > INITIAL_ITEMS_COUNT && (
           <button
             onClick={() => toggleExpanded('locations')}
-            className="mt-3 flex w-full items-center justify-between text-sm text-gray-600 hover:text-gray-800"
+            className="mt-2.5 flex h-[18px] w-full items-center justify-center gap-1.5 text-[13px] font-semibold text-black/50 hover:text-black/70"
           >
-            <span>Expand</span>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <span>{expandedSections.locations ? 'Show Less' : 'Expand'}</span>
+            <CaretDownIcon
+              width={16}
+              height={16}
               className={`transition-transform ${
                 expandedSections.locations ? 'rotate-180' : ''
               }`}
-            >
-              <path
-                d="M3 4.5L6 7.5L9 4.5"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            />
           </button>
         )}
-      </div>
-
-      {/* Tags Filter */}
-      <div className="border-t border-gray-200 py-4">
-        <div className="mb-3 flex items-center gap-2">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M3 8H13M1 4H15M5 12H11"
-              stroke="black"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          <h4 className="text-sm font-semibold">Tags</h4>
-        </div>
-        <div>
-          <input
-            type="text"
-            placeholder="tagone"
-            disabled
-            className="w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 placeholder:text-gray-400"
-          />
-        </div>
       </div>
     </div>
   );
