@@ -11,6 +11,7 @@ import ProjectFilter from '@/components/pages/project/Filter';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
+import ProjectSort from '@/components/pages/project/Sort';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -225,7 +226,7 @@ const ProjectsContent = () => {
             ) : (
               <div className="flex items-center justify-between">
                 <ECFTypography type={'subtitle1'}>{title}</ECFTypography>
-                <ProjectFilter />
+                {/* <ProjectFilter /> */}
               </div>
             )}
           </div>
@@ -244,7 +245,9 @@ const ProjectsContent = () => {
           />
         </div>
 
-        <div className="mobile:hidden">
+        <div className="mobile:hidden flex w-[300px] flex-col gap-[20px]">
+          <ProjectSort />
+          <ProjectFilter />
           <RewardCard />
         </div>
 
