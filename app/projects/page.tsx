@@ -8,10 +8,12 @@ import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import BackHeader from '@/components/pages/project/BackHeader';
 import ProjectFilter from '@/components/pages/project/Filter';
+import ProjectFilterMobile from '@/components/pages/project/FilterMobile';
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import ProjectSort from '@/components/pages/project/Sort';
+import ProjectSortMobile from '@/components/pages/project/SortMobile';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -23,6 +25,11 @@ const ProjectsContent = () => {
   const searchParams = useSearchParams();
   const type = searchParams.get('type');
   const category = searchParams.get('cat');
+
+  // Get filter and sort parameters from URL
+  const categories = searchParams.get('categories')?.split(',').filter(Boolean);
+  const locations = searchParams.get('locations')?.split(',').filter(Boolean);
+  const sort = searchParams.get('sort');
 
   const {
     data,
@@ -36,6 +43,9 @@ const ProjectsContent = () => {
       limit: 10,
       isPublished: true,
       ...(category && { categories: [category] }),
+      ...(categories && categories.length > 0 && { categories }),
+      ...(locations && locations.length > 0 && { locations }),
+      ...(sort && { sort }),
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -210,6 +220,28 @@ const ProjectsContent = () => {
       ) : (
         <BackHeader className="px-[10px]" />
       )}
+
+      <div className="mobile:block hidden">
+        {/* mobile filter and sort entry */}
+        <div className=" flex items-center gap-0">
+          <ProjectSortMobile />
+          <ProjectFilterMobile />
+        </div>
+        {/* Active Filters Display */}
+        {(searchParams.get('categories') || searchParams.get('locations')) && (
+          <div className="mt-[5px] text-left">
+            <p className="font-['Open_Sans'] text-[12px] font-normal text-black/50">
+              Active Filters:{' '}
+              {[
+                searchParams.get('categories') && 'Category',
+                searchParams.get('locations') && 'Location',
+              ]
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
         <div className="w-full flex-1">
