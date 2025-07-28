@@ -6,7 +6,6 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import BackHeader from '@/components/pages/project/BackHeader';
 import ProjectFilter from '@/components/pages/project/filterAndSort/Filter';
 import ProjectFilterMobile from '@/components/pages/project/filterAndSort/FilterMobile';
 import ProjectSort from '@/components/pages/project/filterAndSort/Sort';
@@ -178,27 +177,23 @@ const ProjectsContent = () => {
 
   return (
     <div className="pb-10">
-      {sort === 'top-transparent' || sort === 'top-community-trusted' ? (
-        <BackHeader className="px-[10px]" />
-      ) : (
-        <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
-          <Image
-            src="/images/projects/logo.png"
-            alt="ECF project Logo"
-            width={63}
-            height={63}
-          />
-          <div className="flex-1">
-            <ECFTypography type={'title'}>Projects</ECFTypography>
-            <ECFTypography type={'subtitle2'} className="mt-2.5">
-              Explore projects and initiatives here or add your own to the list!
-            </ECFTypography>
-            <ECFButton onPress={handleProposeProject} className="mt-2.5">
-              Propose a Project
-            </ECFButton>
-          </div>
+      <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
+        <Image
+          src="/images/projects/logo.png"
+          alt="ECF project Logo"
+          width={63}
+          height={63}
+        />
+        <div className="flex-1">
+          <ECFTypography type={'title'}>Projects</ECFTypography>
+          <ECFTypography type={'subtitle2'} className="mt-2.5">
+            Explore projects and initiatives here or add your own to the list!
+          </ECFTypography>
+          <ECFButton onPress={handleProposeProject} className="mt-2.5">
+            Propose a Project
+          </ECFButton>
         </div>
-      )}
+      </div>
 
       <div className="mobile:block hidden">
         {/* mobile filter and sort entry */}

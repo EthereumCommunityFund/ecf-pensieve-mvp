@@ -119,11 +119,11 @@ const HomeList = () => {
   }, [transparentProjectsUpdatedAt]);
 
   const handleViewTopTransparentProjects = useCallback(() => {
-    router.push('/projects?type=transparent');
+    router.push('/projects?sort=top-transparent');
   }, [router]);
 
   const handleViewTopCommunityTrustedProjects = useCallback(() => {
-    router.push('/projects?type=community-trusted');
+    router.push('/projects?sort=top-community-trusted');
   }, [router]);
 
   // Refetch all method to refresh all data
@@ -229,7 +229,7 @@ const HomeList = () => {
             showUpvote={true}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl="/projects?sort=community-trusted"
+            viewAllUrl="/projects?sort=top-community-trusted"
           />
         </div>
 
