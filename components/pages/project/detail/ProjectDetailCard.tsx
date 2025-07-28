@@ -51,7 +51,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
           {(getLeadingCategories
             ? getLeadingCategories()
             : project.categories
-          ).map((category) => {
+          ).map((category: string) => {
             return (
               <span
                 key={category}

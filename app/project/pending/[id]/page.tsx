@@ -213,7 +213,7 @@ const ProjectCard = ({
           {project.tagline}
         </p>
         <div className="flex flex-wrap gap-[8px]">
-          {project.categories.map((category) => {
+          {project.categories.map((category: string) => {
             return (
               <span
                 key={category}

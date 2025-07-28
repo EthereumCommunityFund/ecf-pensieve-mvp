@@ -94,7 +94,7 @@ const PendingProjectCard = ({
     return ProposalVoteUtils.getVoteResultOfProject({
       projectId: project.id,
       votesOfProject: project.proposals.flatMap(
-        (proposal) => proposal.voteRecords || [],
+        (proposal: any) => proposal.voteRecords || [],
       ),
       proposals: project.proposals,
       userId,
@@ -113,7 +113,7 @@ const PendingProjectCard = ({
   const leadingProposal = useMemo(() => {
     if (!leadingProposalId) return null;
     return (project.proposals || []).find(
-      (proposal) => proposal?.id === leadingProposalId,
+      (proposal: any) => proposal?.id === leadingProposalId,
     );
   }, [project, leadingProposalId]);
 
@@ -148,7 +148,7 @@ const PendingProjectCard = ({
           </div>
 
           <div className="flex flex-wrap gap-[8px]">
-            {project.categories.map((tag) => (
+            {project.categories.map((tag: string) => (
               <div
                 key={tag}
                 className="flex h-[22px] items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)] px-[12px]"

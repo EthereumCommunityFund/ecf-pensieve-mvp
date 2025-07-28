@@ -16,7 +16,7 @@ export type IProposalWithVotes = IProposal & {
 };
 
 export type IProject = RouterOutputs['project']['getProjects']['items'][0] & {
-  proposals: IProposalWithVotes[];
+  proposals?: IProposalWithVotes[];
   projectSnap?: IProjectSnap;
 };
 
