@@ -226,7 +226,7 @@ const HomeList = () => {
             emptyMessage="No projects found"
             onSuccess={refetchAll}
             showCreator={false}
-            showUpvote={true}
+            showUpvote={false}
             showTransparentScore={false}
             size="sm"
             viewAllUrl="/projects?type=community-trusted"
@@ -248,7 +248,7 @@ const HomeList = () => {
             emptyMessage="No projects found"
             onSuccess={refetchAll}
             showCreator={false}
-            showUpvote={true}
+            showUpvote={false}
             showTransparentScore={false}
             size="sm"
             viewAllUrl={`/projects?cat=${encodeURIComponent('Local Communities')}`}
@@ -270,7 +270,7 @@ const HomeList = () => {
             emptyMessage="No projects found"
             onSuccess={refetchAll}
             showCreator={false}
-            showUpvote={true}
+            showUpvote={false}
             showTransparentScore={false}
             size="sm"
             viewAllUrl={`/projects?cat=Events`}
@@ -292,7 +292,7 @@ const HomeList = () => {
             emptyMessage="No projects found"
             onSuccess={refetchAll}
             showCreator={false}
-            showUpvote={true}
+            showUpvote={false}
             showTransparentScore={false}
             size="sm"
             viewAllUrl={`/projects?cat=Hubs`}
