@@ -2,7 +2,20 @@ import { eq } from 'drizzle-orm';
 import { expect } from 'vitest';
 
 import { db } from '@/lib/db';
-import { projects } from '@/lib/db/schema';
+import {
+  activeLogs,
+  invitationCodes,
+  itemProposals,
+  likeRecords,
+  notifications,
+  profiles,
+  projectLogs,
+  projects,
+  projectSnaps,
+  proposals,
+  ranks,
+  voteRecords,
+} from '@/lib/db/schema';
 
 export const publishProject = async (projectId: number) => {
   await db
@@ -54,4 +67,23 @@ export const getProjectTopWeight = async (projectId: number, key: string) => {
     where: eq(projects.id, projectId),
   });
   return (project?.itemsTopWeight as Record<string, number>)?.[key] || 0;
+};
+
+export const cleanDatabase = async () => {
+  await db.delete(activeLogs);
+  await db.delete(notifications);
+  await db.delete(projectLogs);
+  await db.delete(likeRecords);
+  await db.delete(voteRecords);
+
+  await db.delete(itemProposals);
+  await db.delete(proposals);
+
+  await db.delete(projectSnaps);
+  await db.delete(ranks);
+  await db.delete(projects);
+
+  await db.delete(profiles);
+
+  await db.delete(invitationCodes);
 };

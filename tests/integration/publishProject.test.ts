@@ -907,11 +907,11 @@ describe('Vote Integration Tests', () => {
       expect(firstCallResult).toBeDefined();
       expect(firstCallResult.items).toBeDefined();
       expect(Array.isArray(firstCallResult.items)).toBe(true);
-      expect(firstCallResult.totalCount).toBeGreaterThan(0);
+      expect(firstCallResult.hasNextPage).toBeDefined();
 
       // Verify our published project is in the results
       const publishedProjectInResults = firstCallResult.items.find(
-        (p) => p.id === publishableProject.id,
+        (p: any) => p.id === publishableProject.id,
       );
       expect(publishedProjectInResults).toBeDefined();
       expect(publishedProjectInResults!.isPublished).toBe(true);
@@ -925,18 +925,18 @@ describe('Vote Integration Tests', () => {
 
       expect(secondCallResult).toEqual(firstCallResult);
 
-      // Call with cursor should NOT use cache (cache only applies when !cursor)
-      if (firstCallResult.nextCursor) {
-        const cursorCallResult = await publicProjectCaller.getProjects({
+      // Call with offset should NOT use cache (cache only applies when offset === 0)
+      if (firstCallResult.hasNextPage) {
+        const offsetCallResult = await publicProjectCaller.getProjects({
           isPublished: true,
           limit: 10,
-          cursor: firstCallResult.nextCursor,
+          offset: 10,
         });
 
-        expect(cursorCallResult).toBeDefined();
-        expect(cursorCallResult.items).toBeDefined();
+        expect(offsetCallResult).toBeDefined();
+        expect(offsetCallResult.items).toBeDefined();
         // Should be different from first call (different page)
-        expect(cursorCallResult.items).not.toEqual(firstCallResult.items);
+        expect(offsetCallResult.items).not.toEqual(firstCallResult.items);
       }
 
       // Call with isPublished=false should NOT use cache
@@ -949,7 +949,7 @@ describe('Vote Integration Tests', () => {
       expect(unpublishedCallResult.items).toBeDefined();
       // Should contain unpublished projects (different from published results)
       const unpublishedProject = unpublishedCallResult.items.find(
-        (p) => !p.isPublished,
+        (p: any) => !p.isPublished,
       );
       if (unpublishedProject) {
         expect(unpublishedProject.isPublished).toBe(false);
@@ -968,7 +968,7 @@ describe('Vote Integration Tests', () => {
 
       expect(postPublishCallResult).toBeDefined();
       const freshPublishedProject = postPublishCallResult.items.find(
-        (p) => p.id === publishableProject.id,
+        (p: any) => p.id === publishableProject.id,
       );
       expect(freshPublishedProject).toBeDefined();
       expect(freshPublishedProject!.isPublished).toBe(true);

@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local.test') });
 
 export default defineConfig({
   test: {
-    include: ['tests/integration/**/*.test.ts'],
+    include: ['tests/integration/**/*.test.ts', 'tests/unit/**/*.test.ts'],
     exclude: ['stories/**/*', '.storybook/**/*'],
     environment: 'node',
     testTimeout: 30000,
