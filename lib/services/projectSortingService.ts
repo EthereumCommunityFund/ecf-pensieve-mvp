@@ -1,4 +1,4 @@
-import { SQL, and, asc, desc, eq, sql } from 'drizzle-orm';
+import { SQL, and, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { PgColumn } from 'drizzle-orm/pg-core';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
@@ -67,15 +67,10 @@ export class ProjectSortingService {
 
     let query = this.db
       .select({
-        id: projects.id,
-        createdAt: projects.createdAt,
-        support: projects.support,
-        isPublished: projects.isPublished,
-        itemsTopWeight: projects.itemsTopWeight,
-        name: projects.name,
-        categories: projects.categories,
-        currentName: projectSnaps.name,
-        currentCategories: projectSnaps.categories,
+        ...getTableColumns(projects),
+        projectSnap: {
+          ...getTableColumns(projectSnaps),
+        },
         creator: {
           name: profiles.name,
           avatarUrl: profiles.avatarUrl,
