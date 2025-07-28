@@ -15,8 +15,8 @@ import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
-import { SortBy, SortOrder } from '@/lib/services/projectSortingService';
 import { trpc } from '@/lib/trpc/client';
+import { SortBy, SortOrder } from '@/lib/types/sorting';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 

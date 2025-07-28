@@ -4,10 +4,10 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/lib/db';
 import { invitationCodes, profiles, projects } from '@/lib/db/schema';
-import { SortBy, SortOrder } from '@/lib/services/projectSortingService';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authRouter } from '@/lib/trpc/routers/auth';
 import { projectRouter } from '@/lib/trpc/routers/project';
+import { SortBy, SortOrder } from '@/lib/types/sorting';
 
 import { createValidProjectData } from './factories/projectFactory';
 import { cleanDatabase } from './helpers/testHelpers';
