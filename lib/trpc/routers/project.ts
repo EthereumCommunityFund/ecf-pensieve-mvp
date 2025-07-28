@@ -243,7 +243,10 @@ export const projectRouter = router({
               .where(
                 and(
                   eq(projectSnaps.projectId, projects.id),
-                  sql`${projectSnaps.categories} && ${categories}::text[]`,
+                  sql`${projectSnaps.categories} && ARRAY[${sql.join(
+                    categories.map((cat) => sql`${cat}`),
+                    sql`, `,
+                  )}]`,
                 ),
               ),
           ),

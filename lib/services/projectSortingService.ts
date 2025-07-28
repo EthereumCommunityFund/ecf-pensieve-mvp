@@ -72,8 +72,10 @@ export class ProjectSortingService {
         support: projects.support,
         isPublished: projects.isPublished,
         itemsTopWeight: projects.itemsTopWeight,
-        name: projectSnaps.name,
-        categories: projectSnaps.categories,
+        name: projects.name,
+        categories: projects.categories,
+        currentName: projectSnaps.name,
+        currentCategories: projectSnaps.categories,
         creator: {
           name: profiles.name,
           avatarUrl: profiles.avatarUrl,
@@ -100,10 +102,10 @@ export class ProjectSortingService {
 
     if (categories && categories.length > 0 && isPublished === true) {
       conditions.push(
-        sql`EXISTS (
-          SELECT 1 FROM jsonb_array_elements_text(${projectSnaps.categories}) AS cat
-          WHERE cat = ANY(${categories}::text[])
-        )`,
+        sql`${projectSnaps.categories} && ARRAY[${sql.join(
+          categories.map((cat) => sql`${cat}`),
+          sql`, `,
+        )}]`,
       );
     }
 
@@ -221,7 +223,7 @@ export class ProjectSortingService {
         WHEN ${projects.itemsTopWeight} IS NULL THEN 0
         ELSE COALESCE((
           SELECT SUM(CAST(value AS NUMERIC))
-          FROM jsonb_each_text(${projects.itemsTopWeight})
+          FROM jsonb_each_text(${projects.itemsTopWeight}::jsonb)
           WHERE value ~ '^[0-9]+(\.[0-9]+)?$'
         ), 0)
       END
