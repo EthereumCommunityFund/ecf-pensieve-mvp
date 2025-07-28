@@ -4,7 +4,19 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import { db } from '../db';
 import { profiles, projectSnaps, projects, ranks } from '../db/schema';
-import { SortBy, SortOrder } from '../types/sorting';
+
+export enum SortBy {
+  CREATED_AT = 'createdAt',
+  COMMUNITY_TRUSTED = 'communityTrusted',
+  TRANSPARENT = 'transparent',
+  NAME = 'name',
+  ACTIVITY = 'activity',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 export interface SortingConfig {
   field: SortBy;

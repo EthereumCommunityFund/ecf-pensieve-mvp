@@ -37,11 +37,14 @@ import {
   createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
-import { ProjectSortingService } from '@/lib/services/projectSortingService';
+import {
+  ProjectSortingService,
+  SortBy,
+  SortOrder,
+} from '@/lib/services/projectSortingService';
 import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
-import { SortBy, SortOrder } from '@/lib/types/sorting';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 
