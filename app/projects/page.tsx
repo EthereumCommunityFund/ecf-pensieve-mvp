@@ -68,13 +68,19 @@ const ProjectsContent = () => {
     data,
     isLoading,
     refetch: refetchProjects,
-  } = trpc.project.getProjects.useQuery({
-    limit: 10,
-    offset,
-    isPublished: true,
-    ...(cats && cats.length > 0 && { categories: cats }),
-    ...sortParams,
-  });
+  } = trpc.project.getProjects.useQuery(
+    {
+      limit: 10,
+      offset,
+      isPublished: true,
+      ...(cats && cats.length > 0 && { categories: cats }),
+      ...sortParams,
+    },
+    {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    },
+  );
 
   const handleProposeProject = useCallback(() => {
     if (!profile) {
@@ -113,6 +119,21 @@ const ProjectsContent = () => {
     setOffset(0);
     setAllProjects([]);
   }, [sort, catsKey]);
+
+  // Refetch data when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetchProjects();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetchProjects]);
 
   const { projectList, title, description, emptyMessage } = useMemo(() => {
     // Determine title and description based on sort parameter
