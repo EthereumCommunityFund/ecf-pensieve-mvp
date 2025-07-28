@@ -226,7 +226,7 @@ const HomeList = () => {
             emptyMessage="No projects found"
             onSuccess={refetchAll}
             showCreator={false}
-            showUpvote={false}
+            showUpvote={true}
             showTransparentScore={false}
             size="sm"
             viewAllUrl="/projects?type=community-trusted"
