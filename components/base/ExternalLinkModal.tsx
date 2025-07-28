@@ -28,13 +28,20 @@ const ExternalLinkModal: FC<IExternalLinkModalProps> = ({
   }, []);
 
   const handleOpenSite = useCallback(() => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    // Check if window is available (for SSR compatibility)
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
     onClose();
   }, [url, onClose]);
 
   const formatDisplayUrl = (urlString: string) => {
     try {
-      const urlObj = new URL(urlString);
+      // Check if URL constructor is available (for SSR compatibility)
+      if (typeof URL !== 'undefined') {
+        // Parse URL to validate it
+        new URL(urlString);
+      }
       // Remove https:// prefix for display
       const displayUrl = urlString.replace(/^https?:\/\//, '');
 

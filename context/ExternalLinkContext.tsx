@@ -27,10 +27,30 @@ export const ExternalLinkProvider: React.FC<{ children: ReactNode }> = ({
   const [externalUrl, setExternalUrl] = useState('');
 
   const openExternalLink = useCallback((url: string) => {
-    // Skip if it's an internal link or already has pensieve domain
-    if (!url || url.startsWith('/') || url.includes(window.location.hostname)) {
+    // Skip if running in SSR or test environment
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Skip if it's an internal link
+    if (!url || url.startsWith('/')) {
       window.open(url, '_blank', 'noopener,noreferrer');
       return;
+    }
+
+    // Check if URL is from the same domain (more strict check)
+    try {
+      const urlObj = new URL(url, window.location.href);
+      const currentHostname = window.location.hostname;
+
+      // Strict domain check to avoid substring matching issues
+      if (urlObj.hostname === currentHostname) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+    } catch (e) {
+      // If URL parsing fails, treat as external link
+      console.warn('Invalid URL provided:', url);
     }
 
     setExternalUrl(url);
