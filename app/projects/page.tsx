@@ -118,7 +118,9 @@ const ProjectsContent = () => {
   useEffect(() => {
     setOffset(0);
     setAllProjects([]);
-  }, [sort, catsKey]);
+    // Force refetch when filters change
+    refetchProjects();
+  }, [sort, catsKey, refetchProjects]);
 
   // Refetch data when page becomes visible
   useEffect(() => {
