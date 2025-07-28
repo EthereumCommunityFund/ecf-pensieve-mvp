@@ -67,6 +67,7 @@ const ProjectsContent = () => {
   const {
     data,
     isLoading,
+    isFetching,
     refetch: refetchProjects,
   } = trpc.project.getProjects.useQuery(
     {
@@ -118,9 +119,14 @@ const ProjectsContent = () => {
   useEffect(() => {
     setOffset(0);
     setAllProjects([]);
-    // Force refetch when filters change
+  }, [sort, catsKey]);
+
+  // Trigger refetch when query params change (including clearing filters)
+  useEffect(() => {
+    // Clear existing projects to show skeleton while refetching
+    setAllProjects([]);
     refetchProjects();
-  }, [sort, catsKey, refetchProjects]);
+  }, [searchParams, refetchProjects]);
 
   // Refetch data when page becomes visible
   useEffect(() => {
@@ -257,7 +263,10 @@ const ProjectsContent = () => {
           </div>
 
           <ProjectListWrapper
-            isLoading={isLoading && offset === 0}
+            isLoading={
+              (isLoading || (isFetching && offset === 0)) &&
+              projectList.length === 0
+            }
             isFetchingNextPage={isLoadingMore}
             hasNextPage={data?.hasNextPage}
             projectList={projectList}
