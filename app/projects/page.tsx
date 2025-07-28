@@ -23,8 +23,13 @@ const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Get filter and sort parameters from URL
-  const cats = searchParams.get('cats')?.split(',').filter(Boolean);
+
+  // Get filter and sort parameters from URL - memoize to prevent recreation
+  const catsParam = searchParams.get('cats');
+  const cats = useMemo(() => {
+    return catsParam?.split(',').filter(Boolean);
+  }, [catsParam]);
+
   const sort = searchParams.get('sort');
 
   // Parse sort parameter into sortBy and sortOrder
@@ -51,7 +56,9 @@ const ProjectsContent = () => {
     }
   };
 
-  const sortParams = sort ? parseSortParam(sort) : {};
+  const sortParams = useMemo(() => {
+    return sort ? parseSortParam(sort) : {};
+  }, [sort]);
 
   const [offset, setOffset] = useState(0);
   const [allProjects, setAllProjects] = useState<IProject[]>([]);
@@ -163,11 +170,12 @@ const ProjectsContent = () => {
     }
   }, [data, offset]);
 
-  // Reset when filters change
+  // Reset when filters change - use stable dependency
+  const catsKey = cats?.join(',') || '';
   useEffect(() => {
     setOffset(0);
     setAllProjects([]);
-  }, [sort, cats]);
+  }, [sort, catsKey]);
 
   useEffect(() => {
     if (allProjects.length > 0) {
