@@ -2,48 +2,37 @@
 
 import { Image } from '@heroui/react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import PendingProjectCard, {
   PendingProjectCardSkeleton,
 } from '@/components/pages/project/PendingProjectCard';
-import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import ProposalRequirements from '@/components/pages/project/ProposalRequirements';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import ScanPendingProject from '@/components/pages/ScanPendingProject';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-import { IProject } from '@/types';
-import { devLog } from '@/utils/devLog';
+import type { IProject } from '@/types';
 
 const PendingProjectsPage = () => {
   const router = useRouter();
   const { profile, showAuthPrompt } = useAuth();
 
-  // TODO: hasNextPage is down, need fix after weekly meeting
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    // @ts-ignore
-    trpc.project.getProjects.useInfiniteQuery(
-      {
-        limit: 50,
-        isPublished: false,
-      },
-      {
-        // @ts-ignore
-        getNextPageParam: (lastPage: any) => lastPage.nextCursor,
-        // @ts-ignore
-        select: (data: any) => {
-          devLog('getProjects', data);
-          return data;
-        },
-      },
-    );
+  const [offset, setOffset] = useState(0);
+  const [allProjects, setAllProjects] = useState<IProject[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const handleLoadMore = () => {
-    if (!isFetchingNextPage) {
-      fetchNextPage();
-    }
+  const { data, isLoading } = trpc.project.getProjects.useQuery({
+    limit: 10,
+    offset,
+    isPublished: false,
+  });
+
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    setOffset((prev) => prev + 10);
   };
 
   const handleProposeProject = () => {
@@ -54,8 +43,17 @@ const PendingProjectsPage = () => {
     router.push('/project/create');
   };
 
-  // @ts-ignore
-  const allProjects = data?.pages.flatMap((page: any) => page.items) || [];
+  // Manage accumulated projects list
+  useEffect(() => {
+    if (data?.items) {
+      if (offset === 0) {
+        setAllProjects(data.items as IProject[]);
+      } else {
+        setAllProjects((prev) => [...prev, ...(data.items as IProject[])]);
+      }
+      setIsLoadingMore(false);
+    }
+  }, [data, offset]);
 
   return (
     <div className="pb-10">
@@ -96,7 +94,7 @@ const PendingProjectsPage = () => {
 
           {/* Project list */}
           <div className="pb-2.5">
-            {isLoading ? (
+            {isLoading && offset === 0 ? (
               <>
                 {Array.from({ length: 10 }).map((_, index) => (
                   <PendingProjectCardSkeleton key={index} />
@@ -104,27 +102,30 @@ const PendingProjectsPage = () => {
               </>
             ) : allProjects.length > 0 ? (
               <>
-                {/* @ts-ignore */}
-                {allProjects.map((project: any) => (
+                {allProjects.map((project) => (
                   <PendingProjectCard
                     key={project.id}
-                    project={project as IProject}
+                    project={project}
                     showBorder={true}
                   />
                 ))}
 
-                {isFetchingNextPage && (
-                  <ProjectCardSkeleton showBorder={true} />
+                {isLoadingMore && (
+                  <div>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <PendingProjectCardSkeleton key={`loading-${index}`} />
+                    ))}
+                  </div>
                 )}
 
-                {hasNextPage && (
+                {data?.hasNextPage && (
                   <div className="flex justify-center py-4">
                     <ECFButton
                       onPress={handleLoadMore}
-                      isDisabled={isFetchingNextPage}
+                      isDisabled={isLoadingMore}
                       $size="small"
                     >
-                      {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                      {isLoadingMore ? 'Loading...' : 'Load More'}
                     </ECFButton>
                   </div>
                 )}

@@ -62,6 +62,8 @@ const ProjectsContent = () => {
 
   const [offset, setOffset] = useState(0);
   const [allProjects, setAllProjects] = useState<IProject[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const {
     data,
     isLoading,
@@ -86,19 +88,33 @@ const ProjectsContent = () => {
     refetchProjects();
   };
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
     setOffset((prev) => prev + 10);
   };
 
-  const {
-    projectList,
-    title,
-    description,
-    emptyMessage,
-    currentIsLoading,
-    currentHasNextPage,
-    currentIsFetchingNextPage,
-  } = useMemo(() => {
+  // Manage accumulated projects list
+  useEffect(() => {
+    if (data?.items) {
+      if (offset === 0) {
+        // First load or refresh
+        setAllProjects(data.items as IProject[]);
+      } else {
+        // Load more
+        setAllProjects((prev) => [...prev, ...(data.items as IProject[])]);
+      }
+      setIsLoadingMore(false);
+    }
+  }, [data, offset]);
+
+  // Reset when filters change - use stable dependency
+  const catsKey = cats?.join(',') || '';
+  useEffect(() => {
+    setOffset(0);
+    setAllProjects([]);
+  }, [sort, catsKey]);
+
+  const { projectList, title, description, emptyMessage } = useMemo(() => {
     // Determine title and description based on sort parameter
     let pageTitle: string;
     let pageDescription: string;
@@ -139,11 +155,8 @@ const ProjectsContent = () => {
       title: pageTitle,
       description: pageDescription,
       emptyMessage: pageEmptyMessage,
-      currentIsLoading: isLoading,
-      currentHasNextPage: data?.hasNextPage || false,
-      currentIsFetchingNextPage: false,
     };
-  }, [sort, cats, data, allProjects, isLoading]);
+  }, [sort, cats, allProjects]);
 
   const showTransparentScore = useMemo(() => {
     return sort === 'top-transparent';
@@ -156,26 +169,6 @@ const ProjectsContent = () => {
   const showUpvote = useMemo(() => {
     return sort !== 'top-transparent';
   }, [sort]);
-
-  // Manage accumulated projects list
-  useEffect(() => {
-    if (data?.items) {
-      if (offset === 0) {
-        // First load or refresh
-        setAllProjects(data.items as IProject[]);
-      } else {
-        // Load more
-        setAllProjects((prev) => [...prev, ...(data.items as IProject[])]);
-      }
-    }
-  }, [data, offset]);
-
-  // Reset when filters change - use stable dependency
-  const catsKey = cats?.join(',') || '';
-  useEffect(() => {
-    setOffset(0);
-    setAllProjects([]);
-  }, [sort, catsKey]);
 
   useEffect(() => {
     if (allProjects.length > 0) {
@@ -241,9 +234,9 @@ const ProjectsContent = () => {
           </div>
 
           <ProjectListWrapper
-            isLoading={currentIsLoading}
-            isFetchingNextPage={currentIsFetchingNextPage}
-            hasNextPage={currentHasNextPage}
+            isLoading={isLoading && offset === 0}
+            isFetchingNextPage={isLoadingMore}
+            hasNextPage={data?.hasNextPage}
             projectList={projectList}
             emptyMessage={emptyMessage}
             onLoadMore={handleLoadMore}
