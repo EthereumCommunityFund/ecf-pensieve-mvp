@@ -136,7 +136,7 @@ describe('Project Integration Tests', () => {
 
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
-      expect(result.totalCount).toBeGreaterThan(0);
+      expect(result.hasNextPage).toBeDefined();
       expect(result.items.length).toBeGreaterThan(0);
     });
 
@@ -149,20 +149,21 @@ describe('Project Integration Tests', () => {
       expect(result.items.length).toBeLessThanOrEqual(1);
     });
 
-    it('should handle pagination with cursor', async () => {
+    it('should handle pagination with offset', async () => {
       const ctx = { db, supabase, user: null };
       const caller = projectRouter.createCaller(ctx);
 
-      const firstPage = await caller.getProjects({ limit: 1 });
+      const firstPage = await caller.getProjects({ limit: 1, offset: 0 });
 
-      if (firstPage.nextCursor) {
+      if (firstPage.hasNextPage) {
         const secondPage = await caller.getProjects({
           limit: 1,
-          cursor: firstPage.nextCursor,
+          offset: 1,
         });
 
         expect(secondPage.items).toBeDefined();
         expect(Array.isArray(secondPage.items)).toBe(true);
+        expect(secondPage.offset).toBe(1);
       }
     });
   });
@@ -1004,7 +1005,8 @@ describe('Project Integration Tests', () => {
       });
 
       expect(result.items).toBeDefined();
-      expect(result.totalCount).toBeGreaterThanOrEqual(0);
+      expect(result.hasNextPage).toBeDefined();
+      expect(result.offset).toBeDefined();
     });
 
     it('should handle multiple category filters', async () => {
