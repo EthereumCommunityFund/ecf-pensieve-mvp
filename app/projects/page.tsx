@@ -2,7 +2,7 @@
 
 import { Image } from '@heroui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -15,6 +15,7 @@ import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
+import { SortBy, SortOrder } from '@/lib/services/projectSortingService';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -23,66 +24,49 @@ const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const type = searchParams.get('type');
-  const category = searchParams.get('cat');
-
   // Get filter and sort parameters from URL
-  const categories = searchParams.get('categories')?.split(',').filter(Boolean);
-  const locations = searchParams.get('locations')?.split(',').filter(Boolean);
+  const cats = searchParams.get('cats')?.split(',').filter(Boolean);
   const sort = searchParams.get('sort');
 
+  // Parse sort parameter into sortBy and sortOrder
+  const parseSortParam = (sortParam: string) => {
+    switch (sortParam) {
+      case 'newest':
+        return { sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC };
+      case 'oldest':
+        return { sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.ASC };
+      case 'a-z':
+        return { sortBy: SortBy.NAME, sortOrder: SortOrder.ASC };
+      case 'z-a':
+        return { sortBy: SortBy.NAME, sortOrder: SortOrder.DESC };
+      case 'most-contributed':
+        return { sortBy: SortBy.ACTIVITY, sortOrder: SortOrder.DESC };
+      case 'less-contributed':
+        return { sortBy: SortBy.ACTIVITY, sortOrder: SortOrder.ASC };
+      case 'top-transparent':
+        return { sortBy: SortBy.TRANSPARENT, sortOrder: SortOrder.DESC };
+      case 'top-community-trusted':
+        return { sortBy: SortBy.COMMUNITY_TRUSTED, sortOrder: SortOrder.DESC };
+      default:
+        return {};
+    }
+  };
+
+  const sortParams = sort ? parseSortParam(sort) : {};
+
+  const [offset, setOffset] = useState(0);
+  const [allProjects, setAllProjects] = useState<IProject[]>([]);
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isLoading,
     refetch: refetchProjects,
-  } = trpc.project.getProjects.useInfiniteQuery(
-    {
-      limit: 10,
-      isPublished: true,
-      ...(category && { categories: [category] }),
-      ...(categories && categories.length > 0 && { categories }),
-      ...(locations && locations.length > 0 && { locations }),
-      ...(sort && { sort }),
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-      enabled: !type,
-    },
-  );
-
-  const {
-    data: genesisData,
-    fetchNextPage: fetchNextGenesisPage,
-    hasNextPage: hasNextGenesisPage,
-    isFetchingNextPage: isFetchingNextGenesisPage,
-    isLoading: isGenesisLoading,
-    refetch: refetchGenesis,
-  } = trpc.rank.getTopRanksByGenesisWeightPaginated.useInfiniteQuery(
-    { limit: 10 },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-      enabled: type === 'transparent',
-    },
-  );
-
-  const {
-    data: supportData,
-    fetchNextPage: fetchNextSupportPage,
-    hasNextPage: hasNextSupportPage,
-    isFetchingNextPage: isFetchingNextSupportPage,
-    isLoading: isSupportLoading,
-    refetch: refetchSupport,
-  } = trpc.rank.getTopRanksBySupportPaginated.useInfiniteQuery(
-    { limit: 10 },
-    {
-      getNextPageParam: (lastPage: { nextCursor: number | undefined }) =>
-        lastPage.nextCursor,
-      enabled: type === 'community-trusted',
-    },
-  );
+  } = trpc.project.getProjects.useQuery({
+    limit: 10,
+    offset,
+    isPublished: true,
+    ...(cats && cats.length > 0 && { categories: cats }),
+    ...sortParams,
+  });
 
   const handleProposeProject = useCallback(() => {
     if (!profile) {
@@ -93,23 +77,11 @@ const ProjectsContent = () => {
   }, [profile, showAuthPrompt, router]);
 
   const onUpvoteSuccess = () => {
-    if (type === 'transparent') {
-      refetchGenesis();
-    } else if (type === 'community-trusted') {
-      refetchSupport();
-    } else {
-      refetchProjects();
-    }
+    refetchProjects();
   };
 
   const handleLoadMore = () => {
-    if (type === 'transparent') {
-      fetchNextGenesisPage();
-    } else if (type === 'community-trusted') {
-      fetchNextSupportPage();
-    } else {
-      fetchNextPage();
-    }
+    setOffset((prev) => prev + 10);
   };
 
   const {
@@ -121,85 +93,94 @@ const ProjectsContent = () => {
     currentHasNextPage,
     currentIsFetchingNextPage,
   } = useMemo(() => {
-    if (type === 'transparent') {
-      const list =
-        genesisData?.pages
-          .flatMap((page: { items: any[] }) => page.items)
-          .map((rank) => rank.project) || [];
-      return {
-        projectList: list as IProject[],
-        title: 'Top Transparent Projects',
-        description: `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`,
-        emptyMessage: 'No transparent projects found',
-        currentIsLoading: isGenesisLoading,
-        currentHasNextPage: hasNextGenesisPage,
-        currentIsFetchingNextPage: isFetchingNextGenesisPage,
-      };
-    }
-    if (type === 'community-trusted') {
-      const list = supportData?.pages.flatMap((page) => page.items) || [];
-      return {
-        projectList: list as IProject[],
-        title: 'Top Community-trusted',
-        description: `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`,
-        emptyMessage: 'No community-trusted projects found',
-        currentIsLoading: isSupportLoading,
-        currentHasNextPage: hasNextSupportPage,
-        currentIsFetchingNextPage: isFetchingNextSupportPage,
-      };
-    }
-    const list = data?.pages.flatMap((page) => page.items) || [];
-    return {
-      projectList: list as IProject[],
-      title: category ? `${category} Projects` : 'Recent Projects',
-      description: category
+    // Determine title and description based on sort parameter
+    let pageTitle: string;
+    let pageDescription: string;
+    let pageEmptyMessage: string;
+
+    if (sort === 'top-transparent') {
+      pageTitle = 'Top Transparent Projects';
+      pageDescription = `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`;
+      pageEmptyMessage = 'No transparent projects found';
+    } else if (sort === 'top-community-trusted') {
+      pageTitle = 'Top Community-trusted';
+      pageDescription = `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`;
+      pageEmptyMessage = 'No community-trusted projects found';
+    } else {
+      // For multiple categories, show a generic title
+      const categoryDisplay =
+        cats && cats.length > 0
+          ? cats.length === 1
+            ? cats[0]
+            : 'Filtered'
+          : null;
+
+      pageTitle = categoryDisplay
+        ? `${categoryDisplay} Projects`
+        : 'Recent Projects';
+      pageDescription = categoryDisplay
         ? `Page Completion Rate (Transparency) * User Supported Votes`
-        : '',
-      emptyMessage: category
-        ? `No ${category} projects found`
-        : 'No Published Project Yet',
+        : '';
+      pageEmptyMessage = categoryDisplay
+        ? cats && cats.length === 1
+          ? `No ${cats[0]} projects found`
+          : 'No projects found matching the selected categories'
+        : 'No Published Project Yet';
+    }
+
+    return {
+      projectList: allProjects,
+      title: pageTitle,
+      description: pageDescription,
+      emptyMessage: pageEmptyMessage,
       currentIsLoading: isLoading,
-      currentHasNextPage: hasNextPage,
-      currentIsFetchingNextPage: isFetchingNextPage,
+      currentHasNextPage: data?.hasNextPage || false,
+      currentIsFetchingNextPage: false,
     };
-  }, [
-    type,
-    category,
-    genesisData,
-    supportData,
-    data,
-    isGenesisLoading,
-    isSupportLoading,
-    isLoading,
-    hasNextGenesisPage,
-    hasNextSupportPage,
-    hasNextPage,
-    isFetchingNextGenesisPage,
-    isFetchingNextSupportPage,
-    isFetchingNextPage,
-  ]);
+  }, [sort, cats, data, allProjects, isLoading]);
 
   const showTransparentScore = useMemo(() => {
-    return type === 'transparent';
-  }, [type]);
+    return sort === 'top-transparent';
+  }, [sort]);
 
   const showCreator = useMemo(() => {
-    return type !== 'transparent';
-  }, [type]);
+    return sort !== 'top-transparent';
+  }, [sort]);
 
   const showUpvote = useMemo(() => {
-    return type !== 'transparent';
-  }, [type]);
+    return sort !== 'top-transparent';
+  }, [sort]);
+
+  // Manage accumulated projects list
+  useEffect(() => {
+    if (data?.items) {
+      if (offset === 0) {
+        // First load or refresh
+        setAllProjects(data.items as IProject[]);
+      } else {
+        // Load more
+        setAllProjects((prev) => [...prev, ...(data.items as IProject[])]);
+      }
+    }
+  }, [data, offset]);
+
+  // Reset when filters change
+  useEffect(() => {
+    setOffset(0);
+    setAllProjects([]);
+  }, [sort, cats]);
 
   useEffect(() => {
-    if (projectList.length > 0) {
-      devLog('projectList', projectList);
+    if (allProjects.length > 0) {
+      devLog('projectList', allProjects);
     }
-  }, [projectList]);
+  }, [allProjects]);
 
   return (
     <div className="pb-10">
-      {!type ? (
+      {sort === 'top-transparent' || sort === 'top-community-trusted' ? (
+        <BackHeader className="px-[10px]" />
+      ) : (
         <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
           <Image
             src="/images/projects/logo.png"
@@ -217,8 +198,6 @@ const ProjectsContent = () => {
             </ECFButton>
           </div>
         </div>
-      ) : (
-        <BackHeader className="px-[10px]" />
       )}
 
       <div className="mobile:block hidden">
@@ -228,16 +207,11 @@ const ProjectsContent = () => {
           <ProjectFilterMobile />
         </div>
         {/* Active Filters Display */}
-        {(searchParams.get('categories') || searchParams.get('locations')) && (
+        {cats && cats.length > 0 && (
           <div className="mt-[5px] text-left">
             <p className="font-['Open_Sans'] text-[12px] font-normal text-black/50">
               Active Filters:{' '}
-              {[
-                searchParams.get('categories') && 'Category',
-                searchParams.get('locations') && 'Location',
-              ]
-                .filter(Boolean)
-                .join(', ')}
+              {cats.length === 1 ? 'Category' : `${cats.length} Categories`}
             </p>
           </div>
         )}
@@ -246,7 +220,7 @@ const ProjectsContent = () => {
       <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
         <div className="w-full flex-1">
           <div className="border-b border-black/10 px-2.5 py-4">
-            {type ? (
+            {sort === 'top-transparent' || sort === 'top-community-trusted' ? (
               <>
                 <h1 className="text-[24px] font-[700] leading-[1.4] text-black/80">
                   {title}

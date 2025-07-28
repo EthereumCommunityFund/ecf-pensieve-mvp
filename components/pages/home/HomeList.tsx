@@ -229,7 +229,7 @@ const HomeList = () => {
             showUpvote={true}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl="/projects?type=community-trusted"
+            viewAllUrl="/projects?sort=community-trusted"
           />
         </div>
 
@@ -251,7 +251,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=${encodeURIComponent('Local Communities')}`}
+            viewAllUrl={`/projects?cats=${encodeURIComponent('Local Communities')}`}
           />
         </div>
 
@@ -273,7 +273,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=Events`}
+            viewAllUrl={`/projects?cats=Events`}
           />
         </div>
 
@@ -295,7 +295,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=Hubs`}
+            viewAllUrl={`/projects?cats=Hubs`}
           />
         </div>
       </div>

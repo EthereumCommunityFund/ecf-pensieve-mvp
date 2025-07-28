@@ -49,7 +49,9 @@ export default function ProjectFilter() {
       checked,
       currentFilters,
     );
-    router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
+    router.replace(
+      `/projects${params.toString() ? `?${params.toString()}` : ''}`,
+    );
   };
 
   const clearFilter = (type: keyof FilterState) => {

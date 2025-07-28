@@ -30,7 +30,9 @@ export default function ProjectSort() {
       params.set('sort', sortValue);
     }
 
-    router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
+    router.replace(
+      `/projects${params.toString() ? `?${params.toString()}` : ''}`,
+    );
     setIsExpanded(false); // Close dropdown after selection
   };
 

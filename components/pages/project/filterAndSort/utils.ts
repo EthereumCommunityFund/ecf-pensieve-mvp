@@ -4,8 +4,7 @@ export const parseFilterStateFromURL = (
   searchParams: URLSearchParams,
 ): FilterState => {
   return {
-    categories:
-      searchParams.get('categories')?.split(',').filter(Boolean) || [],
+    categories: searchParams.get('cats')?.split(',').filter(Boolean) || [],
     locations: searchParams.get('locations')?.split(',').filter(Boolean) || [],
     tags: searchParams.get('tags')?.split(',').filter(Boolean) || [],
   };
@@ -38,9 +37,11 @@ export const updateFilterParams = (
   }
 
   if (values.length > 0) {
-    params.set(type, values.join(','));
+    const paramName = type === 'categories' ? 'cats' : type;
+    params.set(paramName, values.join(','));
   } else {
-    params.delete(type);
+    const paramName = type === 'categories' ? 'cats' : type;
+    params.delete(paramName);
   }
 
   // Remove type parameter when filtering
@@ -56,9 +57,10 @@ export const clearFilterParams = (
   const params = new URLSearchParams(searchParams.toString());
 
   if (type) {
-    params.delete(type);
+    const paramName = type === 'categories' ? 'cats' : type;
+    params.delete(paramName);
   } else {
-    params.delete('categories');
+    params.delete('cats');
     params.delete('locations');
     params.delete('tags');
     params.delete('type');

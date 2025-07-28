@@ -31,7 +31,9 @@ export default function ProjectSortMobile() {
       params.set('sort', sortValue);
     }
 
-    router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
+    router.replace(
+      `/projects${params.toString() ? `?${params.toString()}` : ''}`,
+    );
   };
 
   const getButtonLabel = () => {

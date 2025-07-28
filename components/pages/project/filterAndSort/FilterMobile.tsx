@@ -51,7 +51,9 @@ export default function ProjectFilterMobile() {
 
   const clearAllFilters = () => {
     const params = clearFilterParams(searchParams);
-    router.push(`/projects${params.toString() ? `?${params.toString()}` : ''}`);
+    router.replace(
+      `/projects${params.toString() ? `?${params.toString()}` : ''}`,
+    );
     setIsOpen(false);
   };
 
