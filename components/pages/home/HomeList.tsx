@@ -220,7 +220,7 @@ const HomeList = () => {
           />
           <ProjectListWrapper
             isLoading={isLoadingSupport}
-            projectList={bySupportProjects as IProject[]}
+            projectList={bySupportProjects as unknown as IProject[]}
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
