@@ -119,7 +119,6 @@ const CommonListCard = ({
             itemClasses={{
               base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
             }}
-            disabledKeys={list.privacy === 'private' ? ['share'] : []}
           >
             <DropdownItem
               key="edit"
