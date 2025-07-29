@@ -31,6 +31,8 @@ export default function ProjectSortMobile() {
       params.set('sort', sortValue);
     }
 
+    setIsOpen(false);
+
     router.replace(
       `/projects${params.toString() ? `?${params.toString()}` : ''}`,
     );
