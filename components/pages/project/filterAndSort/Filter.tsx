@@ -185,7 +185,7 @@ export default function ProjectFilter() {
       </div>
 
       {/* Location Filter */}
-      <div className=" py-4">
+      {/* <div className=" py-4">
         <div className="mb-2.5 flex h-[30px] items-center justify-between border-b border-black/10 px-0 py-1.5">
           <div className="flex items-center gap-1.5">
             <FunnelSimpleIcon
@@ -264,7 +264,7 @@ export default function ProjectFilter() {
             />
           </button>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

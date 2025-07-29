@@ -196,7 +196,7 @@ export default function ProjectFilterMobile() {
                 </button>
 
                 {/* Location Section */}
-                <button
+                {/* <button
                   onClick={() => setActiveSection('locations')}
                   className="flex min-h-[39px] items-center gap-[5px] rounded-[5px] border border-black/10 p-[10px]"
                 >
@@ -222,7 +222,7 @@ export default function ProjectFilterMobile() {
                     height={16}
                     className="-rotate-90 text-black"
                   />
-                </button>
+                </button> */}
 
                 {/* Clear All Filters */}
                 {hasActiveFilters && (
