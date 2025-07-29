@@ -9,7 +9,7 @@ import {
   ModalHeader,
   Textarea,
 } from '@heroui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { Select, SelectItem } from '@/components/base/select';
@@ -21,12 +21,13 @@ import {
   LockKeyIcon,
   XIcon,
 } from '@/components/icons';
-import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { RouterOutputs } from '@/types';
 
-interface CreateListModalProps {
+interface EditListModalProps {
   isOpen: boolean;
   onClose: () => void;
+  list: RouterOutputs['list']['getUserLists'][0];
 }
 
 const privacyOptions = [
@@ -51,8 +52,7 @@ const privacyOptions = [
   },
 ];
 
-const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
-  const { isAuthenticated, session } = useAuth();
+const EditListModal = ({ isOpen, onClose, list }: EditListModalProps) => {
   const [listName, setListName] = useState('');
   const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('private');
@@ -60,26 +60,29 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
 
   const utils = trpc.useUtils();
 
-  const createListMutation = trpc.list.createList.useMutation({
+  const updateListMutation = trpc.list.updateList.useMutation({
     onSuccess: (data) => {
-      console.log('devLog - createList success:', data);
+      console.log('devLog - updateList success:', data);
       utils.list.getUserLists.invalidate();
+      utils.list.getListBySlug.invalidate();
       handleClose();
     },
     onError: (error) => {
-      console.log('devLog - createList error:', error);
-      console.error('Failed to create list:', error);
-      console.error('Error details:', {
-        code: error.data?.code,
-        message: error.message,
-      });
+      console.log('devLog - updateList error:', error);
+      console.error('Failed to update list:', error);
     },
   });
 
+  // Initialize form with list data when modal opens
+  useEffect(() => {
+    if (isOpen && list) {
+      setListName(list.name);
+      setDescription(list.description || '');
+      setPrivacy(list.privacy as 'public' | 'private');
+    }
+  }, [isOpen, list]);
+
   const handleClose = () => {
-    setListName('');
-    setDescription('');
-    setPrivacy('private');
     setIsSubmitting(false);
     onClose();
   };
@@ -87,17 +90,11 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
   const handleSubmit = async () => {
     if (!listName.trim()) return;
 
-    // Check authentication status
-    if (!isAuthenticated || !session) {
-      console.error('User not authenticated');
-      alert('Please make sure you are logged in before creating a list.');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      await createListMutation.mutateAsync({
+      await updateListMutation.mutateAsync({
+        id: list.id,
         name: listName.trim(),
         description: description.trim() || undefined,
         privacy,
@@ -112,7 +109,6 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
       isOpen={isOpen}
       onClose={handleClose}
       placement="center"
-      backdrop="blur"
       classNames={{
         base: 'max-w-[400px]',
         closeButton: 'hidden',
@@ -124,7 +120,7 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
             type="subtitle2"
             className="text-[16px] font-semibold leading-[21.82px] text-black opacity-80"
           >
-            Create a List
+            Edit List
           </ECFTypography>
           <button
             onClick={handleClose}
@@ -193,7 +189,7 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
                   classNames={{
                     inputWrapper:
                       'border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] min-h-[80px] rounded-[8px] px-[10px] py-[10px]',
-                    input: 'text-[14px] leading-[20px] placeholder:opacity-50',
+                    input: 'text-[14px] leading-[20px] placeholder:opacity-30',
                   }}
                   maxRows={5}
                   maxLength={5000}
@@ -248,7 +244,6 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
                 {privacyOptions.map((option) => (
                   <SelectItem
                     key={option.value}
-                    value={option.value}
                     textValue={option.label}
                     isDisabled={option.disabled}
                     className={`rounded-[5px] px-[10px] py-[4px] ${
@@ -279,41 +274,31 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
           </div>
         </ModalBody>
 
-        <ModalFooter className="flex flex-col gap-3 px-5 pb-5 pt-0">
-          {!isAuthenticated && (
-            <ECFTypography
-              type="caption"
-              className="text-center text-orange-600"
-            >
-              Please make sure you are logged in to create a list.
-            </ECFTypography>
-          )}
-          <div className="flex gap-[10px]">
-            <Button
-              variant="light"
-              onPress={handleClose}
-              className="h-[39px] flex-1 rounded-[5px] px-[30px] text-[14px] font-semibold leading-[19.12px]"
-            >
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              onPress={handleSubmit}
-              isLoading={isSubmitting}
-              isDisabled={!listName.trim() || isSubmitting || !isAuthenticated}
-              className={`h-[39px] flex-1 rounded-[5px] px-[30px] text-[14px] font-semibold leading-[19.12px] text-white ${
-                !listName.trim() || isSubmitting
-                  ? 'opacity-20'
-                  : 'hover:bg-[#2C2C2C]'
-              }`}
-            >
-              Create
-            </Button>
-          </div>
+        <ModalFooter className="flex gap-[10px] px-5 pb-5 pt-0">
+          <Button
+            color="secondary"
+            onPress={handleClose}
+            className="h-[39px] flex-1 rounded-[5px] px-[30px] text-[14px] font-semibold leading-[19.12px]"
+          >
+            Cancel
+          </Button>
+          <Button
+            color="primary"
+            onPress={handleSubmit}
+            isLoading={isSubmitting}
+            isDisabled={!listName.trim() || isSubmitting}
+            className={`h-[39px] flex-1 rounded-[5px] px-[30px] text-[14px] font-semibold leading-[19.12px] text-white ${
+              !listName.trim() || isSubmitting
+                ? 'opacity-20'
+                : 'hover:bg-[#2C2C2C]'
+            }`}
+          >
+            Save
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
 };
 
-export default CreateListModal;
+export default EditListModal;

@@ -1,0 +1,152 @@
+'use client';
+
+import { cn } from '@heroui/react';
+import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import ECFTypography from '@/components/base/typography';
+import BookmarksIcon from '@/components/icons/Bookmarks';
+
+const tabItems = [
+  {
+    key: 'profile',
+    label: 'Profile Settings',
+    icon: <UserSquare size={28} weight="fill" />,
+  },
+  {
+    key: 'contributions',
+    label: 'My Contributions',
+    icon: <GitCommit size={28} weight="fill" />,
+  },
+  {
+    key: 'upvotes',
+    label: 'My Upvotes',
+    icon: <ArrowSquareUp size={28} />,
+  },
+  {
+    key: 'lists',
+    label: 'My Lists',
+    icon: <BookmarksIcon size={28} />,
+  },
+];
+
+const ProfileSideBar = () => {
+  const { address } = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab');
+
+  // Determine initial tab based on URL
+  const getInitialTab = () => {
+    // Check if current path matches /profile/[address]/list/[slug]
+    if (pathname.includes(`/profile/${address}/list/`)) {
+      return 'lists';
+    }
+
+    if (initialTab === 'contributions') return 'contributions';
+    if (initialTab === 'upvotes') return 'upvotes';
+    if (initialTab === 'lists') return 'lists';
+    return 'profile';
+  };
+
+  const [activeTab, setActiveTab] = useState<
+    'profile' | 'contributions' | 'upvotes' | 'lists'
+  >(getInitialTab());
+
+  // Update activeTab when pathname changes
+  useEffect(() => {
+    if (pathname.includes(`/profile/${address}/list/`)) {
+      setActiveTab('lists');
+    }
+  }, [pathname, address]);
+
+  return (
+    <>
+      {/* Left Sidebar Navigation */}
+      <div className="mobile:hidden flex w-[220px] flex-col gap-5">
+        {/* Navigation Menu */}
+        <div className="flex flex-col gap-2">
+          {tabItems.map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => {
+                const newTab = key as
+                  | 'profile'
+                  | 'contributions'
+                  | 'upvotes'
+                  | 'lists';
+                setActiveTab(newTab);
+                router.push(`/profile/${address}?tab=${newTab}`, {
+                  scroll: false,
+                });
+              }}
+              className={cn(
+                'flex items-center gap-3 rounded-[10px] p-[6px_10px] transition-all duration-200',
+                activeTab === key
+                  ? 'bg-[#EBEBEB] opacity-100'
+                  : 'bg-transparent opacity-60 hover:bg-[rgba(0,0,0,0.05)] hover:opacity-80',
+              )}
+            >
+              <div className="text-black">{icon}</div>
+              <ECFTypography
+                type="body1"
+                className={cn(
+                  'font-semibold',
+                  activeTab === key ? 'opacity-100' : 'opacity-100',
+                )}
+              >
+                {label}
+              </ECFTypography>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile Top Header - Only visible on mobile */}
+      <div className="mobile:flex hidden w-full flex-col gap-5">
+        {/* Mobile Navigation - Horizontal Scroll */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {tabItems.map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => {
+                const newTab = key as
+                  | 'profile'
+                  | 'contributions'
+                  | 'upvotes'
+                  | 'lists';
+                setActiveTab(newTab);
+                router.push(`/profile/${address}?tab=${newTab}`, {
+                  scroll: false,
+                });
+              }}
+              className={cn(
+                'flex min-w-max items-center gap-2 rounded-[10px] p-[6px_12px] transition-all duration-200',
+                activeTab === key
+                  ? 'bg-[#EBEBEB] opacity-100'
+                  : 'bg-transparent opacity-60 hover:bg-[rgba(0,0,0,0.05)] hover:opacity-80',
+              )}
+            >
+              <div className="text-black">{icon}</div>
+              <ECFTypography
+                type="caption"
+                className="whitespace-nowrap font-semibold"
+              >
+                {label}
+              </ECFTypography>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ProfileSideBar;

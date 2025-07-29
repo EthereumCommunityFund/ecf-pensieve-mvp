@@ -25,6 +25,7 @@ interface CommonListCardProps {
   onEdit: () => void;
   onShare: () => void;
   onDelete: () => void;
+  profileAddress?: string; // Optional address for profile context
 }
 
 const CommonListCard = ({
@@ -33,11 +34,16 @@ const CommonListCard = ({
   onEdit,
   onShare,
   onDelete,
+  profileAddress,
 }: CommonListCardProps) => {
   const router = useRouter();
 
   const handleCardClick = () => {
-    router.push(`/list/${list.slug}`);
+    // If profileAddress is provided, use profile route; otherwise use public route
+    const targetRoute = profileAddress
+      ? `/profile/${profileAddress}/list/${list.slug}`
+      : `/list/${list.slug}`;
+    router.push(targetRoute);
   };
 
   const getPrivacyIcon = () => {
@@ -69,8 +75,11 @@ const CommonListCard = ({
         showBorderBottom ? 'border-b border-black/10' : '',
       )}
     >
-      <div className="flex flex-1 cursor-pointer items-center justify-between rounded-[10px] p-[10px] transition-all hover:bg-[rgba(0,0,0,0.02)]">
-        <div onClick={handleCardClick} className="">
+      <div
+        onClick={handleCardClick}
+        className="flex flex-1 cursor-pointer items-center justify-between rounded-[10px] p-[10px] transition-all hover:bg-[rgba(0,0,0,0.02)]"
+      >
+        <div>
           <p className="text-[16px] font-semibold leading-[15px]">
             {list.name}
           </p>
@@ -89,7 +98,13 @@ const CommonListCard = ({
           </div>
         </div>
 
-        <Dropdown>
+        <Dropdown
+          classNames={{
+            base: 'shadow-none',
+            content: 'p-0',
+          }}
+          placement="bottom-end"
+        >
           <DropdownTrigger>
             <button
               onClick={(e) => e.stopPropagation()}
@@ -102,16 +117,13 @@ const CommonListCard = ({
             aria-label="List actions"
             className="min-w-[171px] rounded-[10px] p-[10px] shadow-lg"
             itemClasses={{
-              base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px] data-[hover=true]:bg-[#EBEBEB]',
-              title:
-                "text-[16px] font-semibold leading-[1.36] tracking-[0.018em] font-['Open_Sans']",
+              base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
             }}
           >
             <DropdownItem
               key="edit"
               onPress={onEdit}
               endContent={<PencilSimpleIcon size={18} />}
-              className="bg-[#EBEBEB]"
             >
               Edit List
             </DropdownItem>
@@ -126,7 +138,7 @@ const CommonListCard = ({
               key="delete"
               onPress={onDelete}
               endContent={<TrashIcon size={18} />}
-              className="text-[#CD453B]"
+              className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
             >
               Delete
             </DropdownItem>

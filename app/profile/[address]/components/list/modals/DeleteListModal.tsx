@@ -54,7 +54,6 @@ const DeleteListModal = ({ isOpen, onClose, list }: DeleteListModalProps) => {
       isOpen={isOpen}
       onClose={handleClose}
       placement="center"
-      backdrop="blur"
       classNames={{
         base: 'max-w-[400px]',
         closeButton: 'hidden',

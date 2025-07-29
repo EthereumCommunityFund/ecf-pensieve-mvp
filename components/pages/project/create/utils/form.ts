@@ -13,18 +13,18 @@ import { transformFormValue } from '@/utils/item';
 import { normalizeUrl } from '@/utils/url';
 
 /**
- * Helper function to convert empty string to undefined for optional fields
+ * Helper function to convert empty string to null for optional fields
  */
-const emptyToUndefined = (value: string): string | undefined => {
-  return value === '' ? undefined : value;
+const emptyToNull = (value: string): string | null => {
+  return value === '' ? null : value;
 };
 
 /**
- * Helper function to convert empty string to Date or undefined
+ * Helper function to convert empty string to Date or null
  * Ensures dates are treated as UTC
  */
-const emptyToDateOrUndefined = (value: string): Date | undefined => {
-  return value === '' ? undefined : dayjs.utc(value).toDate();
+const emptyToDateOrNull = (value: string): Date | null => {
+  return value === '' ? null : dayjs.utc(value).toDate();
 };
 
 /**
@@ -96,7 +96,7 @@ export const transformProjectData = (
       url: website.url,
       title: website.title,
     })),
-    appUrl: emptyToUndefined(
+    appUrl: emptyToNull(
       transformFormValue(
         'appUrl',
         normalizeUrl(formData.appUrl) || '',
@@ -104,14 +104,12 @@ export const transformProjectData = (
       ),
     ),
     tags: tagsValue as string[],
-    whitePaper: transformFormValue(
-      'whitePaper',
-      formData.whitePaper,
-      fieldApplicability,
+    whitePaper: emptyToNull(
+      transformFormValue('whitePaper', formData.whitePaper, fieldApplicability),
     ),
 
     dateFounded: dateToUTC(formData.dateFounded),
-    dateLaunch: emptyToDateOrUndefined(
+    dateLaunch: emptyToDateOrNull(
       transformFormValue(
         'dateLaunch',
         formData.dateLaunch
@@ -127,7 +125,7 @@ export const transformProjectData = (
       formData.devStatus || 'In Development',
       fieldApplicability,
     ),
-    fundingStatus: emptyToUndefined(
+    fundingStatus: emptyToNull(
       transformFormValue(
         'fundingStatus',
         formData.fundingStatus || '',
@@ -135,24 +133,26 @@ export const transformProjectData = (
       ),
     ),
     openSource: formData.openSource === 'Yes',
-    codeRepo: emptyToUndefined(
+    codeRepo: emptyToNull(
       transformFormValue(
         'codeRepo',
         normalizeUrl(formData.codeRepo) || '',
         fieldApplicability,
       ),
     ),
-    tokenContract: emptyToUndefined(
+    tokenContract: emptyToNull(
       transformFormValue(
         'tokenContract',
         formData.tokenContract || '',
         fieldApplicability,
       ),
     ),
-    dappSmartContracts: transformFormValue(
-      'dappSmartContracts',
-      formData.dappSmartContracts || '',
-      fieldApplicability,
+    dappSmartContracts: emptyToNull(
+      transformFormValue(
+        'dappSmartContracts',
+        formData.dappSmartContracts || '',
+        fieldApplicability,
+      ),
     ),
 
     orgStructure: transformFormValue(
@@ -169,7 +169,7 @@ export const transformProjectData = (
     refs:
       references.length > 0
         ? references.map((ref) => ({ key: ref.key, value: ref.value }))
-        : undefined,
+        : null,
   };
 };
 

@@ -6,6 +6,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Image,
 } from '@heroui/react';
 import { useRouter } from 'next/navigation';
 
@@ -13,7 +14,7 @@ import {
   DotsThreeVerticalIcon,
   GlobeHemisphereWestIcon,
   LockKeyIcon,
-  TrashIcon,
+  SignOutIcon,
 } from '@/components/icons';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
@@ -22,13 +23,18 @@ interface FollowListCardProps {
   list: RouterOutputs['list']['getUserFollowedLists'][0] & {
     creator?: {
       name?: string;
-      avatarUrl?: string;
+      avatarUrl?: string | null;
     };
   };
   showBorderBottom?: boolean;
+  profileAddress?: string; // Optional address for profile context
 }
 
-const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
+const FollowListCard = ({
+  list,
+  showBorderBottom,
+  profileAddress,
+}: FollowListCardProps) => {
   const router = useRouter();
   const utils = trpc.useContext();
 
@@ -99,7 +105,13 @@ const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
             </div>
           </div>
 
-          <Dropdown>
+          <Dropdown
+            classNames={{
+              base: 'shadow-none',
+              content: 'p-0',
+            }}
+            placement="bottom-end"
+          >
             <DropdownTrigger>
               <button
                 onClick={(e) => e.stopPropagation()}
@@ -108,13 +120,17 @@ const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
                 <DotsThreeVerticalIcon size={32} />
               </button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Follow actions">
+            <DropdownMenu
+              aria-label="Follow actions"
+              itemClasses={{
+                base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
+              }}
+            >
               <DropdownItem
                 key="leave"
                 onPress={handleUnfollow}
-                startContent={<TrashIcon size={18} />}
-                className="text-danger"
-                color="danger"
+                endContent={<SignOutIcon size={18} color="#CD453B" />}
+                className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
               >
                 Leave List
               </DropdownItem>
@@ -122,17 +138,13 @@ const FollowListCard = ({ list, showBorderBottom }: FollowListCardProps) => {
           </Dropdown>
         </div>
 
-        <div className="flex w-fit items-center gap-[5px] rounded-[5px] bg-[rgba(0,0,0,0.05)] p-[5px]">
+        <div className="flex w-fit items-center gap-[5px]  p-[5px]">
           <p className="text-[14px] leading-[19px] opacity-80">by:</p>
-          {list.creator?.avatarUrl ? (
-            <img
-              src={list.creator.avatarUrl}
-              alt={list.creator.name || 'User'}
-              className="size-6 rounded-full object-cover"
-            />
-          ) : (
-            <div className="size-6 rounded-full bg-gray-300" />
-          )}
+          <Image
+            src={list.creator?.avatarUrl || '/images/user/avatar_p.png'}
+            alt={list.creator?.name || 'User'}
+            className="size-6 rounded-full object-cover"
+          />
           <p className="text-[14px] leading-[19px] opacity-80">
             {list.creator?.name || 'Unknown'}
           </p>

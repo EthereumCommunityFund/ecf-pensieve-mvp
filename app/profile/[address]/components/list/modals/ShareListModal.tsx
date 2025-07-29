@@ -52,7 +52,6 @@ const ShareListModal = ({ isOpen, onClose, list }: ShareListModalProps) => {
       isOpen={isOpen}
       onClose={handleClose}
       placement="center"
-      backdrop="blur"
       classNames={{
         base: 'max-w-[400px]',
         closeButton: 'hidden',
@@ -94,9 +93,9 @@ const ShareListModal = ({ isOpen, onClose, list }: ShareListModalProps) => {
 
             {/* Share URL Input */}
             <div className="flex flex-col gap-[10px] bg-[#F5F5F5]">
-              <div className="flex h-[40px] items-center rounded-[8px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] px-[10px]">
+              <div className="flex h-[40px] items-center overflow-hidden rounded-[8px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] px-[10px]">
                 <div className="flex flex-1 items-center gap-[5px]">
-                  <div className="flex h-full items-center justify-center rounded-l-[10px] bg-[#E1E1E1] px-0">
+                  <div className="flex h-full items-center justify-center rounded-l-[10px]  px-0">
                     <ECFTypography
                       type="body1"
                       className="p-[10px] text-[14px] font-semibold leading-[19.12px] opacity-50"

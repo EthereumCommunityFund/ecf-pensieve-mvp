@@ -215,3 +215,107 @@ pnpm run format
 - 组件的 stories 文件位于 `/stories` 目录
 - 使用 `pnpm run storybook` 启动开发环境
 - 新组件应该包含对应的 `.stories.tsx` 文件
+
+## 后端接口测试
+
+### 测试框架
+
+项目使用 **Vitest** 作为测试框架，测试文件位于 `/tests/integration` 目录。
+
+### 测试命令
+
+```bash
+# 运行所有集成测试
+pnpm run test:integration
+
+# 运行测试并监视文件变化
+pnpm run test:integration:watch
+
+# 生成测试覆盖率报告
+pnpm run test:coverage
+
+# 生成并打开覆盖率报告
+pnpm run test:coverage:open
+```
+
+### 测试配置
+
+- **环境配置**: 使用 `.env.local.test` 文件进行测试环境配置
+- **测试超时**: 30秒（适应数据库操作的延迟）
+- **测试模式**: 使用 `forks` 池模式，确保测试隔离
+- **覆盖率目标**:
+  - `lib/trpc/routers/**/*.ts` - tRPC 路由
+  - `lib/services/**/*.ts` - 业务服务层
+  - `lib/utils/**/*.ts` - 工具函数
+
+### 测试前置条件
+
+1. **Supabase 本地实例**: 测试需要本地运行的 Supabase
+
+   ```bash
+   supabase start
+   ```
+
+2. **数据库迁移**: 测试前会自动运行数据库迁移
+
+### 编写测试指南
+
+#### 测试结构
+
+```typescript
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+
+// Mock Next.js cache functions
+vi.mock('next/cache', () => ({
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
+}));
+
+describe('Feature Name', () => {
+  beforeAll(async () => {
+    // 设置测试数据
+  });
+
+  it('should handle specific case', async () => {
+    // 测试逻辑
+  });
+});
+```
+
+#### 测试辅助工具
+
+**Factory 函数** (位于 `/tests/integration/factories/`)
+
+- `projectFactory.ts` - 创建测试项目数据
+- `itemProposalFactory.ts` - 创建提案测试数据
+- `invalidProjectFactory.ts` - 创建无效数据用于测试验证
+
+**Helper 函数** (位于 `/tests/integration/helpers/`)
+
+- `testHelpers.ts` - 通用测试辅助函数
+- `pocItemsHelpers.ts` - POC_ITEMS 相关辅助函数
+- `testConstants.ts` - 测试常量定义
+
+#### 测试模式
+
+1. **集成测试**: 测试完整的 API 流程，包括数据库操作
+2. **Context 模拟**: 使用 `createContext` 函数模拟认证上下文
+3. **用户模拟**: 使用 ethers.js 创建测试钱包地址
+4. **数据清理**: 每个测试后清理测试数据，避免测试间干扰
+
+#### 测试覆盖重点
+
+- **认证流程**: 用户注册、登录、邀请码验证
+- **项目操作**: 创建、更新、发布项目
+- **提案系统**: 创建提案、投票、提案通过
+- **权重计算**: 用户权重更新、投票权重计算
+- **通知系统**: 通知创建和发送
+- **数据验证**: 输入验证、业务规则验证
+
+### 测试最佳实践
+
+1. **隔离测试**: 每个测试应该独立，不依赖其他测试的执行顺序
+2. **Mock 外部依赖**: 使用 vi.mock 模拟外部服务（如 Next.js cache）
+3. **清晰的测试描述**: 使用描述性的测试名称，清楚说明测试内容
+4. **边界测试**: 测试正常情况和异常情况，包括边界值
+5. **性能考虑**: 避免在测试中执行过多数据库操作

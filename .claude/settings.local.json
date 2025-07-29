@@ -29,6 +29,7 @@
       "Bash(gh pr diff:*)",
       "Bash(sed:*)",
       "WebFetch(domain:www.figma.com)",
+      "Bash(grep:*)",
       "Bash(pnpm add:*)"
     ],
     "deny": []

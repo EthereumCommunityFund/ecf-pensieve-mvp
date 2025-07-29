@@ -2,19 +2,25 @@
 
 import { useState } from 'react';
 
+import CreateListModal from '@/app/profile/[address]/components/list/modals/CreateListModal';
+import DeleteListModal from '@/app/profile/[address]/components/list/modals/DeleteListModal';
+import EditListModal from '@/app/profile/[address]/components/list/modals/EditListModal';
+import ShareListModal from '@/app/profile/[address]/components/list/modals/ShareListModal';
 import { PlusIcon } from '@/components/icons';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
 import { devLog } from '@/utils/devLog';
 
 import CommonListCard from './CommonListCard';
+import CommonListCardSkeleton from './CommonListCardSkeleton';
 import FollowListCard from './FollowListCard';
-import CreateListModal from './modals/CreateListModal';
-import DeleteListModal from './modals/DeleteListModal';
-import EditListModal from './modals/EditListModal';
-import ShareListModal from './modals/ShareListModal';
+import FollowListCardSkeleton from './FollowListCardSkeleton';
 
-const MyLists = () => {
+interface MyListsProps {
+  profileAddress: string;
+}
+
+const MyLists = ({ profileAddress }: MyListsProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -27,7 +33,7 @@ const MyLists = () => {
   const { data: userLists, isLoading: userListsLoading } =
     trpc.list.getUserLists.useQuery(undefined, {
       select: (data) => {
-        console.log('devLog - getUserLists response:', data);
+        devLog('getUserLists response:', data);
         return data;
       },
     });
@@ -55,10 +61,7 @@ const MyLists = () => {
             {userListsLoading ? (
               <div className="flex flex-col gap-[10px]">
                 {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-[120px] w-full animate-pulse rounded-[10px] bg-[rgba(0,0,0,0.05)]"
-                  />
+                  <CommonListCardSkeleton key={i} showBorderBottom={i < 3} />
                 ))}
               </div>
             ) : userLists && userLists.length > 0 ? (
@@ -67,6 +70,7 @@ const MyLists = () => {
                   key={list.id}
                   list={list}
                   showBorderBottom={index < userLists.length - 1}
+                  profileAddress={profileAddress}
                   onEdit={() => {
                     setSelectedList(list);
                     setShowEditModal(true);
@@ -109,14 +113,11 @@ const MyLists = () => {
           Following Lists:
         </p>
 
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-[10px]">
           {followedListsLoading ? (
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-[10px]">
               {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-[120px] w-full animate-pulse rounded-[10px] bg-[rgba(0,0,0,0.05)]"
-                />
+                <FollowListCardSkeleton key={i} showBorderBottom={i < 2} />
               ))}
             </div>
           ) : followedLists && followedLists.length > 0 ? (
@@ -125,6 +126,7 @@ const MyLists = () => {
                 key={list.id}
                 list={list}
                 showBorderBottom={index < followedLists.length - 1}
+                profileAddress={profileAddress}
               />
             ))
           ) : (

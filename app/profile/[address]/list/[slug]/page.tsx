@@ -1,41 +1,65 @@
 'use client';
 
 import {
-  Button,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Skeleton,
-} from '@heroui/react';
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
-  ArrowLeft,
-  DotsSixVertical,
-  DotsThreeVertical,
-  Globe,
-  Lock,
-  PencilSimple,
-  Plus,
-  ShareNetwork,
-  Trash,
-} from '@phosphor-icons/react';
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import EditListModal from '@/app/profile/[address]/components/list/modals/EditListModal';
+import ShareListModal from '@/app/profile/[address]/components/list/modals/ShareListModal';
+import { Button } from '@/components/base';
+import { addToast } from '@/components/base/toast';
 import ECFTypography from '@/components/base/typography';
+import {
+  GearSixIcon,
+  GlobeHemisphereWestIcon,
+  LockKeyIcon,
+  PencilSimpleIcon,
+  XIcon,
+} from '@/components/icons';
+import LinkIcon from '@/components/icons/Link';
+import ListDetailSkeleton from '@/components/pages/list/ListDetailSkeleton';
+import SortableProjectCard from '@/components/pages/list/SortableProjectCard';
+import ProjectCard, {
+  ProjectCardSkeleton,
+} from '@/components/pages/project/ProjectCard';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { IProject } from '@/types';
 
-import DeleteListModal from '../../components/modals/DeleteListModal';
-import EditListModal from '../../components/modals/EditListModal';
-import ShareListModal from '../../components/modals/ShareListModal';
-
-const ListDetailPage = () => {
+const ProfileListDetailPage = () => {
   const { address, slug } = useParams();
   const router = useRouter();
-  const [isManagementMode, setIsManagementMode] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { profile } = useAuth();
+
+  const [isEditMode, setIsEditMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showEditListModal, setShowEditListModal] = useState(false);
+  const [editedItems, setEditedItems] = useState<any[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   // Fetch list details
   const {
@@ -49,7 +73,7 @@ const ListDetailPage = () => {
     {
       retry: false, // Don't retry on 403
       select: (data) => {
-        console.log('devLog - getListBySlug response:', data);
+        console.log('devLog - getListBySlug response (profile page):', data);
         return data;
       },
     },
@@ -64,7 +88,10 @@ const ListDetailPage = () => {
       {
         enabled: !!list?.id && !error,
         select: (data) => {
-          console.log('devLog - getListProjects response:', data);
+          console.log(
+            'devLog - getListProjects response (profile page):',
+            data,
+          );
           return data;
         },
       },
@@ -72,16 +99,107 @@ const ListDetailPage = () => {
 
   const listItems = listData?.items;
 
+  // Initialize editedItems when listItems change
+  useEffect(() => {
+    if (listItems && listItems.length > 0) {
+      setEditedItems(
+        listItems.map((item, index) => ({
+          ...item,
+          order: index,
+        })),
+      );
+    }
+  }, [listItems]);
+
   const handleBack = () => {
     router.push(`/profile/${address}?tab=lists`);
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setEditedItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over?.id);
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        setHasChanges(true);
+        return newItems;
+      });
+    }
+  };
+
+  const handleRemoveItem = useCallback((itemId: string) => {
+    setEditedItems((items) => items.filter((item) => item.id !== itemId));
+    setHasChanges(true);
+  }, []);
+
+  const handleSaveChanges = async () => {
+    if (!list) return;
+
+    setIsSaving(true);
+
+    try {
+      // TODO: Implement save changes logic when API is ready
+      const updatedItems = editedItems.map((item, index) => ({
+        id: item.id,
+        order: index,
+      }));
+
+      console.log('Save changes:', { listId: list.id, items: updatedItems });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      addToast({
+        title: 'Changes saved successfully',
+        color: 'success',
+      });
+
+      setIsEditMode(false);
+      setHasChanges(false);
+    } catch (error) {
+      addToast({
+        title: 'Failed to save changes',
+        color: 'danger',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    if (listItems) {
+      setEditedItems(
+        listItems.map((item, index) => ({
+          ...item,
+          order: index,
+        })),
+      );
+    }
+    setIsEditMode(false);
+    setHasChanges(false);
+  };
+
+  // Check if current user is the owner
+  const isOwner =
+    list && list.creator && profile
+      ? list.creator.userId.toLowerCase() === profile.userId
+      : false;
+
+  // If not owner, redirect to public list page
+  useEffect(() => {
+    if (!isOwner && list) {
+      router.push(`/list/${slug}`);
+    }
+  }, [isOwner, list, slug, router]);
+
   const getPrivacyIcon = () => {
     if (!list) return null;
     return list.privacy === 'private' ? (
-      <Lock size={20} className="opacity-60" />
+      <LockKeyIcon size={20} className="opacity-60" />
     ) : (
-      <Globe size={20} className="opacity-60" />
+      <GlobeHemisphereWestIcon size={20} className="opacity-60" />
     );
   };
 
@@ -90,272 +208,227 @@ const ListDetailPage = () => {
     return list.privacy === 'private' ? 'Private' : 'Public';
   };
 
-  // Check if current user is the owner
-  const isOwner = true; // TODO: Implement actual ownership check
-
   if (isLoading) {
-    return (
-      <div className="mobile:px-[10px] px-[40px]">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 pb-16 pt-8">
-          <Skeleton className="h-[40px] w-[200px] rounded-[8px]" />
-          <Skeleton className="h-[100px] w-full rounded-[10px]" />
-          <div className="flex flex-col gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-[80px] w-full rounded-[10px]" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <ListDetailSkeleton />;
   }
 
   if (error || !list) {
     const isForbidden = error?.data?.code === 'FORBIDDEN';
 
     return (
-      <div className="mobile:px-[10px] px-[40px]">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-6 pb-16 pt-8">
-          <ECFTypography type="subtitle1">
-            {isForbidden ? 'Access Denied' : 'List not found'}
-          </ECFTypography>
-          <ECFTypography type="body1" className="text-center opacity-60">
-            {isForbidden
-              ? "This is a private list and you don't have permission to view it."
-              : 'This list may not exist or has been deleted.'}
-          </ECFTypography>
-          <Button
-            onPress={handleBack}
-            variant="light"
-            startContent={<ArrowLeft size={20} />}
-          >
-            Back to Lists
-          </Button>
-        </div>
+      <div className="flex flex-1 flex-col items-center gap-6">
+        <ECFTypography type="subtitle1">
+          {isForbidden ? 'Access Denied' : 'List not found'}
+        </ECFTypography>
+        <ECFTypography type="body1" className="text-center opacity-60">
+          {isForbidden
+            ? "This is a private list and you don't have permission to view it."
+            : "This list may be private or doesn't exist."}
+        </ECFTypography>
+        <Button
+          onPress={handleBack}
+          color="secondary"
+          startContent={<ArrowLeft />}
+        >
+          Go Back
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="mobile:px-[10px] px-[40px]">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 pb-16 pt-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="flex flex-1 flex-col gap-[10px]">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-[10px]">
           <Button
             onPress={handleBack}
-            variant="light"
+            color="secondary"
+            size="sm"
+            className="h-[30px] rounded-[5px] border-none px-[8px] text-[14px] font-semibold text-black"
             startContent={<ArrowLeft size={20} />}
-            className="text-black hover:bg-[rgba(0,0,0,0.05)]"
           >
-            Back to Lists
+            Back
           </Button>
+        </div>
 
-          {isOwner && (
-            <div className="flex items-center gap-3">
-              {/* Management Mode Toggle */}
+        <div className="flex items-center gap-[10px]">
+          {/* Another Share Button (as shown in Figma) */}
+          <Button
+            onPress={() => setShowShareModal(true)}
+            endContent={<LinkIcon size={18} />}
+            size="sm"
+            className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+            isDisabled={list.privacy === 'private'}
+          >
+            Share List
+          </Button>
+        </div>
+      </div>
+
+      {/* List Info */}
+      <div className="flex flex-col gap-[10px] border-b border-[rgba(0,0,0,0.1)] pb-[20px]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-[10px]">
+            <ECFTypography
+              type="subtitle1"
+              className="text-[20px] font-semibold leading-[24px]"
+            >
+              {list.name}
+            </ECFTypography>
+            {isOwner && !isEditMode && (
               <Button
-                onPress={() => setIsManagementMode(!isManagementMode)}
-                variant={isManagementMode ? 'solid' : 'light'}
-                className={
-                  isManagementMode
-                    ? 'bg-black text-white'
-                    : 'bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.1)]'
-                }
+                isIconOnly
+                size="sm"
+                color="secondary"
+                className="size-[28px] rounded-[5px] border-none p-[5px] opacity-50 hover:opacity-100"
+                onPress={() => setShowEditListModal(true)}
               >
-                {isManagementMode ? 'Exit Management' : 'Manage Projects'}
+                <PencilSimpleIcon size={14} className="opacity-50" />
               </Button>
+            )}
+          </div>
+        </div>
+        {list.description && (
+          <ECFTypography
+            type="body1"
+            className="opacity-68 text-[14px] leading-[18px]"
+          >
+            {list.description}
+          </ECFTypography>
+        )}
+        <div className="flex items-center gap-[5px] opacity-60">
+          {getPrivacyIcon()}
+          <ECFTypography type="body2" className="text-[14px] font-semibold">
+            {getPrivacyText()}
+          </ECFTypography>
+        </div>
+      </div>
 
-              {/* List Actions Dropdown */}
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    className="bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.1)]"
-                  >
-                    <DotsThreeVertical size={20} />
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="List actions">
-                  <DropdownItem
-                    key="edit"
-                    onPress={() => setShowEditModal(true)}
-                    startContent={<PencilSimple size={18} />}
-                  >
-                    Edit List ddd
-                  </DropdownItem>
-                  <DropdownItem
-                    key="share"
-                    onPress={() => setShowShareModal(true)}
-                    startContent={<ShareNetwork size={18} />}
-                  >
-                    Share List
-                  </DropdownItem>
-                  <DropdownItem
-                    key="delete"
-                    onPress={() => setShowDeleteModal(true)}
-                    startContent={<Trash size={18} />}
-                    className="text-danger"
-                    color="danger"
-                  >
-                    Delete List
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
+      {/* Projects Section */}
+      <div className="flex flex-col gap-[10px]">
+        {/* Edit Mode Controls */}
+        {isOwner && (
+          <div className="flex items-center justify-end">
+            {isEditMode ? (
+              <div className="flex items-center gap-[20px]">
+                <Button
+                  onPress={handleDiscardChanges}
+                  size="sm"
+                  className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                  endContent={<XIcon size={20} color="#000" />}
+                >
+                  Discard Changes
+                </Button>
+                <Button
+                  onPress={handleSaveChanges}
+                  size="sm"
+                  className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                  isDisabled={!hasChanges || isSaving}
+                  isLoading={isSaving}
+                  endContent={
+                    !isSaving && (
+                      <GearSixIcon size={20} className="opacity-100" />
+                    )
+                  }
+                >
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onPress={() => setIsEditMode(true)}
+                size="sm"
+                className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
+                endContent={<GearSixIcon size={20} className="opacity-100" />}
+              >
+                Organize List
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Projects List */}
+        <div className="flex flex-col gap-[10px]">
+          {itemsLoading ? (
+            <div className="flex flex-col gap-[10px]">
+              {[1, 2, 3].map((i) => (
+                <ProjectCardSkeleton
+                  key={i}
+                  showCreator={false}
+                  showBorder={i < 2}
+                />
+              ))}
+            </div>
+          ) : editedItems && editedItems.length > 0 ? (
+            isEditMode ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis]}
+              >
+                <SortableContext
+                  items={editedItems.map((item) => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {editedItems.map((item) => (
+                    <SortableProjectCard
+                      key={item.id}
+                      id={item.id}
+                      project={item.project as IProject}
+                      onRemove={() => handleRemoveItem(item.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            ) : (
+              editedItems.map((item) => (
+                <ProjectCard
+                  key={item.id}
+                  project={item.project as IProject}
+                  showCreator={false}
+                />
+              ))
+            )
+          ) : (
+            <div className="flex flex-col items-center gap-4 py-12">
+              <ECFTypography
+                type="body1"
+                className="text-center text-[16px] leading-[25.6px] opacity-50"
+              >
+                This list is empty
+              </ECFTypography>
+              <ECFTypography
+                type="body2"
+                className="text-center text-[14px] leading-[22.4px] opacity-40"
+              >
+                No projects have been added to this list yet.
+              </ECFTypography>
             </div>
           )}
         </div>
+      </div>
 
-        {/* List Info */}
-        <div className="flex flex-col gap-4 rounded-[10px] bg-[rgba(0,0,0,0.03)] p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-2">
-              <ECFTypography type="subtitle1" className="font-semibold">
-                {list.name}
-              </ECFTypography>
-              {list.description && (
-                <ECFTypography type="body1" className="opacity-80">
-                  {list.description}
-                </ECFTypography>
-              )}
-            </div>
-          </div>
-
-          {/* Privacy Status and Stats */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {getPrivacyIcon()}
-              <ECFTypography type="body2" className="font-semibold opacity-60">
-                {getPrivacyText()}
-              </ECFTypography>
-            </div>
-            <div className="flex items-center gap-4">
-              <ECFTypography type="body2" className="opacity-60">
-                {listItems?.length || 0} projects
-              </ECFTypography>
-              <ECFTypography type="body2" className="opacity-60">
-                Created {new Date(list.createdAt).toLocaleDateString()}
-              </ECFTypography>
-            </div>
-          </div>
-        </div>
-
-        {/* Projects Section */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <ECFTypography type="subtitle2" className="opacity-60">
-              Projects in this list:
-            </ECFTypography>
-            {isOwner && !isManagementMode && (
-              <Button
-                startContent={<Plus size={20} />}
-                className="bg-[rgba(0,0,0,0.05)] text-black hover:bg-[rgba(0,0,0,0.1)]"
-                variant="light"
-              >
-                Add Project
-              </Button>
-            )}
-          </div>
-
-          {/* Projects List */}
-          <div className="flex flex-col gap-3">
-            {itemsLoading ? (
-              <div className="flex flex-col gap-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-[80px] w-full rounded-[10px]"
-                  />
-                ))}
-              </div>
-            ) : listItems && listItems.length > 0 ? (
-              listItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="group flex items-center gap-4 rounded-[10px] bg-[rgba(0,0,0,0.05)] p-4 transition-all hover:bg-[rgba(0,0,0,0.08)]"
-                >
-                  {/* Drag Handle - Only visible in management mode */}
-                  {isManagementMode && (
-                    <div className="cursor-grab opacity-40 hover:opacity-60">
-                      <DotsSixVertical size={20} />
-                    </div>
-                  )}
-
-                  {/* Project Info */}
-                  <div className="flex flex-1 flex-col gap-1">
-                    <ECFTypography type="body1" className="font-semibold">
-                      {item.project.name}
-                    </ECFTypography>
-                    <ECFTypography type="body2" className="opacity-60">
-                      {item.project.tagline || 'No description available'}
-                    </ECFTypography>
-                  </div>
-
-                  {/* Order Number */}
-                  <div className="flex items-center gap-2">
-                    <ECFTypography type="caption" className="opacity-40">
-                      #{index + 1}
-                    </ECFTypography>
-                  </div>
-
-                  {/* Remove Button - Only visible in management mode */}
-                  {isManagementMode && (
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      className="opacity-40 hover:bg-red-100 hover:text-red-600 hover:opacity-100"
-                      onPress={() => {
-                        // TODO: Implement remove project from list
-                        console.log(
-                          'Remove project from list:',
-                          item.projectId,
-                        );
-                      }}
-                    >
-                      <Trash size={16} />
-                    </Button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center gap-4 py-12">
-                <ECFTypography type="body1" className="text-center opacity-50">
-                  No projects in this list yet
-                </ECFTypography>
-                {isOwner && (
-                  <Button
-                    startContent={<Plus size={20} />}
-                    className="bg-black text-white hover:bg-[rgba(0,0,0,0.8)]"
-                  >
-                    Add Your First Project
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Modals */}
-        <EditListModal
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          list={list}
-        />
-
-        <DeleteListModal
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          list={list}
-        />
-
+      {/* Share Modal */}
+      {list && (
         <ShareListModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           list={list}
         />
-      </div>
+      )}
+
+      {/* Edit List Modal */}
+      {list && (
+        <EditListModal
+          isOpen={showEditListModal}
+          onClose={() => setShowEditListModal(false)}
+          list={list}
+        />
+      )}
     </div>
   );
 };
 
-export default ListDetailPage;
+export default ProfileListDetailPage;
