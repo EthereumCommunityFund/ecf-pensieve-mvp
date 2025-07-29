@@ -50,9 +50,6 @@ import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 
 import { proposalRouter } from './proposal';
 
-// Define a consistent type for project items returned by getProjects
-type ProjectItem = any; // Using any to avoid complex type definitions
-
 export const projectRouter = router({
   createProject: protectedProcedure
     .input(
@@ -203,139 +200,116 @@ export const projectRouter = router({
         })
         .optional(),
     )
-    .query(
-      async ({
-        ctx,
-        input,
-      }): Promise<{
-        items: ProjectItem[];
-        offset: number;
-        hasNextPage: boolean;
-      }> => {
-        const limit = input?.limit ?? 50;
-        const offset = input?.offset ?? 0;
-        const isPublished = input?.isPublished ?? false;
-        const categories = input?.categories;
-        const sortBy = input?.sortBy;
-        const sortOrder = input?.sortOrder;
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 50;
+      const offset = input?.offset ?? 0;
+      const isPublished = input?.isPublished ?? false;
+      const categories = input?.categories;
+      const sortBy = input?.sortBy;
+      const sortOrder = input?.sortOrder;
 
-        const sortingService = new ProjectSortingService(ctx.db);
+      const sortingService = new ProjectSortingService(ctx.db);
 
-        const useSorting = !!sortBy;
+      const useSorting = !!sortBy;
 
-        if (useSorting) {
-          const sortedQuery = sortingService.buildSortedQuery({
-            sortBy,
-            sortOrder,
-            offset,
-            limit: limit + 1,
-            isPublished,
-            categories,
-          });
+      if (useSorting) {
+        const sortedQuery = sortingService.buildSortedQuery({
+          sortBy,
+          sortOrder,
+          offset,
+          limit: limit + 1,
+          isPublished,
+          categories,
+        });
 
-          const sortedResults = await sortedQuery;
-          const hasNextPage = sortedResults.length > limit;
-          const items = hasNextPage
-            ? sortedResults.slice(0, limit)
-            : sortedResults;
+        const sortedResults = await sortedQuery;
+        const hasNextPage = sortedResults.length > limit;
+        const items = hasNextPage
+          ? sortedResults.slice(0, limit)
+          : sortedResults;
 
-          // Normalize sorted results to match the structure of regular query
-          const normalizedItems = (items ?? []).map((item: any) => ({
-            ...item,
-            proposals: [],
-            projectSnap: item.projectSnap || null,
-          }));
+        return {
+          items: items ?? [],
+          offset,
+          hasNextPage,
+        };
+      }
 
-          return {
-            items: normalizedItems,
-            offset,
-            hasNextPage,
-          };
-        }
+      const conditions = [eq(projects.isPublished, isPublished)];
 
-        const conditions = [eq(projects.isPublished, isPublished)];
-
-        if (categories && categories.length > 0) {
-          conditions.push(
-            exists(
-              ctx.db
-                .select()
-                .from(projectSnaps)
-                .where(
-                  and(
-                    eq(projectSnaps.projectId, projects.id),
-                    sql`${projectSnaps.categories} && ARRAY[${sql.join(
-                      categories.map((cat) => sql`${cat}`),
-                      sql`, `,
-                    )}]`,
-                  ),
+      if (categories && categories.length > 0) {
+        conditions.push(
+          exists(
+            ctx.db
+              .select()
+              .from(projectSnaps)
+              .where(
+                and(
+                  eq(projectSnaps.projectId, projects.id),
+                  sql`${projectSnaps.categories} && ARRAY[${sql.join(
+                    categories.map((cat) => sql`${cat}`),
+                    sql`, `,
+                  )}]`,
                 ),
-            ),
-          );
-        }
+              ),
+          ),
+        );
+      }
 
-        const whereCondition = and(...conditions);
+      const whereCondition = and(...conditions);
 
-        const queryOptions: any = {
-          creator: true,
-          projectSnap: true,
-        };
+      const queryOptions: any = {
+        creator: true,
+        projectSnap: true,
+      };
 
-        if (!isPublished) {
-          queryOptions.proposals = {
-            with: {
-              voteRecords: {
-                with: {
-                  creator: true,
-                },
+      if (!isPublished) {
+        queryOptions.proposals = {
+          with: {
+            voteRecords: {
+              with: {
+                creator: true,
               },
-              creator: true,
             },
-          };
-        }
-
-        const getProjects = async () => {
-          const results = await ctx.db.query.projects.findMany({
-            with: queryOptions,
-            where: whereCondition,
-            orderBy: desc(projects.id),
-            limit: limit + 1,
-            offset,
-          });
-
-          const hasNextPage = results.length > limit;
-          const items = hasNextPage ? results.slice(0, limit) : results;
-
-          // Normalize all items to ensure consistent structure
-          const normalizedItems = items.map((item: any) => ({
-            ...item,
-            proposals: item.proposals || [],
-            projectSnap: item.projectSnap || null,
-          }));
-
-          return {
-            items: normalizedItems,
-            offset,
-            hasNextPage,
-          };
+            creator: true,
+          },
         };
+      }
 
-        if (isPublished && offset === 0) {
-          const cacheKey =
-            categories && categories.length > 0
-              ? `projects-published-${limit}-categories-${categories.sort().join('-')}-first-page`
-              : `projects-published-${limit}-first-page`;
+      const getProjects = async () => {
+        const results = await ctx.db.query.projects.findMany({
+          with: queryOptions,
+          where: whereCondition,
+          orderBy: desc(projects.id),
+          limit: limit + 1,
+          offset,
+        });
 
-          const getCachedProjects = nextCache(getProjects, [cacheKey], {
-            revalidate: 3600,
-            tags: [CACHE_TAGS.PROJECTS],
-          });
-          return getCachedProjects();
-        }
+        const hasNextPage = results.length > limit;
+        const items = hasNextPage ? results.slice(0, limit) : results;
 
-        return getProjects();
-      },
-    ),
+        return {
+          items,
+          offset,
+          hasNextPage,
+        };
+      };
+
+      if (isPublished && offset === 0) {
+        const cacheKey =
+          categories && categories.length > 0
+            ? `projects-published-${limit}-categories-${categories.sort().join('-')}-first-page`
+            : `projects-published-${limit}-first-page`;
+
+        const getCachedProjects = nextCache(getProjects, [cacheKey], {
+          revalidate: 3600,
+          tags: [CACHE_TAGS.PROJECTS],
+        });
+        return getCachedProjects();
+      }
+
+      return getProjects();
+    }),
 
   searchProjects: publicProcedure
     .input(

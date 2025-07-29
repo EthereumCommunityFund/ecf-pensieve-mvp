@@ -103,7 +103,7 @@ const ProjectCard = ({
   const projectSnapDataMap = useMemo(() => {
     if (!!project?.projectSnap?.items && project.projectSnap.items.length > 0) {
       return project.projectSnap.items.reduce(
-        (prev: any, cur: any) => {
+        (prev, cur) => {
           return {
             ...prev,
             [cur.key]: cur.value,

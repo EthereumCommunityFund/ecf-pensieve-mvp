@@ -54,8 +54,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   const tableKey = useMemo(() => {
     const weightKeysCount = Object.keys(project?.itemsTopWeight || {}).length;
     const totalWeightSum = Object.values(project?.itemsTopWeight || {}).reduce(
-      (sum: number, weight: any) =>
-        sum + (typeof weight === 'number' ? weight : 0),
+      (sum, weight) => sum + weight,
       0,
     );
     return `${project?.id || 0}-${weightKeysCount}-${totalWeightSum}`;
