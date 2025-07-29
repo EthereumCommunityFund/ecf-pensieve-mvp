@@ -119,11 +119,11 @@ const HomeList = () => {
   }, [transparentProjectsUpdatedAt]);
 
   const handleViewTopTransparentProjects = useCallback(() => {
-    router.push('/projects?type=transparent');
+    router.push('/projects?sort=top-transparent');
   }, [router]);
 
   const handleViewTopCommunityTrustedProjects = useCallback(() => {
-    router.push('/projects?type=community-trusted');
+    router.push('/projects?sort=top-community-trusted');
   }, [router]);
 
   // Refetch all method to refresh all data
@@ -220,7 +220,7 @@ const HomeList = () => {
           />
           <ProjectListWrapper
             isLoading={isLoadingSupport}
-            projectList={bySupportProjects as IProject[]}
+            projectList={bySupportProjects as unknown as IProject[]}
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
@@ -229,7 +229,7 @@ const HomeList = () => {
             showUpvote={true}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl="/projects?type=community-trusted"
+            viewAllUrl="/projects?sort=top-community-trusted"
           />
         </div>
 
@@ -251,7 +251,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=${encodeURIComponent('Local Communities')}`}
+            viewAllUrl={`/projects?cats=${encodeURIComponent('Local Communities')}`}
           />
         </div>
 
@@ -273,7 +273,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=Events`}
+            viewAllUrl={`/projects?cats=Events`}
           />
         </div>
 
@@ -295,7 +295,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cat=Hubs`}
+            viewAllUrl={`/projects?cats=Hubs`}
           />
         </div>
       </div>
