@@ -9,7 +9,6 @@ import { useAccount } from 'wagmi';
 import { Button } from '@/components/base';
 import ECFTypography from '@/components/base/typography';
 import {
-  ArrowLeftIcon,
   GlobeHemisphereWestIcon,
   LockKeyIcon,
   PlusSquareIcon,
@@ -22,6 +21,7 @@ import ProjectCard, {
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { devLog } from '@/utils/devLog';
 
 const PublicListPage = () => {
   const { slug } = useParams();
@@ -41,6 +41,10 @@ const PublicListPage = () => {
     },
     {
       retry: false, // Don't retry on 403
+      select: (data) => {
+        devLog('getListBySlug', slug, data);
+        return data;
+      },
     },
   );
 
@@ -78,7 +82,7 @@ const PublicListPage = () => {
   }, [list]);
 
   const handleBack = () => {
-    router.back();
+    router.replace('/');
   };
 
   const handleFollow = () => {
@@ -126,7 +130,7 @@ const PublicListPage = () => {
           <Button
             onPress={handleBack}
             variant="light"
-            startContent={<ArrowLeftIcon size={20} />}
+            startContent={<ArrowLeft />}
           >
             Go Back
           </Button>
@@ -194,6 +198,9 @@ const PublicListPage = () => {
                   </ECFTypography>
                 </div>
               </div>
+              <p className="text-[14px] text-black/80">
+                Followers: {list.followCount}
+              </p>
             </div>
           </div>
         </div>
