@@ -187,6 +187,10 @@ const ProjectsContent = () => {
     };
   }, [sort, cats, allProjects]);
 
+  const showUpvote = useMemo(() => {
+    return sort !== 'top-transparent';
+  }, [sort]);
+
   const showTransparentScore = useMemo(() => {
     return sort === 'top-transparent';
   }, [sort]);
@@ -266,7 +270,7 @@ const ProjectsContent = () => {
             onLoadMore={handleLoadMore}
             onSuccess={onUpvoteSuccess}
             showTransparentScore={showTransparentScore}
-            showUpvote={true}
+            showUpvote={showUpvote}
             showCreator={true}
           />
         </div>
