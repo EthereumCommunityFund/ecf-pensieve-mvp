@@ -191,14 +191,6 @@ const ProjectsContent = () => {
     return sort === 'top-transparent';
   }, [sort]);
 
-  const showCreator = useMemo(() => {
-    return sort !== 'top-transparent';
-  }, [sort]);
-
-  const showUpvote = useMemo(() => {
-    return sort !== 'top-transparent';
-  }, [sort]);
-
   useEffect(() => {
     if (allProjects.length > 0) {
       devLog('projectList', allProjects);
@@ -274,8 +266,8 @@ const ProjectsContent = () => {
             onLoadMore={handleLoadMore}
             onSuccess={onUpvoteSuccess}
             showTransparentScore={showTransparentScore}
-            showUpvote={showUpvote}
-            showCreator={showCreator}
+            showUpvote={true}
+            showCreator={true}
           />
         </div>
 
