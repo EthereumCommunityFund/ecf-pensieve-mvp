@@ -30,7 +30,9 @@
       "Bash(sed:*)",
       "WebFetch(domain:www.figma.com)",
       "Bash(grep:*)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(pnpm remove:*)"
     ],
     "deny": []
   }
