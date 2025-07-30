@@ -147,13 +147,32 @@ export const transformProjectData = (
         fieldApplicability,
       ),
     ),
-    dappSmartContracts: emptyToNull(
-      transformFormValue(
-        'dappSmartContracts',
-        formData.dappSmartContracts || '',
-        fieldApplicability,
-      ),
-    ),
+    dappSmartContracts: (() => {
+      // Handle the new smart contracts format
+      if (
+        typeof formData.dappSmartContracts === 'object' &&
+        formData.dappSmartContracts
+      ) {
+        const { applicable, contracts } = formData.dappSmartContracts;
+        if (!applicable || !contracts || contracts.length === 0) {
+          return null;
+        }
+        // For now, convert back to comma-separated string for backward compatibility
+        // This should be updated once the backend is ready to accept JSONB
+        const allAddresses = contracts.flatMap(
+          (contract) => contract.addresses,
+        );
+        return allAddresses.length > 0 ? allAddresses.join(', ') : null;
+      }
+      // Handle legacy string format
+      return emptyToNull(
+        transformFormValue(
+          'dappSmartContracts',
+          formData.dappSmartContracts || '',
+          fieldApplicability,
+        ),
+      );
+    })(),
 
     orgStructure: transformFormValue(
       'orgStructure',
@@ -377,6 +396,58 @@ export const transformProposalData = (
 export const convertProjectToFormData = (
   project: IProject,
 ): IProjectFormData => {
+  // Handle smart contracts data conversion
+  let dappSmartContractsData: any = '';
+  let dappSmartContractsApplicable = true;
+  let dappSmartContractsReferences: string[] = [];
+
+  if (
+    project.dappSmartContracts !== null &&
+    project.dappSmartContracts !== undefined
+  ) {
+    if (typeof project.dappSmartContracts === 'string') {
+      // Legacy format: convert string to new structure
+      const smartContractsString = project.dappSmartContracts as string;
+      const addresses = smartContractsString
+        .split(',')
+        .map((addr: string) => addr.trim())
+        .filter(Boolean);
+      if (addresses.length > 0) {
+        dappSmartContractsData = {
+          applicable: true,
+          contracts: [
+            {
+              id: crypto.randomUUID(),
+              chain: 'ethereum',
+              addresses,
+            },
+          ],
+          references: [],
+        };
+      } else {
+        dappSmartContractsData = {
+          applicable: true,
+          contracts: [],
+          references: [],
+        };
+      }
+    } else if (typeof project.dappSmartContracts === 'object') {
+      // New JSONB format
+      dappSmartContractsData = project.dappSmartContracts;
+      dappSmartContractsApplicable =
+        project.dappSmartContracts.applicable ?? true;
+      dappSmartContractsReferences =
+        project.dappSmartContracts.references || [];
+    }
+  } else {
+    // No data - use default structure
+    dappSmartContractsData = {
+      applicable: true,
+      contracts: [],
+      references: [],
+    };
+  }
+
   return {
     name: project.name,
     tagline: project.tagline,
@@ -390,7 +461,9 @@ export const convertProjectToFormData = (
     appUrl: project.appUrl || null,
     tags: project.tags,
     whitePaper: project.whitePaper || '',
-    dappSmartContracts: project.dappSmartContracts || '',
+    dappSmartContracts: dappSmartContractsData,
+    dappSmartContractsApplicable,
+    dappSmartContractsReferences,
     dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
     dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,
     devStatus: project.devStatus,

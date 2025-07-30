@@ -1,7 +1,7 @@
 import { Avatar, Tooltip } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ControllerFieldState,
   ControllerRenderProps,
@@ -16,6 +16,7 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
+import { SmartContractsField } from '@/components/biz/project/smart-contracts';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
@@ -24,7 +25,12 @@ import {
   dateValueToDate,
 } from '@/utils/formatters';
 
-import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
+import {
+  IFormTypeEnum,
+  IFounder,
+  IProjectFormData,
+  ISmartContract,
+} from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
 import InputPrefix from './InputPrefix';
@@ -68,9 +74,109 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
   }, [itemKey, formType]);
 
+  const formContext = useFormContext();
+  const { watch, setValue } = formContext;
+
+  // Smart contracts values (used only when itemKey === 'dappSmartContracts')
+  const smartContractsApplicable =
+    itemKey === 'dappSmartContracts'
+      ? (watch('dappSmartContractsApplicable') ?? true)
+      : true;
+  const smartContractsReferences =
+    itemKey === 'dappSmartContracts'
+      ? (watch('dappSmartContractsReferences') ?? [])
+      : [];
+
+  // Process smart contracts value
+  const smartContractsValue: ISmartContract[] = useMemo(() => {
+    if (itemKey !== 'dappSmartContracts') {
+      return [];
+    }
+
+    if (typeof field.value === 'string') {
+      // Convert legacy string format to new structure
+      if (field.value) {
+        const addresses = field.value
+          .split(',')
+          .map((addr) => addr.trim())
+          .filter(Boolean);
+        if (addresses.length > 0) {
+          return [
+            {
+              id: crypto.randomUUID(),
+              chain: 'ethereum',
+              addresses,
+            },
+          ];
+        }
+      }
+    } else if (field.value && typeof field.value === 'object') {
+      // Handle the new format
+      if (Array.isArray(field.value.contracts)) {
+        return field.value.contracts;
+      } else if (Array.isArray(field.value)) {
+        return field.value;
+      }
+    }
+
+    return [];
+  }, [itemKey, field.value]);
+
+  // Callbacks for smart contracts (always defined, but only used when needed)
+  const handleContractsChange = useCallback(
+    (contracts: ISmartContract[]) => {
+      field.onChange({
+        applicable: smartContractsApplicable,
+        contracts,
+        references: smartContractsReferences,
+      });
+    },
+    [field, smartContractsApplicable, smartContractsReferences],
+  );
+
+  const handleApplicableChange = useCallback(
+    (applicable: boolean) => {
+      setValue('dappSmartContractsApplicable', applicable);
+      field.onChange({
+        applicable,
+        contracts: smartContractsValue,
+        references: smartContractsReferences,
+      });
+    },
+    [field, setValue, smartContractsValue, smartContractsReferences],
+  );
+
+  const handleReferencesChange = useCallback(
+    (refs: string[]) => {
+      setValue('dappSmartContractsReferences', refs);
+      field.onChange({
+        applicable: smartContractsApplicable,
+        contracts: smartContractsValue,
+        references: refs,
+      });
+    },
+    [field, setValue, smartContractsApplicable, smartContractsValue],
+  );
+
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
+
+  // Special handling for dappSmartContracts
+  if (itemKey === 'dappSmartContracts') {
+    return (
+      <SmartContractsField
+        value={smartContractsValue}
+        onChange={handleContractsChange}
+        weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
+        applicable={smartContractsApplicable}
+        onApplicableChange={handleApplicableChange}
+        references={smartContractsReferences}
+        onReferencesChange={handleReferencesChange}
+        disabled={isDisabled}
+      />
+    );
+  }
 
   switch (formDisplayType) {
     case 'string':

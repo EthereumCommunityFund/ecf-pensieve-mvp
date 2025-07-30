@@ -40,6 +40,18 @@ export interface IReferenceData {
   value: string;
 }
 
+export interface ISmartContract {
+  id: string;
+  chain: string;
+  addresses: string[];
+}
+
+export interface ISmartContractsData {
+  applicable: boolean;
+  contracts: ISmartContract[];
+  references: string[];
+}
+
 export interface IProjectFormData
   extends Partial<Record<IEssentialItemKey, any>> {
   name: string;
@@ -58,7 +70,9 @@ export interface IProjectFormData
   openSource: 'Yes' | 'No' | '';
   codeRepo: string | null;
   tokenContract: string | null;
-  dappSmartContracts: string;
+  dappSmartContracts: string | ISmartContractsData;
+  dappSmartContractsApplicable?: boolean;
+  dappSmartContractsReferences?: string[];
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
   founders: IFounder[];

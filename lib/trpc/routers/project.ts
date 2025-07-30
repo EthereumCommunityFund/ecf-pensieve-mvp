@@ -29,6 +29,7 @@ import {
   voteRecords,
 } from '@/lib/db/schema';
 import { itemProposals } from '@/lib/db/schema/itemProposals';
+import type { DappSmartContractsData } from '@/lib/db/schema/projects';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
@@ -92,7 +93,23 @@ export const projectRouter = router({
           .min(1, 'At least one founder is required'),
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
         whitePaper: z.string().nullable(),
-        dappSmartContracts: z.string().nullable(),
+        dappSmartContracts: z
+          .union([
+            z.string().nullable(),
+            z
+              .object({
+                applicable: z.boolean(),
+                contracts: z.array(
+                  z.object({
+                    chain: z.string(),
+                    addresses: z.array(z.string()),
+                  }),
+                ),
+                references: z.array(z.string()).optional(),
+              })
+              .nullable(),
+          ])
+          .nullable(),
         refs: z
           .array(
             z.object({
@@ -121,10 +138,41 @@ export const projectRouter = router({
             return !!existing;
           });
 
+          // Convert smart contracts data if it's a string
+          let dappSmartContractsData: DappSmartContractsData | null = null;
+
+          if (input.dappSmartContracts) {
+            if (typeof input.dappSmartContracts === 'string') {
+              // Convert legacy string format to new JSONB format
+              const addresses = input.dappSmartContracts
+                .split(',')
+                .map((addr) => addr.trim())
+                .filter(Boolean);
+
+              if (addresses.length > 0) {
+                dappSmartContractsData = {
+                  applicable: true,
+                  contracts: [
+                    {
+                      chain: 'ethereum',
+                      addresses,
+                    },
+                  ],
+                  references: [],
+                };
+              }
+            } else {
+              // Already in correct format
+              dappSmartContractsData =
+                input.dappSmartContracts as DappSmartContractsData;
+            }
+          }
+
           const [project] = await tx
             .insert(projects)
             .values({
               ...input,
+              dappSmartContracts: dappSmartContractsData,
               creator: ctx.user.id,
               hasProposalKeys,
               shortCode,

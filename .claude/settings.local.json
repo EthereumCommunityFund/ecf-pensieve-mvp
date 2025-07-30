@@ -30,7 +30,13 @@
       "Bash(grep:*)",
       "Bash(pnpm add:*)",
       "WebFetch(domain:www.figma.com)",
-      "Bash(pnpm remove:*)"
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest run:*)",
+      "Bash(true)",
+      "Bash(node:*)",
+      "mcp__browser__getConsoleLogs",
+      "mcp__browser__getConsoleErrors"
     ],
     "deny": []
   }

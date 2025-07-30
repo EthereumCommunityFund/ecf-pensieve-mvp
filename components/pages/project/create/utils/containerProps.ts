@@ -1,10 +1,14 @@
-import { IItemConfig } from '@/types/item';
+import { IEssentialItemKey, IItemConfig } from '@/types/item';
 
 import { IFormItemUIContainerProps } from '../form/FormItemUIContainer';
 import { IProjectFormData } from '../types';
 
-export interface ICreateContainerPropsParams {
-  fieldConfig: IItemConfig<keyof IProjectFormData>;
+export interface ICreateContainerPropsParams<
+  TFieldKey extends keyof IProjectFormData = keyof IProjectFormData,
+> {
+  fieldConfig: IItemConfig<
+    TFieldKey extends IEssentialItemKey ? TFieldKey : never
+  >;
   showApplicable?: boolean;
   isApplicable?: boolean;
   onChangeApplicability?: (val: boolean) => void;
@@ -12,8 +16,10 @@ export interface ICreateContainerPropsParams {
   hasFieldReference?: (fieldKey: string) => boolean;
 }
 
-export const createContainerProps = (
-  params: ICreateContainerPropsParams,
+export const createContainerProps = <
+  TFieldKey extends keyof IProjectFormData = keyof IProjectFormData,
+>(
+  params: ICreateContainerPropsParams<TFieldKey>,
 ): Omit<IFormItemUIContainerProps, 'children' | 'hasValue'> => {
   const {
     fieldConfig,

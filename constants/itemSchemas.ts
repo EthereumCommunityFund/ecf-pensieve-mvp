@@ -1,3 +1,4 @@
+import { isAddress } from 'ethers';
 import * as yup from 'yup';
 
 import { IFounder, IWebsite } from '@/components/pages/project/create/types';
@@ -211,11 +212,69 @@ export const itemValidationSchemas = {
     .required('Code repository URL is required when applicable'),
 
   dappSmartContracts: yup
-    .string()
-    .isContractAddressList(
-      'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas. An empty field is allowed if not applicable.',
+    .mixed()
+    .test(
+      'smart-contracts-validation',
+      'Invalid smart contracts data',
+      function (value) {
+        // Handle string format (legacy)
+        if (typeof value === 'string') {
+          if (!value) return true; // Empty string is valid
+          return yup
+            .string()
+            .isContractAddressList(
+              'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas.',
+            )
+            .isValidSync(value);
+        }
+
+        // Handle object format (new)
+        if (typeof value === 'object' && value !== null) {
+          const smartContractsData = value as {
+            applicable?: boolean;
+            contracts?: Array<{ chain: string; addresses: string[] }>;
+            references?: string[];
+          };
+          const { applicable, contracts } = smartContractsData;
+
+          // If not applicable, no validation needed
+          if (!applicable) return true;
+
+          // If applicable but no contracts, that's valid
+          if (!contracts || contracts.length === 0) return true;
+
+          // Validate each contract
+          for (const contract of contracts) {
+            if (!contract.chain) {
+              return this.createError({
+                message: 'Chain selection is required for each contract',
+              });
+            }
+
+            if (!contract.addresses || contract.addresses.length === 0) {
+              return this.createError({
+                message: `No addresses provided for ${contract.chain}`,
+              });
+            }
+
+            // Validate each address
+            for (const address of contract.addresses) {
+              const trimmed = address.trim();
+              if (trimmed && !isAddress(trimmed)) {
+                return this.createError({
+                  message: `Invalid address on ${contract.chain}: ${trimmed}`,
+                });
+              }
+            }
+          }
+
+          return true;
+        }
+
+        return true; // No value is valid
+      },
     )
-    .required('Dapp smart contract address is required when applicable'),
+    .required('Smart contracts data is required'),
 
   audit_status: yup.string().required('Audit status is required'),
 

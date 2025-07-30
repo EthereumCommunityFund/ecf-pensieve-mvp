@@ -118,7 +118,13 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   founders: [{ name: '', title: '', region: '' }],
   tags: [],
   whitePaper: '',
-  dappSmartContracts: '',
+  dappSmartContracts: {
+    applicable: true,
+    contracts: [],
+    references: [],
+  },
+  dappSmartContractsApplicable: true,
+  dappSmartContractsReferences: [],
 };
 
 export const FakeProjectFormData: IProjectFormData = {
@@ -143,7 +149,19 @@ export const FakeProjectFormData: IProjectFormData = {
   publicGoods: 'Yes',
   founders: [{ name: 'John Doe', title: 'Founder', region: 'US' }],
   whitePaper: 'https://fake-project.com/whitepaper.pdf',
-  dappSmartContracts: '0x1234567890123456789012345678901234567890',
+  dappSmartContracts: {
+    applicable: true,
+    contracts: [
+      {
+        id: '1',
+        chain: 'ethereum',
+        addresses: ['0x1234567890123456789012345678901234567890'],
+      },
+    ],
+    references: [],
+  },
+  dappSmartContractsApplicable: true,
+  dappSmartContractsReferences: [],
 };
 
 export const getDefaultProjectFormData = (): IProjectFormData => {

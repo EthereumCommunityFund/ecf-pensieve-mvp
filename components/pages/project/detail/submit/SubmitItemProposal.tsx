@@ -17,7 +17,7 @@ import {
 import { AllItemConfig } from '@/constants/itemConfig';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
-import { IItemConfig, IPocItemKey } from '@/types/item';
+import { IPocItemKey } from '@/types/item';
 import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
@@ -411,7 +411,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           </div>
 
           <FormItemManager
-            itemConfig={itemConfig as IItemConfig<keyof IProjectFormData>}
+            itemConfig={itemConfig as any}
             control={control}
             fieldApplicability={fieldApplicability}
             onChangeApplicability={handleApplicabilityChange}

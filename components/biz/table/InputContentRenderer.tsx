@@ -57,6 +57,67 @@ const InputContentRenderer: React.FC<IProps> = ({
           </div>
         );
       case 'stringMultiple': {
+        // Special handling for dappSmartContracts
+        if (
+          itemKey === 'dappSmartContracts' &&
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          const { applicable, contracts, references } = value;
+
+          if (!applicable) {
+            return <span className="text-gray-500">N/A</span>;
+          }
+
+          if (!contracts || contracts.length === 0) {
+            return <span className="text-gray-400">No contracts</span>;
+          }
+
+          // Render contracts by chain
+          const contractsByChain = contracts
+            .map((contract: any) => {
+              const addressCount = contract.addresses?.length || 0;
+              return `${contract.chain}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
+            })
+            .join(', ');
+
+          if (isExpandable && !isExpanded) {
+            return <>{contractsByChain}</>;
+          }
+
+          // In expanded view, show full details
+          return (
+            <div className="space-y-2">
+              {contracts.map((contract: any, index: number) => (
+                <div key={index} className="space-y-1">
+                  <div className="text-sm font-medium">{contract.chain}:</div>
+                  <div className="pl-4 text-sm">
+                    {contract.addresses?.join(', ') || 'No addresses'}
+                  </div>
+                </div>
+              ))}
+              {references && references.length > 0 && (
+                <div className="mt-2 border-t border-gray-200 pt-2">
+                  <div className="text-xs text-gray-500">References:</div>
+                  {references.map((ref: string, index: number) => (
+                    <Link
+                      key={index}
+                      href={ref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block truncate text-xs text-blue-600 hover:underline"
+                    >
+                      {ref}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Default handling for other stringMultiple fields
         const multipleValues = parseMultipleValue(value);
         const joinedText = multipleValues.join(', ');
 
