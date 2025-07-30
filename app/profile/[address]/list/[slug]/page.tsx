@@ -194,7 +194,7 @@ const ProfileListDetailPage = () => {
         await removeProjectsMutation.mutateAsync({
           listId: list.id,
           projectIds: editState.deletedItemIds,
-        });
+        } as { listId: number; projectIds: number[] });
       }
 
       // 2. Process order updates

@@ -92,12 +92,33 @@ export function useBookmark() {
   const removeProjectFromListMutation =
     trpc.list.removeProjectFromList.useMutation({
       onSuccess: (_, variables) => {
-        utils.list.getUserListsWithProjectStatus.invalidate({
-          projectId: variables.projectId,
-        });
-        utils.list.isProjectBookmarked.invalidate({
-          projectId: variables.projectId,
-        });
+        // Handle both single and multiple project removal
+        const projectId =
+          'projectId' in variables ? variables.projectId : undefined;
+        const projectIds =
+          'projectIds' in variables ? variables.projectIds : undefined;
+
+        // For single project removal
+        if (projectId) {
+          utils.list.getUserListsWithProjectStatus.invalidate({
+            projectId: projectId,
+          });
+          utils.list.isProjectBookmarked.invalidate({
+            projectId: projectId,
+          });
+        }
+
+        // For multiple project removal
+        if (projectIds) {
+          projectIds.forEach((id) => {
+            utils.list.getUserListsWithProjectStatus.invalidate({
+              projectId: id,
+            });
+            utils.list.isProjectBookmarked.invalidate({
+              projectId: id,
+            });
+          });
+        }
         // addToast({
         //   title: 'Success',
         //   description: 'Project removed from list successfully',
