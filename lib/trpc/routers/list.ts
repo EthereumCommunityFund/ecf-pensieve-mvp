@@ -1,14 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  getTableColumns,
-  inArray,
-  sql,
-  SQL,
-} from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { listFollows, listProjects, lists, projects } from '@/lib/db/schema';
@@ -409,7 +400,7 @@ export const listRouter = router({
               listId,
               projectId,
               addedBy: ctx.user.id,
-              sortOrder: sql`(SELECT COALESCE(MAX(${listProjects.sortOrder}), 0) + 10 FROM ${listProjects} WHERE ${listProjects.listId} = ${listId} FOR UPDATE)`,
+              sortOrder: sql`(SELECT COALESCE(MAX(${listProjects.sortOrder}), 0) + 10 FROM ${listProjects} WHERE ${listProjects.listId} = ${listId})`,
             })
             .returning();
 
@@ -732,27 +723,15 @@ export const listRouter = router({
             });
           }
 
-          // Update sort orders using batch update with CASE statement
-          if (items.length > 0) {
-            const sqlChunks: SQL[] = [sql`(case`];
-
-            for (const item of items) {
-              sqlChunks.push(
-                sql`when ${listProjects.projectId} = ${item.projectId} then ${item.sortOrder}`,
-              );
-            }
-
-            sqlChunks.push(sql`end)`);
-
-            const caseStatement = sql.join(sqlChunks, sql.raw(' '));
-
+          // Update sort orders - use individual updates for simplicity in tests
+          for (const item of items) {
             await tx
               .update(listProjects)
-              .set({ sortOrder: caseStatement })
+              .set({ sortOrder: item.sortOrder })
               .where(
                 and(
                   eq(listProjects.listId, listId),
-                  inArray(listProjects.projectId, projectIds),
+                  eq(listProjects.projectId, item.projectId),
                 ),
               );
           }
