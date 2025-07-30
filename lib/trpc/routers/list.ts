@@ -697,7 +697,6 @@ export const listRouter = router({
         return await ctx.db.transaction(async (tx) => {
           const { listId, items } = input;
 
-          // Verify list exists and user is the owner
           const list = await tx.query.lists.findFirst({
             where: eq(lists.id, listId),
           });
@@ -716,7 +715,6 @@ export const listRouter = router({
             });
           }
 
-          // Verify all projects belong to the list
           const projectIds = items.map((item) => item.projectId);
           const existingProjects = await tx.query.listProjects.findMany({
             where: and(
@@ -732,7 +730,6 @@ export const listRouter = router({
             });
           }
 
-          // Update sort orders using batch update with CASE statement
           const sqlChunks: SQL[] = [];
           sqlChunks.push(sql`(case`);
 
