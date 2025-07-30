@@ -40,7 +40,7 @@ import ProjectCard, {
 } from '@/components/pages/project/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-import { IProject } from '@/types';
+import { IEditState, IListProjectWithOrder, IProject } from '@/types';
 
 const ProfileListDetailPage = () => {
   const { address, slug } = useParams();
@@ -50,7 +50,11 @@ const ProfileListDetailPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showEditListModal, setShowEditListModal] = useState(false);
-  const [editedItems, setEditedItems] = useState<any[]>([]);
+  const [editState, setEditState] = useState<IEditState>({
+    editedItems: [],
+    deletedItemIds: [],
+    originalItems: [],
+  });
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -80,34 +84,51 @@ const ProfileListDetailPage = () => {
   );
 
   // Fetch list items (projects)
-  const { data: listData, isLoading: itemsLoading } =
-    trpc.list.getListProjects.useQuery(
-      {
-        slug: slug as string,
+  const {
+    data: listData,
+    isLoading: itemsLoading,
+    refetch: refetchListProjects,
+  } = trpc.list.getListProjects.useQuery(
+    {
+      slug: slug as string,
+    },
+    {
+      enabled: !!list?.id && !error,
+      select: (data) => {
+        console.log('devLog - getListProjects response (profile page):', data);
+        return data;
       },
-      {
-        enabled: !!list?.id && !error,
-        select: (data) => {
-          console.log(
-            'devLog - getListProjects response (profile page):',
-            data,
-          );
-          return data;
-        },
-      },
-    );
+    },
+  );
 
   const listItems = listData?.items;
 
-  // Initialize editedItems when listItems change
+  // Mutations for updating list
+  const removeProjectsMutation = trpc.list.removeProjectFromList.useMutation({
+    onError: (error) => {
+      console.error('Failed to remove projects:', error);
+    },
+  });
+
+  const updateOrderMutation = trpc.list.updateListProjectsOrder.useMutation({
+    onError: (error) => {
+      console.error('Failed to update order:', error);
+    },
+  });
+
+  // Initialize edit state when listItems change
   useEffect(() => {
     if (listItems && listItems.length > 0) {
-      setEditedItems(
-        listItems.map((item, index) => ({
-          ...item,
-          order: index,
-        })),
-      );
+      const itemsWithOrder = listItems.map((item, index) => ({
+        ...item,
+        order: index,
+      })) as IListProjectWithOrder[];
+
+      setEditState({
+        editedItems: itemsWithOrder,
+        deletedItemIds: [],
+        originalItems: itemsWithOrder,
+      });
     }
   }, [listItems]);
 
@@ -119,18 +140,46 @@ const ProfileListDetailPage = () => {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      setEditedItems((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        setHasChanges(true);
-        return newItems;
+      setEditState((prevState) => {
+        const oldIndex = prevState.editedItems.findIndex(
+          (item) => item.id.toString() === active.id,
+        );
+        const newIndex = prevState.editedItems.findIndex(
+          (item) => item.id.toString() === over?.id,
+        );
+        const newItems = arrayMove(prevState.editedItems, oldIndex, newIndex);
+        // Update order property after moving
+        const itemsWithUpdatedOrder = newItems.map(
+          (item: IListProjectWithOrder, index: number) => ({
+            ...item,
+            order: index,
+          }),
+        );
+
+        return {
+          ...prevState,
+          editedItems: itemsWithUpdatedOrder,
+        };
       });
+      setHasChanges(true);
     }
   };
 
-  const handleRemoveItem = useCallback((itemId: string) => {
-    setEditedItems((items) => items.filter((item) => item.id !== itemId));
+  const handleRemoveItem = useCallback((itemId: number) => {
+    setEditState((prevState) => {
+      // Find the item to get its projectId
+      const itemToRemove = prevState.editedItems.find(
+        (item) => item.id === itemId,
+      );
+
+      if (!itemToRemove) return prevState;
+
+      return {
+        ...prevState,
+        editedItems: prevState.editedItems.filter((item) => item.id !== itemId),
+        deletedItemIds: [...prevState.deletedItemIds, itemToRemove.project.id],
+      };
+    });
     setHasChanges(true);
   }, []);
 
@@ -140,43 +189,79 @@ const ProfileListDetailPage = () => {
     setIsSaving(true);
 
     try {
-      // TODO: Implement save changes logic when API is ready
-      const updatedItems = editedItems.map((item, index) => ({
-        id: item.id,
-        order: index,
+      // 1. Process deletions if any
+      if (editState.deletedItemIds.length > 0) {
+        await removeProjectsMutation.mutateAsync({
+          listId: list.id,
+          projectIds: editState.deletedItemIds,
+        });
+      }
+
+      // 2. Process order updates
+      const sortedItems = editState.editedItems.map((item, index) => ({
+        projectId: item.project.id,
+        sortOrder: (index + 1) * 10, // Use multiples of 10 for future insertion flexibility
       }));
 
-      console.log('Save changes:', { listId: list.id, items: updatedItems });
+      await updateOrderMutation.mutateAsync({
+        listId: list.id,
+        items: sortedItems,
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // 3. Refresh data
+      await refetchListProjects();
+
+      // 4. Reset state
+      setIsEditMode(false);
+      setHasChanges(false);
+      setEditState((prevState) => ({
+        ...prevState,
+        deletedItemIds: [],
+      }));
 
       addToast({
         title: 'Changes saved successfully',
         color: 'success',
       });
-
-      setIsEditMode(false);
-      setHasChanges(false);
     } catch (error) {
+      // Error handling based on error type
+      let errorMessage = 'Failed to save changes';
+
+      if (error instanceof Error) {
+        if (error.message.includes('FORBIDDEN')) {
+          errorMessage = 'You do not have permission to modify this list';
+        } else if (error.message.includes('NOT_FOUND')) {
+          errorMessage = 'List not found or has been deleted';
+        } else if (
+          error.message.includes('NETWORK_ERROR') ||
+          error.message.includes('fetch')
+        ) {
+          errorMessage = 'Network error, please try again later';
+        } else if (error.message.includes('BAD_REQUEST')) {
+          errorMessage =
+            'Some projects have already been removed from this list';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       addToast({
-        title: 'Failed to save changes',
+        title: errorMessage,
         color: 'danger',
       });
+
+      console.error('Save changes error:', error);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDiscardChanges = () => {
-    if (listItems) {
-      setEditedItems(
-        listItems.map((item, index) => ({
-          ...item,
-          order: index,
-        })),
-      );
-    }
+    setEditState((prevState) => ({
+      editedItems: [...prevState.originalItems],
+      deletedItemIds: [],
+      originalItems: prevState.originalItems,
+    }));
     setIsEditMode(false);
     setHasChanges(false);
   };
@@ -360,7 +445,7 @@ const ProfileListDetailPage = () => {
                 />
               ))}
             </div>
-          ) : editedItems && editedItems.length > 0 ? (
+          ) : editState.editedItems && editState.editedItems.length > 0 ? (
             isEditMode ? (
               <DndContext
                 sensors={sensors}
@@ -369,13 +454,15 @@ const ProfileListDetailPage = () => {
                 modifiers={[restrictToVerticalAxis]}
               >
                 <SortableContext
-                  items={editedItems.map((item) => item.id)}
+                  items={editState.editedItems.map((item) =>
+                    item.id.toString(),
+                  )}
                   strategy={verticalListSortingStrategy}
                 >
-                  {editedItems.map((item) => (
+                  {editState.editedItems.map((item) => (
                     <SortableProjectCard
                       key={item.id}
-                      id={item.id}
+                      id={item.id.toString()}
                       project={item.project as IProject}
                       onRemove={() => handleRemoveItem(item.id)}
                     />
@@ -383,7 +470,7 @@ const ProfileListDetailPage = () => {
                 </SortableContext>
               </DndContext>
             ) : (
-              editedItems.map((item) => (
+              editState.editedItems.map((item) => (
                 <ProjectCard
                   key={item.id}
                   project={item.project as IProject}
