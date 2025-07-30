@@ -1,5 +1,14 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  sql,
+  SQL,
+} from 'drizzle-orm';
 import { z } from 'zod';
 
 import { listFollows, listProjects, lists, projects } from '@/lib/db/schema';
@@ -723,18 +732,29 @@ export const listRouter = router({
             });
           }
 
-          // Update sort orders - use individual updates for simplicity in tests
+          // Update sort orders using batch update with CASE statement
+          const sqlChunks: SQL[] = [];
+          sqlChunks.push(sql`(case`);
+
           for (const item of items) {
-            await tx
-              .update(listProjects)
-              .set({ sortOrder: item.sortOrder })
-              .where(
-                and(
-                  eq(listProjects.listId, listId),
-                  eq(listProjects.projectId, item.projectId),
-                ),
-              );
+            sqlChunks.push(
+              sql`when ${listProjects.projectId} = ${item.projectId} then ${item.sortOrder}`,
+            );
           }
+
+          sqlChunks.push(sql`else ${listProjects.sortOrder} end)`);
+
+          await tx
+            .update(listProjects)
+            .set({
+              sortOrder: sql.join(sqlChunks, sql.raw(' ')),
+            })
+            .where(
+              and(
+                eq(listProjects.listId, listId),
+                inArray(listProjects.projectId, projectIds),
+              ),
+            );
 
           return { success: true };
         });
