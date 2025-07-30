@@ -1,5 +1,14 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  sql,
+  SQL,
+} from 'drizzle-orm';
 import { z } from 'zod';
 
 import { listFollows, listProjects, lists, projects } from '@/lib/db/schema';
@@ -137,7 +146,7 @@ export const listRouter = router({
 
         const items = await ctx.db.query.listProjects.findMany({
           where: and(...conditions),
-          orderBy: [desc(listProjects.id)],
+          orderBy: [asc(listProjects.sortOrder), desc(listProjects.id)],
           limit: limit + 1,
           with: {
             project: {
@@ -393,12 +402,14 @@ export const listRouter = router({
             });
           }
 
+          // Insert with calculated sortOrder in a single SQL statement
           const [listProject] = await tx
             .insert(listProjects)
             .values({
               listId,
               projectId,
               addedBy: ctx.user.id,
+              sortOrder: sql`(SELECT COALESCE(MAX(${listProjects.sortOrder}), 0) + 10 FROM ${listProjects} WHERE ${listProjects.listId} = ${listId} FOR UPDATE)`,
             })
             .returning();
 
@@ -417,14 +428,23 @@ export const listRouter = router({
 
   removeProjectFromList: protectedProcedure
     .input(
-      z.object({
-        listId: z.number(),
-        projectId: z.number(),
-      }),
+      z.union([
+        z.object({
+          listId: z.number(),
+          projectId: z.number(),
+        }),
+        z.object({
+          listId: z.number(),
+          projectIds: z.array(z.number()).min(1),
+        }),
+      ]),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const { listId, projectId } = input;
+        const { listId } = input;
+        const projectIds =
+          'projectIds' in input ? input.projectIds : [input.projectId];
+
         const list = await ctx.db.query.lists.findFirst({
           where: eq(lists.id, listId),
         });
@@ -448,7 +468,7 @@ export const listRouter = router({
           .where(
             and(
               eq(listProjects.listId, listId),
-              eq(listProjects.projectId, projectId),
+              inArray(listProjects.projectId, projectIds),
             ),
           );
 
@@ -656,6 +676,96 @@ export const listRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to get user lists with project status',
+        });
+      }
+    }),
+
+  updateListProjectsOrder: protectedProcedure
+    .input(
+      z.object({
+        listId: z.number(),
+        items: z.array(
+          z.object({
+            projectId: z.number(),
+            sortOrder: z.number(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.transaction(async (tx) => {
+          const { listId, items } = input;
+
+          // Verify list exists and user is the owner
+          const list = await tx.query.lists.findFirst({
+            where: eq(lists.id, listId),
+          });
+
+          if (!list) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'List not found',
+            });
+          }
+
+          if (!isListOwner(list, ctx.user.id)) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'You are not the owner of this list',
+            });
+          }
+
+          // Verify all projects belong to the list
+          const projectIds = items.map((item) => item.projectId);
+          const existingProjects = await tx.query.listProjects.findMany({
+            where: and(
+              eq(listProjects.listId, listId),
+              inArray(listProjects.projectId, projectIds),
+            ),
+          });
+
+          if (existingProjects.length !== items.length) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Some projects do not belong to this list',
+            });
+          }
+
+          // Update sort orders using batch update with CASE statement
+          if (items.length > 0) {
+            const sqlChunks: SQL[] = [sql`(case`];
+
+            for (const item of items) {
+              sqlChunks.push(
+                sql`when ${listProjects.projectId} = ${item.projectId} then ${item.sortOrder}`,
+              );
+            }
+
+            sqlChunks.push(sql`end)`);
+
+            const caseStatement = sql.join(sqlChunks, sql.raw(' '));
+
+            await tx
+              .update(listProjects)
+              .set({ sortOrder: caseStatement })
+              .where(
+                and(
+                  eq(listProjects.listId, listId),
+                  inArray(listProjects.projectId, projectIds),
+                ),
+              );
+          }
+
+          return { success: true };
+        });
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update list projects order',
         });
       }
     }),

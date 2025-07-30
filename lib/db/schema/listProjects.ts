@@ -2,6 +2,7 @@ import {
   bigint,
   bigserial,
   index,
+  integer,
   pgTable,
   timestamp,
   unique,
@@ -25,6 +26,7 @@ export const listProjects = pgTable(
     addedBy: uuid('added_by')
       .notNull()
       .references(() => profiles.userId),
+    sortOrder: integer('sort_order').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .defaultNow()
       .notNull(),
@@ -37,6 +39,10 @@ export const listProjects = pgTable(
     listProjectUnique: unique().on(table.listId, table.projectId),
     listIdIdx: index('list_projects_list_id_idx').on(table.listId),
     projectIdIdx: index('list_projects_project_id_idx').on(table.projectId),
+    listIdSortOrderIdx: index('list_projects_list_id_sort_order_idx').on(
+      table.listId,
+      table.sortOrder,
+    ),
   }),
 );
 
