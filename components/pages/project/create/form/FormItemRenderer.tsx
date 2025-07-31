@@ -672,24 +672,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       );
     }
 
-    // case 'fundingReceivedGrants': {
-    //   return (
-    //     <div>
-    //       <FundingReceivedGrantsTable
-    //         value={field.value}
-    //         onChange={field.onChange}
-    //         disabled={isDisabled}
-    //         error={error}
-    //         // React Hook Form integration
-    //         register={register}
-    //         touchedFields={touchedFields}
-    //         fieldName={field.name as 'funding_received_grants'}
-    //         errors={fieldState.error}
-    //       />
-    //     </div>
-    //   );
-    // }
-
     case 'roadmap':
       return (
         <div className="rounded-md border border-dashed border-gray-300 p-4 text-center text-gray-500">
