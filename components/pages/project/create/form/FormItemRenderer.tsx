@@ -1,4 +1,4 @@
-import { Avatar, Tooltip } from '@heroui/react';
+import { Avatar, cn, Tooltip } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
@@ -27,10 +27,11 @@ import {
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
-import FundingReceivedGrantsTable from './FundingReceivedGrantsTable';
+import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
+import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -579,18 +580,115 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'fundingReceivedGrants': {
+      const valueArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value
+          : [{ date: null, organization: '', amount: '', reference: '' }];
+
       return (
         <div>
-          <FundingReceivedGrantsTable
-            value={field.value}
-            onChange={field.onChange}
-            disabled={isDisabled}
-            error={error}
-          />
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex h-[40px] w-full items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex h-full w-[158px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Date
+                  </span>
+                  <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
+                </div>
+              </div>
+              <div className="flex h-full w-[301px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Organization/Program
+                  </span>
+                  <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
+                </div>
+              </div>
+              <div className="flex h-full w-[138px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="shrink-0 text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Amount (USD)
+                  </span>
+                  <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  'flex-1 flex h-full min-w-[143px] shrink-0 items-center  px-[10px] bg-[#F5F5F5]',
+                  valueArray.length > 1 ? 'border-r border-black/10' : '',
+                )}
+              >
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Reference
+                  </span>
+                  <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
+                </div>
+              </div>
+              {valueArray.length > 1 && (
+                <div className="flex h-full w-[60px] items-center justify-center">
+                  {/* Actions column header */}
+                </div>
+              )}
+            </div>
+            {valueArray.map((item: any, index: number) => {
+              return (
+                <FundingReceivedGrantsTableItem
+                  key={`${field.name}-${index}`}
+                  index={index}
+                  remove={() => {
+                    const newValue = valueArray.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newValue);
+                  }}
+                  itemKey={field.name as 'funding_received_grants'}
+                  canRemove={valueArray.length > 1}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  field.onChange([
+                    ...valueArray,
+                    { date: null, organization: '', amount: '', reference: '' },
+                  ]);
+                }}
+              >
+                <PlusIcon size={16} />
+                Add an Entity
+              </button>
+            </div>
+          </div>
           {errorMessageElement}
         </div>
       );
     }
+
+    // case 'fundingReceivedGrants': {
+    //   return (
+    //     <div>
+    //       <FundingReceivedGrantsTable
+    //         value={field.value}
+    //         onChange={field.onChange}
+    //         disabled={isDisabled}
+    //         error={error}
+    //         // React Hook Form integration
+    //         register={register}
+    //         touchedFields={touchedFields}
+    //         fieldName={field.name as 'funding_received_grants'}
+    //         errors={fieldState.error}
+    //       />
+    //     </div>
+    //   );
+    // }
 
     case 'roadmap':
       return (

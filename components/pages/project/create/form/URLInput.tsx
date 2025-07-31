@@ -73,8 +73,8 @@ const URLInput: React.FC<URLInputProps> = ({
     }
   };
 
-  const validationError = validateURL(value);
-  const displayError = error || validationError;
+  // const validationError = validateURL(value);
+  // const displayError = error || validationError;
 
   return (
     <div className="w-full">
@@ -85,18 +85,13 @@ const URLInput: React.FC<URLInputProps> = ({
         onBlur={handleBlur}
         disabled={disabled}
         placeholder={placeholder}
-        className={`h-[20px] w-full border-none bg-transparent text-[13px] font-[400] text-black placeholder:text-black/60 focus:outline-none ${
-          displayError ? 'text-red-500' : ''
-        } ${className}`}
+        className={`h-[20px] w-full border-none bg-transparent text-[13px] font-[400] text-black placeholder:text-black/60 focus:outline-none ${className}`}
         style={{
           boxShadow: 'none !important',
           outline: 'none !important',
           border: 'none !important',
         }}
       />
-      {displayError && (
-        <div className="mt-1 text-[13px] text-red-500">{displayError}</div>
-      )}
     </div>
   );
 };
