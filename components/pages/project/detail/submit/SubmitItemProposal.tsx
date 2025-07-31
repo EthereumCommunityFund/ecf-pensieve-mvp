@@ -86,10 +86,28 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   );
 
   const defaultFormValues = useMemo(() => {
-    const defaultValue =
-      itemConfig.formDisplayType === 'founderList'
-        ? [{ name: '', title: '', region: '' }]
-        : '';
+    let defaultValue: any = '';
+
+    if (itemConfig.formDisplayType === 'founderList') {
+      defaultValue = [
+        { name: '', title: '', region: '', _id: crypto.randomUUID() },
+      ];
+    } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
+      defaultValue = [
+        {
+          date: null,
+          organization: '',
+          amount: '',
+          reference: '',
+          _id: crypto.randomUUID(),
+        },
+      ];
+    } else if (itemConfig.formDisplayType === 'websites') {
+      defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
+    } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
+      defaultValue = [{ legalName: '', country: '', _id: crypto.randomUUID() }];
+    }
+
     return { [itemConfig.key]: defaultValue };
   }, [itemConfig.key, itemConfig.formDisplayType]);
 
@@ -329,21 +347,72 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       // Handle existing data
       let valueToSet = displayProposalDataOfKey?.input;
 
-      // For founderList type, ensure value is in array format
-      if (itemConfig.formDisplayType === 'founderList') {
+      // For array-based types, ensure value is in array format with _id
+      if (
+        itemConfig.formDisplayType === 'founderList' ||
+        itemConfig.formDisplayType === 'fundingReceivedGrants' ||
+        itemConfig.formDisplayType === 'websites' ||
+        itemConfig.formDisplayType === 'tablePhysicalEntity'
+      ) {
         if (typeof valueToSet === 'string') {
           try {
             // Try to parse JSON string
             valueToSet = JSON.parse(valueToSet);
           } catch (error) {
-            // If parsing fails, set to default value instead of empty array
-            valueToSet = [{ name: '', title: '', region: '' }];
+            // If parsing fails, set to default value
+            if (itemConfig.formDisplayType === 'founderList') {
+              valueToSet = [
+                { name: '', title: '', region: '', _id: crypto.randomUUID() },
+              ];
+            } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
+              valueToSet = [
+                {
+                  date: null,
+                  organization: '',
+                  amount: '',
+                  reference: '',
+                  _id: crypto.randomUUID(),
+                },
+              ];
+            } else if (itemConfig.formDisplayType === 'websites') {
+              valueToSet = [{ url: '', title: '', _id: crypto.randomUUID() }];
+            } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
+              valueToSet = [
+                { legalName: '', country: '', _id: crypto.randomUUID() },
+              ];
+            }
           }
         }
 
-        // Ensure array format, if not array or empty array, set default value
-        if (!Array.isArray(valueToSet) || valueToSet.length === 0) {
-          valueToSet = [{ name: '', title: '', region: '' }];
+        // Ensure array format with _id
+        if (Array.isArray(valueToSet)) {
+          valueToSet = valueToSet.map((item: any) => ({
+            ...item,
+            _id: item._id || crypto.randomUUID(),
+          }));
+        } else {
+          // Set default value if not array
+          if (itemConfig.formDisplayType === 'founderList') {
+            valueToSet = [
+              { name: '', title: '', region: '', _id: crypto.randomUUID() },
+            ];
+          } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
+            valueToSet = [
+              {
+                date: null,
+                organization: '',
+                amount: '',
+                reference: '',
+                _id: crypto.randomUUID(),
+              },
+            ];
+          } else if (itemConfig.formDisplayType === 'websites') {
+            valueToSet = [{ url: '', title: '', _id: crypto.randomUUID() }];
+          } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
+            valueToSet = [
+              { legalName: '', country: '', _id: crypto.randomUUID() },
+            ];
+          }
         }
       }
 
@@ -353,10 +422,30 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       });
       setReferences([]);
     } else {
-      const defaultValue =
-        itemConfig.formDisplayType === 'founderList'
-          ? [{ name: '', title: '', region: '' }]
-          : '';
+      let defaultValue: any = '';
+
+      if (itemConfig.formDisplayType === 'founderList') {
+        defaultValue = [
+          { name: '', title: '', region: '', _id: crypto.randomUUID() },
+        ];
+      } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
+        defaultValue = [
+          {
+            date: null,
+            organization: '',
+            amount: '',
+            reference: '',
+            _id: crypto.randomUUID(),
+          },
+        ];
+      } else if (itemConfig.formDisplayType === 'websites') {
+        defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
+      } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
+        defaultValue = [
+          { legalName: '', country: '', _id: crypto.randomUUID() },
+        ];
+      }
+
       resetRef.current({
         [itemConfig.key]: defaultValue,
       });

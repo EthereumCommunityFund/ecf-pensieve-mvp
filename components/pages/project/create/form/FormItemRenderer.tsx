@@ -680,7 +680,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   key={item._id}
                   index={index}
                   remove={() => {
-                    const newValue = valueArray.filter(
+                    const currentValue = getValues(itemConfig.key as any) || [];
+                    const newValue = currentValue.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newValue);

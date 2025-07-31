@@ -135,6 +135,7 @@ const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
 };
 
 const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
+  value,
   onChange,
   disabled = false,
   error,
@@ -213,10 +214,10 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
             <SearchIcon size={16} className="mr-2 text-black/60" />
             <span
               className={`flex-1 text-[13px] font-normal ${
-                projectName ? 'text-black' : 'text-black/60'
+                value ? 'text-black' : 'text-black/60'
               }`}
             >
-              {projectName || placeholder}
+              {value || placeholder}
             </span>
           </div>
         </div>
