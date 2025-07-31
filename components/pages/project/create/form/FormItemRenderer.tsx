@@ -60,7 +60,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     componentsProps = {},
   } = itemConfig;
 
-  const { register, formState, control } = useFormContext<IProjectFormData>();
+  const { register, formState, control, getValues, setValue } =
+    useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
@@ -288,8 +289,16 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               name: founder.name || '',
               title: founder.title || '',
               region: founder.region,
+              _id: founder._id || crypto.randomUUID(),
             }))
-          : [{ name: '', title: '', region: undefined }];
+          : [
+              {
+                name: '',
+                title: '',
+                region: undefined,
+                _id: crypto.randomUUID(),
+              },
+            ];
 
       return (
         <div>
@@ -369,10 +378,12 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <FounderFormItemTable
-                  key={index}
+                  key={founder._id}
                   index={index}
                   remove={() => {
-                    const newFounders = foundersArray.filter(
+                    const currentFounders =
+                      getValues(itemConfig.key as any) || [];
+                    const newFounders = currentFounders.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newFounders);
@@ -384,7 +395,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   canRemove={foundersArray.length > 1}
                   value={founder}
                   onChange={(updatedFounder) => {
-                    const newFounders = [...foundersArray];
+                    const currentFounders =
+                      getValues(itemConfig.key as any) || [];
+                    const newFounders = [...currentFounders];
                     newFounders[index] = updatedFounder;
                     field.onChange(newFounders);
                   }}
@@ -400,11 +413,16 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   e.stopPropagation();
 
                   // Add new item directly to existing array
+                  const currentFounders =
+                    getValues(itemConfig.key as any) || [];
                   const newFounders = [
-                    ...foundersArray,
+                    ...currentFounders,
                     { name: '', title: '', region: undefined },
                   ];
-                  field.onChange(newFounders);
+                  // Use setValue with shouldValidate: false to avoid triggering validation
+                  setValue(itemConfig.key as any, newFounders, {
+                    shouldValidate: false,
+                  });
                 }}
                 disabled={isDisabled}
                 style={{
@@ -426,10 +444,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'websites': {
+      // 确保每个 website 都有唯一的 _id
       const websitesArray =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ url: '', title: '' }];
+          ? field.value.map((item: any) => ({
+              ...item,
+              _id: item._id || crypto.randomUUID(),
+            }))
+          : [{ url: '', title: '', _id: crypto.randomUUID() }];
 
       return (
         <div>
@@ -456,10 +478,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <WebsiteFormItemTable
-                  key={`${field.name}-${index}`}
+                  key={website._id}
                   index={index}
                   remove={() => {
-                    const newWebsites = websitesArray.filter(
+                    const currentWebsites = getValues('websites') || [];
+                    const newWebsites = currentWebsites.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newWebsites);
@@ -482,11 +505,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   e.stopPropagation();
 
                   // Add new item directly to existing array
+                  // Get current form values to preserve any unsaved changes
+                  const currentWebsites = getValues('websites') || [];
                   const newWebsites = [
-                    ...websitesArray,
+                    ...currentWebsites,
                     { title: '', url: '' },
                   ];
-                  field.onChange(newWebsites);
+                  // Use setValue with shouldValidate: false to avoid triggering validation
+                  setValue('websites', newWebsites, { shouldValidate: false });
                 }}
                 disabled={isDisabled}
                 style={{
@@ -510,8 +536,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     case 'tablePhysicalEntity': {
       const physicalEntitiesArray =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ legalName: '', country: '' }];
+          ? field.value.map((item: any) => ({
+              ...item,
+              _id: item._id || crypto.randomUUID(),
+            }))
+          : [{ legalName: '', country: '', _id: crypto.randomUUID() }];
 
       return (
         <div>
@@ -538,10 +567,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <PhysicalEntityFormItemTable
-                  key={index}
+                  key={item._id}
                   index={index}
                   remove={() => {
-                    const newEntities = physicalEntitiesArray.filter(
+                    const currentEntities = getValues(field.name as any) || [];
+                    const newEntities = currentEntities.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newEntities);
@@ -562,10 +592,13 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  field.onChange([
-                    ...physicalEntitiesArray,
-                    { legalName: '', country: '' },
-                  ]);
+                  const currentEntities = getValues(field.name as any) || [];
+                  // Use setValue with shouldValidate: false to avoid triggering validation
+                  setValue(
+                    field.name as any,
+                    [...currentEntities, { legalName: '', country: '' }],
+                    { shouldValidate: false },
+                  );
                 }}
               >
                 <PlusIcon className="size-[16px]" />
