@@ -286,12 +286,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       // Ensure valid array data with at least one entry
       const foundersArray: IFounder[] =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value.map((founder: any) => ({
-              name: founder.name || '',
-              title: founder.title || '',
-              region: founder.region,
-              _id: founder._id || crypto.randomUUID(),
-            }))
+          ? field.value
           : [
               {
                 name: '',
@@ -418,7 +413,12 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                     getValues(itemConfig.key as any) || [];
                   const newFounders = [
                     ...currentFounders,
-                    { name: '', title: '', region: undefined },
+                    {
+                      name: '',
+                      title: '',
+                      region: undefined,
+                      _id: crypto.randomUUID(),
+                    },
                   ];
                   // Use setValue with shouldValidate: false to avoid triggering validation
                   setValue(itemConfig.key as any, newFounders, {
@@ -448,10 +448,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       // 确保每个 website 都有唯一的 _id
       const websitesArray =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value.map((item: any) => ({
-              ...item,
-              _id: item._id || crypto.randomUUID(),
-            }))
+          ? field.value
           : [{ url: '', title: '', _id: crypto.randomUUID() }];
 
       return (
@@ -510,7 +507,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   const currentWebsites = getValues('websites') || [];
                   const newWebsites = [
                     ...currentWebsites,
-                    { title: '', url: '' },
+                    { title: '', url: '', _id: crypto.randomUUID() },
                   ];
                   // Use setValue with shouldValidate: false to avoid triggering validation
                   setValue('websites', newWebsites, { shouldValidate: false });
@@ -537,10 +534,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     case 'tablePhysicalEntity': {
       const physicalEntitiesArray =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value.map((item: any) => ({
-              ...item,
-              _id: item._id || crypto.randomUUID(),
-            }))
+          ? field.value
           : [{ legalName: '', country: '', _id: crypto.randomUUID() }];
 
       return (
@@ -597,7 +591,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   // Use setValue with shouldValidate: false to avoid triggering validation
                   setValue(
                     field.name as any,
-                    [...currentEntities, { legalName: '', country: '' }],
+                    [
+                      ...currentEntities,
+                      { legalName: '', country: '', _id: crypto.randomUUID() },
+                    ],
                     { shouldValidate: false },
                   );
                 }}

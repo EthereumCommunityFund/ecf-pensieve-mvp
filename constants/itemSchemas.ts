@@ -50,6 +50,7 @@ const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
   region: yup.string().optional(),
+  _id: yup.string().optional(),
 });
 
 // Create a smart founder validation schema with strict validation on submission
@@ -57,6 +58,7 @@ const smartFounderSchema = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
   region: yup.string().optional(),
+  _id: yup.string().optional(),
 });
 
 const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
@@ -66,6 +68,7 @@ const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
     .url('Please enter a valid URL')
     .required('Project website is required'),
   title: yup.string().required('Project website title is required'),
+  _id: yup.string().optional(),
 });
 
 const physicalEntitySchema: yup.ObjectSchema<IPhysicalEntity> = yup
