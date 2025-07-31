@@ -96,7 +96,7 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
               setCustomChainName(e.target.value);
               setCustomChainError('');
             }}
-            disabled={disabled}
+            isDisabled={disabled}
             className="flex-1"
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
@@ -139,12 +139,15 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
           handleSelectChange(selectedKey);
         }
       }}
-      disabled={disabled}
+      isDisabled={disabled}
       placeholder="Select Chain"
       aria-label="Select blockchain"
       classNames={{
-        trigger: 'h-[40px]',
+        trigger:
+          'h-[40px] rounded-[8px] border-black/10 bg-black/[0.05] hover:border-black/40',
         value: 'text-black',
+        mainWrapper: 'data-[hover=true]:border-black/40',
+        listboxWrapper: 'bg-white',
       }}
     >
       <>
@@ -156,12 +159,7 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
               base: chain.isCustom ? 'text-gray-600' : '',
             }}
           >
-            <div className="flex items-center gap-2">
-              {chain.icon && !chain.isCustom && (
-                <img src={chain.icon} alt={chain.name} className="size-4" />
-              )}
-              <span>{chain.name}</span>
-            </div>
+            <span>{chain.name}</span>
           </SelectItem>
         ))}
         <SelectItem
@@ -171,7 +169,10 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
             base: 'border-t border-gray-200 mt-1 pt-2',
           }}
         >
-          <div className="text-primary flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            style={{ color: 'var(--primary)' }}
+          >
             <span>+ Add Custom Chain</span>
           </div>
         </SelectItem>

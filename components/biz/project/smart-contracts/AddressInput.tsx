@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import React, { useEffect, useId, useRef, useState } from 'react';
 
 import { Textarea } from '@/components/base/input';
@@ -103,23 +104,37 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 
   return (
     <div className="w-full">
-      <Textarea
-        value={inputValue}
-        onChange={handleInputChange}
-        placeholder={placeholder}
-        disabled={disabled || !chain}
-        minRows={2}
-        maxRows={4}
-        isInvalid={errors.length > 0}
-        aria-invalid={errors.length > 0}
-        aria-describedby={helperId}
-        classNames={{
-          input: 'font-mono text-sm',
-          inputWrapper: errors.length > 0 ? 'border-red-500' : '',
-        }}
-      />
-      <div id={helperId} className={`mt-1 text-xs ${getHelperColor()}`}>
-        {getHelperContent()}
+      <div className="relative">
+        <Textarea
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder={placeholder}
+          isDisabled={disabled || !chain}
+          minRows={3}
+          maxRows={6}
+          isInvalid={errors.length > 0}
+          aria-invalid={errors.length > 0}
+          aria-describedby={helperId}
+          classNames={{
+            base: 'w-full',
+            inputWrapper: cn(
+              'rounded-[8px] border-black/10 bg-black/[0.05] hover:border-black/40 p-[10px]',
+              errors.length > 0 && 'border-red-500',
+            ),
+            input: 'text-[14px] leading-[20px]',
+          }}
+        />
+        <div className="absolute bottom-[10px] right-[10px] flex flex-col items-center gap-[2px]">
+          <div className="h-[2px] w-[20px] bg-[#D9D9D9]" />
+          <div className="h-[2px] w-[12px] bg-[#D9D9D9]" />
+          <div className="h-[2px] w-[8px] bg-[#D9D9D9]" />
+        </div>
+      </div>
+      <div
+        id={helperId}
+        className={`mt-[5px] flex items-center gap-[8px] text-[14px] leading-[20px] ${getHelperColor()}`}
+      >
+        <span>{getHelperContent()}</span>
       </div>
     </div>
   );

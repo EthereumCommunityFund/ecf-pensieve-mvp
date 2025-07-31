@@ -332,7 +332,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     weight: ALL_POC_ITEM_MAP.dappSmartContracts.weight,
     formDisplayType: 'stringMultiple',
     placeholder: '0x...',
-    showReference: true,
+    showReference: false,
     showApplicable: true,
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],

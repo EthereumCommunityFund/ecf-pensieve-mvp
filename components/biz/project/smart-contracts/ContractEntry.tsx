@@ -2,9 +2,7 @@
 
 import React from 'react';
 
-import { Button } from '@/components/base/button';
-import { CloseIcon } from '@/components/icons';
-import { getChainDisplayInfo } from '@/constants/chains';
+import { RemoveChainIcon } from '@/components/icons';
 
 import { AddressInput } from './AddressInput';
 import { ChainSelector } from './ChainSelector';
@@ -22,6 +20,7 @@ export interface ContractEntryProps {
   existingChains: string[];
   disabled?: boolean;
   onCustomChainAdd?: (chainName: string) => void;
+  showRemove?: boolean;
 }
 
 export const ContractEntry: React.FC<ContractEntryProps> = ({
@@ -31,57 +30,41 @@ export const ContractEntry: React.FC<ContractEntryProps> = ({
   existingChains,
   disabled = false,
   onCustomChainAdd,
+  showRemove = true,
 }) => {
-  const chainInfo = getChainDisplayInfo(contract.chain);
-
   return (
-    <div className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <div className="flex-1 space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="w-48">
-            <ChainSelector
-              value={contract.chain}
-              onChange={(chain) => onChange({ chain })}
-              excludeChains={existingChains}
-              disabled={disabled}
-              onCustomChainAdd={onCustomChainAdd}
-            />
-          </div>
-          {contract.chain && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              {chainInfo.icon && (
-                <img
-                  src={chainInfo.icon}
-                  alt={chainInfo.name}
-                  className="size-4"
-                />
-              )}
-              <span>{chainInfo.name}</span>
-            </div>
-          )}
-        </div>
+    <div className="space-y-[10px]">
+      <ChainSelector
+        value={contract.chain}
+        onChange={(chain) => onChange({ chain })}
+        excludeChains={existingChains}
+        disabled={disabled}
+        onCustomChainAdd={onCustomChainAdd}
+      />
 
-        <AddressInput
-          value={contract.addresses}
-          onChange={(addresses) => onChange({ addresses })}
-          chain={contract.chain}
-          disabled={disabled}
-        />
-      </div>
+      <AddressInput
+        value={contract.addresses}
+        onChange={(addresses) => onChange({ addresses })}
+        chain={contract.chain}
+        disabled={disabled}
+      />
 
-      <div className="flex items-start">
-        <Button
-          isIconOnly
-          size="sm"
-          variant="light"
+      {showRemove && (
+        <button
+          type="button"
           onClick={onRemove}
           disabled={disabled}
-          className="text-red-500 hover:bg-red-50 hover:text-red-700"
-          aria-label="Remove chain"
+          className="inline-flex h-auto min-h-0 cursor-pointer items-center justify-center gap-[5px] rounded-[4px]  border-none px-[8px] py-[4px] text-[#D75454] opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+          style={{
+            fontFamily: 'Open Sans, sans-serif',
+          }}
         >
-          <CloseIcon width={16} height={16} />
-        </Button>
-      </div>
+          <RemoveChainIcon size={20} />
+          <span className="text-[14px] font-[600] leading-[19px]">
+            Remove Chain
+          </span>
+        </button>
+      )}
     </div>
   );
 };

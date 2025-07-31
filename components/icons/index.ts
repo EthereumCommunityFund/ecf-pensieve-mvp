@@ -41,6 +41,7 @@ export { default as PlusIcon } from './Plus';
 export { default as PushPinSimpleIcon } from './PushPinSimple';
 export { default as PushPinSimpleSlashIcon } from './PushPinSimpleSlash';
 export { default as QuestionIcon } from './Question';
+export { default as RemoveChainIcon } from './RemoveChainIcon';
 export { default as SablierIcon } from './Sablier';
 export { default as SealCheckIcon } from './SealCheck';
 export { default as SearchIcon } from './Search';

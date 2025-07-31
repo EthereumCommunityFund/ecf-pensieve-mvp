@@ -6,7 +6,6 @@ import {
   getAllChains,
   getChainById,
   getChainDisplayInfo,
-  getChainExplorerUrl,
   PREDEFINED_CHAINS,
   validateChainName,
 } from '@/constants/chains';
@@ -127,26 +126,6 @@ describe('Chain Constants', () => {
     });
   });
 
-  describe('getChainExplorerUrl', () => {
-    it('should return explorer URL for predefined chain', () => {
-      const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3';
-      const url = getChainExplorerUrl('ethereum', address);
-      expect(url).toBe(`https://etherscan.io/address/${address}`);
-    });
-
-    it('should return null for custom chain', () => {
-      const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3';
-      const url = getChainExplorerUrl('custom-solana', address);
-      expect(url).toBeNull();
-    });
-
-    it('should return null for unknown chain', () => {
-      const address = '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3';
-      const url = getChainExplorerUrl('unknown', address);
-      expect(url).toBeNull();
-    });
-  });
-
   describe('validateChainName', () => {
     it('should validate valid chain names', () => {
       expect(validateChainName('Solana')).toEqual({ valid: true });
@@ -205,19 +184,16 @@ describe('Chain Constants', () => {
     it('should return display info for predefined chain', () => {
       const info = getChainDisplayInfo('ethereum');
       expect(info.name).toBe('Ethereum');
-      expect(info.icon).toBe('/icons/chains/ethereum.svg');
     });
 
     it('should return display info for custom chain', () => {
       const info = getChainDisplayInfo('custom-solana');
       expect(info.name).toBe('solana');
-      expect(info.icon).toBeUndefined();
     });
 
     it('should return Unknown Chain for invalid ID', () => {
       const info = getChainDisplayInfo('invalid-id');
       expect(info.name).toBe('Unknown Chain');
-      expect(info.icon).toBeUndefined();
     });
   });
 

@@ -1,8 +1,6 @@
 export interface ChainConfig {
   id: string;
   name: string;
-  icon?: string;
-  explorerUrl?: string;
   addressPattern?: RegExp;
   isCustom?: boolean;
 }
@@ -11,71 +9,51 @@ export const PREDEFINED_CHAINS: ChainConfig[] = [
   {
     id: 'ethereum',
     name: 'Ethereum',
-    icon: '/icons/chains/ethereum.svg',
-    explorerUrl: 'https://etherscan.io/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'bsc',
     name: 'Binance Smart Chain',
-    icon: '/icons/chains/bsc.svg',
-    explorerUrl: 'https://bscscan.com/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'polygon',
     name: 'Polygon',
-    icon: '/icons/chains/polygon.svg',
-    explorerUrl: 'https://polygonscan.com/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'arbitrum',
     name: 'Arbitrum',
-    icon: '/icons/chains/arbitrum.svg',
-    explorerUrl: 'https://arbiscan.io/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'optimism',
     name: 'Optimism',
-    icon: '/icons/chains/optimism.svg',
-    explorerUrl: 'https://optimistic.etherscan.io/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'avalanche',
     name: 'Avalanche',
-    icon: '/icons/chains/avalanche.svg',
-    explorerUrl: 'https://snowtrace.io/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'fantom',
     name: 'Fantom',
-    icon: '/icons/chains/fantom.svg',
-    explorerUrl: 'https://ftmscan.com/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'gnosis',
     name: 'Gnosis Chain',
-    icon: '/icons/chains/gnosis.svg',
-    explorerUrl: 'https://gnosisscan.io/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'base',
     name: 'Base',
-    icon: '/icons/chains/base.svg',
-    explorerUrl: 'https://basescan.org/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
   {
     id: 'zksync',
     name: 'zkSync Era',
-    icon: '/icons/chains/zksync.svg',
-    explorerUrl: 'https://explorer.zksync.io/address/',
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   },
 ];
@@ -121,15 +99,6 @@ export const createCustomChain = (name: string): ChainConfig => {
     isCustom: true,
     addressPattern: /^0x[a-fA-F0-9]{40}$/,
   };
-};
-
-// Get chain explorer URL
-export const getChainExplorerUrl = (
-  chainId: string,
-  address: string,
-): string | null => {
-  const chain = getChainById(chainId);
-  return chain?.explorerUrl ? `${chain.explorerUrl}${address}` : null;
 };
 
 // Validate chain name
@@ -189,10 +158,8 @@ export const validateChainName = (
   return { valid: true };
 };
 
-// Get chain display info (name with icon if available)
-export const getChainDisplayInfo = (
-  chainId: string,
-): { name: string; icon?: string } => {
+// Get chain display info
+export const getChainDisplayInfo = (chainId: string): { name: string } => {
   const chain = getChainById(chainId);
 
   if (!chain) {
@@ -201,6 +168,5 @@ export const getChainDisplayInfo = (
 
   return {
     name: chain.name,
-    icon: chain.icon,
   };
 };

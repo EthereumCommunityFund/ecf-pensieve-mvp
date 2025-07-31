@@ -1,10 +1,11 @@
 'use client';
 
+import { cn } from '@heroui/react';
 import React, { useState } from 'react';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
-import { CloseIcon, LinkIcon, PlusIcon } from '@/components/icons';
+import { CloseIcon, LinkIcon } from '@/components/icons';
 
 export interface ReferencesProps {
   value: string[];
@@ -67,8 +68,6 @@ export const References: React.FC<ReferencesProps> = ({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium text-gray-700">References</h4>
-
       {value.length > 0 && (
         <div className="space-y-2">
           {value.map((ref, index) => (
@@ -142,17 +141,38 @@ export const References: React.FC<ReferencesProps> = ({
           </div>
         </div>
       ) : (
-        <Button
-          type="button"
-          variant="light"
-          size="sm"
-          onClick={() => setShowInput(true)}
-          disabled={disabled}
-          startContent={<PlusIcon size={16} />}
-          className="text-gray-600 hover:text-gray-800"
-        >
-          Add Reference
-        </Button>
+        <div className="flex h-[28px] items-center justify-start opacity-60">
+          <button
+            type="button"
+            onClick={() => setShowInput(true)}
+            disabled={disabled}
+            className={cn(
+              'flex h-[28px] items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black',
+              disabled
+                ? 'cursor-not-allowed opacity-40 hover:opacity-40'
+                : 'opacity-60 hover:bg-black/10 hover:opacity-100',
+            )}
+            style={{
+              outline: 'none',
+              boxShadow: 'none',
+              fontFamily: 'Open Sans, sans-serif',
+            }}
+          >
+            <div className="flex size-[16px] items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 3v10M3 8h10"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <span className="text-[14px] font-[400] leading-[19px]">
+              Add Reference
+            </span>
+          </button>
+        </div>
       )}
     </div>
   );

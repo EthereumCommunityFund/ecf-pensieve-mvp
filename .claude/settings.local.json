@@ -36,7 +36,8 @@
       "Bash(true)",
       "Bash(node:*)",
       "mcp__browser__getConsoleLogs",
-      "mcp__browser__getConsoleErrors"
+      "mcp__browser__getConsoleErrors",
+      "mcp__figma-context__get_figma_data"
     ],
     "deny": []
   }

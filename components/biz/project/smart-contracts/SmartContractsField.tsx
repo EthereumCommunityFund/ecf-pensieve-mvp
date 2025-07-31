@@ -2,11 +2,8 @@
 
 import React from 'react';
 
-import { Button } from '@/components/base/button';
-import { PlusIcon } from '@/components/icons';
 import { generateUUID } from '@/lib/utils/uuid';
 
-import { ApplicableToggle } from './ApplicableToggle';
 import { ContractEntry, type SmartContract } from './ContractEntry';
 import { References } from './References';
 
@@ -74,26 +71,12 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
   };
 
   return (
-    <div className="space-y-4" data-testid="smart-contracts-field">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-medium text-gray-900">
-            Dapp Smart Contracts
-          </h3>
-          <span className="text-sm text-gray-500">Weight: {weight ?? 0}</span>
-        </div>
-        <ApplicableToggle
-          value={applicable}
-          onChange={onApplicableChange}
-          disabled={disabled}
-        />
-      </div>
-
-      {applicable && (
-        <>
-          {value.length > 0 && (
-            <div className="space-y-3">
-              {value.map((contract) => (
+    <div className="space-y-[10px]" data-testid="smart-contracts-field">
+      {/* Always show contract entries but disabled when not applicable */}
+      {(value.length > 0 || !applicable) && (
+        <div className="space-y-3">
+          {value.length > 0
+            ? value.map((contract) => (
                 <ContractEntry
                   key={contract.id}
                   contract={contract}
@@ -102,38 +85,57 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
                   }
                   onRemove={() => handleRemoveChain(contract.id)}
                   existingChains={getExistingChains(contract.id)}
-                  disabled={disabled}
+                  disabled={disabled || !applicable}
                   onCustomChainAdd={handleCustomChainAdd}
+                  showRemove={value.length > 1 && applicable}
                 />
-              ))}
-            </div>
-          )}
-
-          <Button
-            type="button"
-            variant="bordered"
-            onClick={handleAddChain}
-            disabled={disabled}
-            className="w-full border-2 border-dashed border-gray-300 hover:border-gray-400"
-            startContent={<PlusIcon size={16} />}
-          >
-            Add a new chain
-          </Button>
-
-          {onReferencesChange && (
-            <References
-              value={references || []}
-              onChange={onReferencesChange}
-              disabled={disabled}
-            />
-          )}
-        </>
+              ))
+            : // Show one disabled entry when N/A is selected
+              !applicable && (
+                <ContractEntry
+                  contract={{ id: 'placeholder', chain: '', addresses: [] }}
+                  onChange={() => {}}
+                  onRemove={() => {}}
+                  existingChains={[]}
+                  disabled={true}
+                  showRemove={false}
+                />
+              )}
+        </div>
       )}
 
-      {!applicable && (
-        <div className="rounded-lg bg-gray-50 p-4 text-center text-gray-500">
-          Smart contracts are marked as not applicable for this project
+      <button
+        type="button"
+        onClick={handleAddChain}
+        disabled={disabled || !applicable}
+        className="flex h-auto w-full cursor-pointer items-center justify-center gap-[5px] rounded-[4px] border-none bg-black/[0.05] p-[10px] px-[8px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+        style={{
+          outline: 'none',
+          boxShadow: 'none',
+          fontFamily: 'Open Sans, sans-serif',
+        }}
+      >
+        <div className="flex size-[16px] items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 2.5v11M2.5 8h11"
+              stroke="black"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
+        <span className="text-[14px] font-[400] leading-[19px]">
+          Add a new chain
+        </span>
+      </button>
+
+      {onReferencesChange && (
+        <References
+          value={references || []}
+          onChange={onReferencesChange}
+          disabled={disabled || !applicable}
+        />
       )}
     </div>
   );

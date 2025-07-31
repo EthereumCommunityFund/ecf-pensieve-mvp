@@ -7,9 +7,6 @@ export type { ChainSelectorProps } from './ChainSelector';
 export { AddressInput } from './AddressInput';
 export type { AddressInputProps } from './AddressInput';
 
-export { ApplicableToggle } from './ApplicableToggle';
-export type { ApplicableToggleProps } from './ApplicableToggle';
-
 export { ContractEntry } from './ContractEntry';
 export type { ContractEntryProps, SmartContract } from './ContractEntry';
 
