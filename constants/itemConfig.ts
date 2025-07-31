@@ -991,4 +991,23 @@ This helps us understand how decisions are made and who gets to participate.`,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
     legitimacy: [],
   },
+  funding_received_grants: {
+    key: 'funding_received_grants',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.funding_received_grants.isEssential,
+    label: 'Funding Received (Grants)',
+    description:
+      'Provide the date, organization and amount this project has received',
+    shortDescription:
+      'Grant-based funding received from Web3 organizations, foundations, or grant programs.',
+    longDescription: `This item tracks non-equity funding received by the project through Web3-focused grants, such as those distributed by DAOs, ecosystems, or public goods programs. These grants are typically awarded to support development, research, or ecosystem growth, and do not require repayment or token exchange. Examples include Gitcoin rounds, Octant, ecosystem foundation grants (e.g. Ethereum, Optimism), or funding from decentralized grant platforms and community treasury allocations`,
+    weight: ALL_POC_ITEM_MAP.funding_received_grants.weight,
+    formDisplayType: 'fundingReceivedGrants',
+    placeholder: '',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+  },
 };

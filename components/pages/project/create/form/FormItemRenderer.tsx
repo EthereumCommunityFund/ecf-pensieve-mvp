@@ -27,6 +27,7 @@ import {
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
+import FundingReceivedGrantsTable from './FundingReceivedGrantsTable';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
@@ -572,6 +573,20 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               </button>
             </div>
           </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'fundingReceivedGrants': {
+      return (
+        <div>
+          <FundingReceivedGrantsTable
+            value={field.value}
+            onChange={field.onChange}
+            disabled={isDisabled}
+            error={error}
+          />
           {errorMessageElement}
         </div>
       );

@@ -65,7 +65,7 @@ export default function ProjectSortMobile() {
       >
         <div className="flex items-center gap-[5px]">
           <SortDescendingIcon width={20} height={20} className="text-black" />
-          <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+          <span className="text-[14px] font-semibold text-black">
             {getButtonLabel()}
           </span>
         </div>
@@ -141,7 +141,7 @@ export default function ProjectSortMobile() {
                   </clipPath>
                 </defs>
               </svg>
-              <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+              <span className="text-[14px] font-semibold text-black">
                 Sort List
               </span>
             </div>
@@ -158,7 +158,7 @@ export default function ProjectSortMobile() {
             <div className="flex flex-col gap-[20px] py-[14px]">
               {Object.entries(groupedOptions).map(([category, options]) => (
                 <div key={category} className="flex flex-col gap-[8px]">
-                  <p className="font-['Open_Sans'] text-[13px] font-semibold text-black/30">
+                  <p className="text-[13px] font-semibold text-black/30">
                     {CATEGORY_MAP[category] || category}
                   </p>
                   <div className="flex flex-col gap-[5px]">
@@ -168,7 +168,7 @@ export default function ProjectSortMobile() {
                         <button
                           key={option.value}
                           onClick={() => handleSortSelect(option.value)}
-                          className={`flex h-[34px] items-center justify-between rounded-[4px] px-[8px] py-[4px] font-['Open_Sans'] text-[14px] font-normal ${
+                          className={`flex h-[34px] items-center justify-between rounded-[4px] px-[8px] py-[4px] text-[14px] font-normal ${
                             isSelected
                               ? 'bg-[#EBEBEB] text-black'
                               : 'bg-white text-black/80'

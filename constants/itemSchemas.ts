@@ -1,7 +1,11 @@
 import * as yup from 'yup';
 
 import { IFounder, IWebsite } from '@/components/pages/project/create/types';
-import { IDateConstraints, IPhysicalEntity } from '@/types/item';
+import {
+  IDateConstraints,
+  IFundingReceivedGrants,
+  IPhysicalEntity,
+} from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
 
 // TypeScript declaration merging for custom Yup methods
@@ -123,6 +127,25 @@ const createDateConstraintValidator = (constraints?: IDateConstraints) => {
     return true;
   };
 };
+
+const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
+  yup.object().shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .required('Foundation date is required'),
+    organization: yup.string().required('organization is required'),
+    amount: yup.string().required('amount is required'),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+  });
 
 export const itemValidationSchemas = {
   // Basics
@@ -359,6 +382,12 @@ export const itemValidationSchemas = {
     .of(physicalEntitySchema)
     .min(1, 'At least one physical entity is required')
     .required('Physical entity information is required'),
+
+  funding_received_grants: yup
+    .array()
+    .of(fundingReceivedGrantsSchema)
+    .min(1, 'At least one funding received(grants) is required')
+    .required('Funding received(grants) information is required'),
 
   // Financial
   fundingStatus: yup

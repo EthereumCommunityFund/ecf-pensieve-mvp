@@ -92,9 +92,7 @@ export default function ProjectFilterMobile() {
         className="relative flex h-10 items-center gap-[5px] rounded-[5px] border border-none border-black/10 px-[14px] py-[5px]"
       >
         <FunnelSimpleIcon width={20} height={20} className="text-black" />
-        <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
-          Filter
-        </span>
+        <span className="text-[14px] font-semibold text-black">Filter</span>
         {hasActiveFilters && (
           <div className="size-2 rounded-full bg-[#68C6AC]" />
         )}
@@ -125,7 +123,7 @@ export default function ProjectFilterMobile() {
                   height={20}
                   className="text-black"
                 />
-                <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+                <span className="text-[14px] font-semibold text-black">
                   Filter
                 </span>
                 {hasActiveFilters && (
@@ -142,7 +140,7 @@ export default function ProjectFilterMobile() {
                   height={20}
                   className="rotate-90 text-black"
                 />
-                <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+                <span className="text-[14px] font-semibold text-black">
                   Back
                 </span>
               </button>
@@ -167,7 +165,7 @@ export default function ProjectFilterMobile() {
                 >
                   <div className="flex w-full flex-1 flex-col items-start">
                     <div className="flex items-center gap-[5px]">
-                      <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+                      <span className="text-[14px] font-semibold text-black">
                         Category
                       </span>
                       {currentFilters.categories.length > 0 && (
@@ -176,7 +174,7 @@ export default function ProjectFilterMobile() {
                     </div>
                     {currentFilters.categories.length > 0 && (
                       <div className="flex flex-wrap gap-[5px]">
-                        <span className="text-left font-['Open_Sans'] text-[10px] font-normal text-black/50">
+                        <span className="text-left text-[10px] font-normal text-black/50">
                           {currentFilters.categories
                             .map(
                               (cat) =>
@@ -202,7 +200,7 @@ export default function ProjectFilterMobile() {
                 >
                   <div className="flex w-full flex-1 flex-col items-start">
                     <div className="flex items-center gap-[5px]">
-                      <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+                      <span className="text-[14px] font-semibold text-black">
                         Location
                       </span>
                       {currentFilters.locations.length > 0 && (
@@ -211,7 +209,7 @@ export default function ProjectFilterMobile() {
                     </div>
                     {currentFilters.locations.length > 0 && (
                       <div className="flex flex-wrap gap-[5px]">
-                        <span className="font-['Open_Sans'] text-[10px] font-normal text-black/50">
+                        <span className="text-[10px] font-normal text-black/50">
                           {currentFilters.locations.join(', ')}
                         </span>
                       </div>
@@ -230,7 +228,7 @@ export default function ProjectFilterMobile() {
                     onClick={clearAllFilters}
                     className="mt-[10px] flex h-[28px] items-center justify-center gap-[5px] py-[4px]"
                   >
-                    <span className="font-['Open_Sans'] text-[13px] font-semibold text-black/50">
+                    <span className="text-[13px] font-semibold text-black/50">
                       Clear All Filters
                     </span>
                     <CircleXIcon
@@ -250,7 +248,7 @@ export default function ProjectFilterMobile() {
                     onClick={() => setActiveSection(null)}
                     className="flex items-center gap-[5px]"
                   >
-                    <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+                    <span className="text-[14px] font-semibold text-black">
                       {getSectionLabel(activeSection)}
                     </span>
                   </button>
@@ -281,7 +279,7 @@ export default function ProjectFilterMobile() {
 
                 {/* Section Info */}
                 {activeSection === 'categories' && (
-                  <p className="mb-[14px] font-['Open_Sans'] text-[12px] font-normal text-black/50">
+                  <p className="mb-[14px] text-[12px] font-normal text-black/50">
                     There are {AllCategories.length} sub-categories
                   </p>
                 )}
@@ -309,7 +307,7 @@ export default function ProjectFilterMobile() {
                         }`}
                       >
                         <span
-                          className={`font-['Open_Sans'] text-[14px] ${
+                          className={`text-[14px] ${
                             isSelected
                               ? 'font-semibold text-black'
                               : 'font-normal text-black/80'
