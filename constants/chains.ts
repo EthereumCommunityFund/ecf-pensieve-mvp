@@ -5,6 +5,15 @@ export interface ChainConfig {
   isCustom?: boolean;
 }
 
+export interface ChainValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+export interface ChainDisplayInfo {
+  name: string;
+}
+
 export const PREDEFINED_CHAINS: ChainConfig[] = [
   {
     id: 'ethereum',
@@ -105,7 +114,7 @@ export const createCustomChain = (name: string): ChainConfig => {
 export const validateChainName = (
   name: string,
   excludeIds?: string[],
-): { valid: boolean; error?: string } => {
+): ChainValidationResult => {
   const trimmedName = name.trim();
 
   if (!trimmedName) {
@@ -159,7 +168,7 @@ export const validateChainName = (
 };
 
 // Get chain display info
-export const getChainDisplayInfo = (chainId: string): { name: string } => {
+export const getChainDisplayInfo = (chainId: string): ChainDisplayInfo => {
   const chain = getChainById(chainId);
 
   if (!chain) {

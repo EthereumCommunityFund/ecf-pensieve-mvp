@@ -108,7 +108,7 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
         type="button"
         onClick={handleAddChain}
         disabled={disabled || !applicable}
-        className="flex h-auto w-full cursor-pointer items-center justify-center gap-[5px] rounded-[4px] border-none bg-black/[0.05] p-[10px] px-[8px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex h-auto w-full cursor-pointer items-center justify-center gap-[5px] rounded-[4px] border border-black/10 bg-black/[0.05] p-[10px] px-[8px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
         style={{
           outline: 'none',
           boxShadow: 'none',
