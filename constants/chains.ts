@@ -135,6 +135,7 @@ export const getChainExplorerUrl = (
 // Validate chain name
 export const validateChainName = (
   name: string,
+  excludeIds?: string[],
 ): { valid: boolean; error?: string } => {
   const trimmedName = name.trim();
 
@@ -153,7 +154,7 @@ export const validateChainName = (
     };
   }
 
-  // Check if name already exists in predefined chains
+  // Check if name already exists in predefined chains (case-insensitive)
   const existingChain = PREDEFINED_CHAINS.find(
     (chain) => chain.name.toLowerCase() === trimmedName.toLowerCase(),
   );
@@ -163,6 +164,26 @@ export const validateChainName = (
       valid: false,
       error: 'This chain name already exists in the predefined list',
     };
+  }
+
+  // Also check the generated ID doesn't conflict with existing chains
+  const generatedId = `custom-${trimmedName.toLowerCase().replace(/\s+/g, '-')}`;
+  if (PREDEFINED_CHAINS.some((chain) => chain.id === generatedId)) {
+    return {
+      valid: false,
+      error: 'This chain name generates a conflicting ID',
+    };
+  }
+
+  // Check against excluded IDs if provided
+  if (excludeIds) {
+    const normalizedExcludeIds = excludeIds.map((id) => id.toLowerCase());
+    if (normalizedExcludeIds.includes(generatedId.toLowerCase())) {
+      return {
+        valid: false,
+        error: 'This chain name is already in use',
+      };
+    }
   }
 
   return { valid: true };

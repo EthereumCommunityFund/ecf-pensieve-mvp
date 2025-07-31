@@ -83,12 +83,19 @@ export class AddressValidator {
 
   /**
    * Parse comma-separated address string
+   * Also supports newline and space-separated addresses
    */
   static parseAddressString(input: string): string[] {
+    // Support multiple separators: comma, newline, and multiple spaces
     return input
-      .split(',')
+      .split(/[,\n]+/)
       .map((addr) => addr.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .reduce((acc: string[], curr) => {
+        // Further split by spaces if multiple addresses on same line
+        const spaceSplit = curr.split(/\s+/).filter(Boolean);
+        return acc.concat(spaceSplit);
+      }, []);
   }
 
   /**
@@ -99,23 +106,38 @@ export class AddressValidator {
     const validAddresses: string[] = [];
     const uniqueAddresses = new Set<string>();
 
-    addresses.forEach((address) => {
+    addresses.forEach((address, index) => {
       const trimmed = address.trim();
       if (!trimmed) return;
 
       if (!this.isValidFormat(trimmed)) {
-        errors.push(`Invalid address format: ${trimmed}`);
+        errors.push(`Line ${index + 1}: Invalid address format: ${trimmed}`);
         return;
       }
 
-      const normalized = trimmed.toLowerCase();
+      // Normalize to checksum format
+      let checksumAddress: string;
+      try {
+        checksumAddress = ethers.getAddress(trimmed);
+      } catch {
+        errors.push(
+          `Line ${index + 1}: Failed to normalize address: ${trimmed}`,
+        );
+        return;
+      }
+
+      // Check for duplicates using lowercase comparison
+      const normalized = checksumAddress.toLowerCase();
       if (uniqueAddresses.has(normalized)) {
-        errors.push(`Duplicate address detected: ${trimmed}`);
+        errors.push(
+          `Line ${index + 1}: Duplicate address detected: ${trimmed}`,
+        );
         return;
       }
 
       uniqueAddresses.add(normalized);
-      validAddresses.push(trimmed);
+      // Store with proper checksum format
+      validAddresses.push(checksumAddress);
     });
 
     return {

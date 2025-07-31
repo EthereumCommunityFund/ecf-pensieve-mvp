@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 
 import { Textarea } from '@/components/base/input';
 import useDebounce from '@/hooks/useDebounce';
@@ -25,7 +25,14 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   placeholder = 'Enter addresses separated by commas',
 }) => {
   const [inputValue, setInputValue] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
+  const helperId = useId();
+
+  // Use ref to store the latest onChange callback
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   // Initialize input value from prop value
   useEffect(() => {
@@ -42,8 +49,8 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   // Validate addresses when debounced value changes
   useEffect(() => {
     if (!debouncedInputValue.trim()) {
-      setError('');
-      onChange([]);
+      setErrors([]);
+      onChangeRef.current([]);
       return;
     }
 
@@ -51,31 +58,46 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     const validation = validateAndNormalizeAddresses(addresses);
 
     if (!validation.valid && validation.errors.length > 0) {
-      setError(validation.errors[0]); // Show first error
+      setErrors(validation.errors);
     } else {
-      setError('');
-      onChange(validation.addresses);
+      setErrors([]);
+      onChangeRef.current(validation.addresses);
     }
-  }, [debouncedInputValue]); // Removed onChange from dependencies to prevent infinite loops
+  }, [debouncedInputValue]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
   };
 
-  const getHelperText = () => {
-    if (error) return error;
-    if (inputValue && !error && debouncedInputValue === inputValue) {
+  const getHelperContent = () => {
+    if (errors.length > 0) {
+      return (
+        <ul className="list-inside list-disc space-y-1">
+          {errors.map((err, idx) => (
+            <li key={idx}>{err}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    if (
+      inputValue &&
+      errors.length === 0 &&
+      debouncedInputValue === inputValue
+    ) {
       const addressCount = parseAddressInput(inputValue).filter(Boolean).length;
       if (addressCount > 0) {
         return `${addressCount} valid address${addressCount > 1 ? 'es' : ''}`;
+      } else {
+        return 'No valid address found';
       }
     }
     return "Use comma ',' to separate multiple addresses";
   };
 
   const getHelperColor = () => {
-    if (error) return 'text-red-600';
+    if (errors.length > 0) return 'text-red-600';
     return 'text-gray-600';
   };
 
@@ -88,13 +110,17 @@ export const AddressInput: React.FC<AddressInputProps> = ({
         disabled={disabled || !chain}
         minRows={2}
         maxRows={4}
-        isInvalid={!!error}
+        isInvalid={errors.length > 0}
+        aria-invalid={errors.length > 0}
+        aria-describedby={helperId}
         classNames={{
           input: 'font-mono text-sm',
-          inputWrapper: error ? 'border-red-500' : '',
+          inputWrapper: errors.length > 0 ? 'border-red-500' : '',
         }}
       />
-      <p className={`mt-1 text-xs ${getHelperColor()}`}>{getHelperText()}</p>
+      <div id={helperId} className={`mt-1 text-xs ${getHelperColor()}`}>
+        {getHelperContent()}
+      </div>
     </div>
   );
 };

@@ -18,6 +18,7 @@ import {
 } from '@/components/base';
 import { SmartContractsField } from '@/components/biz/project/smart-contracts';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
+import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
   buildDatePickerProps,
@@ -103,7 +104,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         if (addresses.length > 0) {
           return [
             {
-              id: crypto.randomUUID(),
+              id: generateUUID(),
               chain: 'ethereum',
               addresses,
             },
@@ -139,8 +140,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       setValue('dappSmartContractsApplicable', applicable);
       field.onChange({
         applicable,
-        contracts: smartContractsValue,
-        references: smartContractsReferences,
+        contracts: applicable ? smartContractsValue : [],
+        references: applicable ? smartContractsReferences : [],
       });
     },
     [field, setValue, smartContractsValue, smartContractsReferences],

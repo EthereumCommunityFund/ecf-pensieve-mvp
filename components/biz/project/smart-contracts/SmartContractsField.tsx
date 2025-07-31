@@ -4,6 +4,7 @@ import React from 'react';
 
 import { Button } from '@/components/base/button';
 import { PlusIcon } from '@/components/icons';
+import { generateUUID } from '@/lib/utils/uuid';
 
 import { ApplicableToggle } from './ApplicableToggle';
 import { ContractEntry, type SmartContract } from './ContractEntry';
@@ -32,7 +33,7 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
 }) => {
   const handleAddChain = () => {
     const newContract: SmartContract = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       chain: '',
       addresses: [],
     };
@@ -63,7 +64,12 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
   // Get list of already selected chains (excluding the current one being edited)
   const getExistingChains = (currentId: string) => {
     return value
-      .filter((contract) => contract.id !== currentId && contract.chain)
+      .filter(
+        (contract) =>
+          contract.id !== currentId &&
+          contract.chain &&
+          contract.chain.trim() !== '',
+      )
       .map((contract) => contract.chain);
   };
 
@@ -74,7 +80,7 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
           <h3 className="text-lg font-medium text-gray-900">
             Dapp Smart Contracts
           </h3>
-          <span className="text-sm text-gray-500">Weight: {weight}</span>
+          <span className="text-sm text-gray-500">Weight: {weight ?? 0}</span>
         </div>
         <ApplicableToggle
           value={applicable}

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import type { ISmartContract } from '@/components/pages/project/create/types';
 import type { DappSmartContractsData } from '@/lib/db/schema/projects';
+import { generateUUID } from '@/lib/utils/uuid';
 
 /**
  * Hook to transform smart contracts data between different formats
@@ -34,7 +35,7 @@ export const useSmartContractsData = (
           addresses.length > 0
             ? ([
                 {
-                  id: crypto.randomUUID(),
+                  id: generateUUID(),
                   chain: 'ethereum',
                   addresses,
                 },

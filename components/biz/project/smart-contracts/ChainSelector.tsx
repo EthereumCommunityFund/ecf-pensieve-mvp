@@ -8,6 +8,7 @@ import { Select, SelectItem } from '@/components/base/select';
 import {
   createCustomChain,
   getAllChains,
+  getChainById,
   validateChainName,
 } from '@/constants/chains';
 
@@ -30,9 +31,21 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
   const [customChainName, setCustomChainName] = useState('');
   const [customChainError, setCustomChainError] = useState('');
 
-  const availableChains = getAllChains().filter(
-    (chain) => !excludeChains.includes(chain.id),
+  // Normalize excludeChains to lowercase for consistent comparison
+  const normalizedExcludeChains = excludeChains.map((id) => id.toLowerCase());
+
+  // Get predefined chains
+  const predefinedChains = getAllChains().filter(
+    (chain) => !normalizedExcludeChains.includes(chain.id.toLowerCase()),
   );
+
+  // If current value is a custom chain, ensure it's included in the list
+  const customChainFromValue =
+    value && value.startsWith('custom-') ? getChainById(value) : null;
+
+  const availableChains = customChainFromValue
+    ? [...predefinedChains, customChainFromValue]
+    : predefinedChains;
 
   const handleSelectChange = (selectedValue: string) => {
     if (selectedValue === 'custom') {
@@ -46,21 +59,15 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
   };
 
   const handleCustomChainSubmit = () => {
-    const validation = validateChainName(customChainName);
+    const validation = validateChainName(customChainName, excludeChains);
 
     if (!validation.valid) {
       setCustomChainError(validation.error || 'Invalid chain name');
       return;
     }
 
-    // Check if this custom name conflicts with excluded chains
+    // Create the custom chain and set the value
     const customChain = createCustomChain(customChainName);
-    if (excludeChains.includes(customChain.id)) {
-      setCustomChainError('This chain name is already in use');
-      return;
-    }
-
-    // Set the value and notify parent
     onChange(customChain.id);
     onCustomChainAdd?.(customChainName);
 
@@ -74,7 +81,8 @@ export const ChainSelector: React.FC<ChainSelectorProps> = ({
     setShowCustomInput(false);
     setCustomChainName('');
     setCustomChainError('');
-    onChange(''); // Reset selection
+    // Don't change the current value when canceling
+    // This preserves any previously selected value
   };
 
   if (showCustomInput) {

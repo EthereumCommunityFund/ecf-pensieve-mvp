@@ -7,6 +7,7 @@ import {
 } from '@/components/pages/project/create/types';
 import { isAutoFillForm, isDev } from '@/constants/env';
 import dayjs from '@/lib/dayjs';
+import { generateUUID } from '@/lib/utils/uuid';
 import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { transformFormValue } from '@/utils/item';
@@ -153,25 +154,34 @@ export const transformProjectData = (
         typeof formData.dappSmartContracts === 'object' &&
         formData.dappSmartContracts
       ) {
-        const { applicable, contracts } = formData.dappSmartContracts;
-        if (!applicable || !contracts || contracts.length === 0) {
-          return null;
-        }
-        // For now, convert back to comma-separated string for backward compatibility
-        // This should be updated once the backend is ready to accept JSONB
-        const allAddresses = contracts.flatMap(
-          (contract) => contract.addresses,
-        );
-        return allAddresses.length > 0 ? allAddresses.join(', ') : null;
+        const { applicable, contracts, references } =
+          formData.dappSmartContracts;
+        // Return the full object structure that backend expects
+        return {
+          applicable,
+          contracts: applicable ? contracts : [],
+          references: applicable ? references || [] : [],
+        };
       }
-      // Handle legacy string format
-      return emptyToNull(
-        transformFormValue(
-          'dappSmartContracts',
-          formData.dappSmartContracts || '',
-          fieldApplicability,
-        ),
+      // Handle legacy string format - convert to new format
+      const legacyValue = transformFormValue(
+        'dappSmartContracts',
+        formData.dappSmartContracts || '',
+        fieldApplicability,
       );
+      if (typeof legacyValue === 'string' && legacyValue) {
+        const addresses = legacyValue
+          .split(',')
+          .map((addr) => addr.trim())
+          .filter(Boolean);
+        return {
+          applicable: true,
+          contracts:
+            addresses.length > 0 ? [{ chain: 'ethereum', addresses }] : [],
+          references: [],
+        };
+      }
+      return null;
     })(),
 
     orgStructure: transformFormValue(
@@ -417,7 +427,7 @@ export const convertProjectToFormData = (
           applicable: true,
           contracts: [
             {
-              id: crypto.randomUUID(),
+              id: generateUUID(),
               chain: 'ethereum',
               addresses,
             },

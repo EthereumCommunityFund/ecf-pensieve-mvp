@@ -100,7 +100,17 @@ export interface ICreateProjectPayload {
   openSource: boolean;
   codeRepo: string | null;
   tokenContract: string | null;
-  dappSmartContracts: string | null;
+  dappSmartContracts:
+    | string
+    | null
+    | {
+        applicable: boolean;
+        contracts: {
+          chain: string;
+          addresses: string[];
+        }[];
+        references: string[];
+      };
   orgStructure: string;
   publicGoods: boolean;
   founders: IFounder[];

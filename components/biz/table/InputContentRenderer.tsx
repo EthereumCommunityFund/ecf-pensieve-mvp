@@ -4,7 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { memo, useCallback } from 'react';
 
+import { AddressListDisplay } from '@/components/base/AddressDisplay';
 import { TableIcon } from '@/components/icons';
+import { getChainDisplayInfo } from '@/constants/chains';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -77,8 +79,9 @@ const InputContentRenderer: React.FC<IProps> = ({
           // Render contracts by chain
           const contractsByChain = contracts
             .map((contract: any) => {
+              const chainInfo = getChainDisplayInfo(contract.chain);
               const addressCount = contract.addresses?.length || 0;
-              return `${contract.chain}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
+              return `${chainInfo.name}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
             })
             .join(', ');
 
@@ -88,29 +91,49 @@ const InputContentRenderer: React.FC<IProps> = ({
 
           // In expanded view, show full details
           return (
-            <div className="space-y-2">
-              {contracts.map((contract: any, index: number) => (
-                <div key={index} className="space-y-1">
-                  <div className="text-sm font-medium">{contract.chain}:</div>
-                  <div className="pl-4 text-sm">
-                    {contract.addresses?.join(', ') || 'No addresses'}
+            <div className="space-y-3">
+              {contracts.map((contract: any, index: number) => {
+                const chainInfo = getChainDisplayInfo(contract.chain);
+                return (
+                  <div
+                    key={contract.id || `${contract.chain}-${index}`}
+                    className="space-y-2"
+                  >
+                    <div className="text-sm font-medium">{chainInfo.name}:</div>
+                    <div className="pl-4">
+                      {contract.addresses && contract.addresses.length > 0 ? (
+                        <AddressListDisplay
+                          addresses={contract.addresses}
+                          className="text-sm"
+                          layout="vertical"
+                        />
+                      ) : (
+                        <span className="text-sm text-gray-400">
+                          No addresses
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {references && references.length > 0 && (
-                <div className="mt-2 border-t border-gray-200 pt-2">
-                  <div className="text-xs text-gray-500">References:</div>
-                  {references.map((ref: string, index: number) => (
-                    <Link
-                      key={index}
-                      href={ref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block truncate text-xs text-blue-600 hover:underline"
-                    >
-                      {ref}
-                    </Link>
-                  ))}
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <div className="mb-1 text-xs font-medium text-gray-600">
+                    References:
+                  </div>
+                  <div className="space-y-1">
+                    {references.map((ref: string, index: number) => (
+                      <Link
+                        key={ref || `ref-${index}`}
+                        href={ref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block truncate text-xs text-blue-600 hover:underline"
+                      >
+                        {ref}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

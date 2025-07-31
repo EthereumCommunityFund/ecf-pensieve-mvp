@@ -1,3 +1,4 @@
+export * from './AddressDisplay';
 export { default as Autocomplete } from './Autocomplete';
 export * from './button';
 export * from './datePicker';
