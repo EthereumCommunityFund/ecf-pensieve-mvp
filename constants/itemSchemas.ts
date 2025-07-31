@@ -148,6 +148,7 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
+    _id: yup.string().optional(),
   });
 
 export const itemValidationSchemas = {

@@ -612,8 +612,19 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     case 'fundingReceivedGrants': {
       const valueArray =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value
-          : [{ date: null, organization: '', amount: '', reference: '' }];
+          ? field.value.map((item: any) => ({
+              ...item,
+              _id: item._id || crypto.randomUUID(),
+            }))
+          : [
+              {
+                date: null,
+                organization: '',
+                amount: '',
+                reference: '',
+                _id: crypto.randomUUID(),
+              },
+            ];
 
       return (
         <div>
@@ -666,7 +677,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
             {valueArray.map((item: any, index: number) => {
               return (
                 <FundingReceivedGrantsTableItem
-                  key={`${field.name}-${index}`}
+                  key={item._id}
                   index={index}
                   remove={() => {
                     const newValue = valueArray.filter(
@@ -688,7 +699,13 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   e.stopPropagation();
                   field.onChange([
                     ...valueArray,
-                    { date: null, organization: '', amount: '', reference: '' },
+                    {
+                      date: null,
+                      organization: '',
+                      amount: '',
+                      reference: '',
+                      _id: crypto.randomUUID(),
+                    },
                   ]);
                 }}
               >

@@ -188,4 +188,5 @@ export interface IFundingReceivedGrants {
   organization: string;
   amount: string;
   reference?: string;
+  _id?: string;
 }
