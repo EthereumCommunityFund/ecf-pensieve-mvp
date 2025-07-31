@@ -8,6 +8,7 @@ import { WagmiProvider } from 'wagmi';
 import AuthPrompt from '@/components/auth/AuthPrompt';
 import { config } from '@/config/wagmi';
 import { AuthProvider } from '@/context/AuthContext';
+import { ExternalLinkProvider } from '@/context/ExternalLinkContext';
 import { NavigationProvider } from '@/hooks/useNavigation';
 import { SupabaseProvider } from '@/lib/supabase/provider';
 import { TRPCProvider } from '@/lib/trpc/provider';
@@ -26,27 +27,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <TRPCProvider>
                 <SupabaseProvider>
                   <AuthProvider>
-                    <ToastProvider
-                      placement={'bottom-left'}
-                      toastOffset={20}
-                      toastProps={{
-                        classNames: {
-                          base: 'max-w-[350px]',
-                          content: 'min-w-0',
-                          wrapper: 'min-w-0',
-                          title: 'break-words whitespace-normal',
-                          description: 'break-words whitespace-normal',
-                        },
-                        variant: 'flat',
-                      }}
-                      regionProps={{
-                        classNames: {
-                          base: 'z-[1500]',
-                        },
-                      }}
-                    />
-                    {children}
-                    <AuthPrompt />
+                    <ExternalLinkProvider>
+                      <ToastProvider
+                        placement={'bottom-left'}
+                        toastOffset={20}
+                        toastProps={{
+                          classNames: {
+                            base: 'max-w-[350px]',
+                            content: 'min-w-0',
+                            wrapper: 'min-w-0',
+                            title: 'break-words whitespace-normal',
+                            description: 'break-words whitespace-normal',
+                          },
+                          variant: 'flat',
+                        }}
+                        regionProps={{
+                          classNames: {
+                            base: 'z-[1500]',
+                          },
+                        }}
+                      />
+                      {children}
+                      <AuthPrompt />
+                    </ExternalLinkProvider>
                   </AuthProvider>
                 </SupabaseProvider>
               </TRPCProvider>

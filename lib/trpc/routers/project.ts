@@ -37,6 +37,11 @@ import {
   createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import {
+  ProjectSortingService,
+  SortBy,
+  SortOrder,
+} from '@/lib/services/projectSortingService';
 import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
@@ -64,14 +69,14 @@ export const projectRouter = router({
             }),
           )
           .min(1, 'At least one website is required'),
-        appUrl: z.string().optional(),
+        appUrl: z.string().nullable(),
         dateFounded: z.date(),
-        dateLaunch: z.date().optional(),
+        dateLaunch: z.date().nullable(),
         devStatus: z.string().min(1, 'Development status cannot be empty'),
-        fundingStatus: z.string().optional(),
+        fundingStatus: z.string().nullable(),
         openSource: z.boolean(),
-        codeRepo: z.string().optional(),
-        tokenContract: z.string().optional(),
+        codeRepo: z.string().nullable(),
+        tokenContract: z.string().nullable(),
         orgStructure: z
           .string()
           .min(1, 'Organization structure cannot be empty'),
@@ -86,8 +91,8 @@ export const projectRouter = router({
           )
           .min(1, 'At least one founder is required'),
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
-        whitePaper: z.string().optional(),
-        dappSmartContracts: z.string().optional(),
+        whitePaper: z.string().nullable(),
+        dappSmartContracts: z.string().nullable(),
         refs: z
           .array(
             z.object({
@@ -95,7 +100,7 @@ export const projectRouter = router({
               value: z.string().min(1, 'Value cannot be empty'),
             }),
           )
-          .optional(),
+          .nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -183,17 +188,52 @@ export const projectRouter = router({
       z
         .object({
           limit: z.number().min(1).max(100).default(50),
-          cursor: z.number().optional(),
+          offset: z.number().min(0).default(0),
           isPublished: z.boolean().optional().default(false),
           categories: z.array(z.string()).optional(),
+          sortBy: z
+            .union([z.nativeEnum(SortBy), z.array(z.nativeEnum(SortBy))])
+            .optional(),
+          sortOrder: z
+            .union([z.nativeEnum(SortOrder), z.array(z.nativeEnum(SortOrder))])
+            .optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;
-      const cursor = input?.cursor;
+      const offset = input?.offset ?? 0;
       const isPublished = input?.isPublished ?? false;
       const categories = input?.categories;
+      const sortBy = input?.sortBy;
+      const sortOrder = input?.sortOrder;
+
+      const sortingService = new ProjectSortingService(ctx.db);
+
+      const useSorting = !!sortBy;
+
+      if (useSorting) {
+        const sortedQuery = sortingService.buildSortedQuery({
+          sortBy,
+          sortOrder,
+          offset,
+          limit: limit + 1,
+          isPublished,
+          categories,
+        });
+
+        const sortedResults = await sortedQuery;
+        const hasNextPage = sortedResults.length > limit;
+        const items = hasNextPage
+          ? sortedResults.slice(0, limit)
+          : sortedResults;
+
+        return {
+          items: items ?? [],
+          offset,
+          hasNextPage,
+        };
+      }
 
       const conditions = [eq(projects.isPublished, isPublished)];
 
@@ -208,16 +248,12 @@ export const projectRouter = router({
                   eq(projectSnaps.projectId, projects.id),
                   sql`${projectSnaps.categories} && ARRAY[${sql.join(
                     categories.map((cat) => sql`${cat}`),
-                    sql`,`,
-                  )}]::text[]`,
+                    sql`, `,
+                  )}]`,
                 ),
               ),
           ),
         );
-      }
-
-      if (cursor) {
-        conditions.push(lt(projects.id, cursor));
       }
 
       const whereCondition = and(...conditions);
@@ -241,32 +277,25 @@ export const projectRouter = router({
       }
 
       const getProjects = async () => {
-        const [results, totalCountResult] = await Promise.all([
-          ctx.db.query.projects.findMany({
-            with: queryOptions,
-            where: whereCondition,
-            orderBy: desc(projects.id),
-            limit: limit + 1,
-          }),
-          ctx.db
-            .select({ count: sql`count(*)::int` })
-            .from(projects)
-            .where(whereCondition),
-        ]);
+        const results = await ctx.db.query.projects.findMany({
+          with: queryOptions,
+          where: whereCondition,
+          orderBy: desc(projects.id),
+          limit: limit + 1,
+          offset,
+        });
 
         const hasNextPage = results.length > limit;
         const items = hasNextPage ? results.slice(0, limit) : results;
-        const nextCursor = hasNextPage ? items[items.length - 1].id : undefined;
-        const totalCount = Number(totalCountResult[0]?.count ?? 0);
 
         return {
           items,
-          nextCursor,
-          totalCount,
+          offset,
+          hasNextPage,
         };
       };
 
-      if (isPublished && !cursor) {
+      if (isPublished && offset === 0) {
         const cacheKey =
           categories && categories.length > 0
             ? `projects-published-${limit}-categories-${categories.sort().join('-')}-first-page`
