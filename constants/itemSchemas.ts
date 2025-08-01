@@ -427,7 +427,11 @@ export const itemValidationSchemas = {
 
   token_sales: yup.string().required('Token sales status is required'),
 
-  token_type: yup.string().required('Token type is required'),
+  token_type: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one token type')
+    .required('Token type is required'),
 
   token_issuance_mechanism: yup
     .string()
