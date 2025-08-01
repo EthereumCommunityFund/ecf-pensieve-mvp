@@ -13,6 +13,7 @@ import {
 import { CopyIcon } from '@/components/icons';
 import SablierEntry from '@/components/sablier/SablierEntry';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { IEssentialItemKey } from '@/types/item';
 import { isSablierDomain } from '@/utils/sablierDetector';
 import { normalizeUrl } from '@/utils/url';
@@ -32,6 +33,8 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
   fieldKey,
   refs,
 }) => {
+  const { openExternalLink } = useExternalLink();
+
   const refMap = useMemo(() => {
     return refs.reduce(
       (acc, ref) => {
@@ -59,6 +62,10 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
       color: 'success',
     });
   }, []);
+
+  const handleLinkClick = useCallback(() => {
+    openExternalLink(link);
+  }, [link, openExternalLink]);
 
   return (
     <Modal
@@ -88,8 +95,11 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
           </p>
 
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10">
-            <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
-              <span className="truncate">{link}</span>
+            <div
+              className="flex h-[40px] flex-1 cursor-pointer items-center truncate px-[10px] text-black hover:bg-gray-50"
+              onClick={handleLinkClick}
+            >
+              <span className="truncate underline">{link}</span>
             </div>
             <CopyToClipboard text={link} onCopy={onCopySuccess}>
               <Button
@@ -103,14 +113,9 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
 
           {isMatchSablier && (
             <div className="flex flex-col items-center gap-[10px]">
-              <a
-                href={link}
-                target="_blank"
-                className="w-full"
-                rel="noreferrer"
-              >
-                <Button className="w-full">View on Sablier</Button>
-              </a>
+              <Button className="w-full" onClick={handleLinkClick}>
+                View on Sablier
+              </Button>
               <SablierEntry />
             </div>
           )}

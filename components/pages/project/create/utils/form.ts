@@ -95,6 +95,7 @@ export const transformProjectData = (
     websites: formData.websites.map((website) => ({
       url: website.url,
       title: website.title,
+      _id: website._id,
     })),
     appUrl: emptyToNull(
       transformFormValue(
@@ -228,6 +229,7 @@ export const transformProposalData = (
               formData.websites.map((website) => ({
                 url: website.url,
                 title: website.title,
+                _id: website._id,
               })),
             )
           : '',
@@ -356,6 +358,7 @@ export const transformProposalData = (
                 name: founder.name,
                 title: founder.title,
                 region: founder.region,
+                _id: founder._id,
               })),
             )
           : '',
@@ -386,6 +389,7 @@ export const convertProjectToFormData = (
     websites: project.websites.map((website: any) => ({
       url: website.url,
       title: website.title,
+      _id: website._id || crypto.randomUUID(),
     })),
     appUrl: project.appUrl || null,
     tags: project.tags,
@@ -404,6 +408,7 @@ export const convertProjectToFormData = (
       name: founder.name,
       title: founder.title,
       region: founder.region,
+      _id: founder._id || crypto.randomUUID(),
     })),
   };
 };

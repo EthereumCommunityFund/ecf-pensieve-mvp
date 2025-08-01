@@ -34,7 +34,9 @@ export default function Categories({ className = '' }: IProps) {
             size="sm"
             className="h-[28px] rounded-full border border-black/10 bg-[#EBEBEB] text-[14px] leading-[18px] text-black/60"
             onPress={() =>
-              router.push(`/projects?cat=${encodeURIComponent(category.value)}`)
+              router.push(
+                `/projects?cats=${encodeURIComponent(category.value)}`,
+              )
             }
           >
             {category.label}

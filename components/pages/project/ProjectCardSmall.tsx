@@ -3,11 +3,10 @@
 import { Button, cn, Image } from '@heroui/react';
 import NextImage from 'next/image';
 import Link from 'next/link';
-import { useCallback, useMemo } from 'react';
 
+import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
-import { IEssentialItemKey } from '@/types/item';
 
 interface IProjectCardSmallProps {
   project: IProject;
@@ -31,31 +30,8 @@ const ProjectCardSmall = ({
   onUpvote,
   userLikeRecord,
 }: IProjectCardSmallProps) => {
-  const projectSnapDataMap = useMemo(() => {
-    if (!!project?.projectSnap?.items && project.projectSnap.items.length > 0) {
-      return project.projectSnap.items.reduce(
-        (prev, cur) => {
-          return {
-            ...prev,
-            [cur.key]: cur.value,
-          };
-        },
-        {} as Record<IEssentialItemKey, any>,
-      );
-    }
-    return {} as Record<IEssentialItemKey, any>;
-  }, [project]);
-
-  const getItemValue = useCallback(
-    (itemKey: IEssentialItemKey) => {
-      return projectSnapDataMap[itemKey] || project[itemKey] || '';
-    },
-    [projectSnapDataMap, project],
-  );
-
-  const logoUrl = getItemValue('logoUrl');
-  const projectName = getItemValue('name');
-  const tagline = getItemValue('tagline');
+  const { logoUrl, projectName, tagline, categories } =
+    useProjectItemValue(project);
 
   return (
     <div className="py-0">
