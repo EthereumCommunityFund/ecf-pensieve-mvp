@@ -1,4 +1,4 @@
-import { Avatar, Tooltip } from '@heroui/react';
+import { Avatar, cn, Tooltip } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
@@ -27,9 +27,11 @@ import {
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
+import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
+import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -59,7 +61,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     componentsProps = {},
   } = itemConfig;
 
-  const { register, formState, control } = useFormContext<IProjectFormData>();
+  const { register, formState, control, getValues, setValue } =
+    useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
@@ -283,12 +286,15 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       // Ensure valid array data with at least one entry
       const foundersArray: IFounder[] =
         Array.isArray(field.value) && field.value.length > 0
-          ? field.value.map((founder: any) => ({
-              name: founder.name || '',
-              title: founder.title || '',
-              region: founder.region,
-            }))
-          : [{ name: '', title: '', region: undefined }];
+          ? field.value
+          : [
+              {
+                name: '',
+                title: '',
+                region: undefined,
+                _id: crypto.randomUUID(),
+              },
+            ];
 
       return (
         <div>
@@ -368,10 +374,12 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <FounderFormItemTable
-                  key={index}
+                  key={founder._id}
                   index={index}
                   remove={() => {
-                    const newFounders = foundersArray.filter(
+                    const currentFounders =
+                      getValues(itemConfig.key as any) || [];
+                    const newFounders = currentFounders.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newFounders);
@@ -383,7 +391,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   canRemove={foundersArray.length > 1}
                   value={founder}
                   onChange={(updatedFounder) => {
-                    const newFounders = [...foundersArray];
+                    const currentFounders =
+                      getValues(itemConfig.key as any) || [];
+                    const newFounders = [...currentFounders];
                     newFounders[index] = updatedFounder;
                     field.onChange(newFounders);
                   }}
@@ -399,11 +409,21 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   e.stopPropagation();
 
                   // Add new item directly to existing array
+                  const currentFounders =
+                    getValues(itemConfig.key as any) || [];
                   const newFounders = [
-                    ...foundersArray,
-                    { name: '', title: '', region: undefined },
+                    ...currentFounders,
+                    {
+                      name: '',
+                      title: '',
+                      region: undefined,
+                      _id: crypto.randomUUID(),
+                    },
                   ];
-                  field.onChange(newFounders);
+                  // Use setValue with shouldValidate: false to avoid triggering validation
+                  setValue(itemConfig.key as any, newFounders, {
+                    shouldValidate: false,
+                  });
                 }}
                 disabled={isDisabled}
                 style={{
@@ -425,10 +445,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'websites': {
+      // 确保每个 website 都有唯一的 _id
       const websitesArray =
         Array.isArray(field.value) && field.value.length > 0
           ? field.value
-          : [{ url: '', title: '' }];
+          : [{ url: '', title: '', _id: crypto.randomUUID() }];
 
       return (
         <div>
@@ -455,10 +476,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <WebsiteFormItemTable
-                  key={`${field.name}-${index}`}
+                  key={website._id}
                   index={index}
                   remove={() => {
-                    const newWebsites = websitesArray.filter(
+                    const currentWebsites = getValues('websites') || [];
+                    const newWebsites = currentWebsites.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newWebsites);
@@ -481,11 +503,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   e.stopPropagation();
 
                   // Add new item directly to existing array
+                  // Get current form values to preserve any unsaved changes
+                  const currentWebsites = getValues('websites') || [];
                   const newWebsites = [
-                    ...websitesArray,
-                    { title: '', url: '' },
+                    ...currentWebsites,
+                    { title: '', url: '', _id: crypto.randomUUID() },
                   ];
-                  field.onChange(newWebsites);
+                  // Use setValue with shouldValidate: false to avoid triggering validation
+                  setValue('websites', newWebsites, { shouldValidate: false });
                 }}
                 disabled={isDisabled}
                 style={{
@@ -510,7 +535,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       const physicalEntitiesArray =
         Array.isArray(field.value) && field.value.length > 0
           ? field.value
-          : [{ legalName: '', country: '' }];
+          : [{ legalName: '', country: '', _id: crypto.randomUUID() }];
 
       return (
         <div>
@@ -537,10 +562,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
               return (
                 <PhysicalEntityFormItemTable
-                  key={index}
+                  key={item._id}
                   index={index}
                   remove={() => {
-                    const newEntities = physicalEntitiesArray.filter(
+                    const currentEntities = getValues(field.name as any) || [];
+                    const newEntities = currentEntities.filter(
                       (_: any, i: number) => i !== index,
                     );
                     field.onChange(newEntities);
@@ -561,14 +587,131 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  field.onChange([
-                    ...physicalEntitiesArray,
-                    { legalName: '', country: '' },
-                  ]);
+                  const currentEntities = getValues(field.name as any) || [];
+                  // Use setValue with shouldValidate: false to avoid triggering validation
+                  setValue(
+                    field.name as any,
+                    [
+                      ...currentEntities,
+                      { legalName: '', country: '', _id: crypto.randomUUID() },
+                    ],
+                    { shouldValidate: false },
+                  );
                 }}
               >
                 <PlusIcon className="size-[16px]" />
                 Add Physical Entity
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'fundingReceivedGrants': {
+      const valueArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value.map((item: any) => ({
+              ...item,
+              _id: item._id || crypto.randomUUID(),
+            }))
+          : [
+              {
+                date: null,
+                organization: '',
+                amount: '',
+                reference: '',
+                _id: crypto.randomUUID(),
+              },
+            ];
+
+      return (
+        <div>
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex h-[40px] w-full items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex h-full w-[158px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Date
+                  </span>
+                  <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
+                </div>
+              </div>
+              <div className="flex h-full w-[301px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Organization/Program
+                  </span>
+                  <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
+                </div>
+              </div>
+              <div className="flex h-full w-[138px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="shrink-0 text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Amount (USD)
+                  </span>
+                  <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  'flex-1 flex h-full min-w-[143px] shrink-0 items-center  px-[10px] bg-[#F5F5F5]',
+                  valueArray.length > 1 ? 'border-r border-black/10' : '',
+                )}
+              >
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Reference
+                  </span>
+                  <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
+                </div>
+              </div>
+              {valueArray.length > 1 && (
+                <div className="flex h-full w-[60px] items-center justify-center">
+                  {/* Actions column header */}
+                </div>
+              )}
+            </div>
+            {valueArray.map((item: any, index: number) => {
+              return (
+                <FundingReceivedGrantsTableItem
+                  key={item._id}
+                  index={index}
+                  remove={() => {
+                    const currentValue = getValues(itemConfig.key as any) || [];
+                    const newValue = currentValue.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newValue);
+                  }}
+                  itemKey={field.name as 'funding_received_grants'}
+                  canRemove={valueArray.length > 1}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  field.onChange([
+                    ...valueArray,
+                    {
+                      date: null,
+                      organization: '',
+                      amount: '',
+                      reference: '',
+                      _id: crypto.randomUUID(),
+                    },
+                  ]);
+                }}
+              >
+                <PlusIcon size={16} />
+                Add an Entity
               </button>
             </div>
           </div>

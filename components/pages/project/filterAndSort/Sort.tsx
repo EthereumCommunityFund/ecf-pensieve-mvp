@@ -67,7 +67,7 @@ export default function ProjectSort() {
       >
         <div className="flex items-center gap-[5px]">
           <SortDescendingIcon width={20} height={20} className="text-black" />
-          <span className="font-['Open_Sans'] text-[14px] font-semibold text-black">
+          <span className="text-[14px] font-semibold text-black">
             {getButtonLabel()}
           </span>
         </div>
@@ -86,7 +86,7 @@ export default function ProjectSort() {
               {Object.entries(groupedOptions).map(([category, options]) => (
                 <div key={category} className="flex flex-col gap-[8px]">
                   <p
-                    className="font-['Open_Sans'] text-[13px] font-semibold text-black"
+                    className="text-[13px] font-semibold text-black"
                     style={{ opacity: 0.3 }}
                   >
                     {CATEGORY_MAP[category] || category}
@@ -98,7 +98,7 @@ export default function ProjectSort() {
                         <button
                           key={option.value}
                           onClick={() => handleSortSelect(option.value)}
-                          className={`flex h-[27px] items-center justify-between rounded-[4px] px-[8px] py-[4px] font-['Open_Sans'] text-[14px] font-normal transition-colors ${
+                          className={`flex h-[27px] items-center justify-between rounded-[4px] px-[8px] py-[4px] text-[14px] font-normal transition-colors ${
                             isSelected
                               ? 'bg-[#EBEBEB] text-black'
                               : 'bg-white text-black hover:bg-[#F5F5F5]'

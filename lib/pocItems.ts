@@ -196,4 +196,8 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 2,
   },
+  funding_received_grants: {
+    isEssential: false,
+    accountability_metric: 1,
+  },
 } as const;
