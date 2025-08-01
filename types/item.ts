@@ -133,6 +133,7 @@ export type IFormDisplayType =
   | 'websites'
   | 'tablePhysicalEntity'
   | 'autoComplete'
+  | 'fundingReceivedGrants'
   | 'roadmap';
 
 export interface IGroupConfig {
@@ -177,4 +178,15 @@ export interface IProposalItem {
 export interface IPhysicalEntity {
   legalName: string;
   country: string;
+}
+
+export interface IFundingReceivedGrants {
+  date: Date | null;
+  /**
+   * actually, this is projectId
+   */
+  organization: string;
+  amount: string;
+  reference?: string;
+  _id?: string;
 }

@@ -230,7 +230,7 @@ const ProjectsContent = () => {
         {/* Active Filters Display */}
         {cats && cats.length > 0 && (
           <div className="mt-[5px] text-left">
-            <p className="font-['Open_Sans'] text-[12px] font-normal text-black/50">
+            <p className="text-[12px] font-normal text-black/50">
               Active Filters:{' '}
               {cats.length === 1 ? 'Category' : `${cats.length} Categories`}
             </p>
