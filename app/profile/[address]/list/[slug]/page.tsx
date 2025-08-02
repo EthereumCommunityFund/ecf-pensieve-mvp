@@ -39,6 +39,7 @@ import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
+import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IEditState, IListProjectWithOrder, IProject } from '@/types';
 
@@ -115,6 +116,11 @@ const ProfileListDetailPage = () => {
       console.error('Failed to update order:', error);
     },
   });
+
+  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
+    useUpvote({
+      onSuccess: refetchListProjects,
+    });
 
   // Initialize edit state when listItems change
   useEffect(() => {
@@ -475,6 +481,17 @@ const ProfileListDetailPage = () => {
                   key={item.id}
                   project={item.project as IProject}
                   showCreator={false}
+                  showUpvote={true}
+                  onUpvote={handleUpvote}
+                  userLikeRecord={
+                    getProjectLikeRecord(item.project.id)
+                      ? {
+                          id: item.project.id,
+                          weight:
+                            getProjectLikeRecord(item.project.id)?.weight || 0,
+                        }
+                      : null
+                  }
                 />
               ))
             )
@@ -514,6 +531,8 @@ const ProfileListDetailPage = () => {
           list={list}
         />
       )}
+
+      {UpvoteModalComponent}
     </div>
   );
 };

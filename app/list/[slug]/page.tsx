@@ -19,6 +19,7 @@ import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
+import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -49,15 +50,18 @@ const PublicListPage = () => {
   );
 
   // Fetch list items (projects)
-  const { data: listData, isLoading: itemsLoading } =
-    trpc.list.getListProjects.useQuery(
-      {
-        slug: slug as string,
-      },
-      {
-        enabled: !!list?.id && !error,
-      },
-    );
+  const {
+    data: listData,
+    isLoading: itemsLoading,
+    refetch: refetchListProjects,
+  } = trpc.list.getListProjects.useQuery(
+    {
+      slug: slug as string,
+    },
+    {
+      enabled: !!list?.id && !error,
+    },
+  );
 
   const listItems = listData?.items;
 
@@ -108,6 +112,11 @@ const PublicListPage = () => {
     if (!list) return '';
     return list.privacy === 'private' ? 'Private' : 'Public';
   };
+
+  const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
+    useUpvote({
+      onSuccess: refetchListProjects,
+    });
 
   if (isLoading) {
     return <SharedListSkeleton />;
@@ -257,6 +266,16 @@ const PublicListPage = () => {
                 key={item.id}
                 project={item.project as IProject}
                 showCreator={false}
+                onUpvote={handleUpvote}
+                userLikeRecord={
+                  getProjectLikeRecord(item.project.id)
+                    ? {
+                        id: item.project.id,
+                        weight:
+                          getProjectLikeRecord(item.project.id)?.weight || 0,
+                      }
+                    : null
+                }
               />
             ))
           ) : (
@@ -277,6 +296,8 @@ const PublicListPage = () => {
           )}
         </div>
       </div>
+
+      {UpvoteModalComponent}
     </div>
   );
 };

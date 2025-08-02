@@ -38,7 +38,11 @@ const SortableProjectCard: React.FC<SortableProjectCardProps> = ({
       <div className="flex items-center gap-[10px]">
         {/* Project Card */}
         <div className="flex-1">
-          <ProjectCard project={project} showCreator={false} />
+          <ProjectCard
+            project={project}
+            showCreator={false}
+            showUpvote={false}
+          />
         </div>
 
         {/* Remove Button */}
