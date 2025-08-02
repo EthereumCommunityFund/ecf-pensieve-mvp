@@ -130,7 +130,7 @@ const FollowListCard = ({
                 key="leave"
                 onPress={handleUnfollow}
                 endContent={<SignOutIcon size={18} color="#CD453B" />}
-                className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
+                className="p-[10px] text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
               >
                 Leave List
               </DropdownItem>
