@@ -94,25 +94,25 @@ const ShareListModal = ({ isOpen, onClose, list }: ShareListModalProps) => {
             {/* Share URL Input */}
             <div className="flex flex-col gap-[10px] bg-[#F5F5F5]">
               <div className="flex h-[40px] items-center overflow-hidden rounded-[8px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] px-[10px]">
-                <div className="flex flex-1 items-center gap-[5px]">
-                  <div className="flex h-full items-center justify-center rounded-l-[10px]  px-0">
+                <div className="flex flex-1 items-center overflow-hidden">
+                  <div className="flex h-full shrink-0 items-center justify-center rounded-l-[10px] px-0">
                     <ECFTypography
                       type="body1"
-                      className="p-[10px] text-[14px] font-semibold leading-[19.12px] opacity-50"
+                      className="text-[14px] font-semibold leading-[19.12px] opacity-50"
                     >
                       https://
                     </ECFTypography>
                   </div>
                   <ECFTypography
                     type="body1"
-                    className="text-[14px] leading-[20px]"
+                    className="ml-[5px] flex-1 truncate text-[14px] leading-[20px]"
                   >
                     {shareUrl.replace(/^https?:\/\//, '')}
                   </ECFTypography>
                 </div>
                 <button
                   onClick={handleCopyUrl}
-                  className="transition-opacity hover:opacity-70"
+                  className="ml-[10px] w-[20px] shrink-0 transition-opacity hover:opacity-70"
                 >
                   <CopyIcon
                     width={20}
