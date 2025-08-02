@@ -2,18 +2,14 @@
 
 import { cn } from '@heroui/react';
 import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import BookmarksIcon from '@/components/icons/Bookmarks';
+import { ITabKey, useProfileTab } from '@/hooks/useProfileTab';
 
-const tabItems = [
+const tabItemsWithIcons = [
   {
     key: 'profile',
     label: 'Profile Settings',
@@ -39,33 +35,16 @@ const tabItems = [
 const ProfileSideBar = () => {
   const { address } = useParams();
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab');
+  const { currentTabKey } = useProfileTab();
+  const [activeTab, setActiveTab] = useState<ITabKey>(
+    currentTabKey || 'profile',
+  );
 
-  // Determine initial tab based on URL
-  const getInitialTab = () => {
-    // Check if current path matches /profile/[address]/list/[slug]
-    if (pathname.includes(`/profile/${address}/list/`)) {
-      return 'lists';
-    }
-
-    if (initialTab === 'contributions') return 'contributions';
-    if (initialTab === 'upvotes') return 'upvotes';
-    if (initialTab === 'lists') return 'lists';
-    return 'profile';
-  };
-
-  const [activeTab, setActiveTab] = useState<
-    'profile' | 'contributions' | 'upvotes' | 'lists'
-  >(getInitialTab());
-
-  // Update activeTab when pathname changes
   useEffect(() => {
-    if (pathname.includes(`/profile/${address}/list/`)) {
-      setActiveTab('lists');
+    if (currentTabKey) {
+      setActiveTab(currentTabKey);
     }
-  }, [pathname, address]);
+  }, [currentTabKey]);
 
   return (
     <>
@@ -73,15 +52,11 @@ const ProfileSideBar = () => {
       <div className="mobile:hidden flex w-[220px] flex-col gap-5">
         {/* Navigation Menu */}
         <div className="flex flex-col gap-2">
-          {tabItems.map(({ key, label, icon }) => (
+          {tabItemsWithIcons.map(({ key, label, icon }) => (
             <button
               key={key}
               onClick={() => {
-                const newTab = key as
-                  | 'profile'
-                  | 'contributions'
-                  | 'upvotes'
-                  | 'lists';
+                const newTab = key as ITabKey;
                 setActiveTab(newTab);
                 router.push(`/profile/${address}?tab=${newTab}`, {
                   scroll: false,
@@ -113,15 +88,11 @@ const ProfileSideBar = () => {
       <div className="mobile:flex hidden w-full flex-col gap-5">
         {/* Mobile Navigation - Horizontal Scroll */}
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {tabItems.map(({ key, label, icon }) => (
+          {tabItemsWithIcons.map(({ key, label, icon }) => (
             <button
               key={key}
               onClick={() => {
-                const newTab = key as
-                  | 'profile'
-                  | 'contributions'
-                  | 'upvotes'
-                  | 'lists';
+                const newTab = key as ITabKey;
                 setActiveTab(newTab);
                 router.push(`/profile/${address}?tab=${newTab}`, {
                   scroll: false,
