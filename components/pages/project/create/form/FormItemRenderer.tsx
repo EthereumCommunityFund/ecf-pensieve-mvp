@@ -549,8 +549,55 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               </div>
               <div className="flex flex-1 items-center gap-[5px] p-[10px]">
                 <span className="text-[14px] font-[600] leading-[19px] text-black/60">
-                  Country
+                  Country/Region
                 </span>
+                <Tooltip
+                  content={
+                    <div className="flex flex-col gap-1">
+                      <span>
+                        Following{' '}
+                        <a
+                          href="https://www.iso.org/iso-3166-country-codes.html"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600"
+                        >
+                          {` ISO 3166 `}
+                        </a>{' '}
+                        standard
+                      </span>
+                    </div>
+                  }
+                  classNames={{
+                    content: 'p-[10px] rounded-[5px] border border-black/10',
+                  }}
+                  closeDelay={0}
+                >
+                  <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <circle
+                        cx="9"
+                        cy="9"
+                        r="6.75"
+                        stroke="black"
+                        strokeWidth="1"
+                      />
+                      <circle
+                        cx="9"
+                        cy="6.75"
+                        r="2.25"
+                        stroke="black"
+                        strokeWidth="1"
+                      />
+                      <path
+                        d="M9 12.09L9 12.09"
+                        stroke="black"
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                </Tooltip>
               </div>
               <div className="w-[60px] p-[10px]"></div>
             </div>
@@ -571,12 +618,17 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                     );
                     field.onChange(newEntities);
                   }}
-                  register={register}
                   errors={errors}
-                  physicalEntitiesKey={field.name as 'physical_entity'}
                   isPrimary={index === 0}
                   canRemove={physicalEntitiesArray.length > 1}
                   touchedFields={touchedFields}
+                  value={item}
+                  onChange={(updatedEntity) => {
+                    const currentEntities = getValues(field.name as any) || [];
+                    const newEntities = [...currentEntities];
+                    newEntities[index] = updatedEntity;
+                    field.onChange(newEntities);
+                  }}
                 />
               );
             })}
@@ -599,7 +651,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   );
                 }}
               >
-                <PlusIcon className="size-[16px]" />
+                <PlusIcon size={16} />
                 Add Physical Entity
               </button>
             </div>

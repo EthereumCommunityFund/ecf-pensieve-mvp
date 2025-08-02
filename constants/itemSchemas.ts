@@ -75,7 +75,8 @@ const physicalEntitySchema: yup.ObjectSchema<IPhysicalEntity> = yup
   .object()
   .shape({
     legalName: yup.string().required('Legal name is required'),
-    country: yup.string().required('Country is required'),
+    country: yup.string().optional(),
+    _id: yup.string().optional(),
   });
 
 export const dateFoundedConstraints: IDateConstraints = {
