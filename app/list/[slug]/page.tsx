@@ -19,6 +19,7 @@ import ProjectCard, {
   ProjectCardSkeleton,
 } from '@/components/pages/project/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigationContext } from '@/hooks/useNavigation';
 import { useUpvote } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
@@ -30,6 +31,7 @@ const PublicListPage = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const { address: currentUserAddress } = useAccount();
   const { profile, showAuthPrompt } = useAuth();
+  const { onRouterBack } = useNavigationContext();
 
   // Fetch list details
   const {
@@ -86,7 +88,7 @@ const PublicListPage = () => {
   }, [list]);
 
   const handleBack = () => {
-    router.replace('/');
+    onRouterBack();
   };
 
   const handleFollow = () => {
@@ -137,7 +139,7 @@ const PublicListPage = () => {
               : "This list may be private or doesn't exist."}
           </ECFTypography>
           <Button
-            onPress={handleBack}
+            onPress={onRouterBack}
             variant="light"
             startContent={<ArrowLeft />}
           >
