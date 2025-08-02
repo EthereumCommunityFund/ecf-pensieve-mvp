@@ -350,7 +350,6 @@ const ProfileListDetailPage = () => {
             endContent={<LinkIcon size={18} />}
             size="sm"
             className="flex h-[30px] items-center gap-[5px] rounded-[5px] border-none px-[8px] py-[4px] text-[14px] font-semibold text-black opacity-50 hover:opacity-100"
-            isDisabled={list.privacy === 'private'}
           >
             Share List
           </Button>

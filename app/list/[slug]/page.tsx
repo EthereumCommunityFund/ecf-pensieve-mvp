@@ -38,6 +38,7 @@ const PublicListPage = () => {
     data: list,
     isLoading,
     error,
+    refetch: refetchList,
   } = trpc.list.getListBySlug.useQuery(
     {
       slug: slug as string,
@@ -71,12 +72,14 @@ const PublicListPage = () => {
   const followMutation = trpc.list.followList.useMutation({
     onSuccess: () => {
       setIsFollowing(true);
+      refetchList();
     },
   });
 
   const unfollowMutation = trpc.list.unfollowList.useMutation({
     onSuccess: () => {
       setIsFollowing(false);
+      refetchList();
     },
   });
 
@@ -221,12 +224,12 @@ const PublicListPage = () => {
           {currentUserAddress ? (
             <Button
               onPress={handleFollow}
-              variant={isFollowing ? 'light' : 'light'}
-              size="sm"
-              className={`h-[40px] rounded-[5px] border px-[10px] text-[14px] font-semibold ${
+              size="md"
+              color="secondary"
+              className={`rounded-[5px] border px-[10px] font-semibold ${
                 isFollowing
-                  ? 'border-[rgba(0,0,0,0.1)] bg-[#EBEBEB] text-[#CD453B]'
-                  : 'border-[rgba(0,0,0,0.1)] bg-[#EBEBEB] text-black opacity-60 hover:opacity-100'
+                  ? 'text-[#CD453B]'
+                  : 'text-black opacity-60 hover:opacity-100'
               }`}
               endContent={
                 isFollowing ? (
