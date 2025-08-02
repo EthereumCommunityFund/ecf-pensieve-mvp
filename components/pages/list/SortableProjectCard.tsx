@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@heroui/react';
-import { DotsSixVertical, X } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import ProjectCard from '@/components/pages/project/ProjectCard';
@@ -53,13 +53,13 @@ const SortableProjectCard: React.FC<SortableProjectCardProps> = ({
         </Button>
 
         {/* Drag Handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="flex cursor-grab touch-none items-center active:cursor-grabbing"
-        >
-          <DotsSixVertical size={24} className="text-black" />
-        </div>
+        {/*<div*/}
+        {/*  {...attributes}*/}
+        {/*  {...listeners}*/}
+        {/*  className="flex cursor-grab touch-none items-center active:cursor-grabbing"*/}
+        {/*>*/}
+        {/*  <DotsSixVertical size={24} className="text-black" />*/}
+        {/*</div>*/}
       </div>
     </div>
   );
