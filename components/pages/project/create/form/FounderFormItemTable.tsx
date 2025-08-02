@@ -41,8 +41,8 @@ const FounderFormItemTable: React.FC<FounderFormItemTableProps> = ({
   value,
   onChange,
 }) => {
-  // Handle region value with validation
-  const regionValue = value?.region || '';
+  // Handle region value with validation - ensure stable value
+  const regionValue = value?.region ?? '';
 
   // Handle region selection change
   const handleRegionChange = useCallback(

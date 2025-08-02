@@ -65,7 +65,7 @@ const RegionAutocomplete: React.FC<RegionAutocompleteProps> = ({
       clearOnBlur={false}
       handleHomeEndKeys
       freeSolo={false}
-      disableClearable={true}
+      disableClearable
       forcePopupIcon={false}
       blurOnSelect
       className={className}
