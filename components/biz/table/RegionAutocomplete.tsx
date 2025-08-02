@@ -62,7 +62,7 @@ const RegionAutocomplete: React.FC<RegionAutocompleteProps> = ({
       size="small"
       disablePortal
       selectOnFocus
-      clearOnBlur={false}
+      clearOnBlur
       handleHomeEndKeys
       freeSolo={false}
       disableClearable
