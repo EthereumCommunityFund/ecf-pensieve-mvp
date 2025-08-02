@@ -212,28 +212,30 @@ const AddReferenceModal: React.FC<AddReferenceModalProps> = ({
           </form>
         </ModalBody>
 
-        <div className="bg-[#F5F5F5] p-[10px]">
-          <div className="text-[13px] font-[400] text-black/80">
-            Backed and partnered with ECF, using these on-chain tools
-            significantly enhances the legitimacy and trust behind your claim:
-          </div>
-          <div className="mt-[10px] flex items-center justify-between gap-[10px]">
-            <div className="flex flex-1 items-center justify-start gap-[10px]">
-              <SablierEntry />
-              <span className="text-[13px] font-[400] text-black/30">
-                More Coming Soon
-              </span>
+        {isMatchSablier && (
+          <div className="bg-[#F5F5F5] p-[10px]">
+            <div className="text-[13px] font-[400] text-black/80">
+              Backed and partnered with ECF, using these on-chain tools
+              significantly enhances the legitimacy and trust behind your claim:
             </div>
-            <a
-              href="https://discord.gg/F7Xgd3NsDT"
-              target="_blank"
-              className="text-[11px] font-[600] text-black/60 hover:text-black/80 hover:underline"
-              rel="noreferrer"
-            >
-              Looking to partner with ECF?
-            </a>
+            <div className="mt-[10px] flex items-center justify-between gap-[10px]">
+              <div className="flex flex-1 items-center justify-start gap-[10px]">
+                <SablierEntry />
+                <span className="text-[13px] font-[400] text-black/30">
+                  More Coming Soon
+                </span>
+              </div>
+              <a
+                href="https://discord.gg/F7Xgd3NsDT"
+                target="_blank"
+                className="text-[11px] font-[600] text-black/60 hover:text-black/80 hover:underline"
+                rel="noreferrer"
+              >
+                Looking to partner with ECF?
+              </a>
+            </div>
           </div>
-        </div>
+        )}
       </ModalContent>
     </Modal>
   );

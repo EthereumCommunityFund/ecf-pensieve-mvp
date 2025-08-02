@@ -32,7 +32,8 @@
       "Bash(grep:*)",
       "Bash(pnpm add:*)",
       "WebFetch(domain:www.figma.com)",
-      "Bash(pnpm remove:*)"
+      "Bash(pnpm remove:*)",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }

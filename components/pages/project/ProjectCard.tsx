@@ -3,13 +3,12 @@
 import { Button, cn, Image, Skeleton } from '@heroui/react';
 import NextImage from 'next/image';
 import Link from 'next/link';
-import { useCallback, useMemo } from 'react';
 
 import ECFTypography from '@/components/base/typography';
 import TransparentScore from '@/components/biz/project/TransparentScore';
+import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { formatNumber, formatTimeAgo } from '@/lib/utils';
 import { IProfile, IProject } from '@/types';
-import { IEssentialItemKey } from '@/types/item';
 
 interface IProjectCardSkeletonProps {
   showBorder?: boolean;
@@ -100,47 +99,8 @@ const ProjectCard = ({
   onUpvote,
   userLikeRecord,
 }: IProjectCardProps) => {
-  const projectSnapDataMap = useMemo(() => {
-    if (!!project?.projectSnap?.items && project.projectSnap.items.length > 0) {
-      return project.projectSnap.items.reduce(
-        (prev, cur) => {
-          return {
-            ...prev,
-            [cur.key]: cur.value,
-          };
-        },
-        {} as Record<IEssentialItemKey, any>,
-      );
-    }
-    return {} as Record<IEssentialItemKey, any>;
-  }, [project]);
-
-  const displayedCount = useMemo(() => {
-    return Object.keys(project?.itemsTopWeight || {}).length || 0;
-  }, [project]);
-
-  const getItemValue = useCallback(
-    (itemKey: IEssentialItemKey) => {
-      return projectSnapDataMap[itemKey] || project[itemKey] || '';
-    },
-    [projectSnapDataMap, project],
-  );
-
-  const logoUrl = getItemValue('logoUrl');
-  const projectName = getItemValue('name');
-  const tagline = getItemValue('tagline');
-  const categories = useMemo(() => {
-    const cats = getItemValue('categories');
-    if (typeof cats === 'string') {
-      try {
-        const parsed = JSON.parse(cats);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        return [];
-      }
-    }
-    return Array.isArray(cats) ? cats : [];
-  }, [getItemValue]);
+  const { logoUrl, projectName, tagline, categories } =
+    useProjectItemValue(project);
 
   return (
     <div

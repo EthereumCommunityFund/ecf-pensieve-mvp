@@ -775,7 +775,9 @@ Identity / Reputation Tokens – non-transferable tokens (SBTs, badges) that rep
 
 Asset-Backed Tokens – represent real-world or on-chain assets (e.g. tokenized gold, RWA, shares).
 
-NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital or physical assets (e.g. art, membership, media).`,
+NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital or physical assets (e.g. art, membership, media).
+
+Native Tokens – the primary token of a blockchain network used for gas fees and network security (e.g. ETH for Ethereum, BTC for Bitcoin).`,
     weight: ALL_POC_ITEM_MAP.token_type.weight,
     formDisplayType: 'autoComplete',
     placeholder: 'Select token type',
@@ -797,6 +799,7 @@ NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital
         value: 'Hybrid / Multi-Role Token',
         label: 'Hybrid / Multi-Role Token',
       },
+      { value: 'Native Token', label: 'Native Token' },
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
@@ -989,6 +992,25 @@ This helps us understand how decisions are made and who gets to participate.`,
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
+    legitimacy: [],
+  },
+  funding_received_grants: {
+    key: 'funding_received_grants',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.funding_received_grants.isEssential,
+    label: 'Funding Received (Grants)',
+    description:
+      'Provide the date, organization and amount this project has received',
+    shortDescription:
+      'Grant-based funding received from Web3 organizations, foundations, or grant programs.',
+    longDescription: `This item tracks non-equity funding received by the project through Web3-focused grants, such as those distributed by DAOs, ecosystems, or public goods programs. These grants are typically awarded to support development, research, or ecosystem growth, and do not require repayment or token exchange. Examples include Gitcoin rounds, Octant, ecosystem foundation grants (e.g. Ethereum, Optimism), or funding from decentralized grant platforms and community treasury allocations`,
+    weight: ALL_POC_ITEM_MAP.funding_received_grants.weight,
+    formDisplayType: 'fundingReceivedGrants',
+    placeholder: '',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
   },
 };
