@@ -177,7 +177,8 @@ export interface IProposalItem {
 
 export interface IPhysicalEntity {
   legalName: string;
-  country: string;
+  country?: string;
+  _id?: string;
 }
 
 export interface IFundingReceivedGrants {

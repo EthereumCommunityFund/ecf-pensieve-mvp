@@ -471,69 +471,64 @@ const InputContentRenderer: React.FC<IProps> = ({
                       <TableHeader width={214} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span>Legal Name</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
                         </div>
                       </TableHeader>
                       <TableHeader isLast isContainerBordered>
                         <div className="flex items-center gap-[5px]">
-                          <span>Country</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
+                          <span>Country/Region</span>
+                          <Tooltip
+                            content={
+                              <div className="flex flex-col gap-1">
+                                <span>
+                                  Following{' '}
+                                  <a
+                                    href="https://www.iso.org/iso-3166-country-codes.html"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600"
+                                  >
+                                    {` ISO 3166 `}
+                                  </a>
+                                  standard
+                                </span>
+                              </div>
+                            }
+                            classNames={{
+                              content:
+                                'p-[10px] rounded-[5px] border border-black/10',
+                            }}
+                            closeDelay={0}
+                          >
+                            <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 18 18"
+                                fill="none"
+                              >
+                                <circle
+                                  cx="9"
+                                  cy="9"
+                                  r="6.75"
+                                  stroke="black"
+                                  strokeWidth="1"
+                                />
+                                <circle
+                                  cx="9"
+                                  cy="6.75"
+                                  r="2.25"
+                                  stroke="black"
+                                  strokeWidth="1"
+                                />
+                                <path
+                                  d="M9 12.09L9 12.09"
+                                  stroke="black"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                          </Tooltip>
                         </div>
                       </TableHeader>
                     </tr>
@@ -556,7 +551,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                           isContainerBordered
                           isLastRow={index === parsed.length - 1}
                         >
-                          {item.country}
+                          {getRegionLabel(item.country)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -589,7 +584,8 @@ const InputContentRenderer: React.FC<IProps> = ({
           <>
             {parsed
               .map(
-                (item: IPhysicalEntity) => `${item.legalName}: ${item.country}`,
+                (item: IPhysicalEntity) =>
+                  `${item.legalName}: ${getRegionLabel(item.country)}`,
               )
               .join(', ')}
           </>
