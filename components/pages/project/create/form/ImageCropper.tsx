@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 
 import {
@@ -28,8 +28,8 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   isOpen,
   onClose,
   onCropComplete,
-  maxWidth = 1500,
-  maxHeight = 1500,
+  maxWidth = 1200,
+  maxHeight = 1200,
   maxSizeMB = 10,
   quality = 0.9,
   onError,
@@ -45,39 +45,45 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Cleanup blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      // src is a blob URL that should be cleaned up when component unmounts
-      if (src && src.startsWith('blob:')) {
-        URL.revokeObjectURL(src);
-      }
-    };
-  }, [src]);
+  // Note: blob URL cleanup is handled by the parent component (PhotoUpload)
+  // ImageCropper should not clean up URLs it doesn't own
 
   const onImageLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
       const { width, height } = e.currentTarget;
-      const cropWidthInPercent = (Math.min(width, height) / width) * 100;
-      const cropHeightInPercent = (Math.min(width, height) / height) * 100;
+      // Calculate the size for a square crop (1:1 aspect ratio)
+      const minDimension = Math.min(width, height);
+      const cropSizeInPercent =
+        (minDimension / Math.max(width, height)) * 100 * 0.9;
+
+      // For 1:1 aspect ratio, width and height percentages are calculated differently
+      const cropWidthPercent =
+        width >= height
+          ? cropSizeInPercent
+          : (minDimension / width) * 100 * 0.9;
+      const cropHeightPercent =
+        height >= width
+          ? cropSizeInPercent
+          : (minDimension / height) * 100 * 0.9;
 
       const newCrop: Crop = {
         unit: '%',
-        width: cropWidthInPercent * 0.9,
-        height: cropHeightInPercent * 0.9,
-        x: (100 - cropWidthInPercent * 0.9) / 2,
-        y: (100 - cropHeightInPercent * 0.9) / 2,
+        width: cropWidthPercent,
+        height: cropHeightPercent,
+        x: (100 - cropWidthPercent) / 2,
+        y: (100 - cropHeightPercent) / 2,
       };
 
       setCrop(newCrop);
 
       // Also set the completed crop with pixel values
+      const pixelSize = minDimension * 0.9;
       const pixelCrop: PixelCrop = {
         unit: 'px',
-        width: (width * cropWidthInPercent * 0.9) / 100,
-        height: (height * cropHeightInPercent * 0.9) / 100,
-        x: (width * (100 - cropWidthInPercent * 0.9)) / 200,
-        y: (height * (100 - cropHeightInPercent * 0.9)) / 200,
+        width: pixelSize,
+        height: pixelSize,
+        x: (width - pixelSize) / 2,
+        y: (height - pixelSize) / 2,
       };
       setCompletedCrop(pixelCrop);
     },
@@ -176,6 +182,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
               onComplete={(c) => setCompletedCrop(c)}
+              aspect={1}
               className="max-h-[80vh] w-auto"
             >
               <img

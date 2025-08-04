@@ -14,16 +14,18 @@ interface PhotoUploadProps {
   className?: string;
   isDisabled?: boolean;
   maxSizeMB?: number;
+  enableCrop?: boolean;
 }
 
 export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   initialUrl,
   onUploadSuccess,
-  accept = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  accept = ['image/jpeg', 'image/png', 'image/gif'],
   children,
   className = '',
   isDisabled = false,
   maxSizeMB = 10,
+  enableCrop = true,
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,15 +83,36 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           return;
         }
 
-        setOriginalFile(file);
-        const tempUrl = URL.createObjectURL(file);
-        setTempImageUrl(tempUrl);
-        setIsCropperOpen(true);
+        if (enableCrop) {
+          setOriginalFile(file);
+          const tempUrl = URL.createObjectURL(file);
+          setTempImageUrl(tempUrl);
+          setIsCropperOpen(true);
+          resetInput();
+        } else {
+          // Direct upload without cropping
+          const reader = new FileReader();
+          reader.onload = (loadEvent) => {
+            const base64String = loadEvent.target?.result as string;
+            if (base64String) {
+              uploadMutation.mutate({
+                data: base64String,
+                type: file.type,
+              });
+            } else {
+              setErrorMessage('Failed to process image.');
+            }
+            resetInput();
+          };
+          reader.onerror = () => {
+            setErrorMessage('Error processing image.');
+            resetInput();
+          };
+          reader.readAsDataURL(file);
+        }
       }
-
-      resetInput();
     },
-    [accept, maxSizeMB, resetInput],
+    [accept, maxSizeMB, resetInput, enableCrop, uploadMutation],
   );
 
   const handleCropComplete = useCallback(
@@ -209,7 +232,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
         </div>
       )}
 
-      {tempImageUrl && (
+      {tempImageUrl && enableCrop && (
         <ImageCropper
           src={tempImageUrl}
           isOpen={isCropperOpen}

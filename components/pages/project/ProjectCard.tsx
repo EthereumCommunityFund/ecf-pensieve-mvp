@@ -118,6 +118,7 @@ const ProjectCard = ({
             <div className="mobile:hidden box-content size-[100px] overflow-hidden rounded-[10px] ">
               <Image
                 src={logoUrl}
+                as={NextImage}
                 alt={projectName}
                 className="rounded-none object-cover"
                 width={100}
@@ -128,6 +129,7 @@ const ProjectCard = ({
             <div className="mobile:block hidden size-[60px] overflow-hidden rounded-[5px] ">
               <Image
                 src={logoUrl}
+                as={NextImage}
                 alt={projectName}
                 className="rounded-none object-cover"
                 width={60}
