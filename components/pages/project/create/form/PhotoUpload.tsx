@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
 
+import { ImageCropper } from './ImageCropper';
+
 interface PhotoUploadProps {
   initialUrl?: string;
   onUploadSuccess?: (url: string) => void;
@@ -27,6 +29,9 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUrl, setLocalUrl] = useState<string | undefined>(initialUrl);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
   const uploadMutation = trpc.file.uploadFile.useMutation({
     onSuccess: (data) => {
@@ -76,27 +81,65 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (loadEvent) => {
-          const base64String = loadEvent.target?.result as string;
-          if (base64String) {
-            uploadMutation.mutate({ data: base64String, type: file.type });
-          } else {
-            setErrorMessage('Failed to read file.');
-            console.error('FileReader onload result is null or not a string');
-          }
-        };
-        reader.onerror = (error) => {
-          setErrorMessage('Error reading file.');
-          console.error('FileReader error:', error);
-        };
-        reader.readAsDataURL(file);
+        setOriginalFile(file);
+        const tempUrl = URL.createObjectURL(file);
+        setTempImageUrl(tempUrl);
+        setIsCropperOpen(true);
       }
 
       resetInput();
     },
     [accept, maxSizeMB, uploadMutation, resetInput],
   );
+
+  const handleCropComplete = useCallback(
+    async (croppedImageUrl: string) => {
+      if (!originalFile) return;
+
+      try {
+        const response = await fetch(croppedImageUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+
+        reader.onload = (loadEvent) => {
+          const base64String = loadEvent.target?.result as string;
+          if (base64String) {
+            uploadMutation.mutate({
+              data: base64String,
+              type: originalFile.type,
+            });
+          } else {
+            setErrorMessage('Failed to process cropped image.');
+          }
+        };
+
+        reader.onerror = () => {
+          setErrorMessage('Error processing cropped image.');
+        };
+
+        reader.readAsDataURL(blob);
+
+        URL.revokeObjectURL(croppedImageUrl);
+        if (tempImageUrl) {
+          URL.revokeObjectURL(tempImageUrl);
+          setTempImageUrl(null);
+        }
+      } catch (error) {
+        console.error('Error processing cropped image:', error);
+        setErrorMessage('Failed to process cropped image.');
+      }
+    },
+    [originalFile, uploadMutation, tempImageUrl],
+  );
+
+  const handleCropperClose = useCallback(() => {
+    setIsCropperOpen(false);
+    if (tempImageUrl) {
+      URL.revokeObjectURL(tempImageUrl);
+      setTempImageUrl(null);
+    }
+    setOriginalFile(null);
+  }, [tempImageUrl]);
 
   const isLoading = uploadMutation.isPending;
 
@@ -147,6 +190,15 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
         <div className="mt-2 w-full text-center text-sm text-red-500">
           {errorMessage}
         </div>
+      )}
+
+      {tempImageUrl && (
+        <ImageCropper
+          src={tempImageUrl}
+          isOpen={isCropperOpen}
+          onClose={handleCropperClose}
+          onCropComplete={handleCropComplete}
+        />
       )}
     </div>
   );
