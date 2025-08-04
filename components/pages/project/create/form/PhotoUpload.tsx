@@ -89,7 +89,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
       resetInput();
     },
-    [accept, maxSizeMB, uploadMutation, resetInput],
+    [accept, maxSizeMB, resetInput],
   );
 
   const handleCropComplete = useCallback(
@@ -99,6 +99,14 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
       try {
         const response = await fetch(croppedImageUrl);
         const blob = await response.blob();
+
+        // Double check the cropped image size
+        if (blob.size > maxSizeMB * 1024 * 1024) {
+          setErrorMessage(`Cropped image still exceeds ${maxSizeMB}MB limit.`);
+          URL.revokeObjectURL(croppedImageUrl);
+          return;
+        }
+
         const reader = new FileReader();
 
         reader.onload = (loadEvent) => {
@@ -129,7 +137,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
         setErrorMessage('Failed to process cropped image.');
       }
     },
-    [originalFile, uploadMutation, tempImageUrl],
+    [originalFile, uploadMutation, tempImageUrl, maxSizeMB],
   );
 
   const handleCropperClose = useCallback(() => {
@@ -139,6 +147,15 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
       setTempImageUrl(null);
     }
     setOriginalFile(null);
+  }, [tempImageUrl]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (tempImageUrl) {
+        URL.revokeObjectURL(tempImageUrl);
+      }
+    };
   }, [tempImageUrl]);
 
   const isLoading = uploadMutation.isPending;
@@ -198,6 +215,8 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           isOpen={isCropperOpen}
           onClose={handleCropperClose}
           onCropComplete={handleCropComplete}
+          maxSizeMB={maxSizeMB}
+          onError={setErrorMessage}
         />
       )}
     </div>

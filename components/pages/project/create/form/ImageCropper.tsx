@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 
 import {
@@ -16,6 +16,11 @@ interface ImageCropperProps {
   isOpen: boolean;
   onClose: () => void;
   onCropComplete: (croppedImageUrl: string) => void;
+  maxWidth?: number;
+  maxHeight?: number;
+  maxSizeMB?: number;
+  quality?: number;
+  onError?: (message: string) => void;
 }
 
 export const ImageCropper: React.FC<ImageCropperProps> = ({
@@ -23,6 +28,11 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   isOpen,
   onClose,
   onCropComplete,
+  maxWidth = 1500,
+  maxHeight = 1500,
+  maxSizeMB = 10,
+  quality = 0.9,
+  onError,
 }) => {
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
@@ -34,6 +44,16 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const imgRef = useRef<HTMLImageElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      // src is a blob URL that should be cleaned up when component unmounts
+      if (src && src.startsWith('blob:')) {
+        URL.revokeObjectURL(src);
+      }
+    };
+  }, [src]);
 
   const onImageLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -81,8 +101,8 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       return;
     }
 
-    const targetWidth = Math.min(1200, crop.width * scaleX);
-    const targetHeight = Math.min(1200, crop.height * scaleY);
+    const targetWidth = Math.min(maxWidth, crop.width * scaleX);
+    const targetHeight = Math.min(maxHeight, crop.height * scaleY);
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
@@ -106,16 +126,35 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       (blob) => {
         if (!blob) {
           console.error('Canvas is empty');
+          onError?.('Failed to generate cropped image');
           return;
         }
+
+        // Validate cropped image size
+        if (blob.size > maxSizeMB * 1024 * 1024) {
+          onError?.(
+            `Cropped image exceeds ${maxSizeMB}MB limit. Please crop a smaller area.`,
+          );
+          return;
+        }
+
         const croppedImageUrl = URL.createObjectURL(blob);
         onCropComplete(croppedImageUrl);
         onClose();
       },
       'image/jpeg',
-      1,
+      quality,
     );
-  }, [completedCrop, onCropComplete, onClose]);
+  }, [
+    completedCrop,
+    onCropComplete,
+    onClose,
+    maxWidth,
+    maxHeight,
+    maxSizeMB,
+    quality,
+    onError,
+  ]);
 
   return (
     <Modal
