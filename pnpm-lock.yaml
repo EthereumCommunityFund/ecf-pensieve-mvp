@@ -116,6 +116,9 @@ importers:
       react-hook-form:
         specifier: ^7.56.0
         version: 7.56.0(react@19.0.0)
+      react-image-crop:
+        specifier: ^11.0.10
+        version: 11.0.10(react@19.0.0)
       superjson:
         specifier: ^2.2.2
         version: 2.2.2
@@ -6869,6 +6872,11 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-image-crop@11.0.10:
+    resolution: {integrity: sha512-+5FfDXUgYLLqBh1Y/uQhIycpHCbXkI50a+nbfkB1C0xXXUTwkisHDo2QCB1SQJyHCqIuia4FeyReqXuMDKWQTQ==, tarball: https://registry.npmjs.org/react-image-crop/-/react-image-crop-11.0.10.tgz}
+    peerDependencies:
+      react: '>=16.13.1'
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -16760,6 +16768,10 @@ snapshots:
       scheduler: 0.25.0
 
   react-hook-form@7.56.0(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+
+  react-image-crop@11.0.10(react@19.0.0):
     dependencies:
       react: 19.0.0
 

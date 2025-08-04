@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
 
+import { ImageCropper } from './ImageCropper';
+
 interface PhotoUploadProps {
   initialUrl?: string;
   onUploadSuccess?: (url: string) => void;
@@ -12,21 +14,26 @@ interface PhotoUploadProps {
   className?: string;
   isDisabled?: boolean;
   maxSizeMB?: number;
+  enableCrop?: boolean;
 }
 
 export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   initialUrl,
   onUploadSuccess,
-  accept = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  accept = ['image/jpeg', 'image/png', 'image/gif'],
   children,
   className = '',
   isDisabled = false,
   maxSizeMB = 10,
+  enableCrop = true,
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUrl, setLocalUrl] = useState<string | undefined>(initialUrl);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
   const uploadMutation = trpc.file.uploadFile.useMutation({
     onSuccess: (data) => {
@@ -76,27 +83,103 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           return;
         }
 
+        if (enableCrop) {
+          setOriginalFile(file);
+          const tempUrl = URL.createObjectURL(file);
+          setTempImageUrl(tempUrl);
+          setIsCropperOpen(true);
+          resetInput();
+        } else {
+          // Direct upload without cropping
+          const reader = new FileReader();
+          reader.onload = (loadEvent) => {
+            const base64String = loadEvent.target?.result as string;
+            if (base64String) {
+              uploadMutation.mutate({
+                data: base64String,
+                type: file.type,
+              });
+            } else {
+              setErrorMessage('Failed to process image.');
+            }
+            resetInput();
+          };
+          reader.onerror = () => {
+            setErrorMessage('Error processing image.');
+            resetInput();
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    },
+    [accept, maxSizeMB, resetInput, enableCrop, uploadMutation],
+  );
+
+  const handleCropComplete = useCallback(
+    async (croppedImageUrl: string) => {
+      if (!originalFile) return;
+
+      try {
+        const response = await fetch(croppedImageUrl);
+        const blob = await response.blob();
+
+        // Double check the cropped image size
+        if (blob.size > maxSizeMB * 1024 * 1024) {
+          setErrorMessage(`Cropped image still exceeds ${maxSizeMB}MB limit.`);
+          URL.revokeObjectURL(croppedImageUrl);
+          return;
+        }
+
         const reader = new FileReader();
+
         reader.onload = (loadEvent) => {
           const base64String = loadEvent.target?.result as string;
           if (base64String) {
-            uploadMutation.mutate({ data: base64String, type: file.type });
+            uploadMutation.mutate({
+              data: base64String,
+              type: originalFile.type,
+            });
           } else {
-            setErrorMessage('Failed to read file.');
-            console.error('FileReader onload result is null or not a string');
+            setErrorMessage('Failed to process cropped image.');
           }
         };
-        reader.onerror = (error) => {
-          setErrorMessage('Error reading file.');
-          console.error('FileReader error:', error);
-        };
-        reader.readAsDataURL(file);
-      }
 
-      resetInput();
+        reader.onerror = () => {
+          setErrorMessage('Error processing cropped image.');
+        };
+
+        reader.readAsDataURL(blob);
+
+        URL.revokeObjectURL(croppedImageUrl);
+        if (tempImageUrl) {
+          URL.revokeObjectURL(tempImageUrl);
+          setTempImageUrl(null);
+        }
+      } catch (error) {
+        console.error('Error processing cropped image:', error);
+        setErrorMessage('Failed to process cropped image.');
+      }
     },
-    [accept, maxSizeMB, uploadMutation, resetInput],
+    [originalFile, uploadMutation, tempImageUrl, maxSizeMB],
   );
+
+  const handleCropperClose = useCallback(() => {
+    setIsCropperOpen(false);
+    if (tempImageUrl) {
+      URL.revokeObjectURL(tempImageUrl);
+      setTempImageUrl(null);
+    }
+    setOriginalFile(null);
+  }, [tempImageUrl]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (tempImageUrl) {
+        URL.revokeObjectURL(tempImageUrl);
+      }
+    };
+  }, [tempImageUrl]);
 
   const isLoading = uploadMutation.isPending;
 
@@ -147,6 +230,17 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
         <div className="mt-2 w-full text-center text-sm text-red-500">
           {errorMessage}
         </div>
+      )}
+
+      {tempImageUrl && enableCrop && (
+        <ImageCropper
+          src={tempImageUrl}
+          isOpen={isCropperOpen}
+          onClose={handleCropperClose}
+          onCropComplete={handleCropComplete}
+          maxSizeMB={maxSizeMB}
+          onError={setErrorMessage}
+        />
       )}
     </div>
   );
