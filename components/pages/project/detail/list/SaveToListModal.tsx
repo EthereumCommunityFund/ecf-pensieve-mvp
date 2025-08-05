@@ -203,8 +203,8 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
             </button>
           </ModalHeader>
           <ModalBody className="flex flex-col justify-between gap-[10px] p-5">
-            <div className="relative">
-              <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
+            <div className="relative flex-1 overflow-hidden">
+              <div className="custom-scrollbar flex max-h-[300px] flex-col gap-2 overflow-y-auto pr-1">
                 {isLoadingLists ? (
                   <SaveToListSkeleton />
                 ) : !listsWithProjectStatus ||
@@ -236,8 +236,8 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
                 )}
               </div>
               {/* Gradient fade overlay at bottom when content overflows */}
-              {listsWithProjectStatus && listsWithProjectStatus.length > 6 && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/100 via-white/90 to-white/20" />
+              {listsWithProjectStatus && listsWithProjectStatus.length > 5 && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white to-transparent" />
               )}
             </div>
 
@@ -253,9 +253,9 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
 
             {hasChanges && (
               <Button
-                onClick={handleConfirm}
+                onPress={handleConfirm}
                 isLoading={isConfirming}
-                disabled={isConfirming}
+                isDisabled={isConfirming}
                 className="flex items-center justify-center rounded-[5px] bg-[rgb(60,60,60)] px-[30px] py-[10px] text-[14px] font-[600] text-white hover:bg-[rgb(80,80,80)] disabled:opacity-50"
                 style={{ fontFamily: 'Open Sans' }}
               >

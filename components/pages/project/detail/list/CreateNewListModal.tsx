@@ -9,11 +9,12 @@ import {
   Select,
   SelectItem,
 } from '@heroui/react';
-import { CaretDown, Info, X } from '@phosphor-icons/react';
+import { CaretDown, Globe, Info, Link, Lock, X } from '@phosphor-icons/react';
 import { FC, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
+import ECFTypography from '@/components/base/typography';
 import { BookmarkList, CreateListRequest } from '@/types/bookmark';
 
 import { useBookmark } from './useBookmark';
@@ -102,9 +103,12 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
     >
       <ModalContent className="rounded-[10px] border border-black/10">
         <ModalHeader className="flex items-center justify-between border-b border-black/10 px-5 py-[10px]">
-          <h3 className="text-[16px] font-[600] text-black opacity-80">
+          <ECFTypography
+            type="subtitle2"
+            className="text-[16px] font-semibold leading-[21.82px] text-black opacity-80"
+          >
             Create New List
-          </h3>
+          </ECFTypography>
           <button
             onClick={handleClose}
             className="flex size-[30px] items-center justify-center rounded-[4px] p-[5px] hover:bg-black/5"
@@ -116,9 +120,12 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
           <div className="flex flex-col gap-[20px] pb-5">
             <div className="flex flex-col gap-[10px]">
               <div className="flex flex-col gap-[5px]">
-                <label className="text-[16px] font-[600] leading-[1.6em] text-black">
+                <ECFTypography
+                  type="body1"
+                  className="text-[16px] font-semibold leading-[25.6px]"
+                >
                   List Name
-                </label>
+                </ECFTypography>
               </div>
               <div className="flex flex-col gap-[10px]">
                 <div className="flex items-stretch rounded-[8px] border border-black/10 bg-black/5 px-[10px]">
@@ -139,9 +146,12 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
                   />
                 </div>
                 <div className="text-right">
-                  <span className="text-[11px] leading-[1.36em] text-black opacity-80">
+                  <ECFTypography
+                    type="caption"
+                    className="text-[11px] leading-[15px] text-black opacity-80"
+                  >
                     {formData.name.length} / 150
-                  </span>
+                  </ECFTypography>
                 </div>
               </div>
             </div>
@@ -149,9 +159,12 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
             <div className="flex flex-col gap-[10px]">
               <div className="flex flex-col gap-[5px]">
                 <div className="flex items-center gap-[5px]">
-                  <label className="text-[16px] font-[600] leading-[1.6em] text-black">
+                  <ECFTypography
+                    type="body1"
+                    className="text-[16px] font-semibold leading-[25.6px]"
+                  >
                     List Privacy
-                  </label>
+                  </ECFTypography>
                   <Info
                     className="size-5 text-black opacity-50"
                     strokeWidth={1.5}
@@ -174,8 +187,85 @@ const CreateNewListModal: FC<CreateNewListModalProps> = ({
                     selectorIcon: 'hidden',
                   }}
                 >
-                  <SelectItem key="private">Private</SelectItem>
-                  <SelectItem key="public">Public</SelectItem>
+                  <SelectItem
+                    key="public"
+                    textValue="Public"
+                    className="rounded-[5px] px-[10px] py-[4px]"
+                  >
+                    <div className="flex items-center justify-between gap-[10px]">
+                      <div className="flex flex-col gap-[5px]">
+                        <ECFTypography
+                          type="body1"
+                          className="text-[16px] font-semibold leading-[25.6px]"
+                        >
+                          Public
+                        </ECFTypography>
+                        <ECFTypography
+                          type="caption"
+                          className="text-[13px] leading-[17.7px] tracking-[0.282px] opacity-80"
+                        >
+                          Anyone can view
+                        </ECFTypography>
+                      </div>
+                      <Globe
+                        className="size-5 text-black opacity-50"
+                        weight="bold"
+                      />
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    key="private"
+                    textValue="Private"
+                    className="rounded-[5px] px-[10px] py-[4px]"
+                  >
+                    <div className="flex items-center justify-between gap-[10px]">
+                      <div className="flex flex-col gap-[5px]">
+                        <ECFTypography
+                          type="body1"
+                          className="text-[16px] font-semibold leading-[25.6px]"
+                        >
+                          Private
+                        </ECFTypography>
+                        <ECFTypography
+                          type="caption"
+                          className="text-[13px] leading-[17.7px] tracking-[0.282px] opacity-80"
+                        >
+                          Only you can view
+                        </ECFTypography>
+                      </div>
+                      <Lock
+                        className="size-5 text-black opacity-50"
+                        weight="bold"
+                      />
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    key="share-only"
+                    textValue="Share-only"
+                    isReadOnly
+                    className="rounded-[5px] px-[10px] py-[4px] opacity-20"
+                  >
+                    <div className="flex items-center justify-between gap-[10px]">
+                      <div className="flex flex-col gap-[5px]">
+                        <ECFTypography
+                          type="body1"
+                          className="text-[16px] font-semibold leading-[25.6px]"
+                        >
+                          Share-only
+                        </ECFTypography>
+                        <ECFTypography
+                          type="caption"
+                          className="text-[13px] leading-[17.7px] tracking-[0.282px] opacity-80"
+                        >
+                          Anyone with link can view
+                        </ECFTypography>
+                      </div>
+                      <Link
+                        className="size-5 text-black opacity-50"
+                        weight="bold"
+                      />
+                    </div>
+                  </SelectItem>
                 </Select>
                 <CaretDown
                   className="size-4 text-black opacity-50"
