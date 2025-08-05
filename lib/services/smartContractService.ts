@@ -3,7 +3,6 @@ import { ethers } from 'ethers';
 
 import { db } from '@/lib/db';
 import { projects } from '@/lib/db/schema';
-import type { DappSmartContractsData } from '@/lib/db/schema/projects';
 
 export interface SmartContract {
   chain: string;
@@ -109,7 +108,7 @@ export class SmartContractService {
     data: SmartContractsUpdateData,
   ): Promise<void> {
     // Construct JSONB data structure
-    const smartContractsData: DappSmartContractsData = {
+    const smartContractsData = {
       applicable: data.applicable,
       contracts: data.applicable
         ? data.contracts.map((contract) => ({
@@ -147,10 +146,7 @@ export class SmartContractService {
     }
 
     const project = projectResults[0];
-    const smartContractsData = project.dappSmartContracts as
-      | DappSmartContractsData
-      | string
-      | null;
+    const smartContractsData = project.dappSmartContracts as any;
 
     // Handle old data format (if it's a string)
     if (typeof smartContractsData === 'string') {

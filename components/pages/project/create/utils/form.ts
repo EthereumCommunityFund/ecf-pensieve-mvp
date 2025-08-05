@@ -448,9 +448,9 @@ export const convertProjectToFormData = (
       // New JSONB format
       dappSmartContractsData = project.dappSmartContracts;
       dappSmartContractsApplicable =
-        project.dappSmartContracts.applicable ?? true;
+        (project.dappSmartContracts as any).applicable ?? true;
       dappSmartContractsReferences =
-        project.dappSmartContracts.references || [];
+        (project.dappSmartContracts as any).references || [];
     }
   } else {
     // No data - use default structure

@@ -330,7 +330,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     shortDescription: `What does your project's smart contract do at high level? Definition of Smart Contract: a set of rules defined in code that can be executed by an underlying blockchain for a fee e.g smart contracts on Ethereum.`,
     longDescription: `List specific features (imports, functions, modifiers, security implementations) and/or gas optimizations of your smart contract`,
     weight: ALL_POC_ITEM_MAP.dappSmartContracts.weight,
-    formDisplayType: 'stringMultiple',
+    formDisplayType: 'smartContract',
     placeholder: '0x...',
     showReference: false,
     showApplicable: true,

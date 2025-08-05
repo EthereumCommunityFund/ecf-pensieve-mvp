@@ -65,10 +65,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     startContentText,
     minRows,
     formDisplayType,
-    componentsProps = {},
   } = itemConfig;
 
-  const { register, formState, control, getValues, setValue } =
+  const { register, formState, control, getValues, setValue, watch } =
     useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
 
@@ -78,22 +77,19 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
   }, [itemKey, formType]);
 
-  const formContext = useFormContext();
-  const { watch, setValue } = formContext;
-
-  // Smart contracts values (used only when itemKey === 'dappSmartContracts')
+  // Smart contracts values (used only when formDisplayType === 'smartContract')
   const smartContractsApplicable =
-    itemKey === 'dappSmartContracts'
+    formDisplayType === 'smartContract'
       ? (watch('dappSmartContractsApplicable') ?? true)
       : true;
   const smartContractsReferences =
-    itemKey === 'dappSmartContracts'
+    formDisplayType === 'smartContract'
       ? (watch('dappSmartContractsReferences') ?? [])
       : [];
 
   // Process smart contracts value
   const smartContractsValue: ISmartContract[] = useMemo(() => {
-    if (itemKey !== 'dappSmartContracts') {
+    if (formDisplayType !== 'smartContract') {
       return [];
     }
 
@@ -124,7 +120,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     return [];
-  }, [itemKey, field.value]);
+  }, [formDisplayType, field.value]);
 
   // Callbacks for smart contracts (always defined, but only used when needed)
   const handleContractsChange = useCallback(
@@ -165,22 +161,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
-
-  // Special handling for dappSmartContracts
-  if (itemKey === 'dappSmartContracts') {
-    return (
-      <SmartContractsField
-        value={smartContractsValue}
-        onChange={handleContractsChange}
-        weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
-        applicable={smartContractsApplicable}
-        onApplicableChange={handleApplicableChange}
-        references={smartContractsReferences}
-        onReferencesChange={handleReferencesChange}
-        disabled={isDisabled}
-      />
-    );
-  }
 
   switch (formDisplayType) {
     case 'string':
@@ -884,6 +864,20 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         <div className="rounded-md border border-dashed border-gray-300 p-4 text-center text-gray-500">
           roadmap
         </div>
+      );
+
+    case 'smartContract':
+      return (
+        <SmartContractsField
+          value={smartContractsValue}
+          onChange={handleContractsChange}
+          weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
+          applicable={smartContractsApplicable}
+          onApplicableChange={handleApplicableChange}
+          references={smartContractsReferences}
+          onReferencesChange={handleReferencesChange}
+          disabled={isDisabled}
+        />
       );
 
     default:

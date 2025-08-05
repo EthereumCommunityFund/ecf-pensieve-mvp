@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 
 import type { ISmartContract } from '@/components/pages/project/create/types';
-import type { DappSmartContractsData } from '@/lib/db/schema/projects';
 import { generateUUID } from '@/lib/utils/uuid';
 
 /**
  * Hook to transform smart contracts data between different formats
  */
 export const useSmartContractsData = (
-  data: string | DappSmartContractsData | null | undefined,
+  data: string | any | null | undefined,
 ) => {
   return useMemo(() => {
     // Handle null/undefined
@@ -49,11 +48,13 @@ export const useSmartContractsData = (
 
     // Handle new JSONB format
     if (typeof data === 'object') {
-      const contracts = (data.contracts || []).map((contract, index) => ({
-        id: `contract-${index}-${Date.now()}`,
-        chain: contract.chain,
-        addresses: contract.addresses || [],
-      }));
+      const contracts = (data.contracts || []).map(
+        (contract: any, index: number) => ({
+          id: `contract-${index}-${Date.now()}`,
+          chain: contract.chain,
+          addresses: contract.addresses || [],
+        }),
+      );
 
       return {
         applicable: data.applicable ?? true,
@@ -61,7 +62,7 @@ export const useSmartContractsData = (
         references: data.references || ([] as string[]),
         isEmpty:
           contracts.length === 0 ||
-          contracts.every((c) => c.addresses.length === 0),
+          contracts.every((c: any) => c.addresses.length === 0),
         isLegacyFormat: false,
       };
     }
@@ -81,7 +82,7 @@ export const useSmartContractsData = (
  * Hook to convert smart contracts data to display format
  */
 export const useSmartContractsDisplay = (
-  data: string | DappSmartContractsData | null | undefined,
+  data: string | any | null | undefined,
 ) => {
   const { applicable, contracts, references, isEmpty } =
     useSmartContractsData(data);
@@ -105,7 +106,7 @@ export const useSmartContractsDisplay = (
 
     // Create summary
     const summary = contracts
-      .map((contract) => {
+      .map((contract: any) => {
         const addressCount = contract.addresses.length;
         return `${contract.chain}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
       })
@@ -113,7 +114,7 @@ export const useSmartContractsDisplay = (
 
     // Create detailed view
     const details = {
-      contracts: contracts.map((contract) => ({
+      contracts: contracts.map((contract: any) => ({
         chain: contract.chain,
         addresses: contract.addresses,
         addressCount: contract.addresses.length,
@@ -133,7 +134,7 @@ export const useSmartContractsDisplay = (
  * Hook to convert smart contracts data back to string format (for backward compatibility)
  */
 export const useSmartContractsToString = (
-  data: string | DappSmartContractsData | null | undefined,
+  data: string | any | null | undefined,
 ) => {
   const { contracts } = useSmartContractsData(data);
 
@@ -143,7 +144,9 @@ export const useSmartContractsToString = (
     }
 
     // Flatten all addresses from all chains
-    const allAddresses = contracts.flatMap((contract) => contract.addresses);
+    const allAddresses = contracts.flatMap(
+      (contract: any) => contract.addresses,
+    );
     return allAddresses.join(', ');
   }, [contracts]);
 };

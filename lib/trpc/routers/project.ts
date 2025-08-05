@@ -29,7 +29,6 @@ import {
   voteRecords,
 } from '@/lib/db/schema';
 import { itemProposals } from '@/lib/db/schema/itemProposals';
-import type { DappSmartContractsData } from '@/lib/db/schema/projects';
 import { proposals } from '@/lib/db/schema/proposals';
 import { POC_ITEMS } from '@/lib/pocItems';
 import {
@@ -139,7 +138,7 @@ export const projectRouter = router({
           });
 
           // Convert smart contracts data if it's a string
-          let dappSmartContractsData: DappSmartContractsData | null = null;
+          let dappSmartContractsData: any = null;
 
           if (input.dappSmartContracts) {
             if (typeof input.dappSmartContracts === 'string') {
@@ -163,8 +162,7 @@ export const projectRouter = router({
               }
             } else {
               // Already in correct format
-              dappSmartContractsData =
-                input.dappSmartContracts as DappSmartContractsData;
+              dappSmartContractsData = input.dappSmartContracts;
             }
           }
 

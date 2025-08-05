@@ -13,16 +13,6 @@ import {
 
 import { profiles } from './profiles';
 
-// Define JSONB data type for smart contracts
-export type DappSmartContractsData = {
-  applicable: boolean;
-  contracts: Array<{
-    chain: string;
-    addresses: string[];
-  }>;
-  references?: string[];
-};
-
 export const projects = pgTable(
   'projects',
   {
@@ -56,9 +46,7 @@ export const projects = pgTable(
     founders: jsonb('founders').array().notNull(),
     tags: text('tags').array().notNull(),
     whitePaper: text('white_paper'),
-    dappSmartContracts: jsonb(
-      'dapp_smart_contracts',
-    ).$type<DappSmartContractsData>(),
+    dappSmartContracts: jsonb('dapp_smart_contracts'),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),

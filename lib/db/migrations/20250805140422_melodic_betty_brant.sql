@@ -9,16 +9,12 @@ ALTER TABLE projects ADD COLUMN dapp_smart_contracts_new JSONB;
 
 -- Step 2: Convert existing TEXT data to JSONB format
 -- Old format: comma-separated addresses
--- New format: {"applicable": true, "contracts": [{"chain": "ethereum", "addresses": [...]}], "references": []}
+-- New format: flexible JSON structure without type constraints
 UPDATE projects 
 SET dapp_smart_contracts_new = 
   CASE 
     WHEN dapp_smart_contracts IS NULL OR trim(dapp_smart_contracts) = '' THEN 
-      jsonb_build_object(
-        'applicable', false,
-        'contracts', '[]'::jsonb,
-        'references', '[]'::jsonb
-      )
+      NULL  -- Use NULL to indicate not applicable (like appUrl)
     ELSE 
       jsonb_build_object(
         'applicable', true,
@@ -51,24 +47,10 @@ SET dapp_smart_contracts = jsonb_set(
   '[]'::jsonb
 )
 WHERE dapp_smart_contracts->'contracts'->0->>'addresses' IS NULL
+  AND dapp_smart_contracts IS NOT NULL
   AND jsonb_array_length(dapp_smart_contracts->'contracts') > 0;
 
--- Step 6: Create a GIN index for better JSONB query performance
-CREATE INDEX IF NOT EXISTS idx_projects_dapp_smart_contracts ON projects USING gin(dapp_smart_contracts);
-
--- Step 7: Add a CHECK constraint to ensure data integrity
-ALTER TABLE projects ADD CONSTRAINT check_dapp_smart_contracts_format
-  CHECK (
-    dapp_smart_contracts IS NULL OR (
-      jsonb_typeof(dapp_smart_contracts) = 'object' AND
-      dapp_smart_contracts ? 'applicable' AND
-      dapp_smart_contracts ? 'contracts' AND
-      jsonb_typeof(dapp_smart_contracts->'contracts') = 'array'
-    )
-  );
-
--- Add a comment to document the column structure
-COMMENT ON COLUMN projects.dapp_smart_contracts IS 'Smart contract data in JSONB format: {applicable: boolean, contracts: [{chain: string, addresses: string[]}], references?: string[]}';
+-- Note: No type constraints are added to allow for flexible JSON structure
 
 -- Commit the transaction
 COMMIT;

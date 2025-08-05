@@ -134,7 +134,8 @@ export type IFormDisplayType =
   | 'tablePhysicalEntity'
   | 'autoComplete'
   | 'fundingReceivedGrants'
-  | 'roadmap';
+  | 'roadmap'
+  | 'smartContract';
 
 export interface IGroupConfig {
   key: IItemGroupEnum;

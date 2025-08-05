@@ -59,9 +59,19 @@ const InputContentRenderer: React.FC<IProps> = ({
           </div>
         );
       case 'stringMultiple': {
-        // Special handling for dappSmartContracts
+        const multipleValues = parseMultipleValue(value);
+        const joinedText = multipleValues.join(', ');
+
+        // For expandable fields in collapsed state, show truncated text
+        if (isExpandable && !isExpanded) {
+          // Don't truncate here, let the outer expandable logic handle it
+          return <>{joinedText}</>;
+        }
+
+        return <>{joinedText}</>;
+      }
+      case 'smartContract': {
         if (
-          itemKey === 'dappSmartContracts' &&
           typeof value === 'object' &&
           value !== null &&
           !Array.isArray(value)
@@ -140,17 +150,8 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
 
-        // Default handling for other stringMultiple fields
-        const multipleValues = parseMultipleValue(value);
-        const joinedText = multipleValues.join(', ');
-
-        // For expandable fields in collapsed state, show truncated text
-        if (isExpandable && !isExpanded) {
-          // Don't truncate here, let the outer expandable logic handle it
-          return <>{joinedText}</>;
-        }
-
-        return <>{joinedText}</>;
+        // Fallback for unexpected value type
+        return <>{value}</>;
       }
       case 'selectMultiple':
         return <>{parseMultipleValue(value).join(', ')}</>;

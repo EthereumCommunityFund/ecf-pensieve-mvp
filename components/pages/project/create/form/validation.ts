@@ -2,8 +2,6 @@ import * as yup from 'yup';
 
 import { founderSchema, itemValidationSchemas } from '@/constants/itemSchemas';
 
-import { IProjectFormData } from '../types';
-
 export const projectSchema = yup
   .object()
   .shape({
@@ -23,6 +21,8 @@ export const projectSchema = yup
     openSource: itemValidationSchemas.openSource,
     codeRepo: itemValidationSchemas.codeRepo,
     dappSmartContracts: itemValidationSchemas.dappSmartContracts,
+    dappSmartContractsApplicable: yup.boolean(),
+    dappSmartContractsReferences: yup.array().of(yup.string()),
 
     orgStructure: itemValidationSchemas.orgStructure,
     publicGoods: itemValidationSchemas.publicGoods,
@@ -32,6 +32,6 @@ export const projectSchema = yup
     funding_received_grants: itemValidationSchemas.funding_received_grants,
     tokenContract: itemValidationSchemas.tokenContract,
   })
-  .defined() as yup.ObjectSchema<IProjectFormData>;
+  .defined();
 
 export { founderSchema };
