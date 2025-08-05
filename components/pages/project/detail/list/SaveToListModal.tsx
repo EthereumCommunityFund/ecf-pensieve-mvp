@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Button,
   Modal,
   ModalBody,
   ModalContent,
@@ -8,7 +9,7 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Plus, X } from '@phosphor-icons/react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { addToast } from '@/components/base/toast';
 import { BookmarkList } from '@/types/bookmark';
@@ -45,126 +46,132 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
   const { data: listsWithProjectStatus, isLoading: isLoadingLists } =
     getUserListsWithProjectStatus(projectId, isOpen);
 
-  // Derive selected lists directly from query data
-  const initialSelectedListIds = useMemo(
-    () =>
-      listsWithProjectStatus
-        ?.filter((list) => list.isProjectInList)
-        .map((list) => list.id) || [],
-    [listsWithProjectStatus],
-  );
+  // State management for tracking changes
+  const [originalCheckedState, setOriginalCheckedState] = useState<
+    Record<string, boolean>
+  >({});
+  const [currentCheckedState, setCurrentCheckedState] = useState<
+    Record<string, boolean>
+  >({});
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  // Local state for optimistic updates
-  const [localSelectedChanges, setLocalSelectedChanges] = useState<{
-    added: Set<number>;
-    removed: Set<number>;
-  }>({ added: new Set(), removed: new Set() });
+  // Initialize state when data loads
+  useEffect(() => {
+    if (listsWithProjectStatus && isOpen) {
+      const initialState: Record<string, boolean> = {};
+      listsWithProjectStatus.forEach((list) => {
+        initialState[list.id.toString()] = list.isProjectInList;
+      });
+      setOriginalCheckedState(initialState);
+      setCurrentCheckedState(initialState);
+      setHasChanges(false);
+    }
+  }, [listsWithProjectStatus, isOpen]);
 
-  // Compute final selected list IDs
-  const selectedListIds = useMemo(
-    () => [
-      ...initialSelectedListIds.filter(
-        (id) => !localSelectedChanges.removed.has(id),
-      ),
-      ...Array.from(localSelectedChanges.added),
-    ],
-    [initialSelectedListIds, localSelectedChanges],
-  );
+  // Check for changes
+  useEffect(() => {
+    const hasChanges =
+      JSON.stringify(originalCheckedState) !==
+      JSON.stringify(currentCheckedState);
+    setHasChanges(hasChanges);
+  }, [originalCheckedState, currentCheckedState]);
 
-  // Reset local changes when modal closes
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setLocalSelectedChanges({ added: new Set(), removed: new Set() });
+      setOriginalCheckedState({});
+      setCurrentCheckedState({});
+      setHasChanges(false);
     }
   }, [isOpen]);
 
-  const handleListToggle = useCallback(
-    async (listId: number) => {
-      const isCurrentlySelected = selectedListIds.includes(listId);
-      const wasInitiallySelected = initialSelectedListIds.includes(listId);
+  const handleListToggle = useCallback((listId: number) => {
+    setCurrentCheckedState((prev) => ({
+      ...prev,
+      [listId.toString()]: !prev[listId.toString()],
+    }));
+  }, []);
 
-      // Optimistic update
-      setLocalSelectedChanges((prev) => {
-        const newAdded = new Set(prev.added);
-        const newRemoved = new Set(prev.removed);
+  const handleConfirm = useCallback(async () => {
+    // Find changes
+    const toAdd: number[] = [];
+    const toRemove: number[] = [];
 
-        if (isCurrentlySelected) {
-          // Removing
-          if (wasInitiallySelected) {
-            newRemoved.add(listId);
-          } else {
-            newAdded.delete(listId);
-          }
+    Object.keys(currentCheckedState).forEach((listId) => {
+      const original = originalCheckedState[listId];
+      const current = currentCheckedState[listId];
+
+      if (original !== current) {
+        if (current) {
+          toAdd.push(Number(listId));
         } else {
-          // Adding
-          if (wasInitiallySelected) {
-            newRemoved.delete(listId);
-          } else {
-            newAdded.add(listId);
-          }
+          toRemove.push(Number(listId));
         }
+      }
+    });
 
-        return { added: newAdded, removed: newRemoved };
+    // Early return if no changes
+    if (toAdd.length === 0 && toRemove.length === 0) {
+      return;
+    }
+
+    setIsConfirming(true);
+
+    try {
+      // Execute all changes
+      const promises = [];
+
+      for (const listId of toAdd) {
+        promises.push(
+          addProjectToListMutation.mutateAsync({ listId, projectId }),
+        );
+      }
+
+      for (const listId of toRemove) {
+        promises.push(
+          removeProjectFromListMutation.mutateAsync({ listId, projectId }),
+        );
+      }
+
+      await Promise.allSettled(promises).then((results) => {
+        const failed = results.filter((result) => result.status === 'rejected');
+        if (failed.length > 0) {
+          throw new Error(`Failed to update ${failed.length} list(s)`);
+        }
       });
 
-      try {
-        if (isCurrentlySelected) {
-          await removeProjectFromListMutation.mutateAsync({
-            listId,
-            projectId,
-          });
-          addToast({ title: 'Removed from list', color: 'success' });
-        } else {
-          await addProjectToListMutation.mutateAsync({ listId, projectId });
-          addToast({ title: 'Added to list', color: 'success' });
-        }
-      } catch (error) {
-        // Revert optimistic update on error
-        setLocalSelectedChanges((prev) => {
-          const newAdded = new Set(prev.added);
-          const newRemoved = new Set(prev.removed);
+      // Update original state to current state after successful save
+      setOriginalCheckedState(currentCheckedState);
+      setHasChanges(false);
 
-          if (isCurrentlySelected) {
-            // Was trying to remove, revert
-            if (wasInitiallySelected) {
-              newRemoved.delete(listId);
-            } else {
-              newAdded.add(listId);
-            }
-          } else {
-            // Was trying to add, revert
-            if (wasInitiallySelected) {
-              newRemoved.add(listId);
-            } else {
-              newAdded.delete(listId);
-            }
-          }
-
-          return { added: newAdded, removed: newRemoved };
-        });
-
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to toggle list';
-        addToast({ title: errorMessage, color: 'danger' });
-        console.error('Failed to toggle list:', error);
-      }
-    },
-    [
-      selectedListIds,
-      initialSelectedListIds,
-      projectId,
-      addProjectToListMutation,
-      removeProjectFromListMutation,
-    ],
-  );
+      const changeCount = toAdd.length + toRemove.length;
+      addToast({
+        title: `Updated ${changeCount} list${changeCount > 1 ? 's' : ''}`,
+        color: 'success',
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to update lists';
+      addToast({ title: errorMessage, color: 'danger' });
+      console.error('Failed to update lists:', error);
+    } finally {
+      setIsConfirming(false);
+    }
+  }, [
+    currentCheckedState,
+    originalCheckedState,
+    projectId,
+    addProjectToListMutation,
+    removeProjectFromListMutation,
+  ]);
 
   const handleCreateNewList = useCallback((newList: BookmarkList) => {
     // Auto-select the new list after creation
-    setLocalSelectedChanges((prev) => {
-      const newAdded = new Set(prev.added);
-      newAdded.add(newList.id);
-      return { ...prev, added: newAdded };
-    });
+    setCurrentCheckedState((prev) => ({
+      ...prev,
+      [newList.id.toString()]: true,
+    }));
   }, []);
 
   const handleClose = () => {
@@ -220,7 +227,9 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
                       <BookmarkListItem
                         key={list.id}
                         list={list}
-                        isSelected={selectedListIds.includes(list.id)}
+                        isSelected={
+                          currentCheckedState[list.id.toString()] || false
+                        }
                         onToggle={handleListToggle}
                       />
                     ))
@@ -241,6 +250,18 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
               </span>
               <Plus className="size-5 text-black" strokeWidth={1.5} />
             </button>
+
+            {hasChanges && (
+              <Button
+                onClick={handleConfirm}
+                isLoading={isConfirming}
+                disabled={isConfirming}
+                className="flex items-center justify-center rounded-[5px] bg-[rgb(60,60,60)] px-[30px] py-[10px] text-[14px] font-[600] text-white hover:bg-[rgb(80,80,80)] disabled:opacity-50"
+                style={{ fontFamily: 'Open Sans' }}
+              >
+                Confirm
+              </Button>
+            )}
           </ModalBody>
         </ModalContent>
       </Modal>

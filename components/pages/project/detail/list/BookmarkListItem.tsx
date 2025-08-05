@@ -1,8 +1,9 @@
 'use client';
 
-import { Check, Globe, Lock, Square } from '@phosphor-icons/react';
+import { Globe, Lock, Square } from '@phosphor-icons/react';
 import { FC } from 'react';
 
+import CheckSquareIcon from '@/components/icons/CheckSquare';
 import { BookmarkList } from '@/types/bookmark';
 
 interface BookmarkListItemProps {
@@ -17,8 +18,8 @@ const BookmarkListItem: FC<BookmarkListItemProps> = ({
   onToggle,
 }) => {
   return (
-    <div
-      className="flex cursor-pointer items-center justify-between gap-[10px] rounded-[12px] px-2 py-1 hover:bg-[#EEEEEE]"
+    <button
+      className="flex w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] px-2 py-1 hover:bg-[#EEEEEE]"
       style={{
         border: 'none',
         boxShadow: 'none',
@@ -27,19 +28,18 @@ const BookmarkListItem: FC<BookmarkListItemProps> = ({
         MozBoxShadow: 'none',
       }}
       onClick={() => onToggle(list.id)}
+      aria-pressed={isSelected}
+      aria-label={`${isSelected ? 'Remove from' : 'Add to'} ${list.name} list`}
     >
       <div className="flex items-center gap-[10px]">
-        <div className="relative flex size-[28px] items-center justify-center">
-          <Square
-            className="size-[19.25px] text-black"
-            strokeWidth={2}
-            weight="regular"
-          />
-          {isSelected && (
-            <Check
-              className="absolute size-[14px] text-black"
+        <div className="flex size-[28px] items-center justify-center">
+          {isSelected ? (
+            <CheckSquareIcon className="size-[20px] text-black" />
+          ) : (
+            <Square
+              className="size-[19.25px] text-black"
               strokeWidth={2}
-              weight="bold"
+              weight="regular"
             />
           )}
         </div>
@@ -54,7 +54,7 @@ const BookmarkListItem: FC<BookmarkListItemProps> = ({
           <Globe className="size-6 text-black" strokeWidth={1.5} />
         )}
       </div>
-    </div>
+    </button>
   );
 };
 
