@@ -186,7 +186,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
         placement="center"
         hideCloseButton={true}
         classNames={{
-          base: 'w-[400px] max-w-[400px] min-h-[185px] max-h-[447px]',
+          base: 'w-[400px] max-w-[400px] min-h-[185px] max-h-[600px]',
           backdrop: 'bg-black/50',
         }}
       >
@@ -202,8 +202,8 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
               <X className="size-5 text-black" strokeWidth={1.5} />
             </button>
           </ModalHeader>
-          <ModalBody className="flex flex-col justify-between gap-[10px] p-5">
-            <div className="relative flex-1 overflow-hidden">
+          <ModalBody className="flex flex-col gap-[10px] p-5">
+            <div className="relative overflow-hidden">
               <div className="custom-scrollbar flex max-h-[300px] flex-col gap-2 overflow-y-auto pr-1">
                 {isLoadingLists ? (
                   <SaveToListSkeleton />
@@ -241,27 +241,29 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
               )}
             </div>
 
-            <button
-              onClick={onCreateModalOpen}
-              className="flex items-center justify-between rounded-[8px] bg-black/5 px-[14px] py-2 hover:bg-black/10"
-            >
-              <span className="text-[14px] font-[600] text-black">
-                Create New List
-              </span>
-              <Plus className="size-5 text-black" strokeWidth={1.5} />
-            </button>
-
-            {hasChanges && (
-              <Button
-                onPress={handleConfirm}
-                isLoading={isConfirming}
-                isDisabled={isConfirming}
-                className="flex items-center justify-center rounded-[5px] bg-[rgb(60,60,60)] px-[30px] py-[10px] text-[14px] font-[600] text-white hover:bg-[rgb(80,80,80)] disabled:opacity-50"
-                style={{ fontFamily: 'Open Sans' }}
+            <div className="flex shrink-0 flex-col gap-[10px]">
+              <button
+                onClick={onCreateModalOpen}
+                className="flex items-center justify-between rounded-[8px] bg-black/5 px-[14px] py-2 hover:bg-black/10"
               >
-                Confirm
-              </Button>
-            )}
+                <span className="text-[14px] font-[600] text-black">
+                  Create New List
+                </span>
+                <Plus className="size-5 text-black" strokeWidth={1.5} />
+              </button>
+
+              {hasChanges && (
+                <Button
+                  onPress={handleConfirm}
+                  isLoading={isConfirming}
+                  isDisabled={isConfirming}
+                  className="flex items-center justify-center rounded-[5px] bg-[rgb(60,60,60)] px-[30px] py-[10px] text-[14px] font-[600] text-white hover:bg-[rgb(80,80,80)] disabled:opacity-50"
+                  style={{ fontFamily: 'Open Sans' }}
+                >
+                  Confirm
+                </Button>
+              )}
+            </div>
           </ModalBody>
         </ModalContent>
       </Modal>
