@@ -104,7 +104,7 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   categories: [],
   mainDescription: '',
   logoUrl: '',
-  websites: [{ url: '', title: '' }],
+  websites: [{ url: '', title: '', _id: crypto.randomUUID() }],
   appUrl: null,
   dateFounded: null,
   dateLaunch: null,
@@ -115,7 +115,7 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   tokenContract: null,
   orgStructure: '',
   publicGoods: '',
-  founders: [{ name: '', title: '', region: '' }],
+  founders: [{ name: '', title: '', region: '', _id: crypto.randomUUID() }],
   tags: [],
   whitePaper: '',
   dappSmartContracts: {
@@ -136,7 +136,13 @@ export const FakeProjectFormData: IProjectFormData = {
     'Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology. Status is a messenger, crypto wallet, and Web3 browser built with state of the art technology.',
   logoUrl:
     'https://pub-d00cee3ff1154a18bdf38c29db9a51c5.r2.dev/uploads/a4dbec29-8f62-4e13-9722-01ef0a12de8e.jpeg',
-  websites: [{ url: 'https://fake-project.com', title: 'Fake website name' }],
+  websites: [
+    {
+      url: 'https://fake-project.com',
+      title: 'Fake website name',
+      _id: crypto.randomUUID(),
+    },
+  ],
   appUrl: 'https://fake-project.com',
   dateFounded: new Date('2025-01-01'),
   dateLaunch: new Date('2025-01-01'),
@@ -147,7 +153,14 @@ export const FakeProjectFormData: IProjectFormData = {
   tokenContract: '0x1234567890123456789012345678901234567890',
   orgStructure: 'DAO',
   publicGoods: 'Yes',
-  founders: [{ name: 'John Doe', title: 'Founder', region: 'US' }],
+  founders: [
+    {
+      name: 'John Doe',
+      title: 'Founder',
+      region: 'US',
+      _id: crypto.randomUUID(),
+    },
+  ],
   whitePaper: 'https://fake-project.com/whitepaper.pdf',
   dappSmartContracts: {
     applicable: true,

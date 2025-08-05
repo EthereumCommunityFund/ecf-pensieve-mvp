@@ -37,7 +37,8 @@
       "Bash(node:*)",
       "mcp__browser__getConsoleLogs",
       "mcp__browser__getConsoleErrors",
-      "mcp__figma-context__get_figma_data"
+      "mcp__figma-context__get_figma_data",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }

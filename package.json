@@ -63,6 +63,7 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.0",
+    "react-image-crop": "^11.0.10",
     "superjson": "^2.2.2",
     "twitter-api-v2": "^1.17.2",
     "use-debounce": "^10.0.5",

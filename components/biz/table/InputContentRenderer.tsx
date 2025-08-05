@@ -6,6 +6,7 @@ import React, { memo, useCallback } from 'react';
 
 import { AddressListDisplay } from '@/components/base/AddressDisplay';
 import { TableIcon } from '@/components/icons';
+import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
@@ -32,7 +33,6 @@ interface IProps {
 
 const InputContentRenderer: React.FC<IProps> = ({
   value,
-  itemKey,
   isEssential,
   displayFormType,
   isExpandable,
@@ -190,7 +190,6 @@ const InputContentRenderer: React.FC<IProps> = ({
           return <>{parsedFounderList}</>;
         }
 
-        // 如果在 ExpandableRow 中，只显示表格内容，不显示按钮
         if (isInExpandableRow) {
           return (
             <div className="w-full">
@@ -370,7 +369,6 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
 
-        // 如果是可展开的，在普通单元格中只显示按钮
         if (isExpandable) {
           return (
             <div className="w-full">
@@ -395,7 +393,6 @@ const InputContentRenderer: React.FC<IProps> = ({
           return <>{parsedWebsites}</>;
         }
 
-        // 如果在 ExpandableRow 中，只显示表格内容，不显示按钮
         if (isInExpandableRow) {
           return (
             <div className="w-full">
@@ -514,7 +511,6 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
 
-        // 如果是可展开的，在普通单元格中只显示按钮
         if (isExpandable) {
           return (
             <div className="w-full">
@@ -531,7 +527,6 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
 
-        // 非可展开状态下的默认显示（简单文本格式）
         return (
           <>
             {parsedWebsites
@@ -550,7 +545,6 @@ const InputContentRenderer: React.FC<IProps> = ({
           return <>{parsed}</>;
         }
 
-        // 如果在 ExpandableRow 中，只显示表格内容，不显示按钮
         if (isInExpandableRow) {
           return (
             <div className="w-full">
@@ -561,69 +555,64 @@ const InputContentRenderer: React.FC<IProps> = ({
                       <TableHeader width={214} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span>Legal Name</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
                         </div>
                       </TableHeader>
                       <TableHeader isLast isContainerBordered>
                         <div className="flex items-center gap-[5px]">
-                          <span>Country</span>
-                          <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                            >
-                              <circle
-                                cx="9"
-                                cy="9"
-                                r="6.75"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <circle
-                                cx="9"
-                                cy="6.75"
-                                r="2.25"
-                                stroke="black"
-                                strokeWidth="1"
-                              />
-                              <path
-                                d="M9 12.09L9 12.09"
-                                stroke="black"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
+                          <span>Country/Region</span>
+                          <Tooltip
+                            content={
+                              <div className="flex flex-col gap-1">
+                                <span>
+                                  Following{' '}
+                                  <a
+                                    href="https://www.iso.org/iso-3166-country-codes.html"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600"
+                                  >
+                                    {` ISO 3166 `}
+                                  </a>
+                                  standard
+                                </span>
+                              </div>
+                            }
+                            classNames={{
+                              content:
+                                'p-[10px] rounded-[5px] border border-black/10',
+                            }}
+                            closeDelay={0}
+                          >
+                            <div className="flex size-[18px] items-center justify-center rounded bg-white opacity-40">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 18 18"
+                                fill="none"
+                              >
+                                <circle
+                                  cx="9"
+                                  cy="9"
+                                  r="6.75"
+                                  stroke="black"
+                                  strokeWidth="1"
+                                />
+                                <circle
+                                  cx="9"
+                                  cy="6.75"
+                                  r="2.25"
+                                  stroke="black"
+                                  strokeWidth="1"
+                                />
+                                <path
+                                  d="M9 12.09L9 12.09"
+                                  stroke="black"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                          </Tooltip>
                         </div>
                       </TableHeader>
                     </tr>
@@ -646,7 +635,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                           isContainerBordered
                           isLastRow={index === parsed.length - 1}
                         >
-                          {item.country}
+                          {getRegionLabel(item.country)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -679,7 +668,147 @@ const InputContentRenderer: React.FC<IProps> = ({
           <>
             {parsed
               .map(
-                (item: IPhysicalEntity) => `${item.legalName}: ${item.country}`,
+                (item: IPhysicalEntity) =>
+                  `${item.legalName}: ${getRegionLabel(item.country)}`,
+              )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'fundingReceivedGrants': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={158} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Date</span>
+                          <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={301} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Organization/Program</span>
+                          <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={138} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span className="shrink-0">Amount (USD)</span>
+                          <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Reference</span>
+                          <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        grant: {
+                          date: Date | string;
+                          organization: string;
+                          amount: string;
+                          reference: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={158}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {dayjs(grant.date).format('YYYY/MM/DD')}
+                          </TableCell>
+                          {/* TODO can jump to project page with projectId */}
+                          <TableCell
+                            width={301}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {grant.organization}
+                          </TableCell>
+                          <TableCell
+                            width={138}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {grant.amount}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {grant.reference ? (
+                              <Link
+                                href={normalizeUrl(grant.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(grant.reference)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map(
+                (grant: {
+                  date: Date | string;
+                  organization: string;
+                  amount: string;
+                  reference: string;
+                }) => {
+                  const dateStr = dayjs(grant.date).format('YYYY/MM/DD');
+                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.reference}`;
+                },
               )
               .join(', ')}
           </>
@@ -719,7 +848,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     isExpandable &&
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites' &&
-    displayFormType !== 'tablePhysicalEntity'
+    displayFormType !== 'tablePhysicalEntity' &&
+    displayFormType !== 'fundingReceivedGrants'
   ) {
     // If we're in an expandable row, show full content without line clamp
     if (isInExpandableRow) {

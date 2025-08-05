@@ -2,7 +2,11 @@ import { isAddress } from 'ethers';
 import * as yup from 'yup';
 
 import { IFounder, IWebsite } from '@/components/pages/project/create/types';
-import { IDateConstraints, IPhysicalEntity } from '@/types/item';
+import {
+  IDateConstraints,
+  IFundingReceivedGrants,
+  IPhysicalEntity,
+} from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
 
 // TypeScript declaration merging for custom Yup methods
@@ -47,6 +51,7 @@ const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
   region: yup.string().optional(),
+  _id: yup.string().optional(),
 });
 
 // Create a smart founder validation schema with strict validation on submission
@@ -54,6 +59,7 @@ const smartFounderSchema = yup.object().shape({
   name: yup.string().required('Founder name is required'),
   title: yup.string().required('Founder title is required'),
   region: yup.string().optional(),
+  _id: yup.string().optional(),
 });
 
 const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
@@ -63,13 +69,15 @@ const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
     .url('Please enter a valid URL')
     .required('Project website is required'),
   title: yup.string().required('Project website title is required'),
+  _id: yup.string().optional(),
 });
 
 const physicalEntitySchema: yup.ObjectSchema<IPhysicalEntity> = yup
   .object()
   .shape({
     legalName: yup.string().required('Legal name is required'),
-    country: yup.string().required('Country is required'),
+    country: yup.string().optional(),
+    _id: yup.string().optional(),
   });
 
 export const dateFoundedConstraints: IDateConstraints = {
@@ -124,6 +132,26 @@ const createDateConstraintValidator = (constraints?: IDateConstraints) => {
     return true;
   };
 };
+
+const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
+  yup.object().shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .required('Foundation date is required'),
+    organization: yup.string().required('organization is required'),
+    amount: yup.string().required('amount is required'),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().optional(),
+  });
 
 export const itemValidationSchemas = {
   // Basics
@@ -419,6 +447,12 @@ export const itemValidationSchemas = {
     .min(1, 'At least one physical entity is required')
     .required('Physical entity information is required'),
 
+  funding_received_grants: yup
+    .array()
+    .of(fundingReceivedGrantsSchema)
+    .min(1, 'At least one funding received(grants) is required')
+    .required('Funding received(grants) information is required'),
+
   // Financial
   fundingStatus: yup
     .string()
@@ -453,7 +487,11 @@ export const itemValidationSchemas = {
 
   token_sales: yup.string().required('Token sales status is required'),
 
-  token_type: yup.string().required('Token type is required'),
+  token_type: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one token type')
+    .required('Token type is required'),
 
   token_issuance_mechanism: yup
     .string()

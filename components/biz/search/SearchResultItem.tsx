@@ -2,26 +2,11 @@
 
 import Link from 'next/link';
 
+import { useProjectItemValue } from '@/hooks/useProjectItemValue';
+import { IProject } from '@/types';
+
 interface SearchResultItemProps {
-  project: {
-    id: string;
-    name: string;
-    tagline?: string;
-    mainDescription?: string;
-    logoUrl?: string;
-    creator: {
-      address: string;
-      avatar?: string;
-      username?: string;
-    };
-    projectSnap?: {
-      name: string;
-      tagline?: string;
-      mainDescription?: string;
-      logoUrl?: string;
-    } | null;
-    createdAt: string;
-  };
+  project: IProject;
   query: string;
   isPublished: boolean;
   onClose: () => void;
@@ -33,6 +18,9 @@ export default function SearchResultItem({
   isPublished,
   onClose,
 }: SearchResultItemProps) {
+  const { logoUrl, projectName, tagline, getItemValue } =
+    useProjectItemValue(project);
+
   const highlightText = (text: string, query: string) => {
     if (!query) return text;
 
@@ -51,17 +39,11 @@ export default function SearchResultItem({
     );
   };
 
-  const displayName = isPublished
-    ? project.projectSnap?.name || project.name
-    : project.name;
-  const displayDescription = isPublished
-    ? project.projectSnap?.mainDescription || project.mainDescription
-    : project.mainDescription;
-  const displayLogo = isPublished
-    ? project.projectSnap?.logoUrl || project.logoUrl
-    : project.logoUrl;
+  const displayName = projectName;
+  const displayDescription = tagline || getItemValue('mainDescription' as any);
+  const displayLogo = logoUrl;
   const creatorName =
-    project.creator.username || project.creator.address.slice(0, 6) + '...';
+    project.creator.name || project.creator.address.slice(0, 6) + '...';
 
   const projectUrl = isPublished
     ? `/project/${project.id}`

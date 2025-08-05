@@ -27,11 +27,13 @@ export interface IFounder {
   name: string;
   title: string;
   region?: string;
+  _id?: string;
 }
 
 export interface IWebsite {
   url: string;
   title: string;
+  _id?: string;
 }
 
 export interface IReferenceData {
