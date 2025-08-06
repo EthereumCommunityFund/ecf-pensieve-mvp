@@ -6,7 +6,7 @@ import { projects } from '@/lib/db/schema';
 
 export interface SmartContract {
   chain: string;
-  addresses: string[];
+  addresses: string;
 }
 
 export interface SmartContractsUpdateData {
@@ -42,30 +42,30 @@ export class SmartContractService {
         continue;
       }
 
-      if (!contract.addresses || contract.addresses.length === 0) {
+      if (!contract.addresses || !contract.addresses.trim()) {
         errors.push(`No addresses provided for ${contract.chain}`);
         continue;
       }
 
       const addressSet = chainMap.get(contract.chain) || new Set<string>();
 
-      for (const address of contract.addresses) {
-        const trimmed = address.trim();
+      // Parse addresses from string (comma-separated)
+      const addressList = contract.addresses
+        .split(',')
+        .map((addr) => addr.trim())
+        .filter(Boolean);
 
-        if (!trimmed) {
-          continue;
-        }
-
-        if (!ethers.isAddress(trimmed)) {
+      for (const address of addressList) {
+        if (!ethers.isAddress(address)) {
           errors.push(
-            `Invalid address format on ${contract.chain}: ${trimmed}`,
+            `Invalid address format on ${contract.chain}: ${address}`,
           );
           continue;
         }
 
-        const normalized = trimmed.toLowerCase();
+        const normalized = address.toLowerCase();
         if (addressSet.has(normalized)) {
-          errors.push(`Duplicate address on ${contract.chain}: ${trimmed}`);
+          errors.push(`Duplicate address on ${contract.chain}: ${address}`);
           continue;
         }
 
@@ -113,9 +113,7 @@ export class SmartContractService {
       contracts: data.applicable
         ? data.contracts.map((contract) => ({
             chain: contract.chain,
-            addresses: contract.addresses
-              .map((addr) => addr.trim())
-              .filter(Boolean),
+            addresses: contract.addresses.trim(),
           }))
         : [],
       references: data.references || [],
@@ -151,21 +149,16 @@ export class SmartContractService {
     // Handle old data format (if it's a string)
     if (typeof smartContractsData === 'string') {
       // Old data is comma-separated addresses string
-      const addresses = smartContractsData
-        .split(',')
-        .map((a) => a.trim())
-        .filter(Boolean);
       return {
-        applicable: addresses.length > 0,
-        contracts:
-          addresses.length > 0
-            ? [
-                {
-                  chain: 'ethereum',
-                  addresses,
-                },
-              ]
-            : [],
+        applicable: smartContractsData.trim().length > 0,
+        contracts: smartContractsData.trim()
+          ? [
+              {
+                chain: 'ethereum',
+                addresses: smartContractsData.trim(),
+              },
+            ]
+          : [],
         references: [],
       };
     }
@@ -199,21 +192,13 @@ export class SmartContractService {
    * Transform legacy smart contracts data to new format
    */
   transformLegacyData(legacyData: string | null): SmartContract[] {
-    if (!legacyData) return [];
-
-    // Assume old data is comma-separated addresses
-    const addresses = legacyData
-      .split(',')
-      .map((addr) => addr.trim())
-      .filter(Boolean);
-
-    if (addresses.length === 0) return [];
+    if (!legacyData || !legacyData.trim()) return [];
 
     // Group all addresses under Ethereum by default
     return [
       {
         chain: 'ethereum',
-        addresses,
+        addresses: legacyData.trim(),
       },
     ];
   }
@@ -223,7 +208,7 @@ export class SmartContractService {
    */
   transformToLegacyFormat(contracts: SmartContract[]): string {
     // For backwards compatibility, concatenate all addresses
-    return contracts.flatMap((contract) => contract.addresses).join(', ');
+    return contracts.map((contract) => contract.addresses).join(', ');
   }
 }
 

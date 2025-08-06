@@ -45,7 +45,7 @@ export interface IReferenceData {
 export interface ISmartContract {
   id: string;
   chain: string;
-  addresses: string[];
+  addresses: string;
 }
 
 export interface ISmartContractsData {
@@ -109,7 +109,7 @@ export interface ICreateProjectPayload {
         applicable: boolean;
         contracts: {
           chain: string;
-          addresses: string[];
+          addresses: string;
         }[];
         references: string[];
       };

@@ -10,7 +10,7 @@ import { ChainSelector } from './ChainSelector';
 export interface SmartContract {
   id: string;
   chain: string;
-  addresses: string[];
+  addresses: string;
 }
 
 export interface ContractEntryProps {
@@ -21,6 +21,7 @@ export interface ContractEntryProps {
   disabled?: boolean;
   onCustomChainAdd?: (chainName: string) => void;
   showRemove?: boolean;
+  placeholder?: string;
 }
 
 export const ContractEntry: React.FC<ContractEntryProps> = ({
@@ -31,6 +32,7 @@ export const ContractEntry: React.FC<ContractEntryProps> = ({
   disabled = false,
   onCustomChainAdd,
   showRemove = true,
+  placeholder,
 }) => {
   return (
     <div className="space-y-[10px]">
@@ -47,6 +49,7 @@ export const ContractEntry: React.FC<ContractEntryProps> = ({
         onChange={(addresses) => onChange({ addresses })}
         chain={contract.chain}
         disabled={disabled}
+        placeholder={placeholder}
       />
 
       {showRemove && (

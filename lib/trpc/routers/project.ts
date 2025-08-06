@@ -101,7 +101,7 @@ export const projectRouter = router({
                 contracts: z.array(
                   z.object({
                     chain: z.string(),
-                    addresses: z.array(z.string()),
+                    addresses: z.string(),
                   }),
                 ),
                 references: z.array(z.string()).optional(),

@@ -23,25 +23,19 @@ export const useSmartContractsData = (
 
     // Handle legacy string format
     if (typeof data === 'string') {
-      const addresses = data
-        .split(',')
-        .map((addr) => addr.trim())
-        .filter(Boolean);
-
       return {
         applicable: true,
-        contracts:
-          addresses.length > 0
-            ? ([
-                {
-                  id: generateUUID(),
-                  chain: 'ethereum',
-                  addresses,
-                },
-              ] as ISmartContract[])
-            : [],
+        contracts: data.trim()
+          ? ([
+              {
+                id: generateUUID(),
+                chain: 'ethereum',
+                addresses: data,
+              },
+            ] as ISmartContract[])
+          : [],
         references: [] as string[],
-        isEmpty: addresses.length === 0,
+        isEmpty: !data.trim(),
         isLegacyFormat: true,
       };
     }
@@ -52,7 +46,7 @@ export const useSmartContractsData = (
         (contract: any, index: number) => ({
           id: `contract-${index}-${Date.now()}`,
           chain: contract.chain,
-          addresses: contract.addresses || [],
+          addresses: contract.addresses || '',
         }),
       );
 
@@ -62,7 +56,9 @@ export const useSmartContractsData = (
         references: data.references || ([] as string[]),
         isEmpty:
           contracts.length === 0 ||
-          contracts.every((c: any) => c.addresses.length === 0),
+          contracts.every(
+            (c: any) => !c.addresses || c.addresses.trim() === '',
+          ),
         isLegacyFormat: false,
       };
     }
@@ -107,7 +103,13 @@ export const useSmartContractsDisplay = (
     // Create summary
     const summary = contracts
       .map((contract: any) => {
-        const addressCount = contract.addresses.length;
+        const addresses = contract.addresses
+          ? contract.addresses
+              .split(',')
+              .map((a: string) => a.trim())
+              .filter(Boolean)
+          : [];
+        const addressCount = addresses.length;
         return `${contract.chain}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
       })
       .join(', ');
@@ -117,7 +119,12 @@ export const useSmartContractsDisplay = (
       contracts: contracts.map((contract: any) => ({
         chain: contract.chain,
         addresses: contract.addresses,
-        addressCount: contract.addresses.length,
+        addressCount: contract.addresses
+          ? contract.addresses
+              .split(',')
+              .map((a: string) => a.trim())
+              .filter(Boolean).length
+          : 0,
       })),
       references,
     };
@@ -143,10 +150,11 @@ export const useSmartContractsToString = (
       return '';
     }
 
-    // Flatten all addresses from all chains
-    const allAddresses = contracts.flatMap(
-      (contract: any) => contract.addresses,
-    );
-    return allAddresses.join(', ');
+    // Concatenate all addresses from all chains
+    const allAddresses = contracts
+      .map((contract: any) => contract.addresses)
+      .filter(Boolean)
+      .join(', ');
+    return allAddresses;
   }, [contracts]);
 };

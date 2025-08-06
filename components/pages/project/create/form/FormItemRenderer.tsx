@@ -16,7 +16,7 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
-import { SmartContractsField } from '@/components/biz/project/smart-contracts';
+import { MultiContractEntry } from '@/components/biz/project/smart-contracts';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
@@ -77,19 +77,19 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
   }, [itemKey, formType]);
 
-  // Smart contracts values (used only when formDisplayType === 'smartContract')
+  // Smart contracts values (used only when formDisplayType === 'multiContracts')
   const smartContractsApplicable =
-    formDisplayType === 'smartContract'
+    formDisplayType === 'multiContracts'
       ? (watch('dappSmartContractsApplicable') ?? true)
       : true;
   const smartContractsReferences =
-    formDisplayType === 'smartContract'
+    formDisplayType === 'multiContracts'
       ? (watch('dappSmartContractsReferences') ?? [])
       : [];
 
   // Process smart contracts value
   const smartContractsValue: ISmartContract[] = useMemo(() => {
-    if (formDisplayType !== 'smartContract') {
+    if (formDisplayType !== 'multiContracts') {
       return [];
     }
 
@@ -866,9 +866,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         </div>
       );
 
-    case 'smartContract':
+    case 'multiContracts':
       return (
-        <SmartContractsField
+        <MultiContractEntry
           value={smartContractsValue}
           onChange={handleContractsChange}
           weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
@@ -877,6 +877,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
           references={smartContractsReferences}
           onReferencesChange={handleReferencesChange}
           disabled={isDisabled}
+          placeholder={itemConfig.placeholder}
         />
       );
 

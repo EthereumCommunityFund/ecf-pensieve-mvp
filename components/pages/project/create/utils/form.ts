@@ -171,14 +171,11 @@ export const transformProjectData = (
         fieldApplicability,
       );
       if (typeof legacyValue === 'string' && legacyValue) {
-        const addresses = legacyValue
-          .split(',')
-          .map((addr) => addr.trim())
-          .filter(Boolean);
         return {
           applicable: true,
-          contracts:
-            addresses.length > 0 ? [{ chain: 'ethereum', addresses }] : [],
+          contracts: legacyValue.trim()
+            ? [{ chain: 'ethereum', addresses: legacyValue }]
+            : [],
           references: [],
         };
       }

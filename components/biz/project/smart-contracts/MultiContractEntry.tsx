@@ -6,7 +6,7 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 import { ContractEntry, type SmartContract } from './ContractEntry';
 
-export interface SmartContractsFieldProps {
+export interface MultiContractEntryProps {
   value: SmartContract[];
   onChange: (contracts: SmartContract[]) => void;
   weight: number;
@@ -18,7 +18,7 @@ export interface SmartContractsFieldProps {
   placeholder?: string;
 }
 
-export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
+export const MultiContractEntry: React.FC<MultiContractEntryProps> = ({
   value,
   onChange,
   weight,
@@ -71,7 +71,7 @@ export const SmartContractsField: React.FC<SmartContractsFieldProps> = ({
   };
 
   return (
-    <div className="space-y-[10px]" data-testid="smart-contracts-field">
+    <div className="space-y-[10px]" data-testid="multi-contract-entry">
       {/* Always show contract entries but disabled when not applicable */}
       {(value.length > 0 || !applicable) && (
         <div className="space-y-3">

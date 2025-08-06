@@ -135,7 +135,8 @@ export type IFormDisplayType =
   | 'autoComplete'
   | 'fundingReceivedGrants'
   | 'roadmap'
-  | 'smartContract';
+  | 'smartContract'
+  | 'multiContracts';
 
 export interface IGroupConfig {
   key: IItemGroupEnum;

@@ -168,7 +168,7 @@ export const FakeProjectFormData: IProjectFormData = {
       {
         id: '1',
         chain: 'ethereum',
-        addresses: ['0x1234567890123456789012345678901234567890'],
+        addresses: '0x1234567890123456789012345678901234567890',
       },
     ],
     references: [],

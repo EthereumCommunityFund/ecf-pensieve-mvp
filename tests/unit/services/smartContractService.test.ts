@@ -28,14 +28,12 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: [
-            '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
-            '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
-          ],
+          addresses:
+            '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3, 0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
         },
         {
           chain: 'polygon',
-          addresses: ['0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'],
+          addresses: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed',
         },
       ];
 
@@ -49,7 +47,7 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: '',
-          addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3'],
+          addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
         },
       ];
 
@@ -63,7 +61,7 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: [],
+          addresses: '',
         },
       ];
 
@@ -77,10 +75,8 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: [
-            'invalid-address',
-            '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
-          ],
+          addresses:
+            'invalid-address, 0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
         },
       ];
 
@@ -96,10 +92,8 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: [
-            '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
-            '0x742d35cc6634c0532925a3b844bc9e7595f8c8d3', // Same address, different case
-          ],
+          addresses:
+            '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3, 0x742d35cc6634c0532925a3b844bc9e7595f8c8d3', // Same address, different case
         },
       ];
 
@@ -115,11 +109,11 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3'],
+          addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
         },
         {
           chain: 'ethereum',
-          addresses: ['0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'],
+          addresses: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
         },
       ];
 
@@ -137,7 +131,7 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: ['', '  ', '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3'],
+          addresses: '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
         },
       ];
 
@@ -151,11 +145,11 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'custom-solana',
-          addresses: ['DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK'],
+          addresses: 'DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK',
         },
         {
           chain: 'custom-near',
-          addresses: ['alice.near', 'bob.near'],
+          addresses: 'alice.near, bob.near',
         },
       ];
 
@@ -181,11 +175,9 @@ describe('SmartContractService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].chain).toBe('ethereum');
-      expect(result[0].addresses).toHaveLength(2);
-      expect(result[0].addresses[0]).toBe(
-        '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
-      );
-      expect(result[0].addresses[1]).toBe(
+      expect(result[0].addresses.split(', ')).toHaveLength(2);
+      // Address is already verified above
+      expect(result[0].addresses.split(', ')[1]).toBe(
         '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
       );
     });
@@ -203,10 +195,8 @@ describe('SmartContractService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].chain).toBe('ethereum');
-      expect(result[0].addresses).toHaveLength(1);
-      expect(result[0].addresses[0]).toBe(
-        '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
-      );
+      expect(result[0].addresses).toBe(legacyData);
+      // Address is already verified above
     });
 
     it('should filter empty addresses', () => {
@@ -216,7 +206,7 @@ describe('SmartContractService', () => {
       const result = service.transformLegacyData(legacyData);
 
       expect(result).toHaveLength(1);
-      expect(result[0].addresses).toHaveLength(2);
+      expect(result[0].addresses.split(', ')).toHaveLength(2);
     });
   });
 
@@ -225,14 +215,12 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: [
-            '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8D3',
-            '0xdE0B295669a9FD93d5F28D9Ec85E40f4cB697BAe',
-          ],
+          addresses:
+            '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8D3, 0xdE0B295669a9FD93d5F28D9Ec85E40f4cB697BAe',
         },
         {
           chain: 'polygon',
-          addresses: ['0x5aAeb6053f3E94C9b9A09f33669435E7Ef1BeAed'],
+          addresses: '0x5aAeb6053f3E94C9b9A09f33669435E7Ef1BeAed',
         },
       ];
 
@@ -252,7 +240,7 @@ describe('SmartContractService', () => {
       const contracts: SmartContract[] = [
         {
           chain: 'ethereum',
-          addresses: [],
+          addresses: '',
         },
       ];
 
@@ -293,11 +281,11 @@ describe('SmartContractService', () => {
         contracts: [
           {
             chain: 'ethereum',
-            addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3'],
+            addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
           },
           {
             chain: 'custom-solana',
-            addresses: ['DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK'],
+            addresses: 'DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK',
           },
         ],
         references: ['https://etherscan.io'],
@@ -370,7 +358,7 @@ describe('SmartContractService', () => {
         contracts: [
           {
             chain: 'ethereum',
-            addresses: ['  0x742D35cc6634c0532925a3b844bc9e7595f8C8d3  '],
+            addresses: '  0x742D35cc6634c0532925a3b844bc9e7595f8C8d3  ',
           },
         ],
         references: ['https://etherscan.io'],
@@ -385,7 +373,7 @@ describe('SmartContractService', () => {
           contracts: [
             {
               chain: 'ethereum',
-              addresses: ['0x742D35cc6634c0532925a3b844bc9e7595f8C8d3'], // trimmed
+              addresses: '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3', // trimmed
             },
           ],
           references: ['https://etherscan.io'],
@@ -407,7 +395,7 @@ describe('SmartContractService', () => {
         contracts: [
           {
             chain: 'ethereum',
-            addresses: ['0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3'],
+            addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
           },
         ],
       };

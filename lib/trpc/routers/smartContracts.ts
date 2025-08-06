@@ -9,7 +9,7 @@ import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 // Schema definitions
 const smartContractSchema = z.object({
   chain: z.string().min(1, 'Chain is required'),
-  addresses: z.array(z.string()).min(1, 'At least one address is required'),
+  addresses: z.string().min(1, 'At least one address is required'),
 });
 
 const smartContractsInputSchema = z.object({

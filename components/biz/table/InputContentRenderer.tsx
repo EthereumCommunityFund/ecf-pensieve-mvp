@@ -70,7 +70,7 @@ const InputContentRenderer: React.FC<IProps> = ({
 
         return <>{joinedText}</>;
       }
-      case 'smartContract': {
+      case 'multiContracts': {
         if (
           typeof value === 'object' &&
           value !== null &&

@@ -12,3 +12,9 @@ export type { ContractEntryProps, SmartContract } from './ContractEntry';
 
 export { References } from './References';
 export type { ReferencesProps } from './References';
+
+export { SingleContractEntry } from './SingleContractEntry';
+export type { SingleContractEntryProps } from './SingleContractEntry';
+
+export { MultiContractEntry } from './MultiContractEntry';
+export type { MultiContractEntryProps } from './MultiContractEntry';
