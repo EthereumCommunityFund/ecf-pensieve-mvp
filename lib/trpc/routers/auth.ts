@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { loginNonces, profiles } from '@/lib/db/schema';
 import { invitationCodes } from '@/lib/db/schema/invitations';
+import { addDefaultListToUser } from '@/lib/services/listService';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 const NONCE_EXPIRY_MS = 10 * 60 * 1000;
@@ -369,6 +370,8 @@ export const authRouter = router({
             'Profile data is not immediately available for reading - this may be due to database replication delay or caching. Please try again in a moment.',
           );
         }
+
+        await addDefaultListToUser(userId, ctx.db);
 
         // Generate token only after confirming profile exists and is queryable
         const token = await generateAuthToken(normalizedAddress, ctx.supabase);

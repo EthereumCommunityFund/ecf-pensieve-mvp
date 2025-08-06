@@ -1,0 +1,1 @@
+CREATE INDEX "list_projects_list_id_sort_order_idx" ON "list_projects" USING btree ("list_id","sort_order");
