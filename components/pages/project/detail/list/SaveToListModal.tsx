@@ -186,7 +186,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
         placement="center"
         hideCloseButton={true}
         classNames={{
-          base: 'w-[400px] max-w-[400px] min-h-[185px] max-h-[600px]',
+          base: 'w-[400px] max-w-[400px] min-h-[220px] max-h-[600px]',
           backdrop: 'bg-black/50',
         }}
       >
@@ -236,7 +236,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
                 )}
               </div>
               {/* Gradient fade overlay at bottom when content overflows */}
-              {listsWithProjectStatus && listsWithProjectStatus.length > 5 && (
+              {listsWithProjectStatus && listsWithProjectStatus.length > 6 && (
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white to-transparent" />
               )}
             </div>
@@ -252,17 +252,15 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
                 <Plus className="size-5 text-black" strokeWidth={1.5} />
               </button>
 
-              {hasChanges && (
-                <Button
-                  onPress={handleConfirm}
-                  isLoading={isConfirming}
-                  isDisabled={isConfirming}
-                  className="flex items-center justify-center rounded-[5px] bg-[rgb(60,60,60)] px-[30px] py-[10px] text-[14px] font-[600] text-white hover:bg-[rgb(80,80,80)] disabled:opacity-50"
-                  style={{ fontFamily: 'Open Sans' }}
-                >
-                  Confirm
-                </Button>
-              )}
+              <Button
+                onPress={handleConfirm}
+                isLoading={isConfirming}
+                isDisabled={!hasChanges || isConfirming}
+                className="flex items-center justify-center rounded-[5px] bg-[rgb(60,60,60)] px-[30px] py-[10px] text-[14px] font-[600] text-white hover:bg-[rgb(80,80,80)] disabled:opacity-50"
+                style={{ fontFamily: 'Open Sans' }}
+              >
+                Confirm
+              </Button>
             </div>
           </ModalBody>
         </ModalContent>
