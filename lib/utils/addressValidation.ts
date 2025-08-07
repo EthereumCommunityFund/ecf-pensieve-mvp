@@ -22,9 +22,14 @@ export interface ValidationResult {
 export class AddressValidator {
   /**
    * Check if address has valid format (basic validation)
+   * More lenient validation for EVM-compatible chains
+   * Accepts any 0x-prefixed 40 hex character string
    */
   static isValidFormat(address: string): boolean {
-    return ethers.isAddress(address);
+    // Basic regex validation for EVM addresses
+    // Accepts uppercase, lowercase, or mixed case
+    const evmAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+    return evmAddressRegex.test(address);
   }
 
   /**
@@ -40,12 +45,21 @@ export class AddressValidator {
 
   /**
    * Normalize address to checksum format
+   * Falls back to lowercase if checksum conversion fails
    */
   static normalizeAddress(address: string): string {
+    // First check if it's a valid format
+    if (!this.isValidFormat(address)) {
+      return address;
+    }
+
     try {
+      // Try to convert to checksum format
       return ethers.getAddress(address);
     } catch {
-      return address;
+      // If checksum conversion fails, return lowercase format
+      // This ensures valid addresses are not rejected
+      return address.toLowerCase();
     }
   }
 
@@ -115,29 +129,22 @@ export class AddressValidator {
         return;
       }
 
-      // Normalize to checksum format
-      let checksumAddress: string;
-      try {
-        checksumAddress = ethers.getAddress(trimmed);
-      } catch {
-        errors.push(
-          `Line ${index + 1}: Failed to normalize address: ${trimmed}`,
-        );
-        return;
-      }
+      // Normalize to checksum format or lowercase
+      // We accept addresses even if checksum validation fails
+      const normalizedAddress = this.normalizeAddress(trimmed);
 
       // Check for duplicates using lowercase comparison
-      const normalized = checksumAddress.toLowerCase();
-      if (uniqueAddresses.has(normalized)) {
+      const lowercaseAddress = normalizedAddress.toLowerCase();
+      if (uniqueAddresses.has(lowercaseAddress)) {
         errors.push(
           `Line ${index + 1}: Duplicate address detected: ${trimmed}`,
         );
         return;
       }
 
-      uniqueAddresses.add(normalized);
-      // Store with proper checksum format
-      validAddresses.push(checksumAddress);
+      uniqueAddresses.add(lowercaseAddress);
+      // Store with normalized format (checksum or lowercase)
+      validAddresses.push(normalizedAddress);
     });
 
     return {
@@ -201,7 +208,8 @@ export class AddressValidator {
 }
 
 /**
- * Helper function to validate Ethereum address
+ * Helper function to validate Ethereum/EVM address
+ * Uses lenient validation that accepts any valid EVM address format
  */
 export const validateEthereumAddress = (address: string): boolean => {
   return AddressValidator.isValidFormat(address);

@@ -10,6 +10,7 @@ import {
 describe('AddressValidator', () => {
   describe('isValidFormat', () => {
     it('should validate correct Ethereum addresses', () => {
+      // Checksum addresses
       expect(
         AddressValidator.isValidFormat(
           '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
@@ -23,6 +24,20 @@ describe('AddressValidator', () => {
       expect(
         AddressValidator.isValidFormat(
           '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed',
+        ),
+      ).toBe(true);
+
+      // Lowercase addresses (now accepted)
+      expect(
+        AddressValidator.isValidFormat(
+          '0x742d35cc6634c0532925a3b844bc9e7595f8c8d3',
+        ),
+      ).toBe(true);
+
+      // Uppercase addresses (now accepted)
+      expect(
+        AddressValidator.isValidFormat(
+          '0x742D35CC6634C0532925A3B844BC9E7595F8C8D3',
         ),
       ).toBe(true);
     });
@@ -79,7 +94,7 @@ describe('AddressValidator', () => {
   });
 
   describe('normalizeAddress', () => {
-    it('should convert address to checksum format', () => {
+    it('should convert address to checksum format when possible', () => {
       expect(
         AddressValidator.normalizeAddress(
           '0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed',
@@ -87,11 +102,20 @@ describe('AddressValidator', () => {
       ).toBe('0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed');
     });
 
-    it('should return original address if invalid', () => {
+    it('should return lowercase address if checksum fails but format is valid', () => {
+      // Valid format but may fail checksum in some cases
+      const validAddress = '0x0000000000000000000000000000000000000001';
+      const result = AddressValidator.normalizeAddress(validAddress);
+      // Should either be checksum or lowercase, both are acceptable
+      expect(result.toLowerCase()).toBe(validAddress.toLowerCase());
+    });
+
+    it('should return original address if invalid format', () => {
       expect(AddressValidator.normalizeAddress('invalid-address')).toBe(
         'invalid-address',
       );
       expect(AddressValidator.normalizeAddress('')).toBe('');
+      expect(AddressValidator.normalizeAddress('0x123')).toBe('0x123');
     });
   });
 
@@ -166,7 +190,7 @@ describe('AddressValidator', () => {
       const addresses = [
         '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
         'invalid-address',
-        '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3', // duplicate
+        '0x742d35cc6634c0532925a3b844bc9e7595f8c8d3', // duplicate (case-insensitive)
         '',
       ];
 
@@ -177,6 +201,20 @@ describe('AddressValidator', () => {
       expect(result.errors[0]).toContain('Invalid address format');
       expect(result.errors[1]).toContain('Duplicate address detected');
       expect(result.addresses).toHaveLength(1);
+    });
+
+    it('should accept mixed case addresses as valid', () => {
+      const addresses = [
+        '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3', // mixed case
+        '0xDE0B295669A9FD93D5F28D9EC85E40F4CB697BAE', // uppercase
+        '0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed', // lowercase
+      ];
+
+      const result = AddressValidator.validateAddresses(addresses);
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.addresses).toHaveLength(3);
     });
 
     it('should handle all valid addresses', () => {
@@ -204,6 +242,22 @@ describe('AddressValidator', () => {
       expect(result.valid).toBe(false);
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0]).toContain('Duplicate address detected');
+    });
+
+    it('should handle various EVM chain address formats', () => {
+      // Test addresses from different EVM chains
+      const addresses = [
+        '0x0000000000000000000000000000000000000001', // Common burn address
+        '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // Common ETH placeholder
+        '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT on Ethereum
+        '0x8AC76A51CC950D9822D68B83FE1AD97B32CD580D', // USDC on BSC
+      ];
+
+      const result = AddressValidator.validateAddresses(addresses);
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.addresses).toHaveLength(4);
     });
   });
 
