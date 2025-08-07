@@ -65,7 +65,9 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
               'font-sans text-[13px] font-[400] text-black',
               itemConfig!.formDisplayType === 'founderList' ||
                 itemConfig!.formDisplayType === 'websites' ||
-                itemConfig!.formDisplayType === 'tablePhysicalEntity'
+                itemConfig!.formDisplayType === 'tablePhysicalEntity' ||
+                itemConfig!.formDisplayType === 'multiContracts' ||
+                itemConfig!.formDisplayType === 'fundingReceivedGrants'
                 ? 'p-[0px]'
                 : 'p-[20px]',
             )}

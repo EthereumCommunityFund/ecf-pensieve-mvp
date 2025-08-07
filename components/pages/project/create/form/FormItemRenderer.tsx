@@ -119,7 +119,14 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       }
     }
 
-    return [];
+    // Return default contract with ethereum chain and empty address
+    return [
+      {
+        id: generateUUID(),
+        chain: 'ethereum',
+        addresses: '',
+      },
+    ];
   }, [formDisplayType, field.value]);
 
   // Callbacks for smart contracts (always defined, but only used when needed)
@@ -144,18 +151,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
       });
     },
     [field, setValue, smartContractsValue, smartContractsReferences],
-  );
-
-  const handleReferencesChange = useCallback(
-    (refs: string[]) => {
-      setValue('dappSmartContractsReferences', refs);
-      field.onChange({
-        applicable: smartContractsApplicable,
-        contracts: smartContractsValue,
-        references: refs,
-      });
-    },
-    [field, setValue, smartContractsApplicable, smartContractsValue],
   );
 
   const errorMessageElement = error ? (
@@ -874,8 +869,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
           weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
           applicable={smartContractsApplicable}
           onApplicableChange={handleApplicableChange}
-          references={smartContractsReferences}
-          onReferencesChange={handleReferencesChange}
           disabled={isDisabled}
           placeholder={itemConfig.placeholder}
         />

@@ -51,7 +51,7 @@ export interface ISmartContract {
 export interface ISmartContractsData {
   applicable: boolean;
   contracts: ISmartContract[];
-  references: string[];
+  references?: string[];
 }
 
 export interface IProjectFormData
@@ -111,7 +111,7 @@ export interface ICreateProjectPayload {
           chain: string;
           addresses: string;
         }[];
-        references: string[];
+        references?: string[];
       };
   orgStructure: string;
   publicGoods: boolean;

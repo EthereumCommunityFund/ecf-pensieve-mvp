@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { memo, useCallback } from 'react';
 
-import { AddressListDisplay } from '@/components/base/AddressDisplay';
+import { AddressDisplay } from '@/components/base/AddressDisplay';
 import { TableIcon } from '@/components/icons';
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
@@ -71,61 +71,122 @@ const InputContentRenderer: React.FC<IProps> = ({
         return <>{joinedText}</>;
       }
       case 'multiContracts': {
-        if (
+        let parsedContracts = [];
+        let applicable = true;
+        let references = [];
+
+        // Handle different data formats
+        if (typeof value === 'string') {
+          // Legacy format: string with comma-separated addresses
+          const addresses = value
+            .split(',')
+            .map((addr: string) => addr.trim())
+            .filter(Boolean);
+          if (addresses.length > 0) {
+            parsedContracts = [
+              {
+                chain: 'ethereum', // Default to Ethereum for legacy data
+                addresses: addresses.join(','),
+              },
+            ];
+          }
+        } else if (
           typeof value === 'object' &&
           value !== null &&
           !Array.isArray(value)
         ) {
-          const { applicable, contracts, references } = value;
+          // New format with applicable flag and contracts array
+          applicable = value.applicable ?? true;
+          parsedContracts = value.contracts || [];
+          references = value.references || [];
 
           if (!applicable) {
             return <span className="text-gray-500">N/A</span>;
           }
+        }
 
-          if (!contracts || contracts.length === 0) {
-            return <span className="text-gray-400">No contracts</span>;
-          }
+        if (parsedContracts.length === 0) {
+          return <span className="text-gray-400">No contracts</span>;
+        }
 
-          // Render contracts by chain
-          const contractsByChain = contracts
-            .map((contract: any) => {
-              const chainInfo = getChainDisplayInfo(contract.chain);
-              const addressCount = contract.addresses?.length || 0;
-              return `${chainInfo.name}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
-            })
-            .join(', ');
-
-          if (isExpandable && !isExpanded) {
-            return <>{contractsByChain}</>;
-          }
-
-          // In expanded view, show full details
+        // Table view when in expandable row
+        if (isInExpandableRow) {
           return (
-            <div className="space-y-3">
-              {contracts.map((contract: any, index: number) => {
-                const chainInfo = getChainDisplayInfo(contract.chain);
-                return (
-                  <div
-                    key={contract.id || `${contract.chain}-${index}`}
-                    className="space-y-2"
-                  >
-                    <div className="text-sm font-medium">{chainInfo.name}:</div>
-                    <div className="pl-4">
-                      {contract.addresses && contract.addresses.length > 0 ? (
-                        <AddressListDisplay
-                          addresses={contract.addresses}
-                          className="text-sm"
-                          layout="vertical"
-                        />
-                      ) : (
-                        <span className="text-sm text-gray-400">
-                          No addresses
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="w-full">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={214} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Chain</span>
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Addresses</span>
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedContracts.map((contract: any, index: number) => {
+                      const chainInfo = getChainDisplayInfo(
+                        contract.chain || 'ethereum',
+                      );
+                      // Parse addresses - could be string or array
+                      let addressList: string[] = [];
+                      if (typeof contract.addresses === 'string') {
+                        addressList = contract.addresses
+                          .split(',')
+                          .map((addr: string) => addr.trim())
+                          .filter(Boolean);
+                      } else if (Array.isArray(contract.addresses)) {
+                        addressList = contract.addresses;
+                      }
+
+                      return (
+                        <TableRow
+                          key={contract.id || `${contract.chain}-${index}`}
+                          isLastRow={index === parsedContracts.length - 1}
+                        >
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedContracts.length - 1}
+                          >
+                            {chainInfo.name}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedContracts.length - 1}
+                          >
+                            {addressList.length > 0 ? (
+                              <div className="space-y-1">
+                                {addressList.map((address, idx) => (
+                                  <div key={idx}>
+                                    <AddressDisplay
+                                      address={address}
+                                      startLength={42} // 显示完整地址（以太坊地址长度为42，包括0x）
+                                      endLength={0} // 不截断末尾
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">
+                                No addresses
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </TableContainer>
               {references && references.length > 0 && (
                 <div className="mt-3 border-t border-gray-200 pt-3">
                   <div className="mb-1 text-xs font-medium text-gray-600">
@@ -150,8 +211,40 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
 
-        // Fallback for unexpected value type
-        return <>{value}</>;
+        // Expandable button view
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        // Default collapsed view - show summary
+        const contractSummary = parsedContracts
+          .map((contract: any) => {
+            const chainInfo = getChainDisplayInfo(contract.chain || 'ethereum');
+            let addressCount = 0;
+            if (typeof contract.addresses === 'string') {
+              addressCount = contract.addresses
+                .split(',')
+                .filter((addr: string) => addr.trim()).length;
+            } else if (Array.isArray(contract.addresses)) {
+              addressCount = contract.addresses.length;
+            }
+            return `${chainInfo.name}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
+          })
+          .join(', ');
+
+        return <>{contractSummary}</>;
       }
       case 'selectMultiple':
         return <>{parseMultipleValue(value).join(', ')}</>;
@@ -850,7 +943,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites' &&
     displayFormType !== 'tablePhysicalEntity' &&
-    displayFormType !== 'fundingReceivedGrants'
+    displayFormType !== 'fundingReceivedGrants' &&
+    displayFormType !== 'multiContracts'
   ) {
     // If we're in an expandable row, show full content without line clamp
     if (isInExpandableRow) {

@@ -331,7 +331,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     weight: ALL_POC_ITEM_MAP.dappSmartContracts.weight,
     formDisplayType: 'multiContracts',
     placeholder: 'use the comma ‘,’ to separate multiple addresses',
-    showReference: false,
+    showReference: true,
     showApplicable: true,
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],

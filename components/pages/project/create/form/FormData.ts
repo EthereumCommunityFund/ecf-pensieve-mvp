@@ -120,7 +120,13 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   whitePaper: '',
   dappSmartContracts: {
     applicable: true,
-    contracts: [],
+    contracts: [
+      {
+        id: crypto.randomUUID(),
+        chain: 'ethereum',
+        addresses: '',
+      },
+    ],
     references: [],
   },
   dappSmartContractsApplicable: true,

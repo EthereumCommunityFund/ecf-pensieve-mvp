@@ -12,8 +12,6 @@ export interface MultiContractEntryProps {
   weight: number;
   applicable: boolean;
   onApplicableChange: (applicable: boolean) => void;
-  references?: string[];
-  onReferencesChange?: (refs: string[]) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -21,10 +19,9 @@ export interface MultiContractEntryProps {
 export const MultiContractEntry: React.FC<MultiContractEntryProps> = ({
   value,
   onChange,
-  weight,
+  weight: _weight,
   applicable,
-  onApplicableChange,
-  references,
+  onApplicableChange: _onApplicableChange,
   disabled = false,
   placeholder,
 }) => {
