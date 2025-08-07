@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { ISmartContract } from '@/components/pages/project/create/types';
+import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
 import { generateUUID } from '@/lib/utils/uuid';
 
 /**
@@ -14,7 +14,7 @@ export const useSmartContractsData = (
     if (!data) {
       return {
         applicable: true,
-        contracts: [] as ISmartContract[],
+        contracts: [] as SmartContract[],
         references: [] as string[],
         isEmpty: true,
         isLegacyFormat: false,
@@ -32,7 +32,7 @@ export const useSmartContractsData = (
                 chain: 'ethereum',
                 addresses: data,
               },
-            ] as ISmartContract[])
+            ] as SmartContract[])
           : [],
         references: [] as string[],
         isEmpty: !data.trim(),
@@ -66,7 +66,7 @@ export const useSmartContractsData = (
     // Default case
     return {
       applicable: true,
-      contracts: [] as ISmartContract[],
+      contracts: [] as SmartContract[],
       references: [] as string[],
       isEmpty: true,
       isLegacyFormat: false,

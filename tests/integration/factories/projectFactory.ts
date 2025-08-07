@@ -24,7 +24,11 @@ export interface ValidProjectData {
   codeRepo: string | null;
   tokenContract: string | null;
   whitePaper: string | null;
-  dappSmartContracts: string | null;
+  dappSmartContracts: Array<{
+    id: string;
+    chain: string;
+    addresses: string;
+  }> | null;
   refs: Array<{
     key: string;
     value: string;

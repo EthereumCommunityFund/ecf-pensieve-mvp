@@ -9,8 +9,13 @@ export const createProjectWithOptionalFields = (): ValidProjectData => {
     codeRepo: 'https://github.com/example/project',
     tokenContract: '0x1234567890abcdef1234567890abcdef12345678',
     whitePaper: 'https://example.com/whitepaper.pdf',
-    dappSmartContracts:
-      'https://etherscan.io/address/0x1234567890abcdef1234567890abcdef12345678',
+    dappSmartContracts: [
+      {
+        id: 'test-contract-1',
+        chain: 'ethereum',
+        addresses: '0x1234567890abcdef1234567890abcdef12345678',
+      },
+    ],
     refs: [
       {
         key: 'whitepaper',

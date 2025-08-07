@@ -47,6 +47,7 @@ export class SmartContractService {
         continue;
       }
 
+      // Use original chain name for storage but check duplicates case-insensitively
       const addressSet = chainMap.get(contract.chain) || new Set<string>();
 
       // Parse addresses from string (comma-separated)
@@ -75,21 +76,27 @@ export class SmartContractService {
       chainMap.set(contract.chain, addressSet);
     }
 
-    // Check for duplicate chains
+    // Check for duplicate chains (case-insensitive)
     const chainCounts = new Map<string, number>();
+    const chainOriginalNames = new Map<string, string>();
+
     for (const contract of contracts) {
       if (contract.chain) {
-        chainCounts.set(
-          contract.chain,
-          (chainCounts.get(contract.chain) || 0) + 1,
-        );
+        const chainLower = contract.chain.toLowerCase();
+        chainCounts.set(chainLower, (chainCounts.get(chainLower) || 0) + 1);
+
+        // Store the original name for error messages
+        if (!chainOriginalNames.has(chainLower)) {
+          chainOriginalNames.set(chainLower, contract.chain);
+        }
       }
     }
 
-    for (const [chain, count] of chainCounts.entries()) {
+    for (const [chainLower, count] of chainCounts.entries()) {
       if (count > 1) {
+        const originalName = chainOriginalNames.get(chainLower) || chainLower;
         errors.push(
-          `Chain "${chain}" appears multiple times. Please consolidate addresses into a single entry.`,
+          `Chain "${originalName}" appears multiple times (case-insensitive). Please consolidate addresses into a single entry.`,
         );
       }
     }

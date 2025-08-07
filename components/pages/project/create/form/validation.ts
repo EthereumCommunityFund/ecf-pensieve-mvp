@@ -21,8 +21,6 @@ export const projectSchema = yup
     openSource: itemValidationSchemas.openSource,
     codeRepo: itemValidationSchemas.codeRepo,
     dappSmartContracts: itemValidationSchemas.dappSmartContracts,
-    dappSmartContractsApplicable: yup.boolean(),
-    dappSmartContractsReferences: yup.array().of(yup.string()),
 
     orgStructure: itemValidationSchemas.orgStructure,
     publicGoods: itemValidationSchemas.publicGoods,

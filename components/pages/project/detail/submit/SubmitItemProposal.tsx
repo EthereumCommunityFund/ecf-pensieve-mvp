@@ -106,6 +106,15 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
     } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
       defaultValue = [{ legalName: '', country: '', _id: crypto.randomUUID() }];
+    } else if (itemConfig.formDisplayType === 'multiContracts') {
+      // Add default value for Smart Contracts
+      defaultValue = [
+        {
+          id: crypto.randomUUID(),
+          chain: '',
+          addresses: '',
+        },
+      ];
     }
 
     return { [itemConfig.key]: defaultValue };
@@ -229,6 +238,19 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           name: founder.name || '',
           title: founder.title || '',
           region: founder.region || '',
+        }));
+      }
+
+      // For multiContracts, ensure proper data format
+      if (
+        itemConfig.formDisplayType === 'multiContracts' &&
+        Array.isArray(valueToSubmit)
+      ) {
+        // Create a clean copy of the contracts data
+        valueToSubmit = valueToSubmit.map((contract: any) => ({
+          id: contract.id || crypto.randomUUID(),
+          chain: contract.chain || '',
+          addresses: contract.addresses || '',
         }));
       }
 

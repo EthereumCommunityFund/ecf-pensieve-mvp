@@ -17,6 +17,7 @@ import {
   Textarea,
 } from '@/components/base';
 import { MultiContractEntry } from '@/components/biz/project/smart-contracts';
+import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
@@ -26,12 +27,7 @@ import {
   dateValueToDate,
 } from '@/utils/formatters';
 
-import {
-  IFormTypeEnum,
-  IFounder,
-  IProjectFormData,
-  ISmartContract,
-} from '../types';
+import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
 import FounderFormItemTable from './FounderFormItemTable';
 import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
@@ -67,7 +63,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     formDisplayType,
   } = itemConfig;
 
-  const { register, formState, control, getValues, setValue, watch } =
+  const { register, formState, control, getValues, setValue } =
     useFormContext<IProjectFormData>();
   const { touchedFields } = formState;
 
@@ -80,50 +76,25 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   // Smart contracts values (used only when formDisplayType === 'multiContracts')
   const smartContractsApplicable =
     formDisplayType === 'multiContracts'
-      ? (watch('dappSmartContractsApplicable') ?? true)
+      ? fieldApplicability?.dappSmartContracts !== false
       : true;
-  const smartContractsReferences =
-    formDisplayType === 'multiContracts'
-      ? (watch('dappSmartContractsReferences') ?? [])
-      : [];
 
-  // Process smart contracts value
-  const smartContractsValue: ISmartContract[] = useMemo(() => {
+  // Process smart contracts value - now always an array
+  const smartContractsValue: SmartContract[] = useMemo(() => {
     if (formDisplayType !== 'multiContracts') {
       return [];
     }
 
-    if (typeof field.value === 'string') {
-      // Convert legacy string format to new structure
-      if (field.value) {
-        const addresses = field.value
-          .split(',')
-          .map((addr) => addr.trim())
-          .filter(Boolean);
-        if (addresses.length > 0) {
-          return [
-            {
-              id: generateUUID(),
-              chain: 'ethereum',
-              addresses,
-            },
-          ];
-        }
-      }
-    } else if (field.value && typeof field.value === 'object') {
-      // Handle the new format
-      if (Array.isArray(field.value.contracts)) {
-        return field.value.contracts;
-      } else if (Array.isArray(field.value)) {
-        return field.value;
-      }
+    // Field value should already be an array of SmartContract
+    if (Array.isArray(field.value)) {
+      return field.value;
     }
 
-    // Return default contract with ethereum chain and empty address
+    // Fallback: return default contract if somehow not an array
     return [
       {
         id: generateUUID(),
-        chain: 'ethereum',
+        chain: '',
         addresses: '',
       },
     ];
@@ -131,27 +102,17 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
   // Callbacks for smart contracts (always defined, but only used when needed)
   const handleContractsChange = useCallback(
-    (contracts: ISmartContract[]) => {
-      field.onChange({
-        applicable: smartContractsApplicable,
-        contracts,
-        references: smartContractsReferences,
-      });
+    (contracts: SmartContract[]) => {
+      // Directly set the contracts array
+      field.onChange(contracts);
     },
-    [field, smartContractsApplicable, smartContractsReferences],
+    [field],
   );
 
-  const handleApplicableChange = useCallback(
-    (applicable: boolean) => {
-      setValue('dappSmartContractsApplicable', applicable);
-      field.onChange({
-        applicable,
-        contracts: applicable ? smartContractsValue : [],
-        references: applicable ? smartContractsReferences : [],
-      });
-    },
-    [field, setValue, smartContractsValue, smartContractsReferences],
-  );
+  const handleApplicableChange = useCallback((_applicable: boolean) => {
+    // This is now handled through the global fieldApplicability map
+    // No need to set a separate field
+  }, []);
 
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>

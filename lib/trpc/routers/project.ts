@@ -93,21 +93,13 @@ export const projectRouter = router({
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
         whitePaper: z.string().nullable(),
         dappSmartContracts: z
-          .union([
-            z.string().nullable(),
-            z
-              .object({
-                applicable: z.boolean(),
-                contracts: z.array(
-                  z.object({
-                    chain: z.string(),
-                    addresses: z.string(),
-                  }),
-                ),
-                references: z.array(z.string()).optional(),
-              })
-              .nullable(),
-          ])
+          .array(
+            z.object({
+              id: z.string(),
+              chain: z.string(),
+              addresses: z.string(),
+            }),
+          )
           .nullable(),
         refs: z
           .array(
@@ -137,33 +129,19 @@ export const projectRouter = router({
             return !!existing;
           });
 
-          // Convert smart contracts data if it's a string
+          // Convert smart contracts array to JSONB format for database
           let dappSmartContractsData: any = null;
 
-          if (input.dappSmartContracts) {
-            if (typeof input.dappSmartContracts === 'string') {
-              // Convert legacy string format to new JSONB format
-              const addresses = input.dappSmartContracts
-                .split(',')
-                .map((addr) => addr.trim())
-                .filter(Boolean);
-
-              if (addresses.length > 0) {
-                dappSmartContractsData = {
-                  applicable: true,
-                  contracts: [
-                    {
-                      chain: 'ethereum',
-                      addresses,
-                    },
-                  ],
-                  references: [],
-                };
-              }
-            } else {
-              // Already in correct format
-              dappSmartContractsData = input.dappSmartContracts;
-            }
+          if (input.dappSmartContracts && input.dappSmartContracts.length > 0) {
+            // Convert array format to JSONB structure for database
+            dappSmartContractsData = {
+              applicable: true,
+              contracts: input.dappSmartContracts.map((contract) => ({
+                chain: contract.chain,
+                addresses: contract.addresses,
+              })),
+              references: [],
+            };
           }
 
           const [project] = await tx

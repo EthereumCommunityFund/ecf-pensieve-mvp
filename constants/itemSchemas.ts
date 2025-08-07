@@ -1,4 +1,3 @@
-import { isAddress } from 'ethers';
 import * as yup from 'yup';
 
 import { IFounder, IWebsite } from '@/components/pages/project/create/types';
@@ -231,6 +230,7 @@ export const itemValidationSchemas = {
 
   openSource: yup
     .string()
+    .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is open source'),
 
   codeRepo: yup
@@ -240,69 +240,32 @@ export const itemValidationSchemas = {
     .required('Code repository URL is required when applicable'),
 
   dappSmartContracts: yup
-    .mixed()
-    .test(
-      'smart-contracts-validation',
-      'Invalid smart contracts data',
-      function (value) {
-        // Handle string format (legacy)
-        if (typeof value === 'string') {
-          if (!value) return true; // Empty string is valid
-          return yup
-            .string()
-            .isContractAddressList(
-              'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas.',
-            )
-            .isValidSync(value);
-        }
-
-        // Handle object format (new)
-        if (typeof value === 'object' && value !== null) {
-          const smartContractsData = value as {
-            applicable?: boolean;
-            contracts?: Array<{ chain: string; addresses: string[] }>;
-            references?: string[];
-          };
-          const { applicable, contracts } = smartContractsData;
-
-          // If not applicable, no validation needed
-          if (!applicable) return true;
-
-          // If applicable but no contracts, that's valid
-          if (!contracts || contracts.length === 0) return true;
-
-          // Validate each contract
-          for (const contract of contracts) {
-            if (!contract.chain) {
-              return this.createError({
-                message: 'Chain selection is required for each contract',
-              });
-            }
-
-            if (!contract.addresses || contract.addresses.length === 0) {
-              return this.createError({
-                message: `No addresses provided for ${contract.chain}`,
-              });
-            }
-
-            // Validate each address
-            for (const address of contract.addresses) {
-              const trimmed = address.trim();
-              if (trimmed && !isAddress(trimmed)) {
-                return this.createError({
-                  message: `Invalid address on ${contract.chain}: ${trimmed}`,
-                });
-              }
-            }
-          }
-
-          return true;
-        }
-
-        return true; // No value is valid
-      },
+    .array()
+    .of(
+      yup.object().shape({
+        id: yup.string().required(),
+        chain: yup.string().required('Chain selection is required'),
+        addresses: yup
+          .string()
+          .required('Contract addresses are required')
+          .test(
+            'valid-addresses',
+            'Invalid Ethereum address format',
+            function (value) {
+              if (!value) return false;
+              const addresses = value
+                .split(',')
+                .map((addr) => addr.trim())
+                .filter(Boolean);
+              return addresses.every((addr) =>
+                /^0x[a-fA-F0-9]{40}$/.test(addr),
+              );
+            },
+          ),
+      }),
     )
-    .required('Smart contracts data is required'),
+    .min(1, 'At least one smart contract is required')
+    .required('Smart contracts are required when applicable'),
 
   audit_status: yup.string().required('Audit status is required'),
 
@@ -315,6 +278,7 @@ export const itemValidationSchemas = {
 
   publicGoods: yup
     .string()
+    .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is a public good'),
 
   founders: yup
@@ -385,7 +349,7 @@ export const itemValidationSchemas = {
 
         for (let i = 0; i < value.length; i++) {
           const member = value[i] || {};
-          const { name, title, region } = member;
+          const { name, title } = member;
           const hasName = name && name.trim() !== '';
           const hasTitle = title && title.trim() !== '';
 

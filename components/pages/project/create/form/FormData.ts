@@ -118,19 +118,7 @@ export const DEFAULT_CREATE_PROJECT_FORM_DATA: IProjectFormData = {
   founders: [{ name: '', title: '', region: '', _id: crypto.randomUUID() }],
   tags: [],
   whitePaper: '',
-  dappSmartContracts: {
-    applicable: true,
-    contracts: [
-      {
-        id: crypto.randomUUID(),
-        chain: 'ethereum',
-        addresses: '',
-      },
-    ],
-    references: [],
-  },
-  dappSmartContractsApplicable: true,
-  dappSmartContractsReferences: [],
+  dappSmartContracts: [{ id: crypto.randomUUID(), chain: '', addresses: '' }],
 };
 
 export const FakeProjectFormData: IProjectFormData = {
@@ -168,19 +156,13 @@ export const FakeProjectFormData: IProjectFormData = {
     },
   ],
   whitePaper: 'https://fake-project.com/whitepaper.pdf',
-  dappSmartContracts: {
-    applicable: true,
-    contracts: [
-      {
-        id: '1',
-        chain: 'ethereum',
-        addresses: '0x1234567890123456789012345678901234567890',
-      },
-    ],
-    references: [],
-  },
-  dappSmartContractsApplicable: true,
-  dappSmartContractsReferences: [],
+  dappSmartContracts: [
+    {
+      id: crypto.randomUUID(),
+      chain: 'ethereum',
+      addresses: '0x1234567890123456789012345678901234567890',
+    },
+  ],
 };
 
 export const getDefaultProjectFormData = (): IProjectFormData => {

@@ -90,6 +90,9 @@ const InputContentRenderer: React.FC<IProps> = ({
               },
             ];
           }
+        } else if (Array.isArray(value)) {
+          // Direct array format from form submission
+          parsedContracts = value;
         } else if (
           typeof value === 'object' &&
           value !== null &&
