@@ -2,8 +2,8 @@
 
 import { cn } from '@heroui/react';
 import { XCircle } from '@phosphor-icons/react';
-import React from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import React, { useEffect, useMemo } from 'react';
+import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
 import AmountInput from './AmountInput';
 import DateInput from './DateInput';
@@ -11,16 +11,44 @@ import ProjectSearchSelector from './ProjectSearchSelector';
 import URLInput from './URLInput';
 
 interface FundingReceivedGrantsTableItemProps {
+  field: FieldArrayWithId<any, any, 'fieldId'>;
   index: number;
-  remove: (index: number) => void;
+  remove: () => void;
   itemKey: 'funding_received_grants';
   canRemove: boolean;
 }
 
 const FundingReceivedGrantsTableItem: React.FC<
   FundingReceivedGrantsTableItemProps
-> = ({ index, remove, itemKey, canRemove }) => {
-  const { control } = useFormContext();
+> = ({ field, index, remove, itemKey, canRemove }) => {
+  const { control, watch } = useFormContext();
+
+  // Create stable field paths using useMemo
+  const fieldPaths = useMemo(
+    () => ({
+      date: `${itemKey}.${index}.date`,
+      organization: `${itemKey}.${index}.organization`,
+      amount: `${itemKey}.${index}.amount`,
+      reference: `${itemKey}.${index}.reference`,
+    }),
+    [itemKey, index],
+  );
+
+  // Monitor current row data for integrity
+  const currentRowData = watch(`${itemKey}.${index}`);
+
+  // Data integrity check
+  useEffect(() => {
+    if (currentRowData) {
+      // Log warning if critical fields are unexpectedly empty
+      if (currentRowData.date === null && currentRowData.amount === '') {
+        console.warn(
+          `[FundingReceivedGrantsTableItem] Row ${index} data integrity check - possible reset detected`,
+          currentRowData,
+        );
+      }
+    }
+  }, [currentRowData, index]);
 
   return (
     <div
@@ -30,7 +58,7 @@ const FundingReceivedGrantsTableItem: React.FC<
       {/* Date Column */}
       <div className="flex w-[158px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
-          name={`${itemKey}.${index}.date`}
+          name={fieldPaths.date}
           control={control}
           render={({ field, fieldState }) => (
             <>
@@ -48,14 +76,15 @@ const FundingReceivedGrantsTableItem: React.FC<
       {/* Organization Column */}
       <div className="flex w-[301px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
-          name={`${itemKey}.${index}.organization`}
+          name={fieldPaths.organization}
           control={control}
           render={({ field, fieldState }) => (
             <>
               <ProjectSearchSelector
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="Search or select organization"
+                placeholder="Search or select organizations"
+                multiple={true}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
@@ -70,7 +99,7 @@ const FundingReceivedGrantsTableItem: React.FC<
       {/* Amount Column */}
       <div className="flex w-[138px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
-          name={`${itemKey}.${index}.amount`}
+          name={fieldPaths.amount}
           control={control}
           render={({ field, fieldState }) => (
             <>
@@ -97,7 +126,7 @@ const FundingReceivedGrantsTableItem: React.FC<
         )}
       >
         <Controller
-          name={`${itemKey}.${index}.reference`}
+          name={fieldPaths.reference}
           control={control}
           render={({ field, fieldState }) => (
             <div className="flex min-h-[40px] flex-col justify-center">
@@ -123,7 +152,7 @@ const FundingReceivedGrantsTableItem: React.FC<
           <button
             type="button"
             className="flex size-[40px] cursor-pointer items-center justify-center  rounded-full border-none bg-transparent p-[8px] opacity-30"
-            onClick={() => remove(index)}
+            onClick={remove}
             aria-label={`Remove line ${index + 1}`}
             style={{
               outline: 'none',
@@ -138,4 +167,4 @@ const FundingReceivedGrantsTableItem: React.FC<
   );
 };
 
-export default FundingReceivedGrantsTableItem;
+export default React.memo(FundingReceivedGrantsTableItem);

@@ -2,10 +2,11 @@ import { Tooltip } from '@heroui/react';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 
 import { TableIcon } from '@/components/icons';
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
+import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -40,6 +41,34 @@ const InputContentRenderer: React.FC<IProps> = ({
 }) => {
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
+
+  // For fundingReceivedGrants, extract project IDs from organization field
+  const grantProjectIds = useMemo(() => {
+    if (displayFormType !== 'fundingReceivedGrants') return [];
+
+    const parsed = parseValue(formatValue);
+    if (!parsed || !Array.isArray(parsed)) return [];
+
+    const ids: string[] = [];
+    parsed.forEach((grant: any) => {
+      if (grant.organization) {
+        if (Array.isArray(grant.organization)) {
+          // New format: array of project IDs
+          ids.push(...grant.organization);
+        }
+      }
+    });
+
+    return [...new Set(ids)]; // Remove duplicates
+  }, [displayFormType, formatValue]);
+
+  // Fetch project names for grant organizations
+  const { projectNamesMap, isLoading: isLoadingProjects } =
+    useProjectNamesByIds(grantProjectIds, {
+      enabled:
+        displayFormType === 'fundingReceivedGrants' &&
+        grantProjectIds.length > 0,
+    });
 
   const renderContent = useCallback(() => {
     switch (displayFormType) {
@@ -653,13 +682,42 @@ const InputContentRenderer: React.FC<IProps> = ({
                           >
                             {dayjs(grant.date).format('YYYY/MM/DD')}
                           </TableCell>
-                          {/* TODO can jump to project page with projectId */}
                           <TableCell
                             width={301}
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {grant.organization}
+                            {(() => {
+                              if (!grant.organization) return '';
+
+                              // Check if it's the old format (string)
+                              if (typeof grant.organization === 'string') {
+                                return grant.organization;
+                              }
+
+                              // New format: array of project IDs
+                              if (Array.isArray(grant.organization)) {
+                                if (isLoadingProjects) {
+                                  return 'Loading project detail...';
+                                }
+
+                                const projectNames = (
+                                  grant.organization as string[]
+                                )
+                                  .map((id: string) => {
+                                    const numId = parseInt(id, 10);
+                                    return (
+                                      projectNamesMap?.get(numId) ||
+                                      `Project ${id}`
+                                    );
+                                  })
+                                  .filter(Boolean);
+
+                                return projectNames.join(', ');
+                              }
+
+                              return '';
+                            })()}
                           </TableCell>
                           <TableCell
                             width={138}

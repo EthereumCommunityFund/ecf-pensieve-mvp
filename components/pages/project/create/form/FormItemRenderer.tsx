@@ -32,6 +32,7 @@ import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
+import { useFundingReceivedGrants } from './useFundingReceivedGrants';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -70,6 +71,17 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   const disableNameEdit = useMemo(() => {
     return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
   }, [itemKey, formType]);
+
+  // Use custom hook for funding received grants field array management
+  const {
+    fields: fundingFields,
+    handleAddField: handleAddFundingField,
+    handleRemoveField: handleRemoveFundingField,
+  } = useFundingReceivedGrants({
+    control,
+    formDisplayType,
+    fieldName: field.name as any,
+  });
 
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
@@ -662,22 +674,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'fundingReceivedGrants': {
-      const valueArray =
-        Array.isArray(field.value) && field.value.length > 0
-          ? field.value.map((item: any) => ({
-              ...item,
-              _id: item._id || crypto.randomUUID(),
-            }))
-          : [
-              {
-                date: null,
-                organization: '',
-                amount: '',
-                reference: '',
-                _id: crypto.randomUUID(),
-              },
-            ];
-
       return (
         <div>
           <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
@@ -710,7 +706,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               <div
                 className={cn(
                   'flex-1 flex h-full min-w-[143px] shrink-0 items-center  px-[10px] bg-[#F5F5F5]',
-                  valueArray.length > 1 ? 'border-r border-black/10' : '',
+                  fundingFields.length > 1 ? 'border-r border-black/10' : '',
                 )}
               >
                 <div className="flex items-center gap-[5px]">
@@ -720,26 +716,21 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
                 </div>
               </div>
-              {valueArray.length > 1 && (
+              {fundingFields.length > 1 && (
                 <div className="flex h-full w-[60px] items-center justify-center">
                   {/* Actions column header */}
                 </div>
               )}
             </div>
-            {valueArray.map((item: any, index: number) => {
+            {fundingFields.map((field, index) => {
               return (
                 <FundingReceivedGrantsTableItem
-                  key={item._id}
+                  key={field.fieldId}
+                  field={field}
                   index={index}
-                  remove={() => {
-                    const currentValue = getValues(itemConfig.key as any) || [];
-                    const newValue = currentValue.filter(
-                      (_: any, i: number) => i !== index,
-                    );
-                    field.onChange(newValue);
-                  }}
-                  itemKey={field.name as 'funding_received_grants'}
-                  canRemove={valueArray.length > 1}
+                  remove={() => handleRemoveFundingField(index)}
+                  itemKey={'funding_received_grants'}
+                  canRemove={fundingFields.length > 1}
                 />
               );
             })}
@@ -750,16 +741,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  field.onChange([
-                    ...valueArray,
-                    {
-                      date: null,
-                      organization: '',
-                      amount: '',
-                      reference: '',
-                      _id: crypto.randomUUID(),
-                    },
-                  ]);
+                  handleAddFundingField();
                 }}
               >
                 <PlusIcon size={16} />

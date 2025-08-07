@@ -142,7 +142,29 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
         createDateConstraintValidator(dateFoundedConstraints),
       )
       .required('Foundation date is required'),
-    organization: yup.string().required('organization is required'),
+    organization: yup
+      .mixed<string | string[]>()
+      .test(
+        'organization-required',
+        'organization is required',
+        function (value) {
+          if (Array.isArray(value)) {
+            return value.length > 0;
+          }
+          return typeof value === 'string' && value.trim().length > 0;
+        },
+      )
+      .test(
+        'organization-limit',
+        'Maximum 10 organizations allowed',
+        function (value) {
+          if (Array.isArray(value)) {
+            return value.length <= 10;
+          }
+          return true; // Single selection mode doesn't need limit
+        },
+      )
+      .required('organization is required'),
     amount: yup.string().required('amount is required'),
     reference: yup
       .string()
