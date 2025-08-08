@@ -10,8 +10,6 @@ export interface MultiContractEntryProps {
   value: SmartContract[];
   onChange: (contracts: SmartContract[]) => void;
   weight: number;
-  applicable: boolean;
-  onApplicableChange: (applicable: boolean) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -20,8 +18,6 @@ export const MultiContractEntry: React.FC<MultiContractEntryProps> = ({
   value,
   onChange,
   weight: _weight,
-  applicable,
-  onApplicableChange: _onApplicableChange,
   disabled = false,
   placeholder,
 }) => {
@@ -69,44 +65,29 @@ export const MultiContractEntry: React.FC<MultiContractEntryProps> = ({
 
   return (
     <div className="space-y-[10px]" data-testid="multi-contract-entry">
-      {/* Always show contract entries but disabled when not applicable */}
-      {(value.length > 0 || !applicable) && (
+      {/* Show contract entries if there are any */}
+      {value.length > 0 && (
         <div className="space-y-3">
-          {value.length > 0
-            ? value.map((contract, idx) => (
-                <ContractEntry
-                  key={contract.id}
-                  contract={contract}
-                  onChange={(updates) =>
-                    handleContractChange(contract.id, updates)
-                  }
-                  onRemove={() => handleRemoveChain(contract.id)}
-                  existingChains={getExistingChains(contract.id)}
-                  disabled={disabled || !applicable}
-                  onCustomChainAdd={handleCustomChainAdd}
-                  showRemove={value.length > 1 && applicable && idx !== 0}
-                  placeholder={placeholder}
-                />
-              ))
-            : // Show one disabled entry when N/A is selected
-              !applicable && (
-                <ContractEntry
-                  contract={{ id: 'placeholder', chain: '', addresses: '' }}
-                  onChange={() => {}}
-                  onRemove={() => {}}
-                  existingChains={[]}
-                  disabled={true}
-                  showRemove={false}
-                  placeholder={placeholder}
-                />
-              )}
+          {value.map((contract, idx) => (
+            <ContractEntry
+              key={contract.id}
+              contract={contract}
+              onChange={(updates) => handleContractChange(contract.id, updates)}
+              onRemove={() => handleRemoveChain(contract.id)}
+              existingChains={getExistingChains(contract.id)}
+              disabled={disabled}
+              onCustomChainAdd={handleCustomChainAdd}
+              showRemove={value.length > 1 && idx !== 0}
+              placeholder={placeholder}
+            />
+          ))}
         </div>
       )}
 
       <button
         type="button"
         onClick={handleAddChain}
-        disabled={disabled || !applicable}
+        disabled={disabled}
         className="flex h-auto w-full cursor-pointer items-center justify-center gap-[5px] rounded-[4px] border border-black/10 bg-black/[0.05] p-[10px] px-[8px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
         style={{
           outline: 'none',

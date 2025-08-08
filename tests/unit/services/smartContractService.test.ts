@@ -267,29 +267,28 @@ describe('SmartContractService', () => {
 
       const result = await service.getSmartContracts(1);
 
-      expect(result.applicable).toBe(true);
       expect(result.contracts).toHaveLength(1);
       expect(result.contracts[0].chain).toBe('ethereum');
-      expect(result.contracts[0].addresses).toHaveLength(2);
-      expect(result.references).toEqual([]);
+      expect(result.contracts[0].addresses).toContain(
+        '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
+      );
+      expect(result.contracts[0].addresses).toContain(
+        '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
+      );
     });
 
-    it('should handle new JSONB data format', async () => {
+    it('should handle new JSONB array format', async () => {
       const mockDb = await import('@/lib/db');
-      const mockData = {
-        applicable: true,
-        contracts: [
-          {
-            chain: 'ethereum',
-            addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
-          },
-          {
-            chain: 'custom-solana',
-            addresses: 'DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK',
-          },
-        ],
-        references: ['https://etherscan.io'],
-      };
+      const mockData = [
+        {
+          chain: 'ethereum',
+          addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
+        },
+        {
+          chain: 'custom-solana',
+          addresses: 'DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK',
+        },
+      ];
 
       const selectMock = {
         from: vi.fn().mockReturnThis(),
@@ -305,7 +304,7 @@ describe('SmartContractService', () => {
 
       const result = await service.getSmartContracts(1);
 
-      expect(result).toEqual(mockData);
+      expect(result.contracts).toEqual(mockData);
     });
 
     it('should handle null data', async () => {
@@ -324,9 +323,7 @@ describe('SmartContractService', () => {
 
       const result = await service.getSmartContracts(1);
 
-      expect(result.applicable).toBe(true);
       expect(result.contracts).toEqual([]);
-      expect(result.references).toEqual([]);
     });
 
     it('should throw error if project not found', async () => {
@@ -353,36 +350,28 @@ describe('SmartContractService', () => {
       };
       mockDb.db.update = vi.fn().mockReturnValue(updateMock);
 
-      const data = {
-        applicable: true,
-        contracts: [
-          {
-            chain: 'ethereum',
-            addresses: '  0x742D35cc6634c0532925a3b844bc9e7595f8C8d3  ',
-          },
-        ],
-        references: ['https://etherscan.io'],
-      };
+      const contracts = [
+        {
+          chain: 'ethereum',
+          addresses: '  0x742D35cc6634c0532925a3b844bc9e7595f8C8d3  ',
+        },
+      ];
 
-      await service.updateSmartContracts(1, data);
+      await service.updateSmartContracts(1, contracts);
 
       expect(mockDb.db.update).toHaveBeenCalled();
       expect(updateMock.set).toHaveBeenCalledWith({
-        dappSmartContracts: {
-          applicable: true,
-          contracts: [
-            {
-              chain: 'ethereum',
-              addresses: '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3', // trimmed
-            },
-          ],
-          references: ['https://etherscan.io'],
-        },
+        dappSmartContracts: [
+          {
+            chain: 'ethereum',
+            addresses: '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3', // trimmed
+          },
+        ],
         updatedAt: expect.any(Date),
       });
     });
 
-    it('should handle non-applicable state', async () => {
+    it('should handle empty contracts (not applicable)', async () => {
       const mockDb = await import('@/lib/db');
       const updateMock = {
         set: vi.fn().mockReturnThis(),
@@ -390,24 +379,12 @@ describe('SmartContractService', () => {
       };
       mockDb.db.update = vi.fn().mockReturnValue(updateMock);
 
-      const data = {
-        applicable: false,
-        contracts: [
-          {
-            chain: 'ethereum',
-            addresses: '0x742d35Cc6634C0532925a3b844Bc9e7595f8C8d3',
-          },
-        ],
-      };
+      const contracts: SmartContract[] = [];
 
-      await service.updateSmartContracts(1, data);
+      await service.updateSmartContracts(1, contracts);
 
       expect(updateMock.set).toHaveBeenCalledWith({
-        dappSmartContracts: {
-          applicable: false,
-          contracts: [], // Empty when not applicable
-          references: [],
-        },
+        dappSmartContracts: null, // null when empty
         updatedAt: expect.any(Date),
       });
     });

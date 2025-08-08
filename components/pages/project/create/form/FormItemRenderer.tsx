@@ -75,14 +75,16 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   }, [itemKey, formType]);
 
   // Smart contracts values (used only when formDisplayType === 'multiContracts')
-  const smartContractsApplicable =
-    formDisplayType === 'multiContracts'
-      ? fieldApplicability?.dappSmartContracts !== false
-      : true;
+  // When field is not applicable, value should be empty array
 
   // Process smart contracts value - now always an array
   const smartContractsValue: SmartContract[] = useMemo(() => {
     if (formDisplayType !== 'multiContracts') {
+      return [];
+    }
+
+    // If field is not applicable, return empty array
+    if (fieldApplicability?.dappSmartContracts === false) {
       return [];
     }
 
@@ -99,7 +101,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         addresses: '',
       },
     ];
-  }, [formDisplayType, field.value]);
+  }, [formDisplayType, field.value, fieldApplicability]);
 
   // Callbacks for smart contracts (always defined, but only used when needed)
   const handleContractsChange = useCallback(
@@ -110,10 +112,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     [field],
   );
 
-  const handleApplicableChange = useCallback((_applicable: boolean) => {
-    // This is now handled through the global fieldApplicability map
-    // No need to set a separate field
-  }, []);
+  // Removed handleApplicableChange - now handled through fieldApplicability
 
   // Use custom hook for funding received grants field array management
   const {
@@ -818,9 +817,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
           value={smartContractsValue}
           onChange={handleContractsChange}
           weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
-          applicable={smartContractsApplicable}
-          onApplicableChange={handleApplicableChange}
-          disabled={isDisabled}
+          disabled={
+            isDisabled || fieldApplicability?.dappSmartContracts === false
+          }
           placeholder={itemConfig.placeholder}
         />
       );

@@ -14,9 +14,7 @@ const smartContractSchema = z.object({
 
 const smartContractsInputSchema = z.object({
   projectId: z.number(),
-  applicable: z.boolean(),
   contracts: z.array(smartContractSchema),
-  references: z.array(z.string().url('Invalid URL format')).optional(),
 });
 
 export const smartContractsRouter = router({
@@ -26,7 +24,7 @@ export const smartContractsRouter = router({
   update: protectedProcedure
     .input(smartContractsInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const { projectId, applicable, contracts, references } = input;
+      const { projectId, contracts } = input;
 
       // Check user permission
       const hasPermission = await smartContractService.checkUserPermission(
@@ -41,24 +39,22 @@ export const smartContractsRouter = router({
         });
       }
 
-      // Validate all contract addresses
-      const validationResults =
-        await smartContractService.validateContracts(contracts);
+      // Validate all contract addresses if there are any
+      if (contracts.length > 0) {
+        const validationResults =
+          await smartContractService.validateContracts(contracts);
 
-      if (!validationResults.valid) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Invalid contract data',
-          cause: validationResults.errors,
-        });
+        if (!validationResults.valid) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid contract data',
+            cause: validationResults.errors,
+          });
+        }
       }
 
       // Update smart contracts data
-      await smartContractService.updateSmartContracts(projectId, {
-        applicable,
-        contracts,
-        references,
-      });
+      await smartContractService.updateSmartContracts(projectId, contracts);
 
       // Invalidate cache
       revalidateTag(CACHE_TAGS.PROJECTS);
@@ -76,7 +72,7 @@ export const smartContractsRouter = router({
         projectId: z.number(),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const { projectId } = input;
 
       try {

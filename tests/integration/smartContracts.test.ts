@@ -83,7 +83,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
     it('should update smart contracts with single chain', async () => {
       const contractsData = {
         projectId: testProjectId,
-        applicable: true,
         contracts: [
           {
             chain: 'ethereum',
@@ -91,7 +90,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
               '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3,0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
           },
         ],
-        references: ['https://etherscan.io'],
       };
 
       const result = await smartContractsCaller.update(contractsData);
@@ -103,7 +101,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
         projectId: testProjectId,
       });
 
-      expect(savedData.applicable).toBe(true);
       expect(savedData.contracts).toHaveLength(1);
       expect(savedData.contracts[0].chain).toBe('ethereum');
       expect(savedData.contracts[0].addresses).toContain(
@@ -112,13 +109,11 @@ describe.skip('Smart Contracts API Integration Tests', () => {
       expect(savedData.contracts[0].addresses).toContain(
         '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
       );
-      expect(savedData.references).toEqual(['https://etherscan.io']);
     });
 
     it('should update smart contracts with multiple chains including custom', async () => {
       const contractsData = {
         projectId: testProjectId,
-        applicable: true,
         contracts: [
           {
             chain: 'ethereum',
@@ -144,7 +139,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
         projectId: testProjectId,
       });
 
-      expect(savedData.applicable).toBe(true);
       expect(savedData.contracts).toHaveLength(3);
 
       const ethereumContract = savedData.contracts.find(
@@ -162,10 +156,9 @@ describe.skip('Smart Contracts API Integration Tests', () => {
       );
     });
 
-    it('should handle non-applicable state', async () => {
+    it('should handle empty contracts (not applicable)', async () => {
       const contractsData = {
         projectId: testProjectId,
-        applicable: false,
         contracts: [],
       };
 
@@ -178,14 +171,12 @@ describe.skip('Smart Contracts API Integration Tests', () => {
         projectId: testProjectId,
       });
 
-      expect(savedData.applicable).toBe(false);
       expect(savedData.contracts).toHaveLength(0);
     });
 
     it('should reject invalid addresses', async () => {
       const contractsData = {
         projectId: testProjectId,
-        applicable: true,
         contracts: [
           {
             chain: 'ethereum',
@@ -221,7 +212,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
     it('should reject duplicate chains', async () => {
       const contractsData = {
         projectId: testProjectId,
-        applicable: true,
         contracts: [
           {
             chain: 'ethereum',
@@ -247,7 +237,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
 
       const contractsData = {
         projectId: testProjectId,
-        applicable: true,
         contracts: [
           {
             chain: 'ethereum',
@@ -261,23 +250,7 @@ describe.skip('Smart Contracts API Integration Tests', () => {
       );
     });
 
-    it('should validate URL references', async () => {
-      const contractsData = {
-        projectId: testProjectId,
-        applicable: true,
-        contracts: [
-          {
-            chain: 'ethereum',
-            addresses: '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
-          },
-        ],
-        references: ['not-a-url', 'https://valid-url.com'],
-      };
-
-      await expect(
-        smartContractsCaller.update(contractsData),
-      ).rejects.toThrow();
-    });
+    // References field removed - no longer part of the API
   });
 
   describe('get', () => {
@@ -285,14 +258,12 @@ describe.skip('Smart Contracts API Integration Tests', () => {
       // First update with some data
       await smartContractsCaller.update({
         projectId: testProjectId,
-        applicable: true,
         contracts: [
           {
             chain: 'ethereum',
             addresses: '0x742D35cc6634c0532925a3b844bc9e7595f8C8d3',
           },
         ],
-        references: ['https://etherscan.io'],
       });
 
       // Then retrieve
@@ -300,10 +271,8 @@ describe.skip('Smart Contracts API Integration Tests', () => {
         projectId: testProjectId,
       });
 
-      expect(result.applicable).toBe(true);
       expect(result.contracts).toHaveLength(1);
       expect(result.contracts[0].chain).toBe('ethereum');
-      expect(result.references).toEqual(['https://etherscan.io']);
     });
 
     it('should handle non-existent project', async () => {

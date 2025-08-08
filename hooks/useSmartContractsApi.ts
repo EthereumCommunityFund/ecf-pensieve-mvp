@@ -51,22 +51,14 @@ export const useSmartContractsApi = ({
   return {
     // Data
     smartContracts: data?.contracts || [],
-    applicable: data?.applicable ?? true,
-    references: data?.references || [],
     isLoading,
     error,
 
     // Actions
-    updateSmartContracts: async (
-      contracts: SmartContract[],
-      applicable: boolean,
-      references?: string[],
-    ) => {
+    updateSmartContracts: async (contracts: SmartContract[]) => {
       return updateMutation.mutateAsync({
         projectId,
-        applicable,
         contracts,
-        references: references || [],
       });
     },
 

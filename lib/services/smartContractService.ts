@@ -9,16 +9,10 @@ export interface SmartContract {
   addresses: string;
 }
 
-export interface SmartContractsUpdateData {
-  applicable: boolean;
-  contracts: SmartContract[];
-  references?: string[];
-}
+// SmartContractsUpdateData interface removed - using SmartContract[] directly
 
 export interface SmartContractsData {
-  applicable: boolean;
   contracts: SmartContract[];
-  references: string[];
 }
 
 export interface ValidationResult {
@@ -112,15 +106,17 @@ export class SmartContractService {
    */
   async updateSmartContracts(
     projectId: number,
-    data: SmartContractsUpdateData,
+    contracts: SmartContract[],
   ): Promise<void> {
     // Construct JSONB array data structure (DB stores array only)
-    const smartContractsData = data.applicable
-      ? data.contracts.map((contract) => ({
-          chain: contract.chain,
-          addresses: contract.addresses.trim(),
-        }))
-      : null;
+    // Empty array is stored as null to match other nullable fields behavior
+    const smartContractsData =
+      contracts.length > 0
+        ? contracts.map((contract) => ({
+            chain: contract.chain,
+            addresses: contract.addresses.trim(),
+          }))
+        : null;
 
     // Update project's dappSmartContracts field
     await db
@@ -153,7 +149,6 @@ export class SmartContractService {
     if (typeof smartContractsData === 'string') {
       // Old data is comma-separated addresses string
       return {
-        applicable: smartContractsData.trim().length > 0,
         contracts: smartContractsData.trim()
           ? [
               {
@@ -162,33 +157,26 @@ export class SmartContractService {
               },
             ]
           : [],
-        references: [],
       };
     }
 
     // Handle new array format (canonical)
     if (Array.isArray(smartContractsData)) {
       return {
-        applicable: smartContractsData.length > 0,
         contracts: smartContractsData,
-        references: [],
       };
     }
 
     // Handle old object format (for backwards compatibility during migration)
     if (smartContractsData && typeof smartContractsData === 'object') {
       return {
-        applicable: smartContractsData.applicable ?? true,
         contracts: smartContractsData.contracts || [],
-        references: smartContractsData.references || [],
       };
     }
 
-    // No data -> default to applicable true with empty list (UI expects this)
+    // No data -> return empty array
     return {
-      applicable: true,
       contracts: [],
-      references: [],
     };
   }
 
