@@ -8,7 +8,11 @@ import { useDebounce } from 'use-debounce';
 
 import { Button } from '@/components/base';
 import { calcTransparentScore } from '@/components/biz/project/TransparentScore';
-import { PlusSquareOutlineIcon, ShieldStarIcon } from '@/components/icons';
+import {
+  PlusSquareOutlineIcon,
+  SearchIcon,
+  ShieldStarIcon,
+} from '@/components/icons';
 import { XCircleSolidIcon } from '@/components/icons/XCircle';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { useProjectsByIds } from '@/hooks/useProjectsByIds';
@@ -358,10 +362,13 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                   ))}
                 </div>
               ) : (
-                <span className="text-[13px] font-normal text-black/60">
-                  {(!multiple && typeof value === 'string' ? value : null) ||
-                    placeholder}
-                </span>
+                <div className="flex items-center">
+                  <SearchIcon size={16} className="mr-2 text-black/60" />
+                  <span className="text-[13px] font-normal text-black/60">
+                    {(!multiple && typeof value === 'string' ? value : null) ||
+                      placeholder}
+                  </span>
+                </div>
               )}
             </div>
           </div>
