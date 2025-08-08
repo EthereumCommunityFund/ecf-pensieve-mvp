@@ -90,7 +90,7 @@ async function syncProjectSnap() {
         }
 
         return {
-          key: row.key,
+          key: row.key as string,
           value,
         };
       });

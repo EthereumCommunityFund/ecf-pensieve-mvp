@@ -186,9 +186,18 @@ export interface IPhysicalEntity {
 export interface IFundingReceivedGrants {
   date: Date | null;
   /**
-   * actually, this is projectId
+   * Organization identifier - supports multi-select and backward compatibility
+   * - New data format: string[] - project ID array (multi-select mode)
+   * - Legacy data format: string - project ID or project name (single-select compatibility)
+   * Note: Based on existing code comments, organization field actually stores projectId
    */
-  organization: string;
+  organization: string | string[];
+  /**
+   * Project donator identifiers - projects that have donated to this funding round
+   * Required field, supports up to 10 project IDs
+   * Format: string[] - array of project IDs
+   */
+  projectDonator: string[];
   amount: string;
   reference?: string;
   _id?: string;

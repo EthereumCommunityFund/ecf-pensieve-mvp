@@ -47,6 +47,7 @@ export { default as PencilCircleIcon } from './PencilCircle';
 export { default as PencilSimpleIcon } from './PencilSimple';
 export { default as PlusIcon } from './Plus';
 export { default as PlusSquareIcon } from './PlusSquare';
+export { default as PlusSquareOutlineIcon } from './PlusSquareOutline';
 export { default as PushPinSimpleIcon } from './PushPinSimple';
 export { default as PushPinSimpleSlashIcon } from './PushPinSimpleSlash';
 export { default as QuestionIcon } from './Question';

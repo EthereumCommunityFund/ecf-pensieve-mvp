@@ -69,7 +69,7 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
                 itemConfig!.formDisplayType === 'multiContracts' ||
                 itemConfig!.formDisplayType === 'fundingReceivedGrants'
                 ? 'p-[0px]'
-                : 'p-[20px]',
+                : 'p-[20px] mobile:p-[10px]',
             )}
           >
             <InputContentRenderer

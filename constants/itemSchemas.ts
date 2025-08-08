@@ -142,7 +142,50 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
         createDateConstraintValidator(dateFoundedConstraints),
       )
       .required('Foundation date is required'),
-    organization: yup.string().required('organization is required'),
+    organization: yup
+      .mixed<string | string[]>()
+      .test(
+        'organization-required',
+        'organization is required',
+        function (value) {
+          if (Array.isArray(value)) {
+            return value.length > 0;
+          }
+          return typeof value === 'string' && value.trim().length > 0;
+        },
+      )
+      .test(
+        'organization-limit',
+        'Maximum 10 organizations allowed',
+        function (value) {
+          if (Array.isArray(value)) {
+            return value.length <= 10;
+          }
+          return true; // Single selection mode doesn't need limit
+        },
+      )
+      .required('organization is required'),
+    projectDonator: yup
+      .array()
+      .of(yup.string().required('Project ID is required'))
+      .min(1, 'At least one project donator is required')
+      .test(
+        'project-donator-limit',
+        'Maximum 10 project donators allowed',
+        function (value) {
+          if (!value || value.length === 0) return false; // Required field
+          return value.length <= 10;
+        },
+      )
+      .test(
+        'valid-project-ids',
+        'Invalid project IDs detected',
+        function (value) {
+          if (!value) return true;
+          return value.every((id) => /^\d+$/.test(id)); // Validate numeric ID format
+        },
+      )
+      .required('Project donator is required'),
     amount: yup.string().required('amount is required'),
     reference: yup
       .string()

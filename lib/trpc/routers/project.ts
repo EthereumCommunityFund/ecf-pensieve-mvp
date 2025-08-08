@@ -457,6 +457,7 @@ export const projectRouter = router({
               creator: true,
             },
           },
+          projectSnap: true,
         },
         where: eq(projects.id, input.id),
       });
@@ -469,6 +470,36 @@ export const projectRouter = router({
       }
 
       return project;
+    }),
+
+  getProjectByIds: publicProcedure
+    .input(
+      z.object({
+        ids: z.array(z.number()).min(1).max(100),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const uniqueIds = [...new Set(input.ids)];
+
+      const result = await ctx.db.query.projects.findMany({
+        with: {
+          creator: true,
+          proposals: {
+            with: {
+              voteRecords: {
+                with: {
+                  creator: true,
+                },
+              },
+              creator: true,
+            },
+          },
+          projectSnap: true,
+        },
+        where: inArray(projects.id, uniqueIds),
+      });
+
+      return result;
     }),
 
   scanPendingProject: publicProcedure.query(async ({ ctx }) => {

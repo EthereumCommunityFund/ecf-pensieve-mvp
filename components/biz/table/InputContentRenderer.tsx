@@ -1,13 +1,16 @@
-import { Tooltip } from '@heroui/react';
+import { Skeleton, Tooltip } from '@heroui/react';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 
 import { AddressDisplay } from '@/components/base/AddressDisplay';
 import { TableIcon } from '@/components/icons';
+import { SelectedProjectTag } from '@/components/pages/project/create/form/ProjectSearchSelector';
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
+import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
+import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -42,6 +45,41 @@ const InputContentRenderer: React.FC<IProps> = ({
 }) => {
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
+
+  // For fundingReceivedGrants, extract project IDs from organization and projectDonator fields
+  const grantProjectIds = useMemo(() => {
+    if (displayFormType !== 'fundingReceivedGrants') return [];
+
+    const parsed = parseValue(formatValue);
+    if (!parsed || !Array.isArray(parsed)) return [];
+
+    const ids: string[] = [];
+    parsed.forEach((grant: any) => {
+      // Extract from organization field
+      if (grant.organization) {
+        if (Array.isArray(grant.organization)) {
+          // New format: array of project IDs
+          ids.push(...grant.organization);
+        }
+      }
+      // Extract from projectDonator field
+      if (grant.projectDonator && Array.isArray(grant.projectDonator)) {
+        ids.push(...grant.projectDonator);
+      }
+    });
+
+    return [...new Set(ids)]; // Remove duplicates
+  }, [displayFormType, formatValue]);
+
+  // Fetch project names for grant organizations
+  const { projectsMap, isLoading: isLoadingProjects } = useProjectNamesByIds(
+    grantProjectIds,
+    {
+      enabled:
+        displayFormType === 'fundingReceivedGrants' &&
+        grantProjectIds.length > 0,
+    },
+  );
 
   const renderContent = useCallback(() => {
     switch (displayFormType) {
@@ -781,7 +819,7 @@ const InputContentRenderer: React.FC<IProps> = ({
 
         if (isInExpandableRow) {
           return (
-            <div className="w-full">
+            <div className="w-full ">
               <TableContainer bordered rounded background="white">
                 <table className="w-full border-separate border-spacing-0">
                   <thead>
@@ -792,13 +830,19 @@ const InputContentRenderer: React.FC<IProps> = ({
                           <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
                         </div>
                       </TableHeader>
-                      <TableHeader width={301} isContainerBordered>
+                      <TableHeader width={300} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span>Organization/Program</span>
                           <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
                         </div>
                       </TableHeader>
-                      <TableHeader width={138} isContainerBordered>
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project Donator</span>
+                          <TooltipWithQuestionIcon content="Projects that have donated to this funding round or acted as sponsors" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={160} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span className="shrink-0">Amount (USD)</span>
                           <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
@@ -817,7 +861,8 @@ const InputContentRenderer: React.FC<IProps> = ({
                       (
                         grant: {
                           date: Date | string;
-                          organization: string;
+                          organization: string | string[];
+                          projectDonator?: string[];
                           amount: string;
                           reference: string;
                         },
@@ -834,13 +879,94 @@ const InputContentRenderer: React.FC<IProps> = ({
                           >
                             {dayjs(grant.date).format('YYYY/MM/DD')}
                           </TableCell>
-                          {/* TODO can jump to project page with projectId */}
                           <TableCell
                             width={301}
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {grant.organization}
+                            {(() => {
+                              if (!grant.organization) return '';
+
+                              // Check if it's the old format (string)
+                              if (typeof grant.organization === 'string') {
+                                return grant.organization;
+                              }
+
+                              // New format: array of project IDs
+                              if (Array.isArray(grant.organization)) {
+                                if (isLoadingProjects) {
+                                  return (
+                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
+                                  );
+                                }
+
+                                const projects = (
+                                  grant.organization as string[]
+                                )
+                                  .map((id: string) => {
+                                    const numId = parseInt(id, 10);
+                                    const projectData = projectsMap?.get(numId);
+                                    return projectData || null;
+                                  })
+                                  .filter((p): p is IProject => p !== null);
+
+                                return (
+                                  <div className="flex flex-wrap items-center gap-[8px]">
+                                    {projects.map((project) => (
+                                      <SelectedProjectTag
+                                        key={project.id}
+                                        project={project}
+                                      />
+                                    ))}
+                                  </div>
+                                );
+                              }
+
+                              return '';
+                            })()}
+                          </TableCell>
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {(() => {
+                              // Compatibility: handle old data without projectDonator field
+                              if (
+                                !grant.projectDonator ||
+                                !Array.isArray(grant.projectDonator) ||
+                                grant.projectDonator.length === 0
+                              ) {
+                                return '-';
+                              }
+
+                              if (isLoadingProjects) {
+                                return (
+                                  <Skeleton className="h-[20px] w-[50px] rounded-sm" />
+                                );
+                              }
+
+                              const donatorProjects = grant.projectDonator
+                                .map((id: string) => {
+                                  const numId = parseInt(id, 10);
+                                  const projectData = projectsMap?.get(numId);
+                                  return projectData || null;
+                                })
+                                .filter((p): p is IProject => p !== null);
+
+                              return donatorProjects.length > 0 ? (
+                                <div className="flex flex-wrap items-center gap-[8px]">
+                                  {donatorProjects.map((project) => (
+                                    <SelectedProjectTag
+                                      key={project.id}
+                                      project={project}
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                '-'
+                              );
+                            })()}
                           </TableCell>
                           <TableCell
                             width={138}
@@ -922,6 +1048,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     isExpanded,
     onToggleExpanded,
     isInExpandableRow,
+    isLoadingProjects,
+    projectsMap,
   ]);
 
   if (!displayFormType) {

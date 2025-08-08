@@ -9,6 +9,8 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
+import { IProposalItem } from '@/types/item';
+
 import { projects } from './projects';
 
 export const projectSnaps = pgTable(
@@ -21,7 +23,7 @@ export const projectSnaps = pgTable(
     projectId: bigint('project_id', { mode: 'number' })
       .notNull()
       .references(() => projects.id),
-    items: jsonb('items').notNull(),
+    items: jsonb('items').$type<IProposalItem[]>().notNull(),
     name: text('name'),
     categories: text('categories').array(),
   },
