@@ -28,6 +28,7 @@ const FundingReceivedGrantsTableItem: React.FC<
     () => ({
       date: `${itemKey}.${index}.date`,
       organization: `${itemKey}.${index}.organization`,
+      projectDonator: `${itemKey}.${index}.projectDonator`,
       amount: `${itemKey}.${index}.amount`,
       reference: `${itemKey}.${index}.reference`,
     }),
@@ -74,7 +75,7 @@ const FundingReceivedGrantsTableItem: React.FC<
       </div>
 
       {/* Organization Column */}
-      <div className="flex w-[301px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
+      <div className="flex w-[300px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
           name={fieldPaths.organization}
           control={control}
@@ -89,6 +90,32 @@ const FundingReceivedGrantsTableItem: React.FC<
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
                   {fieldState.error.message || 'organization is required'}
+                </span>
+              )}
+            </>
+          )}
+        />
+      </div>
+
+      {/* Project Donator Column */}
+      <div className="flex w-[300px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
+        <Controller
+          name={fieldPaths.projectDonator}
+          control={control}
+          render={({ field, fieldState }) => (
+            <>
+              <ProjectSearchSelector
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Search or select projects"
+                multiple={true}
+                disabled={false}
+                columnName={'Project Donator'}
+              />
+              {fieldState.error && (
+                <span className="mt-1 text-[12px] text-red-500">
+                  {fieldState.error.message ||
+                    'project donator selection error'}
                 </span>
               )}
             </>

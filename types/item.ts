@@ -190,6 +190,12 @@ export interface IFundingReceivedGrants {
    * Note: Based on existing code comments, organization field actually stores projectId
    */
   organization: string | string[];
+  /**
+   * Project donator identifiers - projects that have donated to this funding round
+   * Required field, supports up to 10 project IDs
+   * Format: string[] - array of project IDs
+   */
+  projectDonator: string[];
   amount: string;
   reference?: string;
   _id?: string;

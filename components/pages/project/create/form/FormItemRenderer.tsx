@@ -675,10 +675,10 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
     case 'fundingReceivedGrants': {
       return (
-        <div>
-          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
+          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
             {/* Table header */}
-            <div className="flex h-[40px] w-full items-center border-b border-black/5 bg-[#F5F5F5]">
+            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
               <div className="flex h-full w-[158px] shrink-0 items-center border-r border-black/10 px-[10px]">
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
@@ -687,12 +687,20 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
                 </div>
               </div>
-              <div className="flex h-full w-[301px] shrink-0 items-center border-r border-black/10 px-[10px]">
+              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
                     Organization/Program
                   </span>
                   <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
+                </div>
+              </div>
+              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Project Donator
+                  </span>
+                  <TooltipWithQuestionIcon content="Projects that have donated to this funding round or acted as sponsors" />
                 </div>
               </div>
               <div className="flex h-full w-[138px] shrink-0 items-center border-r border-black/10 px-[10px]">

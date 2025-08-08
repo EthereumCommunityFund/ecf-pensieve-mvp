@@ -28,6 +28,7 @@ interface ProjectSearchSelectorProps {
   disabled?: boolean;
   error?: string;
   placeholder?: string;
+  columnName?: string;
   multiple?: boolean; // 是否启用多选模式
 }
 
@@ -159,6 +160,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   error,
   placeholder = 'Search or select organization',
   multiple = false,
+  columnName = 'Organization/Program',
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -245,6 +247,11 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
         if (isAlreadySelected) {
           return prev.filter((p) => p.id !== project.id);
         } else {
+          // Check if maximum 10 projects limit is reached
+          if (prev.length >= 10) {
+            alert('Maximum 10 project donators allowed');
+            return prev;
+          }
           return [...prev, project];
         }
       });
@@ -386,7 +393,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                   </span>
                   <div className="flex items-center gap-[5px] opacity-60">
                     <span className="text-[14px] font-semibold text-[rgb(51,51,51)]">
-                      Organization/Program
+                      {columnName}
                     </span>
                     <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
                   </div>
