@@ -70,14 +70,14 @@ const InputContentRenderer: React.FC<IProps> = ({
   }, [displayFormType, formatValue]);
 
   // Fetch project names for grant organizations
-  const {
-    projectNamesMap,
-    projectsMap,
-    isLoading: isLoadingProjects,
-  } = useProjectNamesByIds(grantProjectIds, {
-    enabled:
-      displayFormType === 'fundingReceivedGrants' && grantProjectIds.length > 0,
-  });
+  const { projectsMap, isLoading: isLoadingProjects } = useProjectNamesByIds(
+    grantProjectIds,
+    {
+      enabled:
+        displayFormType === 'fundingReceivedGrants' &&
+        grantProjectIds.length > 0,
+    },
+  );
 
   const renderContent = useCallback(() => {
     switch (displayFormType) {
@@ -868,7 +868,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     onToggleExpanded,
     isInExpandableRow,
     isLoadingProjects,
-    projectNamesMap,
+    projectsMap,
   ]);
 
   if (!displayFormType) {
