@@ -156,7 +156,7 @@ const FundingReceivedGrantsTableItem: React.FC<
       {/* Reference Column */}
       <div
         className={cn(
-          'flex-1 flex flex-col justify-center h-full min-w-[143px] shrink-0 items-center px-[10px] py-[5px]',
+          'flex flex-1 min-w-[143px] shrink-0 flex-col justify-center px-[10px] py-[5px]',
           canRemove ? 'border-r border-black/10' : '',
         )}
       >
@@ -164,7 +164,7 @@ const FundingReceivedGrantsTableItem: React.FC<
           name={fieldPaths.reference}
           control={control}
           render={({ field, fieldState }) => (
-            <div className="flex min-h-[40px] flex-col justify-center">
+            <>
               <URLInput
                 value={field.value}
                 onChange={field.onChange}
@@ -176,7 +176,7 @@ const FundingReceivedGrantsTableItem: React.FC<
                   {fieldState.error.message}
                 </span>
               )}
-            </div>
+            </>
           )}
         />
       </div>
