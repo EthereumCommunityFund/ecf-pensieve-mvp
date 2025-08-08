@@ -11,7 +11,7 @@ export const DropDownMenuData = {
   common: [
     {
       name: 'Whitepaper',
-      link: 'https://ecf.wiki/doc/docs-bqClH1SVRt',
+      link: 'https://ecf.wiki/s/ae77a12f-106c-429e-a7ed-8cca218bf20b',
     },
     /*{
       name: 'Docs',
