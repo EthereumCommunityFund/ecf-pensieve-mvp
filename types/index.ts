@@ -113,3 +113,15 @@ export type IProposalsByProjectIdAndKey =
   RouterOutputs['projectLog']['getProposalsByProjectIdAndKey'];
 export type ILeadingProposalHistory =
   RouterOutputs['projectLog']['getLeadingProposalHistoryByProjectIdAndKey'];
+
+// List-related types
+export type IListDetail = RouterOutputs['list']['getListBySlug'];
+export type IListProjectWithOrder =
+  RouterOutputs['list']['getListProjects']['items'][0];
+
+// Edit state for list management
+export interface IEditState {
+  editedItems: IListProjectWithOrder[];
+  deletedItemIds: number[];
+  originalItems: IListProjectWithOrder[];
+}

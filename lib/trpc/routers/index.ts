@@ -5,6 +5,7 @@ import { authRouter } from './auth';
 import { fileRouter } from './file';
 import { itemProposalRouter } from './itemProposal';
 import { likeProjectRouter } from './likeProject';
+import { listRouter } from './list';
 import { notificationRouter } from './notification';
 import { projectRouter } from './project';
 import { projectLogRouter } from './projectLog';
@@ -22,6 +23,7 @@ export const appRouter = router({
   proposal: proposalRouter,
   itemProposal: itemProposalRouter,
   likeProject: likeProjectRouter,
+  list: listRouter,
   notification: notificationRouter,
   active: activeRouter,
   vote: voteRouter,
