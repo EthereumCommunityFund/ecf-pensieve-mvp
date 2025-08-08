@@ -5,8 +5,10 @@ import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { TableIcon } from '@/components/icons';
+import { SelectedProjectTag } from '@/components/pages/project/create/form/ProjectSearchSelector';
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
+import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -68,12 +70,14 @@ const InputContentRenderer: React.FC<IProps> = ({
   }, [displayFormType, formatValue]);
 
   // Fetch project names for grant organizations
-  const { projectNamesMap, isLoading: isLoadingProjects } =
-    useProjectNamesByIds(grantProjectIds, {
-      enabled:
-        displayFormType === 'fundingReceivedGrants' &&
-        grantProjectIds.length > 0,
-    });
+  const {
+    projectNamesMap,
+    projectsMap,
+    isLoading: isLoadingProjects,
+  } = useProjectNamesByIds(grantProjectIds, {
+    enabled:
+      displayFormType === 'fundingReceivedGrants' && grantProjectIds.length > 0,
+  });
 
   const renderContent = useCallback(() => {
     switch (displayFormType) {
@@ -715,19 +719,26 @@ const InputContentRenderer: React.FC<IProps> = ({
                                   );
                                 }
 
-                                const projectNames = (
+                                const projects = (
                                   grant.organization as string[]
                                 )
                                   .map((id: string) => {
                                     const numId = parseInt(id, 10);
-                                    return (
-                                      projectNamesMap?.get(numId) ||
-                                      `Project ${id}`
-                                    );
+                                    const projectData = projectsMap?.get(numId);
+                                    return projectData || null;
                                   })
-                                  .filter(Boolean);
+                                  .filter((p): p is IProject => p !== null);
 
-                                return projectNames.join(', ');
+                                return (
+                                  <div className="flex flex-wrap items-center gap-[8px]">
+                                    {projects.map((project) => (
+                                      <SelectedProjectTag
+                                        key={project.id}
+                                        project={project}
+                                      />
+                                    ))}
+                                  </div>
+                                );
                               }
 
                               return '';
@@ -754,19 +765,26 @@ const InputContentRenderer: React.FC<IProps> = ({
                                 );
                               }
 
-                              const donatorNames = grant.projectDonator
+                              const donatorProjects = grant.projectDonator
                                 .map((id: string) => {
                                   const numId = parseInt(id, 10);
-                                  return (
-                                    projectNamesMap?.get(numId) ||
-                                    `Project ${id}`
-                                  );
+                                  const projectData = projectsMap?.get(numId);
+                                  return projectData || null;
                                 })
-                                .filter(Boolean);
+                                .filter((p): p is IProject => p !== null);
 
-                              return donatorNames.length > 0
-                                ? donatorNames.join(', ')
-                                : '-';
+                              return donatorProjects.length > 0 ? (
+                                <div className="flex flex-wrap items-center gap-[8px]">
+                                  {donatorProjects.map((project) => (
+                                    <SelectedProjectTag
+                                      key={project.id}
+                                      project={project}
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                '-'
+                              );
                             })()}
                           </TableCell>
                           <TableCell

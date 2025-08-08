@@ -521,12 +521,28 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
 
 const SelectedProjectTag: React.FC<{
   project: IProject;
-  onRemove: () => void;
+  onRemove?: () => void;
 }> = ({ project, onRemove }) => {
   const { projectName } = useProjectItemValue(project);
 
+  // If onRemove is not provided, render as a clickable link
+  if (!onRemove) {
+    return (
+      <Link
+        href={`/project/${project.id}`}
+        target={'_blank'}
+        className="flex min-h-[28px] items-center gap-[5px] rounded-[5px] border border-black/20 px-[10px] py-[4px] transition-colors hover:bg-gray-50"
+      >
+        <span className="text-[13px] font-normal text-black">
+          {projectName}
+        </span>
+      </Link>
+    );
+  }
+
+  // Original behavior with remove button for modal usage
   return (
-    <div className="flex h-[28px] items-center gap-[5px] rounded-[5px] border border-black/20 px-[10px] py-[4px]">
+    <div className="flex min-h-[28px] items-center gap-[5px] rounded-[5px] border border-black/20 px-[10px] py-[4px]">
       <span className="text-[13px] font-normal text-black">{projectName}</span>
       <button onClick={onRemove} className="flex items-center justify-center">
         <XCircleSolidIcon />
@@ -561,3 +577,4 @@ const SelectedProjectChip: React.FC<{
 };
 
 export default React.memo(ProjectSearchSelector);
+export { SelectedProjectTag };
