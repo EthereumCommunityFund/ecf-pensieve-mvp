@@ -137,7 +137,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           if (base64String) {
             uploadMutation.mutate({
               data: base64String,
-              type: originalFile.type,
+              type: blob.type, // use actual cropped blob mime (e.g., image/jpeg)
             });
           } else {
             setErrorMessage('Failed to process cropped image.');
@@ -239,6 +239,14 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           onClose={handleCropperClose}
           onCropComplete={handleCropComplete}
           maxSizeMB={maxSizeMB}
+          // Decide outputType based on original file's MIME
+          outputType={
+            originalFile?.type === 'image/png'
+              ? 'image/png'
+              : originalFile?.type === 'image/webp'
+                ? 'image/webp'
+                : 'image/jpeg'
+          }
           onError={setErrorMessage}
         />
       )}

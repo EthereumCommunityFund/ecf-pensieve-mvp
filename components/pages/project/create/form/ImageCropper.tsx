@@ -20,6 +20,7 @@ interface ImageCropperProps {
   maxHeight?: number;
   maxSizeMB?: number;
   quality?: number;
+  outputType?: string; // e.g. 'image/png' | 'image/jpeg' | 'image/webp'
   onError?: (message: string) => void;
 }
 
@@ -32,6 +33,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   maxHeight = 1200,
   maxSizeMB = 10,
   quality = 0.9,
+  outputType = 'image/jpeg',
   onError,
 }) => {
   const [crop, setCrop] = useState<Crop>({
@@ -148,7 +150,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
         onCropComplete(croppedImageUrl);
         onClose();
       },
-      'image/jpeg',
+      outputType,
       quality,
     );
   }, [
