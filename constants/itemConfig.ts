@@ -268,7 +268,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
       { value: 'Concept', label: 'Concept' },
       { value: 'Stealth', label: 'Stealth' },
       { value: 'Active Community', label: 'Active Community' },
-      { value: 'Operational Community', label: 'Operational Community' },
+      // { value: 'Operational Community', label: 'Operational Community' }, // ECF01-137
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
@@ -775,7 +775,9 @@ Identity / Reputation Tokens – non-transferable tokens (SBTs, badges) that rep
 
 Asset-Backed Tokens – represent real-world or on-chain assets (e.g. tokenized gold, RWA, shares).
 
-NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital or physical assets (e.g. art, membership, media).`,
+NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital or physical assets (e.g. art, membership, media).
+
+Native Tokens – the primary token of a blockchain network used for gas fees and network security (e.g. ETH for Ethereum, BTC for Bitcoin).`,
     weight: ALL_POC_ITEM_MAP.token_type.weight,
     formDisplayType: 'autoComplete',
     placeholder: 'Select token type',
@@ -797,6 +799,7 @@ NFTs (Non-Fungible Tokens) – unique tokens that represent ownership of digital
         value: 'Hybrid / Multi-Role Token',
         label: 'Hybrid / Multi-Role Token',
       },
+      { value: 'Native Token', label: 'Native Token' },
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],

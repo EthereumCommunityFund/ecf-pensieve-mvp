@@ -1,25 +1,21 @@
 'use client';
 
 import { XCircle } from '@phosphor-icons/react';
-import React from 'react';
-import {
-  FieldError,
-  FieldErrorsImpl,
-  Merge,
-  UseFormRegister,
-} from 'react-hook-form';
+import React, { useCallback } from 'react';
+import { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
 
+import RegionAutocomplete from '@/components/biz/table/RegionAutocomplete';
 import { IPhysicalEntity } from '@/types/item';
 
 interface PhysicalEntityFormItemTableProps {
   index: number;
   remove: (index: number) => void;
-  register: UseFormRegister<any>;
   errors: Merge<FieldError, FieldErrorsImpl<IPhysicalEntity>> | undefined;
-  physicalEntitiesKey: 'physical_entity';
   isPrimary: boolean;
   canRemove: boolean;
   touchedFields: any;
+  value: IPhysicalEntity;
+  onChange: (value: IPhysicalEntity) => void;
 }
 
 const PhysicalEntityFormItemTable: React.FC<
@@ -27,22 +23,35 @@ const PhysicalEntityFormItemTable: React.FC<
 > = ({
   index,
   remove,
-  register,
   errors,
-  physicalEntitiesKey,
   isPrimary,
   canRemove,
   touchedFields,
+  value,
+  onChange,
 }) => {
   const legalNameTouched = touchedFields.physical_entity?.[index]?.legalName;
-  const countryTouched = touchedFields.physical_entity?.[index]?.country;
+
+  // Handle region value with validation - ensure stable value
+  const regionValue = value?.country ?? '';
+
+  // Handle region selection change
+  const handleRegionChange = useCallback(
+    (newValue: string) => {
+      onChange({ ...value, country: newValue });
+    },
+    [onChange, value],
+  );
   return (
     <div className="flex items-stretch border-b border-black/5 bg-white">
       <div className="flex-1 border-r border-black/10 p-[10px]">
         <input
           type="text"
           placeholder="Type a legal name"
-          {...register(`${physicalEntitiesKey}.${index}.legalName`)}
+          value={value?.legalName || ''}
+          onChange={(e) => {
+            onChange({ ...value, legalName: e.target.value });
+          }}
           className={`h-[20px] w-full border-none bg-transparent px-0 text-[14px] font-[600] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0 ${legalNameTouched && errors?.legalName ? 'bg-red-50' : ''}`}
           style={{
             boxShadow: 'none !important',
@@ -59,22 +68,16 @@ const PhysicalEntityFormItemTable: React.FC<
         )}
       </div>
       <div className="flex-1 p-[10px]">
-        <input
-          type="text"
-          placeholder="Type a country"
-          {...register(`${physicalEntitiesKey}.${index}.country`)}
-          className={`h-[20px] w-full border-none bg-transparent px-0 text-[13px] font-[400] leading-[18px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0`}
-          style={{
-            boxShadow: 'none !important',
-            outline: 'none !important',
-            border: 'none !important',
-          }}
+        <RegionAutocomplete
+          value={regionValue}
+          onChange={handleRegionChange}
+          placeholder="Select or type to search"
         />
-        {errors?.country && (countryTouched || !isPrimary) && (
+        {errors?.country && (
           <span className="text-[13px] text-red-500">
-            {typeof errors.country === 'string'
+            {typeof errors?.country === 'string'
               ? errors.country
-              : errors.country?.message || 'country is required'}
+              : errors?.country?.message || 'Region is required'}
           </span>
         )}
       </div>

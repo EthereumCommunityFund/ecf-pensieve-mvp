@@ -75,7 +75,8 @@ const physicalEntitySchema: yup.ObjectSchema<IPhysicalEntity> = yup
   .object()
   .shape({
     legalName: yup.string().required('Legal name is required'),
-    country: yup.string().required('Country is required'),
+    country: yup.string().optional(),
+    _id: yup.string().optional(),
   });
 
 export const dateFoundedConstraints: IDateConstraints = {
@@ -427,7 +428,11 @@ export const itemValidationSchemas = {
 
   token_sales: yup.string().required('Token sales status is required'),
 
-  token_type: yup.string().required('Token type is required'),
+  token_type: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one token type')
+    .required('Token type is required'),
 
   token_issuance_mechanism: yup
     .string()

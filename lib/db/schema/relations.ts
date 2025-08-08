@@ -4,6 +4,9 @@ import { activeLogs } from './activeLogs';
 import { invitationCodes } from './invitations';
 import { itemProposals } from './itemProposals';
 import { likeRecords } from './likeRecord';
+import { listFollows } from './listFollows';
+import { listProjects } from './listProjects';
+import { lists } from './lists';
 import { notifications } from './notifications';
 import { profiles } from './profiles';
 import { projectLogs } from './projectLogs';
@@ -26,6 +29,8 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   proposalCreatorLogs: many(activeLogs, {
     relationName: 'proposalCreatorLogs',
   }),
+  createdLists: many(lists),
+  listFollows: many(listFollows),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -44,6 +49,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     fields: [projects.id],
     references: [ranks.projectId],
   }),
+  listProjects: many(listProjects),
 }));
 
 export const proposalsRelations = relations(proposals, ({ one, many }) => ({
@@ -177,5 +183,40 @@ export const projectSnapsRelations = relations(projectSnaps, ({ one }) => ({
   project: one(projects, {
     fields: [projectSnaps.projectId],
     references: [projects.id],
+  }),
+}));
+
+export const listsRelations = relations(lists, ({ one, many }) => ({
+  creator: one(profiles, {
+    fields: [lists.creator],
+    references: [profiles.userId],
+  }),
+  listProjects: many(listProjects),
+  listFollows: many(listFollows),
+}));
+
+export const listProjectsRelations = relations(listProjects, ({ one }) => ({
+  list: one(lists, {
+    fields: [listProjects.listId],
+    references: [lists.id],
+  }),
+  project: one(projects, {
+    fields: [listProjects.projectId],
+    references: [projects.id],
+  }),
+  addedByUser: one(profiles, {
+    fields: [listProjects.addedBy],
+    references: [profiles.userId],
+  }),
+}));
+
+export const listFollowsRelations = relations(listFollows, ({ one }) => ({
+  list: one(lists, {
+    fields: [listFollows.listId],
+    references: [lists.id],
+  }),
+  user: one(profiles, {
+    fields: [listFollows.userId],
+    references: [profiles.userId],
   }),
 }));
