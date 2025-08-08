@@ -11,7 +11,7 @@ export const DropDownMenuData = {
   common: [
     {
       name: 'Whitepaper',
-      link: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
+      link: 'https://ecf.wiki/doc/docs-bqClH1SVRt',
     },
     /*{
       name: 'Docs',
