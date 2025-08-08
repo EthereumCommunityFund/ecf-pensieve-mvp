@@ -129,19 +129,16 @@ export const projectRouter = router({
             return !!existing;
           });
 
-          // Convert smart contracts array to JSONB format for database
+          // Convert smart contracts array to JSONB array format for database
           let dappSmartContractsData: any = null;
 
           if (input.dappSmartContracts && input.dappSmartContracts.length > 0) {
-            // Convert array format to JSONB structure for database
-            dappSmartContractsData = {
-              applicable: true,
-              contracts: input.dappSmartContracts.map((contract) => ({
+            dappSmartContractsData = input.dappSmartContracts.map(
+              (contract) => ({
                 chain: contract.chain,
                 addresses: contract.addresses,
-              })),
-              references: [],
-            };
+              }),
+            );
           }
 
           const [project] = await tx

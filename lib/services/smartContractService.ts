@@ -114,17 +114,13 @@ export class SmartContractService {
     projectId: number,
     data: SmartContractsUpdateData,
   ): Promise<void> {
-    // Construct JSONB data structure
-    const smartContractsData = {
-      applicable: data.applicable,
-      contracts: data.applicable
-        ? data.contracts.map((contract) => ({
-            chain: contract.chain,
-            addresses: contract.addresses.trim(),
-          }))
-        : [],
-      references: data.references || [],
-    };
+    // Construct JSONB array data structure (DB stores array only)
+    const smartContractsData = data.applicable
+      ? data.contracts.map((contract) => ({
+          chain: contract.chain,
+          addresses: contract.addresses.trim(),
+        }))
+      : null;
 
     // Update project's dappSmartContracts field
     await db
@@ -170,13 +166,30 @@ export class SmartContractService {
       };
     }
 
-    // Return structured data or default values
-    const result: SmartContractsData = {
-      applicable: smartContractsData?.applicable ?? true,
-      contracts: smartContractsData?.contracts || [],
-      references: smartContractsData?.references || [],
+    // Handle new array format (canonical)
+    if (Array.isArray(smartContractsData)) {
+      return {
+        applicable: smartContractsData.length > 0,
+        contracts: smartContractsData,
+        references: [],
+      };
+    }
+
+    // Handle old object format (for backwards compatibility during migration)
+    if (smartContractsData && typeof smartContractsData === 'object') {
+      return {
+        applicable: smartContractsData.applicable ?? true,
+        contracts: smartContractsData.contracts || [],
+        references: smartContractsData.references || [],
+      };
+    }
+
+    // No data -> default to applicable true with empty list (UI expects this)
+    return {
+      applicable: true,
+      contracts: [],
+      references: [],
     };
-    return result;
   }
 
   /**

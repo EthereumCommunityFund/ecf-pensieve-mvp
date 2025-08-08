@@ -40,7 +40,28 @@ export const useSmartContractsData = (
       };
     }
 
-    // Handle new JSONB format
+    // Handle canonical JSONB array format
+    if (Array.isArray(data)) {
+      const contracts = data.map((contract: any, index: number) => ({
+        id: `contract-${index}-${Date.now()}`,
+        chain: contract.chain,
+        addresses: contract.addresses || '',
+      }));
+
+      return {
+        applicable: contracts.length > 0,
+        contracts,
+        references: [] as string[],
+        isEmpty:
+          contracts.length === 0 ||
+          contracts.every(
+            (c: any) => !c.addresses || c.addresses.trim() === '',
+          ),
+        isLegacyFormat: false,
+      };
+    }
+
+    // Handle legacy/new object JSONB format
     if (typeof data === 'object') {
       const contracts = (data.contracts || []).map(
         (contract: any, index: number) => ({
