@@ -83,7 +83,11 @@ const FundingReceivedGrantsTableItem: React.FC<
             <>
               <ProjectSearchSelector
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  // Use onChange without triggering validation
+                  field.onChange(value);
+                }}
+                onBlur={field.onBlur}
                 placeholder="Search or select organizations"
                 multiple={true}
               />
@@ -106,7 +110,11 @@ const FundingReceivedGrantsTableItem: React.FC<
             <>
               <ProjectSearchSelector
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  // Use onChange without triggering validation
+                  field.onChange(value);
+                }}
+                onBlur={field.onBlur}
                 placeholder="Search or select projects"
                 multiple={true}
                 disabled={false}

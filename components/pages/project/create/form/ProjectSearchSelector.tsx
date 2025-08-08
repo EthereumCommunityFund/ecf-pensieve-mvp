@@ -29,6 +29,7 @@ interface ProjectSearchSelectorProps {
     value: string | string[],
     projectData?: IProject | IProject[],
   ) => void;
+  onBlur?: () => void; // Optional onBlur handler for form integration
   disabled?: boolean;
   error?: string;
   placeholder?: string;
@@ -160,6 +161,7 @@ const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
 const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   value,
   onChange,
+  onBlur,
   disabled = false,
   error,
   placeholder = 'Search or select organization',
@@ -221,7 +223,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
         return fetchedProjects;
       });
     }
-  }, [fetchedProjects, multiple, value]);
+  }, [fetchedProjects, multiple]); // can't add value to deps
 
   // Use tRPC to search projects with React Query
   const {
@@ -303,15 +305,18 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     // 不清空搜索状态，保留用户的搜索结果
   }, [multiple, selectedProjects]);
 
-  const handleModalOpen = () => {
+  const handleModalOpen = useCallback(() => {
     if (!disabled) {
-      setIsModalOpen(true);
-      // 在多选模式下初始化临时选择
-      if (multiple) {
-        setTempSelectedProjects([...selectedProjects]);
-      }
+      // Use setTimeout to ensure modal opens after any potential validation events
+      setTimeout(() => {
+        setIsModalOpen(true);
+        // 在多选模式下初始化临时选择
+        if (multiple) {
+          setTempSelectedProjects([...selectedProjects]);
+        }
+      }, 0);
     }
-  };
+  }, [disabled, multiple, selectedProjects]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -338,7 +343,15 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
             className={`flex min-h-[42px] flex-1 cursor-pointer items-center rounded-[8px] px-[10px] ${
               disabled ? 'cursor-not-allowed opacity-50' : ''
             }`}
-            onClick={handleModalOpen}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleModalOpen();
+            }}
+            onMouseDown={(e) => {
+              // Prevent focus change which might trigger validation
+              e.preventDefault();
+            }}
           >
             {/* Selected projects or placeholder */}
             <div className="flex flex-1 items-center gap-[10px]">
@@ -376,7 +389,16 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
           {/* Plus button - only show when there are selected projects in multiple mode */}
           {multiple && selectedProjects.length > 0 && (
             <button
-              onClick={handleModalOpen}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleModalOpen();
+              }}
+              onMouseDown={(e) => {
+                // Prevent focus change which might trigger validation
+                e.preventDefault();
+              }}
               disabled={disabled}
               className="ml-[10px] flex size-[18px] items-center justify-center"
             >
