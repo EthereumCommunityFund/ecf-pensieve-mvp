@@ -21,9 +21,9 @@ export default defineConfig({
       reporter: ['text', 'html', 'json'],
       include: [
         'lib/trpc/routers/**/*.ts',
-        'lib/utils.ts',
         'lib/services/**/*.ts',
         'lib/utils/**/*.ts',
+        'lib/utils.ts',
         'constants/**/*.ts',
       ],
       exclude: ['**/*.test.ts', '**/*.spec.ts'],

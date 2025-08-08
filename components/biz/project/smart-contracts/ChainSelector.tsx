@@ -31,7 +31,7 @@ export interface ChainSelectorProps {
 const sanitizeChainName = (name: string): string => {
   return name
     .trim()
-    .replace(/[<>"']/g, '') // Remove potential XSS characters
+    .replace(/[<>"'&/\\`]/g, '') // Remove potential XSS characters
     .substring(0, 50); // Enforce length limit
 };
 

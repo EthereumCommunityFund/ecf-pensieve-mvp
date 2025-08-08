@@ -132,6 +132,11 @@ export const validateChainName = (
     };
   }
 
+  // Validate against XSS characters
+  if (/[<>"'&/\\`]/.test(trimmedName)) {
+    return { valid: false, error: 'Chain name contains invalid characters' };
+  }
+
   // Check if name already exists in predefined chains (case-insensitive)
   const existingChain = PREDEFINED_CHAINS.find(
     (chain) => chain.name.toLowerCase() === trimmedName.toLowerCase(),

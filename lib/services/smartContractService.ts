@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm';
-import { ethers } from 'ethers';
 
 import { db } from '@/lib/db';
 import { projects } from '@/lib/db/schema';
+import { AddressValidator } from '@/lib/utils/addressValidation';
 
 export interface SmartContract {
   chain: string;
@@ -51,14 +51,16 @@ export class SmartContractService {
         .filter(Boolean);
 
       for (const address of addressList) {
-        if (!ethers.isAddress(address)) {
+        if (!AddressValidator.isValidFormat(address)) {
           errors.push(
             `Invalid address format on ${contract.chain}: ${address}`,
           );
           continue;
         }
 
-        const normalized = address.toLowerCase();
+        // Normalize to checksum format for consistency
+        const normalized =
+          AddressValidator.normalizeAddress(address).toLowerCase();
         if (addressSet.has(normalized)) {
           errors.push(`Duplicate address on ${contract.chain}: ${address}`);
           continue;
@@ -112,10 +114,19 @@ export class SmartContractService {
     // Empty array is stored as null to match other nullable fields behavior
     const smartContractsData =
       contracts.length > 0
-        ? contracts.map((contract) => ({
-            chain: contract.chain,
-            addresses: contract.addresses.trim(),
-          }))
+        ? contracts.map((contract) => {
+            // Normalize addresses to checksum format for consistency
+            const addressList = contract.addresses
+              .split(',')
+              .map((addr) => addr.trim())
+              .filter(Boolean)
+              .map((addr) => AddressValidator.normalizeAddress(addr)); // Convert to normalized format
+
+            return {
+              chain: contract.chain,
+              addresses: addressList.join(','),
+            };
+          })
         : null;
 
     // Update project's dappSmartContracts field
@@ -202,11 +213,19 @@ export class SmartContractService {
   transformLegacyData(legacyData: string | null): SmartContract[] {
     if (!legacyData || !legacyData.trim()) return [];
 
+    // Filter out empty addresses when transforming legacy data
+    const addressList = legacyData
+      .split(',')
+      .map((addr) => addr.trim())
+      .filter(Boolean);
+
+    if (addressList.length === 0) return [];
+
     // Group all addresses under Ethereum by default
     return [
       {
         chain: 'ethereum',
-        addresses: legacyData.trim(),
+        addresses: addressList.join(', '),
       },
     ];
   }

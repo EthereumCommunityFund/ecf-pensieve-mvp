@@ -55,6 +55,10 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   }, [debouncedValue]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent onChange from being called when component is disabled
+    if (disabled || !chain) {
+      return;
+    }
     const newValue = e.target.value;
     onChange(newValue);
   };
