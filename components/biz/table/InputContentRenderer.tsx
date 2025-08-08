@@ -849,6 +849,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     isExpanded,
     onToggleExpanded,
     isInExpandableRow,
+    isLoadingProjects,
+    projectNamesMap,
   ]);
 
   if (!displayFormType) {

@@ -217,7 +217,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
         return fetchedProjects;
       });
     }
-  }, [fetchedProjects, multiple]);
+  }, [fetchedProjects, multiple, value]);
 
   // Use tRPC to search projects with React Query
   const {
