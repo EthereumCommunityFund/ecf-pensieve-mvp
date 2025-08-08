@@ -53,15 +53,13 @@ export const PrivacyPolicyContent = () => (
     <SectionContainer>
       <p>
         <strong>Data Collection: </strong>
-        The platform does not collect user data; you are in full control of your
-        own profile and your account security through control of your private
-        keys. All the data the platform shows to the public are user generated
-        data that are considered intentionally published by users. Note: Due to
-        the inherent transparency of blockchain technology, wallet addresses are
-        the only form of public data that may be traceable to your personal
-        identity. To protect your privacy, we strongly recommend using a new,
-        unused address if you are concerned about linking activity to your
-        identity.
+        The platform does not collect user data. All the data the platform shows
+        to the public are user generated data that are considered intentionally
+        published by users. Note: Due to the inherent transparency of blockchain
+        technology, wallet addresses are the only form of public data that may
+        be traceable to your personal identity. To protect your privacy, we
+        strongly recommend using a new, unused address if you are concerned
+        about linking activity to your identity.
       </p>
     </SectionContainer>
 

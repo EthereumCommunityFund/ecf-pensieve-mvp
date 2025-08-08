@@ -8,12 +8,13 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import { ArrowSquareUp, SignOut, User } from '@phosphor-icons/react';
+import { ArrowSquareUp, GitCommit, SignOut, User } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { Button } from '@/components/base';
 import Copy from '@/components/biz/common/Copy';
 import { WalletIcon } from '@/components/icons';
+import BookmarksIcon from '@/components/icons/Bookmarks';
 import { useAuth } from '@/context/AuthContext';
 
 const formatAddress = (address?: string | null, chars = 6): string => {
@@ -122,6 +123,15 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             My Profile
           </DropdownItem>
           <DropdownItem
+            key="contributions"
+            startContent={<GitCommit size={18} />}
+            textValue="My Contributions"
+            className="mt-[10px]"
+            href={`/profile/${profile?.address}?tab=contributions`}
+          >
+            My Contributions
+          </DropdownItem>
+          <DropdownItem
             key="upvotes"
             startContent={<ArrowSquareUp size={18} />}
             textValue="My Upvotes"
@@ -129,6 +139,15 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             href={`/profile/${profile?.address}?tab=upvotes`}
           >
             My Upvotes
+          </DropdownItem>
+          <DropdownItem
+            key="lists"
+            startContent={<BookmarksIcon size={18} />}
+            textValue="My Lists"
+            className="mt-[10px]"
+            href={`/profile/${profile?.address}?tab=lists`}
+          >
+            My Lists
           </DropdownItem>
           <DropdownItem
             key="logout"

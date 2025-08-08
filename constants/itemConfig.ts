@@ -268,7 +268,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
       { value: 'Concept', label: 'Concept' },
       { value: 'Stealth', label: 'Stealth' },
       { value: 'Active Community', label: 'Active Community' },
-      { value: 'Operational Community', label: 'Operational Community' },
+      // { value: 'Operational Community', label: 'Operational Community' }, // ECF01-137
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],

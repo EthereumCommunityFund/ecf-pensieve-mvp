@@ -150,6 +150,7 @@ export default function Setting() {
                   onUploadSuccess={(url) => field.onChange(url || '')}
                   className="size-[120px] overflow-hidden rounded-full"
                   isDisabled={!isOwner || isSubmitting}
+                  enableCrop={false}
                 >
                   <Avatar
                     size="lg"
