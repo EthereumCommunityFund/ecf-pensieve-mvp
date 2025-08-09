@@ -208,6 +208,10 @@ export const listProjectsRelations = relations(listProjects, ({ one }) => ({
     fields: [listProjects.addedBy],
     references: [profiles.userId],
   }),
+  projectSnap: one(projectSnaps, {
+    fields: [listProjects.projectId],
+    references: [projectSnaps.projectId],
+  }),
 }));
 
 export const listFollowsRelations = relations(listFollows, ({ one }) => ({
