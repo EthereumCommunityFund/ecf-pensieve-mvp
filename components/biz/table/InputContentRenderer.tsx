@@ -1,11 +1,16 @@
-import { Tooltip } from '@heroui/react';
+import { Skeleton, Tooltip } from '@heroui/react';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 
+import { AddressDisplay } from '@/components/base/AddressDisplay';
 import { TableIcon } from '@/components/icons';
+import { SelectedProjectTag } from '@/components/pages/project/create/form/ProjectSearchSelector';
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
+import { getChainDisplayInfo } from '@/constants/chains';
+import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
+import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
   isInputValueEmpty,
@@ -41,6 +46,41 @@ const InputContentRenderer: React.FC<IProps> = ({
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
+  // For fundingReceivedGrants, extract project IDs from organization and projectDonator fields
+  const grantProjectIds = useMemo(() => {
+    if (displayFormType !== 'fundingReceivedGrants') return [];
+
+    const parsed = parseValue(formatValue);
+    if (!parsed || !Array.isArray(parsed)) return [];
+
+    const ids: string[] = [];
+    parsed.forEach((grant: any) => {
+      // Extract from organization field
+      if (grant.organization) {
+        if (Array.isArray(grant.organization)) {
+          // New format: array of project IDs
+          ids.push(...grant.organization);
+        }
+      }
+      // Extract from projectDonator field
+      if (grant.projectDonator && Array.isArray(grant.projectDonator)) {
+        ids.push(...grant.projectDonator);
+      }
+    });
+
+    return [...new Set(ids)]; // Remove duplicates
+  }, [displayFormType, formatValue]);
+
+  // Fetch project names for grant organizations
+  const { projectsMap, isLoading: isLoadingProjects } = useProjectNamesByIds(
+    grantProjectIds,
+    {
+      enabled:
+        displayFormType === 'fundingReceivedGrants' &&
+        grantProjectIds.length > 0,
+    },
+  );
+
   const renderContent = useCallback(() => {
     switch (displayFormType) {
       case 'string':
@@ -67,6 +107,185 @@ const InputContentRenderer: React.FC<IProps> = ({
         }
 
         return <>{joinedText}</>;
+      }
+      case 'multiContracts': {
+        let parsedContracts = [];
+        let applicable = true;
+        let references = [];
+
+        // Handle different data formats
+        if (typeof value === 'string') {
+          // Legacy format: string with comma-separated addresses
+          const addresses = value
+            .split(',')
+            .map((addr: string) => addr.trim())
+            .filter(Boolean);
+          if (addresses.length > 0) {
+            parsedContracts = [
+              {
+                chain: 'ethereum', // Default to Ethereum for legacy data
+                addresses: addresses.join(','),
+              },
+            ];
+          }
+        } else if (Array.isArray(value)) {
+          // Direct array format from form submission
+          parsedContracts = value;
+        } else if (
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          // New format with applicable flag and contracts array
+          applicable = value.applicable ?? true;
+          parsedContracts = value.contracts || [];
+          references = value.references || [];
+
+          if (!applicable) {
+            return <span className="text-gray-500">N/A</span>;
+          }
+        }
+
+        if (parsedContracts.length === 0) {
+          return <span className="text-gray-400">No contracts</span>;
+        }
+
+        // Table view when in expandable row
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={214} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Chain</span>
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Addresses</span>
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedContracts.map((contract: any, index: number) => {
+                      const chainInfo = getChainDisplayInfo(
+                        contract.chain || 'ethereum',
+                      );
+                      // Parse addresses - could be string or array
+                      let addressList: string[] = [];
+                      if (typeof contract.addresses === 'string') {
+                        addressList = contract.addresses
+                          .split(',')
+                          .map((addr: string) => addr.trim())
+                          .filter(Boolean);
+                      } else if (Array.isArray(contract.addresses)) {
+                        addressList = contract.addresses;
+                      }
+
+                      return (
+                        <TableRow
+                          key={contract.id || `${contract.chain}-${index}`}
+                          isLastRow={index === parsedContracts.length - 1}
+                        >
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedContracts.length - 1}
+                          >
+                            {chainInfo.name}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedContracts.length - 1}
+                          >
+                            {addressList.length > 0 ? (
+                              <div className="space-y-1">
+                                {addressList.map((address, idx) => (
+                                  <div key={idx}>
+                                    <AddressDisplay
+                                      address={address}
+                                      startLength={42} // 显示完整地址（以太坊地址长度为42，包括0x）
+                                      endLength={0} // 不截断末尾
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">
+                                No addresses
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </TableContainer>
+              {references && references.length > 0 && (
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <div className="mb-1 text-xs font-medium text-gray-600">
+                    References:
+                  </div>
+                  <div className="space-y-1">
+                    {references.map((ref: string, index: number) => (
+                      <Link
+                        key={ref || `ref-${index}`}
+                        href={ref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block truncate text-xs text-blue-600 hover:underline"
+                      >
+                        {ref}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Expandable button view
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        // Default collapsed view - show summary
+        const contractSummary = parsedContracts
+          .map((contract: any) => {
+            const chainInfo = getChainDisplayInfo(contract.chain || 'ethereum');
+            let addressCount = 0;
+            if (typeof contract.addresses === 'string') {
+              addressCount = contract.addresses
+                .split(',')
+                .filter((addr: string) => addr.trim()).length;
+            } else if (Array.isArray(contract.addresses)) {
+              addressCount = contract.addresses.length;
+            }
+            return `${chainInfo.name}: ${addressCount} address${addressCount !== 1 ? 'es' : ''}`;
+          })
+          .join(', ');
+
+        return <>{contractSummary}</>;
       }
       case 'selectMultiple':
         return <>{parseMultipleValue(value).join(', ')}</>;
@@ -600,7 +819,7 @@ const InputContentRenderer: React.FC<IProps> = ({
 
         if (isInExpandableRow) {
           return (
-            <div className="w-full">
+            <div className="w-full ">
               <TableContainer bordered rounded background="white">
                 <table className="w-full border-separate border-spacing-0">
                   <thead>
@@ -611,13 +830,19 @@ const InputContentRenderer: React.FC<IProps> = ({
                           <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
                         </div>
                       </TableHeader>
-                      <TableHeader width={301} isContainerBordered>
+                      <TableHeader width={300} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span>Organization/Program</span>
                           <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
                         </div>
                       </TableHeader>
-                      <TableHeader width={138} isContainerBordered>
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project Donator</span>
+                          <TooltipWithQuestionIcon content="Projects that have donated to this funding round or acted as sponsors" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={160} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
                           <span className="shrink-0">Amount (USD)</span>
                           <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
@@ -636,7 +861,8 @@ const InputContentRenderer: React.FC<IProps> = ({
                       (
                         grant: {
                           date: Date | string;
-                          organization: string;
+                          organization: string | string[];
+                          projectDonator?: string[];
                           amount: string;
                           reference: string;
                         },
@@ -653,13 +879,94 @@ const InputContentRenderer: React.FC<IProps> = ({
                           >
                             {dayjs(grant.date).format('YYYY/MM/DD')}
                           </TableCell>
-                          {/* TODO can jump to project page with projectId */}
                           <TableCell
                             width={301}
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {grant.organization}
+                            {(() => {
+                              if (!grant.organization) return '';
+
+                              // Check if it's the old format (string)
+                              if (typeof grant.organization === 'string') {
+                                return grant.organization;
+                              }
+
+                              // New format: array of project IDs
+                              if (Array.isArray(grant.organization)) {
+                                if (isLoadingProjects) {
+                                  return (
+                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
+                                  );
+                                }
+
+                                const projects = (
+                                  grant.organization as string[]
+                                )
+                                  .map((id: string) => {
+                                    const numId = parseInt(id, 10);
+                                    const projectData = projectsMap?.get(numId);
+                                    return projectData || null;
+                                  })
+                                  .filter((p): p is IProject => p !== null);
+
+                                return (
+                                  <div className="flex flex-wrap items-center gap-[8px]">
+                                    {projects.map((project) => (
+                                      <SelectedProjectTag
+                                        key={project.id}
+                                        project={project}
+                                      />
+                                    ))}
+                                  </div>
+                                );
+                              }
+
+                              return '';
+                            })()}
+                          </TableCell>
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {(() => {
+                              // Compatibility: handle old data without projectDonator field
+                              if (
+                                !grant.projectDonator ||
+                                !Array.isArray(grant.projectDonator) ||
+                                grant.projectDonator.length === 0
+                              ) {
+                                return '-';
+                              }
+
+                              if (isLoadingProjects) {
+                                return (
+                                  <Skeleton className="h-[20px] w-[50px] rounded-sm" />
+                                );
+                              }
+
+                              const donatorProjects = grant.projectDonator
+                                .map((id: string) => {
+                                  const numId = parseInt(id, 10);
+                                  const projectData = projectsMap?.get(numId);
+                                  return projectData || null;
+                                })
+                                .filter((p): p is IProject => p !== null);
+
+                              return donatorProjects.length > 0 ? (
+                                <div className="flex flex-wrap items-center gap-[8px]">
+                                  {donatorProjects.map((project) => (
+                                    <SelectedProjectTag
+                                      key={project.id}
+                                      project={project}
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                '-'
+                              );
+                            })()}
                           </TableCell>
                           <TableCell
                             width={138}
@@ -741,6 +1048,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     isExpanded,
     onToggleExpanded,
     isInExpandableRow,
+    isLoadingProjects,
+    projectsMap,
   ]);
 
   if (!displayFormType) {
@@ -765,7 +1074,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites' &&
     displayFormType !== 'tablePhysicalEntity' &&
-    displayFormType !== 'fundingReceivedGrants'
+    displayFormType !== 'fundingReceivedGrants' &&
+    displayFormType !== 'multiContracts'
   ) {
     // If we're in an expandable row, show full content without line clamp
     if (isInExpandableRow) {

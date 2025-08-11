@@ -92,7 +92,15 @@ export const projectRouter = router({
           .min(1, 'At least one founder is required'),
         tags: z.array(z.string()).min(1, 'At least one tag is required'),
         whitePaper: z.string().nullable(),
-        dappSmartContracts: z.string().nullable(),
+        dappSmartContracts: z
+          .array(
+            z.object({
+              id: z.string(),
+              chain: z.string(),
+              addresses: z.string(),
+            }),
+          )
+          .nullable(),
         refs: z
           .array(
             z.object({
@@ -121,10 +129,23 @@ export const projectRouter = router({
             return !!existing;
           });
 
+          // Convert smart contracts array to JSONB array format for database
+          let dappSmartContractsData: any = null;
+
+          if (input.dappSmartContracts && input.dappSmartContracts.length > 0) {
+            dappSmartContractsData = input.dappSmartContracts.map(
+              (contract) => ({
+                chain: contract.chain,
+                addresses: contract.addresses,
+              }),
+            );
+          }
+
           const [project] = await tx
             .insert(projects)
             .values({
               ...input,
+              dappSmartContracts: dappSmartContractsData,
               creator: ctx.user.id,
               hasProposalKeys,
               shortCode,
@@ -436,6 +457,7 @@ export const projectRouter = router({
               creator: true,
             },
           },
+          projectSnap: true,
         },
         where: eq(projects.id, input.id),
       });
@@ -448,6 +470,36 @@ export const projectRouter = router({
       }
 
       return project;
+    }),
+
+  getProjectByIds: publicProcedure
+    .input(
+      z.object({
+        ids: z.array(z.number()).min(1).max(100),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const uniqueIds = [...new Set(input.ids)];
+
+      const result = await ctx.db.query.projects.findMany({
+        with: {
+          creator: true,
+          proposals: {
+            with: {
+              voteRecords: {
+                with: {
+                  creator: true,
+                },
+              },
+              creator: true,
+            },
+          },
+          projectSnap: true,
+        },
+        where: inArray(projects.id, uniqueIds),
+      });
+
+      return result;
     }),
 
   scanPendingProject: publicProcedure.query(async ({ ctx }) => {

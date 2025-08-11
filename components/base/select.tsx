@@ -16,6 +16,12 @@ const Select = extendVariants(HSelect, {
           'bg-black/[0.05] rounded-[8px] text-black placeholder:text-black/60',
       },
     },
+    isDisabled: {
+      true: {
+        base: 'opacity-30',
+        trigger: 'cursor-not-allowed',
+      },
+    },
   },
   defaultVariants: {
     select: 'default',
