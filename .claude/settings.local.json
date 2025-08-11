@@ -33,7 +33,15 @@
       "Bash(pnpm add:*)",
       "WebFetch(domain:www.figma.com)",
       "Bash(pnpm remove:*)",
-      "Bash(git pull:*)"
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest run:*)",
+      "Bash(true)",
+      "Bash(node:*)",
+      "mcp__browser__getConsoleLogs",
+      "mcp__browser__getConsoleErrors",
+      "mcp__figma-context__get_figma_data",
+      "Bash(git pull:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

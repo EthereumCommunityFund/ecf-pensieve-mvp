@@ -1,4 +1,4 @@
-import { IItemConfig } from '@/types/item';
+import { IEssentialItemKey, IItemConfig } from '@/types/item';
 
 import { IProjectFormData } from '../types';
 import {
@@ -10,16 +10,22 @@ import { useFieldHasValue } from '../utils/useFieldHasValue';
 import { IFormItemUIContainerProps } from './FormItemUIContainer';
 
 // New interface for useCreateContainerPropsWithValue params
-interface IUseFromPropsWithValueParams {
-  fieldConfig: IItemConfig<keyof IProjectFormData>;
+interface IUseFromPropsWithValueParams<
+  TFieldKey extends keyof IProjectFormData = keyof IProjectFormData,
+> {
+  fieldConfig: IItemConfig<
+    TFieldKey extends IEssentialItemKey ? TFieldKey : never
+  >;
   fieldApplicabilityMap: Record<string, boolean>;
   rawOnChangeApplicability?: (fieldKey: string, value: boolean) => void;
   onAddReference?: (key: string, label: string) => void;
   hasFieldReference?: (fieldKey: string) => boolean;
 }
 
-export function useFormPropsWithValue(
-  params: IUseFromPropsWithValueParams, // Use the new interface
+export function useFormPropsWithValue<
+  TFieldKey extends keyof IProjectFormData = keyof IProjectFormData,
+>(
+  params: IUseFromPropsWithValueParams<TFieldKey>, // Use the new interface
 ): Omit<IFormItemUIContainerProps, 'children'> {
   const {
     fieldConfig,

@@ -125,11 +125,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   );
 
   const methods = useForm<IProjectFormData>({
-    resolver: yupResolver<
-      IProjectFormData,
-      Record<string, boolean>,
-      IProjectFormData
-    >(projectSchema),
+    resolver: yupResolver(projectSchema) as any,
     mode: 'onTouched', // Only validate after user interaction
     defaultValues: DefaultProjectFormData,
   });

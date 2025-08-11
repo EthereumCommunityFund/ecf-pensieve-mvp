@@ -46,7 +46,7 @@ export const projects = pgTable(
     founders: jsonb('founders').array().notNull(),
     tags: text('tags').array().notNull(),
     whitePaper: text('white_paper'),
-    dappSmartContracts: text('dapp_smart_contracts'),
+    dappSmartContracts: jsonb('dapp_smart_contracts'),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),

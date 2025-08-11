@@ -8,8 +8,10 @@ import { IFormTypeEnum, IProjectFormData } from '../types';
 import FormItemRenderer from './FormItemRenderer';
 import { FormItemUIContainer } from './FormItemUIContainer';
 
-interface IFormItemManagerProps<TFieldKey extends IEssentialItemKey> {
-  itemConfig: IItemConfig<TFieldKey>;
+interface IFormItemManagerProps<TFieldKey extends keyof IProjectFormData> {
+  itemConfig: IItemConfig<
+    TFieldKey extends IEssentialItemKey ? TFieldKey : never
+  >;
   control: Control<IProjectFormData, any>;
   fieldApplicability: Record<string, boolean>;
   onChangeApplicability: (fieldKey: string, value: boolean) => void;

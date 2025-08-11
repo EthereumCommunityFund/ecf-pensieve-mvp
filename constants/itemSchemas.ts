@@ -142,7 +142,50 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
         createDateConstraintValidator(dateFoundedConstraints),
       )
       .required('Foundation date is required'),
-    organization: yup.string().required('organization is required'),
+    organization: yup
+      .mixed<string | string[]>()
+      .test(
+        'organization-required',
+        'organization is required',
+        function (value) {
+          if (Array.isArray(value)) {
+            return value.length > 0;
+          }
+          return typeof value === 'string' && value.trim().length > 0;
+        },
+      )
+      .test(
+        'organization-limit',
+        'Maximum 10 organizations allowed',
+        function (value) {
+          if (Array.isArray(value)) {
+            return value.length <= 10;
+          }
+          return true; // Single selection mode doesn't need limit
+        },
+      )
+      .required('organization is required'),
+    projectDonator: yup
+      .array()
+      .of(yup.string().required('Project ID is required'))
+      .min(1, 'At least one project donator is required')
+      .test(
+        'project-donator-limit',
+        'Maximum 10 project donators allowed',
+        function (value) {
+          if (!value || value.length === 0) return false; // Required field
+          return value.length <= 10;
+        },
+      )
+      .test(
+        'valid-project-ids',
+        'Invalid project IDs detected',
+        function (value) {
+          if (!value) return true;
+          return value.every((id) => /^\d+$/.test(id)); // Validate numeric ID format
+        },
+      )
+      .required('Project donator is required'),
     amount: yup.string().required('amount is required'),
     reference: yup
       .string()
@@ -230,6 +273,7 @@ export const itemValidationSchemas = {
 
   openSource: yup
     .string()
+    .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is open source'),
 
   codeRepo: yup
@@ -239,11 +283,32 @@ export const itemValidationSchemas = {
     .required('Code repository URL is required when applicable'),
 
   dappSmartContracts: yup
-    .string()
-    .isContractAddressList(
-      'One or more addresses are invalid. Addresses must be valid Ethereum addresses, separated by commas. An empty field is allowed if not applicable.',
+    .array()
+    .of(
+      yup.object().shape({
+        id: yup.string().required(),
+        chain: yup.string().required('Chain selection is required'),
+        addresses: yup
+          .string()
+          .required('Contract addresses are required')
+          .test(
+            'valid-addresses',
+            'Invalid Ethereum address format',
+            function (value) {
+              if (!value) return false;
+              const addresses = value
+                .split(',')
+                .map((addr) => addr.trim())
+                .filter(Boolean);
+              return addresses.every((addr) =>
+                /^0x[a-fA-F0-9]{40}$/.test(addr),
+              );
+            },
+          ),
+      }),
     )
-    .required('Dapp smart contract address is required when applicable'),
+    .min(1, 'At least one smart contract is required')
+    .required('Smart contracts are required when applicable'),
 
   audit_status: yup.string().required('Audit status is required'),
 
@@ -256,6 +321,7 @@ export const itemValidationSchemas = {
 
   publicGoods: yup
     .string()
+    .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is a public good'),
 
   founders: yup
@@ -326,7 +392,7 @@ export const itemValidationSchemas = {
 
         for (let i = 0; i < value.length; i++) {
           const member = value[i] || {};
-          const { name, title, region } = member;
+          const { name, title } = member;
           const hasName = name && name.trim() !== '';
           const hasTitle = title && title.trim() !== '';
 

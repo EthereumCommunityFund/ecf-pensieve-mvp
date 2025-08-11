@@ -7,6 +7,7 @@ import {
   UseFormWatch,
 } from 'react-hook-form';
 
+import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
 import {
   IBasicsKey,
   IEssentialItemKey,
@@ -60,7 +61,7 @@ export interface IProjectFormData
   openSource: 'Yes' | 'No' | '';
   codeRepo: string | null;
   tokenContract: string | null;
-  dappSmartContracts: string;
+  dappSmartContracts: SmartContract[];
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
   founders: IFounder[];
@@ -88,7 +89,7 @@ export interface ICreateProjectPayload {
   openSource: boolean;
   codeRepo: string | null;
   tokenContract: string | null;
-  dappSmartContracts: string | null;
+  dappSmartContracts: SmartContract[] | null;
   orgStructure: string;
   publicGoods: boolean;
   founders: IFounder[];

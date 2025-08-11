@@ -1,7 +1,7 @@
 import { Avatar, cn, Tooltip } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ControllerFieldState,
   ControllerRenderProps,
@@ -16,7 +16,10 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
+import { MultiContractEntry } from '@/components/biz/project/smart-contracts';
+import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
+import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
   buildDatePickerProps,
@@ -32,6 +35,7 @@ import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
+import { useFundingReceivedGrants } from './useFundingReceivedGrants';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -58,7 +62,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     startContentText,
     minRows,
     formDisplayType,
-    componentsProps = {},
   } = itemConfig;
 
   const { register, formState, control, getValues, setValue } =
@@ -70,6 +73,57 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   const disableNameEdit = useMemo(() => {
     return itemKey === 'name' && formType === IFormTypeEnum.Proposal;
   }, [itemKey, formType]);
+
+  // Smart contracts values (used only when formDisplayType === 'multiContracts')
+  // When field is not applicable, value should be empty array
+
+  // Process smart contracts value - now always an array
+  const smartContractsValue: SmartContract[] = useMemo(() => {
+    if (formDisplayType !== 'multiContracts') {
+      return [];
+    }
+
+    // If field is not applicable, return empty array
+    if (fieldApplicability?.dappSmartContracts === false) {
+      return [];
+    }
+
+    // Field value should already be an array of SmartContract
+    if (Array.isArray(field.value)) {
+      return field.value;
+    }
+
+    // Fallback: return default contract if somehow not an array
+    return [
+      {
+        id: generateUUID(),
+        chain: '',
+        addresses: '',
+      },
+    ];
+  }, [formDisplayType, field.value, fieldApplicability]);
+
+  // Callbacks for smart contracts (always defined, but only used when needed)
+  const handleContractsChange = useCallback(
+    (contracts: SmartContract[]) => {
+      // Directly set the contracts array
+      field.onChange(contracts);
+    },
+    [field],
+  );
+
+  // Removed handleApplicableChange - now handled through fieldApplicability
+
+  // Use custom hook for funding received grants field array management
+  const {
+    fields: fundingFields,
+    handleAddField: handleAddFundingField,
+    handleRemoveField: handleRemoveFundingField,
+  } = useFundingReceivedGrants({
+    control,
+    formDisplayType,
+    fieldName: field.name as any,
+  });
 
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
@@ -662,27 +716,11 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'fundingReceivedGrants': {
-      const valueArray =
-        Array.isArray(field.value) && field.value.length > 0
-          ? field.value.map((item: any) => ({
-              ...item,
-              _id: item._id || crypto.randomUUID(),
-            }))
-          : [
-              {
-                date: null,
-                organization: '',
-                amount: '',
-                reference: '',
-                _id: crypto.randomUUID(),
-              },
-            ];
-
       return (
-        <div>
-          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
+          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
             {/* Table header */}
-            <div className="flex h-[40px] w-full items-center border-b border-black/5 bg-[#F5F5F5]">
+            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
               <div className="flex h-full w-[158px] shrink-0 items-center border-r border-black/10 px-[10px]">
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
@@ -691,12 +729,20 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
                 </div>
               </div>
-              <div className="flex h-full w-[301px] shrink-0 items-center border-r border-black/10 px-[10px]">
+              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
                     Organization/Program
                   </span>
                   <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
+                </div>
+              </div>
+              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Project Donator
+                  </span>
+                  <TooltipWithQuestionIcon content="Projects that have donated to this funding round or acted as sponsors" />
                 </div>
               </div>
               <div className="flex h-full w-[138px] shrink-0 items-center border-r border-black/10 px-[10px]">
@@ -710,7 +756,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               <div
                 className={cn(
                   'flex-1 flex h-full min-w-[143px] shrink-0 items-center  px-[10px] bg-[#F5F5F5]',
-                  valueArray.length > 1 ? 'border-r border-black/10' : '',
+                  fundingFields.length > 1 ? 'border-r border-black/10' : '',
                 )}
               >
                 <div className="flex items-center gap-[5px]">
@@ -720,26 +766,21 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
                 </div>
               </div>
-              {valueArray.length > 1 && (
+              {fundingFields.length > 1 && (
                 <div className="flex h-full w-[60px] items-center justify-center">
                   {/* Actions column header */}
                 </div>
               )}
             </div>
-            {valueArray.map((item: any, index: number) => {
+            {fundingFields.map((field, index) => {
               return (
                 <FundingReceivedGrantsTableItem
-                  key={item._id}
+                  key={field.fieldId}
+                  field={field}
                   index={index}
-                  remove={() => {
-                    const currentValue = getValues(itemConfig.key as any) || [];
-                    const newValue = currentValue.filter(
-                      (_: any, i: number) => i !== index,
-                    );
-                    field.onChange(newValue);
-                  }}
-                  itemKey={field.name as 'funding_received_grants'}
-                  canRemove={valueArray.length > 1}
+                  remove={() => handleRemoveFundingField(index)}
+                  itemKey={'funding_received_grants'}
+                  canRemove={fundingFields.length > 1}
                 />
               );
             })}
@@ -750,16 +791,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  field.onChange([
-                    ...valueArray,
-                    {
-                      date: null,
-                      organization: '',
-                      amount: '',
-                      reference: '',
-                      _id: crypto.randomUUID(),
-                    },
-                  ]);
+                  handleAddFundingField();
                 }}
               >
                 <PlusIcon size={16} />
@@ -777,6 +809,19 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         <div className="rounded-md border border-dashed border-gray-300 p-4 text-center text-gray-500">
           roadmap
         </div>
+      );
+
+    case 'multiContracts':
+      return (
+        <MultiContractEntry
+          value={smartContractsValue}
+          onChange={handleContractsChange}
+          weight={typeof itemConfig.weight === 'number' ? itemConfig.weight : 0}
+          disabled={
+            isDisabled || fieldApplicability?.dappSmartContracts === false
+          }
+          placeholder={itemConfig.placeholder}
+        />
       );
 
     default:
