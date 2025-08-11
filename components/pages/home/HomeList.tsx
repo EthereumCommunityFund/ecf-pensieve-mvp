@@ -1,11 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import SortTabs from '@/components/base/SortTabs';
 import { CommunityTrustedIcon, TagIcon } from '@/components/icons';
+import {
+  DEFAULT_SORT_TYPE,
+  getSortTabs,
+  SortType,
+} from '@/constants/sortConfig';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { SortBy, SortOrder } from '@/types/sort';
 import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
 
@@ -17,6 +24,16 @@ import SectionHeaderSmall from './SectionHeaderSmall';
 const HomeList = () => {
   const router = useRouter();
   const limit = 5;
+
+  // Right side section sort states
+  const [communitySort, setCommunitySort] =
+    useState<SortType>(DEFAULT_SORT_TYPE);
+  const [eventsSort, setEventsSort] = useState<SortType>(DEFAULT_SORT_TYPE);
+  const [hubsSort, setHubsSort] = useState<SortType>(DEFAULT_SORT_TYPE);
+
+  const resolveSortParams = useCallback((sortType: SortType) => {
+    return { sortBy: sortType, sortOrder: SortOrder.DESC } as const;
+  }, []);
 
   // Left side: Genesis weight paginated data with infinite scroll
   const {
@@ -53,6 +70,7 @@ const HomeList = () => {
     limit,
     categories: ['Local Communities'],
     isPublished: true,
+    ...resolveSortParams(communitySort),
   });
 
   const {
@@ -63,6 +81,7 @@ const HomeList = () => {
     limit,
     categories: ['Events'],
     isPublished: true,
+    ...resolveSortParams(eventsSort),
   });
 
   const {
@@ -73,6 +92,7 @@ const HomeList = () => {
     limit,
     categories: ['Hubs'],
     isPublished: true,
+    ...resolveSortParams(hubsSort),
   });
 
   // Flatten paginated genesis projects
@@ -240,6 +260,11 @@ const HomeList = () => {
             description="Discover local and cyber communities"
             icon={<TagIcon />}
           />
+          <SortTabs<SortType>
+            tabs={getSortTabs()}
+            activeKey={communitySort}
+            onChange={setCommunitySort}
+          />
           <ProjectListWrapper
             isLoading={isLoadingCommunity}
             projectList={(communityProjects?.items || []) as IProject[]}
@@ -251,7 +276,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cats=${encodeURIComponent('Local Communities')}`}
+            viewAllUrl={`/projects?cats=${encodeURIComponent('Local Communities')}&sort=${communitySort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
           />
         </div>
 
@@ -261,6 +286,11 @@ const HomeList = () => {
             title="Events"
             description="Explore event organizations and pop-up events"
             icon={<TagIcon />}
+          />
+          <SortTabs<SortType>
+            tabs={getSortTabs()}
+            activeKey={eventsSort}
+            onChange={setEventsSort}
           />
           <ProjectListWrapper
             isLoading={isLoadingEvents}
@@ -273,7 +303,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cats=Events`}
+            viewAllUrl={`/projects?cats=Events&sort=${eventsSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
           />
         </div>
 
@@ -283,6 +313,11 @@ const HomeList = () => {
             title="Hubs"
             description="Explore digital and physical hubs"
             icon={<TagIcon />}
+          />
+          <SortTabs<SortType>
+            tabs={getSortTabs()}
+            activeKey={hubsSort}
+            onChange={setHubsSort}
           />
           <ProjectListWrapper
             isLoading={isLoadingHubs}
@@ -295,7 +330,7 @@ const HomeList = () => {
             showUpvote={false}
             showTransparentScore={false}
             size="sm"
-            viewAllUrl={`/projects?cats=Hubs`}
+            viewAllUrl={`/projects?cats=Hubs&sort=${hubsSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
           />
         </div>
       </div>
