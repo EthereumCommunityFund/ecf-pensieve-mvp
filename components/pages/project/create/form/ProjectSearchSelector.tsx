@@ -4,22 +4,23 @@ import { Image, Skeleton } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDebounce } from 'use-debounce';
 
 import { Button } from '@/components/base';
 import { calcTransparentScore } from '@/components/biz/project/TransparentScore';
+import { ProjectTagList } from '@/components/biz/search/ProjectTagList';
 import {
   PlusSquareOutlineIcon,
   SearchIcon,
   ShieldStarIcon,
 } from '@/components/icons';
 import { XCircleSolidIcon } from '@/components/icons/XCircle';
+import { SEARCH_CONFIG } from '@/constants/search';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { useProjectsByIds } from '@/hooks/useProjectsByIds';
-import { trpc } from '@/lib/trpc/client';
+import { useProjectSearch } from '@/hooks/useProjectSearch';
 import { IProject } from '@/types';
-import { devLog } from '@/utils/devLog';
 import { idsArrayEqual } from '@/utils/formHelpers';
+import { highlightSearchText } from '@/utils/searchHighlight';
 
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 
@@ -42,6 +43,7 @@ interface SearchProjectItemProps {
   onSelect: (project: IProject, name: string) => void;
   isSelected?: boolean;
   multiple?: boolean;
+  query?: string;
 }
 
 const SearchProjectItemSkeleton: React.FC = () => {
@@ -78,8 +80,10 @@ const SearchProjectItemSkeleton: React.FC = () => {
 const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
   project,
   onSelect,
+  query,
 }) => {
   const { logoUrl, projectName, tagline } = useProjectItemValue(project);
+  const projectTags = project.tags || [];
 
   // 计算透明度分数
   const transparencyScore = project.itemsTopWeight
@@ -109,7 +113,7 @@ const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
           {/* Project Name and Transparency */}
           <div className="flex min-w-0 items-center gap-[6px]">
             <span className="min-w-0 shrink truncate text-[14px] font-semibold text-black">
-              {projectName}
+              {query ? highlightSearchText(projectName, query) : projectName}
             </span>
             <div className="flex shrink-0 items-center gap-[6px]">
               <ShieldStarIcon className="size-[18px]" />
@@ -128,6 +132,17 @@ const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
             <p className="line-clamp-2 text-[13px] font-normal text-black">
               {tagline}
             </p>
+          )}
+          {/* Display matching tags with highlighting */}
+          {projectTags.length > 0 && query && (
+            <div className="mt-1">
+              <ProjectTagList
+                tags={projectTags}
+                query={query}
+                maxDisplay={2}
+                className="flex-wrap"
+              />
+            </div>
           )}
         </div>
       </div>
@@ -158,6 +173,19 @@ const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
   );
 };
 
+// Optimized version with React.memo to prevent unnecessary re-renders
+const OptimizedSearchProjectItem = React.memo(
+  SearchProjectItem,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.project.id === nextProps.project.id &&
+      prevProps.query === nextProps.query &&
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.multiple === nextProps.multiple
+    );
+  },
+);
+
 const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   value,
   onChange,
@@ -169,8 +197,21 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   columnName = 'Organization/Program',
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery] = useDebounce(searchQuery, 300);
+  // Use unified search hook
+  const {
+    searchQuery,
+    setSearchQuery,
+    debouncedQuery,
+    searchResults,
+    isLoading,
+    isFetching,
+    highlightText,
+    clearSearch,
+  } = useProjectSearch({
+    enabled: isModalOpen,
+    limit: SEARCH_CONFIG.DEFAULT_LIMIT,
+    debounceMs: SEARCH_CONFIG.DEBOUNCE_DELAY,
+  });
   const [selectedProjects, setSelectedProjects] = useState<IProject[]>([]);
   const [tempSelectedProjects, setTempSelectedProjects] = useState<IProject[]>(
     [],
@@ -225,25 +266,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     }
   }, [fetchedProjects, multiple]); // can't add value to deps
 
-  // Use tRPC to search projects with React Query
-  const {
-    data: searchResults,
-    isLoading,
-    isFetching,
-  } = trpc.project.searchProjects.useQuery(
-    {
-      query: debouncedQuery,
-      limit: 20,
-    },
-    {
-      enabled: debouncedQuery.length >= 2,
-      staleTime: 5 * 60 * 1000,
-      select: (data) => {
-        devLog('searchProjects', data);
-        return data;
-      },
-    },
-  );
+  // Search results are now provided by useProjectSearch hook
 
   const handleProjectSelect = (project: IProject, projectName: string) => {
     if (multiple) {
@@ -474,7 +497,14 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
 
             {/* Search Results */}
             <div className="max-h-[320px] overflow-y-auto">
-              {(isLoading || isFetching) && debouncedQuery.length >= 2 ? (
+              {/* Empty query state */}
+              {debouncedQuery.length < SEARCH_CONFIG.MIN_SEARCH_CHARS ? (
+                <div className="flex h-[60px] items-center justify-center">
+                  <span className="text-[14px] font-normal text-black/60">
+                    {SEARCH_CONFIG.MESSAGES.EMPTY_QUERY}
+                  </span>
+                </div>
+              ) : isLoading || isFetching ? (
                 <div className="flex flex-col p-[14px]">
                   {Array.from({ length: 3 }).map((_, index) => (
                     <SearchProjectItemSkeleton key={`skeleton-${index}`} />
@@ -482,23 +512,24 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                 </div>
               ) : allProjects.length > 0 ? (
                 <div className="flex flex-col p-[14px]">
-                  {allProjects.map((project) => (
-                    <SearchProjectItem
+                  {allProjects.map((project: any) => (
+                    <OptimizedSearchProjectItem
                       key={project.id}
                       project={project as unknown as IProject}
                       onSelect={handleProjectSelect}
                       isSelected={isProjectSelected(project.id)}
                       multiple={multiple}
+                      query={debouncedQuery}
                     />
                   ))}
                 </div>
-              ) : debouncedQuery.length >= 2 && !isLoading && !isFetching ? (
+              ) : (
                 <div className="flex h-[60px] items-center justify-center">
                   <span className="text-[14px] font-normal text-black/60">
-                    No projects found
+                    {SEARCH_CONFIG.MESSAGES.NO_RESULTS}
                   </span>
                 </div>
-              ) : null}
+              )}
             </div>
 
             {/* Confirm Selection Button for Multiple Mode */}

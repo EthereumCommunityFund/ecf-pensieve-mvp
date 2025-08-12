@@ -1,15 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import {
-  and,
-  desc,
-  eq,
-  exists,
-  ilike,
-  inArray,
-  isNull,
-  lt,
-  sql,
-} from 'drizzle-orm';
+import { and, desc, eq, exists, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -335,7 +325,10 @@ export const projectRouter = router({
   searchProjects: publicProcedure
     .input(
       z.object({
-        query: z.string().min(1, 'Search query cannot be empty'),
+        query: z
+          .string()
+          .min(1, 'Search query cannot be empty')
+          .max(100, 'Search query too long (max 100 characters)'),
         limit: z.number().min(1).max(100).default(20),
         publishedCursor: z.number().optional(),
         unpublishedCursor: z.number().optional(),
@@ -345,20 +338,37 @@ export const projectRouter = router({
       const { query, limit, publishedCursor, unpublishedCursor } = input;
       const searchTerm = query.trim();
 
+      // Enhanced search condition for published projects - search in both name and tags
       const publishedSearchCondition = sql`
-        EXISTS (
-          SELECT 1 
-          FROM ${projectSnaps} ps
-          WHERE ps.project_id = ${projects.id}
-          AND ps.name ILIKE ${`%${searchTerm}%`}
-          LIMIT 1
+        (
+          EXISTS (
+            SELECT 1 
+            FROM ${projectSnaps} ps
+            WHERE ps.project_id = ${projects.id}
+            AND ps.name ILIKE ${`%${searchTerm}%`}
+            LIMIT 1
+          )
+          OR EXISTS (
+            SELECT 1 
+            FROM unnest(${projects.tags}) AS tag
+            WHERE tag ILIKE ${`%${searchTerm}%`}
+            LIMIT 1
+          )
         )
       `;
 
-      const unpublishedSearchCondition = ilike(
-        projects.name,
-        `%${searchTerm}%`,
-      );
+      // Enhanced search condition for unpublished projects - search in both name and tags
+      const unpublishedSearchCondition = sql`
+        (
+          ${projects.name} ILIKE ${`%${searchTerm}%`}
+          OR EXISTS (
+            SELECT 1 
+            FROM unnest(${projects.tags}) AS tag
+            WHERE tag ILIKE ${`%${searchTerm}%`}
+            LIMIT 1
+          )
+        )
+      `;
 
       const publishedCondition = and(
         publishedSearchCondition,
