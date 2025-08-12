@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 
+import { ProjectTagList } from '@/components/biz/search/ProjectTagList';
+import { SEARCH_CONFIG } from '@/constants/searchConfig';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { IProject } from '@/types';
+import { highlightSearchText } from '@/utils/searchHighlight';
 
 interface SearchResultItemProps {
   project: IProject;
@@ -21,29 +24,10 @@ export default function SearchResultItem({
   const { logoUrl, projectName, tagline, getItemValue } =
     useProjectItemValue(project);
 
-  const highlightText = (text: string, query: string) => {
-    if (!query) return text;
-
-    const parts = text.split(new RegExp(`(${query})`, 'gi'));
-    return parts.map((part, index) =>
-      part.toLowerCase() === query.toLowerCase() ? (
-        <mark
-          key={index}
-          className="rounded bg-yellow-200 px-1 text-yellow-800"
-        >
-          {part}
-        </mark>
-      ) : (
-        part
-      ),
-    );
-  };
-
   const displayName = projectName;
   const displayDescription = tagline || getItemValue('mainDescription' as any);
   const displayLogo = logoUrl;
-  const creatorName =
-    project.creator.name || project.creator.address.slice(0, 6) + '...';
+  const projectTags = project.tags || [];
 
   const projectUrl = isPublished
     ? `/project/${project.id}`
@@ -73,12 +57,23 @@ export default function SearchResultItem({
           <div className="min-w-0 flex-1">
             <div className="mb-1">
               <h4 className="truncate text-sm font-semibold text-gray-900">
-                {highlightText(displayName, query)}
+                {highlightSearchText(displayName, query)}
               </h4>
             </div>
             <div className="line-clamp-2 text-sm text-gray-600 opacity-70">
               {displayDescription || 'No description available'}
             </div>
+            {/* Display matching tags with highlighting */}
+            {projectTags.length > 0 && (
+              <div className="mt-2">
+                <ProjectTagList
+                  tags={projectTags}
+                  query={query}
+                  maxDisplay={SEARCH_CONFIG.MAX_DISPLAYED_TAGS}
+                  className="flex-wrap"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
