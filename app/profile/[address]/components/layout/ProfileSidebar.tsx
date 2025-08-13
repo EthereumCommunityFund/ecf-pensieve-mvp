@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
-import BookmarksIcon from '@/components/icons/Bookmarks';
+import ListsIcon from '@/components/icons/Lists';
 import { ITabKey, useProfileTab } from '@/hooks/useProfileTab';
 
 const tabItemsWithIcons = [
@@ -28,7 +28,7 @@ const tabItemsWithIcons = [
   {
     key: 'lists',
     label: 'My Lists',
-    icon: <BookmarksIcon size={28} />,
+    icon: <ListsIcon size={28} />,
   },
 ];
 

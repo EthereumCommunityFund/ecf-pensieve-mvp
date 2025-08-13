@@ -1,7 +1,7 @@
 import { Skeleton } from '@heroui/react';
 import { useParams } from 'next/navigation';
 
-import ECFTypography from '@/components/base/typography';
+import { AddressDisplay } from '@/components/base/AddressDisplay';
 
 import { useProfileData } from '../dataContext';
 
@@ -10,24 +10,28 @@ const UserInfo = () => {
   const { user } = useProfileData();
 
   return (
-    <div className="mobile:flex-col flex justify-center gap-[10px]">
-      <div className="mobile:flex-col flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
-        <ECFTypography type="caption" className="opacity-50">
+    <div className="flex gap-[10px]">
+      {/* Connected Address card - Figma design */}
+      <div className="flex h-[28px] items-center gap-[5px] rounded-[5px] border border-black bg-white px-[10px] py-[5px]">
+        <span className="text-[13px] font-normal leading-[18px] text-black">
           Connected Address:
-        </ECFTypography>
-        <ECFTypography type="caption" className="opacity-80">
-          {address}
-        </ECFTypography>
+        </span>
+        <AddressDisplay
+          address={address as string}
+          className="text-[13px] font-normal leading-[15px] text-black"
+          showCopy={false}
+        />
       </div>
 
-      <div className="mobile:flex-col flex gap-[5px] rounded-[10px] border border-[rgba(0,0,0,0.1)] p-[5px_10px]">
-        <ECFTypography type="caption" className="opacity-50">
-          Contribution Points:
-        </ECFTypography>
-        <Skeleton isLoaded={!!user}>
-          <ECFTypography type="caption" className="opacity-80">
+      {/* Contribution Points card - Figma design */}
+      <div className="flex h-[28px] items-center gap-[5px] rounded-[5px] border border-black bg-white px-[10px] py-[5px]">
+        <span className="text-[13px] font-normal leading-[18px] text-black">
+          Your Contribution Points:
+        </span>
+        <Skeleton isLoaded={!!user} className="rounded-[2px]">
+          <span className="font-mono text-[13px] font-semibold leading-[15px] text-black">
             {user?.weight ?? 100}
-          </ECFTypography>
+          </span>
         </Skeleton>
       </div>
     </div>
