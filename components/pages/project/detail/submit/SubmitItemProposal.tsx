@@ -17,7 +17,7 @@ import {
 import { AllItemConfig } from '@/constants/itemConfig';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
-import { IItemConfig, IPocItemKey } from '@/types/item';
+import { IPocItemKey } from '@/types/item';
 import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
@@ -106,6 +106,15 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
     } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
       defaultValue = [{ legalName: '', country: '', _id: crypto.randomUUID() }];
+    } else if (itemConfig.formDisplayType === 'multiContracts') {
+      // Add default value for Smart Contracts
+      defaultValue = [
+        {
+          id: crypto.randomUUID(),
+          chain: '',
+          addresses: '',
+        },
+      ];
     }
 
     return { [itemConfig.key]: defaultValue };
@@ -229,6 +238,19 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           name: founder.name || '',
           title: founder.title || '',
           region: founder.region || '',
+        }));
+      }
+
+      // For multiContracts, ensure proper data format
+      if (
+        itemConfig.formDisplayType === 'multiContracts' &&
+        Array.isArray(valueToSubmit)
+      ) {
+        // Create a clean copy of the contracts data
+        valueToSubmit = valueToSubmit.map((contract: any) => ({
+          id: contract.id || crypto.randomUUID(),
+          chain: contract.chain || '',
+          addresses: contract.addresses || '',
         }));
       }
 
@@ -500,7 +522,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           </div>
 
           <FormItemManager
-            itemConfig={itemConfig as IItemConfig<keyof IProjectFormData>}
+            itemConfig={itemConfig as any}
             control={control}
             fieldApplicability={fieldApplicability}
             onChangeApplicability={handleApplicabilityChange}

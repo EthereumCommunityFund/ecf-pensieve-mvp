@@ -148,13 +148,12 @@ export const transformProjectData = (
         fieldApplicability,
       ),
     ),
-    dappSmartContracts: emptyToNull(
-      transformFormValue(
-        'dappSmartContracts',
-        formData.dappSmartContracts || '',
-        fieldApplicability,
-      ),
-    ),
+    dappSmartContracts:
+      fieldApplicability.dappSmartContracts === false
+        ? null
+        : formData.dappSmartContracts && formData.dappSmartContracts.length > 0
+          ? formData.dappSmartContracts
+          : null,
 
     orgStructure: transformFormValue(
       'orgStructure',
@@ -328,7 +327,9 @@ export const transformProposalData = (
       key: 'dappSmartContracts',
       value: transformFormValue(
         'dappSmartContracts',
-        formData.dappSmartContracts || '',
+        formData.dappSmartContracts?.length > 0
+          ? JSON.stringify(formData.dappSmartContracts)
+          : '',
         fieldApplicability,
       ),
     },
@@ -380,6 +381,68 @@ export const transformProposalData = (
 export const convertProjectToFormData = (
   project: IProject,
 ): IProjectFormData => {
+  // Handle smart contracts data conversion to array format
+  let dappSmartContractsData: any[] = [];
+
+  if (
+    project.dappSmartContracts !== null &&
+    project.dappSmartContracts !== undefined
+  ) {
+    if (typeof project.dappSmartContracts === 'string') {
+      // Legacy string format - convert to array with single contract
+      const addresses = project.dappSmartContracts
+        .split(',')
+        .map((addr) => addr.trim())
+        .filter(Boolean)
+        .join(', ');
+
+      if (addresses) {
+        dappSmartContractsData = [
+          {
+            id: crypto.randomUUID(),
+            chain: 'ethereum',
+            addresses: addresses,
+          },
+        ];
+      }
+    } else if (typeof project.dappSmartContracts === 'object') {
+      // JSONB format from backend
+      const contractsObj = project.dappSmartContracts as any;
+      if (contractsObj.contracts && Array.isArray(contractsObj.contracts)) {
+        // New format with contracts array
+        dappSmartContractsData = contractsObj.contracts.map((c: any) => ({
+          id: c.id || crypto.randomUUID(),
+          chain: c.chain || '',
+          addresses: Array.isArray(c.addresses)
+            ? c.addresses.join(', ')
+            : c.addresses || '',
+        }));
+      } else if (Array.isArray(project.dappSmartContracts)) {
+        // Already in array format
+        dappSmartContractsData = (project.dappSmartContracts as any[]).map(
+          (c: any) => ({
+            id: c.id || crypto.randomUUID(),
+            chain: c.chain || '',
+            addresses: Array.isArray(c.addresses)
+              ? c.addresses.join(', ')
+              : c.addresses || '',
+          }),
+        );
+      }
+    }
+  }
+
+  // If no data, provide empty array with one empty contract
+  if (dappSmartContractsData.length === 0) {
+    dappSmartContractsData = [
+      {
+        id: crypto.randomUUID(),
+        chain: '',
+        addresses: '',
+      },
+    ];
+  }
+
   return {
     name: project.name,
     tagline: project.tagline,
@@ -394,7 +457,7 @@ export const convertProjectToFormData = (
     appUrl: project.appUrl || null,
     tags: project.tags,
     whitePaper: project.whitePaper || '',
-    dappSmartContracts: project.dappSmartContracts || '',
+    dappSmartContracts: dappSmartContractsData,
     dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
     dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,
     devStatus: project.devStatus,

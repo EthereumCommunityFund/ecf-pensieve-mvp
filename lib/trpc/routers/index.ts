@@ -11,6 +11,7 @@ import { projectRouter } from './project';
 import { projectLogRouter } from './projectLog';
 import { proposalRouter } from './proposal';
 import { rankRouter } from './rank';
+import { smartContractsRouter } from './smartContracts';
 import { userRouter } from './user';
 import { voteRouter } from './vote';
 
@@ -28,6 +29,7 @@ export const appRouter = router({
   vote: voteRouter,
   projectLog: projectLogRouter,
   rank: rankRouter,
+  smartContracts: smartContractsRouter,
 });
 
 export type AppRouter = typeof appRouter;

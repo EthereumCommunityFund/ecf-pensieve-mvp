@@ -51,6 +51,4 @@ next-env.d.ts
 .yoyo/
 supabase/*
 .kiro/
-
 .vscode
-.kiro/

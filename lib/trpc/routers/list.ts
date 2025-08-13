@@ -157,6 +157,7 @@ export const listRouter = router({
                     avatarUrl: true,
                   },
                 },
+                projectSnap: true,
               },
             },
           },
