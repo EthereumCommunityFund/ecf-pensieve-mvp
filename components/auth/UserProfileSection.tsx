@@ -15,7 +15,7 @@ import { Button } from '@/components/base';
 import Copy from '@/components/biz/common/Copy';
 import { WalletIcon } from '@/components/icons';
 import ArrowSquareUpIcon from '@/components/icons/ArrowSquareUp';
-import ListsIcon from '@/components/icons/Lists';
+import BookmarksWhiteIcon from '@/components/icons/BookmarksWhite';
 import LogoutIcon from '@/components/icons/Logout';
 import UserProfileIcon from '@/components/icons/UserProfile';
 import { useAuth } from '@/context/AuthContext';
@@ -161,7 +161,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
           </DropdownItem>
           <DropdownItem
             key="lists"
-            startContent={<ListsIcon size={24} />}
+            startContent={<BookmarksWhiteIcon size={24} />}
             textValue="My Lists"
             className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-black transition-all duration-200 hover:bg-black/[0.05]"
             href={`/profile/${profile?.address}?tab=lists`}
