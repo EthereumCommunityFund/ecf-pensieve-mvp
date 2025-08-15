@@ -101,7 +101,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
               message={'Wallet address copied'}
               useCustomChildren={true}
             >
-              <div className="flex w-full items-center gap-[10px] rounded-[5px] border border-black/10 p-[10px] transition-all duration-200">
+              <div className="flex w-full items-center gap-[10px] rounded-[5px] border-b border-black/10 p-[10px] transition-all duration-200">
                 <Avatar
                   src={profile?.avatarUrl ?? '/images/user/avatar_p.png'}
                   alt="avatar"
@@ -123,7 +123,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             className="cursor-default p-0 hover:bg-transparent focus:bg-transparent data-[hover=true]:bg-transparent"
             isReadOnly
           >
-            <div className="flex w-full flex-col items-start rounded-[5px] border border-black/10 bg-black/[0.02] px-[8px] py-[6px]">
+            <div className="flex w-full flex-col items-start rounded-[5px] border border-black/10 px-[8px] py-[6px]">
               <div className="text-[13px] font-[400] text-black/70">
                 Contribution Points:
               </div>
