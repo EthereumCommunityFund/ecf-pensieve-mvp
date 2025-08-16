@@ -11,6 +11,7 @@ import {
   CodeIcon,
   GaugeIcon,
 } from '@/components/icons';
+import { STICKY_OFFSETS } from '@/constants/layoutConstants';
 import { IItemCategoryEnum } from '@/types/item';
 
 import { IStepStatus } from './types';
@@ -69,9 +70,10 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   return (
     <nav
       className={cn(
-        'mobile:hidden sticky top-[70px] w-[220px] shrink-0 flex-col gap-[20px] self-start',
+        'mobile:hidden sticky w-[220px] shrink-0 flex-col gap-[20px] self-start',
         dimmed ? 'opacity-30' : '',
       )}
+      style={{ top: `${STICKY_OFFSETS.withPadding}px` }}
     >
       <ul className="space-y-4">
         {stepsOrder.map((step, index) => {

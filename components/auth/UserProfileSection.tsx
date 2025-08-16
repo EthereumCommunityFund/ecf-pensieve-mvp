@@ -8,14 +8,18 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import { ArrowSquareUp, GitCommit, SignOut, User } from '@phosphor-icons/react';
+import { GitCommit } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { Button } from '@/components/base';
 import Copy from '@/components/biz/common/Copy';
 import { WalletIcon } from '@/components/icons';
-import BookmarksIcon from '@/components/icons/Bookmarks';
+import ArrowSquareUpIcon from '@/components/icons/ArrowSquareUp';
+import BookmarksWhiteIcon from '@/components/icons/BookmarksWhite';
+import LogoutIcon from '@/components/icons/Logout';
+import UserProfileIcon from '@/components/icons/UserProfile';
 import { useAuth } from '@/context/AuthContext';
+import { formatWeight } from '@/utils/weight';
 
 const formatAddress = (address?: string | null, chars = 6): string => {
   if (!address) return '';
@@ -37,16 +41,7 @@ export interface IUserProfileSection {
 const UserProfileSection: React.FC<IUserProfileSection> = ({
   avatarSize = 24,
 }) => {
-  const {
-    isAuthenticated,
-    profile,
-    user,
-    performFullLogoutAndReload,
-    showAuthPrompt,
-    isCheckingInitialAuth,
-    fetchUserProfile,
-    authStatus,
-  } = useAuth();
+  const { profile, performFullLogoutAndReload, showAuthPrompt } = useAuth();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -70,7 +65,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
     <>
       <Dropdown
         placement="bottom-end"
-        className="rounded-md border border-gray-200 bg-white text-gray-900 shadow-lg" // Example light theme dropdown styling
+        className="rounded-[10px] border border-black/10 bg-white text-gray-900 shadow-sm"
       >
         <DropdownTrigger>
           <Button
@@ -89,24 +84,34 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             </span>
           </Button>
         </DropdownTrigger>
-        <DropdownMenu aria-label="Profile Actions" variant="flat">
-          <DropdownItem key="profileInfo">
+        <DropdownMenu
+          aria-label="Profile Actions"
+          variant="flat"
+          className="p-[10px]"
+          itemClasses={{
+            base: 'mb-[10px] last:mb-0',
+          }}
+        >
+          <DropdownItem
+            key="profileInfo"
+            className="cursor-default p-0 hover:bg-transparent focus:bg-transparent"
+          >
             <Copy
               text={profile?.address}
               message={'Wallet address copied'}
               useCustomChildren={true}
             >
-              <div className="flex w-[full] items-center gap-[10px] rounded-[8px] p-[5px] hover:bg-[rgba(255,255,255,0.05)]">
+              <div className="flex w-full items-center gap-[10px] rounded-[5px] border-b border-black/10 p-[10px] transition-all duration-200">
                 <Avatar
                   src={profile?.avatarUrl ?? '/images/user/avatar_p.png'}
                   alt="avatar"
-                  className="size-[40px] shrink-0"
+                  className="size-[34px] shrink-0 rounded-full border border-white"
                 />
-                <div className="w-[128px]">
-                  <p className="truncate text-[16px] font-[500] leading-[1.2] text-black">
+                <div className="flex flex-col">
+                  <p className="text-[14px] font-[500] leading-[17px] text-black">
                     {formattedName}
                   </p>
-                  <p className="mt-[5px] text-[13px] leading-[1.4] text-black opacity-70">
+                  <p className="font-mono text-[13px] leading-[18px] text-black/60">
                     {formatAddress(profile.address)}
                   </p>
                 </div>
@@ -114,50 +119,63 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             </Copy>
           </DropdownItem>
           <DropdownItem
+            key="contribution"
+            className="cursor-default p-0 hover:bg-transparent focus:bg-transparent data-[hover=true]:bg-transparent"
+            isReadOnly
+          >
+            <div className="flex w-full flex-col items-start rounded-[5px] border border-black/10 px-[8px] py-[6px]">
+              <div className="text-[13px] font-[400] text-black/70">
+                Contribution Points:
+              </div>
+              <div className="ml-[5px] font-mono text-[13px] font-semibold text-black">
+                {formatWeight(profile?.weight ?? 100)}
+              </div>
+            </div>
+          </DropdownItem>
+          <DropdownItem
             key="profile"
-            startContent={<User size={18} />}
+            startContent={<UserProfileIcon size={24} />}
             textValue="My Profile"
-            className="mt-[10px]"
+            className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-black transition-all duration-200 hover:bg-black/[0.05]"
             href={`/profile/${profile?.address}?tab=profile`}
           >
             My Profile
           </DropdownItem>
           <DropdownItem
             key="contributions"
-            startContent={<GitCommit size={18} />}
+            startContent={<GitCommit size={24} />}
             textValue="My Contributions"
-            className="mt-[10px]"
+            className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-black transition-all duration-200 hover:bg-black/[0.05]"
             href={`/profile/${profile?.address}?tab=contributions`}
           >
             My Contributions
           </DropdownItem>
           <DropdownItem
             key="upvotes"
-            startContent={<ArrowSquareUp size={18} />}
+            startContent={<ArrowSquareUpIcon size={24} />}
             textValue="My Upvotes"
-            className="mt-[10px]"
+            className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-black transition-all duration-200 hover:bg-black/[0.05]"
             href={`/profile/${profile?.address}?tab=upvotes`}
           >
             My Upvotes
           </DropdownItem>
           <DropdownItem
             key="lists"
-            startContent={<BookmarksIcon size={18} />}
+            startContent={<BookmarksWhiteIcon size={24} />}
             textValue="My Lists"
-            className="mt-[10px]"
+            className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-black transition-all duration-200 hover:bg-black/[0.05]"
             href={`/profile/${profile?.address}?tab=lists`}
           >
             My Lists
           </DropdownItem>
           <DropdownItem
             key="logout"
-            color="danger"
-            startContent={<SignOut size={18} />}
+            startContent={<LogoutIcon size={24} className="text-[#CD453B]" />}
             onPress={performFullLogoutAndReload}
-            textValue="Log Out"
-            className="text-danger mt-[10px]"
+            textValue="Logout"
+            className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-[#CD453B] transition-all duration-200 hover:bg-red-50"
           >
-            Log Out
+            Logout
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
