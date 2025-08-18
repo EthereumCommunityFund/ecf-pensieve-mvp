@@ -5,6 +5,7 @@ import {
   ISocialLink,
   IWebsite,
 } from '@/components/pages/project/create/types';
+import { NA_VALUE } from '@/constants/naSelection';
 import {
   IDateConstraints,
   IFundingReceivedGrants,
@@ -162,6 +163,10 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
         'organization-required',
         'organization is required',
         function (value) {
+          // Accept N/A as valid value
+          if (value === NA_VALUE) {
+            return true;
+          }
           if (Array.isArray(value)) {
             return value.length > 0;
           }
@@ -172,6 +177,10 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
         'organization-limit',
         'Maximum 10 organizations allowed',
         function (value) {
+          // N/A doesn't need limit check
+          if (value === NA_VALUE) {
+            return true;
+          }
           if (Array.isArray(value)) {
             return value.length <= 10;
           }

@@ -91,6 +91,8 @@ const FundingReceivedGrantsTableItem: React.FC<
                 onBlur={field.onBlur}
                 placeholder="Search or select organizations"
                 multiple={true}
+                allowNA={true}
+                columnName="Organization/Program"
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
