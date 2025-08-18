@@ -128,8 +128,8 @@ export const formatProjectValue = (key: string, value: any): any => {
     case 'dateFounded':
     case 'dateLaunch':
       return value instanceof Date
-        ? formatDate(value)
-        : formatDate(new Date(value));
+        ? formatDate(value, 'MM/DD/YYYY', '', true)
+        : formatDate(new Date(value), 'MM/DD/YYYY', '', true);
     case 'categories':
     case 'tags':
       return Array.isArray(value) ? value.join(', ') : value;
