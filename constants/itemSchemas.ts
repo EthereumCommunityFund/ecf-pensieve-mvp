@@ -1,6 +1,10 @@
 import * as yup from 'yup';
 
-import { IFounder, IWebsite } from '@/components/pages/project/create/types';
+import {
+  IFounder,
+  ISocialLink,
+  IWebsite,
+} from '@/components/pages/project/create/types';
 import {
   IDateConstraints,
   IFundingReceivedGrants,
@@ -68,6 +72,16 @@ const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
     .url('Please enter a valid URL')
     .required('Project website is required'),
   title: yup.string().required('Project website title is required'),
+  _id: yup.string().optional(),
+});
+
+const socialLinkSchema: yup.ObjectSchema<ISocialLink> = yup.object().shape({
+  platform: yup.string().required('Social platform is required'),
+  url: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Social link URL is required'),
   _id: yup.string().optional(),
 });
 
@@ -231,6 +245,27 @@ export const itemValidationSchemas = {
     .of(websiteSchema)
     .min(1, 'At least one website is required')
     .required('Project website is required'),
+
+  social_links: yup
+    .array()
+    .of(socialLinkSchema)
+    .test(
+      'unique-platforms',
+      'Each platform can only be added once',
+      function (value) {
+        if (!value || value.length === 0) return true;
+        // Only check uniqueness for non-empty platforms
+        const platforms = value
+          .map((link) => link.platform)
+          .filter((platform) => platform && platform.trim() !== '');
+
+        // If no platforms are selected, skip uniqueness check
+        if (platforms.length === 0) return true;
+
+        const uniquePlatforms = new Set(platforms);
+        return platforms.length === uniquePlatforms.size;
+      },
+    ),
 
   appUrl: yup
     .string()

@@ -34,6 +34,7 @@ import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
+import SocialLinkFormItemTable from './SocialLinkFormItemTable';
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 import { useFundingReceivedGrants } from './useFundingReceivedGrants';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
@@ -66,7 +67,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
   const { register, formState, control, getValues, setValue } =
     useFormContext<IProjectFormData>();
-  const { touchedFields } = formState;
+  const { touchedFields, isSubmitted } = formState;
 
   const isDisabled = fieldApplicability?.[itemKey] === false;
 
@@ -499,7 +500,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     }
 
     case 'websites': {
-      // 确保每个 website 都有唯一的 _id
       const websitesArray =
         Array.isArray(field.value) && field.value.length > 0
           ? field.value
@@ -545,6 +545,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   isPrimary={index === 0}
                   canRemove={websitesArray.length > 1}
                   touchedFields={touchedFields}
+                  isSubmitted={isSubmitted}
                 />
               );
             })}
@@ -565,6 +566,98 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   ];
                   // Use setValue with shouldValidate: false to avoid triggering validation
                   setValue('websites', newWebsites, { shouldValidate: false });
+                }}
+                disabled={isDisabled}
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  fontFamily: 'Open Sans, sans-serif',
+                }}
+              >
+                <PlusIcon size={16} />
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add an Entry
+                </span>
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'social_links': {
+      const socialLinksArray =
+        Array.isArray(field.value) && field.value.length > 0
+          ? field.value
+          : [{ platform: '', url: '', _id: crypto.randomUUID() }];
+
+      return (
+        <div>
+          <div className="overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex flex-1 items-center gap-[5px] border-r border-black/10 p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  Platform
+                </span>
+              </div>
+              <div className="flex flex-1 items-center gap-[5px] p-[10px]">
+                <span className="text-[14px] font-[600] leading-[19px] text-black/60">
+                  URL
+                </span>
+              </div>
+              <div className="w-[60px] p-[10px]"></div>
+            </div>
+            {socialLinksArray.map((socialLink: any, index: number) => {
+              const socialLinkError =
+                fieldState.error && Array.isArray(fieldState.error)
+                  ? fieldState.error[index]
+                  : undefined;
+
+              return (
+                <SocialLinkFormItemTable
+                  key={socialLink._id}
+                  index={index}
+                  remove={() => {
+                    const currentSocialLinks =
+                      getValues(field.name as any) || [];
+                    const newSocialLinks = currentSocialLinks.filter(
+                      (_: any, i: number) => i !== index,
+                    );
+                    field.onChange(newSocialLinks);
+                  }}
+                  errors={socialLinkError}
+                  isPrimary={index === 0}
+                  canRemove={socialLinksArray.length > 1}
+                  touchedFields={touchedFields}
+                  isSubmitted={isSubmitted}
+                  value={socialLink}
+                  onChange={(updatedSocialLink) => {
+                    const currentSocialLinks =
+                      getValues(field.name as any) || [];
+                    const newSocialLinks = [...currentSocialLinks];
+                    newSocialLinks[index] = updatedSocialLink;
+                    field.onChange(newSocialLinks);
+                  }}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const currentSocialLinks = getValues(field.name as any) || [];
+                  const newSocialLinks = [
+                    ...currentSocialLinks,
+                    { platform: '', url: '', _id: crypto.randomUUID() },
+                  ];
+                  setValue(field.name as any, newSocialLinks, {
+                    shouldValidate: false,
+                  });
                 }}
                 disabled={isDisabled}
                 style={{
@@ -676,6 +769,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   isPrimary={index === 0}
                   canRemove={physicalEntitiesArray.length > 1}
                   touchedFields={touchedFields}
+                  isSubmitted={isSubmitted}
                   value={item}
                   onChange={(updatedEntity) => {
                     const currentEntities = getValues(field.name as any) || [];

@@ -14,6 +14,7 @@ interface PhysicalEntityFormItemTableProps {
   isPrimary: boolean;
   canRemove: boolean;
   touchedFields: any;
+  isSubmitted?: boolean;
   value: IPhysicalEntity;
   onChange: (value: IPhysicalEntity) => void;
 }
@@ -27,6 +28,7 @@ const PhysicalEntityFormItemTable: React.FC<
   isPrimary,
   canRemove,
   touchedFields,
+  isSubmitted,
   value,
   onChange,
 }) => {
@@ -59,13 +61,14 @@ const PhysicalEntityFormItemTable: React.FC<
             border: 'none !important',
           }}
         />
-        {errors?.legalName && (legalNameTouched || !isPrimary) && (
-          <span className="text-[13px] text-red-500">
-            {typeof errors.legalName === 'string'
-              ? errors.legalName
-              : errors.legalName?.message || 'legal name is required'}
-          </span>
-        )}
+        {errors?.legalName &&
+          (legalNameTouched || !isPrimary || isSubmitted) && (
+            <span className="text-[13px] text-red-500">
+              {typeof errors.legalName === 'string'
+                ? errors.legalName
+                : errors.legalName?.message || 'legal name is required'}
+            </span>
+          )}
       </div>
       <div className="flex-1 p-[10px]">
         <RegionAutocomplete

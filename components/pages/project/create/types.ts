@@ -37,6 +37,12 @@ export interface IWebsite {
   _id?: string;
 }
 
+export interface ISocialLink {
+  platform: string;
+  url: string;
+  _id?: string;
+}
+
 export interface IReferenceData {
   key: string;
   ref: string;

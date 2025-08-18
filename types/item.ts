@@ -131,6 +131,7 @@ export type IFormDisplayType =
   | 'date'
   | 'founderList'
   | 'websites'
+  | 'social_links'
   | 'tablePhysicalEntity'
   | 'autoComplete'
   | 'fundingReceivedGrants'

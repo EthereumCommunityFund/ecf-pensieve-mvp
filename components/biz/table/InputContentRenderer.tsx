@@ -521,6 +521,100 @@ const InputContentRenderer: React.FC<IProps> = ({
         }
         break;
       }
+      case 'social_links': {
+        const parsedSocialLinks = parseValue(value);
+
+        if (!Array.isArray(parsedSocialLinks)) {
+          return <>{parsedSocialLinks}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={214} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Platform</span>
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>URL</span>
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedSocialLinks.map(
+                      (
+                        link: { platform: string; url: string },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsedSocialLinks.length - 1}
+                        >
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedSocialLinks.length - 1}
+                          >
+                            {link.platform}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedSocialLinks.length - 1}
+                          >
+                            <Link
+                              href={normalizeUrl(link.url)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(link.url)}
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsedSocialLinks
+              .map(
+                (link: { platform: string; url: string }) =>
+                  `${link.platform}: ${link.url}`,
+              )
+              .join(', ')}
+          </>
+        );
+      }
       case 'websites': {
         const parsedWebsites = parseValue(value);
 
@@ -1073,6 +1167,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     isExpandable &&
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites' &&
+    displayFormType !== 'social_links' &&
     displayFormType !== 'tablePhysicalEntity' &&
     displayFormType !== 'fundingReceivedGrants' &&
     displayFormType !== 'multiContracts'
