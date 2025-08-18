@@ -31,6 +31,7 @@ const FundingReceivedGrantsTableItem: React.FC<
       projectDonator: `${itemKey}.${index}.projectDonator`,
       amount: `${itemKey}.${index}.amount`,
       reference: `${itemKey}.${index}.reference`,
+      expenseSheetUrl: `${itemKey}.${index}.expenseSheetUrl`,
     }),
     [itemKey, index],
   );
@@ -153,10 +154,33 @@ const FundingReceivedGrantsTableItem: React.FC<
         />
       </div>
 
+      {/* Expense Sheet Column */}
+      <div className="flex w-[200px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
+        <Controller
+          name={fieldPaths.expenseSheetUrl}
+          control={control}
+          render={({ field, fieldState }) => (
+            <>
+              <URLInput
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="https://"
+                required={false}
+              />
+              {fieldState.error && (
+                <span className="mt-1 text-[12px] text-red-500">
+                  {fieldState.error.message}
+                </span>
+              )}
+            </>
+          )}
+        />
+      </div>
+
       {/* Reference Column */}
       <div
         className={cn(
-          'flex flex-1 min-w-[143px] shrink-0 flex-col justify-center px-[10px] py-[5px]',
+          'flex w-[200px] shrink-0 flex-col justify-center px-[10px] py-[5px]',
           canRemove ? 'border-r border-black/10' : '',
         )}
       >

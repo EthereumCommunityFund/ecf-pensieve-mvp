@@ -201,5 +201,10 @@ export interface IFundingReceivedGrants {
   projectDonator: string[];
   amount: string;
   reference?: string;
+  /**
+   * URL to expense sheet document showing detailed breakdown of grant fund utilization
+   * Optional field for transparency in fund allocation
+   */
+  expenseSheetUrl?: string;
   _id?: string;
 }

@@ -206,6 +206,11 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
+    expenseSheetUrl: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
     _id: yup.string().optional(),
   });
 

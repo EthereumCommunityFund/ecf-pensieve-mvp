@@ -847,9 +847,17 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
                 </div>
               </div>
+              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Expense Sheet
+                  </span>
+                  <TooltipWithQuestionIcon content="Link to detailed expense breakdown showing how the grant funds were utilized" />
+                </div>
+              </div>
               <div
                 className={cn(
-                  'flex-1 flex h-full min-w-[143px] shrink-0 items-center  px-[10px] bg-[#F5F5F5]',
+                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
                   fundingFields.length > 1 ? 'border-r border-black/10' : '',
                 )}
               >

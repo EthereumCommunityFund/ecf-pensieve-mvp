@@ -938,8 +938,14 @@ const InputContentRenderer: React.FC<IProps> = ({
                       </TableHeader>
                       <TableHeader width={160} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
-                          <span className="shrink-0">Amount (USD)</span>
+                          <span>Amount (USD)</span>
                           <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={200} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Expense Sheet</span>
+                          <TooltipWithQuestionIcon content="Link to detailed expense breakdown showing how the grant funds were utilized" />
                         </div>
                       </TableHeader>
                       <TableHeader isLast isContainerBordered>
@@ -959,6 +965,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                           projectDonator?: string[];
                           amount: string;
                           reference: string;
+                          expenseSheetUrl?: string;
                         },
                         index: number,
                       ) => (
@@ -1070,6 +1077,24 @@ const InputContentRenderer: React.FC<IProps> = ({
                             {grant.amount}
                           </TableCell>
                           <TableCell
+                            width={200}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {grant.expenseSheetUrl ? (
+                              <Link
+                                href={normalizeUrl(grant.expenseSheetUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(grant.expenseSheetUrl)}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell
                             isLast
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
@@ -1122,9 +1147,10 @@ const InputContentRenderer: React.FC<IProps> = ({
                   organization: string;
                   amount: string;
                   reference: string;
+                  expenseSheetUrl?: string;
                 }) => {
                   const dateStr = dayjs(grant.date).format('YYYY/MM/DD');
-                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.reference}`;
+                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
                 },
               )
               .join(', ')}

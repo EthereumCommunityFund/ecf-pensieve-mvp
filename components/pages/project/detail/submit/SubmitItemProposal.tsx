@@ -59,6 +59,7 @@ const getDefaultValueByFormType = (formDisplayType: string): any => {
           date: null,
           organization: '',
           amount: '',
+          expenseSheetUrl: '',
           reference: '',
           _id: crypto.randomUUID(),
         },
