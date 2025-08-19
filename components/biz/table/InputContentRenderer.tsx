@@ -1,5 +1,4 @@
 import { Skeleton, Tooltip } from '@heroui/react';
-import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
@@ -10,6 +9,7 @@ import { SelectedProjectTag } from '@/components/pages/project/create/form/Proje
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
+import dayjs from '@/lib/dayjs';
 import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import {
@@ -317,7 +317,8 @@ const InputContentRenderer: React.FC<IProps> = ({
           </Link>
         );
       case 'date':
-        return <>{dayjs(value).format('MMM, DD, YYYY')}</>;
+        // Use UTC to ensure consistent date display across timezones
+        return <>{dayjs.utc(value).format('MMM, DD, YYYY')}</>;
       case 'founderList': {
         const parsedFounderList = parseValue(value);
 
@@ -978,7 +979,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {dayjs(grant.date).format('YYYY/MM/DD')}
+                            {dayjs.utc(grant.date).format('YYYY/MM/DD')}
                           </TableCell>
                           <TableCell
                             width={301}
@@ -1149,7 +1150,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                   reference: string;
                   expenseSheetUrl?: string;
                 }) => {
-                  const dateStr = dayjs(grant.date).format('YYYY/MM/DD');
+                  const dateStr = dayjs.utc(grant.date).format('YYYY/MM/DD');
                   return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
                 },
               )
