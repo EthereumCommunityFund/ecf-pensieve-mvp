@@ -7,6 +7,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 
 import { Button } from '@/components/base';
+import NAButton from '@/components/base/NAButton';
+import NADisplay from '@/components/base/NADisplay';
 import { calcTransparentScore } from '@/components/biz/project/TransparentScore';
 import {
   PlusSquareOutlineIcon,
@@ -14,6 +16,8 @@ import {
   ShieldStarIcon,
 } from '@/components/icons';
 import { XCircleSolidIcon } from '@/components/icons/XCircle';
+import { NA_VALUE } from '@/constants/naSelection';
+import { useNASelection } from '@/hooks/useNASelection';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { useProjectsByIds } from '@/hooks/useProjectsByIds';
 import { trpc } from '@/lib/trpc/client';
@@ -35,6 +39,8 @@ interface ProjectSearchSelectorProps {
   placeholder?: string;
   columnName?: string;
   multiple?: boolean; // 是否启用多选模式
+  allowNA?: boolean; // 是否显示 N/A 选项
+  naLabel?: string; // N/A 按钮文本
 }
 
 interface SearchProjectItemProps {
@@ -167,6 +173,8 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   placeholder = 'Search or select organization',
   multiple = false,
   columnName = 'Organization/Program',
+  allowNA = false,
+  naLabel = 'N/A',
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,6 +182,13 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   const [selectedProjects, setSelectedProjects] = useState<IProject[]>([]);
   const [tempSelectedProjects, setTempSelectedProjects] = useState<IProject[]>(
     [],
+  );
+
+  // Use N/A selection hook
+  const { isNASelected, selectNA, clearNA } = useNASelection(
+    value,
+    onChange,
+    multiple,
   );
 
   // Use hook to fetch project data by IDs in multiple mode
@@ -333,11 +348,21 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
 
   const allProjects = searchResults?.published.items || [];
 
+  // If N/A is selected, show NADisplay component
+  if (allowNA && isNASelected) {
+    return (
+      <div className="relative w-full">
+        <NADisplay onClear={clearNA} label={naLabel} />
+        {error && <div className="mt-1 text-[13px] text-red-500">{error}</div>}
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Input Field */}
       <div className="relative w-full">
-        <div className="flex min-h-[42px] w-full flex-wrap items-center">
+        <div className="flex min-h-[42px] w-full flex-wrap items-center gap-[8px]">
           {/* Main input container with border */}
           <div
             className={`flex min-h-[42px] flex-1 cursor-pointer items-center rounded-[8px] px-[10px] ${
@@ -378,8 +403,11 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                 <div className="flex items-center">
                   <SearchIcon size={16} className="mr-2 text-black/60" />
                   <span className="text-[13px] font-normal text-black/60">
-                    {(!multiple && typeof value === 'string' ? value : null) ||
-                      placeholder}
+                    {(!multiple &&
+                    typeof value === 'string' &&
+                    value !== NA_VALUE
+                      ? value
+                      : null) || placeholder}
                   </span>
                 </div>
               )}
@@ -400,10 +428,25 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                 e.preventDefault();
               }}
               disabled={disabled}
-              className="ml-[10px] flex size-[18px] items-center justify-center"
+              className="flex size-[18px] items-center justify-center"
             >
               <PlusSquareOutlineIcon size={18} />
             </button>
+          )}
+
+          {/* N/A Button - show when allowNA is true */}
+          {allowNA && (
+            <NAButton
+              onClick={() => {
+                selectNA();
+                if (onBlur) {
+                  onBlur();
+                }
+              }}
+              disabled={disabled}
+            >
+              {naLabel}
+            </NAButton>
           )}
         </div>
         {error && <div className="mt-1 text-[13px] text-red-500">{error}</div>}

@@ -22,6 +22,7 @@ interface WebsiteFormItemTableProps {
   isPrimary: boolean;
   canRemove: boolean;
   touchedFields: any;
+  isSubmitted?: boolean;
 }
 
 const WebsiteFormItemTable: React.FC<WebsiteFormItemTableProps> = ({
@@ -33,6 +34,7 @@ const WebsiteFormItemTable: React.FC<WebsiteFormItemTableProps> = ({
   isPrimary,
   canRemove,
   touchedFields,
+  isSubmitted,
 }) => {
   const titleTouched = touchedFields.websites?.[index]?.title;
   const urlTouched = touchedFields.websites?.[index]?.url;
@@ -50,7 +52,7 @@ const WebsiteFormItemTable: React.FC<WebsiteFormItemTableProps> = ({
             border: 'none !important',
           }}
         />
-        {errors?.title && (titleTouched || !isPrimary) && (
+        {errors?.title && (titleTouched || !isPrimary || isSubmitted) && (
           <span className="text-[13px] text-red-500">
             {typeof errors.title === 'string'
               ? errors.title
@@ -70,7 +72,7 @@ const WebsiteFormItemTable: React.FC<WebsiteFormItemTableProps> = ({
             border: 'none !important',
           }}
         />
-        {errors?.url && (urlTouched || !isPrimary) && (
+        {errors?.url && (urlTouched || !isPrimary || isSubmitted) && (
           <span className="text-[13px] text-red-500">
             {typeof errors.url === 'string'
               ? errors.url

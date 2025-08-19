@@ -48,6 +48,41 @@ interface IFormData extends IProjectFormData {
   [key: string]: any;
 }
 
+// Helper function to get default value based on form display type
+const getDefaultValueByFormType = (formDisplayType: string): any => {
+  switch (formDisplayType) {
+    case 'founderList':
+      return [{ name: '', title: '', region: '', _id: crypto.randomUUID() }];
+    case 'fundingReceivedGrants':
+      return [
+        {
+          date: null,
+          organization: '',
+          amount: '',
+          expenseSheetUrl: '',
+          reference: '',
+          _id: crypto.randomUUID(),
+        },
+      ];
+    case 'websites':
+      return [{ url: '', title: '', _id: crypto.randomUUID() }];
+    case 'social_links':
+      return [{ platform: '', url: '', _id: crypto.randomUUID() }];
+    case 'tablePhysicalEntity':
+      return [{ legalName: '', country: '', _id: crypto.randomUUID() }];
+    case 'multiContracts':
+      return [
+        {
+          id: crypto.randomUUID(),
+          chain: '',
+          addresses: '',
+        },
+      ];
+    default:
+      return '';
+  }
+};
+
 const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   itemKey,
   displayProposalDataOfKey,
@@ -86,37 +121,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   );
 
   const defaultFormValues = useMemo(() => {
-    let defaultValue: any = '';
-
-    if (itemConfig.formDisplayType === 'founderList') {
-      defaultValue = [
-        { name: '', title: '', region: '', _id: crypto.randomUUID() },
-      ];
-    } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-      defaultValue = [
-        {
-          date: null,
-          organization: '',
-          amount: '',
-          reference: '',
-          _id: crypto.randomUUID(),
-        },
-      ];
-    } else if (itemConfig.formDisplayType === 'websites') {
-      defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
-    } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-      defaultValue = [{ legalName: '', country: '', _id: crypto.randomUUID() }];
-    } else if (itemConfig.formDisplayType === 'multiContracts') {
-      // Add default value for Smart Contracts
-      defaultValue = [
-        {
-          id: crypto.randomUUID(),
-          chain: '',
-          addresses: '',
-        },
-      ];
-    }
-
+    const defaultValue = getDefaultValueByFormType(itemConfig.formDisplayType);
     return { [itemConfig.key]: defaultValue };
   }, [itemConfig.key, itemConfig.formDisplayType]);
 
@@ -135,8 +140,15 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     }),
   });
 
-  const { control, clearErrors, reset, handleSubmit, watch, getValues } =
-    methods;
+  const {
+    control,
+    clearErrors,
+    reset,
+    handleSubmit,
+    watch,
+    getValues,
+    formState,
+  } = methods;
 
   // Watch form values
   const watchedValues = watch();
@@ -374,6 +386,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         itemConfig.formDisplayType === 'founderList' ||
         itemConfig.formDisplayType === 'fundingReceivedGrants' ||
         itemConfig.formDisplayType === 'websites' ||
+        itemConfig.formDisplayType === 'social_links' ||
         itemConfig.formDisplayType === 'tablePhysicalEntity'
       ) {
         if (typeof valueToSet === 'string') {
@@ -382,27 +395,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
             valueToSet = JSON.parse(valueToSet);
           } catch (error) {
             // If parsing fails, set to default value
-            if (itemConfig.formDisplayType === 'founderList') {
-              valueToSet = [
-                { name: '', title: '', region: '', _id: crypto.randomUUID() },
-              ];
-            } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-              valueToSet = [
-                {
-                  date: null,
-                  organization: '',
-                  amount: '',
-                  reference: '',
-                  _id: crypto.randomUUID(),
-                },
-              ];
-            } else if (itemConfig.formDisplayType === 'websites') {
-              valueToSet = [{ url: '', title: '', _id: crypto.randomUUID() }];
-            } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-              valueToSet = [
-                { legalName: '', country: '', _id: crypto.randomUUID() },
-              ];
-            }
+            valueToSet = getDefaultValueByFormType(itemConfig.formDisplayType);
           }
         }
 
@@ -414,27 +407,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           }));
         } else {
           // Set default value if not array
-          if (itemConfig.formDisplayType === 'founderList') {
-            valueToSet = [
-              { name: '', title: '', region: '', _id: crypto.randomUUID() },
-            ];
-          } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-            valueToSet = [
-              {
-                date: null,
-                organization: '',
-                amount: '',
-                reference: '',
-                _id: crypto.randomUUID(),
-              },
-            ];
-          } else if (itemConfig.formDisplayType === 'websites') {
-            valueToSet = [{ url: '', title: '', _id: crypto.randomUUID() }];
-          } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-            valueToSet = [
-              { legalName: '', country: '', _id: crypto.randomUUID() },
-            ];
-          }
+          valueToSet = getDefaultValueByFormType(itemConfig.formDisplayType);
         }
       }
 
@@ -444,30 +417,9 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       });
       setReferences([]);
     } else {
-      let defaultValue: any = '';
-
-      if (itemConfig.formDisplayType === 'founderList') {
-        defaultValue = [
-          { name: '', title: '', region: '', _id: crypto.randomUUID() },
-        ];
-      } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-        defaultValue = [
-          {
-            date: null,
-            organization: '',
-            amount: '',
-            reference: '',
-            _id: crypto.randomUUID(),
-          },
-        ];
-      } else if (itemConfig.formDisplayType === 'websites') {
-        defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
-      } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-        defaultValue = [
-          { legalName: '', country: '', _id: crypto.randomUUID() },
-        ];
-      }
-
+      const defaultValue = getDefaultValueByFormType(
+        itemConfig.formDisplayType,
+      );
       resetRef.current({
         [itemConfig.key]: defaultValue,
       });

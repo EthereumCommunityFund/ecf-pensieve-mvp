@@ -43,6 +43,7 @@ export const useFundingReceivedGrants = ({
         organization: '',
         amount: '',
         reference: '',
+        expenseSheetUrl: '',
       });
     }
   }, [isFundingReceivedGrants, fundingFields.length, appendFunding]);
@@ -54,6 +55,7 @@ export const useFundingReceivedGrants = ({
       organization: '',
       amount: '',
       reference: '',
+      expenseSheetUrl: '',
     });
   }, [appendFunding]);
 

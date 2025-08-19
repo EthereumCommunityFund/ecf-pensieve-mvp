@@ -16,7 +16,7 @@ const TooltipWithQuestionIcon: FC<IProps> = ({ content }) => {
       }}
       closeDelay={0}
     >
-      <QuestionIcon size={18} />
+      <QuestionIcon size={18} className="shrink-0" />
     </Tooltip>
   );
 };
