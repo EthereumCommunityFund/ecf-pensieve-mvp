@@ -522,6 +522,100 @@ const InputContentRenderer: React.FC<IProps> = ({
         }
         break;
       }
+      case 'social_links': {
+        const parsedSocialLinks = parseValue(value);
+
+        if (!Array.isArray(parsedSocialLinks)) {
+          return <>{parsedSocialLinks}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={214} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Platform</span>
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>URL</span>
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedSocialLinks.map(
+                      (
+                        link: { platform: string; url: string },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsedSocialLinks.length - 1}
+                        >
+                          <TableCell
+                            width={214}
+                            isContainerBordered
+                            isLastRow={index === parsedSocialLinks.length - 1}
+                          >
+                            {link.platform}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsedSocialLinks.length - 1}
+                          >
+                            <Link
+                              href={normalizeUrl(link.url)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(link.url)}
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsedSocialLinks
+              .map(
+                (link: { platform: string; url: string }) =>
+                  `${link.platform}: ${link.url}`,
+              )
+              .join(', ')}
+          </>
+        );
+      }
       case 'websites': {
         const parsedWebsites = parseValue(value);
 
@@ -845,8 +939,14 @@ const InputContentRenderer: React.FC<IProps> = ({
                       </TableHeader>
                       <TableHeader width={160} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
-                          <span className="shrink-0">Amount (USD)</span>
+                          <span>Amount (USD)</span>
                           <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={200} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Expense Sheet</span>
+                          <TooltipWithQuestionIcon content="Link to detailed expense breakdown showing how the grant funds were utilized" />
                         </div>
                       </TableHeader>
                       <TableHeader isLast isContainerBordered>
@@ -866,6 +966,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                           projectDonator?: string[];
                           amount: string;
                           reference: string;
+                          expenseSheetUrl?: string;
                         },
                         index: number,
                       ) => (
@@ -977,6 +1078,24 @@ const InputContentRenderer: React.FC<IProps> = ({
                             {grant.amount}
                           </TableCell>
                           <TableCell
+                            width={200}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {grant.expenseSheetUrl ? (
+                              <Link
+                                href={normalizeUrl(grant.expenseSheetUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(grant.expenseSheetUrl)}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell
                             isLast
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
@@ -1029,9 +1148,10 @@ const InputContentRenderer: React.FC<IProps> = ({
                   organization: string;
                   amount: string;
                   reference: string;
+                  expenseSheetUrl?: string;
                 }) => {
                   const dateStr = dayjs.utc(grant.date).format('YYYY/MM/DD');
-                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.reference}`;
+                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
                 },
               )
               .join(', ')}
@@ -1074,6 +1194,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     isExpandable &&
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites' &&
+    displayFormType !== 'social_links' &&
     displayFormType !== 'tablePhysicalEntity' &&
     displayFormType !== 'fundingReceivedGrants' &&
     displayFormType !== 'multiContracts'

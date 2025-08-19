@@ -200,4 +200,8 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 1,
   },
+  social_links: {
+    isEssential: false,
+    accountability_metric: 1,
+  },
 } as const;
