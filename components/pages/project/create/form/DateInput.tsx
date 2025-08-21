@@ -3,7 +3,7 @@
 import { DateValue } from '@internationalized/date';
 import React from 'react';
 
-import { DatePicker } from '@/components/base';
+import { LocaleDatePicker } from '@/components/base';
 import { dateToDateValue, dateValueToDate } from '@/utils/formatters';
 
 interface DateInputProps {
@@ -28,7 +28,8 @@ const DateInput: React.FC<DateInputProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      <DatePicker
+      <LocaleDatePicker
+        locale="en-CA"
         showMonthAndYearPickers={true}
         value={dateToDateValue(value)}
         onChange={handleDateChange}

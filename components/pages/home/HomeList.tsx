@@ -133,7 +133,7 @@ const HomeList = () => {
     return transparentProjectsUpdatedAt
       ? `Updated: ${formatDateWithTimeGMT(
           transparentProjectsUpdatedAt,
-          'DD-MM-YYYY | HH:mm',
+          'YYYY-MM-DD | HH:mm',
         )} GMT`
       : '';
   }, [transparentProjectsUpdatedAt]);

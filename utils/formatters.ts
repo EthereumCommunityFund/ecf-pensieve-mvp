@@ -66,14 +66,14 @@ export function formatNumber(
  * Format a date to a readable string format
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY')
+ * @param format - The format to use (default: 'YYYY-MM-DD')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @param useUTC - Whether to format in UTC timezone (default: false, uses local timezone)
  * @returns Formatted date string
  */
 export function formatDate(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY',
+  format: string = 'YYYY-MM-DD',
   fallback: string = '',
   useUTC: boolean = false,
 ): string {
@@ -94,13 +94,13 @@ export function formatDate(
  * Format a date to a readable string format with timezone
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param format - The format to use (default: 'YYYY-MM-DD HH:mm')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string with timezone info
  */
 export function formatDateWithTime(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY HH:mm',
+  format: string = 'YYYY-MM-DD HH:mm',
   fallback: string = '',
 ): string {
   if (!date) return fallback;
@@ -118,13 +118,13 @@ export function formatDateWithTime(
  * Format a date to a readable string format in GMT timezone
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param format - The format to use (default: 'YYYY-MM-DD HH:mm')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string in GMT timezone
  */
 export function formatDateWithTimeGMT(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY HH:mm',
+  format: string = 'YYYY-MM-DD HH:mm',
   fallback: string = '',
 ): string {
   if (!date) return fallback;
@@ -143,13 +143,13 @@ export function formatDateWithTimeGMT(
  * This is useful for displaying dates exactly as stored in the database
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY')
+ * @param format - The format to use (default: 'YYYY-MM-DD')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string in UTC timezone
  */
 export function formatDateAsUTC(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY',
+  format: string = 'YYYY-MM-DD',
   fallback: string = '',
 ): string {
   if (!date) return fallback;

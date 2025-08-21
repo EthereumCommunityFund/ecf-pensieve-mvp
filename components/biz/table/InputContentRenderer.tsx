@@ -318,7 +318,7 @@ const InputContentRenderer: React.FC<IProps> = ({
         );
       case 'date':
         // Use UTC to ensure consistent date display across timezones
-        return <>{dayjs.utc(value).format('MMM, DD, YYYY')}</>;
+        return <>{dayjs.utc(value).format('YYYY-MM-DD')}</>;
       case 'founderList': {
         const parsedFounderList = parseValue(value);
 
@@ -979,7 +979,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {dayjs.utc(grant.date).format('YYYY/MM/DD')}
+                            {dayjs.utc(grant.date).format('YYYY-MM-DD')}
                           </TableCell>
                           <TableCell
                             width={301}
@@ -1150,7 +1150,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                   reference: string;
                   expenseSheetUrl?: string;
                 }) => {
-                  const dateStr = dayjs.utc(grant.date).format('YYYY/MM/DD');
+                  const dateStr = dayjs.utc(grant.date).format('YYYY-MM-DD');
                   return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
                 },
               )
