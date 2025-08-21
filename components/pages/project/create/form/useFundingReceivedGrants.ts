@@ -1,9 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 
+import { IFormDisplayType } from '@/types/item';
+import { getDefaultEmbedTableFormItemValue } from '@/utils/item';
+
 interface UseFundingReceivedGrantsProps {
   control: Control<any>;
-  formDisplayType?: string;
+  formDisplayType: IFormDisplayType;
   fieldName: string;
 }
 
@@ -38,26 +41,19 @@ export const useFundingReceivedGrants = ({
   // Ensure at least one field exists for funding grants
   useEffect(() => {
     if (isFundingReceivedGrants && fundingFields.length === 0) {
-      appendFunding({
-        date: null,
-        organization: '',
-        amount: '',
-        reference: '',
-        expenseSheetUrl: '',
-      });
+      appendFunding(getDefaultEmbedTableFormItemValue(formDisplayType));
     }
-  }, [isFundingReceivedGrants, fundingFields.length, appendFunding]);
+  }, [
+    isFundingReceivedGrants,
+    fundingFields.length,
+    appendFunding,
+    formDisplayType,
+  ]);
 
   // Memoize event handler for adding new funding field
   const handleAddFundingField = useCallback(() => {
-    appendFunding({
-      date: null,
-      organization: '',
-      amount: '',
-      reference: '',
-      expenseSheetUrl: '',
-    });
-  }, [appendFunding]);
+    appendFunding(getDefaultEmbedTableFormItemValue(formDisplayType));
+  }, [appendFunding, formDisplayType]);
 
   // Memoize event handler for removing funding field
   const handleRemoveFundingField = useCallback(
