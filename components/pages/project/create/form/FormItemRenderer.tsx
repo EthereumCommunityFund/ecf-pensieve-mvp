@@ -29,6 +29,7 @@ import {
 
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
+import AffiliatedProjectsTableItem from './AffiliatedProjectsTableItem';
 import FounderFormItemTable from './FounderFormItemTable';
 import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
 import InputPrefix from './InputPrefix';
@@ -36,6 +37,7 @@ import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
 import SocialLinkFormItemTable from './SocialLinkFormItemTable';
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
+import { useAffiliatedProjects } from './useAffiliatedProjects';
 import { useFundingReceivedGrants } from './useFundingReceivedGrants';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
@@ -113,14 +115,21 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     [field],
   );
 
-  // Removed handleApplicableChange - now handled through fieldApplicability
-
-  // Use custom hook for funding received grants field array management
   const {
     fields: fundingFields,
     handleAddField: handleAddFundingField,
     handleRemoveField: handleRemoveFundingField,
   } = useFundingReceivedGrants({
+    control,
+    formDisplayType,
+    fieldName: field.name as any,
+  });
+
+  const {
+    fields: affiliatedFields,
+    handleAddField: handleAddAffiliatedField,
+    handleRemoveField: handleRemoveAffiliatedField,
+  } = useAffiliatedProjects({
     control,
     formDisplayType,
     fieldName: field.name as any,
@@ -899,6 +908,87 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               >
                 <PlusIcon size={16} />
                 Add an Entity
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'affiliated_projects': {
+      return (
+        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
+          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Project
+                  </span>
+                  <TooltipWithQuestionIcon content="The project that has an affiliation with this project" />
+                </div>
+              </div>
+              <div className="flex h-full w-[180px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Affiliation Type
+                  </span>
+                  <TooltipWithQuestionIcon content="The type of relationship between the projects" />
+                </div>
+              </div>
+              <div className="flex h-full w-[250px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Description
+                  </span>
+                  <TooltipWithQuestionIcon content="Description of the affiliation relationship" />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
+                  affiliatedFields.length > 1 ? 'border-r border-black/10' : '',
+                )}
+              >
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Reference
+                  </span>
+                  <TooltipWithQuestionIcon content="Reference link for more information about this affiliation" />
+                </div>
+              </div>
+              {affiliatedFields.length > 1 && (
+                <div className="flex h-full w-[60px] items-center justify-center">
+                  {/* Actions column header */}
+                </div>
+              )}
+            </div>
+            {affiliatedFields.map((field, index) => {
+              return (
+                <AffiliatedProjectsTableItem
+                  key={field.fieldId}
+                  field={field}
+                  index={index}
+                  remove={() => handleRemoveAffiliatedField(index)}
+                  itemKey={'affiliated_projects'}
+                  canRemove={affiliatedFields.length > 1}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleAddAffiliatedField();
+                }}
+              >
+                <PlusIcon size={16} />
+                Add an Entry
               </button>
             </div>
           </div>

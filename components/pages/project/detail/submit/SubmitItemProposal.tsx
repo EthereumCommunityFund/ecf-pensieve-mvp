@@ -19,6 +19,7 @@ import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
 import { createItemValidationSchema } from '@/utils/schema';
+import { getDefaultValueByFormType, isEmbedTableFormType } from '@/utils/item';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import AddReferenceModal from '../../create/AddReferenceModal';
@@ -47,41 +48,6 @@ export interface ISubmitItemProposalProps {
 interface IFormData extends IProjectFormData {
   [key: string]: any;
 }
-
-// Helper function to get default value based on form display type
-const getDefaultValueByFormType = (formDisplayType: string): any => {
-  switch (formDisplayType) {
-    case 'founderList':
-      return [{ name: '', title: '', region: '', _id: crypto.randomUUID() }];
-    case 'fundingReceivedGrants':
-      return [
-        {
-          date: null,
-          organization: '',
-          amount: '',
-          expenseSheetUrl: '',
-          reference: '',
-          _id: crypto.randomUUID(),
-        },
-      ];
-    case 'websites':
-      return [{ url: '', title: '', _id: crypto.randomUUID() }];
-    case 'social_links':
-      return [{ platform: '', url: '', _id: crypto.randomUUID() }];
-    case 'tablePhysicalEntity':
-      return [{ legalName: '', country: '', _id: crypto.randomUUID() }];
-    case 'multiContracts':
-      return [
-        {
-          id: crypto.randomUUID(),
-          chain: '',
-          addresses: '',
-        },
-      ];
-    default:
-      return '';
-  }
-};
 
 const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   itemKey,
@@ -382,13 +348,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       let valueToSet = displayProposalDataOfKey?.input;
 
       // For array-based types, ensure value is in array format with _id
-      if (
-        itemConfig.formDisplayType === 'founderList' ||
-        itemConfig.formDisplayType === 'fundingReceivedGrants' ||
-        itemConfig.formDisplayType === 'websites' ||
-        itemConfig.formDisplayType === 'social_links' ||
-        itemConfig.formDisplayType === 'tablePhysicalEntity'
-      ) {
+      if (isEmbedTableFormType(itemConfig.formDisplayType)) {
         if (typeof valueToSet === 'string') {
           try {
             // Try to parse JSON string

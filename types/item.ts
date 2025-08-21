@@ -1,5 +1,7 @@
 import { POC_ITEMS } from '@/lib/pocItems';
 
+import { AffiliationType } from './affiliatedProjects';
+
 type FilterEssentialKeys<T> = {
   [K in keyof T]: T[K] extends { isEssential: true } ? K : never;
 }[keyof T];
@@ -135,6 +137,7 @@ export type IFormDisplayType =
   | 'tablePhysicalEntity'
   | 'autoComplete'
   | 'fundingReceivedGrants'
+  | 'affiliated_projects'
   | 'roadmap'
   | 'smartContract'
   | 'multiContracts';
@@ -186,25 +189,18 @@ export interface IPhysicalEntity {
 
 export interface IFundingReceivedGrants {
   date: Date | null;
-  /**
-   * Organization identifier - supports multi-select and backward compatibility
-   * - New data format: string[] - project ID array (multi-select mode)
-   * - Legacy data format: string - project ID or project name (single-select compatibility)
-   * Note: Based on existing code comments, organization field actually stores projectId
-   */
   organization: string | string[];
-  /**
-   * Project donator identifiers - projects that have donated to this funding round
-   * Required field, supports up to 10 project IDs
-   * Format: string[] - array of project IDs
-   */
   projectDonator: string[];
   amount: string;
   reference?: string;
-  /**
-   * URL to expense sheet document showing detailed breakdown of grant fund utilization
-   * Optional field for transparency in fund allocation
-   */
   expenseSheetUrl?: string;
   _id?: string;
+}
+
+export interface IAffiliatedProject {
+  project: string | string[];
+  affiliationType: AffiliationType | string;
+  description?: string;
+  reference?: string;
+  _id: string;
 }

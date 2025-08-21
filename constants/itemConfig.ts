@@ -1030,4 +1030,23 @@ This helps us understand how decisions are made and who gets to participate.`,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
   },
+  affiliated_projects: {
+    key: 'affiliated_projects',
+    category: IItemCategoryEnum.Basics,
+    subCategory: IItemSubCategoryEnum.BasicProfile,
+    isEssential: POC_ITEMS.affiliated_projects.isEssential,
+    label: 'Affiliated Projects',
+    description:
+      'List projects that have an affiliation or relationship with this project',
+    shortDescription: 'Projects affiliated with this project',
+    longDescription: `Projects that have various types of relationships with this project, such as partnerships, investments, integrations, or ecosystem collaborations`,
+    weight: ALL_POC_ITEM_MAP.affiliated_projects.weight,
+    formDisplayType: 'affiliated_projects',
+    placeholder: '',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    // TODO validationSchema 还没设置
+  },
 };
