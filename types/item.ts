@@ -1,6 +1,12 @@
 import { POC_ITEMS } from '@/lib/pocItems';
 
-import { AffiliationType } from './affiliatedProjects';
+export enum AffiliationType {
+  Partner = 'Partner',
+  Investor = 'Investor',
+  Subsidiary = 'Subsidiary',
+  Collaboration = 'Collaboration',
+  Other = 'Other',
+}
 
 type FilterEssentialKeys<T> = {
   [K in keyof T]: T[K] extends { isEssential: true } ? K : never;
@@ -200,7 +206,7 @@ export interface IFundingReceivedGrants {
 export interface IAffiliatedProject {
   project: string | string[];
   affiliationType: AffiliationType | string;
-  description?: string;
+  description: string;
   reference?: string;
-  _id: string;
+  _id?: string;
 }

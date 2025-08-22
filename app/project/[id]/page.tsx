@@ -11,8 +11,8 @@ import Ecosystem from '@/components/pages/project/detail/Ecosystem';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import SubmitterModal from '@/components/pages/project/detail/modal/Submitter';
-import Profile from '@/components/pages/project/detail/Profile';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
+import ProjectTabs from '@/components/pages/project/detail/ProjectTabs';
 import Review from '@/components/pages/project/detail/Review';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
 import TransparentScore from '@/components/pages/project/detail/TransparentScore';
@@ -21,13 +21,12 @@ import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
-  { key: 'project-data', label: 'Profile' },
-  // { key: 'ecosystem', label: 'Ecosystem' },
-  // { key: 'profile', label: 'Profile' },
-  // { key: 'review', label: 'Review' },
+  { key: 'profile', label: 'Profile' },
+  { key: 'ecosystem', label: 'Ecosystem' },
+  { key: 'reviews', label: 'Reviews' },
 ];
 
-export type ITabKey = 'project-data' | 'ecosystem' | 'profile' | 'review';
+export type ITabKey = 'profile' | 'ecosystem' | 'reviews';
 export type IModalContentType = 'viewItemProposal' | 'submitPropose';
 
 const ProjectPage = () => {
@@ -65,7 +64,7 @@ const ProjectPage = () => {
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
 
-  const [activeTab, setActiveTab] = useState<ITabKey>('project-data');
+  const [activeTab, setActiveTab] = useState<ITabKey>('profile');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemKey, setSelectedItemKey] = useState<IPocItemKey | null>(
@@ -77,12 +76,16 @@ const ProjectPage = () => {
 
   useEffect(() => {
     const currentTab = searchParams.get('tab');
-    // Only allow project-data tab, redirect disabled tabs to project-data
-    if (currentTab === 'project-data') {
+    // Allow all three tabs: profile, ecosystem, reviews
+    if (
+      currentTab === 'profile' ||
+      currentTab === 'ecosystem' ||
+      currentTab === 'reviews'
+    ) {
       setActiveTab(currentTab as ITabKey);
     } else {
-      // Redirect any other tab (including disabled ones) to project-data
-      router.replace(`/project/${projectId}?tab=project-data`, {
+      // Default to profile tab if no valid tab specified
+      router.replace(`/project/${projectId}?tab=profile`, {
         scroll: false,
       });
     }
@@ -177,14 +180,27 @@ const ProjectPage = () => {
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
 
-      <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
-        <TransparentScore
-          isDataFetched={isProjectFetched}
-          itemsTopWeight={project?.itemsTopWeight || {}}
-        />
+      <div className="tablet:px-[10px] mobile:px-[10px] mt-[30px] px-[20px]">
+        <div className="flex items-center justify-between">
+          <ProjectTabs
+            tabs={tabItems}
+            activeTab={activeTab}
+            onTabChange={(tabKey) => {
+              router.push(`/project/${projectId}?tab=${tabKey}`, {
+                scroll: false,
+              });
+            }}
+          />
+          <div className="flex items-center gap-[8px]">
+            <TransparentScore
+              isDataFetched={isProjectFetched}
+              itemsTopWeight={project?.itemsTopWeight || {}}
+            />
+          </div>
+        </div>
       </div>
 
-      {activeTab === 'project-data' && (
+      {activeTab === 'profile' && (
         <ProjectDetailTable
           projectId={Number(projectId)}
           isProposalsLoading={isProposalsLoading}
@@ -195,8 +211,7 @@ const ProjectPage = () => {
         />
       )}
       {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
-      {activeTab === 'profile' && <Profile projectId={Number(projectId)} />}
-      {activeTab === 'review' && <Review projectId={Number(projectId)} />}
+      {activeTab === 'reviews' && <Review projectId={Number(projectId)} />}
 
       <ProjectDetailMainModal
         isOpen={isModalOpen && !!selectedItemKey}
