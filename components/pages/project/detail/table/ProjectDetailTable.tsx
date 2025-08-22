@@ -3,7 +3,7 @@
 import { cn } from '@heroui/react';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import Link from 'next/link';
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
@@ -14,6 +14,7 @@ import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
 import NavigationMenu from './NavigationMenu';
 import { useProjectTableColumns } from './ProjectDetailTableColumns';
 import { CategoryTableSection } from './components/CategoryTableSection';
+import TableFilterControls from './components/TableFilterControls';
 import { useProjectTableData } from './hooks/useProjectTableData';
 import { useTableNavigation } from './hooks/useTableNavigation';
 import { useTableStates } from './hooks/useTableStates';
@@ -47,8 +48,39 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     isLeadingProposalsFetched,
   } = useProjectDetailContext();
 
-  // Custom hooks for data and state management
-  const { tableData, emptyItemsCounts } = useProjectTableData();
+  // State management hooks
+  const {
+    expandedRows,
+    expanded,
+    emptyItemsExpanded,
+    groupExpanded,
+    metricsVisible,
+    columnPinning,
+    showPendingOnly,
+    showEmptyOnly,
+    globalMetricsVisible,
+    globalCollapseState,
+    toggleRowExpanded,
+    toggleCategory,
+    toggleEmptyItems,
+    toggleGroupExpanded,
+    toggleMetricsVisible,
+    toggleAllRowsInCategory,
+    toggleColumnPinning,
+    isColumnPinned,
+    cleanupInvalidPinnedColumns,
+    togglePendingFilter,
+    toggleEmptyFilter,
+    toggleGlobalMetrics,
+    toggleGlobalCollapse,
+    resetFilters,
+  } = useTableStates();
+
+  // Custom hooks for data and state management with filters
+  const { tableData, emptyItemsCounts, itemCounts } = useProjectTableData({
+    showPendingOnly,
+    showEmptyOnly,
+  });
 
   // Create a unique key for forcing table re-renders when data changes
   const tableKey = useMemo(() => {
@@ -59,25 +91,13 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     );
     return `${project?.id || 0}-${weightKeysCount}-${totalWeightSum}`;
   }, [project?.id, project?.itemsTopWeight]);
-  const {
-    expandedRows,
-    expanded,
-    emptyItemsExpanded,
-    groupExpanded,
-    metricsVisible,
-    columnPinning,
-    toggleRowExpanded,
-    toggleCategory,
-    toggleEmptyItems,
-    toggleGroupExpanded,
-    toggleMetricsVisible,
-    toggleAllRowsInCategory,
-    toggleColumnPinning,
-    isColumnPinned,
-    cleanupInvalidPinnedColumns,
-  } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
+
+  // Wrapper function for global collapse that passes tableData
+  const handleGlobalCollapse = useCallback(() => {
+    toggleGlobalCollapse(tableData);
+  }, [toggleGlobalCollapse, tableData]);
 
   // Table meta data for column components
   const coreTableMeta = useMemo(
@@ -345,6 +365,24 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
               </Link>{' '}
               is where truth is validated by communities, not gatekeepers.
             </div>
+
+            {/* Filter Controls */}
+            <TableFilterControls
+              globalCollapseState={globalCollapseState}
+              onToggleGlobalCollapse={handleGlobalCollapse}
+              showPendingOnly={showPendingOnly}
+              showEmptyOnly={showEmptyOnly}
+              onTogglePendingFilter={togglePendingFilter}
+              onToggleEmptyFilter={toggleEmptyFilter}
+              globalMetricsVisible={globalMetricsVisible}
+              onToggleGlobalMetrics={toggleGlobalMetrics}
+              totalItems={itemCounts?.total || 0}
+              pendingItemsCount={itemCounts?.pending || 0}
+              emptyItemsCount={itemCounts?.empty || 0}
+              onResetFilters={resetFilters}
+              hasActiveFilters={showPendingOnly || showEmptyOnly}
+              className="mb-[20px]"
+            />
 
             {/* Category tables */}
             <div className="flex flex-col gap-[40px]">

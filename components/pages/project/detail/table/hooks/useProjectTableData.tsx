@@ -10,8 +10,15 @@ import { calculateItemStatusFields, isInputValueEmpty } from '@/utils/item';
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
 import { IProposalCreator } from '../../types';
 import { IKeyItemDataForTable } from '../ProjectDetailTableColumns';
+import { TableFilterService } from '../utils/filterService';
 
-export const useProjectTableData = () => {
+interface UseProjectTableDataProps {
+  showPendingOnly?: boolean;
+  showEmptyOnly?: boolean;
+}
+
+export const useProjectTableData = (props?: UseProjectTableDataProps) => {
+  const { showPendingOnly = false, showEmptyOnly = false } = props || {};
   const {
     project,
     displayProposalDataListOfProject,
@@ -229,10 +236,37 @@ export const useProjectTableData = () => {
     generateEmptyItemsCounts,
   ]);
 
+  // Apply filters to table data if needed
+  const filteredTableData = useMemo(() => {
+    if (!showPendingOnly && !showEmptyOnly) {
+      return tableData;
+    }
+
+    const filtered: Record<IItemSubCategoryEnum, IKeyItemDataForTable[]> =
+      {} as any;
+
+    Object.entries(tableData).forEach(([category, items]) => {
+      filtered[category as IItemSubCategoryEnum] =
+        TableFilterService.applyFilters(items, {
+          showPendingOnly,
+          showEmptyOnly,
+        });
+    });
+
+    return filtered;
+  }, [tableData, showPendingOnly, showEmptyOnly]);
+
+  // Calculate item counts across all categories
+  const itemCounts = useMemo(() => {
+    return TableFilterService.countItemsAcrossCategories(tableData);
+  }, [tableData]);
+
   return {
     isProjectFetched,
     isDataFetched: isProjectFetched && isLeadingProposalsFetched,
-    tableData,
+    tableData: filteredTableData,
+    unfilteredTableData: tableData,
     emptyItemsCounts,
+    itemCounts,
   };
 };

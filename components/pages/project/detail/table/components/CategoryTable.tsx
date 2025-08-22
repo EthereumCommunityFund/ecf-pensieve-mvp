@@ -54,6 +54,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 }) => {
   const showSkeleton = isLoading || !project;
   const noDataForThisTable = table.options.data.length === 0;
+  const isDataLoaded = !isLoading && project;
 
   // Create stable pinned column styles and position calculations
   // Use useMemo to stabilize columnPinningState, avoiding re-fetching on every render
@@ -244,7 +245,8 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     </thead>
   );
 
-  if (showSkeleton || noDataForThisTable) {
+  // Show skeleton only when actually loading
+  if (showSkeleton) {
     return (
       <PageTableContainer
         className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white"
@@ -309,6 +311,41 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             <TableFooter colSpan={table.getAllColumns().length}>
               Loading...
             </TableFooter>
+          </tbody>
+        </table>
+      </PageTableContainer>
+    );
+  }
+
+  // Show empty state when data is loaded but no data exists
+  if (isDataLoaded && noDataForThisTable) {
+    return (
+      <PageTableContainer
+        className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white"
+        allowInternalBorderRadius={true}
+      >
+        <table
+          className="box-border w-full border-separate border-spacing-0"
+          style={{ minWidth: 'max-content' }}
+        >
+          {colGroupDefinition}
+          {tableHeaders}
+          <tbody>
+            <tr>
+              <td
+                colSpan={table.getAllColumns().length}
+                className="p-8 text-center text-gray-500"
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <div className="mb-2 text-[16px] font-medium">
+                    No data available
+                  </div>
+                  <div className="text-[14px] text-gray-400">
+                    This category currently has no items to display
+                  </div>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </PageTableContainer>

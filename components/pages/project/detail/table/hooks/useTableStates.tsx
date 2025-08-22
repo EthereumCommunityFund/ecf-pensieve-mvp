@@ -1,9 +1,12 @@
 'use client';
 
 import { ColumnPinningState } from '@tanstack/react-table';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { IItemSubCategoryEnum } from '@/types/item';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
+
+import { useTableFilterParams } from './useTableFilterParams';
 
 const DefaultExpandedSubCat: Record<IItemSubCategoryEnum, boolean> = {
   [IItemSubCategoryEnum.Organization]: true,
@@ -39,14 +42,50 @@ const OriginalColumnOrder = [
 
 /**
  * Hook for managing all table-related states
- * Centralizes state management for expandable rows, categories, groups, etc.
+ * Centralizes state management for expandable rows, categories, groups, filters, etc.
  */
 export const useTableStates = () => {
+  // URL params management
+  const { filterParams, setFilterParams, clearFilterParams } =
+    useTableFilterParams();
+
   // Row expansion state
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // Category expansion state management
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
+
+  // Filter states - initialized from URL params
+  const [showPendingOnly, setShowPendingOnly] = useState(
+    filterParams.showPendingOnly,
+  );
+  const [showEmptyOnly, setShowEmptyOnly] = useState(
+    filterParams.showEmptyOnly,
+  );
+
+  // Global control states - initialized from URL params
+  const [globalMetricsVisible, setGlobalMetricsVisible] = useState(
+    filterParams.showMetrics,
+  );
+  const [globalCollapseState, setGlobalCollapseState] = useState<
+    'expanded' | 'collapsed' | 'mixed'
+  >(filterParams.collapsed ? 'collapsed' : 'expanded');
+
+  // Sync URL params when filter states change
+  useEffect(() => {
+    setFilterParams({
+      showPendingOnly,
+      showEmptyOnly,
+      showMetrics: globalMetricsVisible,
+      collapsed: globalCollapseState === 'collapsed',
+    });
+  }, [
+    showPendingOnly,
+    showEmptyOnly,
+    globalMetricsVisible,
+    globalCollapseState,
+    setFilterParams,
+  ]);
 
   // Empty data group expansion state management
   const [emptyItemsExpanded, setEmptyItemsExpanded] = useState<
@@ -261,6 +300,138 @@ export const useTableStates = () => {
     }));
   }, []);
 
+  // Toggle pending items filter
+  const togglePendingFilter = useCallback(() => {
+    setShowPendingOnly((prev) => !prev);
+    // If enabling pending filter, disable empty filter (mutually exclusive)
+    if (!showPendingOnly) {
+      setShowEmptyOnly(false);
+    }
+  }, [showPendingOnly]);
+
+  // Toggle empty items filter
+  const toggleEmptyFilter = useCallback(() => {
+    setShowEmptyOnly((prev) => !prev);
+    // If enabling empty filter, disable pending filter (mutually exclusive)
+    if (!showEmptyOnly) {
+      setShowPendingOnly(false);
+    }
+  }, [showEmptyOnly]);
+
+  // Toggle global metrics visibility
+  const toggleGlobalMetrics = useCallback(() => {
+    const newState = !globalMetricsVisible;
+    setGlobalMetricsVisible(newState);
+
+    // Apply to all categories
+    setMetricsVisible({
+      [IItemSubCategoryEnum.Organization]: newState,
+      [IItemSubCategoryEnum.Team]: newState,
+      [IItemSubCategoryEnum.BasicProfile]: newState,
+      [IItemSubCategoryEnum.Development]: newState,
+      [IItemSubCategoryEnum.Finances]: newState,
+      [IItemSubCategoryEnum.Token]: newState,
+      [IItemSubCategoryEnum.Governance]: newState,
+    });
+  }, [globalMetricsVisible]);
+
+  // Toggle global collapse/expand state
+  const toggleGlobalCollapse = useCallback(
+    (tableData?: Record<IItemSubCategoryEnum, any[]>) => {
+      const shouldCollapse = globalCollapseState !== 'collapsed';
+
+      if (shouldCollapse) {
+        // Collapse all
+        setExpandedRows({});
+        setExpanded({
+          [IItemSubCategoryEnum.Organization]: false,
+          [IItemSubCategoryEnum.Team]: false,
+          [IItemSubCategoryEnum.BasicProfile]: false,
+          [IItemSubCategoryEnum.Development]: false,
+          [IItemSubCategoryEnum.Finances]: false,
+          [IItemSubCategoryEnum.Token]: false,
+          [IItemSubCategoryEnum.Governance]: false,
+        });
+        setEmptyItemsExpanded({
+          [IItemSubCategoryEnum.Organization]: false,
+          [IItemSubCategoryEnum.Team]: false,
+          [IItemSubCategoryEnum.BasicProfile]: false,
+          [IItemSubCategoryEnum.Development]: false,
+          [IItemSubCategoryEnum.Finances]: false,
+          [IItemSubCategoryEnum.Token]: false,
+          [IItemSubCategoryEnum.Governance]: false,
+        });
+        setGroupExpanded({});
+        setGlobalCollapseState('collapsed');
+      } else {
+        // Expand all
+
+        // Expand all rows that are expandable
+        if (tableData) {
+          const allExpandableRows: Record<string, boolean> = {};
+          const allGroups: Record<string, boolean> = {};
+
+          // Collect all expandable row keys and groups from all categories
+          Object.values(tableData).forEach((categoryItems) => {
+            categoryItems.forEach((item: any) => {
+              // Check if item has expandable content based on AllItemConfig
+              const itemConfig = AllItemConfig[item.key as IPocItemKey];
+              if (itemConfig?.showExpand) {
+                allExpandableRows[item.key] = true;
+              }
+
+              // Collect groups
+              if (item.group) {
+                allGroups[item.group] = true; // true means expanded
+              }
+            });
+          });
+
+          setExpandedRows(allExpandableRows);
+          setGroupExpanded(allGroups);
+        }
+
+        // Expand all categories
+        setExpanded(DefaultExpandedSubCat);
+
+        // Expand all empty items groups
+        setEmptyItemsExpanded({
+          [IItemSubCategoryEnum.Organization]: true,
+          [IItemSubCategoryEnum.Team]: true,
+          [IItemSubCategoryEnum.BasicProfile]: true,
+          [IItemSubCategoryEnum.Development]: true,
+          [IItemSubCategoryEnum.Finances]: true,
+          [IItemSubCategoryEnum.Token]: true,
+          [IItemSubCategoryEnum.Governance]: true,
+        });
+
+        setGlobalCollapseState('expanded');
+      }
+    },
+    [globalCollapseState],
+  );
+
+  // Reset all filters
+  const resetFilters = useCallback(() => {
+    setShowPendingOnly(false);
+    setShowEmptyOnly(false);
+    clearFilterParams();
+  }, [clearFilterParams]);
+
+  // Update global collapse state based on current expansion states
+  const updateGlobalCollapseState = useCallback(() => {
+    const allCategories = Object.values(IItemSubCategoryEnum);
+    const expandedCount = allCategories.filter((cat) => expanded[cat]).length;
+
+    if (expandedCount === 0) {
+      setGlobalCollapseState('collapsed');
+    } else if (expandedCount === allCategories.length) {
+      setGlobalCollapseState('expanded');
+    } else {
+      setGlobalCollapseState('mixed');
+    }
+  }, [expanded]);
+
   return {
     // States
     expandedRows,
@@ -269,6 +440,10 @@ export const useTableStates = () => {
     groupExpanded,
     metricsVisible,
     columnPinning,
+    showPendingOnly,
+    showEmptyOnly,
+    globalMetricsVisible,
+    globalCollapseState,
 
     // Actions
     toggleRowExpanded,
@@ -281,5 +456,11 @@ export const useTableStates = () => {
     isColumnPinned,
     cleanupInvalidPinnedColumns,
     resetColumnPinning,
+    togglePendingFilter,
+    toggleEmptyFilter,
+    toggleGlobalMetrics,
+    toggleGlobalCollapse,
+    resetFilters,
+    updateGlobalCollapseState,
   };
 };
