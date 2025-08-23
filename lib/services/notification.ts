@@ -147,21 +147,8 @@ export const createRewardNotification = {
 
 export const addMultiUserNotification = async (
   baseData: MultiUserNotificationData,
-  _tx?: any,
 ): Promise<void> => {
-  const notificationData = {
-    userId: baseData.userId || '',
-    projectId: baseData.projectId,
-    proposalId: baseData.proposalId,
-    itemProposalId: baseData.itemProposalId,
-    reward: baseData.reward,
-    voter_id: baseData.voter_id,
-    type: baseData.type,
-    _metadata: baseData.metadata,
-    _expandRecipients: true,
-  };
-
-  await notificationQueue.enqueue(notificationData as NotificationData);
+  await notificationQueue.enqueue(baseData as NotificationData);
 };
 
 export const createNotification = {
@@ -236,34 +223,19 @@ export const createMultiUserNotification = {
     userId: string,
     projectId: number,
     itemProposalId: number,
-    key: string,
   ): MultiUserNotificationData => ({
     type: 'itemProposalBecameLeading',
     projectId,
     itemProposalId,
     userId,
-    metadata: { key, itemProposalId },
   }),
 
   itemProposalLostLeading: (
     userId: string,
     projectId: number,
     itemProposalId: number,
-    key: string,
   ): MultiUserNotificationData => ({
     type: 'itemProposalLostLeading',
-    projectId,
-    itemProposalId,
-    userId,
-    metadata: { key, itemProposalId },
-  }),
-
-  itemProposalPass: (
-    userId: string,
-    projectId: number,
-    itemProposalId: number,
-  ): MultiUserNotificationData => ({
-    type: 'itemProposalPass',
     projectId,
     itemProposalId,
     userId,
@@ -281,11 +253,13 @@ export const createMultiUserNotification = {
   }),
 
   createItemProposal: (
+    userId: string,
     projectId: number,
     itemProposalId: number,
   ): MultiUserNotificationData => ({
     type: 'createItemProposal',
     projectId,
     itemProposalId,
+    userId,
   }),
 };

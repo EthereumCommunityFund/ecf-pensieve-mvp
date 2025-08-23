@@ -5,6 +5,8 @@ import { projectNotificationSettings } from '@/lib/db/schema';
 
 import type { NotificationType } from '../notification';
 
+import { notificationCache } from './cache';
+
 export type NotificationMode = 'muted' | 'my_contributions' | 'all_events';
 
 const MY_CONTRIBUTION_NOTIFICATION_TYPES: NotificationType[] = [
@@ -28,33 +30,38 @@ export async function getUserNotificationSettings(
     return new Map();
   }
 
-  const settings = await db
-    .select({
-      userId: projectNotificationSettings.userId,
-      notificationMode: projectNotificationSettings.notificationMode,
-    })
-    .from(projectNotificationSettings)
-    .where(
-      and(
-        inArray(projectNotificationSettings.userId, userIds),
-        eq(projectNotificationSettings.projectId, projectId),
-      ),
-    );
-
   const settingsMap = new Map<string, NotificationMode>();
+  const uncachedUserIds: string[] = [];
 
-  settings.forEach((setting) => {
-    settingsMap.set(
-      setting.userId,
-      setting.notificationMode as NotificationMode,
-    );
-  });
-
-  userIds.forEach((userId) => {
-    if (!settingsMap.has(userId)) {
-      settingsMap.set(userId, 'all_events');
+  for (const userId of userIds) {
+    const cachedMode = notificationCache.getUserSetting(userId, projectId);
+    if (cachedMode !== null) {
+      settingsMap.set(userId, cachedMode);
+    } else {
+      uncachedUserIds.push(userId);
     }
-  });
+  }
+
+  if (uncachedUserIds.length > 0) {
+    const settings = await db
+      .select({
+        userId: projectNotificationSettings.userId,
+        notificationMode: projectNotificationSettings.notificationMode,
+      })
+      .from(projectNotificationSettings)
+      .where(
+        and(
+          inArray(projectNotificationSettings.userId, uncachedUserIds),
+          eq(projectNotificationSettings.projectId, projectId),
+        ),
+      );
+
+    settings.forEach((setting) => {
+      const mode = setting.notificationMode as NotificationMode;
+      settingsMap.set(setting.userId, mode);
+      notificationCache.setUserSetting(setting.userId, projectId, mode);
+    });
+  }
 
   return settingsMap;
 }
@@ -78,7 +85,7 @@ export function shouldSendNotification(
 
   if (notificationMode === 'my_contributions') {
     const isContributionNotification =
-      MY_CONTRIBUTION_NOTIFICATION_TYPES.includes(notificationType);
+      notificationType !== 'createItemProposal';
 
     if (isContributionNotification) {
       return (
@@ -101,8 +108,8 @@ export interface FilterContext {
   isProjectOwner?: boolean;
 }
 
-export async function filterRecipientsBySettings(
-  recipients: string[],
+export async function filterUsersBySettings(
+  users: string[],
   projectId: number,
   notificationType: NotificationType,
   contextMap?: Map<
@@ -110,90 +117,16 @@ export async function filterRecipientsBySettings(
     Omit<FilterContext, 'userId' | 'notificationType' | 'projectId'>
   >,
 ): Promise<string[]> {
-  if (recipients.length === 0) {
+  if (users.length === 0) {
     return [];
   }
 
-  const settingsMap = await getUserNotificationSettings(recipients, projectId);
+  const settingsMap = await getUserNotificationSettings(users, projectId);
 
-  return recipients.filter((userId) => {
-    const mode = settingsMap.get(userId) || 'all_events';
+  return users.filter((userId) => {
+    const mode = settingsMap.get(userId) || 'my_contributions';
     const context = contextMap?.get(userId) || {};
 
     return shouldSendNotification(mode, notificationType, context);
   });
-}
-
-export async function batchFilterRecipients(
-  notificationBatches: Array<{
-    recipients: string[];
-    projectId: number;
-    notificationType: NotificationType;
-    contextMap?: Map<
-      string,
-      Omit<FilterContext, 'userId' | 'notificationType' | 'projectId'>
-    >;
-  }>,
-): Promise<Map<number, string[]>> {
-  const results = new Map<number, string[]>();
-
-  for (let i = 0; i < notificationBatches.length; i++) {
-    const batch = notificationBatches[i];
-    const filteredRecipients = await filterRecipientsBySettings(
-      batch.recipients,
-      batch.projectId,
-      batch.notificationType,
-      batch.contextMap,
-    );
-    results.set(i, filteredRecipients);
-  }
-
-  return results;
-}
-
-export async function getNotificationRecipientsSummary(
-  recipients: string[],
-  projectId: number,
-  notificationType: NotificationType,
-): Promise<{
-  total: number;
-  muted: number;
-  myContributions: number;
-  allEvents: number;
-  willReceive: number;
-}> {
-  const settingsMap = await getUserNotificationSettings(recipients, projectId);
-
-  let muted = 0;
-  let myContributions = 0;
-  let allEvents = 0;
-  let willReceive = 0;
-
-  recipients.forEach((userId) => {
-    const mode = settingsMap.get(userId) || 'all_events';
-
-    switch (mode) {
-      case 'muted':
-        muted++;
-        break;
-      case 'my_contributions':
-        myContributions++;
-        if (MY_CONTRIBUTION_NOTIFICATION_TYPES.includes(notificationType)) {
-          willReceive++;
-        }
-        break;
-      case 'all_events':
-        allEvents++;
-        willReceive++;
-        break;
-    }
-  });
-
-  return {
-    total: recipients.length,
-    muted,
-    myContributions,
-    allEvents,
-    willReceive,
-  };
 }

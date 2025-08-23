@@ -18,8 +18,10 @@ import {
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addMultiUserNotification,
   addNotification,
   addRewardNotification,
+  createMultiUserNotification,
   createNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
@@ -258,13 +260,12 @@ export const processItemProposalVoteResult = async (
         ),
         tx,
       ),
-      addNotification(
-        createNotification.itemProposalBecameLeading(
+      addMultiUserNotification(
+        createMultiUserNotification.itemProposalBecameLeading(
           itemProposal.creator.userId,
           itemProposal.projectId,
           itemProposal.id,
         ),
-        tx,
       ),
       updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
     ]);
