@@ -118,6 +118,47 @@
   font-display: fallback;
 }
 
+/* Inter Font Face Definitions */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: fallback;
+}
+
 /* Font utility classes */
 .font-saria {
   font-family: var(--font-saira), Arial, sans-serif;
@@ -129,6 +170,10 @@
 
 .font-mona-sans {
   font-family: var(--font-mona-sans), Arial, sans-serif;
+}
+
+.font-inter {
+  font-family: var(--font-inter), Arial, sans-serif;
 }
 
 .font-normal {
