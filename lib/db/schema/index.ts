@@ -6,6 +6,7 @@ export * from './listFollows';
 export * from './listProjects';
 export * from './lists';
 export * from './nonces';
+export * from './notificationQueue';
 export * from './notifications';
 export * from './profiles';
 export * from './projectLogs';

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/scanPendingProject",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/processNotifications",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

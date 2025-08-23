@@ -1,6 +1,9 @@
 import { db } from '../db';
 import { notifications } from '../db/schema';
 
+import type { QueueOptions } from './notification/queue';
+import { notificationQueue } from './notification/queue';
+
 export type NotificationType =
   | 'createProposal'
   | 'proposalPass'
@@ -28,7 +31,7 @@ export interface RewardNotificationData extends NotificationData {
   reward: number;
 }
 
-export const addNotification = async (
+export const addNotificationDirect = async (
   notification: NotificationData,
   tx?: any,
 ): Promise<typeof notifications.$inferSelect> => {
@@ -51,10 +54,30 @@ export const addNotification = async (
   }
 };
 
+export const addNotificationToQueue = async (
+  notification: NotificationData,
+  options?: QueueOptions,
+) => {
+  return notificationQueue.enqueue(notification, options);
+};
+
+export const addNotification = async (
+  notification: NotificationData,
+  tx?: any,
+): Promise<typeof notifications.$inferSelect | null> => {
+  if (tx) {
+    return addNotificationDirect(notification, tx);
+  }
+
+  await addNotificationToQueue(notification);
+
+  return null;
+};
+
 export const addRewardNotification = async (
   notification: RewardNotificationData,
   tx?: any,
-): Promise<typeof notifications.$inferSelect> => {
+): Promise<typeof notifications.$inferSelect | null> => {
   return addNotification(notification, tx);
 };
 
