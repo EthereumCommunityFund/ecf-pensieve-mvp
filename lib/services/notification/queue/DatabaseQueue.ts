@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lt, lte, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, lt, or } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import {
@@ -53,41 +53,12 @@ export class DatabaseNotificationQueue {
     return db.insert(notificationQueue).values(values).returning();
   }
 
-  async dequeue(batchSize: number = 10): Promise<NotificationQueueItem[]> {
+  async dequeue(): Promise<NotificationQueueItem[]> {
     return await db.transaction(async (tx) => {
-      const now = new Date();
-
-      const stuckThreshold = new Date(Date.now() - 5 * 60 * 1000);
-      await tx
-        .update(notificationQueue)
-        .set({
-          status: 'pending',
-          processingAt: null,
-        })
-        .where(
-          and(
-            eq(notificationQueue.status, 'processing'),
-            lt(notificationQueue.processingAt, stuckThreshold),
-          ),
-        );
-
       const items = await tx
         .select()
         .from(notificationQueue)
-        .where(
-          and(
-            eq(notificationQueue.status, 'pending'),
-            or(
-              isNull(notificationQueue.scheduledAt),
-              lte(notificationQueue.scheduledAt, now),
-            ),
-          ),
-        )
-        .orderBy(
-          desc(notificationQueue.priority),
-          asc(notificationQueue.createdAt),
-        )
-        .limit(batchSize);
+        .where(eq(notificationQueue.status, 'pending'));
 
       if (items.length === 0) return [];
 
@@ -96,7 +67,7 @@ export class DatabaseNotificationQueue {
         .update(notificationQueue)
         .set({
           status: 'processing',
-          processingAt: now,
+          processingAt: new Date(),
         })
         .where(inArray(notificationQueue.id, ids));
 

@@ -31,6 +31,16 @@ export interface RewardNotificationData extends NotificationData {
   reward: number;
 }
 
+export interface MultiUserNotificationData
+  extends Omit<NotificationData, 'userId'> {
+  userId?: string;
+  metadata?: {
+    key?: string;
+    itemProposalId?: number;
+    proposalId?: number;
+  };
+}
+
 export const addNotificationDirect = async (
   notification: NotificationData,
   tx?: any,
@@ -135,6 +145,25 @@ export const createRewardNotification = {
   }),
 };
 
+export const addMultiUserNotification = async (
+  baseData: MultiUserNotificationData,
+  _tx?: any,
+): Promise<void> => {
+  const notificationData = {
+    userId: baseData.userId || '',
+    projectId: baseData.projectId,
+    proposalId: baseData.proposalId,
+    itemProposalId: baseData.itemProposalId,
+    reward: baseData.reward,
+    voter_id: baseData.voter_id,
+    type: baseData.type,
+    _metadata: baseData.metadata,
+    _expandRecipients: true,
+  };
+
+  await notificationQueue.enqueue(notificationData as NotificationData);
+};
+
 export const createNotification = {
   projectPublished: (userId: string, projectId: number): NotificationData => ({
     userId,
@@ -179,17 +208,6 @@ export const createNotification = {
     type: 'itemProposalSupported' as const,
   }),
 
-  itemProposalPassed: (
-    userId: string,
-    projectId: number,
-    itemProposalId: number,
-  ): NotificationData => ({
-    userId,
-    projectId,
-    itemProposalId,
-    type: 'itemProposalPassed' as const,
-  }),
-
   itemProposalBecameLeading: (
     userId: string,
     projectId: number,
@@ -210,5 +228,64 @@ export const createNotification = {
     projectId,
     itemProposalId,
     type: 'itemProposalLostLeading' as const,
+  }),
+};
+
+export const createMultiUserNotification = {
+  itemProposalBecameLeading: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+    key: string,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalBecameLeading',
+    projectId,
+    itemProposalId,
+    userId,
+    metadata: { key, itemProposalId },
+  }),
+
+  itemProposalLostLeading: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+    key: string,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalLostLeading',
+    projectId,
+    itemProposalId,
+    userId,
+    metadata: { key, itemProposalId },
+  }),
+
+  itemProposalPass: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalPass',
+    projectId,
+    itemProposalId,
+    userId,
+  }),
+
+  itemProposalSupported: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalSupported',
+    projectId,
+    itemProposalId,
+    userId,
+  }),
+
+  createItemProposal: (
+    projectId: number,
+    itemProposalId: number,
+  ): MultiUserNotificationData => ({
+    type: 'createItemProposal',
+    projectId,
+    itemProposalId,
   }),
 };
