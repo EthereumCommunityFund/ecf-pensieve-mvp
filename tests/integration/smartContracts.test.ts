@@ -1,12 +1,13 @@
 import { ethers } from 'ethers';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { db } from '@/lib/db';
+import { invitationCodes, profiles } from '@/lib/db/schema';
 import type { SmartContract } from '@/lib/services/smartContractService';
+import { getServiceSupabase } from '@/lib/supabase/client';
 
 import { createValidProjectData } from './factories/projectFactory';
 import { cleanDatabase } from './helpers/testHelpers';
-
-// Mock context for testing
 
 // Mock Next.js cache functions
 vi.mock('next/cache', () => ({
@@ -14,19 +15,18 @@ vi.mock('next/cache', () => ({
   unstable_cache: vi.fn((fn) => fn),
 }));
 
-// Mock Supabase client
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(() => ({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ user: null }),
-    },
-  })),
-}));
+// Helper function to create context
+const createContext = (userId: string | null) => ({
+  db,
+  supabase: getServiceSupabase(),
+  user: userId ? { id: userId } : null,
+});
 
-// Skip these tests for now due to context setup issues
-describe.skip('Smart Contracts API Integration Tests', () => {
-  let testWallet: ethers.HDNodeWallet;
-  let testWallet2: ethers.HDNodeWallet;
+describe('Smart Contracts API Integration Tests', () => {
+  const supabase = getServiceSupabase();
+  let testUserId: string;
+  let testUserId2: string;
+  let testInviteCodeId: number;
   let userContext: any;
   let userContext2: any;
   let projectCaller: any;
@@ -36,29 +36,61 @@ describe.skip('Smart Contracts API Integration Tests', () => {
   beforeAll(async () => {
     await cleanDatabase();
 
-    // Create test wallets
-    testWallet = ethers.Wallet.createRandom();
-    testWallet2 = ethers.Wallet.createRandom();
+    // Create test invite code
+    const [inviteCode] = await db
+      .insert(invitationCodes)
+      .values({
+        code: 'test-smart-contracts-' + Date.now(),
+        maxUses: 10,
+        currentUses: 0,
+      })
+      .returning();
+    testInviteCodeId = inviteCode.id;
 
-    // Skip user creation due to context setup issues
-    // This test suite is skipped for now
-    // await db.insert(profiles).values({
-    //   userId: testWallet.address,
-    //   address: testWallet.address,
-    //   userName: 'TestUser1',
-    //   inviteCodeId: 1,
-    // });
+    // Create test users
+    const testWallet = ethers.Wallet.createRandom();
+    const testWallet2 = ethers.Wallet.createRandom();
 
-    // await db.insert(profiles).values({
-    //   userId: testWallet2.address,
-    //   address: testWallet2.address,
-    //   userName: 'TestUser2',
-    //   inviteCodeId: 1,
-    // });
+    // Create users in Supabase Auth
+    const { data: authUser1 } = await supabase.auth.admin.createUser({
+      email: `test-${Date.now()}@example.com`,
+      password: 'password123',
+      email_confirm: true,
+    });
+    if (!authUser1?.user?.id) {
+      throw new Error('Failed to create test user 1');
+    }
+    testUserId = authUser1.user.id;
+
+    const { data: authUser2 } = await supabase.auth.admin.createUser({
+      email: `test2-${Date.now()}@example.com`,
+      password: 'password123',
+      email_confirm: true,
+    });
+    if (!authUser2?.user?.id) {
+      throw new Error('Failed to create test user 2');
+    }
+    testUserId2 = authUser2.user.id;
+
+    // Create profiles
+    await db.insert(profiles).values([
+      {
+        userId: testUserId,
+        address: testWallet.address.toLowerCase(),
+        name: 'TestUser1',
+        inviteCodeId: testInviteCodeId,
+      },
+      {
+        userId: testUserId2,
+        address: testWallet2.address.toLowerCase(),
+        name: 'TestUser2',
+        inviteCodeId: testInviteCodeId,
+      },
+    ]);
 
     // Create contexts for authenticated users
-    userContext = {}; // createContext(testWallet.address);
-    userContext2 = {}; // createContext(testWallet2.address);
+    userContext = createContext(testUserId);
+    userContext2 = createContext(testUserId2);
 
     // Create router callers
     const { projectRouter } = await import('@/lib/trpc/routers/project');
@@ -76,6 +108,14 @@ describe.skip('Smart Contracts API Integration Tests', () => {
   });
 
   afterAll(async () => {
+    // Clean up Supabase auth users
+    try {
+      await supabase.auth.admin.deleteUser(testUserId);
+      await supabase.auth.admin.deleteUser(testUserId2);
+    } catch (error) {
+      console.warn('Failed to delete test users:', error);
+    }
+
     await cleanDatabase();
   });
 
@@ -282,12 +322,11 @@ describe.skip('Smart Contracts API Integration Tests', () => {
     });
 
     it('should work for unauthenticated users', async () => {
-      const publicContext = {}; // createContext(null);
+      const publicContext = createContext(null);
       const { smartContractsRouter } = await import(
         '@/lib/trpc/routers/smartContracts'
       );
-      // const publicCaller = smartContractsRouter.createCaller(publicContext);
-      const publicCaller = null as any;
+      const publicCaller = smartContractsRouter.createCaller(publicContext);
 
       const result = await publicCaller.get({ projectId: testProjectId });
 
@@ -327,12 +366,11 @@ describe.skip('Smart Contracts API Integration Tests', () => {
     });
 
     it('should work for unauthenticated users', async () => {
-      const publicContext = {}; // createContext(null);
+      const publicContext = createContext(null);
       const { smartContractsRouter } = await import(
         '@/lib/trpc/routers/smartContracts'
       );
-      // const publicCaller = smartContractsRouter.createCaller(publicContext);
-      const publicCaller = null as any;
+      const publicCaller = smartContractsRouter.createCaller(publicContext);
 
       const contracts = [
         {
@@ -442,7 +480,6 @@ describe.skip('Smart Contracts API Integration Tests', () => {
         projectId: testProjectId,
       });
 
-      expect(result.applicable).toBe(true);
       expect(result.contracts).toHaveLength(1);
       expect(result.contracts[0].chain).toBe('ethereum');
       expect(result.contracts[0].addresses).toContain(

@@ -7,9 +7,13 @@ import {
   invitationCodes,
   itemProposals,
   likeRecords,
+  listFollows,
+  listProjects,
+  lists,
   notifications,
   profiles,
   projectLogs,
+  projectNotificationSettings,
   projects,
   projectSnaps,
   proposals,
@@ -79,6 +83,10 @@ export const cleanDatabase = async () => {
   await db.delete(itemProposals);
   await db.delete(proposals);
 
+  await db.delete(listFollows);
+  await db.delete(listProjects);
+  await db.delete(lists);
+  await db.delete(projectNotificationSettings);
   await db.delete(projectSnaps);
   await db.delete(ranks);
   await db.delete(projects);
