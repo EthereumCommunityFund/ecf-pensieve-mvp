@@ -9,14 +9,6 @@ import { notificationCache } from './cache';
 
 export type NotificationMode = 'muted' | 'my_contributions' | 'all_events';
 
-const MY_CONTRIBUTION_NOTIFICATION_TYPES: NotificationType[] = [
-  'itemProposalPass',
-  'itemProposalBecameLeading',
-  'itemProposalLostLeading',
-  'itemProposalSupported',
-  'itemProposalPassed',
-];
-
 export interface UserNotificationSetting {
   userId: string;
   notificationMode: NotificationMode;

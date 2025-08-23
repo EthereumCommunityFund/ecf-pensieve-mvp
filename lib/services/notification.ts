@@ -245,11 +245,13 @@ export const createMultiUserNotification = {
     userId: string,
     projectId: number,
     itemProposalId: number,
+    voterId: string,
   ): MultiUserNotificationData => ({
     type: 'itemProposalSupported',
     projectId,
     itemProposalId,
     userId,
+    voter_id: voterId,
   }),
 
   createItemProposal: (

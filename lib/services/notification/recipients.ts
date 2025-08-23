@@ -14,6 +14,13 @@ export interface NotificationRecipientContext {
   itemProposalId?: number;
 }
 
+export interface UserWithRole {
+  userId: string;
+  isProjectOwner?: boolean;
+  isCreator?: boolean;
+  isVoter?: boolean;
+}
+
 export async function getItemProposalContributors(
   itemProposalId: number,
 ): Promise<{ creator: string; voters: string[] }> {
@@ -61,17 +68,22 @@ async function getProjectOwner(projectId: number): Promise<string | null> {
 
 export async function getNotificationUsers(
   context: NotificationRecipientContext,
-): Promise<string[]> {
+): Promise<UserWithRole[]> {
   const { projectId, notificationType, userId, itemProposalId } = context;
-  const recipients = new Set<string>();
+  const userRoleMap = new Map<string, UserWithRole>();
+
+  const addUserWithRole = (uid: string, role: Partial<UserWithRole>) => {
+    const existing = userRoleMap.get(uid) || { userId: uid };
+    userRoleMap.set(uid, { ...existing, ...role });
+  };
 
   switch (notificationType) {
     case 'createItemProposal': {
       const projectOwner = await getProjectOwner(projectId);
       if (projectOwner) {
-        recipients.add(projectOwner);
+        addUserWithRole(projectOwner, { isProjectOwner: true });
       }
-      return Array.from(recipients);
+      break;
     }
 
     case 'itemProposalSupported':
@@ -79,19 +91,23 @@ export async function getNotificationUsers(
     case 'itemProposalLostLeading': {
       const projectOwner = await getProjectOwner(projectId);
       if (projectOwner) {
-        recipients.add(projectOwner);
+        addUserWithRole(projectOwner, { isProjectOwner: true });
       }
 
       const contributors = await getItemProposalContributors(itemProposalId!);
       if (contributors.creator) {
-        recipients.add(contributors.creator);
+        addUserWithRole(contributors.creator, { isCreator: true });
       }
-      contributors.voters.forEach((voter) => recipients.add(voter));
 
-      return Array.from(recipients);
+      contributors.voters.forEach((voter) => {
+        addUserWithRole(voter, { isVoter: true });
+      });
+      break;
     }
 
     default:
-      return [userId];
+      addUserWithRole(userId, {});
   }
+
+  return Array.from(userRoleMap.values());
 }
