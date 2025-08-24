@@ -94,7 +94,8 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
         >
           <DropdownItem
             key="profileInfo"
-            className="cursor-default p-0 hover:bg-transparent focus:bg-transparent"
+            className="cursor-default p-0  hover:bg-transparent focus:bg-transparent data-[hover=true]:bg-transparent"
+            isReadOnly
           >
             <Copy
               text={profile?.address}
