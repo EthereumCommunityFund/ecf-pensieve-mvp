@@ -45,14 +45,8 @@ describe('Vote Integration Tests', () => {
   }
 
   const testUsers: TestUser[] = [];
-  let testProject: Awaited<
-    ReturnType<(typeof projectRouter)['createCaller']>
-  >['createProject'];
-  let testProposal: Awaited<
-    ReturnType<(typeof projectRouter)['createCaller']>
-  >['getProjectById'] extends PromiseLike<infer U>
-    ? U['proposals'][number]
-    : any;
+  let testProject: any;
+  let testProposal: any;
 
   // Helper functions
   const createContext = (userId: string | null) => ({
