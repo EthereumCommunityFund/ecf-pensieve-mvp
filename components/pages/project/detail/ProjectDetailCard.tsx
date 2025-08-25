@@ -70,7 +70,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
         <BookmarkButton projectId={project.id} />
         {project.shortCode && <ShareButton shortCode={project.shortCode} />}
-        <NotificationConfigDropdown />
+        <NotificationConfigDropdown projectId={project.id} />
       </div>
     </div>
   );

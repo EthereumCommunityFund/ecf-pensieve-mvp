@@ -1,18 +1,25 @@
 'use client';
 
 import {
+  cn,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  cn,
+  Spinner,
 } from '@heroui/react';
-import { FC, useCallback, useState } from 'react';
+import { FC, memo, useCallback, useEffect, useState } from 'react';
 
-import { Button } from '@/components/base';
+import { addToast, Button } from '@/components/base';
 import { EyeIcon } from '@/components/icons/EyeIcon';
+import {
+  NotificationConfigDropdownProps,
+  NotificationMode,
+} from '@/components/pages/project/detail/notification/notification';
+import { getErrorMessage } from '@/components/pages/project/detail/notification/notificationError';
+import { useAuth } from '@/context/AuthContext';
 
-type NotificationType = 'myContributions' | 'allEvents';
+import { useNotificationSettings } from './useNotificationSettings';
 
 const CheckboxIcon = ({ checked }: { checked: boolean }) => {
   return checked ? (
@@ -115,33 +122,80 @@ const CheckIcon = ({ checked }: { checked: boolean }) => {
   );
 };
 
-interface IProps {
-  className?: string;
-}
-
-const NotificationConfigDropdown: FC<IProps> = ({ className = '' }) => {
+const NotificationConfigDropdown: FC<NotificationConfigDropdownProps> = ({
+  projectId,
+  className = '',
+  disabled = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [selectedType, setSelectedType] =
-    useState<NotificationType>('myContributions');
+  const { profile } = useAuth();
 
-  const selectMyContribution = selectedType === 'myContributions';
-  const selectAllEvent = selectedType === 'allEvents';
+  // Use the notification settings hook
+  const { setting, isLoading, error, updateSetting, isUpdating } =
+    useNotificationSettings(projectId);
 
+  // Determine the current notification mode
+  const currentMode = setting?.notificationMode || 'all_events';
+  const isMuted = currentMode === 'muted';
+  const selectMyContribution = currentMode === 'my_contributions';
+  const selectAllEvent = currentMode === 'all_events';
+
+  // Handle mute all toggle
   const onMuteAll = useCallback(() => {
-    setIsMuted((pre) => !pre);
-    setTimeout(() => setIsOpen(false), 100);
-  }, []);
+    const newMode: NotificationMode = isMuted ? 'all_events' : 'muted';
+    updateSetting(newMode);
 
+    addToast({
+      title: isMuted
+        ? 'Notifications enabled for all events'
+        : 'All notifications muted',
+      color: 'success',
+    });
+
+    // Close dropdown after a short delay
+    setTimeout(() => setIsOpen(false), 500);
+  }, [isMuted, updateSetting]);
+
+  // Handle notification type selection
   const onCheck = useCallback(
-    (type: NotificationType) => {
-      if (isMuted) return;
-      setSelectedType(type);
+    (type: 'myContributions' | 'allEvents') => {
+      const modeMap: Record<string, NotificationMode> = {
+        myContributions: 'my_contributions',
+        allEvents: 'all_events',
+      };
+
+      updateSetting(modeMap[type]);
+
+      const messageMap = {
+        myContributions: 'Notifications set to your contributions only',
+        allEvents: 'Notifications enabled for all events',
+      };
+
+      addToast({
+        title: messageMap[type],
+        color: 'success',
+      });
+
       // Close dropdown after selection
-      setTimeout(() => setIsOpen(false), 100);
+      setTimeout(() => setIsOpen(false), 500);
     },
-    [isMuted],
+    [updateSetting],
   );
+
+  // Show error if any
+  useEffect(() => {
+    if (error) {
+      addToast({
+        title: getErrorMessage(error),
+        color: 'danger',
+      });
+    }
+  }, [error]);
+
+  // Don't show the button if user is not logged in
+  if (!profile) {
+    return null;
+  }
 
   return (
     <Dropdown
@@ -155,6 +209,8 @@ const NotificationConfigDropdown: FC<IProps> = ({ className = '' }) => {
       <DropdownTrigger>
         <Button
           isIconOnly
+          disabled={disabled || isLoading}
+          isLoading={isLoading}
           className={cn(
             'rounded-[4px] bg-black/5 hover:bg-black/10 size-[40px] p-[8px] mobile:size-[32px] mobile:p-[6px]',
             className,
@@ -195,30 +251,43 @@ const NotificationConfigDropdown: FC<IProps> = ({ className = '' }) => {
                       Mute All Notifications
                     </span>
                     <span className="text-[12px] text-black/70">
-                      Notify me of all activity for this project page
+                      Stop receiving notifications for this project
                     </span>
                   </div>
-                  <div onClick={onMuteAll} className="cursor-pointer">
-                    <CheckboxIcon checked={isMuted} />
-                  </div>
+                  <button
+                    onClick={onMuteAll}
+                    className="cursor-pointer disabled:opacity-50"
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? (
+                      <Spinner size="sm" className="size-[24px]" />
+                    ) : (
+                      <CheckboxIcon checked={isMuted} />
+                    )}
+                  </button>
                 </div>
               </div>
 
               {/* Options */}
               <div
                 className={cn(
-                  isMuted ? 'opacity-50' : '',
+                  isUpdating ? 'opacity-50' : '',
                   'flex flex-col gap-[10px]',
                 )}
               >
                 {/* Only my contributions in-page */}
-                <div
+                <button
                   className={cn(
-                    'rounded-md border border-black/10 transition-colors',
-                    selectMyContribution ? 'bg-[#F5F5F5]' : 'bg-white',
-                    isMuted ? 'cursor-not-allowed' : 'cursor-pointer ',
+                    'rounded-md border border-black/10 transition-colors text-left w-full',
+                    selectMyContribution && !isMuted
+                      ? 'bg-[#F5F5F5]'
+                      : 'bg-white',
+                    isUpdating
+                      ? 'cursor-not-allowed'
+                      : 'cursor-pointer hover:bg-gray-50',
                   )}
                   onClick={() => onCheck('myContributions')}
+                  disabled={isUpdating}
                 >
                   <div className="flex items-center justify-between px-[14px] py-[10px]">
                     <div className="flex flex-col gap-[5px]">
@@ -232,16 +301,19 @@ const NotificationConfigDropdown: FC<IProps> = ({ className = '' }) => {
                     </div>
                     <CheckIcon checked={selectMyContribution && !isMuted} />
                   </div>
-                </div>
+                </button>
 
                 {/* All events in project */}
-                <div
+                <button
                   className={cn(
-                    'rounded-md border border-black/10 transition-colors',
-                    selectAllEvent ? 'bg-[#F5F5F5]' : 'bg-white',
-                    isMuted ? 'cursor-not-allowed' : 'cursor-pointer ',
+                    'rounded-md border border-black/10 transition-colors text-left w-full',
+                    selectAllEvent && !isMuted ? 'bg-[#F5F5F5]' : 'bg-white',
+                    isUpdating
+                      ? 'cursor-not-allowed'
+                      : 'cursor-pointer hover:bg-gray-50',
                   )}
                   onClick={() => onCheck('allEvents')}
+                  disabled={isUpdating}
                 >
                   <div className="flex items-center justify-between px-[14px] py-[10px]">
                     <div className="flex flex-col gap-[5px]">
@@ -254,7 +326,7 @@ const NotificationConfigDropdown: FC<IProps> = ({ className = '' }) => {
                     </div>
                     <CheckIcon checked={selectAllEvent && !isMuted} />
                   </div>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -264,4 +336,4 @@ const NotificationConfigDropdown: FC<IProps> = ({ className = '' }) => {
   );
 };
 
-export default NotificationConfigDropdown;
+export default memo(NotificationConfigDropdown);
