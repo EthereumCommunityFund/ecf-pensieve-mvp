@@ -18,8 +18,8 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
-import { createItemValidationSchema } from '@/utils/schema';
 import { getDefaultValueByFormType, isEmbedTableFormType } from '@/utils/item';
+import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import AddReferenceModal from '../../create/AddReferenceModal';

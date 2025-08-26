@@ -257,7 +257,7 @@ const affiliatedProjectsSchema: yup.ObjectSchema<IAffiliatedProject> = yup
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
-    _id: yup.string().optional(),
+    _id: yup.string().required(),
   });
 
 export const itemValidationSchemas = {
