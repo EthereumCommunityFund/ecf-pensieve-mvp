@@ -1,6 +1,5 @@
 import { POC_ITEMS } from '@/lib/pocItems';
-
-import { AffiliationType } from './affiliatedProjects';
+import { AffiliationType } from '@/components/pages/project/create/form/AffiliatedProjectsTableItem';
 
 type FilterEssentialKeys<T> = {
   [K in keyof T]: T[K] extends { isEssential: true } ? K : never;
