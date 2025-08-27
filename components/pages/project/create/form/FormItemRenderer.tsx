@@ -1,4 +1,4 @@
-import { Avatar, cn, Tooltip } from '@heroui/react';
+import { Avatar, Tooltip } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import React, { useCallback, useMemo } from 'react';
@@ -16,8 +16,20 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
+import InputPrefix from '@/components/biz/FormAndTable/InputPrefix';
+import PhotoUpload from '@/components/biz/FormAndTable/PhotoUpload';
 import { MultiContractEntry } from '@/components/biz/project/smart-contracts';
 import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
+import {
+  DYNAMIC_FIELDS_CONFIG,
+  isDynamicFieldType,
+} from '@/components/biz/table/embedTable/dynamicFieldsConfig';
+import DynamicFieldTable from '@/components/biz/table/embedTable/DynamicFieldTable';
+import FounderFormItemTable from '@/components/biz/table/embedTable/item/FounderFormItemTable';
+import PhysicalEntityFormItemTable from '@/components/biz/table/embedTable/item/PhysicalEntityFormItemTable';
+import SocialLinkFormItemTable from '@/components/biz/table/embedTable/item/SocialLinkFormItemTable';
+import WebsiteFormItemTable from '@/components/biz/table/embedTable/item/WebsiteFormItemTable';
+import { useAllDynamicFieldArrays } from '@/components/biz/table/embedTable/useAllDynamicFieldArrays';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
@@ -28,22 +40,6 @@ import {
 } from '@/utils/formatters';
 
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
-
-import AffiliatedProjectsTableItem from './AffiliatedProjectsTableItem';
-import ContributingTeamsTableItem from './ContributingTeamsTableItem';
-import FounderFormItemTable from './FounderFormItemTable';
-import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
-import InputPrefix from './InputPrefix';
-import PhotoUpload from './PhotoUpload';
-import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
-import SocialLinkFormItemTable from './SocialLinkFormItemTable';
-import StackIntegrationsTableItem from './StackIntegrationsTableItem';
-import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
-import { useAffiliatedProjects } from './useAffiliatedProjects';
-import { useContributingTeams } from './useContributingTeams';
-import { useFundingReceivedGrants } from './useFundingReceivedGrants';
-import { useStackIntegrations } from './useStackIntegrations';
-import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
@@ -119,49 +115,36 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     [field],
   );
 
-  const {
-    fields: fundingFields,
-    handleAddField: handleAddFundingField,
-    handleRemoveField: handleRemoveFundingField,
-  } = useFundingReceivedGrants({
+  // Use optimized dynamic field arrays management
+  const dynamicFieldsMap = useAllDynamicFieldArrays({
     control,
     formDisplayType,
     fieldName: field.name as any,
   });
 
-  const {
-    fields: affiliatedFields,
-    handleAddField: handleAddAffiliatedField,
-    handleRemoveField: handleRemoveAffiliatedField,
-  } = useAffiliatedProjects({
-    control,
-    formDisplayType,
-    fieldName: field.name as any,
-  });
-
-  const {
-    fields: contributingFields,
-    handleAddField: handleAddContributingField,
-    handleRemoveField: handleRemoveContributingField,
-  } = useContributingTeams({
-    control,
-    formDisplayType,
-    fieldName: field.name as any,
-  });
-
-  const {
-    fields: stackFields,
-    handleAddField: handleAddStackField,
-    handleRemoveField: handleRemoveStackField,
-  } = useStackIntegrations({
-    control,
-    formDisplayType,
-    fieldName: field.name as any,
-  });
+  // Get handlers for the current form type (if it's a dynamic type)
+  const dynamicHandlers = isDynamicFieldType(formDisplayType)
+    ? dynamicFieldsMap[formDisplayType]
+    : undefined;
 
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
+
+  // Handle dynamic field types with unified approach
+  if (isDynamicFieldType(formDisplayType) && dynamicHandlers) {
+    const config = DYNAMIC_FIELDS_CONFIG[formDisplayType];
+    return (
+      <DynamicFieldTable
+        config={config}
+        fields={dynamicHandlers.fields}
+        onAdd={dynamicHandlers.handleAddField}
+        onRemove={dynamicHandlers.handleRemoveField}
+        itemKey={field.name}
+        errorMessage={errorMessageElement}
+      />
+    );
+  }
 
   switch (formDisplayType) {
     case 'string':
@@ -835,356 +818,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               >
                 <PlusIcon size={16} />
                 Add Physical Entity
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
-    }
-
-    case 'fundingReceivedGrants': {
-      return (
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
-          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex h-full w-[158px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Date
-                  </span>
-                  <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
-                </div>
-              </div>
-              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Organization/Program
-                  </span>
-                  <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
-                </div>
-              </div>
-              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Project Donator
-                  </span>
-                  <TooltipWithQuestionIcon content="Projects that have donated to this funding round or acted as sponsors" />
-                </div>
-              </div>
-              <div className="flex h-full w-[138px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="shrink-0 text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Amount (USD)
-                  </span>
-                  <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
-                </div>
-              </div>
-              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Expense Sheet
-                  </span>
-                  <TooltipWithQuestionIcon content="Link to detailed expense breakdown showing how the grant funds were utilized" />
-                </div>
-              </div>
-              <div
-                className={cn(
-                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
-                  fundingFields.length > 1 ? 'border-r border-black/10' : '',
-                )}
-              >
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Reference
-                  </span>
-                  <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
-                </div>
-              </div>
-              {fundingFields.length > 1 && (
-                <div className="flex h-full w-[60px] items-center justify-center">
-                  {/* Actions column header */}
-                </div>
-              )}
-            </div>
-            {fundingFields.map((field, index) => {
-              return (
-                <FundingReceivedGrantsTableItem
-                  key={field.fieldId}
-                  field={field}
-                  index={index}
-                  remove={() => handleRemoveFundingField(index)}
-                  itemKey={'funding_received_grants'}
-                  canRemove={fundingFields.length > 1}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleAddFundingField();
-                }}
-              >
-                <PlusIcon size={16} />
-                Add an Entity
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
-    }
-
-    case 'affiliated_projects': {
-      return (
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
-          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Project
-                  </span>
-                  <TooltipWithQuestionIcon content="The project that has an affiliation with this project" />
-                </div>
-              </div>
-              <div className="flex h-full w-[180px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Affiliation Type
-                  </span>
-                  <TooltipWithQuestionIcon content="The type of relationship between the projects" />
-                </div>
-              </div>
-              <div className="flex h-full w-[250px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Description
-                  </span>
-                  <TooltipWithQuestionIcon content="Description of the affiliation relationship" />
-                </div>
-              </div>
-              <div
-                className={cn(
-                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
-                  affiliatedFields.length > 1 ? 'border-r border-black/10' : '',
-                )}
-              >
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Reference
-                  </span>
-                  <TooltipWithQuestionIcon content="Reference link for more information about this affiliation" />
-                </div>
-              </div>
-              {affiliatedFields.length > 1 && (
-                <div className="flex h-full w-[60px] items-center justify-center">
-                  {/* Actions column header */}
-                </div>
-              )}
-            </div>
-            {affiliatedFields.map((field, index) => {
-              return (
-                <AffiliatedProjectsTableItem
-                  key={field.fieldId}
-                  field={field}
-                  index={index}
-                  remove={() => handleRemoveAffiliatedField(index)}
-                  itemKey={'affiliated_projects'}
-                  canRemove={affiliatedFields.length > 1}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleAddAffiliatedField();
-                }}
-              >
-                <PlusIcon size={16} />
-                Add an Entry
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
-    }
-
-    case 'contributing_teams': {
-      return (
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
-          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Project
-                  </span>
-                  <TooltipWithQuestionIcon content="The team or organization that contributed to this project" />
-                </div>
-              </div>
-              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Area of Contribution
-                  </span>
-                  <TooltipWithQuestionIcon content="The type of contribution provided" />
-                </div>
-              </div>
-              <div className="flex h-full w-[250px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Description
-                  </span>
-                  <TooltipWithQuestionIcon content="Description of the contribution" />
-                </div>
-              </div>
-              <div
-                className={cn(
-                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
-                  contributingFields.length > 1
-                    ? 'border-r border-black/10'
-                    : '',
-                )}
-              >
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Reference
-                  </span>
-                  <TooltipWithQuestionIcon content="Reference link for more information about this contribution" />
-                </div>
-              </div>
-              {contributingFields.length > 1 && (
-                <div className="flex h-full w-[60px] items-center justify-center">
-                  {/* Actions column header */}
-                </div>
-              )}
-            </div>
-            {contributingFields.map((field, index) => {
-              return (
-                <ContributingTeamsTableItem
-                  key={field.fieldId}
-                  field={field}
-                  index={index}
-                  remove={() => handleRemoveContributingField(index)}
-                  itemKey={'contributing_teams'}
-                  canRemove={contributingFields.length > 1}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleAddContributingField();
-                }}
-              >
-                <PlusIcon size={16} />
-                Add an Entry
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
-    }
-
-    case 'stack_integrations': {
-      return (
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
-          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex h-full w-[240px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Project
-                  </span>
-                  <TooltipWithQuestionIcon content="The project or technology integrated with this project" />
-                </div>
-              </div>
-              <div className="flex h-full w-[180px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Type
-                  </span>
-                  <TooltipWithQuestionIcon content="The type of integration or dependency" />
-                </div>
-              </div>
-              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Description
-                  </span>
-                  <TooltipWithQuestionIcon content="Description of the integration" />
-                </div>
-              </div>
-              <div className="flex h-full w-[180px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Reference
-                  </span>
-                  <TooltipWithQuestionIcon content="Reference link for more information" />
-                </div>
-              </div>
-              <div
-                className={cn(
-                  'flex h-full w-[180px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
-                  stackFields.length > 1 ? 'border-r border-black/10' : '',
-                )}
-              >
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Repository
-                  </span>
-                  <TooltipWithQuestionIcon content="Repository link for the integration" />
-                </div>
-              </div>
-              {stackFields.length > 1 && (
-                <div className="flex h-full w-[60px] items-center justify-center">
-                  {/* Actions column header */}
-                </div>
-              )}
-            </div>
-            {stackFields.map((field, index) => {
-              return (
-                <StackIntegrationsTableItem
-                  key={field.fieldId}
-                  field={field}
-                  index={index}
-                  remove={() => handleRemoveStackField(index)}
-                  itemKey={'stack_integrations'}
-                  canRemove={stackFields.length > 1}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleAddStackField();
-                }}
-              >
-                <PlusIcon size={16} />
-                Add an Entry
               </button>
             </div>
           </div>
