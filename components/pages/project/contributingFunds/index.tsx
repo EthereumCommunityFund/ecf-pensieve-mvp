@@ -2,35 +2,45 @@
 
 import { FC } from 'react';
 
-import ECFTypography from '@/components/base/typography';
-import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
+import GivenGrantsTable from './table/GivenGrantsTable';
+import ReceivedGrantsTable from './table/ReceivedGrantsTable';
 
-interface ReviewProps {
+interface ContributingFundsProps {
   projectId: number;
 }
 
-const Review: FC<ReviewProps> = ({ projectId }) => {
-  const {
-    project,
-    isProjectFetched,
-    getLeadingProjectName,
-    getLeadingTagline,
-    getLeadingCategories,
-    getLeadingLogoUrl,
-    displayProposalDataListOfProject,
-    leadingProposals,
-    isLeadingProposalsFetched,
-  } = useProjectDetailContext();
+const ContributingFunds: FC<ContributingFundsProps> = ({ projectId }) => {
+  // Context is available but not used in this UI-only implementation
+  // const { project } = useProjectDetailContext();
 
   return (
-    <div className="tablet:px-[10px] mobile:px-[10px] mt-[20px] px-[160px] pt-[20px]">
-      <div className="flex h-[200px] items-center justify-center">
-        <ECFTypography type="subtitle1">
-          Review content will be available soon
-        </ECFTypography>
-      </div>
+    <div className="mt-[40px] px-[20px] ">
+      {/* Page Title and Description */}
+      {/* <div className="mb-[32px]">
+        <div className="flex items-center gap-[12px]">
+          <Button
+            size="sm"
+            variant="bordered"
+            className="h-[36px] rounded-[8px] border-black/10 bg-white px-[16px] text-[14px] font-[500] text-black hover:bg-black/5"
+          >
+            View Item
+          </Button>
+          <Button
+            size="sm"
+            className="h-[36px] rounded-[8px] bg-black px-[16px] text-[14px] font-[500] text-white hover:bg-black/90"
+          >
+            Propose Entry
+          </Button>
+        </div>
+      </div> */}
+
+      {/* Given (Grants) Section */}
+      <GivenGrantsTable projectId={projectId} />
+
+      {/* Received (Grants) Section */}
+      <ReceivedGrantsTable projectId={projectId} />
     </div>
   );
 };
 
-export default Review;
+export default ContributingFunds;

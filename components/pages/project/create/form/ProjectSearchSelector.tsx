@@ -16,16 +16,16 @@ import {
   ShieldStarIcon,
 } from '@/components/icons';
 import { XCircleSolidIcon } from '@/components/icons/XCircle';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { NA_VALUE } from '@/constants/naSelection';
 import { useNASelection } from '@/hooks/useNASelection';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { useProjectsByIds } from '@/hooks/useProjectsByIds';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { idsArrayEqual } from '@/utils/formHelpers';
-import { AllItemConfig } from '@/constants/itemConfig';
-import { IPocItemKey } from '@/types/item';
 
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 
