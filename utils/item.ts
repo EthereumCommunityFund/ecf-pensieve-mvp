@@ -110,6 +110,8 @@ export const isEmbedTableFormType = (formDisplayType: IFormDisplayType) => {
       formDisplayType === 'websites' ||
       formDisplayType === 'social_links' ||
       formDisplayType === 'affiliated_projects' ||
+      formDisplayType === 'contributing_teams' ||
+      formDisplayType === 'stack_integrations' ||
       formDisplayType === 'tablePhysicalEntity' ||
       formDisplayType === 'multiContracts' ||
       formDisplayType === 'fundingReceivedGrants')
@@ -143,6 +145,23 @@ export const getDefaultEmbedTableFormItemValue = (
         affiliationType: '',
         description: '',
         reference: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'contributing_teams':
+      return {
+        project: '',
+        type: '',
+        description: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'stack_integrations':
+      return {
+        project: '',
+        type: '',
+        description: '',
+        reference: '',
+        repository: '',
         _id: crypto.randomUUID(),
       };
     case 'multiContracts':

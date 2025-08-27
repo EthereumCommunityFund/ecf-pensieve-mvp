@@ -1,6 +1,6 @@
 'use client';
 
-import { Image, Skeleton } from '@heroui/react';
+import { cn, Image, Skeleton } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -24,6 +24,8 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { devLog } from '@/utils/devLog';
 import { idsArrayEqual } from '@/utils/formHelpers';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { IPocItemKey } from '@/types/item';
 
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 
@@ -41,6 +43,8 @@ interface ProjectSearchSelectorProps {
   multiple?: boolean; // 是否启用多选模式
   allowNA?: boolean; // 是否显示 N/A 选项
   naLabel?: string; // N/A 按钮文本
+  itemKey: IPocItemKey;
+  searchModalTitle?: string;
 }
 
 interface SearchProjectItemProps {
@@ -172,9 +176,11 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   error,
   placeholder = 'Search or select organization',
   multiple = false,
-  columnName = 'Organization/Program',
   allowNA = false,
   naLabel = 'N/A',
+  searchModalTitle,
+  itemKey,
+  columnName = 'project',
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,6 +196,10 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     onChange,
     multiple,
   );
+
+  const itemLabel = useMemo(() => {
+    return AllItemConfig[itemKey]?.label;
+  }, [itemKey]);
 
   // Use hook to fetch project data by IDs in multiple mode
   // Memoize projectIds to avoid unnecessary re-renders
@@ -402,7 +412,14 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
               ) : (
                 <div className="flex items-center">
                   <SearchIcon size={16} className="mr-2 text-black/60" />
-                  <span className="text-[13px] font-normal text-black/60">
+                  <span
+                    className={cn(
+                      'text-[13px] font-[600] ',
+                      value
+                        ? 'text-black font-[600]'
+                        : 'text-black/70 font-[400]',
+                    )}
+                  >
                     {(!multiple &&
                     typeof value === 'string' &&
                     value !== NA_VALUE
@@ -461,7 +478,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
               <div className="flex items-center gap-[10px]">
                 <div className="flex items-center gap-[10px] rounded-[5px] border-none bg-[rgb(245,245,245)] px-[10px] py-[4px]">
                   <span className="text-[14px] font-semibold text-black">
-                    Funding Received (Grants):
+                    {itemLabel || searchModalTitle || 'Search'}:
                   </span>
                   <div className="flex items-center gap-[5px] opacity-60">
                     <span className="text-[14px] font-semibold text-[rgb(51,51,51)]">

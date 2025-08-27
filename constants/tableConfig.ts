@@ -141,12 +141,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'dateFounded',
           'dateLaunch',
         ],
-        itemsNotEssential: [
-          'adoption_plan',
-          'launch_plan',
-          'social_links',
-          'affiliated_projects',
-        ],
+        itemsNotEssential: ['adoption_plan', 'launch_plan', 'social_links'],
         groups: [],
       },
     ],
@@ -169,6 +164,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'audit_status',
           'dapp_category',
           'protocol_built_on',
+          'stack_integrations',
         ],
         groups: [
           {
@@ -194,6 +190,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         label: 'Organization',
         description: 'How the project is organized legally and operationally',
         items: ['orgStructure', 'publicGoods'],
+        itemsNotEssential: ['affiliated_projects', 'contributing_teams'],
         groups: [],
       },
       {

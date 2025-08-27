@@ -30,15 +30,19 @@ import {
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
 
 import AffiliatedProjectsTableItem from './AffiliatedProjectsTableItem';
+import ContributingTeamsTableItem from './ContributingTeamsTableItem';
 import FounderFormItemTable from './FounderFormItemTable';
 import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
 import InputPrefix from './InputPrefix';
 import PhotoUpload from './PhotoUpload';
 import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
 import SocialLinkFormItemTable from './SocialLinkFormItemTable';
+import StackIntegrationsTableItem from './StackIntegrationsTableItem';
 import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
 import { useAffiliatedProjects } from './useAffiliatedProjects';
+import { useContributingTeams } from './useContributingTeams';
 import { useFundingReceivedGrants } from './useFundingReceivedGrants';
+import { useStackIntegrations } from './useStackIntegrations';
 import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
@@ -130,6 +134,26 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     handleAddField: handleAddAffiliatedField,
     handleRemoveField: handleRemoveAffiliatedField,
   } = useAffiliatedProjects({
+    control,
+    formDisplayType,
+    fieldName: field.name as any,
+  });
+
+  const {
+    fields: contributingFields,
+    handleAddField: handleAddContributingField,
+    handleRemoveField: handleRemoveContributingField,
+  } = useContributingTeams({
+    control,
+    formDisplayType,
+    fieldName: field.name as any,
+  });
+
+  const {
+    fields: stackFields,
+    handleAddField: handleAddStackField,
+    handleRemoveField: handleRemoveStackField,
+  } = useStackIntegrations({
     control,
     formDisplayType,
     fieldName: field.name as any,
@@ -984,6 +1008,178 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                   e.preventDefault();
                   e.stopPropagation();
                   handleAddAffiliatedField();
+                }}
+              >
+                <PlusIcon size={16} />
+                Add an Entry
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'contributing_teams': {
+      return (
+        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
+          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Project
+                  </span>
+                  <TooltipWithQuestionIcon content="The team or organization that contributed to this project" />
+                </div>
+              </div>
+              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Area of Contribution
+                  </span>
+                  <TooltipWithQuestionIcon content="The type of contribution provided" />
+                </div>
+              </div>
+              <div className="flex h-full w-[250px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Description
+                  </span>
+                  <TooltipWithQuestionIcon content="Description of the contribution" />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
+                  contributingFields.length > 1
+                    ? 'border-r border-black/10'
+                    : '',
+                )}
+              >
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Reference
+                  </span>
+                  <TooltipWithQuestionIcon content="Reference link for more information about this contribution" />
+                </div>
+              </div>
+              {contributingFields.length > 1 && (
+                <div className="flex h-full w-[60px] items-center justify-center">
+                  {/* Actions column header */}
+                </div>
+              )}
+            </div>
+            {contributingFields.map((field, index) => {
+              return (
+                <ContributingTeamsTableItem
+                  key={field.fieldId}
+                  field={field}
+                  index={index}
+                  remove={() => handleRemoveContributingField(index)}
+                  itemKey={'contributing_teams'}
+                  canRemove={contributingFields.length > 1}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleAddContributingField();
+                }}
+              >
+                <PlusIcon size={16} />
+                Add an Entry
+              </button>
+            </div>
+          </div>
+          {errorMessageElement}
+        </div>
+      );
+    }
+
+    case 'stack_integrations': {
+      return (
+        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
+          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
+            {/* Table header */}
+            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
+              <div className="flex h-full w-[240px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Project
+                  </span>
+                  <TooltipWithQuestionIcon content="The project or technology integrated with this project" />
+                </div>
+              </div>
+              <div className="flex h-full w-[180px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Type
+                  </span>
+                  <TooltipWithQuestionIcon content="The type of integration or dependency" />
+                </div>
+              </div>
+              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Description
+                  </span>
+                  <TooltipWithQuestionIcon content="Description of the integration" />
+                </div>
+              </div>
+              <div className="flex h-full w-[180px] shrink-0 items-center border-r border-black/10 px-[10px]">
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Reference
+                  </span>
+                  <TooltipWithQuestionIcon content="Reference link for more information" />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  'flex h-full w-[180px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
+                  stackFields.length > 1 ? 'border-r border-black/10' : '',
+                )}
+              >
+                <div className="flex items-center gap-[5px]">
+                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                    Repository
+                  </span>
+                  <TooltipWithQuestionIcon content="Repository link for the integration" />
+                </div>
+              </div>
+              {stackFields.length > 1 && (
+                <div className="flex h-full w-[60px] items-center justify-center">
+                  {/* Actions column header */}
+                </div>
+              )}
+            </div>
+            {stackFields.map((field, index) => {
+              return (
+                <StackIntegrationsTableItem
+                  key={field.fieldId}
+                  field={field}
+                  index={index}
+                  remove={() => handleRemoveStackField(index)}
+                  itemKey={'stack_integrations'}
+                  canRemove={stackFields.length > 1}
+                />
+              );
+            })}
+            <div className="bg-[#F5F5F5] p-[10px]">
+              <button
+                type="button"
+                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleAddStackField();
                 }}
               >
                 <PlusIcon size={16} />
