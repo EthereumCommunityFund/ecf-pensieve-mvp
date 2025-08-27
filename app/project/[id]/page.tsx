@@ -22,8 +22,8 @@ import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
   { key: 'profile', label: 'Profile' },
-  { key: 'ecosystem', label: 'Ecosystem' },
   { key: 'contributing-funds', label: 'Contributing Funds' },
+  { key: 'ecosystem', label: 'Ecosystem' },
 ];
 
 export type ITabKey = 'profile' | 'ecosystem' | 'contributing-funds';
