@@ -5,7 +5,10 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import { AddressDisplay } from '@/components/base/AddressDisplay';
 import { TableIcon } from '@/components/icons';
+import { AFFILIATION_TYPE_OPTIONS } from '@/components/pages/project/create/form/AffiliatedProjectsTableItem';
+import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/pages/project/create/form/ContributingTeamsTableItem';
 import { SelectedProjectTag } from '@/components/pages/project/create/form/ProjectSearchSelector';
+import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/pages/project/create/form/StackIntegrationsTableItem';
 import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
@@ -22,6 +25,16 @@ import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
+
+// Helper function to get label from options
+const getOptionLabel = (
+  value: string | undefined,
+  options: Array<{ value: string; label: string }>,
+): string => {
+  if (!value) return '-';
+  const option = options.find((opt) => opt.value === value);
+  return option ? option.label : value;
+};
 
 interface IProps {
   itemKey: IPocItemKey;
@@ -46,7 +59,7 @@ const InputContentRenderer: React.FC<IProps> = ({
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
-  // For fundingReceivedGrants and affiliated_projects, extract project IDs
+  // For fundingReceivedGrants, affiliated_projects, contributing_teams, and stack_integrations, extract project IDs
   const projectIds = useMemo(() => {
     if (displayFormType === 'fundingReceivedGrants') {
       const parsed = parseValue(formatValue);
@@ -89,16 +102,56 @@ const InputContentRenderer: React.FC<IProps> = ({
       return [...new Set(ids)]; // Remove duplicates
     }
 
+    if (displayFormType === 'contributing_teams') {
+      const parsed = parseValue(formatValue);
+      if (!parsed || !Array.isArray(parsed)) return [];
+
+      const ids: string[] = [];
+      parsed.forEach((item: any) => {
+        // Extract from project field
+        if (item.project) {
+          if (Array.isArray(item.project)) {
+            ids.push(...item.project);
+          } else if (typeof item.project === 'string' && item.project) {
+            ids.push(item.project);
+          }
+        }
+      });
+
+      return [...new Set(ids)]; // Remove duplicates
+    }
+
+    if (displayFormType === 'stack_integrations') {
+      const parsed = parseValue(formatValue);
+      if (!parsed || !Array.isArray(parsed)) return [];
+
+      const ids: string[] = [];
+      parsed.forEach((item: any) => {
+        // Extract from project field
+        if (item.project) {
+          if (Array.isArray(item.project)) {
+            ids.push(...item.project);
+          } else if (typeof item.project === 'string' && item.project) {
+            ids.push(item.project);
+          }
+        }
+      });
+
+      return [...new Set(ids)]; // Remove duplicates
+    }
+
     return [];
   }, [displayFormType, formatValue]);
 
-  // Fetch project names for organizations and affiliated projects
+  // Fetch project names for organizations, affiliated projects, contributing teams, and stack integrations
   const { projectsMap, isLoading: isLoadingProjects } = useProjectNamesByIds(
     projectIds,
     {
       enabled:
         (displayFormType === 'fundingReceivedGrants' ||
-          displayFormType === 'affiliated_projects') &&
+          displayFormType === 'affiliated_projects' ||
+          displayFormType === 'contributing_teams' ||
+          displayFormType === 'stack_integrations') &&
         projectIds.length > 0,
     },
   );
@@ -1285,7 +1338,10 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {item.affiliationType || '-'}
+                            {getOptionLabel(
+                              item.affiliationType,
+                              AFFILIATION_TYPE_OPTIONS,
+                            )}
                           </TableCell>
                           <TableCell
                             width={250}
@@ -1351,7 +1407,407 @@ const InputContentRenderer: React.FC<IProps> = ({
                   const projectName = Array.isArray(item.project)
                     ? item.project.join(', ')
                     : item.project;
-                  return `${projectName} - ${item.affiliationType}: ${item.description}${item.reference ? ` - ${item.reference}` : ''}`;
+                  const typeLabel = getOptionLabel(
+                    item.affiliationType,
+                    AFFILIATION_TYPE_OPTIONS,
+                  );
+                  return `${projectName} - ${typeLabel}: ${item.description}${item.reference ? ` - ${item.reference}` : ''}`;
+                },
+              )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'contributing_teams': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project</span>
+                          <TooltipWithQuestionIcon content="The team or organization that contributed to this project" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={200} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Area of Contribution</span>
+                          <TooltipWithQuestionIcon content="The type of contribution provided" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={250} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Description</span>
+                          <TooltipWithQuestionIcon content="Description of the contribution" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Reference</span>
+                          <TooltipWithQuestionIcon content="Reference link for more information about this contribution" />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        item: {
+                          project: string | string[];
+                          type: string;
+                          description?: string;
+                          reference?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {(() => {
+                              if (!item.project) return 'N/A';
+
+                              // Check if it's a string
+                              if (typeof item.project === 'string') {
+                                if (item.project === 'N/A') return 'N/A';
+                                return item.project;
+                              }
+
+                              // Array of project IDs
+                              if (Array.isArray(item.project)) {
+                                if (isLoadingProjects) {
+                                  return (
+                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
+                                  );
+                                }
+
+                                const projects = (item.project as string[])
+                                  .map((id: string) => {
+                                    const numId = parseInt(id, 10);
+                                    const projectData = projectsMap?.get(numId);
+                                    return projectData || null;
+                                  })
+                                  .filter((p): p is IProject => p !== null);
+
+                                return (
+                                  <div className="flex flex-wrap items-center gap-[8px]">
+                                    {projects.map((project) => (
+                                      <SelectedProjectTag
+                                        key={project.id}
+                                        project={project}
+                                      />
+                                    ))}
+                                  </div>
+                                );
+                              }
+
+                              return '';
+                            })()}
+                          </TableCell>
+                          <TableCell
+                            width={200}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {getOptionLabel(
+                              item.type,
+                              CONTRIBUTION_TYPE_OPTIONS,
+                            )}
+                          </TableCell>
+                          <TableCell
+                            width={250}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.description || '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map(
+                (item: {
+                  project: string | string[];
+                  type: string;
+                  description?: string;
+                  reference?: string;
+                }) => {
+                  const projectName = Array.isArray(item.project)
+                    ? item.project.join(', ')
+                    : item.project;
+                  const typeLabel = getOptionLabel(
+                    item.type,
+                    CONTRIBUTION_TYPE_OPTIONS,
+                  );
+                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}`;
+                },
+              )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'stack_integrations': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={240} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project</span>
+                          <TooltipWithQuestionIcon content="The project or technology integrated with this project" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Type</span>
+                          <TooltipWithQuestionIcon content="The type of integration or dependency" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={200} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Description</span>
+                          <TooltipWithQuestionIcon content="Description of the integration" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Reference</span>
+                          <TooltipWithQuestionIcon content="Reference link for more information" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Repository</span>
+                          <TooltipWithQuestionIcon content="Repository link for the integration" />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        item: {
+                          project: string | string[];
+                          type: string;
+                          description?: string;
+                          reference?: string;
+                          repository?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={240}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {(() => {
+                              if (!item.project) return 'N/A';
+
+                              // Check if it's a string
+                              if (typeof item.project === 'string') {
+                                if (item.project === 'N/A') return 'N/A';
+                                return item.project;
+                              }
+
+                              // Array of project IDs
+                              if (Array.isArray(item.project)) {
+                                if (isLoadingProjects) {
+                                  return (
+                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
+                                  );
+                                }
+
+                                const projects = (item.project as string[])
+                                  .map((id: string) => {
+                                    const numId = parseInt(id, 10);
+                                    const projectData = projectsMap?.get(numId);
+                                    return projectData || null;
+                                  })
+                                  .filter((p): p is IProject => p !== null);
+
+                                return (
+                                  <div className="flex flex-wrap items-center gap-[8px]">
+                                    {projects.map((project) => (
+                                      <SelectedProjectTag
+                                        key={project.id}
+                                        project={project}
+                                      />
+                                    ))}
+                                  </div>
+                                );
+                              }
+
+                              return '';
+                            })()}
+                          </TableCell>
+                          <TableCell
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {getOptionLabel(
+                              item.type,
+                              STACK_INTEGRATION_TYPE_OPTIONS,
+                            )}
+                          </TableCell>
+                          <TableCell
+                            width={200}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.description || '-'}
+                          </TableCell>
+                          <TableCell
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.repository ? (
+                              <Link
+                                href={normalizeUrl(item.repository)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.repository)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map(
+                (item: {
+                  project: string | string[];
+                  type: string;
+                  description?: string;
+                  reference?: string;
+                  repository?: string;
+                }) => {
+                  const projectName = Array.isArray(item.project)
+                    ? item.project.join(', ')
+                    : item.project;
+                  const typeLabel = getOptionLabel(
+                    item.type,
+                    STACK_INTEGRATION_TYPE_OPTIONS,
+                  );
+                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
               .join(', ')}
@@ -1396,6 +1852,8 @@ const InputContentRenderer: React.FC<IProps> = ({
     displayFormType !== 'websites' &&
     displayFormType !== 'social_links' &&
     displayFormType !== 'affiliated_projects' &&
+    displayFormType !== 'contributing_teams' &&
+    displayFormType !== 'stack_integrations' &&
     displayFormType !== 'tablePhysicalEntity' &&
     displayFormType !== 'fundingReceivedGrants' &&
     displayFormType !== 'multiContracts'

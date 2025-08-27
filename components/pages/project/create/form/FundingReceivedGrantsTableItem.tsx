@@ -93,6 +93,8 @@ const FundingReceivedGrantsTableItem: React.FC<
                 multiple={true}
                 allowNA={true}
                 columnName="Organization/Program"
+                itemKey={'funding_received_grants'}
+                searchModalTitle={`Funding Received (Grants)`}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
@@ -122,6 +124,8 @@ const FundingReceivedGrantsTableItem: React.FC<
                 multiple={true}
                 disabled={false}
                 columnName={'Project Donator'}
+                itemKey={'funding_received_grants'}
+                searchModalTitle={`Funding Received (Grants)`}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">

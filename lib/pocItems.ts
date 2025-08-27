@@ -208,4 +208,12 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 1,
   },
+  contributing_teams: {
+    isEssential: false,
+    accountability_metric: 1,
+  },
+  stack_integrations: {
+    isEssential: false,
+    accountability_metric: 1,
+  },
 } as const;

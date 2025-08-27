@@ -1,5 +1,4 @@
 import { POC_ITEMS } from '@/lib/pocItems';
-import { AffiliationType } from '@/components/pages/project/create/form/AffiliatedProjectsTableItem';
 
 type FilterEssentialKeys<T> = {
   [K in keyof T]: T[K] extends { isEssential: true } ? K : never;
@@ -137,6 +136,8 @@ export type IFormDisplayType =
   | 'autoComplete'
   | 'fundingReceivedGrants'
   | 'affiliated_projects'
+  | 'contributing_teams'
+  | 'stack_integrations'
   | 'roadmap'
   | 'smartContract'
   | 'multiContracts';
@@ -198,8 +199,25 @@ export interface IFundingReceivedGrants {
 
 export interface IAffiliatedProject {
   project: string | string[];
-  affiliationType: AffiliationType | string;
+  affiliationType: string;
   description?: string;
   reference?: string;
-  _id: string;
+  _id?: string;
+}
+
+export interface IContributingTeam {
+  project: string | string[];
+  type: string;
+  description?: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IStackIntegration {
+  project: string | string[];
+  type: string;
+  description?: string;
+  reference?: string;
+  repository?: string;
+  _id?: string;
 }
