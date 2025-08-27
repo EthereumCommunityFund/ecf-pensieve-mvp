@@ -5,10 +5,10 @@ import { XCircle } from '@phosphor-icons/react';
 import React, { useEffect, useMemo } from 'react';
 import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
-import AmountInput from './AmountInput';
-import DateInput from './DateInput';
-import ProjectSearchSelector from './ProjectSearchSelector';
-import URLInput from './URLInput';
+import AmountInput from '@/components/biz/FormAndTable/AmountInput';
+import DateInput from '@/components/biz/FormAndTable/DateInput';
+import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearchSelector';
+import URLInput from '@/components/biz/FormAndTable/URLInput';
 
 interface FundingReceivedGrantsTableItemProps {
   field: FieldArrayWithId<any, any, 'fieldId'>;
