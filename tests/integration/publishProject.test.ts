@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-
 // Mock Next.js cache functions to avoid errors in test environment
 vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
@@ -46,8 +45,14 @@ describe('Vote Integration Tests', () => {
   }
 
   const testUsers: TestUser[] = [];
-  let testProject: any;
-  let testProposal: any;
+  let testProject: Awaited<
+    ReturnType<(typeof projectRouter)['createCaller']>
+  >['createProject'];
+  let testProposal: Awaited<
+    ReturnType<(typeof projectRouter)['createCaller']>
+  >['getProjectById'] extends PromiseLike<infer U>
+    ? U['proposals'][number]
+    : any;
 
   // Helper functions
   const createContext = (userId: string | null) => ({
