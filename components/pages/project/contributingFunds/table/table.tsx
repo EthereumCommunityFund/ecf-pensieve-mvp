@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Info } from '@phosphor-icons/react';
+import { CaretUpDown, Info } from '@phosphor-icons/react';
 import {
   flexRender,
   getCoreRowModel,
@@ -16,14 +16,35 @@ import {
   TableRow,
 } from '@/components/biz/table';
 
-import { IReceivedGrant, useReceivedGrantsColumns } from './ReceivedGrantsCol';
+import { GrantType, IGrant, useGrantColumns } from './columns';
 
-interface ReceivedGrantsTableProps {
+interface GrantsTableProps {
   projectId?: number;
+  type: GrantType;
 }
 
+// Mock data for Given (Grants)
+const givenGrantsData: IGrant[] = [
+  {
+    date: '2024-05-15',
+    organization: 'Giveth',
+    projectDonator: 'Octant, ENS',
+    amount: '$500.00',
+    expenseSheet: 'https://',
+    reference: 'https://',
+  },
+  {
+    date: '2024-04-20',
+    organization: null, // Will show as "Not Applicable"
+    projectDonator: 'Octant',
+    amount: '$300.00',
+    expenseSheet: 'https://',
+    reference: 'https://',
+  },
+];
+
 // Mock data for Received (Grants)
-const receivedGrantsData: IReceivedGrant[] = [
+const receivedGrantsData: IGrant[] = [
   {
     date: '2024-06-01',
     organization: 'Giveth',
@@ -50,10 +71,13 @@ const receivedGrantsData: IReceivedGrant[] = [
   },
 ];
 
-const ReceivedGrantsTable: FC<ReceivedGrantsTableProps> = () => {
-  const columns = useReceivedGrantsColumns();
+const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
+  const columns = useGrantColumns(type);
 
-  const data = useMemo(() => receivedGrantsData, []);
+  const data = useMemo(
+    () => (type === 'given' ? givenGrantsData : receivedGrantsData),
+    [type],
+  );
 
   const table = useReactTable({
     data,
@@ -61,33 +85,40 @@ const ReceivedGrantsTable: FC<ReceivedGrantsTableProps> = () => {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const title = type === 'given' ? 'Given (Grants)' : 'Received (Grants)';
+  const description =
+    type === 'given' ? 'Based on other project pages' : 'desc';
+  const showActionButtons = type === 'given';
+
   return (
     <div className="mb-[48px]">
       {/* Category Header - matching CategoryHeader.tsx style */}
       <div className="-mb-px flex items-center justify-between rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
-            Received (Grants)
+            {title}
           </p>
           <p className="text-[13px] font-[400] leading-[18px] text-[#FF5F5F]">
-            desc
+            {description}
           </p>
         </div>
-        {/* dont delete this */}
-        {/* <div className="flex items-center gap-[10px]">
-          <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-            <CaretUpDown size={16} weight="bold" className="opacity-50" />
-            <span>Time</span>
-          </button>
-          <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-            <CaretUpDown size={16} weight="bold" className="opacity-50" />
-            <span>Amount</span>
-          </button>
-          <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-            <CaretUpDown size={16} weight="bold" className="opacity-50" />
-            <span>Collapse Items</span>
-          </button>
-        </div> */}
+        {/* Filter buttons - only shown for 'given' type */}
+        {showActionButtons && (
+          <div className="flex items-center gap-[10px]">
+            <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
+              <CaretUpDown size={16} weight="bold" className="opacity-50" />
+              <span>Time</span>
+            </button>
+            <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
+              <CaretUpDown size={16} weight="bold" className="opacity-50" />
+              <span>Amount</span>
+            </button>
+            <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
+              <CaretUpDown size={16} weight="bold" className="opacity-50" />
+              <span>Collapse Items</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Action buttons section */}
@@ -156,10 +187,7 @@ const ReceivedGrantsTable: FC<ReceivedGrantsTableProps> = () => {
                   return (
                     <TableCell
                       key={cell.id}
-                      className={cn(
-                        // 'h-[56px] px-[16px] py-[18px]',
-                        !isLast && 'border-r border-black/5',
-                      )}
+                      className={cn(!isLast && 'border-r border-black/5')}
                       style={{
                         width: cell.column.getSize(),
                       }}
@@ -180,4 +208,13 @@ const ReceivedGrantsTable: FC<ReceivedGrantsTableProps> = () => {
   );
 };
 
-export default ReceivedGrantsTable;
+// Export named components for backward compatibility
+export const GivenGrantsTable: FC<Pick<GrantsTableProps, 'projectId'>> = (
+  props,
+) => <GrantsTable {...props} type="given" />;
+
+export const ReceivedGrantsTable: FC<Pick<GrantsTableProps, 'projectId'>> = (
+  props,
+) => <GrantsTable {...props} type="received" />;
+
+export default GrantsTable;

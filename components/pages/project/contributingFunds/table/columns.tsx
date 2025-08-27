@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 
 import { formatDate } from '@/utils/formatters';
 
-export interface IGivenGrant {
+export interface IGrant {
   date: string;
   organization: string | null;
   projectDonator: string;
@@ -14,11 +14,13 @@ export interface IGivenGrant {
   reference: string;
 }
 
-export const useGivenGrantsColumns = () => {
-  const columnHelper = useMemo(() => createColumnHelper<IGivenGrant>(), []);
+export type GrantType = 'given' | 'received';
+
+export const useGrantColumns = (type: GrantType) => {
+  const columnHelper = useMemo(() => createColumnHelper<IGrant>(), []);
 
   return useMemo(() => {
-    return [
+    const baseColumns: any[] = [
       columnHelper.accessor('date', {
         id: 'date',
         header: () => 'Date',
@@ -35,9 +37,9 @@ export const useGivenGrantsColumns = () => {
       columnHelper.accessor('organization', {
         id: 'organization',
         header: () => 'Organization/Program',
-        size: 220,
-        minSize: 220,
-        maxSize: 220,
+        size: type === 'given' ? 220 : 240,
+        minSize: type === 'given' ? 220 : 240,
+        maxSize: type === 'given' ? 220 : 240,
         enableResizing: false,
         cell: (info) => {
           const value = info.getValue();
@@ -52,9 +54,9 @@ export const useGivenGrantsColumns = () => {
       columnHelper.accessor('projectDonator', {
         id: 'projectDonator',
         header: () => 'Project Donator',
-        size: 200,
-        minSize: 200,
-        maxSize: 200,
+        size: type === 'given' ? 200 : 220,
+        minSize: type === 'given' ? 200 : 220,
+        maxSize: type === 'given' ? 200 : 220,
         enableResizing: false,
         cell: (info) => (
           <span className="text-[14px] text-black">{info.getValue()}</span>
@@ -63,9 +65,9 @@ export const useGivenGrantsColumns = () => {
       columnHelper.accessor('amount', {
         id: 'amount',
         header: () => 'Amount (USD)',
-        size: 160,
-        minSize: 160,
-        maxSize: 160,
+        size: type === 'given' ? 160 : 180,
+        minSize: type === 'given' ? 160 : 180,
+        maxSize: type === 'given' ? 160 : 180,
         enableResizing: false,
         cell: (info) => (
           <span className="text-[14px] font-[500] text-black">
@@ -76,9 +78,9 @@ export const useGivenGrantsColumns = () => {
       columnHelper.accessor('expenseSheet', {
         id: 'expenseSheet',
         header: () => 'Expense Sheet',
-        size: 160,
-        minSize: 160,
-        maxSize: 160,
+        size: type === 'given' ? 160 : 180,
+        minSize: type === 'given' ? 160 : 180,
+        maxSize: type === 'given' ? 160 : 180,
         enableResizing: false,
         cell: (info) => (
           <button className="text-[14px] text-black/60 transition-colors hover:text-black">
@@ -89,9 +91,9 @@ export const useGivenGrantsColumns = () => {
       columnHelper.accessor('reference', {
         id: 'reference',
         header: () => 'Reference',
-        size: 140,
-        minSize: 140,
-        maxSize: 140,
+        size: type === 'given' ? 140 : 160,
+        minSize: type === 'given' ? 140 : 160,
+        maxSize: type === 'given' ? 140 : 160,
         enableResizing: false,
         cell: (info) => (
           <button className="text-[14px] text-black/60 transition-colors hover:text-black">
@@ -99,19 +101,27 @@ export const useGivenGrantsColumns = () => {
           </button>
         ),
       }),
-      columnHelper.display({
-        id: 'page',
-        header: () => 'Page',
-        size: 140,
-        minSize: 140,
-        maxSize: 140,
-        enableResizing: false,
-        cell: () => (
-          <button className="text-[14px] transition-colors hover:text-[#1E40AF]">
-            View Linkage
-          </button>
-        ),
-      }),
     ];
-  }, [columnHelper]);
+
+    // Add the extra "View Linkage" column only for 'given' type
+    if (type === 'given') {
+      baseColumns.push(
+        columnHelper.display({
+          id: 'page',
+          header: () => 'Page',
+          size: 140,
+          minSize: 140,
+          maxSize: 140,
+          enableResizing: false,
+          cell: () => (
+            <button className="text-[14px] transition-colors hover:text-[#1E40AF]">
+              View Linkage
+            </button>
+          ),
+        }),
+      );
+    }
+
+    return baseColumns;
+  }, [columnHelper, type]);
 };
