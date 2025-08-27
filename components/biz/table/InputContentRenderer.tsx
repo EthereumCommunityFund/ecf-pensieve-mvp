@@ -4,12 +4,12 @@ import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { AddressDisplay } from '@/components/base/AddressDisplay';
+import { SelectedProjectTag } from '@/components/biz/FormAndTable/ProjectSearchSelector';
+import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
+import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
+import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
 import { TableIcon } from '@/components/icons';
-import { AFFILIATION_TYPE_OPTIONS } from '@/components/pages/project/create/form/AffiliatedProjectsTableItem';
-import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/pages/project/create/form/ContributingTeamsTableItem';
-import { SelectedProjectTag } from '@/components/pages/project/create/form/ProjectSearchSelector';
-import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/pages/project/create/form/StackIntegrationsTableItem';
-import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';

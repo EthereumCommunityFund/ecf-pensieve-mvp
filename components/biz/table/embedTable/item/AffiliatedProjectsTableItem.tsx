@@ -6,54 +6,42 @@ import React, { useMemo } from 'react';
 import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
 import { Select, SelectItem } from '@/components/base/select';
-
-import ProjectSearchSelector from './ProjectSearchSelector';
-import URLInput from './URLInput';
+import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearchSelector';
+import URLInput from '@/components/biz/FormAndTable/URLInput';
 
 /**
- * Stack integration type options for select dropdown
+ * Affiliation type options for select dropdown
  */
-export const STACK_INTEGRATION_TYPE_OPTIONS = [
-  {
-    value: 'dependency_interfacing',
-    label: 'Dependency Integration / Interfacing',
-  },
-  { value: 'plugin_extension', label: 'Plugin / Extension' },
-  { value: 'embedding', label: 'Embedding' },
-  { value: 'forking_inheritance', label: 'Forking / Inheritance' },
-  { value: 'wrapping_abstraction', label: 'Wrapping / Abstraction' },
-  { value: 'service', label: 'Service' },
-  { value: 'consumption', label: 'Consumption' },
-  { value: 'modular_composition', label: 'Modular Composition' },
-  { value: 'peer_to_peer', label: 'Peer-to-Peer Relationship' },
-  { value: 'middleware_broker', label: 'Middleware / Broker' },
+export const AFFILIATION_TYPE_OPTIONS = [
+  { value: 'subsidiary', label: 'Subsidiary' },
+  { value: 'partnership', label: 'Partnership' },
+  { value: 'shared_team', label: 'Shared team' },
+  { value: 'investor', label: 'Investor' },
+  { value: 'governance_link', label: 'Governance Link' },
+  { value: 'rebrand', label: 'Rebrand' },
+  { value: 'other', label: 'Other (specify)' },
 ];
 
-interface StackIntegrationsTableItemProps {
+interface AffiliatedProjectsTableItemProps {
   field: FieldArrayWithId<any, any, 'fieldId'>;
   index: number;
   remove: () => void;
-  itemKey: 'stack_integrations';
+  itemKey: 'affiliated_projects';
   canRemove: boolean;
 }
 
-const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
-  field,
-  index,
-  remove,
-  itemKey,
-  canRemove,
-}) => {
+const AffiliatedProjectsTableItem: React.FC<
+  AffiliatedProjectsTableItemProps
+> = ({ field, index, remove, itemKey, canRemove }) => {
   const { control } = useFormContext();
 
   // Create stable field paths using useMemo
   const fieldPaths = useMemo(
     () => ({
       project: `${itemKey}.${index}.project`,
-      type: `${itemKey}.${index}.type`,
+      affiliationType: `${itemKey}.${index}.affiliationType`,
       description: `${itemKey}.${index}.description`,
       reference: `${itemKey}.${index}.reference`,
-      repository: `${itemKey}.${index}.repository`,
     }),
     [itemKey, index],
   );
@@ -64,7 +52,7 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
       className="flex min-h-[40px] w-full items-stretch border-b border-black/10 bg-white last:border-b-0"
     >
       {/* Project Column */}
-      <div className="flex w-[240px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
+      <div className="flex w-[300px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
           name={fieldPaths.project}
           control={control}
@@ -76,11 +64,11 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
                   field.onChange(value);
                 }}
                 onBlur={field.onBlur}
-                placeholder="ethereum"
+                placeholder="Search Project (on pensieve)"
                 multiple={false}
                 allowNA={false}
                 columnName="Project"
-                itemKey={'stack_integrations'}
+                itemKey={'affiliated_projects'}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
@@ -92,10 +80,10 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
         />
       </div>
 
-      {/* Type Column */}
+      {/* Affiliation Type Column */}
       <div className="flex w-[180px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
-          name={fieldPaths.type}
+          name={fieldPaths.affiliationType}
           control={control}
           render={({ field, fieldState }) => (
             <>
@@ -107,8 +95,8 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
                     field.onChange(selectedKey);
                   }
                 }}
-                placeholder="dependency"
-                aria-label="Select integration type"
+                placeholder="Select type"
+                aria-label="Select affiliation type"
                 classNames={{
                   base: 'max-w-full',
                   trigger: `h-[32px] min-h-[32px] border-none bg-transparent shadow-none px-0 ${
@@ -117,11 +105,11 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
                   mainWrapper: 'border-none shadow-none',
                   innerWrapper: 'px-0',
                   listboxWrapper: 'bg-white !max-w-none',
-                  popoverContent: 'bg-white !min-w-[320px]',
+                  popoverContent: 'bg-white !min-w-[250px]',
                 }}
                 radius="none"
               >
-                {STACK_INTEGRATION_TYPE_OPTIONS.map((option) => (
+                {AFFILIATION_TYPE_OPTIONS.map((option) => (
                   <SelectItem key={option.value} textValue={option.label}>
                     {option.label}
                   </SelectItem>
@@ -129,7 +117,7 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
               </Select>
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message || 'Type is required'}
+                  {fieldState.error.message || 'Affiliation type is required'}
                 </span>
               )}
             </>
@@ -138,7 +126,7 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
       </div>
 
       {/* Description Column */}
-      <div className="flex w-[200px] shrink-0 items-center border-r border-black/10 px-[10px] py-[5px]">
+      <div className="flex w-[250px] shrink-0 items-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
           name={fieldPaths.description}
           control={control}
@@ -149,7 +137,7 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
                 value={field.value || ''}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                placeholder="Give a description"
+                placeholder="Describe the relationship"
                 className={cn(
                   'h-[32px] w-full border-none bg-transparent px-0',
                   'text-[14px] font-[400] leading-[19px] text-black',
@@ -164,7 +152,7 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message}
+                  {fieldState.error.message || 'Description is required'}
                 </span>
               )}
             </div>
@@ -173,37 +161,14 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
       </div>
 
       {/* Reference Column */}
-      <div className="flex w-[180px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
-        <Controller
-          name={fieldPaths.reference}
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <URLInput
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="https://"
-                required={false}
-              />
-              {fieldState.error && (
-                <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message}
-                </span>
-              )}
-            </>
-          )}
-        />
-      </div>
-
-      {/* Repository Column */}
       <div
         className={cn(
-          'flex w-[180px] shrink-0 flex-col justify-center px-[10px] py-[5px]',
+          'flex w-[200px] shrink-0 flex-col justify-center px-[10px] py-[5px]',
           canRemove ? 'border-r border-black/10' : '',
         )}
       >
         <Controller
-          name={fieldPaths.repository}
+          name={fieldPaths.reference}
           control={control}
           render={({ field, fieldState }) => (
             <>
@@ -230,7 +195,7 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
             type="button"
             className="flex size-[40px] cursor-pointer items-center justify-center rounded-full border-none bg-transparent p-[8px] opacity-30"
             onClick={remove}
-            aria-label={`Remove stack integration ${index + 1}`}
+            aria-label={`Remove affiliated project ${index + 1}`}
             style={{
               outline: 'none',
               boxShadow: 'none',
@@ -244,4 +209,4 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
   );
 };
 
-export default StackIntegrationsTableItem;
+export default AffiliatedProjectsTableItem;

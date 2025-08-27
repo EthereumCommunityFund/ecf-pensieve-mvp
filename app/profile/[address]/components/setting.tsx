@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Input } from '@/components/base';
 import { Button } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import PhotoUpload from '@/components/pages/project/create/form/PhotoUpload';
+import PhotoUpload from '@/components/biz/FormAndTable/PhotoUpload';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 

@@ -6,41 +6,47 @@ import React, { useMemo } from 'react';
 import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
 import { Select, SelectItem } from '@/components/base/select';
-
-import ProjectSearchSelector from './ProjectSearchSelector';
-import URLInput from './URLInput';
+import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearchSelector';
+import URLInput from '@/components/biz/FormAndTable/URLInput';
 
 /**
- * Affiliation type options for select dropdown
+ * Contribution type options for select dropdown
  */
-export const AFFILIATION_TYPE_OPTIONS = [
-  { value: 'subsidiary', label: 'Subsidiary' },
-  { value: 'partnership', label: 'Partnership' },
-  { value: 'shared_team', label: 'Shared team' },
-  { value: 'investor', label: 'Investor' },
-  { value: 'governance_link', label: 'Governance Link' },
-  { value: 'rebrand', label: 'Rebrand' },
-  { value: 'other', label: 'Other (specify)' },
+export const CONTRIBUTION_TYPE_OPTIONS = [
+  { value: 'core_development', label: 'Core development' },
+  { value: 'technical_integration', label: 'Technical Integration' },
+  { value: 'research', label: 'Research' },
+  { value: 'community_growth', label: 'Community&Growth' },
+  { value: 'operations_governance', label: 'Operations&Governance' },
+  { value: 'design', label: 'Design' },
+  { value: 'education', label: 'Education' },
+  { value: 'security', label: 'Security' },
+  { value: 'fundraising', label: 'Fundraising' },
+  { value: 'other', label: 'Other (Specify)' },
 ];
 
-interface AffiliatedProjectsTableItemProps {
+interface ContributingTeamsTableItemProps {
   field: FieldArrayWithId<any, any, 'fieldId'>;
   index: number;
   remove: () => void;
-  itemKey: 'affiliated_projects';
+  itemKey: 'contributing_teams';
   canRemove: boolean;
 }
 
-const AffiliatedProjectsTableItem: React.FC<
-  AffiliatedProjectsTableItemProps
-> = ({ field, index, remove, itemKey, canRemove }) => {
+const ContributingTeamsTableItem: React.FC<ContributingTeamsTableItemProps> = ({
+  field,
+  index,
+  remove,
+  itemKey,
+  canRemove,
+}) => {
   const { control } = useFormContext();
 
   // Create stable field paths using useMemo
   const fieldPaths = useMemo(
     () => ({
       project: `${itemKey}.${index}.project`,
-      affiliationType: `${itemKey}.${index}.affiliationType`,
+      type: `${itemKey}.${index}.type`,
       description: `${itemKey}.${index}.description`,
       reference: `${itemKey}.${index}.reference`,
     }),
@@ -69,7 +75,7 @@ const AffiliatedProjectsTableItem: React.FC<
                 multiple={false}
                 allowNA={false}
                 columnName="Project"
-                itemKey={'affiliated_projects'}
+                itemKey={'contributing_teams'}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
@@ -81,10 +87,10 @@ const AffiliatedProjectsTableItem: React.FC<
         />
       </div>
 
-      {/* Affiliation Type Column */}
-      <div className="flex w-[180px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
+      {/* Area of Contribution Column */}
+      <div className="flex w-[200px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
         <Controller
-          name={fieldPaths.affiliationType}
+          name={fieldPaths.type}
           control={control}
           render={({ field, fieldState }) => (
             <>
@@ -96,8 +102,8 @@ const AffiliatedProjectsTableItem: React.FC<
                     field.onChange(selectedKey);
                   }
                 }}
-                placeholder="Select type"
-                aria-label="Select affiliation type"
+                placeholder="Options"
+                aria-label="Select area of contribution"
                 classNames={{
                   base: 'max-w-full',
                   trigger: `h-[32px] min-h-[32px] border-none bg-transparent shadow-none px-0 ${
@@ -110,7 +116,7 @@ const AffiliatedProjectsTableItem: React.FC<
                 }}
                 radius="none"
               >
-                {AFFILIATION_TYPE_OPTIONS.map((option) => (
+                {CONTRIBUTION_TYPE_OPTIONS.map((option) => (
                   <SelectItem key={option.value} textValue={option.label}>
                     {option.label}
                   </SelectItem>
@@ -118,7 +124,8 @@ const AffiliatedProjectsTableItem: React.FC<
               </Select>
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message || 'Affiliation type is required'}
+                  {fieldState.error.message ||
+                    'Area of contribution is required'}
                 </span>
               )}
             </>
@@ -138,7 +145,7 @@ const AffiliatedProjectsTableItem: React.FC<
                 value={field.value || ''}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                placeholder="Describe the relationship"
+                placeholder="Give a description"
                 className={cn(
                   'h-[32px] w-full border-none bg-transparent px-0',
                   'text-[14px] font-[400] leading-[19px] text-black',
@@ -153,7 +160,7 @@ const AffiliatedProjectsTableItem: React.FC<
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message || 'Description is required'}
+                  {fieldState.error.message}
                 </span>
               )}
             </div>
@@ -196,7 +203,7 @@ const AffiliatedProjectsTableItem: React.FC<
             type="button"
             className="flex size-[40px] cursor-pointer items-center justify-center rounded-full border-none bg-transparent p-[8px] opacity-30"
             onClick={remove}
-            aria-label={`Remove affiliated project ${index + 1}`}
+            aria-label={`Remove contributing team ${index + 1}`}
             style={{
               outline: 'none',
               boxShadow: 'none',
@@ -210,4 +217,4 @@ const AffiliatedProjectsTableItem: React.FC<
   );
 };
 
-export default AffiliatedProjectsTableItem;
+export default ContributingTeamsTableItem;
