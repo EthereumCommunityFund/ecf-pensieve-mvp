@@ -2,8 +2,7 @@
 
 import { FC } from 'react';
 
-import GivenGrantsTable from './table/GivenGrantsTable';
-import ReceivedGrantsTable from './table/ReceivedGrantsTable';
+import { GivenGrantsTable, ReceivedGrantsTable } from './table/table';
 
 interface ContributingFundsProps {
   projectId: number;
