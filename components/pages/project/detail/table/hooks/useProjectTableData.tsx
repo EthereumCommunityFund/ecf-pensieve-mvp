@@ -246,16 +246,11 @@ export const useProjectTableData = () => {
     [tableData],
   );
 
-  const receivedGrantsData = useMemo(() => {
-    return getItemRowData('funding_received_grants');
-  }, [getItemRowData]);
-
   return {
     isProjectFetched,
     isDataFetched: isProjectFetched && isLeadingProposalsFetched,
     tableData,
     emptyItemsCounts,
     getItemRowData,
-    receivedGrantsData,
   };
 };

@@ -7,7 +7,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import {
   PageTableContainer,
@@ -15,6 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
+import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
+import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
@@ -27,27 +29,50 @@ interface GrantsTableProps {
 
 const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
   const columns = useGrantColumns(type);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { getItemRowData } = useProjectTableData();
 
+  // Initialize after component mount to avoid state update during render
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
   const receivedGrantsData = useMemo(() => {
+    if (!isInitialized) return [];
     return getItemRowData('funding_received_grants');
-  }, [getItemRowData]);
+  }, [getItemRowData, isInitialized]);
 
   const data = useMemo(
     () => (type === 'given' ? [] : receivedGrantsData),
-    [type],
+    [type, receivedGrantsData],
   );
+
+  // Extract project IDs from grants data using shared helper
+  const projectIds = useMemo(() => {
+    if (type === 'given' || !isInitialized) return [];
+    // For grants, extract from organization and projectDonator fields
+    return extractProjectIds(data, ['organization', 'projectDonator']);
+  }, [data, type, isInitialized]);
+
+  const { projectsMap, isLoading: isLoadingProjects } =
+    useOptimizedProjectsByIds(projectIds);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      projectsMap,
+      isLoadingProjects,
+    },
   });
 
   const title = type === 'given' ? 'Given (Grants)' : 'Received (Grants)';
   const description =
-    type === 'given' ? 'Based on other project pages' : 'desc';
+    type === 'given'
+      ? 'Externally documented when, to whom, and how much funding this project has provided.'
+      : 'Document when, from whom, and how much funding this project has received.';
   const showActionButtons = type === 'given';
 
   return (
@@ -58,7 +83,7 @@ const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
           </p>
-          <p className="text-[13px] font-[400] leading-[18px] text-[#FF5F5F]">
+          <p className="text-[13px] font-[400] leading-[18px] text-black/40">
             {description}
           </p>
         </div>
@@ -167,14 +192,5 @@ const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
     </div>
   );
 };
-
-// Export named components for backward compatibility
-export const GivenGrantsTable: FC<Pick<GrantsTableProps, 'projectId'>> = (
-  props,
-) => <GrantsTable {...props} type="given" />;
-
-export const ReceivedGrantsTable: FC<Pick<GrantsTableProps, 'projectId'>> = (
-  props,
-) => <GrantsTable {...props} type="received" />;
 
 export default GrantsTable;

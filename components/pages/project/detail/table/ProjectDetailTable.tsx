@@ -7,7 +7,6 @@ import { FC, useEffect, useMemo } from 'react';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
-import { devLog } from '@/utils/devLog';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
 import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
@@ -49,12 +48,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   } = useProjectDetailContext();
 
   // Custom hooks for data and state management
-  const { tableData, emptyItemsCounts, receivedGrantsData } =
-    useProjectTableData();
-
-  useEffect(() => {
-    devLog('receivedGrantsData', receivedGrantsData);
-  }, [receivedGrantsData]);
+  const { tableData, emptyItemsCounts } = useProjectTableData();
 
   // Create a unique key for forcing table re-renders when data changes
   const tableKey = useMemo(() => {

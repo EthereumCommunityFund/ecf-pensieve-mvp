@@ -1,25 +1,19 @@
 'use client';
 
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { getOptionLabel } from '@/components/biz/table';
+import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
+import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
+import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import {
   IAffiliatedProject,
   IContributingTeam,
   IStackIntegration,
 } from '@/types/item';
-
-const ProjectCell = ({ value }: { value: string | string[] }) => {
-  const displayValue = Array.isArray(value) ? value.join(', ') : value;
-  return (
-    <div className="flex items-center gap-[8px]">
-      <div className="flex size-[24px] items-center justify-center rounded-full bg-[#1E40AF]">
-        <span className="text-[10px] font-bold text-white">E</span>
-      </div>
-      <span className="text-[14px] text-black">{displayValue}</span>
-    </div>
-  );
-};
 
 const TextCell = ({ value }: { value: string }) => (
   <span className="text-[14px] text-black">{value}</span>
@@ -30,19 +24,30 @@ const DescriptionCell = ({ value }: { value?: string }) => (
 );
 
 const LinkCell = ({ value }: { value?: string }) => {
-  return value ? (
-    <button className="text-[14px] text-black/60 transition-colors hover:text-black">
+  if (!value) {
+    return <span className="text-[14px] text-black/30">-</span>;
+  }
+
+  return (
+    <a
+      href={value}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-[14px] text-black/60 underline transition-colors hover:text-black"
+    >
       {value}
-    </button>
-  ) : (
-    <span className="text-[14px] text-black/30">empty</span>
+    </a>
   );
 };
 
-const PageCell = () => (
-  <button className="text-[14px] font-[500] text-black transition-colors hover:text-[#1E40AF]">
+const PageCell = ({ projectId }: { projectId: string }) => (
+  <Link
+    href={`/project/${projectId}`}
+    target="_blank"
+    className="text-[14px] font-[500] text-black transition-colors hover:text-black/70 hover:underline"
+  >
     View Linkage
-  </button>
+  </Link>
 );
 
 export const useStackIntegrationsColumns = () => {
@@ -53,16 +58,27 @@ export const useStackIntegrationsColumns = () => {
 
   return useMemo(() => {
     return [
-      columnHelper.accessor('project', {
+      columnHelper.display({
         id: 'project',
         header: () => 'Project',
         size: 200,
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => (
-          <ProjectCell value={info.getValue() as string | string[]} />
-        ),
+        cell: ({ row, table }) => {
+          const item = row.original;
+          // @ts-ignore - Access custom meta from table
+          const { projectsMap, isLoadingProjects } = table.options.meta || {};
+
+          return (
+            <ProjectFieldRenderer
+              projectValue={item.project}
+              projectsMap={projectsMap}
+              isLoadingProjects={isLoadingProjects || false}
+              showProjectIconAndName={true}
+            />
+          );
+        },
       }),
       columnHelper.accessor('type', {
         id: 'type',
@@ -71,7 +87,14 @@ export const useStackIntegrationsColumns = () => {
         minSize: 160,
         maxSize: 160,
         enableResizing: false,
-        cell: (info) => <TextCell value={info.getValue() as string} />,
+        cell: (info) => (
+          <TextCell
+            value={getOptionLabel(
+              info.getValue() as string,
+              STACK_INTEGRATION_TYPE_OPTIONS,
+            )}
+          />
+        ),
       }),
       columnHelper.accessor('description', {
         id: 'description',
@@ -113,7 +136,17 @@ export const useStackIntegrationsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: () => <PageCell />,
+        cell: ({ row }) => {
+          const projectValue = row.original.project;
+          // Extract projectId from array format [id] or direct string
+          const projectId = Array.isArray(projectValue)
+            ? projectValue[0]
+            : projectValue;
+
+          if (!projectId) return null;
+
+          return <PageCell projectId={projectId} />;
+        },
       }),
     ] as ColumnDef<IStackIntegration>[];
   }, [columnHelper]);
@@ -127,16 +160,27 @@ export const useContributingTeamsColumns = () => {
 
   return useMemo(() => {
     return [
-      columnHelper.accessor('project', {
+      columnHelper.display({
         id: 'project',
         header: () => 'Project',
         size: 200,
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => (
-          <ProjectCell value={info.getValue() as string | string[]} />
-        ),
+        cell: ({ row, table }) => {
+          const item = row.original;
+          // @ts-ignore - Access custom meta from table
+          const { projectsMap, isLoadingProjects } = table.options.meta || {};
+
+          return (
+            <ProjectFieldRenderer
+              projectValue={item.project}
+              projectsMap={projectsMap}
+              isLoadingProjects={isLoadingProjects || false}
+              showProjectIconAndName={true}
+            />
+          );
+        },
       }),
       columnHelper.accessor('type', {
         id: 'type',
@@ -145,7 +189,14 @@ export const useContributingTeamsColumns = () => {
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <TextCell value={info.getValue() as string} />,
+        cell: (info) => (
+          <TextCell
+            value={getOptionLabel(
+              info.getValue() as string,
+              CONTRIBUTION_TYPE_OPTIONS,
+            )}
+          />
+        ),
       }),
       columnHelper.accessor('description', {
         id: 'description',
@@ -176,7 +227,17 @@ export const useContributingTeamsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: () => <PageCell />,
+        cell: ({ row }) => {
+          const projectValue = row.original.project;
+          // Extract projectId from array format [id] or direct string
+          const projectId = Array.isArray(projectValue)
+            ? projectValue[0]
+            : projectValue;
+
+          if (!projectId) return null;
+
+          return <PageCell projectId={projectId} />;
+        },
       }),
     ] as ColumnDef<IContributingTeam>[];
   }, [columnHelper]);
@@ -190,16 +251,27 @@ export const useAffiliatedProjectsColumns = () => {
 
   return useMemo(() => {
     return [
-      columnHelper.accessor('project', {
+      columnHelper.display({
         id: 'project',
         header: () => 'Project',
         size: 200,
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => (
-          <ProjectCell value={info.getValue() as string | string[]} />
-        ),
+        cell: ({ row, table }) => {
+          const item = row.original;
+          // @ts-ignore - Access custom meta from table
+          const { projectsMap, isLoadingProjects } = table.options.meta || {};
+
+          return (
+            <ProjectFieldRenderer
+              projectValue={item.project}
+              projectsMap={projectsMap}
+              isLoadingProjects={isLoadingProjects || false}
+              showProjectIconAndName={true}
+            />
+          );
+        },
       }),
       columnHelper.accessor('affiliationType', {
         id: 'affiliationType',
@@ -208,7 +280,14 @@ export const useAffiliatedProjectsColumns = () => {
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <TextCell value={info.getValue() as string} />,
+        cell: (info) => (
+          <TextCell
+            value={getOptionLabel(
+              info.getValue() as string,
+              AFFILIATION_TYPE_OPTIONS,
+            )}
+          />
+        ),
       }),
       columnHelper.accessor('description', {
         id: 'description',
@@ -239,7 +318,17 @@ export const useAffiliatedProjectsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: () => <PageCell />,
+        cell: ({ row }) => {
+          const projectValue = row.original.project;
+          // Extract projectId from array format [id] or direct string
+          const projectId = Array.isArray(projectValue)
+            ? projectValue[0]
+            : projectValue;
+
+          if (!projectId) return null;
+
+          return <PageCell projectId={projectId} />;
+        },
       }),
     ] as ColumnDef<IAffiliatedProject>[];
   }, [columnHelper]);

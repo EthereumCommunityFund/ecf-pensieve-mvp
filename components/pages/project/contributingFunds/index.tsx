@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { GivenGrantsTable, ReceivedGrantsTable } from './table/table';
+import GrantsTable from './table/table';
 
 interface ContributingFundsProps {
   projectId: number;
@@ -34,10 +34,11 @@ const ContributingFunds: FC<ContributingFundsProps> = ({ projectId }) => {
       </div> */}
 
       {/* Given (Grants) Section */}
-      <GivenGrantsTable projectId={projectId} />
+      {/* <GivenGrantsTable projectId={projectId} /> */}
 
       {/* Received (Grants) Section */}
-      <ReceivedGrantsTable projectId={projectId} />
+      <GrantsTable projectId={projectId} type="received" />
+      {/* <ReceivedGrantsTable projectId={projectId} /> */}
     </div>
   );
 };

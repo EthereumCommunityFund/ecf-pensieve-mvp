@@ -8,6 +8,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   PageTableContainer,
@@ -15,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/biz/table';
+import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
+import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 
 interface EcosystemTableProps<T extends Record<string, any>> {
   id: string;
@@ -34,10 +37,30 @@ function EcosystemTable<T extends Record<string, any>>({
   data,
   columns,
 }: EcosystemTableProps<T>) {
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize after component mount to avoid state update during render
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+  // Extract project IDs from the data using shared helper
+  const projectIds = useMemo(() => {
+    if (!isInitialized) return [];
+    return extractProjectIds(data, 'project');
+  }, [data, isInitialized]);
+
+  const { projectsMap, isLoading: isLoadingProjects } =
+    useOptimizedProjectsByIds(projectIds);
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      projectsMap,
+      isLoadingProjects,
+    },
   });
 
   return (
@@ -47,7 +70,7 @@ function EcosystemTable<T extends Record<string, any>>({
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
           </p>
-          <p className="text-[13px] font-[400] leading-[18px] text-[#FF3636]">
+          <p className="text-[13px] font-[400] leading-[18px] text-black/40">
             {description}
           </p>
         </div>
