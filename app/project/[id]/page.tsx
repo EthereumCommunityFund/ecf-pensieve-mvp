@@ -215,7 +215,10 @@ const ProjectPage = () => {
         />
       )}
       {activeTab === 'contributing-funds' && (
-        <ContributingFunds projectId={Number(projectId)} />
+        <ContributingFunds
+          projectId={Number(projectId)}
+          onOpenModal={handleOpenModal}
+        />
       )}
       {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
 

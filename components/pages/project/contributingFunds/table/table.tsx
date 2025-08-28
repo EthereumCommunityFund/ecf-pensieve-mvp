@@ -17,6 +17,7 @@ import {
 } from '@/components/biz/table';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
+import { IPocItemKey } from '@/types/item';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
@@ -25,9 +26,13 @@ import { GrantType, useGrantColumns } from './columns';
 interface GrantsTableProps {
   projectId?: number;
   type: GrantType;
+  onOpenModal?: (
+    itemKey: IPocItemKey,
+    contentType?: 'viewItemProposal' | 'submitPropose',
+  ) => void;
 }
 
-const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
+const GrantsTable: FC<GrantsTableProps> = ({ type, onOpenModal }) => {
   const columns = useGrantColumns(type);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -108,10 +113,21 @@ const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
 
       {/* Action buttons section */}
       <div className="flex items-center gap-[10px] border-x border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
-        <button className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]">
+        <button
+          onClick={() => {
+            // Open modal for viewing funding_received_grants item proposals
+            onOpenModal?.('funding_received_grants', 'viewItemProposal');
+          }}
+          className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
+        >
           View Item
         </button>
-        <button className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]">
+        <button
+          onClick={() => {
+            onOpenModal?.('funding_received_grants', 'submitPropose');
+          }}
+          className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
+        >
           Propose Entry
         </button>
       </div>
