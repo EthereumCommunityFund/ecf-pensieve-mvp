@@ -16,66 +16,26 @@ import {
   TableRow,
 } from '@/components/biz/table';
 
-import { GrantType, IGrant, useGrantColumns } from './columns';
+import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
+
+import { GrantType, useGrantColumns } from './columns';
 
 interface GrantsTableProps {
   projectId?: number;
   type: GrantType;
 }
 
-// Mock data for Given (Grants)
-const givenGrantsData: IGrant[] = [
-  {
-    date: '2024-05-15',
-    organization: 'Giveth',
-    projectDonator: 'Octant, ENS',
-    amount: '$500.00',
-    expenseSheet: 'https://',
-    reference: 'https://',
-  },
-  {
-    date: '2024-04-20',
-    organization: null, // Will show as "Not Applicable"
-    projectDonator: 'Octant',
-    amount: '$300.00',
-    expenseSheet: 'https://',
-    reference: 'https://',
-  },
-];
-
-// Mock data for Received (Grants)
-const receivedGrantsData: IGrant[] = [
-  {
-    date: '2024-06-01',
-    organization: 'Giveth',
-    projectDonator: 'Octant, ENS',
-    amount: '$1000.00',
-    expenseSheet: 'https://',
-    reference: 'https://',
-  },
-  {
-    date: '2024-05-10',
-    organization: 'Giveth',
-    projectDonator: 'Octant, ENS',
-    amount: '$750.00',
-    expenseSheet: 'https://',
-    reference: 'https://',
-  },
-  {
-    date: '2024-03-25',
-    organization: null,
-    projectDonator: 'Octant',
-    amount: '$500.00',
-    expenseSheet: 'https://',
-    reference: 'https://',
-  },
-];
-
 const GrantsTable: FC<GrantsTableProps> = ({ type }) => {
   const columns = useGrantColumns(type);
 
+  const { getItemRowData } = useProjectTableData();
+
+  const receivedGrantsData = useMemo(() => {
+    return getItemRowData('funding_received_grants');
+  }, [getItemRowData]);
+
   const data = useMemo(
-    () => (type === 'given' ? givenGrantsData : receivedGrantsData),
+    () => (type === 'given' ? [] : receivedGrantsData),
     [type],
   );
 

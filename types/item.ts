@@ -221,3 +221,17 @@ export interface IStackIntegration {
   repository?: string;
   _id?: string;
 }
+
+// Type mapping for getItemRowData function
+export interface IItemDataTypeMap {
+  funding_received_grants: IFundingReceivedGrants;
+  affiliated_projects: IAffiliatedProject;
+  contributing_teams: IContributingTeam;
+  stack_integrations: IStackIntegration;
+  // Add more mappings as needed for other items that return arrays
+  // For items not in this map, the function will return any[]
+}
+
+// Helper type to get the data type for a specific item key
+export type GetItemDataType<K extends IPocItemKey> =
+  K extends keyof IItemDataTypeMap ? IItemDataTypeMap[K][] : any[];

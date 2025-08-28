@@ -214,10 +214,10 @@ const ProjectPage = () => {
           onMetricClick={handleMetricClick}
         />
       )}
-      {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
       {activeTab === 'contributing-funds' && (
         <ContributingFunds projectId={Number(projectId)} />
       )}
+      {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
 
       <ProjectDetailMainModal
         isOpen={isModalOpen && !!selectedItemKey}

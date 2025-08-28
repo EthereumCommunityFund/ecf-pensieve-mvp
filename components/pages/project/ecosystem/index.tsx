@@ -2,6 +2,8 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
+import { useProjectTableData } from '../detail/table/hooks/useProjectTableData';
+
 import EcosystemNav from './nav/EcosystemNav';
 import EcosystemTable from './table/EcosystemTable';
 import {
@@ -9,12 +11,7 @@ import {
   useContributingTeamsColumns,
   useStackIntegrationsColumns,
 } from './table/columns';
-import {
-  EcosystemSection,
-  IAffiliatedProject,
-  IContributingTeam,
-  IStackIntegration,
-} from './types';
+import { EcosystemSection } from './types';
 
 interface EcosystemProps {
   projectId: number;
@@ -24,48 +21,21 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
   const [activeSection, setActiveSection] =
     useState<EcosystemSection>('stack_integrations');
 
+  const { getItemRowData } = useProjectTableData();
+
+  const stackIntegrationsData = useMemo(() => {
+    return getItemRowData('stack_integrations');
+  }, [getItemRowData]);
+  const contributingTeamsData = useMemo(() => {
+    return getItemRowData('contributing_teams');
+  }, [getItemRowData]);
+  const affiliatedProjectsData = useMemo(() => {
+    return getItemRowData('affiliated_projects');
+  }, [getItemRowData]);
+
   const stackIntegrationsColumns = useStackIntegrationsColumns();
   const contributingTeamsColumns = useContributingTeamsColumns();
   const affiliatedProjectsColumns = useAffiliatedProjectsColumns();
-
-  const mockStackIntegrationsData: IStackIntegration[] = useMemo(
-    () => [
-      {
-        project: 'Ethereum',
-        relation: 'Integration',
-        description: 'This project has been a development on Ethereum network.',
-        reference: '',
-        repository: '',
-      },
-    ],
-    [],
-  );
-
-  const mockContributingTeamsData: IContributingTeam[] = useMemo(
-    () => [
-      {
-        project: 'Ethereum',
-        contributionArea: 'Integration',
-        description:
-          'This project has been a development on Ethereum network. Contributed to core protocol development and testing.',
-        reference: '',
-      },
-    ],
-    [],
-  );
-
-  const mockAffiliatedProjectsData: IAffiliatedProject[] = useMemo(
-    () => [
-      {
-        project: 'Ethereum',
-        affiliationType: 'Integration',
-        description:
-          'This project has been a development on Ethereum network. Partnership established for mutual growth and ecosystem expansion.',
-        reference: '',
-      },
-    ],
-    [],
-  );
 
   const handleSectionClick = (section: EcosystemSection) => {
     setActiveSection(section);
@@ -124,7 +94,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           title="Stack & Integrations"
           description="The protocols, libraries and building blocks this project relies on or connects with."
           filterButtonText="Relation"
-          data={mockStackIntegrationsData}
+          data={stackIntegrationsData}
           columns={stackIntegrationsColumns}
           projectId={projectId}
         />
@@ -133,7 +103,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           title="Contributing Teams"
           description="Teams and organizations that contribute to this project's development and growth."
           filterButtonText="Contribution Type"
-          data={mockContributingTeamsData}
+          data={contributingTeamsData}
           columns={contributingTeamsColumns}
           projectId={projectId}
         />
@@ -142,7 +112,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           title="Affiliated Projects"
           description="Related projects and partnerships within the ecosystem."
           filterButtonText="Affiliation Type"
-          data={mockAffiliatedProjectsData}
+          data={affiliatedProjectsData}
           columns={affiliatedProjectsColumns}
           projectId={projectId}
         />

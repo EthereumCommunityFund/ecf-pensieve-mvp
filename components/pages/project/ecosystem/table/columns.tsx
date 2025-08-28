@@ -7,26 +7,29 @@ import {
   IAffiliatedProject,
   IContributingTeam,
   IStackIntegration,
-} from '../types';
+} from '@/types/item';
 
-const ProjectCell = ({ value }: { value: string }) => (
-  <div className="flex items-center gap-[8px]">
-    <div className="flex size-[24px] items-center justify-center rounded-full bg-[#1E40AF]">
-      <span className="text-[10px] font-bold text-white">E</span>
+const ProjectCell = ({ value }: { value: string | string[] }) => {
+  const displayValue = Array.isArray(value) ? value.join(', ') : value;
+  return (
+    <div className="flex items-center gap-[8px]">
+      <div className="flex size-[24px] items-center justify-center rounded-full bg-[#1E40AF]">
+        <span className="text-[10px] font-bold text-white">E</span>
+      </div>
+      <span className="text-[14px] text-black">{displayValue}</span>
     </div>
-    <span className="text-[14px] text-black">{value}</span>
-  </div>
-);
+  );
+};
 
 const TextCell = ({ value }: { value: string }) => (
   <span className="text-[14px] text-black">{value}</span>
 );
 
-const DescriptionCell = ({ value }: { value: string }) => (
-  <span className="text-[14px] text-black/80">{value}</span>
+const DescriptionCell = ({ value }: { value?: string }) => (
+  <span className="text-[14px] text-black/80">{value || ''}</span>
 );
 
-const LinkCell = ({ value }: { value: string }) => {
+const LinkCell = ({ value }: { value?: string }) => {
   return value ? (
     <button className="text-[14px] text-black/60 transition-colors hover:text-black">
       {value}
@@ -57,16 +60,18 @@ export const useStackIntegrationsColumns = () => {
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <ProjectCell value={info.getValue()} />,
+        cell: (info) => (
+          <ProjectCell value={info.getValue() as string | string[]} />
+        ),
       }),
-      columnHelper.accessor('relation', {
-        id: 'relation',
+      columnHelper.accessor('type', {
+        id: 'type',
         header: () => 'Relation',
         size: 160,
         minSize: 160,
         maxSize: 160,
         enableResizing: false,
-        cell: (info) => <TextCell value={info.getValue()} />,
+        cell: (info) => <TextCell value={info.getValue() as string} />,
       }),
       columnHelper.accessor('description', {
         id: 'description',
@@ -75,7 +80,9 @@ export const useStackIntegrationsColumns = () => {
         minSize: 280,
         maxSize: 280,
         enableResizing: false,
-        cell: (info) => <DescriptionCell value={info.getValue()} />,
+        cell: (info) => (
+          <DescriptionCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
@@ -84,7 +91,9 @@ export const useStackIntegrationsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: (info) => <LinkCell value={info.getValue()} />,
+        cell: (info) => (
+          <LinkCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.accessor('repository', {
         id: 'repository',
@@ -93,7 +102,9 @@ export const useStackIntegrationsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: (info) => <LinkCell value={info.getValue()} />,
+        cell: (info) => (
+          <LinkCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.display({
         id: 'page',
@@ -123,16 +134,18 @@ export const useContributingTeamsColumns = () => {
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <ProjectCell value={info.getValue()} />,
+        cell: (info) => (
+          <ProjectCell value={info.getValue() as string | string[]} />
+        ),
       }),
-      columnHelper.accessor('contributionArea', {
-        id: 'contributionArea',
+      columnHelper.accessor('type', {
+        id: 'type',
         header: () => 'Contribution Area',
         size: 200,
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <TextCell value={info.getValue()} />,
+        cell: (info) => <TextCell value={info.getValue() as string} />,
       }),
       columnHelper.accessor('description', {
         id: 'description',
@@ -141,7 +154,9 @@ export const useContributingTeamsColumns = () => {
         minSize: 380,
         maxSize: 380,
         enableResizing: false,
-        cell: (info) => <DescriptionCell value={info.getValue()} />,
+        cell: (info) => (
+          <DescriptionCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
@@ -150,7 +165,9 @@ export const useContributingTeamsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: (info) => <LinkCell value={info.getValue()} />,
+        cell: (info) => (
+          <LinkCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.display({
         id: 'page',
@@ -180,7 +197,9 @@ export const useAffiliatedProjectsColumns = () => {
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <ProjectCell value={info.getValue()} />,
+        cell: (info) => (
+          <ProjectCell value={info.getValue() as string | string[]} />
+        ),
       }),
       columnHelper.accessor('affiliationType', {
         id: 'affiliationType',
@@ -189,7 +208,7 @@ export const useAffiliatedProjectsColumns = () => {
         minSize: 200,
         maxSize: 200,
         enableResizing: false,
-        cell: (info) => <TextCell value={info.getValue()} />,
+        cell: (info) => <TextCell value={info.getValue() as string} />,
       }),
       columnHelper.accessor('description', {
         id: 'description',
@@ -198,7 +217,9 @@ export const useAffiliatedProjectsColumns = () => {
         minSize: 380,
         maxSize: 380,
         enableResizing: false,
-        cell: (info) => <DescriptionCell value={info.getValue()} />,
+        cell: (info) => (
+          <DescriptionCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
@@ -207,7 +228,9 @@ export const useAffiliatedProjectsColumns = () => {
         minSize: 140,
         maxSize: 140,
         enableResizing: false,
-        cell: (info) => <LinkCell value={info.getValue()} />,
+        cell: (info) => (
+          <LinkCell value={info.getValue() as string | undefined} />
+        ),
       }),
       columnHelper.display({
         id: 'page',
