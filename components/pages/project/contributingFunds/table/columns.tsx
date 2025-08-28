@@ -61,11 +61,36 @@ export const useGivenGrantsColumns = () => {
         id: 'amount',
         header: () => 'Amount (USD)',
         size: 160,
-        cell: (info) => (
-          <span className="text-[14px] font-[500] text-black">
-            {info.getValue()}
-          </span>
-        ),
+        cell: (info) => {
+          const value = info.getValue();
+          if (!value) {
+            return <span className="text-[14px] font-[500] text-black">-</span>;
+          }
+
+          // Format number with thousands separators
+          const formatWithThousands = (num: string | number): string => {
+            const numStr = String(num);
+            const parts = numStr.split('.');
+            const integerPart = parts[0];
+            const decimalPart = parts[1];
+
+            // Add commas as thousands separators
+            const formattedInteger = integerPart.replace(
+              /\B(?=(\d{3})+(?!\d))/g,
+              ',',
+            );
+
+            return decimalPart !== undefined
+              ? `${formattedInteger}.${decimalPart}`
+              : formattedInteger;
+          };
+
+          return (
+            <span className="text-[14px] font-[500] text-black">
+              {formatWithThousands(value)}
+            </span>
+          );
+        },
       }),
       columnHelper.accessor('expenseSheet', {
         id: 'expenseSheet',
@@ -183,11 +208,36 @@ export const useGrantColumns = (type: GrantType) => {
         minSize: type === 'given' ? 160 : 180,
         maxSize: type === 'given' ? 160 : 180,
         enableResizing: false,
-        cell: (info) => (
-          <span className="text-[14px] font-[500] text-black">
-            {info.getValue() || '-'}
-          </span>
-        ),
+        cell: (info) => {
+          const value = info.getValue();
+          if (!value) {
+            return <span className="text-[14px] font-[500] text-black">-</span>;
+          }
+
+          // Format number with thousands separators
+          const formatWithThousands = (num: string | number): string => {
+            const numStr = String(num);
+            const parts = numStr.split('.');
+            const integerPart = parts[0];
+            const decimalPart = parts[1];
+
+            // Add commas as thousands separators
+            const formattedInteger = integerPart.replace(
+              /\B(?=(\d{3})+(?!\d))/g,
+              ',',
+            );
+
+            return decimalPart !== undefined
+              ? `${formattedInteger}.${decimalPart}`
+              : formattedInteger;
+          };
+
+          return (
+            <span className="text-[14px] font-[500] text-black">
+              {formatWithThousands(value)}
+            </span>
+          );
+        },
       }),
       columnHelper.accessor('expenseSheetUrl', {
         id: 'expenseSheetUrl',

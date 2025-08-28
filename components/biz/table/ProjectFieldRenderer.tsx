@@ -36,7 +36,7 @@ export const ProjectColDisplay: React.FC<{
     <Link
       href={`/project/${project.id}`}
       target="_blank"
-      className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-sm transition-colors hover:bg-gray-200"
+      className="inline-flex cursor-pointer items-center text-[13px] font-[600] leading-[20px] hover:text-black/60 hover:underline"
     >
       {project.name}
     </Link>
@@ -98,7 +98,7 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
     if (projects.length === 0) return <>N/A</>;
 
     return (
-      <div className="flex flex-wrap items-center gap-[8px]">
+      <div className="flex flex-col gap-[8px]">
         {projects.map((project) => (
           <ProjectColDisplay
             key={project.id}
