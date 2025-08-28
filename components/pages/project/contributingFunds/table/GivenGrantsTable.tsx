@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/biz/table';
 
-import { IGivenGrant, useGivenGrantsColumns } from './GivenGrantsCol';
+import { IGivenGrant, useGivenGrantsColumns } from './columns';
 
 interface GivenGrantsTableProps {
   projectId?: number;

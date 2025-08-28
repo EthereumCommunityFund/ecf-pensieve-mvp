@@ -4,11 +4,11 @@ import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { AddressDisplay } from '@/components/base/AddressDisplay';
-import { SelectedProjectTag } from '@/components/biz/FormAndTable/ProjectSearchSelector';
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
+import { ProjectColDisplay } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
@@ -27,7 +27,7 @@ import { normalizeUrl } from '@/utils/url';
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
 
 // Helper function to get label from options
-const getOptionLabel = (
+export const getOptionLabel = (
   value: string | undefined,
   options: Array<{ value: string; label: string }>,
 ): string => {
@@ -70,7 +70,7 @@ const ProjectFieldRenderer: React.FC<{
       const projectData = projectsMap?.get(numId);
 
       if (projectData) {
-        return <SelectedProjectTag project={projectData} />;
+        return <ProjectColDisplay project={projectData} />;
       }
     }
 
@@ -95,7 +95,7 @@ const ProjectFieldRenderer: React.FC<{
     return (
       <div className="flex flex-wrap items-center gap-[8px]">
         {projects.map((project) => (
-          <SelectedProjectTag key={project.id} project={project} />
+          <ProjectColDisplay key={project.id} project={project} />
         ))}
       </div>
     );
