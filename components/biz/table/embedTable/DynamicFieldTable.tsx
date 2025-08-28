@@ -1,4 +1,4 @@
-import { cn } from '@heroui/react';
+import { cn, ScrollShadow } from '@heroui/react';
 import React from 'react';
 
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
@@ -47,7 +47,10 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
   }
 
   return (
-    <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
+    <ScrollShadow
+      className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll"
+      orientation="horizontal"
+    >
       <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
         {/* Table header */}
         <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
@@ -120,7 +123,7 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
         </div>
       </div>
       {errorMessage}
-    </div>
+    </ScrollShadow>
   );
 };
 
