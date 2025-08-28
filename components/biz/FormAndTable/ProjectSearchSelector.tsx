@@ -49,7 +49,7 @@ interface ProjectSearchSelectorProps {
 
 interface SearchProjectItemProps {
   project: IProject;
-  onSelect: (project: IProject, name: string) => void;
+  onSelect: (project: IProject) => void;
   isSelected?: boolean;
   multiple?: boolean;
 }
@@ -97,8 +97,8 @@ const SearchProjectItem: React.FC<SearchProjectItemProps> = ({
     : 0;
 
   const onTriggerSelect = useCallback(() => {
-    onSelect(project, projectName);
-  }, [onSelect, project, projectName]);
+    onSelect(project);
+  }, [onSelect, project]);
 
   return (
     <div className="flex items-center justify-between gap-[14px] rounded-[10px] p-[10px] hover:bg-gray-50">
@@ -201,22 +201,33 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     return AllItemConfig[itemKey]?.label;
   }, [itemKey]);
 
-  // Use hook to fetch project data by IDs in multiple mode
+  // Use hook to fetch project data by IDs
   // Memoize projectIds to avoid unnecessary re-renders
   const projectIds = useMemo(() => {
-    return multiple && Array.isArray(value) ? value : [];
+    if (multiple && Array.isArray(value)) {
+      return value;
+    }
+    // In single mode, if value is a projectId (not NA_VALUE), wrap it in array
+    if (!multiple && typeof value === 'string' && value !== NA_VALUE) {
+      // Check if it's a numeric string (projectId) or project name
+      const isProjectId = /^\d+$/.test(value);
+      return isProjectId ? [value] : [];
+    }
+    return [];
   }, [multiple, value]);
 
   const { projects: fetchedProjects, isLoading: isLoadingProjects } =
     useProjectsByIds(projectIds, {
-      enabled: multiple && projectIds.length > 0,
+      enabled: projectIds.length > 0,
     });
 
   // Initialize selected projects with protection against unnecessary resets
   useEffect(() => {
     if (!multiple) {
-      // Single select mode - keep original logic
-      if (typeof value === 'string') {
+      // Single select mode - set fetched project if we have a projectId
+      if (fetchedProjects && fetchedProjects.length > 0) {
+        setSelectedProjects(fetchedProjects);
+      } else if (!value || value === NA_VALUE) {
         setSelectedProjects([]);
       }
       return;
@@ -270,7 +281,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     },
   );
 
-  const handleProjectSelect = (project: IProject, projectName: string) => {
+  const handleProjectSelect = (project: IProject) => {
     if (multiple) {
       // 多选模式下切换选中状态
       setTempSelectedProjects((prev) => {
@@ -287,9 +298,8 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
         }
       });
     } else {
-      // 单选模式保持原有逻辑
       setSelectedProjects([project]);
-      onChange(projectName, project);
+      onChange(project.id.toString(), project);
       setIsModalOpen(false);
     }
   };
@@ -323,11 +333,9 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
-    // 在多选模式下重置临时选择
     if (multiple) {
       setTempSelectedProjects([...selectedProjects]);
     }
-    // 不清空搜索状态，保留用户的搜索结果
   }, [multiple, selectedProjects]);
 
   const handleModalOpen = useCallback(() => {
@@ -335,7 +343,6 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
       // Use setTimeout to ensure modal opens after any potential validation events
       setTimeout(() => {
         setIsModalOpen(true);
-        // 在多选模式下初始化临时选择
         if (multiple) {
           setTempSelectedProjects([...selectedProjects]);
         }
@@ -414,17 +421,15 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                   <SearchIcon size={16} className="mr-2 text-black/60" />
                   <span
                     className={cn(
-                      'text-[13px] font-[600] ',
-                      value
+                      'text-[13px]',
+                      (!multiple && selectedProjects.length > 0) || value
                         ? 'text-black font-[600]'
                         : 'text-black/70 font-[400]',
                     )}
                   >
-                    {(!multiple &&
-                    typeof value === 'string' &&
-                    value !== NA_VALUE
-                      ? value
-                      : null) || placeholder}
+                    {(!multiple && selectedProjects.length > 0 ? (
+                      <SingleProjectName project={selectedProjects[0]} />
+                    ) : null) || placeholder}
                   </span>
                 </div>
               )}
@@ -609,6 +614,12 @@ const SelectedProjectTag: React.FC<{
       </button>
     </div>
   );
+};
+
+// Single project name component for single select mode
+const SingleProjectName: React.FC<{ project: IProject }> = ({ project }) => {
+  const { projectName } = useProjectItemValue(project);
+  return <>{projectName || ''}</>;
 };
 
 // Input Field 中的选中项目标签

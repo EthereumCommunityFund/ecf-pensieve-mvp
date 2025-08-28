@@ -47,6 +47,63 @@ interface IProps {
   isInExpandableRow?: boolean;
 }
 
+// Reusable component for rendering project fields
+const ProjectFieldRenderer: React.FC<{
+  projectValue: string | string[] | undefined;
+  projectsMap: Map<number, IProject> | undefined;
+  isLoadingProjects: boolean;
+  isProjectId: (value: string) => boolean;
+}> = ({ projectValue, projectsMap, isLoadingProjects, isProjectId }) => {
+  if (!projectValue) return <>N/A</>;
+
+  // Check if it's a string
+  if (typeof projectValue === 'string') {
+    if (projectValue === 'N/A') return <>N/A</>;
+
+    // Check if it's a projectId
+    if (isProjectId(projectValue)) {
+      if (isLoadingProjects) {
+        return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
+      }
+
+      const numId = parseInt(projectValue, 10);
+      const projectData = projectsMap?.get(numId);
+
+      if (projectData) {
+        return <SelectedProjectTag project={projectData} />;
+      }
+    }
+
+    // Legacy projectName data
+    return <>{projectValue}</>;
+  }
+
+  // Array of project IDs
+  if (Array.isArray(projectValue)) {
+    if (isLoadingProjects) {
+      return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
+    }
+
+    const projects = projectValue
+      .map((id: string) => {
+        const numId = parseInt(id, 10);
+        const projectData = projectsMap?.get(numId);
+        return projectData || null;
+      })
+      .filter((p): p is IProject => p !== null);
+
+    return (
+      <div className="flex flex-wrap items-center gap-[8px]">
+        {projects.map((project) => (
+          <SelectedProjectTag key={project.id} project={project} />
+        ))}
+      </div>
+    );
+  }
+
+  return <></>;
+};
+
 const InputContentRenderer: React.FC<IProps> = ({
   value,
   isEssential,
@@ -59,89 +116,56 @@ const InputContentRenderer: React.FC<IProps> = ({
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
+  // Helper function to check if a string value is a projectId
+  const isProjectId = useCallback((value: string): boolean => {
+    // projectId is a numeric string, not 'N/A', and Number(value) > 0
+    return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
+  }, []);
+
+  // Helper function to extract projectIds from a field value
+  const extractProjectIds = useCallback(
+    (fieldValue: any): string[] => {
+      if (!fieldValue) return [];
+
+      if (Array.isArray(fieldValue)) {
+        return fieldValue;
+      }
+
+      if (typeof fieldValue === 'string' && isProjectId(fieldValue)) {
+        return [fieldValue];
+      }
+
+      return [];
+    },
+    [isProjectId],
+  );
+
   // For fundingReceivedGrants, affiliated_projects, contributing_teams, and stack_integrations, extract project IDs
   const projectIds = useMemo(() => {
+    const parsed = parseValue(formatValue);
+    if (!parsed || !Array.isArray(parsed)) return [];
+
+    const ids: string[] = [];
+
     if (displayFormType === 'fundingReceivedGrants') {
-      const parsed = parseValue(formatValue);
-      if (!parsed || !Array.isArray(parsed)) return [];
-
-      const ids: string[] = [];
       parsed.forEach((grant: any) => {
-        // Extract from organization field
-        if (grant.organization) {
-          if (Array.isArray(grant.organization)) {
-            // New format: array of project IDs
-            ids.push(...grant.organization);
-          }
-        }
-        // Extract from projectDonator field
-        if (grant.projectDonator && Array.isArray(grant.projectDonator)) {
-          ids.push(...grant.projectDonator);
-        }
+        // Extract from organization and projectDonator fields
+        ids.push(...extractProjectIds(grant.organization));
+        ids.push(...extractProjectIds(grant.projectDonator));
       });
-
-      return [...new Set(ids)]; // Remove duplicates
-    }
-
-    if (displayFormType === 'affiliated_projects') {
-      const parsed = parseValue(formatValue);
-      if (!parsed || !Array.isArray(parsed)) return [];
-
-      const ids: string[] = [];
+    } else if (
+      displayFormType === 'affiliated_projects' ||
+      displayFormType === 'contributing_teams' ||
+      displayFormType === 'stack_integrations'
+    ) {
       parsed.forEach((item: any) => {
         // Extract from project field
-        if (item.project) {
-          if (Array.isArray(item.project)) {
-            ids.push(...item.project);
-          } else if (typeof item.project === 'string' && item.project) {
-            ids.push(item.project);
-          }
-        }
+        ids.push(...extractProjectIds(item.project));
       });
-
-      return [...new Set(ids)]; // Remove duplicates
     }
 
-    if (displayFormType === 'contributing_teams') {
-      const parsed = parseValue(formatValue);
-      if (!parsed || !Array.isArray(parsed)) return [];
-
-      const ids: string[] = [];
-      parsed.forEach((item: any) => {
-        // Extract from project field
-        if (item.project) {
-          if (Array.isArray(item.project)) {
-            ids.push(...item.project);
-          } else if (typeof item.project === 'string' && item.project) {
-            ids.push(item.project);
-          }
-        }
-      });
-
-      return [...new Set(ids)]; // Remove duplicates
-    }
-
-    if (displayFormType === 'stack_integrations') {
-      const parsed = parseValue(formatValue);
-      if (!parsed || !Array.isArray(parsed)) return [];
-
-      const ids: string[] = [];
-      parsed.forEach((item: any) => {
-        // Extract from project field
-        if (item.project) {
-          if (Array.isArray(item.project)) {
-            ids.push(...item.project);
-          } else if (typeof item.project === 'string' && item.project) {
-            ids.push(item.project);
-          }
-        }
-      });
-
-      return [...new Set(ids)]; // Remove duplicates
-    }
-
-    return [];
-  }, [displayFormType, formatValue]);
+    return [...new Set(ids)]; // Remove duplicates
+  }, [displayFormType, formatValue, extractProjectIds]);
 
   // Fetch project names for organizations, affiliated projects, contributing teams, and stack integrations
   const { projectsMap, isLoading: isLoadingProjects } = useProjectNamesByIds(
@@ -1061,89 +1085,24 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              if (!grant.organization) return '';
-
-                              // Check if it's the old format (string)
-                              if (typeof grant.organization === 'string') {
-                                return grant.organization;
-                              }
-
-                              // New format: array of project IDs
-                              if (Array.isArray(grant.organization)) {
-                                if (isLoadingProjects) {
-                                  return (
-                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                  );
-                                }
-
-                                const projects = (
-                                  grant.organization as string[]
-                                )
-                                  .map((id: string) => {
-                                    const numId = parseInt(id, 10);
-                                    const projectData = projectsMap?.get(numId);
-                                    return projectData || null;
-                                  })
-                                  .filter((p): p is IProject => p !== null);
-
-                                return (
-                                  <div className="flex flex-wrap items-center gap-[8px]">
-                                    {projects.map((project) => (
-                                      <SelectedProjectTag
-                                        key={project.id}
-                                        project={project}
-                                      />
-                                    ))}
-                                  </div>
-                                );
-                              }
-
-                              return '';
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={grant.organization}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={300}
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              // Compatibility: handle old data without projectDonator field
-                              if (
-                                !grant.projectDonator ||
-                                !Array.isArray(grant.projectDonator) ||
-                                grant.projectDonator.length === 0
-                              ) {
-                                return '-';
-                              }
-
-                              if (isLoadingProjects) {
-                                return (
-                                  <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                );
-                              }
-
-                              const donatorProjects = grant.projectDonator
-                                .map((id: string) => {
-                                  const numId = parseInt(id, 10);
-                                  const projectData = projectsMap?.get(numId);
-                                  return projectData || null;
-                                })
-                                .filter((p): p is IProject => p !== null);
-
-                              return donatorProjects.length > 0 ? (
-                                <div className="flex flex-wrap items-center gap-[8px]">
-                                  {donatorProjects.map((project) => (
-                                    <SelectedProjectTag
-                                      key={project.id}
-                                      project={project}
-                                    />
-                                  ))}
-                                </div>
-                              ) : (
-                                '-'
-                              );
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={grant.projectDonator}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={138}
@@ -1293,45 +1252,12 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              if (!item.project) return 'N/A';
-
-                              // Check if it's a string
-                              if (typeof item.project === 'string') {
-                                if (item.project === 'N/A') return 'N/A';
-                                return item.project;
-                              }
-
-                              // Array of project IDs
-                              if (Array.isArray(item.project)) {
-                                if (isLoadingProjects) {
-                                  return (
-                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                  );
-                                }
-
-                                const projects = (item.project as string[])
-                                  .map((id: string) => {
-                                    const numId = parseInt(id, 10);
-                                    const projectData = projectsMap?.get(numId);
-                                    return projectData || null;
-                                  })
-                                  .filter((p): p is IProject => p !== null);
-
-                                return (
-                                  <div className="flex flex-wrap items-center gap-[8px]">
-                                    {projects.map((project) => (
-                                      <SelectedProjectTag
-                                        key={project.id}
-                                        project={project}
-                                      />
-                                    ))}
-                                  </div>
-                                );
-                              }
-
-                              return '';
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={item.project}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={180}
@@ -1478,45 +1404,12 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              if (!item.project) return 'N/A';
-
-                              // Check if it's a string
-                              if (typeof item.project === 'string') {
-                                if (item.project === 'N/A') return 'N/A';
-                                return item.project;
-                              }
-
-                              // Array of project IDs
-                              if (Array.isArray(item.project)) {
-                                if (isLoadingProjects) {
-                                  return (
-                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                  );
-                                }
-
-                                const projects = (item.project as string[])
-                                  .map((id: string) => {
-                                    const numId = parseInt(id, 10);
-                                    const projectData = projectsMap?.get(numId);
-                                    return projectData || null;
-                                  })
-                                  .filter((p): p is IProject => p !== null);
-
-                                return (
-                                  <div className="flex flex-wrap items-center gap-[8px]">
-                                    {projects.map((project) => (
-                                      <SelectedProjectTag
-                                        key={project.id}
-                                        project={project}
-                                      />
-                                    ))}
-                                  </div>
-                                );
-                              }
-
-                              return '';
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={item.project}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={200}
@@ -1670,45 +1563,12 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              if (!item.project) return 'N/A';
-
-                              // Check if it's a string
-                              if (typeof item.project === 'string') {
-                                if (item.project === 'N/A') return 'N/A';
-                                return item.project;
-                              }
-
-                              // Array of project IDs
-                              if (Array.isArray(item.project)) {
-                                if (isLoadingProjects) {
-                                  return (
-                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                  );
-                                }
-
-                                const projects = (item.project as string[])
-                                  .map((id: string) => {
-                                    const numId = parseInt(id, 10);
-                                    const projectData = projectsMap?.get(numId);
-                                    return projectData || null;
-                                  })
-                                  .filter((p): p is IProject => p !== null);
-
-                                return (
-                                  <div className="flex flex-wrap items-center gap-[8px]">
-                                    {projects.map((project) => (
-                                      <SelectedProjectTag
-                                        key={project.id}
-                                        project={project}
-                                      />
-                                    ))}
-                                  </div>
-                                );
-                              }
-
-                              return '';
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={item.project}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={180}
