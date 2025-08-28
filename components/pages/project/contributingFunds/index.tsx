@@ -2,13 +2,22 @@
 
 import { FC } from 'react';
 
+import { IPocItemKey } from '@/types/item';
+
 import GrantsTable from './table/table';
 
 interface ContributingFundsProps {
   projectId: number;
+  onOpenModal?: (
+    itemKey: IPocItemKey,
+    contentType?: 'viewItemProposal' | 'submitPropose',
+  ) => void;
 }
 
-const ContributingFunds: FC<ContributingFundsProps> = ({ projectId }) => {
+const ContributingFunds: FC<ContributingFundsProps> = ({
+  projectId,
+  onOpenModal,
+}) => {
   // Context is available but not used in this UI-only implementation
   // const { project } = useProjectDetailContext();
 
@@ -37,7 +46,11 @@ const ContributingFunds: FC<ContributingFundsProps> = ({ projectId }) => {
       {/* <GivenGrantsTable projectId={projectId} /> */}
 
       {/* Received (Grants) Section */}
-      <GrantsTable projectId={projectId} type="received" />
+      <GrantsTable
+        projectId={projectId}
+        type="received"
+        onOpenModal={onOpenModal}
+      />
       {/* <ReceivedGrantsTable projectId={projectId} /> */}
     </div>
   );
