@@ -8,7 +8,7 @@ import ProjectTabs from '@/components/base/ProjectTabs';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
-import Review from '@/components/pages/project/contributingFunds';
+import ContributingFunds from '@/components/pages/project/contributingFunds';
 import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import SubmitterModal from '@/components/pages/project/detail/modal/Submitter';
@@ -216,7 +216,7 @@ const ProjectPage = () => {
       )}
       {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
       {activeTab === 'contributing-funds' && (
-        <Review projectId={Number(projectId)} />
+        <ContributingFunds projectId={Number(projectId)} />
       )}
 
       <ProjectDetailMainModal
