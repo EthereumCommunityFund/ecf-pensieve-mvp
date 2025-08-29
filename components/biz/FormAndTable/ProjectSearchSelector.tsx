@@ -9,6 +9,7 @@ import { useDebounce } from 'use-debounce';
 import { Button } from '@/components/base';
 import NAButton from '@/components/base/NAButton';
 import NADisplay from '@/components/base/NADisplay';
+import { Modal, ModalContent } from '@/components/base/modal';
 import { calcTransparentScore } from '@/components/biz/project/TransparentScore';
 import {
   PlusSquareOutlineIcon,
@@ -53,6 +54,166 @@ interface SearchProjectItemProps {
   isSelected?: boolean;
   multiple?: boolean;
 }
+
+interface SearchModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  debouncedQuery: string;
+  tempSelectedProjects: IProject[];
+  onTempSelectedProjectsChange: (projects: IProject[]) => void;
+  onConfirmSelection: () => void;
+  onProjectSelect: (project: IProject) => void;
+  isProjectSelected: (projectId: number) => boolean;
+  isLoading: boolean;
+  isFetching: boolean;
+  allProjects: any[];
+  multiple?: boolean;
+  itemLabel?: string;
+  searchModalTitle?: string;
+  columnName?: string;
+}
+
+const SearchModal: React.FC<SearchModalProps> = ({
+  isOpen,
+  onClose,
+  searchQuery,
+  onSearchQueryChange,
+  debouncedQuery,
+  tempSelectedProjects,
+  onTempSelectedProjectsChange,
+  onConfirmSelection,
+  onProjectSelect,
+  isProjectSelected,
+  isLoading,
+  isFetching,
+  allProjects,
+  multiple = false,
+  itemLabel,
+  searchModalTitle,
+  columnName = 'project',
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      placement="center"
+      hideCloseButton
+      className="mx-4"
+      classNames={{
+        base: 'p-0',
+        body: 'p-0 gap-0',
+        // Ensure this modal stacks above ProjectDetailMainModal
+        wrapper: 'z-[2000]',
+      }}
+    >
+      <ModalContent className="w-[510px] rounded-[10px] border-2 border-[rgb(225,225,225)] bg-white shadow-none">
+        {/* Modal Header */}
+        <div className="flex min-h-[44px] items-center justify-between gap-[10px] px-[14px] pt-[14px]">
+          <div className="flex items-center gap-[10px]">
+            <div className="flex items-center gap-[10px] rounded-[5px] border-none bg-[rgb(245,245,245)] px-[10px] py-[4px]">
+              <span className="text-[14px] font-semibold text-black">
+                {itemLabel || searchModalTitle || 'Search'}:
+              </span>
+              <div className="flex items-center gap-[5px] opacity-60">
+                <span className="text-[14px] font-semibold text-[rgb(51,51,51)]">
+                  {columnName}
+                </span>
+                <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-[10px]">
+            <div className="rounded-[5px] bg-[rgb(245,245,245)] px-[8px] py-[2px]">
+              <span className="font-['Ubuntu_Mono'] text-[13px] font-bold text-black">
+                Esc
+              </span>
+            </div>
+            <button
+              onClick={onClose}
+              className="flex size-[20px] items-center justify-center"
+            >
+              <X size={16} className="text-black" />
+            </button>
+          </div>
+        </div>
+
+        {/* Search Input */}
+        <div className="p-[14px]">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchQueryChange(e.target.value)}
+            placeholder="Search projects..."
+            className="w-full border-none bg-transparent text-[14px] font-normal text-black placeholder:text-black/60 focus:outline-none"
+            autoFocus
+          />
+        </div>
+
+        {/* Selected Projects Display */}
+        {multiple && tempSelectedProjects.length > 0 && (
+          <div className="flex flex-wrap items-center gap-[10px] border-t border-black/10 px-[14px] py-[5px]">
+            {tempSelectedProjects.map((project) => (
+              <SelectedProjectTag
+                key={project.id}
+                project={project}
+                onRemove={() => {
+                  onTempSelectedProjectsChange(
+                    tempSelectedProjects.filter((p) => p.id !== project.id),
+                  );
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Search Results */}
+        <div className="max-h-[320px] overflow-y-auto">
+          {(isLoading || isFetching) && debouncedQuery.length >= 2 ? (
+            <div className="flex flex-col p-[14px]">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <SearchProjectItemSkeleton key={`skeleton-${index}`} />
+              ))}
+            </div>
+          ) : allProjects.length > 0 ? (
+            <div className="flex flex-col p-[14px]">
+              {allProjects.map((project) => (
+                <SearchProjectItem
+                  key={project.id}
+                  project={project as unknown as IProject}
+                  onSelect={onProjectSelect}
+                  isSelected={isProjectSelected(project.id)}
+                  multiple={multiple}
+                />
+              ))}
+            </div>
+          ) : debouncedQuery.length >= 2 && !isLoading && !isFetching ? (
+            <div className="flex h-[60px] items-center justify-center">
+              <span className="text-[14px] font-normal text-black/60">
+                No projects found
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Confirm Selection Button for Multiple Mode */}
+        {multiple && tempSelectedProjects.length > 0 && (
+          <div className="flex justify-end border-t border-black/10 bg-white/40 px-[14px] pb-[14px] pt-[10px] backdrop-blur-[10px]">
+            <button
+              onClick={onConfirmSelection}
+              className="flex h-[36px] items-center justify-center rounded-[5px] bg-[rgb(74,74,74)] px-[10px] py-[8px] font-['Ubuntu_Mono'] text-[14px] font-bold text-white hover:bg-[rgb(64,64,64)]"
+            >
+              Confirm Selection
+            </button>
+          </div>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+};
 
 const SearchProjectItemSkeleton: React.FC = () => {
   return (
@@ -350,19 +511,6 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     }
   }, [disabled, multiple, selectedProjects]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isModalOpen) {
-        handleModalClose();
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isModalOpen, handleModalClose]);
-
   const allProjects = searchResults?.published.items || [];
 
   // If N/A is selected, show NADisplay component
@@ -379,7 +527,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     <>
       {/* Input Field */}
       <div className="relative w-full">
-        <div className="flex min-h-[42px] w-full flex-wrap items-center gap-[8px]">
+        <div className="flex min-h-[42px] w-full flex-wrap items-center gap-[8px] py-[4px]">
           {/* Main input container with border */}
           <div
             className={`flex min-h-[42px] flex-1 cursor-pointer items-center rounded-[8px] px-[10px] ${
@@ -475,111 +623,25 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
       </div>
 
       {/* Search Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-          <div className="w-[510px] rounded-[10px] border-2 border-[rgb(225,225,225)] bg-white shadow-none">
-            {/* Modal Header */}
-            <div className="flex h-[44px] items-center justify-between px-[14px]">
-              <div className="flex items-center gap-[10px]">
-                <div className="flex items-center gap-[10px] rounded-[5px] border-none bg-[rgb(245,245,245)] px-[10px] py-[4px]">
-                  <span className="text-[14px] font-semibold text-black">
-                    {itemLabel || searchModalTitle || 'Search'}:
-                  </span>
-                  <div className="flex items-center gap-[5px] opacity-60">
-                    <span className="text-[14px] font-semibold text-[rgb(51,51,51)]">
-                      {columnName}
-                    </span>
-                    <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-[10px]">
-                <div className="rounded-[5px] bg-[rgb(245,245,245)] px-[8px] py-[2px]">
-                  <span className="font-['Ubuntu_Mono'] text-[13px] font-bold text-black">
-                    Esc
-                  </span>
-                </div>
-                <button
-                  onClick={handleModalClose}
-                  className="flex size-[20px] items-center justify-center"
-                >
-                  <X size={16} className="text-black" />
-                </button>
-              </div>
-            </div>
-
-            {/* Search Input */}
-            <div className="p-[14px]">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search projects..."
-                className="w-full border-none bg-transparent text-[14px] font-normal text-black placeholder:text-black/60 focus:outline-none"
-                autoFocus
-              />
-            </div>
-
-            {/* Selected Projects Display */}
-            {multiple && tempSelectedProjects.length > 0 && (
-              <div className="flex flex-wrap items-center gap-[10px] border-t border-black/10 px-[14px] py-[5px]">
-                {tempSelectedProjects.map((project) => (
-                  <SelectedProjectTag
-                    key={project.id}
-                    project={project}
-                    onRemove={() => {
-                      setTempSelectedProjects((prev) =>
-                        prev.filter((p) => p.id !== project.id),
-                      );
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Search Results */}
-            <div className="max-h-[320px] overflow-y-auto">
-              {(isLoading || isFetching) && debouncedQuery.length >= 2 ? (
-                <div className="flex flex-col p-[14px]">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <SearchProjectItemSkeleton key={`skeleton-${index}`} />
-                  ))}
-                </div>
-              ) : allProjects.length > 0 ? (
-                <div className="flex flex-col p-[14px]">
-                  {allProjects.map((project) => (
-                    <SearchProjectItem
-                      key={project.id}
-                      project={project as unknown as IProject}
-                      onSelect={handleProjectSelect}
-                      isSelected={isProjectSelected(project.id)}
-                      multiple={multiple}
-                    />
-                  ))}
-                </div>
-              ) : debouncedQuery.length >= 2 && !isLoading && !isFetching ? (
-                <div className="flex h-[60px] items-center justify-center">
-                  <span className="text-[14px] font-normal text-black/60">
-                    No projects found
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Confirm Selection Button for Multiple Mode */}
-            {multiple && tempSelectedProjects.length > 0 && (
-              <div className="flex justify-end border-t border-black/10 bg-white/40  px-[14px] pb-[14px] pt-[10px] backdrop-blur-[10px] ">
-                <button
-                  onClick={handleConfirmSelection}
-                  className="flex h-[36px] items-center justify-center rounded-[5px] bg-[rgb(74,74,74)] px-[10px] py-[8px] font-['Ubuntu_Mono'] text-[14px] font-bold text-white hover:bg-[rgb(64,64,64)]"
-                >
-                  Confirm Selection
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <SearchModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        debouncedQuery={debouncedQuery}
+        tempSelectedProjects={tempSelectedProjects}
+        onTempSelectedProjectsChange={setTempSelectedProjects}
+        onConfirmSelection={handleConfirmSelection}
+        onProjectSelect={handleProjectSelect}
+        isProjectSelected={isProjectSelected}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        allProjects={allProjects}
+        multiple={multiple}
+        itemLabel={itemLabel}
+        searchModalTitle={searchModalTitle}
+        columnName={columnName}
+      />
     </>
   );
 };
@@ -630,7 +692,7 @@ const SelectedProjectChip: React.FC<{
   const { projectName } = useProjectItemValue(project);
 
   return (
-    <div className="flex h-[20px] items-center gap-[5px]">
+    <div className="flex min-h-[20px] items-center gap-[5px]">
       <span className="text-[13px] font-[600] leading-[20px] text-black">
         {projectName}
       </span>
