@@ -13,16 +13,13 @@ import URLInput from '@/components/biz/FormAndTable/URLInput';
  * Stack integration type options for select dropdown
  */
 export const STACK_INTEGRATION_TYPE_OPTIONS = [
-  {
-    value: 'dependency_interfacing',
-    label: 'Dependency Integration / Interfacing',
-  },
+  { value: 'dependency', label: 'Dependency' },
+  { value: 'integration_interfacing', label: 'Integration / Interfacing' },
   { value: 'plugin_extension', label: 'Plugin / Extension' },
   { value: 'embedding', label: 'Embedding' },
   { value: 'forking_inheritance', label: 'Forking / Inheritance' },
   { value: 'wrapping_abstraction', label: 'Wrapping / Abstraction' },
-  { value: 'service', label: 'Service' },
-  { value: 'consumption', label: 'Consumption' },
+  { value: 'service_consumption', label: 'Service Consumption' },
   { value: 'modular_composition', label: 'Modular Composition' },
   { value: 'peer_to_peer', label: 'Peer-to-Peer Relationship' },
   { value: 'middleware_broker', label: 'Middleware / Broker' },
