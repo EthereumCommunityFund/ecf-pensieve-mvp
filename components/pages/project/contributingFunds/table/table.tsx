@@ -120,7 +120,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
       </div>
 
       {/* Action buttons section */}
-      <div className="flex items-center gap-[10px] border-x border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+      {/* <div className="flex items-center gap-[10px] border-x border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <button
           onClick={() => {
             // Open modal for viewing funding_received_grants item proposals
@@ -138,7 +138,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
         >
           Propose Entry
         </button>
-      </div>
+      </div> */}
 
       <PageTableContainer className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
         <table className="w-full border-separate border-spacing-0">
