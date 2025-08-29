@@ -11,6 +11,7 @@ export * from './notifications';
 export * from './profiles';
 export * from './projectLogs';
 export * from './projectNotificationSettings';
+export * from './projectRelations';
 export * from './projects';
 export * from './projectSnaps';
 export * from './proposals';
