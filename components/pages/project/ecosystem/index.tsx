@@ -21,7 +21,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
   const [activeSection, setActiveSection] =
     useState<EcosystemSection>('stack_integrations');
 
-  const { getItemRowData } = useProjectTableData();
+  const { getItemRowData, isDataFetched } = useProjectTableData();
 
   const stackIntegrationsData = useMemo(() => {
     return getItemRowData('stack_integrations');
@@ -97,6 +97,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           data={stackIntegrationsData}
           columns={stackIntegrationsColumns}
           projectId={projectId}
+          isDataFetched={isDataFetched}
         />
         <EcosystemTable
           id="contributing_teams"
@@ -106,6 +107,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           data={contributingTeamsData}
           columns={contributingTeamsColumns}
           projectId={projectId}
+          isDataFetched={isDataFetched}
         />
         <EcosystemTable
           id="affiliated_projects"
@@ -115,6 +117,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           data={affiliatedProjectsData}
           columns={affiliatedProjectsColumns}
           projectId={projectId}
+          isDataFetched={isDataFetched}
         />
       </div>
     </div>

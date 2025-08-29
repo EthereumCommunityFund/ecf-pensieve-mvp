@@ -1,19 +1,21 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { CaretUpDown, Info } from '@phosphor-icons/react';
+import { CaretUpDown, Info, Tray } from '@phosphor-icons/react';
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useMemo } from 'react';
 
 import {
   PageTableContainer,
   TableCell,
+  TableCellSkeleton,
   TableHeader,
   TableRow,
+  TableRowSkeleton,
 } from '@/components/biz/table';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
@@ -39,33 +41,29 @@ const GrantsTable: FC<GrantsTableProps> = ({
   onOpenModal,
 }) => {
   const columns = useGrantColumns(type);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  const { getItemRowData } = useProjectTableData();
+  const { getItemRowData, isDataFetched } = useProjectTableData();
   const { data: givenGrantsData, isLoading: isLoadingGiven } =
     useGivenGrantsData(projectId);
 
-  // Initialize after component mount to avoid state update during render
-  useEffect(() => {
-    setIsInitialized(true);
-  }, []);
-
   const receivedGrantsData = useMemo(() => {
-    if (!isInitialized || type === 'given') return [];
+    if (!isDataFetched || type === 'given') return [];
     return getItemRowData('funding_received_grants');
-  }, [getItemRowData, isInitialized, type]);
+  }, [getItemRowData, isDataFetched, type]);
 
   const data = useMemo(() => {
-    if (!isInitialized) return [];
-    return type === 'given' ? givenGrantsData : receivedGrantsData;
-  }, [type, receivedGrantsData, givenGrantsData, isInitialized]);
+    if (type === 'given') {
+      return givenGrantsData;
+    }
+    if (!isDataFetched) return [];
+    return receivedGrantsData;
+  }, [type, receivedGrantsData, givenGrantsData, isDataFetched]);
 
   // Extract project IDs from grants data using shared helper
   const projectIds = useMemo(() => {
-    if (!isInitialized) return [];
     // For grants, extract from organization and projectDonator fields
     return extractProjectIds(data, ['organization', 'projectDonator']);
-  }, [data, isInitialized]);
+  }, [data]);
 
   const { projectsMap, isLoading: isLoadingProjects } =
     useOptimizedProjectsByIds(projectIds);
@@ -86,6 +84,9 @@ const GrantsTable: FC<GrantsTableProps> = ({
       ? 'Externally documented when, to whom, and how much funding this project has provided.'
       : 'Document when, from whom, and how much funding this project has received.';
   const showActionButtons = type === 'given';
+
+  // Determine if we should show skeleton
+  const isLoading = type === 'given' ? isLoadingGiven : !isDataFetched;
 
   return (
     <div className="mb-[48px]">
@@ -180,35 +181,78 @@ const GrantsTable: FC<GrantsTableProps> = ({
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row, rowIndex) => (
-              <TableRow
-                key={row.id}
-                className={cn(
-                  rowIndex < table.getRowModel().rows.length - 1
-                    ? 'border-b border-black/5'
-                    : '',
-                  'bg-white transition-colors hover:bg-black/[0.02]',
-                )}
-              >
-                {row.getVisibleCells().map((cell, cellIndex) => {
-                  const isLast = cellIndex === row.getVisibleCells().length - 1;
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(!isLast && 'border-r border-black/5')}
-                      style={{
-                        width: cell.column.getSize(),
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+            {isLoading ? (
+              // Skeleton rows when loading
+              Array.from({ length: 4 }).map((_, rowIndex) => (
+                <TableRowSkeleton
+                  key={`skeleton-row-${rowIndex}`}
+                  isLastRow={rowIndex === 3}
+                >
+                  {columns.map((column, cellIndex) => {
+                    const isLast = cellIndex === columns.length - 1;
+                    return (
+                      <TableCellSkeleton
+                        key={`skeleton-cell-${column.id}-${rowIndex}`}
+                        width={column.size || column.minSize}
+                        isLast={isLast}
+                        isLastRow={rowIndex === 3}
+                        isContainerBordered={true}
+                        minHeight={56}
+                        skeletonHeight={20}
+                        className={cn(!isLast && 'border-r border-black/5')}
+                      />
+                    );
+                  })}
+                </TableRowSkeleton>
+              ))
+            ) : data.length === 0 ? (
+              // Empty state
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="bg-white py-12 text-center"
+                >
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <Tray size={48} weight="thin" className="text-black/20" />
+                    <p className="text-[14px] font-[400] text-black/40">
+                      No data available
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              // Actual data rows
+              table.getRowModel().rows.map((row, rowIndex) => (
+                <TableRow
+                  key={row.id}
+                  className={cn(
+                    rowIndex < table.getRowModel().rows.length - 1
+                      ? 'border-b border-black/5'
+                      : '',
+                    'bg-white transition-colors hover:bg-black/[0.02]',
+                  )}
+                >
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    const isLast =
+                      cellIndex === row.getVisibleCells().length - 1;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(!isLast && 'border-r border-black/5')}
+                        style={{
+                          width: cell.column.getSize(),
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            )}
           </tbody>
         </table>
       </PageTableContainer>
