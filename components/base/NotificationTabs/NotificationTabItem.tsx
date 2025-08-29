@@ -13,7 +13,7 @@ const NotificationTabItem: FC<NotificationTabItemProps> = ({
 }) => {
   const getTabStyles = () => {
     if (isActive) {
-      return 'bg-white border-0 border-b-[3px] border-black/60 rounded-none';
+      return 'bg-white rounded-none relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-black/60';
     }
     return 'rounded-[5px]';
   };
