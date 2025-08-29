@@ -22,9 +22,10 @@ import { IPocItemKey } from '@/types/item';
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
 import { GrantType, useGrantColumns } from './columns';
+import { useGivenGrantsData } from './hooks/useGivenGrantsData';
 
 interface GrantsTableProps {
-  projectId?: number;
+  projectId: number;
   type: GrantType;
   onOpenModal?: (
     itemKey: IPocItemKey,
@@ -32,11 +33,17 @@ interface GrantsTableProps {
   ) => void;
 }
 
-const GrantsTable: FC<GrantsTableProps> = ({ type, onOpenModal }) => {
+const GrantsTable: FC<GrantsTableProps> = ({
+  projectId,
+  type,
+  onOpenModal,
+}) => {
   const columns = useGrantColumns(type);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const { getItemRowData } = useProjectTableData();
+  const { data: givenGrantsData, isLoading: isLoadingGiven } =
+    useGivenGrantsData(projectId);
 
   // Initialize after component mount to avoid state update during render
   useEffect(() => {
@@ -44,21 +51,21 @@ const GrantsTable: FC<GrantsTableProps> = ({ type, onOpenModal }) => {
   }, []);
 
   const receivedGrantsData = useMemo(() => {
-    if (!isInitialized) return [];
+    if (!isInitialized || type === 'given') return [];
     return getItemRowData('funding_received_grants');
-  }, [getItemRowData, isInitialized]);
+  }, [getItemRowData, isInitialized, type]);
 
-  const data = useMemo(
-    () => (type === 'given' ? [] : receivedGrantsData),
-    [type, receivedGrantsData],
-  );
+  const data = useMemo(() => {
+    if (!isInitialized) return [];
+    return type === 'given' ? givenGrantsData : receivedGrantsData;
+  }, [type, receivedGrantsData, givenGrantsData, isInitialized]);
 
   // Extract project IDs from grants data using shared helper
   const projectIds = useMemo(() => {
-    if (type === 'given' || !isInitialized) return [];
+    if (!isInitialized) return [];
     // For grants, extract from organization and projectDonator fields
     return extractProjectIds(data, ['organization', 'projectDonator']);
-  }, [data, type, isInitialized]);
+  }, [data, isInitialized]);
 
   const { projectsMap, isLoading: isLoadingProjects } =
     useOptimizedProjectsByIds(projectIds);
