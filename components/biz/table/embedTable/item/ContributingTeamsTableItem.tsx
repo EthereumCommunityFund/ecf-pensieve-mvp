@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
 import { Select, SelectItem } from '@/components/base/select';
-import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearchSelector';
+import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
 import URLInput from '@/components/biz/FormAndTable/URLInput';
 
 /**
