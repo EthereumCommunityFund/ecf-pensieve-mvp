@@ -25,7 +25,7 @@ interface ProjectsNavItemProps {
 export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const debouncedSetIsOpen = useDebouncedCallback(setIsOpen, 300);
+  const debouncedSetIsOpen = useDebouncedCallback(setIsOpen, 100);
 
   const handleOpen = () => {
     debouncedSetIsOpen.cancel();
@@ -88,13 +88,15 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
       classNames={{
         content:
           'p-[14px] !transform-none !transition-none motion-reduce:!transform-none motion-reduce:!transition-none',
+        trigger:
+          'transition-none data-[open=true]:scale-100 data-[pressed=true]:scale-100',
       }}
     >
       <PopoverTrigger>
         <Link
           href={item.href}
           className={`
-            !scale-1 flex h-8 shrink-0 items-center gap-2
+            flex h-8 shrink-0 !scale-100 items-center gap-2
             whitespace-nowrap rounded-[10px]
             px-2.5
             ${

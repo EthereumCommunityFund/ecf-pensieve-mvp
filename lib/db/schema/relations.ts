@@ -10,6 +10,7 @@ import { lists } from './lists';
 import { notifications } from './notifications';
 import { profiles } from './profiles';
 import { projectLogs } from './projectLogs';
+import { projectNotificationSettings } from './projectNotificationSettings';
 import { projects } from './projects';
 import { projectSnaps } from './projectSnaps';
 import { proposals } from './proposals';
@@ -31,6 +32,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   }),
   createdLists: many(lists),
   listFollows: many(listFollows),
+  projectNotificationSettings: many(projectNotificationSettings),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -50,6 +52,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [ranks.projectId],
   }),
   listProjects: many(listProjects),
+  projectNotificationSettings: many(projectNotificationSettings),
 }));
 
 export const proposalsRelations = relations(proposals, ({ one, many }) => ({
@@ -224,3 +227,17 @@ export const listFollowsRelations = relations(listFollows, ({ one }) => ({
     references: [profiles.userId],
   }),
 }));
+
+export const projectNotificationSettingsRelations = relations(
+  projectNotificationSettings,
+  ({ one }) => ({
+    user: one(profiles, {
+      fields: [projectNotificationSettings.userId],
+      references: [profiles.userId],
+    }),
+    project: one(projects, {
+      fields: [projectNotificationSettings.projectId],
+      references: [projects.id],
+    }),
+  }),
+);

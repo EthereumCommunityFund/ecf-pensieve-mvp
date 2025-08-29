@@ -12,7 +12,9 @@ import {
 } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addMultiUserNotification,
   addNotification,
+  createMultiUserNotification,
   createNotification,
 } from '@/lib/services/notification';
 import {
@@ -377,17 +379,14 @@ export const voteRouter = router({
             weight: userProfile?.weight ?? 0,
           });
 
-          if (ctx.user.id !== itemProposal.creator.userId) {
-            await addNotification(
-              createNotification.itemProposalSupported(
-                itemProposal.creator.userId,
-                itemProposal.projectId,
-                itemProposalId,
-                ctx.user.id,
-              ),
-              tx,
-            );
-          }
+          await addMultiUserNotification(
+            createMultiUserNotification.itemProposalSupported(
+              itemProposal.creator.userId,
+              itemProposal.projectId,
+              itemProposalId,
+              ctx.user.id,
+            ),
+          );
 
           const [votes, project, leadingProposal] = await Promise.all([
             tx.query.voteRecords.findMany({
@@ -537,17 +536,14 @@ export const voteRouter = router({
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
 
-          if (ctx.user.id !== targetItemProposal.creator.userId) {
-            await addNotification(
-              createNotification.itemProposalSupported(
-                targetItemProposal.creator.userId,
-                projectId,
-                itemProposalId,
-                ctx.user.id,
-              ),
-              tx,
-            );
-          }
+          await addMultiUserNotification(
+            createMultiUserNotification.itemProposalSupported(
+              targetItemProposal.creator.userId,
+              projectId,
+              itemProposalId,
+              ctx.user.id,
+            ),
+          );
 
           const votes = await tx.query.voteRecords.findMany({
             where: and(

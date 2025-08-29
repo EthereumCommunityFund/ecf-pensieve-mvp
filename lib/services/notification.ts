@@ -1,6 +1,9 @@
 import { db } from '../db';
 import { notifications } from '../db/schema';
 
+import type { QueueOptions } from './notification/queue';
+import { notificationQueue } from './notification/queue';
+
 export type NotificationType =
   | 'createProposal'
   | 'proposalPass'
@@ -28,7 +31,17 @@ export interface RewardNotificationData extends NotificationData {
   reward: number;
 }
 
-export const addNotification = async (
+export interface MultiUserNotificationData
+  extends Omit<NotificationData, 'userId'> {
+  userId?: string;
+  metadata?: {
+    key?: string;
+    itemProposalId?: number;
+    proposalId?: number;
+  };
+}
+
+export const addNotificationDirect = async (
   notification: NotificationData,
   tx?: any,
 ): Promise<typeof notifications.$inferSelect> => {
@@ -51,10 +64,30 @@ export const addNotification = async (
   }
 };
 
+export const addNotificationToQueue = async (
+  notification: NotificationData,
+  options?: QueueOptions,
+) => {
+  return notificationQueue.enqueue(notification, options);
+};
+
+export const addNotification = async (
+  notification: NotificationData,
+  tx?: any,
+): Promise<typeof notifications.$inferSelect | null> => {
+  if (tx) {
+    return addNotificationDirect(notification, tx);
+  }
+
+  await addNotificationToQueue(notification);
+
+  return null;
+};
+
 export const addRewardNotification = async (
   notification: RewardNotificationData,
   tx?: any,
-): Promise<typeof notifications.$inferSelect> => {
+): Promise<typeof notifications.$inferSelect | null> => {
   return addNotification(notification, tx);
 };
 
@@ -112,6 +145,12 @@ export const createRewardNotification = {
   }),
 };
 
+export const addMultiUserNotification = async (
+  baseData: MultiUserNotificationData,
+): Promise<void> => {
+  await notificationQueue.enqueue(baseData as NotificationData);
+};
+
 export const createNotification = {
   projectPublished: (userId: string, projectId: number): NotificationData => ({
     userId,
@@ -156,17 +195,6 @@ export const createNotification = {
     type: 'itemProposalSupported' as const,
   }),
 
-  itemProposalPassed: (
-    userId: string,
-    projectId: number,
-    itemProposalId: number,
-  ): NotificationData => ({
-    userId,
-    projectId,
-    itemProposalId,
-    type: 'itemProposalPassed' as const,
-  }),
-
   itemProposalBecameLeading: (
     userId: string,
     projectId: number,
@@ -187,5 +215,53 @@ export const createNotification = {
     projectId,
     itemProposalId,
     type: 'itemProposalLostLeading' as const,
+  }),
+};
+
+export const createMultiUserNotification = {
+  itemProposalBecameLeading: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalBecameLeading',
+    projectId,
+    itemProposalId,
+    userId,
+  }),
+
+  itemProposalLostLeading: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalLostLeading',
+    projectId,
+    itemProposalId,
+    userId,
+  }),
+
+  itemProposalSupported: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+    voterId: string,
+  ): MultiUserNotificationData => ({
+    type: 'itemProposalSupported',
+    projectId,
+    itemProposalId,
+    userId,
+    voter_id: voterId,
+  }),
+
+  createItemProposal: (
+    userId: string,
+    projectId: number,
+    itemProposalId: number,
+  ): MultiUserNotificationData => ({
+    type: 'createItemProposal',
+    projectId,
+    itemProposalId,
+    userId,
   }),
 };

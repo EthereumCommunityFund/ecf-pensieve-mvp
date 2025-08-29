@@ -44,16 +44,10 @@ export function ProjectCardSkeleton({
               )}
 
               <div className="mt-[10px] flex flex-wrap gap-[8px]">
-                <Skeleton className="h-[22px] w-[60px] rounded-[6px]" />
-                <Skeleton className="h-[22px] w-[80px] rounded-[6px]" />
-                <Skeleton className="h-[22px] w-[50px] rounded-[6px]" />
+                <Skeleton className="h-[26px] w-[160px] rounded-[6px]" />
+                <Skeleton className="h-[26px] w-[80px] rounded-[6px]" />
+                <Skeleton className="h-[26px] w-[50px] rounded-[6px]" />
               </div>
-
-              {showTransparentScore && (
-                <div className="tablet:hidden mobile:hidden mt-[10px]">
-                  <Skeleton className="h-[25px] w-full rounded-[4px]" />
-                </div>
-              )}
             </div>
           </div>
 
@@ -64,12 +58,6 @@ export function ProjectCardSkeleton({
             </div>
           )}
         </div>
-
-        {showTransparentScore && (
-          <div className="tablet:block mobile:block mt-[10px] hidden">
-            <Skeleton className="h-[25px] w-full rounded-[4px]" />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -109,7 +97,7 @@ const ProjectCard = ({
         'py-[10px] mobile:py-[5px]',
       )}
     >
-      <div className="rounded-[10px] p-2.5 hover:bg-[rgba(0,0,0,0.05)]">
+      <div className="group rounded-[10px] p-2.5 hover:bg-[rgba(0,0,0,0.05)]">
         <div className="mobile:items-start flex items-center justify-start gap-5 ">
           <Link
             href={`/project/${project.id}`}
@@ -163,10 +151,15 @@ const ProjectCard = ({
                 </p>
               )}
               <div className="mt-[10px] flex flex-wrap gap-[8px]">
+                {showTransparentScore && (
+                  <TransparentScore
+                    itemsTopWeight={project?.itemsTopWeight || {}}
+                  />
+                )}
                 {categories.map((tag) => (
                   <div
                     key={tag}
-                    className="flex h-[22px] items-center justify-center rounded-[6px] bg-[rgba(0,0,0,0.05)] px-3"
+                    className="flex h-[26px] items-center justify-center rounded-[6px] bg-black/5 px-3"
                   >
                     <span className="text-[12px] font-semibold leading-[12px] text-black">
                       {tag}
@@ -174,14 +167,6 @@ const ProjectCard = ({
                   </div>
                 ))}
               </div>
-
-              {showTransparentScore && (
-                <div className="tablet:hidden mobile:hidden mt-[10px]">
-                  <TransparentScore
-                    itemsTopWeight={project?.itemsTopWeight || {}}
-                  />
-                </div>
-              )}
             </div>
           </Link>
 
@@ -221,12 +206,6 @@ const ProjectCard = ({
             </div>
           )}
         </div>
-
-        {showTransparentScore && (
-          <div className="tablet:block mobile:block mt-[10px] hidden">
-            <TransparentScore itemsTopWeight={project?.itemsTopWeight || {}} />
-          </div>
-        )}
       </div>
 
       {weight && (

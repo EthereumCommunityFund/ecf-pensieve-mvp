@@ -55,14 +55,14 @@ type Story = StoryObj<typeof DatePicker>;
 export const Default: Story = {
   args: {
     label: 'Select Date',
-    placeholder: 'MM/DD/YYYY',
+    placeholder: 'YYYY-MM-DD',
   },
 };
 
 export const WithDescription: Story = {
   args: {
     label: 'Event Date',
-    placeholder: 'MM/DD/YYYY',
+    placeholder: 'YYYY-MM-DD',
     description: 'Select the date of your event',
   },
 };
@@ -70,7 +70,7 @@ export const WithDescription: Story = {
 export const WithError: Story = {
   args: {
     label: 'Appointment Date',
-    placeholder: 'MM/DD/YYYY',
+    placeholder: 'YYYY-MM-DD',
     isInvalid: true,
     errorMessage: 'Please select a valid date',
   },
@@ -79,7 +79,7 @@ export const WithError: Story = {
 export const Disabled: Story = {
   args: {
     label: 'Disabled Date Picker',
-    placeholder: 'MM/DD/YYYY',
+    placeholder: 'YYYY-MM-DD',
     isDisabled: true,
   },
 };
@@ -87,7 +87,7 @@ export const Disabled: Story = {
 export const Required: Story = {
   args: {
     label: 'Required Date',
-    placeholder: 'MM/DD/YYYY',
+    placeholder: 'YYYY-MM-DD',
     isRequired: true,
   },
 };
@@ -95,7 +95,7 @@ export const Required: Story = {
 export const WithTimePicker: Story = {
   args: {
     label: 'Date and Time',
-    placeholder: 'MM/DD/YYYY HH:MM',
+    placeholder: 'YYYY-MM-DD HH:mm',
     showTime: true,
   },
 };

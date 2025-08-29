@@ -10,8 +10,8 @@ import {
 
 import {
   Autocomplete,
-  DatePicker,
   Input,
+  LocaleDatePicker,
   Select,
   SelectItem,
   Textarea,
@@ -334,7 +334,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
 
       return (
         <div>
-          <DatePicker
+          <LocaleDatePicker
+            locale="en-CA"
             showMonthAndYearPickers={true}
             value={dateToDateValue(field.value)}
             onChange={(dateValue: DateValue | null) => {
