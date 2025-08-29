@@ -78,13 +78,13 @@ describe('Smart Contracts API Integration Tests', () => {
         userId: testUserId,
         address: testWallet.address.toLowerCase(),
         name: 'TestUser1',
-        inviteCodeId: testInviteCodeId,
+        invitationCodeId: testInviteCodeId,
       },
       {
         userId: testUserId2,
         address: testWallet2.address.toLowerCase(),
         name: 'TestUser2',
-        inviteCodeId: testInviteCodeId,
+        invitationCodeId: testInviteCodeId,
       },
     ]);
 

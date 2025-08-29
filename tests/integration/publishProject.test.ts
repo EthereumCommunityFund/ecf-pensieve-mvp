@@ -45,14 +45,21 @@ describe('Vote Integration Tests', () => {
   }
 
   const testUsers: TestUser[] = [];
-  let testProject: Awaited<
-    ReturnType<(typeof projectRouter)['createCaller']>
-  >['createProject'];
-  let testProposal: Awaited<
-    ReturnType<(typeof projectRouter)['createCaller']>
-  >['getProjectById'] extends PromiseLike<infer U>
-    ? U['proposals'][number]
-    : any;
+  // Infer the output type of projectRouter.createCaller().createProject()
+  type CreateProjectOutput = Awaited<
+    ReturnType<
+      ReturnType<(typeof projectRouter)['createCaller']>['createProject']
+    >
+  >;
+  let testProject: CreateProjectOutput;
+  type GetProjectByIdOutput = Awaited<
+    ReturnType<
+      ReturnType<(typeof projectRouter)['createCaller']>['getProjectById']
+    >
+  >;
+  // A single proposal shape from getProjectById output
+  type ProposalFromProject = GetProjectByIdOutput['proposals'][number];
+  let testProposal: ProposalFromProject;
 
   // Helper functions
   const createContext = (userId: string | null) => ({
