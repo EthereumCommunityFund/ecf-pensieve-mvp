@@ -7,7 +7,7 @@ import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
 import AmountInput from '@/components/biz/FormAndTable/AmountInput';
 import DateInput from '@/components/biz/FormAndTable/DateInput';
-import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearchSelector';
+import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
 import URLInput from '@/components/biz/FormAndTable/URLInput';
 
 interface FundingReceivedGrantsTableItemProps {
