@@ -6,6 +6,7 @@ import {
   ModalBody,
   ModalContent,
   ModalHeader,
+  ScrollShadow,
   useDisclosure,
 } from '@heroui/react';
 import { Plus, X } from '@phosphor-icons/react';
@@ -203,8 +204,8 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
             </button>
           </ModalHeader>
           <ModalBody className="flex flex-col gap-[10px] p-5">
-            <div className="relative overflow-hidden">
-              <div className="custom-scrollbar flex max-h-[300px] flex-col gap-2 overflow-y-auto pr-1">
+            <ScrollShadow className="max-h-[300px] pr-1">
+              <div className="flex flex-col gap-2">
                 {isLoadingLists ? (
                   <SaveToListSkeleton />
                 ) : !listsWithProjectStatus ||
@@ -235,11 +236,7 @@ const SaveToListModal: FC<SaveToListModalProps> = ({
                     ))
                 )}
               </div>
-              {/* Gradient fade overlay at bottom when content overflows */}
-              {listsWithProjectStatus && listsWithProjectStatus.length > 6 && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white to-transparent" />
-              )}
-            </div>
+            </ScrollShadow>
 
             <div className="flex shrink-0 flex-col gap-[10px]">
               <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, ScrollShadow } from '@heroui/react';
 import { flexRender, Table } from '@tanstack/react-table';
 import React, { FC } from 'react';
 
@@ -8,7 +8,6 @@ import {
   ExpandableRow,
   GroupHeader,
   groupTableRows,
-  PageTableContainer,
   TableCellSkeleton,
   TableFooter,
   TableHeader,
@@ -246,9 +245,9 @@ export const CategoryTable: FC<CategoryTableProps> = ({
 
   if (showSkeleton || noDataForThisTable) {
     return (
-      <PageTableContainer
-        className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white"
-        allowInternalBorderRadius={true}
+      <ScrollShadow
+        className="rounded-b-[10px] border-x border-black/10 bg-white"
+        orientation="horizontal"
       >
         <table
           className="box-border w-full border-separate border-spacing-0"
@@ -311,7 +310,7 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             </TableFooter>
           </tbody>
         </table>
-      </PageTableContainer>
+      </ScrollShadow>
     );
   }
 
@@ -337,21 +336,11 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   );
 
   return (
-    <PageTableContainer
+    <ScrollShadow
       className={cn(
         'mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white',
-        // '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100',
       )}
-      allowInternalBorderRadius={true}
-      style={{
-        overflowX: 'auto',
-        // Container settings to ensure sticky positioning works correctly
-        position: 'relative',
-        isolation: 'isolate',
-        // Force scrollbar to always be visible
-        scrollbarWidth: 'thin',
-        WebkitOverflowScrolling: 'touch',
-      }}
+      orientation="horizontal"
     >
       <table
         className="box-border w-full border-separate border-spacing-0"
@@ -527,6 +516,6 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             ))}
         </tbody>
       </table>
-    </PageTableContainer>
+    </ScrollShadow>
   );
 };
