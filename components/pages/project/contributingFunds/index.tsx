@@ -23,24 +23,34 @@ const ContributingFunds: FC<ContributingFundsProps> = ({
 
   return (
     <div className="mt-[40px] px-[20px] ">
-      {/* Page Title and Description */}
-      {/* <div className="mb-[32px]">
-        <div className="flex items-center gap-[12px]">
-          <Button
-            size="sm"
-            variant="bordered"
-            className="h-[36px] rounded-[8px] border-black/10 bg-white px-[16px] text-[14px] font-[500] text-black hover:bg-black/5"
+      {/* Header Section - Funding Received (Grants) */}
+      <div className="mb-[10px] flex flex-col gap-[10px]">
+        <h2 className="text-[18px] font-[700] leading-[25px] text-black/80">
+          Item: Funding Received (Grants)
+        </h2>
+        <p className="text-[14px] font-[600] leading-[19px] text-black/40">
+          Track the financial support this project has received through grants
+          and donations.
+        </p>
+        <div className="flex items-center gap-[10px]">
+          <button
+            onClick={() => {
+              onOpenModal?.('funding_received_grants', 'viewItemProposal');
+            }}
+            className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#F0F0F0] px-[10px] text-[14px] font-[600] leading-[19px] text-black transition-colors hover:bg-[#E0E0E0]"
           >
             View Item
-          </Button>
-          <Button
-            size="sm"
-            className="h-[36px] rounded-[8px] bg-black px-[16px] text-[14px] font-[500] text-white hover:bg-black/90"
+          </button>
+          <button
+            onClick={() => {
+              onOpenModal?.('funding_received_grants', 'submitPropose');
+            }}
+            className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#F0F0F0] px-[10px] text-[14px] font-[600] leading-[19px] text-black transition-colors hover:bg-[#E0E0E0]"
           >
             Propose Entry
-          </Button>
+          </button>
         </div>
-      </div> */}
+      </div>
 
       {/* Given (Grants) Section */}
       <GrantsTable
