@@ -43,7 +43,11 @@ const ContributingFunds: FC<ContributingFundsProps> = ({
       </div> */}
 
       {/* Given (Grants) Section */}
-      {/* <GivenGrantsTable projectId={projectId} /> */}
+      <GrantsTable
+        projectId={projectId}
+        type="given"
+        onOpenModal={onOpenModal}
+      />
 
       {/* Received (Grants) Section */}
       <GrantsTable
@@ -51,7 +55,6 @@ const ContributingFunds: FC<ContributingFundsProps> = ({
         type="received"
         onOpenModal={onOpenModal}
       />
-      {/* <ReceivedGrantsTable projectId={projectId} /> */}
     </div>
   );
 };
