@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { CaretUpDown, Info, Tray } from '@phosphor-icons/react';
+import { Info, Tray } from '@phosphor-icons/react';
 import {
   ColumnDef,
   flexRender,
@@ -78,7 +78,7 @@ function EcosystemTable<T extends Record<string, any>>({
             {description}
           </p>
         </div>
-        <div className="flex items-center gap-[10px]">
+        {/* <div className="flex items-center gap-[10px]">
           <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
             <CaretUpDown size={16} weight="bold" className="opacity-50" />
             <span>{filterButtonText}</span>
@@ -87,7 +87,7 @@ function EcosystemTable<T extends Record<string, any>>({
             <CaretUpDown size={16} weight="bold" className="opacity-50" />
             <span>Collapse Items</span>
           </button>
-        </div>
+        </div> */}
       </div>
 
       <PageTableContainer className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
@@ -167,7 +167,7 @@ function EcosystemTable<T extends Record<string, any>>({
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Tray size={48} weight="thin" className="text-black/20" />
                     <p className="text-[14px] font-[400] text-black/40">
-                      No data available
+                      No data
                     </p>
                   </div>
                 </td>
