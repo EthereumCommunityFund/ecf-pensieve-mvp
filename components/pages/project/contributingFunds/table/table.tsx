@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { CaretUpDown, Info, Tray } from '@phosphor-icons/react';
+import { Info, Tray } from '@phosphor-icons/react';
 import {
   flexRender,
   getCoreRowModel,
@@ -101,7 +101,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
           </p>
         </div>
         {/* Filter buttons - only shown for 'given' type */}
-        {showActionButtons && (
+        {/* {showActionButtons && (
           <div className="flex items-center gap-[10px]">
             <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
               <CaretUpDown size={16} weight="bold" className="opacity-50" />
@@ -116,7 +116,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
               <span>Collapse Items</span>
             </button>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Action buttons section */}
@@ -215,7 +215,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Tray size={48} weight="thin" className="text-black/20" />
                     <p className="text-[14px] font-[400] text-black/40">
-                      No data available
+                      No data
                     </p>
                   </div>
                 </td>

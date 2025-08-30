@@ -22,16 +22,21 @@ const ProjectTabs: FC<ProjectTabsProps> = ({
   className,
 }) => {
   return (
-    <div className={cn('flex gap-[20px]', className)}>
+    <div
+      className={cn(
+        'inline-flex gap-[20px] border-b border-black/10',
+        className,
+      )}
+    >
       {tabs.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
           className={cn(
-            'pb-[12px] text-[16px] font-[600] leading-[22px] transition-all',
+            'relative pb-[12px] text-[16px] font-[600] leading-[22px] transition-all',
             activeTab === tab.key
-              ? 'border-b-[2px] border-black text-black'
-              : 'border-b-[2px] border-transparent text-black/60 hover:text-black',
+              ? 'text-black after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-[2px] after:bg-black'
+              : 'text-black/60 hover:text-black',
           )}
         >
           {tab.label}
