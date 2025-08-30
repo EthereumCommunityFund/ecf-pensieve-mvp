@@ -380,10 +380,10 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
-                  className={
-                    cn()
+                  className={cn(
+                    row.original.isPendingValidation && 'bg-[#7EA9FF]/10',
                     // expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
-                  }
+                  )}
                 >
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => {
                     const isPinned = getColumnPinStatus(cell.column.id);
