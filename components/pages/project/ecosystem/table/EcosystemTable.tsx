@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Info, Tray } from '@phosphor-icons/react';
+import { Tray } from '@phosphor-icons/react';
 import {
   ColumnDef,
   flexRender,
@@ -118,13 +118,6 @@ function EcosystemTable<T extends Record<string, any>>({
                             header.getContext(),
                           )}
                         </span>
-                        {header.column.id !== 'page' && (
-                          <Info
-                            size={14}
-                            weight="regular"
-                            className="text-black/30"
-                          />
-                        )}
                       </div>
                     </TableHeader>
                   );
