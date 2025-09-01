@@ -2,7 +2,7 @@ import { CircularProgress, cn, Tooltip } from '@heroui/react';
 import { FC, memo, useCallback, useMemo } from 'react'; // Added useMemo
 
 import { Button } from '@/components/base';
-import { CaretUpIcon, CheckedGreenIcon, UsersIcon } from '@/components/icons';
+import { CheckedGreenIcon, UsersIcon, VoteIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext'; // Added import
 import { useAuth } from '@/context/AuthContext';
 import { QUORUM_AMOUNT } from '@/lib/constants';
@@ -70,6 +70,8 @@ const SupportColumnItem: FC<IProps> = ({
 
   const maxValue = Math.max(itemPoints, itemPointsNeeded);
 
+  const isValidated = isReachQuorum && itemPoints >= itemPointsNeeded;
+
   const handleAction = useCallback(() => {
     if (!isAuthenticated) {
       showAuthPrompt();
@@ -114,7 +116,7 @@ const SupportColumnItem: FC<IProps> = ({
               aria-label="Loading..."
               color="warning"
               showValueLabel={false}
-              size="sm"
+              size="md"
               minValue={0}
               maxValue={maxValue}
               value={itemPoints}
@@ -125,7 +127,7 @@ const SupportColumnItem: FC<IProps> = ({
               classNames={{
                 base: '',
                 label: '',
-                svg: 'size-[18px] rotate-[180deg]',
+                svg: 'size-[20px] rotate-[180deg]',
                 track: 'stroke-[#D9D9D9]',
                 indicator: 'stroke-[#64C0A5]',
               }}
@@ -150,11 +152,17 @@ const SupportColumnItem: FC<IProps> = ({
             }}
             closeDelay={0}
           >
-            <div className={'opacity-30'}>
-              <UsersIcon />
-            </div>
+            <UsersIcon
+              color={isValidated ? '#64C0A5' : 'black'}
+              className={`opacity-${isValidated ? '80' : '30'}`}
+            />
           </Tooltip>
-          <span className="font-mona text-[13px] font-[600] leading-[19px] text-black/50">
+          <span
+            className={cn(
+              'font-mona text-[13px] font-[600] leading-[19px] ',
+              isValidated ? 'text-[#64C0A5]' : 'text-black/50',
+            )}
+          >
             {votedMemberCount}
             {showQuorum && `/${QUORUM_AMOUNT}`}
           </span>
@@ -176,16 +184,28 @@ const SupportColumnItem: FC<IProps> = ({
           disabled={internalIsLoading || isUserVotedCurrentItemProposal} // Use internalIsLoading
           onPress={handleAction}
           className={cn(
-            'px-[5px] border-none',
-            isUserVotedCurrentItemProposal ? '' : 'opacity-30',
+            'px-[5px] border-none bg-transparent hover:bg-transparent',
+            // isUserVotedCurrentItemProposal ? '' : 'opacity-30',
             isUserVotedCurrentItemProposal ? 'cursor-not-allowed' : '', // Use internalIsLoading
           )}
         >
-          {isUserVotedCurrentItemProposal ? (
+          {isValidated ? (
+            <CheckedGreenIcon />
+          ) : (
+            <VoteIcon
+              color={isUserVotedCurrentItemProposal ? '#64C0A5' : 'black'}
+              className={cn(
+                isUserVotedCurrentItemProposal
+                  ? 'opacity-100'
+                  : 'opacity-20 hover:opacity-50',
+              )}
+            />
+          )}
+          {/* {isUserVotedCurrentItemProposal ? (
             <CheckedGreenIcon />
           ) : (
             <CaretUpIcon />
-          )}
+          )} */}
         </Button>
       </Tooltip>
     </div>

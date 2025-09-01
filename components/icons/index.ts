@@ -68,6 +68,7 @@ export { default as ThumbsUpIcon } from './ThumbsUp';
 export { default as TrashIcon } from './Trash';
 export { default as TrendDownIcon } from './TrendDownIcon';
 export { default as UsersIcon } from './Users';
+export { default as VoteIcon } from './Vote';
 export { default as WalletIcon } from './Wallet';
 export { default as WarningCircleIcon } from './WarningCircle';
 export { default as WarningDiamondIcon } from './WarningDiamond';

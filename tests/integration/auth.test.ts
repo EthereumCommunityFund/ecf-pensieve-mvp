@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { db } from '@/lib/db';
-import { invitationCodes, loginNonces, profiles } from '@/lib/db/schema';
+import { invitationCodes, lists, loginNonces, profiles } from '@/lib/db/schema';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authRouter } from '@/lib/trpc/routers/auth';
 
@@ -38,6 +38,9 @@ describe('Authentication Integration Tests', () => {
     });
 
     if (existingProfile) {
+      // Delete lists created by this user first to avoid foreign key constraint
+      await db.delete(lists).where(eq(lists.creator, existingProfile.userId));
+
       await db
         .delete(profiles)
         .where(eq(profiles.userId, existingProfile.userId));

@@ -115,7 +115,7 @@ const FollowListCard = ({
             <DropdownTrigger>
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="flex size-[40px] items-center justify-center rounded-[5px] bg-[#E1E1E1] transition-all hover:bg-[#D1D1D1]"
+                className="flex size-[40px] items-center justify-center rounded-[5px] transition-all hover:bg-[#E1E1E1]"
               >
                 <DotsThreeVerticalIcon size={32} />
               </button>

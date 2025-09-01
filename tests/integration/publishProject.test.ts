@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-
 // Mock Next.js cache functions to avoid errors in test environment
 vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
@@ -46,8 +45,21 @@ describe('Vote Integration Tests', () => {
   }
 
   const testUsers: TestUser[] = [];
-  let testProject: any;
-  let testProposal: any;
+  // Infer the output type of projectRouter.createCaller().createProject()
+  type CreateProjectOutput = Awaited<
+    ReturnType<
+      ReturnType<(typeof projectRouter)['createCaller']>['createProject']
+    >
+  >;
+  let testProject: CreateProjectOutput;
+  type GetProjectByIdOutput = Awaited<
+    ReturnType<
+      ReturnType<(typeof projectRouter)['createCaller']>['getProjectById']
+    >
+  >;
+  // A single proposal shape from getProjectById output
+  type ProposalFromProject = GetProjectByIdOutput['proposals'][number];
+  let testProposal: ProposalFromProject;
 
   // Helper functions
   const createContext = (userId: string | null) => ({

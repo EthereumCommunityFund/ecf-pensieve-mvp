@@ -6,8 +6,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
-import BookmarksIcon from '@/components/icons/Bookmarks';
+import ListsIcon from '@/components/icons/Lists';
+import { BREAKPOINTS, STICKY_OFFSETS } from '@/constants/layoutConstants';
 import { ITabKey, useProfileTab } from '@/hooks/useProfileTab';
+import { useSticky } from '@/hooks/useSticky';
 
 const tabItemsWithIcons = [
   {
@@ -28,7 +30,7 @@ const tabItemsWithIcons = [
   {
     key: 'lists',
     label: 'My Lists',
-    icon: <BookmarksIcon size={28} />,
+    icon: <ListsIcon size={28} />,
   },
 ];
 
@@ -40,6 +42,12 @@ const ProfileSideBar = () => {
     currentTabKey || 'profile',
   );
 
+  // Use sticky hook for positioning
+  const { refs, state, placeholderStyle, stickyStyle } = useSticky({
+    desktopBreakpoint: BREAKPOINTS.desktop,
+    topOffset: STICKY_OFFSETS.withPadding,
+  });
+
   useEffect(() => {
     if (currentTabKey) {
       setActiveTab(currentTabKey);
@@ -48,8 +56,22 @@ const ProfileSideBar = () => {
 
   return (
     <>
+      {/* Placeholder to maintain layout when menu becomes fixed */}
+      <div
+        ref={refs.placeholderRef}
+        className={cn('mobile:hidden', state.isFixed ? 'h-auto' : 'h-0')}
+        style={placeholderStyle}
+      />
+
       {/* Left Sidebar Navigation */}
-      <div className="mobile:hidden flex w-[220px] flex-col gap-5">
+      <div
+        ref={refs.menuRef}
+        className={cn(
+          'mobile:hidden flex w-[220px] flex-col gap-5',
+          state.isFixed ? 'fixed z-20' : 'relative',
+        )}
+        style={stickyStyle}
+      >
         {/* Navigation Menu */}
         <div className="flex flex-col gap-2">
           {tabItemsWithIcons.map(({ key, label, icon }) => (

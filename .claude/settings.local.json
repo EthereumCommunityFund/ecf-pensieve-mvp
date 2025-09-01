@@ -43,6 +43,7 @@
       "Bash(git pull:*)",
       "Bash(node:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

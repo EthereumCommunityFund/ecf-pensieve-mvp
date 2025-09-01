@@ -4,7 +4,11 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
-import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
+import {
+  GetItemDataType,
+  IItemSubCategoryEnum,
+  IPocItemKey,
+} from '@/types/item';
 import { calculateItemStatusFields, isInputValueEmpty } from '@/utils/item';
 
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
@@ -229,10 +233,24 @@ export const useProjectTableData = () => {
     generateEmptyItemsCounts,
   ]);
 
+  const getItemRowData = useCallback(
+    <K extends IPocItemKey>(key: K): GetItemDataType<K> => {
+      const itemConfig = AllItemConfig[key];
+      const { subCategory } = itemConfig!;
+      if (!tableData) return [] as unknown as GetItemDataType<K>;
+      if (!tableData[subCategory]) return [] as unknown as GetItemDataType<K>;
+      const matchRow = tableData[subCategory].find((item) => item.key === key);
+      if (!matchRow) return [] as unknown as GetItemDataType<K>;
+      return (matchRow.input || []) as unknown as GetItemDataType<K>;
+    },
+    [tableData],
+  );
+
   return {
     isProjectFetched,
     isDataFetched: isProjectFetched && isLeadingProposalsFetched,
     tableData,
     emptyItemsCounts,
+    getItemRowData,
   };
 };

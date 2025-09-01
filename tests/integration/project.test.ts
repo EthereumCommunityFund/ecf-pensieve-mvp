@@ -434,9 +434,12 @@ describe('Project Integration Tests', () => {
       expect(resultWithOptionals.whitePaper).toBe(
         projectWithOptionals.whitePaper,
       );
-      expect(resultWithOptionals.dappSmartContracts).toBe(
-        projectWithOptionals.dappSmartContracts,
-      );
+      expect(resultWithOptionals.dappSmartContracts).toEqual([
+        {
+          chain: 'ethereum',
+          addresses: '0x1234567890abcdef1234567890abcdef12345678',
+        },
+      ]);
 
       const projectWithoutOptionals = createProjectWithoutOptionalFields();
       const resultWithoutOptionals = await caller.createProject(

@@ -18,6 +18,7 @@ import { AllItemConfig } from '@/constants/itemConfig';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
+import { getDefaultValueByFormType, isEmbedTableFormType } from '@/utils/item';
 import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
@@ -86,37 +87,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   );
 
   const defaultFormValues = useMemo(() => {
-    let defaultValue: any = '';
-
-    if (itemConfig.formDisplayType === 'founderList') {
-      defaultValue = [
-        { name: '', title: '', region: '', _id: crypto.randomUUID() },
-      ];
-    } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-      defaultValue = [
-        {
-          date: null,
-          organization: '',
-          amount: '',
-          reference: '',
-          _id: crypto.randomUUID(),
-        },
-      ];
-    } else if (itemConfig.formDisplayType === 'websites') {
-      defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
-    } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-      defaultValue = [{ legalName: '', country: '', _id: crypto.randomUUID() }];
-    } else if (itemConfig.formDisplayType === 'multiContracts') {
-      // Add default value for Smart Contracts
-      defaultValue = [
-        {
-          id: crypto.randomUUID(),
-          chain: '',
-          addresses: '',
-        },
-      ];
-    }
-
+    const defaultValue = getDefaultValueByFormType(itemConfig.formDisplayType);
     return { [itemConfig.key]: defaultValue };
   }, [itemConfig.key, itemConfig.formDisplayType]);
 
@@ -135,8 +106,15 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     }),
   });
 
-  const { control, clearErrors, reset, handleSubmit, watch, getValues } =
-    methods;
+  const {
+    control,
+    clearErrors,
+    reset,
+    handleSubmit,
+    watch,
+    getValues,
+    formState,
+  } = methods;
 
   // Watch form values
   const watchedValues = watch();
@@ -370,39 +348,14 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       let valueToSet = displayProposalDataOfKey?.input;
 
       // For array-based types, ensure value is in array format with _id
-      if (
-        itemConfig.formDisplayType === 'founderList' ||
-        itemConfig.formDisplayType === 'fundingReceivedGrants' ||
-        itemConfig.formDisplayType === 'websites' ||
-        itemConfig.formDisplayType === 'tablePhysicalEntity'
-      ) {
+      if (isEmbedTableFormType(itemConfig.formDisplayType)) {
         if (typeof valueToSet === 'string') {
           try {
             // Try to parse JSON string
             valueToSet = JSON.parse(valueToSet);
           } catch (error) {
             // If parsing fails, set to default value
-            if (itemConfig.formDisplayType === 'founderList') {
-              valueToSet = [
-                { name: '', title: '', region: '', _id: crypto.randomUUID() },
-              ];
-            } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-              valueToSet = [
-                {
-                  date: null,
-                  organization: '',
-                  amount: '',
-                  reference: '',
-                  _id: crypto.randomUUID(),
-                },
-              ];
-            } else if (itemConfig.formDisplayType === 'websites') {
-              valueToSet = [{ url: '', title: '', _id: crypto.randomUUID() }];
-            } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-              valueToSet = [
-                { legalName: '', country: '', _id: crypto.randomUUID() },
-              ];
-            }
+            valueToSet = getDefaultValueByFormType(itemConfig.formDisplayType);
           }
         }
 
@@ -414,27 +367,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
           }));
         } else {
           // Set default value if not array
-          if (itemConfig.formDisplayType === 'founderList') {
-            valueToSet = [
-              { name: '', title: '', region: '', _id: crypto.randomUUID() },
-            ];
-          } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-            valueToSet = [
-              {
-                date: null,
-                organization: '',
-                amount: '',
-                reference: '',
-                _id: crypto.randomUUID(),
-              },
-            ];
-          } else if (itemConfig.formDisplayType === 'websites') {
-            valueToSet = [{ url: '', title: '', _id: crypto.randomUUID() }];
-          } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-            valueToSet = [
-              { legalName: '', country: '', _id: crypto.randomUUID() },
-            ];
-          }
+          valueToSet = getDefaultValueByFormType(itemConfig.formDisplayType);
         }
       }
 
@@ -444,30 +377,9 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       });
       setReferences([]);
     } else {
-      let defaultValue: any = '';
-
-      if (itemConfig.formDisplayType === 'founderList') {
-        defaultValue = [
-          { name: '', title: '', region: '', _id: crypto.randomUUID() },
-        ];
-      } else if (itemConfig.formDisplayType === 'fundingReceivedGrants') {
-        defaultValue = [
-          {
-            date: null,
-            organization: '',
-            amount: '',
-            reference: '',
-            _id: crypto.randomUUID(),
-          },
-        ];
-      } else if (itemConfig.formDisplayType === 'websites') {
-        defaultValue = [{ url: '', title: '', _id: crypto.randomUUID() }];
-      } else if (itemConfig.formDisplayType === 'tablePhysicalEntity') {
-        defaultValue = [
-          { legalName: '', country: '', _id: crypto.randomUUID() },
-        ];
-      }
-
+      const defaultValue = getDefaultValueByFormType(
+        itemConfig.formDisplayType,
+      );
       resetRef.current({
         [itemConfig.key]: defaultValue,
       });

@@ -5,6 +5,7 @@ import { FC } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
+import { isEmbedTableFormType } from '@/utils/item';
 
 import InputContentRenderer from './InputContentRenderer';
 
@@ -63,11 +64,7 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
           <div
             className={cn(
               'font-sans text-[13px] font-[400] text-black',
-              itemConfig!.formDisplayType === 'founderList' ||
-                itemConfig!.formDisplayType === 'websites' ||
-                itemConfig!.formDisplayType === 'tablePhysicalEntity' ||
-                itemConfig!.formDisplayType === 'multiContracts' ||
-                itemConfig!.formDisplayType === 'fundingReceivedGrants'
+              isEmbedTableFormType(itemConfig!.formDisplayType)
                 ? 'p-[0px]'
                 : 'p-[20px] mobile:p-[10px]',
             )}
