@@ -197,6 +197,15 @@ export interface IFundingReceivedGrants {
   _id?: string;
 }
 
+// Extended interface for useGivenGrantsData with backend relation fields
+export interface IFundingReceivedGrantsWithRelation
+  extends IFundingReceivedGrants {
+  sourceProjectId: number | null;
+  itemProposalId: number | null;
+  targetProjectId: number | null;
+  relationType: string | null;
+}
+
 export interface IAffiliatedProject {
   project: string | string[];
   affiliationType: string;

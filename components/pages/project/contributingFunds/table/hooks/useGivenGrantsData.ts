@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
-import { IFundingReceivedGrants } from '@/types/item';
+import { IFundingReceivedGrantsWithRelation } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 
 export function useGivenGrantsData(projectId: number) {
@@ -67,7 +67,7 @@ export function useGivenGrantsData(projectId: number) {
       sourceProjectIds.map((id, idx) => [id, allProposalsData[idx]]),
     );
 
-    const grantsRows: IFundingReceivedGrants[] = [];
+    const grantsRows: IFundingReceivedGrantsWithRelation[] = [];
     const seenKeys = new Set<string>();
 
     // Process each relation
@@ -117,6 +117,11 @@ export function useGivenGrantsData(projectId: number) {
               reference: grantItem.reference,
               expenseSheetUrl: grantItem.expenseSheetUrl,
               _id: grantItem._id || `${sourceId}-${idx}`,
+              // Add backend relation fields
+              sourceProjectId: relation.sourceProjectId,
+              itemProposalId: relation.itemProposalId,
+              targetProjectId: relation.targetProjectId ?? projectId,
+              relationType: relation.relationType ?? 'fundedBy',
             });
           }
         }

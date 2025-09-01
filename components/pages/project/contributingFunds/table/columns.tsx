@@ -1,11 +1,12 @@
 'use client';
 
 import { createColumnHelper } from '@tanstack/react-table';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import { IFundingReceivedGrants } from '@/types/item';
-import { formatDate } from '@/utils/formatters';
+import { formatAmount, formatDate } from '@/utils/formatters';
 
 // For mock data in GivenGrantsTable
 export interface IGivenGrant {
@@ -18,114 +19,6 @@ export interface IGivenGrant {
 }
 
 export type GrantType = 'given' | 'received';
-
-// Columns for GivenGrantsTable (mock data)
-export const useGivenGrantsColumns = () => {
-  const columnHelper = useMemo(() => createColumnHelper<IGivenGrant>(), []);
-
-  return useMemo(
-    () => [
-      columnHelper.accessor('date', {
-        id: 'date',
-        header: () => 'Date',
-        size: 140,
-        cell: (info) => (
-          <span className="text-[14px] text-black/60">
-            {formatDate(info.getValue(), 'YYYY/MM/DD')}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('organization', {
-        id: 'organization',
-        header: () => 'Organization/Program',
-        size: 220,
-        cell: (info) => {
-          const value = info.getValue();
-          if (!value) {
-            return (
-              <span className="text-[14px] text-black">Not Applicable</span>
-            );
-          }
-          return <span className="text-[14px] text-black">{value}</span>;
-        },
-      }),
-      columnHelper.accessor('projectDonator', {
-        id: 'projectDonator',
-        header: () => 'Project Donator',
-        size: 200,
-        cell: (info) => (
-          <span className="text-[14px] text-black">{info.getValue()}</span>
-        ),
-      }),
-      columnHelper.accessor('amount', {
-        id: 'amount',
-        header: () => 'Amount (USD)',
-        size: 160,
-        cell: (info) => {
-          const value = info.getValue();
-          if (!value) {
-            return <span className="text-[14px] font-[500] text-black">-</span>;
-          }
-
-          // Format number with thousands separators
-          const formatWithThousands = (num: string | number): string => {
-            const numStr = String(num);
-            const parts = numStr.split('.');
-            const integerPart = parts[0];
-            const decimalPart = parts[1];
-
-            // Add commas as thousands separators
-            const formattedInteger = integerPart.replace(
-              /\B(?=(\d{3})+(?!\d))/g,
-              ',',
-            );
-
-            return decimalPart !== undefined
-              ? `${formattedInteger}.${decimalPart}`
-              : formattedInteger;
-          };
-
-          return (
-            <span className="text-[14px] font-[500] text-black">
-              {formatWithThousands(value)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('expenseSheet', {
-        id: 'expenseSheet',
-        header: () => 'Expense Sheet',
-        size: 160,
-        cell: (info) => (
-          <button className="text-[14px] text-black/60 transition-colors hover:text-black">
-            {info.getValue()}
-          </button>
-        ),
-      }),
-      columnHelper.accessor('reference', {
-        id: 'reference',
-        header: () => 'Reference',
-        size: 140,
-        cell: (info) => (
-          <button className="text-[14px] text-black/60 transition-colors hover:text-black">
-            {info.getValue()}
-          </button>
-        ),
-      }),
-      columnHelper.display({
-        id: 'page',
-        header: () => 'Page',
-        size: 140,
-        cell: () => (
-          <button className="text-[14px] transition-colors hover:text-[#1E40AF]">
-            View Linkage
-          </button>
-        ),
-      }),
-    ],
-    [columnHelper],
-  );
-};
 
 // Columns for ReceivedGrantsTable (actual data from API)
 export const useGrantColumns = (type: GrantType) => {
@@ -214,27 +107,9 @@ export const useGrantColumns = (type: GrantType) => {
             return <span className="text-[14px] font-[500] text-black">-</span>;
           }
 
-          // Format number with thousands separators
-          const formatWithThousands = (num: string | number): string => {
-            const numStr = String(num);
-            const parts = numStr.split('.');
-            const integerPart = parts[0];
-            const decimalPart = parts[1];
-
-            // Add commas as thousands separators
-            const formattedInteger = integerPart.replace(
-              /\B(?=(\d{3})+(?!\d))/g,
-              ',',
-            );
-
-            return decimalPart !== undefined
-              ? `${formattedInteger}.${decimalPart}`
-              : formattedInteger;
-          };
-
           return (
             <span className="text-[14px] font-[500] text-black">
-              {formatWithThousands(value)}
+              {formatAmount(value)}
             </span>
           );
         },
@@ -287,7 +162,6 @@ export const useGrantColumns = (type: GrantType) => {
       }),
     ];
 
-    // Add the extra "View Linkage" column only for 'given' type
     if (type === 'given') {
       baseColumns.push(
         columnHelper.display({
@@ -297,11 +171,21 @@ export const useGrantColumns = (type: GrantType) => {
           minSize: 140,
           maxSize: 140,
           enableResizing: false,
-          cell: () => (
-            <button className="text-[14px] transition-colors hover:text-[#1E40AF]">
-              View Linkage
-            </button>
-          ),
+          cell: ({ row }) => {
+            const sourceProjectId = (row.original as any).sourceProjectId;
+            if (!sourceProjectId) {
+              return <span className="text-[14px] text-black/30">-</span>;
+            }
+            return (
+              <Link
+                href={`/project/${sourceProjectId}`}
+                className="text-[14px] transition-colors hover:underline hover:opacity-70"
+                target="_blank"
+              >
+                View Linkage
+              </Link>
+            );
+          },
         }),
       );
     }
