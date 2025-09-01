@@ -21,14 +21,16 @@ export const ProjectColDisplay: React.FC<{
 }> = ({ project, showProjectIconAndName = false }) => {
   const { logoUrl, projectName } = useProjectItemValue(project);
   return showProjectIconAndName ? (
-    <div className="flex items-center justify-start gap-[10px]">
-      <Image
-        src={logoUrl}
-        width={32}
-        height={32}
-        className="rounded-[5px] border border-black/10 object-cover"
-      />
-      <span className="text-[13px] font-[600] leading-[20px] text-black">
+    <div className="flex items-center gap-[10px]">
+      <div className="size-[32px] shrink-0">
+        <Image
+          src={logoUrl}
+          width={32}
+          height={32}
+          className="size-[32px] shrink-0 rounded-[5px] border border-black/10 object-cover"
+        />
+      </div>
+      <span className="min-w-0 break-words text-[13px] font-[600] leading-[20px] text-black">
         {projectName}
       </span>
     </div>
@@ -36,7 +38,7 @@ export const ProjectColDisplay: React.FC<{
     <Link
       href={`/project/${project.id}`}
       target="_blank"
-      className="inline-flex cursor-pointer items-center text-[13px] font-[600] leading-[20px] hover:text-black/60 hover:underline"
+      className="inline-block cursor-pointer break-words text-[13px] font-[600] leading-[20px] hover:text-black/60 hover:underline"
     >
       {project.name}
     </Link>

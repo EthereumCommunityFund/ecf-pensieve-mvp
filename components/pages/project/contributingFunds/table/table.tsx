@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-table';
 import { FC, useMemo } from 'react';
 
+import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import {
   PageTableContainer,
   TableCell,
@@ -20,7 +21,6 @@ import {
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
-import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
@@ -150,7 +150,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
         </button>
       </div> */}
 
-      <PageTableContainer className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
+      <PageTableContainer className="rounded-b-[10px] border border-t-0 border-black/10">
         <table className="w-full border-separate border-spacing-0">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (

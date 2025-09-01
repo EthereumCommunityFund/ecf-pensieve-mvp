@@ -90,7 +90,7 @@ function EcosystemTable<T extends Record<string, any>>({
         </div> */}
       </div>
 
-      <PageTableContainer className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
+      <PageTableContainer className="rounded-b-[10px] border border-t-0 border-black/10">
         <table className="w-full border-separate border-spacing-0">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
