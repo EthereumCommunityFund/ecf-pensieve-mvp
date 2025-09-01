@@ -135,19 +135,19 @@ const NotificationConfigDropdown: FC<NotificationConfigDropdownProps> = ({
     useNotificationSettings(projectId);
 
   // Determine the current notification mode
-  const currentMode = setting?.notificationMode || 'all_events';
+  const currentMode = setting?.notificationMode || 'my_contributions';
   const isMuted = currentMode === 'muted';
   const selectMyContribution = currentMode === 'my_contributions';
   const selectAllEvent = currentMode === 'all_events';
 
   // Handle mute all toggle
   const onMuteAll = useCallback(() => {
-    const newMode: NotificationMode = isMuted ? 'all_events' : 'muted';
+    const newMode: NotificationMode = isMuted ? 'my_contributions' : 'muted';
     updateSetting(newMode);
 
     addToast({
       title: isMuted
-        ? 'Notifications enabled for all events'
+        ? 'Notifications enabled for my contributions'
         : 'All notifications muted',
       color: 'success',
     });
