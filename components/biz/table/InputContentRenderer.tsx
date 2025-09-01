@@ -33,7 +33,17 @@ export const getOptionLabel = (
 ): string => {
   if (!value) return '-';
   const option = options.find((opt) => opt.value === value);
-  return option ? option.label : value;
+
+  // If option not found, format the value as title case with spaces
+  if (!option) {
+    return value
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  return option.label;
 };
 
 interface IProps {
