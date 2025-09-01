@@ -22,9 +22,9 @@ const ContributingFunds: FC<ContributingFundsProps> = ({
   // const { project } = useProjectDetailContext();
 
   return (
-    <div className="mt-[40px] px-[20px] ">
+    <div className="mt-[20px] px-[20px] ">
       {/* Header Section - Funding Received (Grants) */}
-      <div className="mb-[10px] flex flex-col gap-[10px]">
+      <div className="mb-[20px] flex flex-col gap-[10px]">
         <h2 className="text-[18px] font-[700] leading-[25px] text-black/80">
           Item: Funding Received (Grants)
         </h2>
