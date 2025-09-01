@@ -30,19 +30,19 @@ async function getTwitterClient() {
 function generateTweetContent(project: ProjectData): string {
   const platformUrl = `${getHost()}/project/${project.id}`;
 
-  return `!! New page on Pensieve!
+  return `🧠 New page on Pensieve!
 Name: ${project.name}
 Tagline: ${project.tagline}
 
-✅ View + validate:: ${platformUrl}
+📚 Help keep Ethereum's memory honest
+🔍 View + validate:: ${platformUrl}
 
-🗳 Validate facts
+✅ Validate facts
 🗳 Upvote trusted projects
-🗳 Share and co-curate history
+🧾 Share and co-curate history
 
-Built by contributors. Governed by citizens. Help keep Ethereum's memory honest
-
-#PensieveECF: the open source knowledge base for Web3.`;
+✍ Built by contributors. Governed by citizens.
+#**PensieveECF**: the open source knowledge base for Web3.`;
 }
 
 async function generateProjectImage(project: ProjectData): Promise<Buffer> {
