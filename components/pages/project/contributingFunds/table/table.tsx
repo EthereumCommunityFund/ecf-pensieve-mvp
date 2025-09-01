@@ -20,6 +20,7 @@ import {
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
+import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
@@ -78,23 +79,32 @@ const GrantsTable: FC<GrantsTableProps> = ({
     },
   });
 
-  const title = type === 'given' ? 'Given (Grants)' : 'Received (Grants)';
-  const description =
-    type === 'given'
-      ? 'Externally documented when, to whom, and how much funding this project has provided.'
-      : 'Document when, from whom, and how much funding this project has received.';
+  const isGivenType = type === 'given';
+
+  const title = isGivenType ? 'Given (Grants)' : 'Received (Grants)';
+  const description = isGivenType
+    ? 'Externally documented when, to whom, and how much funding this project has provided.'
+    : 'Document when, from whom, and how much funding this project has received.';
   const showActionButtons = type === 'given';
 
   // Determine if we should show skeleton
-  const isLoading = type === 'given' ? isLoadingGiven : !isDataFetched;
+  const isLoading = isGivenType ? isLoadingGiven : !isDataFetched;
 
   return (
-    <div className="mb-[48px]">
+    <div className="mb-[20px]">
       {/* Category Header - matching CategoryHeader.tsx style */}
       <div className="-mb-px flex items-center justify-between rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
+            {isGivenType && (
+              <span className="ml-[10px] inline-flex h-[22px] items-center gap-[5px] rounded-[5px] bg-[#DCDCDC] px-[6px] text-[13px] font-[400] text-black/50">
+                Externally Linked
+                <TooltipWithQuestionIcon
+                  content={`These claimed entries are linked and validated by users from other projects on Pensieve. `}
+                />
+              </span>
+            )}
           </p>
           <p className="text-[13px] font-[400] leading-[18px] text-black/40">
             {description}
