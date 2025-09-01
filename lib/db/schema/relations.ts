@@ -162,6 +162,10 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     fields: [notifications.voter_id],
     references: [profiles.userId],
   }),
+  projectSnaps: one(projectSnaps, {
+    fields: [notifications.projectId],
+    references: [projectSnaps.projectId],
+  }),
 }));
 
 export const likeRecordsRelations = relations(likeRecords, ({ one }) => ({

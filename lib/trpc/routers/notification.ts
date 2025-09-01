@@ -38,10 +38,9 @@ export const notificationRouter = router({
         orderBy: [desc(notifications.id)],
         limit: limit + 1,
         with: {
-          project: {
+          projectSnaps: {
             columns: {
-              id: true,
-              name: true,
+              items: true,
             },
           },
           proposal: {
