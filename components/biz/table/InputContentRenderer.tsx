@@ -15,6 +15,7 @@ import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
+import { formatAmount } from '@/utils/formatters';
 import {
   isInputValueEmpty,
   isInputValueNA,
@@ -1119,7 +1120,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {grant.amount}
+                            {formatAmount(grant.amount)}
                           </TableCell>
                           <TableCell
                             width={200}
@@ -1195,7 +1196,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                   expenseSheetUrl?: string;
                 }) => {
                   const dateStr = dayjs.utc(grant.date).format('YYYY-MM-DD');
-                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
+                  return `${dateStr}: ${grant.organization} - ${formatAmount(grant.amount)} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
                 },
               )
               .join(', ')}
