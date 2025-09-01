@@ -8,6 +8,43 @@ import dayjs from '@/lib/dayjs';
 import { IDateConstraints } from '@/types/item';
 
 /**
+ * Format amount with thousands separators
+ *
+ * Examples:
+ * - 1234 -> "1,234"
+ * - 1000000 -> "1,000,000"
+ * - 1234.56 -> "1,234.56"
+ * - "1234" -> "1,234"
+ *
+ * @param amount - The amount to format (string or number)
+ * @returns Formatted amount string with thousands separators
+ */
+export function formatAmount(
+  amount: string | number | null | undefined,
+): string {
+  if (!amount && amount !== 0) return '-';
+
+  // Convert to string and remove any existing commas
+  const cleanedAmount = String(amount).replace(/,/g, '');
+
+  // Check if it's a valid number
+  if (isNaN(Number(cleanedAmount))) return String(amount);
+
+  // Split into integer and decimal parts
+  const parts = cleanedAmount.split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1];
+
+  // Add thousands separators to integer part
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // Combine integer and decimal parts
+  return decimalPart !== undefined
+    ? `${formattedInteger}.${decimalPart}`
+    : formattedInteger;
+}
+
+/**
  * Format a number to a more readable format
  *
  * Examples:
