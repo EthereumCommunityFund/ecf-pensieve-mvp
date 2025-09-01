@@ -5,10 +5,16 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { getOptionLabel } from '@/components/biz/table';
+import ColumnHeaderWithTooltip from '@/components/biz/table/ColumnHeaderWithTooltip';
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
 import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
+import {
+  AFFILIATED_PROJECTS_COLUMNS,
+  CONTRIBUTING_TEAMS_COLUMNS,
+  STACK_INTEGRATIONS_COLUMNS,
+} from '@/constants/tableColumnDescriptions';
 import {
   IAffiliatedProject,
   IContributingTeam,
@@ -60,7 +66,12 @@ export const useStackIntegrationsColumns = () => {
     return [
       columnHelper.display({
         id: 'project',
-        header: () => 'Project',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={STACK_INTEGRATIONS_COLUMNS.project.label}
+            tooltip={STACK_INTEGRATIONS_COLUMNS.project.tooltip}
+          />
+        ),
         size: 200,
         minSize: 200,
         maxSize: 200,
@@ -82,7 +93,12 @@ export const useStackIntegrationsColumns = () => {
       }),
       columnHelper.accessor('type', {
         id: 'type',
-        header: () => 'Relation',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={STACK_INTEGRATIONS_COLUMNS.type.label}
+            tooltip={STACK_INTEGRATIONS_COLUMNS.type.tooltip}
+          />
+        ),
         size: 160,
         minSize: 160,
         maxSize: 160,
@@ -98,7 +114,12 @@ export const useStackIntegrationsColumns = () => {
       }),
       columnHelper.accessor('description', {
         id: 'description',
-        header: () => 'Description',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={STACK_INTEGRATIONS_COLUMNS.description.label}
+            tooltip={STACK_INTEGRATIONS_COLUMNS.description.tooltip}
+          />
+        ),
         size: 280,
         minSize: 280,
         maxSize: 280,
@@ -109,7 +130,12 @@ export const useStackIntegrationsColumns = () => {
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
-        header: () => 'Reference',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={STACK_INTEGRATIONS_COLUMNS.reference.label}
+            tooltip={STACK_INTEGRATIONS_COLUMNS.reference.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -120,7 +146,12 @@ export const useStackIntegrationsColumns = () => {
       }),
       columnHelper.accessor('repository', {
         id: 'repository',
-        header: () => 'Repository',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={STACK_INTEGRATIONS_COLUMNS.repository.label}
+            tooltip={STACK_INTEGRATIONS_COLUMNS.repository.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -131,7 +162,12 @@ export const useStackIntegrationsColumns = () => {
       }),
       columnHelper.display({
         id: 'page',
-        header: () => 'Page',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={STACK_INTEGRATIONS_COLUMNS.page.label}
+            tooltip={STACK_INTEGRATIONS_COLUMNS.page.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -162,7 +198,12 @@ export const useContributingTeamsColumns = () => {
     return [
       columnHelper.display({
         id: 'project',
-        header: () => 'Project',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={CONTRIBUTING_TEAMS_COLUMNS.project.label}
+            tooltip={CONTRIBUTING_TEAMS_COLUMNS.project.tooltip}
+          />
+        ),
         size: 200,
         minSize: 200,
         maxSize: 200,
@@ -200,7 +241,12 @@ export const useContributingTeamsColumns = () => {
       }),
       columnHelper.accessor('description', {
         id: 'description',
-        header: () => 'Description',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={CONTRIBUTING_TEAMS_COLUMNS.description.label}
+            tooltip={CONTRIBUTING_TEAMS_COLUMNS.description.tooltip}
+          />
+        ),
         size: 380,
         minSize: 380,
         maxSize: 380,
@@ -211,7 +257,12 @@ export const useContributingTeamsColumns = () => {
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
-        header: () => 'Reference',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={CONTRIBUTING_TEAMS_COLUMNS.reference.label}
+            tooltip={CONTRIBUTING_TEAMS_COLUMNS.reference.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -222,7 +273,12 @@ export const useContributingTeamsColumns = () => {
       }),
       columnHelper.display({
         id: 'page',
-        header: () => 'Page',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={CONTRIBUTING_TEAMS_COLUMNS.page.label}
+            tooltip={CONTRIBUTING_TEAMS_COLUMNS.page.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -253,7 +309,12 @@ export const useAffiliatedProjectsColumns = () => {
     return [
       columnHelper.display({
         id: 'project',
-        header: () => 'Project',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={AFFILIATED_PROJECTS_COLUMNS.project.label}
+            tooltip={AFFILIATED_PROJECTS_COLUMNS.project.tooltip}
+          />
+        ),
         size: 200,
         minSize: 200,
         maxSize: 200,
@@ -275,7 +336,12 @@ export const useAffiliatedProjectsColumns = () => {
       }),
       columnHelper.accessor('affiliationType', {
         id: 'affiliationType',
-        header: () => 'Affiliation Type',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={AFFILIATED_PROJECTS_COLUMNS.affiliationType.label}
+            tooltip={AFFILIATED_PROJECTS_COLUMNS.affiliationType.tooltip}
+          />
+        ),
         size: 200,
         minSize: 200,
         maxSize: 200,
@@ -291,7 +357,12 @@ export const useAffiliatedProjectsColumns = () => {
       }),
       columnHelper.accessor('description', {
         id: 'description',
-        header: () => 'Description',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={AFFILIATED_PROJECTS_COLUMNS.description.label}
+            tooltip={AFFILIATED_PROJECTS_COLUMNS.description.tooltip}
+          />
+        ),
         size: 380,
         minSize: 380,
         maxSize: 380,
@@ -302,7 +373,12 @@ export const useAffiliatedProjectsColumns = () => {
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
-        header: () => 'Reference',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={AFFILIATED_PROJECTS_COLUMNS.reference.label}
+            tooltip={AFFILIATED_PROJECTS_COLUMNS.reference.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -313,7 +389,12 @@ export const useAffiliatedProjectsColumns = () => {
       }),
       columnHelper.display({
         id: 'page',
-        header: () => 'Page',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={AFFILIATED_PROJECTS_COLUMNS.page.label}
+            tooltip={AFFILIATED_PROJECTS_COLUMNS.page.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,

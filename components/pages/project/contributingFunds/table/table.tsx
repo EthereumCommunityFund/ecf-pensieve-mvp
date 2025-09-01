@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Info, Tray } from '@phosphor-icons/react';
+import { Tray } from '@phosphor-icons/react';
 import {
   flexRender,
   getCoreRowModel,
@@ -161,19 +161,10 @@ const GrantsTable: FC<GrantsTableProps> = ({
                         width: header.getSize(),
                       }}
                     >
-                      <div className="flex items-center gap-[6px]">
-                        <span className="text-[13px] font-[500] text-black/80">
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                        </span>
-                        <Info
-                          size={14}
-                          weight="regular"
-                          className="text-black/30"
-                        />
-                      </div>
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                     </TableHeader>
                   );
                 })}

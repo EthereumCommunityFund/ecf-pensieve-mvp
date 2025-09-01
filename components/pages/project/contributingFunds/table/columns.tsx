@@ -4,7 +4,9 @@ import { createColumnHelper } from '@tanstack/react-table';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
+import ColumnHeaderWithTooltip from '@/components/biz/table/ColumnHeaderWithTooltip';
 import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
+import { FUNDING_GRANTS_COLUMNS } from '@/constants/tableColumnDescriptions';
 import { IFundingReceivedGrants } from '@/types/item';
 import { formatAmount, formatDate } from '@/utils/formatters';
 
@@ -31,7 +33,12 @@ export const useGrantColumns = (type: GrantType) => {
     const baseColumns: any[] = [
       columnHelper.accessor('date', {
         id: 'date',
-        header: () => 'Date',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.date.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.date.tooltip}
+          />
+        ),
         size: 140,
         minSize: 140,
         maxSize: 140,
@@ -54,7 +61,12 @@ export const useGrantColumns = (type: GrantType) => {
       }),
       columnHelper.display({
         id: 'organization',
-        header: () => 'Organization/Program',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.organization.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.organization.tooltip}
+          />
+        ),
         size: type === 'given' ? 220 : 240,
         minSize: type === 'given' ? 220 : 240,
         maxSize: type === 'given' ? 220 : 240,
@@ -75,7 +87,12 @@ export const useGrantColumns = (type: GrantType) => {
       }),
       columnHelper.display({
         id: 'projectDonator',
-        header: () => 'Project Donator',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.projectDonator.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.projectDonator.tooltip}
+          />
+        ),
         size: type === 'given' ? 200 : 220,
         minSize: type === 'given' ? 200 : 220,
         maxSize: type === 'given' ? 200 : 220,
@@ -96,7 +113,12 @@ export const useGrantColumns = (type: GrantType) => {
       }),
       columnHelper.accessor('amount', {
         id: 'amount',
-        header: () => 'Amount (USD)',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.amount.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.amount.tooltip}
+          />
+        ),
         size: type === 'given' ? 160 : 180,
         minSize: type === 'given' ? 160 : 180,
         maxSize: type === 'given' ? 160 : 180,
@@ -116,7 +138,12 @@ export const useGrantColumns = (type: GrantType) => {
       }),
       columnHelper.accessor('expenseSheetUrl', {
         id: 'expenseSheetUrl',
-        header: () => 'Expense Sheet',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.expenseSheetUrl.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.expenseSheetUrl.tooltip}
+          />
+        ),
         size: type === 'given' ? 160 : 180,
         minSize: type === 'given' ? 160 : 180,
         maxSize: type === 'given' ? 160 : 180,
@@ -139,7 +166,12 @@ export const useGrantColumns = (type: GrantType) => {
       }),
       columnHelper.accessor('reference', {
         id: 'reference',
-        header: () => 'Reference',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.reference.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.reference.tooltip}
+          />
+        ),
         size: type === 'given' ? 140 : 160,
         minSize: type === 'given' ? 140 : 160,
         maxSize: type === 'given' ? 140 : 160,
@@ -166,7 +198,12 @@ export const useGrantColumns = (type: GrantType) => {
       baseColumns.push(
         columnHelper.display({
           id: 'page',
-          header: () => 'Page',
+          header: () => (
+            <ColumnHeaderWithTooltip
+              label={FUNDING_GRANTS_COLUMNS.page.label}
+              tooltip={FUNDING_GRANTS_COLUMNS.page.tooltip}
+            />
+          ),
           size: 140,
           minSize: 140,
           maxSize: 140,
