@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, ScrollShadow } from '@heroui/react';
 import { ReactNode } from 'react';
 
 export interface TableContainerProps {
@@ -140,8 +140,13 @@ export const PageTableContainer = ({
   allowInternalBorderRadius?: boolean;
 }) => {
   return (
-    <TableContainer className={className} {...props}>
-      {children}
-    </TableContainer>
+    <ScrollShadow
+      className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full overflow-x-scroll"
+      orientation="horizontal"
+    >
+      <TableContainer className={className} {...props}>
+        {children}
+      </TableContainer>
+    </ScrollShadow>
   );
 };

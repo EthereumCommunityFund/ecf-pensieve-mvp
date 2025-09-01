@@ -27,7 +27,6 @@ export const projectSchema = yup
     founders: itemValidationSchemas.founders,
 
     fundingStatus: itemValidationSchemas.fundingStatus,
-    funding_received_grants: itemValidationSchemas.funding_received_grants,
     tokenContract: itemValidationSchemas.tokenContract,
   })
   .defined();

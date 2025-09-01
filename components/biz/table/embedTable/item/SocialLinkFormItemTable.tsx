@@ -7,7 +7,7 @@ import { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
 import { Select, SelectItem } from '@/components/base/select';
 import { SOCIAL_PLATFORMS } from '@/constants/socialPlatforms';
 
-import { ISocialLink } from '../types';
+import { ISocialLink } from '../../../../pages/project/create/types';
 
 interface SocialLinkFormItemTableProps {
   index: number;

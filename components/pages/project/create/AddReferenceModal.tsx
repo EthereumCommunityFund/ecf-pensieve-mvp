@@ -14,12 +14,12 @@ import {
   ModalBody,
   ModalContent,
 } from '@/components/base';
+import InputPrefix from '@/components/biz/FormAndTable/InputPrefix';
 import SablierEntry from '@/components/sablier/SablierEntry';
 import { devLog } from '@/utils/devLog';
 import { isSablierDomain } from '@/utils/sablierDetector';
 import { normalizeUrl } from '@/utils/url';
 
-import InputPrefix from './form/InputPrefix';
 import { IReferenceData } from './types';
 
 interface AddReferenceModalProps {

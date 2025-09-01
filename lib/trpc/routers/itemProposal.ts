@@ -11,7 +11,9 @@ import {
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addMultiUserNotification,
   addRewardNotification,
+  createMultiUserNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
@@ -119,6 +121,14 @@ export const itemProposalRouter = router({
                   reward,
                 ),
                 tx,
+              ),
+
+              addMultiUserNotification(
+                createMultiUserNotification.createItemProposal(
+                  ctx.user.id,
+                  input.projectId,
+                  itemProposal.id,
+                ),
               ),
 
               logUserActivity.itemProposal.create(

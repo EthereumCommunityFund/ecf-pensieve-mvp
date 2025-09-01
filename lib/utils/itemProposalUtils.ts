@@ -18,9 +18,9 @@ import {
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
-  addNotification,
+  addMultiUserNotification,
   addRewardNotification,
-  createNotification,
+  createMultiUserNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
@@ -208,13 +208,12 @@ export const processItemProposalVoteResult = async (
             itemsTopWeight: newItemsTopWeight,
           })
           .where(eq(projects.id, itemProposal.projectId)),
-        addNotification(
-          createNotification.itemProposalBecameLeading(
+        addMultiUserNotification(
+          createMultiUserNotification.itemProposalBecameLeading(
             itemProposal.creator.userId,
             itemProposal.projectId,
             itemProposal.id,
           ),
-          tx,
         ),
         updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
       ]);
@@ -258,13 +257,12 @@ export const processItemProposalVoteResult = async (
         ),
         tx,
       ),
-      addNotification(
-        createNotification.itemProposalBecameLeading(
+      addMultiUserNotification(
+        createMultiUserNotification.itemProposalBecameLeading(
           itemProposal.creator.userId,
           itemProposal.projectId,
           itemProposal.id,
         ),
-        tx,
       ),
       updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
     ]);
@@ -377,13 +375,12 @@ export const handleOriginalProposalUpdate = async (
           })
           .where(eq(projectLogs.id, originalLeadingCheck.id)),
         originalItemProposal
-          ? addNotification(
-              createNotification.itemProposalLostLeading(
+          ? addMultiUserNotification(
+              createMultiUserNotification.itemProposalLostLeading(
                 originalItemProposal.creator.userId,
                 projectId,
                 originalItemProposalId,
               ),
-              tx,
             )
           : Promise.resolve(),
       ]);

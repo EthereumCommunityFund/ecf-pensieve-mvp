@@ -4,14 +4,18 @@ import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { AddressDisplay } from '@/components/base/AddressDisplay';
+import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
+import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
+import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
+import { ProjectColDisplay } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
-import { SelectedProjectTag } from '@/components/pages/project/create/form/ProjectSearchSelector';
-import TooltipWithQuestionIcon from '@/components/pages/project/create/form/TooltipWithQuestionIcon';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
+import { formatAmount } from '@/utils/formatters';
 import {
   isInputValueEmpty,
   isInputValueNA,
@@ -23,6 +27,26 @@ import { normalizeUrl } from '@/utils/url';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
 
+// Helper function to get label from options
+export const getOptionLabel = (
+  value: string | undefined,
+  options: Array<{ value: string; label: string }>,
+): string => {
+  if (!value) return '-';
+  const option = options.find((opt) => opt.value === value);
+
+  // If option not found, format the value as title case with spaces
+  if (!option) {
+    return value
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  return option.label;
+};
+
 interface IProps {
   itemKey: IPocItemKey;
   isEssential: boolean;
@@ -33,6 +57,63 @@ interface IProps {
   onToggleExpanded?: () => void;
   isInExpandableRow?: boolean;
 }
+
+// Reusable component for rendering project fields
+const ProjectFieldRenderer: React.FC<{
+  projectValue: string | string[] | undefined;
+  projectsMap: Map<number, IProject> | undefined;
+  isLoadingProjects: boolean;
+  isProjectId: (value: string) => boolean;
+}> = ({ projectValue, projectsMap, isLoadingProjects, isProjectId }) => {
+  if (!projectValue) return <>N/A</>;
+
+  // Check if it's a string
+  if (typeof projectValue === 'string') {
+    if (projectValue === 'N/A') return <>N/A</>;
+
+    // Check if it's a projectId
+    if (isProjectId(projectValue)) {
+      if (isLoadingProjects) {
+        return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
+      }
+
+      const numId = parseInt(projectValue, 10);
+      const projectData = projectsMap?.get(numId);
+
+      if (projectData) {
+        return <ProjectColDisplay project={projectData} />;
+      }
+    }
+
+    // Legacy projectName data
+    return <>{projectValue}</>;
+  }
+
+  // Array of project IDs
+  if (Array.isArray(projectValue)) {
+    if (isLoadingProjects) {
+      return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
+    }
+
+    const projects = projectValue
+      .map((id: string) => {
+        const numId = parseInt(id, 10);
+        const projectData = projectsMap?.get(numId);
+        return projectData || null;
+      })
+      .filter((p): p is IProject => p !== null);
+
+    return (
+      <div className="flex flex-wrap items-center gap-[8px]">
+        {projects.map((project) => (
+          <ProjectColDisplay key={project.id} project={project} />
+        ))}
+      </div>
+    );
+  }
+
+  return <></>;
+};
 
 const InputContentRenderer: React.FC<IProps> = ({
   value,
@@ -46,38 +127,67 @@ const InputContentRenderer: React.FC<IProps> = ({
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
-  // For fundingReceivedGrants, extract project IDs from organization and projectDonator fields
-  const grantProjectIds = useMemo(() => {
-    if (displayFormType !== 'fundingReceivedGrants') return [];
+  // Helper function to check if a string value is a projectId
+  const isProjectId = useCallback((value: string): boolean => {
+    // projectId is a numeric string, not 'N/A', and Number(value) > 0
+    return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
+  }, []);
 
+  // Helper function to extract projectIds from a field value
+  const extractProjectIds = useCallback(
+    (fieldValue: any): string[] => {
+      if (!fieldValue) return [];
+
+      if (Array.isArray(fieldValue)) {
+        return fieldValue;
+      }
+
+      if (typeof fieldValue === 'string' && isProjectId(fieldValue)) {
+        return [fieldValue];
+      }
+
+      return [];
+    },
+    [isProjectId],
+  );
+
+  // For fundingReceivedGrants, affiliated_projects, contributing_teams, and stack_integrations, extract project IDs
+  const projectIds = useMemo(() => {
     const parsed = parseValue(formatValue);
     if (!parsed || !Array.isArray(parsed)) return [];
 
     const ids: string[] = [];
-    parsed.forEach((grant: any) => {
-      // Extract from organization field
-      if (grant.organization) {
-        if (Array.isArray(grant.organization)) {
-          // New format: array of project IDs
-          ids.push(...grant.organization);
-        }
-      }
-      // Extract from projectDonator field
-      if (grant.projectDonator && Array.isArray(grant.projectDonator)) {
-        ids.push(...grant.projectDonator);
-      }
-    });
+
+    if (displayFormType === 'fundingReceivedGrants') {
+      parsed.forEach((grant: any) => {
+        // Extract from organization and projectDonator fields
+        ids.push(...extractProjectIds(grant.organization));
+        ids.push(...extractProjectIds(grant.projectDonator));
+      });
+    } else if (
+      displayFormType === 'affiliated_projects' ||
+      displayFormType === 'contributing_teams' ||
+      displayFormType === 'stack_integrations'
+    ) {
+      parsed.forEach((item: any) => {
+        // Extract from project field
+        ids.push(...extractProjectIds(item.project));
+      });
+    }
 
     return [...new Set(ids)]; // Remove duplicates
-  }, [displayFormType, formatValue]);
+  }, [displayFormType, formatValue, extractProjectIds]);
 
-  // Fetch project names for grant organizations
+  // Fetch project names for organizations, affiliated projects, contributing teams, and stack integrations
   const { projectsMap, isLoading: isLoadingProjects } = useProjectNamesByIds(
-    grantProjectIds,
+    projectIds,
     {
       enabled:
-        displayFormType === 'fundingReceivedGrants' &&
-        grantProjectIds.length > 0,
+        (displayFormType === 'fundingReceivedGrants' ||
+          displayFormType === 'affiliated_projects' ||
+          displayFormType === 'contributing_teams' ||
+          displayFormType === 'stack_integrations') &&
+        projectIds.length > 0,
     },
   );
 
@@ -986,96 +1096,31 @@ const InputContentRenderer: React.FC<IProps> = ({
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              if (!grant.organization) return '';
-
-                              // Check if it's the old format (string)
-                              if (typeof grant.organization === 'string') {
-                                return grant.organization;
-                              }
-
-                              // New format: array of project IDs
-                              if (Array.isArray(grant.organization)) {
-                                if (isLoadingProjects) {
-                                  return (
-                                    <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                  );
-                                }
-
-                                const projects = (
-                                  grant.organization as string[]
-                                )
-                                  .map((id: string) => {
-                                    const numId = parseInt(id, 10);
-                                    const projectData = projectsMap?.get(numId);
-                                    return projectData || null;
-                                  })
-                                  .filter((p): p is IProject => p !== null);
-
-                                return (
-                                  <div className="flex flex-wrap items-center gap-[8px]">
-                                    {projects.map((project) => (
-                                      <SelectedProjectTag
-                                        key={project.id}
-                                        project={project}
-                                      />
-                                    ))}
-                                  </div>
-                                );
-                              }
-
-                              return '';
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={grant.organization}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={300}
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {(() => {
-                              // Compatibility: handle old data without projectDonator field
-                              if (
-                                !grant.projectDonator ||
-                                !Array.isArray(grant.projectDonator) ||
-                                grant.projectDonator.length === 0
-                              ) {
-                                return '-';
-                              }
-
-                              if (isLoadingProjects) {
-                                return (
-                                  <Skeleton className="h-[20px] w-[50px] rounded-sm" />
-                                );
-                              }
-
-                              const donatorProjects = grant.projectDonator
-                                .map((id: string) => {
-                                  const numId = parseInt(id, 10);
-                                  const projectData = projectsMap?.get(numId);
-                                  return projectData || null;
-                                })
-                                .filter((p): p is IProject => p !== null);
-
-                              return donatorProjects.length > 0 ? (
-                                <div className="flex flex-wrap items-center gap-[8px]">
-                                  {donatorProjects.map((project) => (
-                                    <SelectedProjectTag
-                                      key={project.id}
-                                      project={project}
-                                    />
-                                  ))}
-                                </div>
-                              ) : (
-                                '-'
-                              );
-                            })()}
+                            <ProjectFieldRenderer
+                              projectValue={grant.projectDonator}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
                           </TableCell>
                           <TableCell
                             width={138}
                             isContainerBordered
                             isLastRow={index === parsed.length - 1}
                           >
-                            {grant.amount}
+                            {formatAmount(grant.amount)}
                           </TableCell>
                           <TableCell
                             width={200}
@@ -1151,7 +1196,489 @@ const InputContentRenderer: React.FC<IProps> = ({
                   expenseSheetUrl?: string;
                 }) => {
                   const dateStr = dayjs.utc(grant.date).format('YYYY-MM-DD');
-                  return `${dateStr}: ${grant.organization} - ${grant.amount} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
+                  return `${dateStr}: ${grant.organization} - ${formatAmount(grant.amount)} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
+                },
+              )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'affiliated_projects': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project</span>
+                          <TooltipWithQuestionIcon content="The project that has an affiliation with this project" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Affiliation Type</span>
+                          <TooltipWithQuestionIcon content="The type of relationship between the projects" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={250} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Description</span>
+                          <TooltipWithQuestionIcon content="Description of the affiliation relationship" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Reference</span>
+                          <TooltipWithQuestionIcon content="Reference link for more information about this affiliation" />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        item: {
+                          project: string | string[];
+                          affiliationType: string;
+                          description: string;
+                          reference?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            <ProjectFieldRenderer
+                              projectValue={item.project}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
+                          </TableCell>
+                          <TableCell
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {getOptionLabel(
+                              item.affiliationType,
+                              AFFILIATION_TYPE_OPTIONS,
+                            )}
+                          </TableCell>
+                          <TableCell
+                            width={250}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.description || '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map(
+                (item: {
+                  project: string | string[];
+                  affiliationType: string;
+                  description: string;
+                  reference?: string;
+                }) => {
+                  const projectName = Array.isArray(item.project)
+                    ? item.project.join(', ')
+                    : item.project;
+                  const typeLabel = getOptionLabel(
+                    item.affiliationType,
+                    AFFILIATION_TYPE_OPTIONS,
+                  );
+                  return `${projectName} - ${typeLabel}: ${item.description}${item.reference ? ` - ${item.reference}` : ''}`;
+                },
+              )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'contributing_teams': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project</span>
+                          <TooltipWithQuestionIcon content="The team or organization that contributed to this project" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={200} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Area of Contribution</span>
+                          <TooltipWithQuestionIcon content="The type of contribution provided" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={250} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Description</span>
+                          <TooltipWithQuestionIcon content="Description of the contribution" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Reference</span>
+                          <TooltipWithQuestionIcon content="Reference link for more information about this contribution" />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        item: {
+                          project: string | string[];
+                          type: string;
+                          description?: string;
+                          reference?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            <ProjectFieldRenderer
+                              projectValue={item.project}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
+                          </TableCell>
+                          <TableCell
+                            width={200}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {getOptionLabel(
+                              item.type,
+                              CONTRIBUTION_TYPE_OPTIONS,
+                            )}
+                          </TableCell>
+                          <TableCell
+                            width={250}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.description || '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map(
+                (item: {
+                  project: string | string[];
+                  type: string;
+                  description?: string;
+                  reference?: string;
+                }) => {
+                  const projectName = Array.isArray(item.project)
+                    ? item.project.join(', ')
+                    : item.project;
+                  const typeLabel = getOptionLabel(
+                    item.type,
+                    CONTRIBUTION_TYPE_OPTIONS,
+                  );
+                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}`;
+                },
+              )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'stack_integrations': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={240} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Project</span>
+                          <TooltipWithQuestionIcon content="The project or technology integrated with this project" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Type</span>
+                          <TooltipWithQuestionIcon content="The type of integration or dependency" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={200} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Description</span>
+                          <TooltipWithQuestionIcon content="Description of the integration" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Reference</span>
+                          <TooltipWithQuestionIcon content="Reference link for more information" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Repository</span>
+                          <TooltipWithQuestionIcon content="Repository link for the integration" />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        item: {
+                          project: string | string[];
+                          type: string;
+                          description?: string;
+                          reference?: string;
+                          repository?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={240}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            <ProjectFieldRenderer
+                              projectValue={item.project}
+                              projectsMap={projectsMap}
+                              isLoadingProjects={isLoadingProjects}
+                              isProjectId={isProjectId}
+                            />
+                          </TableCell>
+                          <TableCell
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {getOptionLabel(
+                              item.type,
+                              STACK_INTEGRATION_TYPE_OPTIONS,
+                            )}
+                          </TableCell>
+                          <TableCell
+                            width={200}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.description || '-'}
+                          </TableCell>
+                          <TableCell
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.repository ? (
+                              <Link
+                                href={normalizeUrl(item.repository)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.repository)}
+                              </Link>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={onToggleExpanded}
+                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map(
+                (item: {
+                  project: string | string[];
+                  type: string;
+                  description?: string;
+                  reference?: string;
+                  repository?: string;
+                }) => {
+                  const projectName = Array.isArray(item.project)
+                    ? item.project.join(', ')
+                    : item.project;
+                  const typeLabel = getOptionLabel(
+                    item.type,
+                    STACK_INTEGRATION_TYPE_OPTIONS,
+                  );
+                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
               .join(', ')}
@@ -1195,6 +1722,9 @@ const InputContentRenderer: React.FC<IProps> = ({
     displayFormType !== 'founderList' &&
     displayFormType !== 'websites' &&
     displayFormType !== 'social_links' &&
+    displayFormType !== 'affiliated_projects' &&
+    displayFormType !== 'contributing_teams' &&
+    displayFormType !== 'stack_integrations' &&
     displayFormType !== 'tablePhysicalEntity' &&
     displayFormType !== 'fundingReceivedGrants' &&
     displayFormType !== 'multiContracts'

@@ -1,4 +1,4 @@
-import { Avatar, cn, Tooltip } from '@heroui/react';
+import { Avatar, Tooltip } from '@heroui/react';
 import { DateValue } from '@internationalized/date';
 import { Image as ImageIcon } from '@phosphor-icons/react';
 import React, { useCallback, useMemo } from 'react';
@@ -16,8 +16,20 @@ import {
   SelectItem,
   Textarea,
 } from '@/components/base';
+import InputPrefix from '@/components/biz/FormAndTable/InputPrefix';
+import PhotoUpload from '@/components/biz/FormAndTable/PhotoUpload';
 import { MultiContractEntry } from '@/components/biz/project/smart-contracts';
 import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
+import {
+  DYNAMIC_FIELDS_CONFIG,
+  isDynamicFieldType,
+} from '@/components/biz/table/embedTable/dynamicFieldsConfig';
+import DynamicFieldTable from '@/components/biz/table/embedTable/DynamicFieldTable';
+import FounderFormItemTable from '@/components/biz/table/embedTable/item/FounderFormItemTable';
+import PhysicalEntityFormItemTable from '@/components/biz/table/embedTable/item/PhysicalEntityFormItemTable';
+import SocialLinkFormItemTable from '@/components/biz/table/embedTable/item/SocialLinkFormItemTable';
+import WebsiteFormItemTable from '@/components/biz/table/embedTable/item/WebsiteFormItemTable';
+import { useAllDynamicFieldArrays } from '@/components/biz/table/embedTable/useAllDynamicFieldArrays';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
 import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
@@ -28,16 +40,6 @@ import {
 } from '@/utils/formatters';
 
 import { IFormTypeEnum, IFounder, IProjectFormData } from '../types';
-
-import FounderFormItemTable from './FounderFormItemTable';
-import FundingReceivedGrantsTableItem from './FundingReceivedGrantsTableItem';
-import InputPrefix from './InputPrefix';
-import PhotoUpload from './PhotoUpload';
-import PhysicalEntityFormItemTable from './PhysicalEntityFormItemTable';
-import SocialLinkFormItemTable from './SocialLinkFormItemTable';
-import TooltipWithQuestionIcon from './TooltipWithQuestionIcon';
-import { useFundingReceivedGrants } from './useFundingReceivedGrants';
-import WebsiteFormItemTable from './WebsiteFormItemTable';
 
 interface FormItemRendererProps {
   field: ControllerRenderProps<any, any>;
@@ -113,22 +115,36 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     [field],
   );
 
-  // Removed handleApplicableChange - now handled through fieldApplicability
-
-  // Use custom hook for funding received grants field array management
-  const {
-    fields: fundingFields,
-    handleAddField: handleAddFundingField,
-    handleRemoveField: handleRemoveFundingField,
-  } = useFundingReceivedGrants({
+  // Use optimized dynamic field arrays management
+  const dynamicFieldsMap = useAllDynamicFieldArrays({
     control,
     formDisplayType,
     fieldName: field.name as any,
   });
 
+  // Get handlers for the current form type (if it's a dynamic type)
+  const dynamicHandlers = isDynamicFieldType(formDisplayType)
+    ? dynamicFieldsMap[formDisplayType]
+    : undefined;
+
   const errorMessageElement = error ? (
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
+
+  // Handle dynamic field types with unified approach
+  if (isDynamicFieldType(formDisplayType) && dynamicHandlers) {
+    const config = DYNAMIC_FIELDS_CONFIG[formDisplayType];
+    return (
+      <DynamicFieldTable
+        config={config}
+        fields={dynamicHandlers.fields}
+        onAdd={dynamicHandlers.handleAddField}
+        onRemove={dynamicHandlers.handleRemoveField}
+        itemKey={field.name}
+        errorMessage={errorMessageElement}
+      />
+    );
+  }
 
   switch (formDisplayType) {
     case 'string':
@@ -802,103 +818,6 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
               >
                 <PlusIcon size={16} />
                 Add Physical Entity
-              </button>
-            </div>
-          </div>
-          {errorMessageElement}
-        </div>
-      );
-    }
-
-    case 'fundingReceivedGrants': {
-      return (
-        <div className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll">
-          <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
-            {/* Table header */}
-            <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
-              <div className="flex h-full w-[158px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Date
-                  </span>
-                  <TooltipWithQuestionIcon content="The Date of when this grant was given to this project" />
-                </div>
-              </div>
-              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Organization/Program
-                  </span>
-                  <TooltipWithQuestionIcon content="This refers to the organization or program this project has received their grants from" />
-                </div>
-              </div>
-              <div className="flex h-full w-[300px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Project Donator
-                  </span>
-                  <TooltipWithQuestionIcon content="Projects that have donated to this funding round or acted as sponsors" />
-                </div>
-              </div>
-              <div className="flex h-full w-[138px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="shrink-0 text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Amount (USD)
-                  </span>
-                  <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
-                </div>
-              </div>
-              <div className="flex h-full w-[200px] shrink-0 items-center border-r border-black/10 px-[10px]">
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Expense Sheet
-                  </span>
-                  <TooltipWithQuestionIcon content="Link to detailed expense breakdown showing how the grant funds were utilized" />
-                </div>
-              </div>
-              <div
-                className={cn(
-                  'flex h-full w-[200px] shrink-0 items-center px-[10px] bg-[#F5F5F5]',
-                  fundingFields.length > 1 ? 'border-r border-black/10' : '',
-                )}
-              >
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    Reference
-                  </span>
-                  <TooltipWithQuestionIcon content="This is the reference link that acts as  evidence for this entry" />
-                </div>
-              </div>
-              {fundingFields.length > 1 && (
-                <div className="flex h-full w-[60px] items-center justify-center">
-                  {/* Actions column header */}
-                </div>
-              )}
-            </div>
-            {fundingFields.map((field, index) => {
-              return (
-                <FundingReceivedGrantsTableItem
-                  key={field.fieldId}
-                  field={field}
-                  index={index}
-                  remove={() => handleRemoveFundingField(index)}
-                  itemKey={'funding_received_grants'}
-                  canRemove={fundingFields.length > 1}
-                />
-              );
-            })}
-            <div className="bg-[#F5F5F5] p-[10px]">
-              <button
-                type="button"
-                className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleAddFundingField();
-                }}
-              >
-                <PlusIcon size={16} />
-                Add an Entity
               </button>
             </div>
           </div>

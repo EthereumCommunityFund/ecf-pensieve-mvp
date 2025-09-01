@@ -295,9 +295,9 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
         className={cn(
           'mx-auto w-full',
           // Desktop: maximum width limit, centered horizontally
-          'lg:max-w-[1400px] pc:max-w-[1200px]',
+          'lg:max-w-[1400px] pc:max-w-[1400px]',
           // Padding: desktop larger, mobile smaller
-          'px-[20px] tablet:px-[15px] mobile:px-[10px]',
+          // 'px-[20px] tablet:px-[15px] mobile:px-[10px]',
           // Top margin and padding
           'mt-[20px] pt-[20px]',
         )}
@@ -325,7 +325,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
             className={cn(
               'w-full',
               // Desktop: limit maximum width, ensure table is not too wide
-              'lg:max-w-[1000px] pc:max-w-[900px]',
+              'lg:max-w-[1200px] pc:max-w-[1200px]',
               // Tablet and mobile: make full use of available width
               'tablet:max-w-none mobile:max-w-none',
               // Behavior as flex item on desktop

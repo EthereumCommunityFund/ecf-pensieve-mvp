@@ -5,10 +5,10 @@ import { XCircle } from '@phosphor-icons/react';
 import React, { useEffect, useMemo } from 'react';
 import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
-import AmountInput from './AmountInput';
-import DateInput from './DateInput';
-import ProjectSearchSelector from './ProjectSearchSelector';
-import URLInput from './URLInput';
+import AmountInput from '@/components/biz/FormAndTable/AmountInput';
+import DateInput from '@/components/biz/FormAndTable/DateInput';
+import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
+import URLInput from '@/components/biz/FormAndTable/URLInput';
 
 interface FundingReceivedGrantsTableItemProps {
   field: FieldArrayWithId<any, any, 'fieldId'>;
@@ -93,6 +93,8 @@ const FundingReceivedGrantsTableItem: React.FC<
                 multiple={true}
                 allowNA={true}
                 columnName="Organization/Program"
+                itemKey={'funding_received_grants'}
+                searchModalTitle={`Funding Received (Grants)`}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
@@ -122,6 +124,8 @@ const FundingReceivedGrantsTableItem: React.FC<
                 multiple={true}
                 disabled={false}
                 columnName={'Project Donator'}
+                itemKey={'funding_received_grants'}
+                searchModalTitle={`Funding Received (Grants)`}
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
