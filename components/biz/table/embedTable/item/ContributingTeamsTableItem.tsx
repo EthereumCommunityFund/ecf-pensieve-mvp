@@ -9,10 +9,12 @@ import { Select, SelectItem } from '@/components/base/select';
 import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
 import URLInput from '@/components/biz/FormAndTable/URLInput';
 
+import { ITypeOption } from './AffiliatedProjectsTableItem';
+
 /**
  * Contribution type options for select dropdown
  */
-export const CONTRIBUTION_TYPE_OPTIONS = [
+export const CONTRIBUTION_TYPE_OPTIONS: ITypeOption[] = [
   { value: 'core_development', label: 'Core development' },
   { value: 'technical_integration', label: 'Technical Integration' },
   { value: 'research', label: 'Research' },

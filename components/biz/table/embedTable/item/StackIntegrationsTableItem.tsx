@@ -9,10 +9,12 @@ import { Select, SelectItem } from '@/components/base/select';
 import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
 import URLInput from '@/components/biz/FormAndTable/URLInput';
 
+import { ITypeOption } from './AffiliatedProjectsTableItem';
+
 /**
  * Stack integration type options for select dropdown
  */
-export const STACK_INTEGRATION_TYPE_OPTIONS = [
+export const STACK_INTEGRATION_TYPE_OPTIONS: ITypeOption[] = [
   { value: 'dependency', label: 'Dependency' },
   { value: 'integration_interfacing', label: 'Integration / Interfacing' },
   { value: 'plugin_extension', label: 'Plugin / Extension' },
@@ -23,7 +25,7 @@ export const STACK_INTEGRATION_TYPE_OPTIONS = [
   { value: 'modular_composition', label: 'Modular Composition' },
   { value: 'peer_to_peer', label: 'Peer-to-Peer Relationship' },
   { value: 'middleware_broker', label: 'Middleware / Broker' },
-];
+] as const;
 
 interface StackIntegrationsTableItemProps {
   field: FieldArrayWithId<any, any, 'fieldId'>;

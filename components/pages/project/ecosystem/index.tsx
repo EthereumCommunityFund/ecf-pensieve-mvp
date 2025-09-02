@@ -2,6 +2,10 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
+import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
+import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
+
 import { useProjectTableData } from '../detail/table/hooks/useProjectTableData';
 
 import EcosystemNav from './nav/EcosystemNav';
@@ -98,6 +102,8 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           columns={stackIntegrationsColumns}
           projectId={projectId}
           isDataFetched={isDataFetched}
+          typeKey="type"
+          typeOptions={STACK_INTEGRATION_TYPE_OPTIONS}
         />
         <EcosystemTable
           id="contributing_teams"
@@ -108,6 +114,8 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           columns={contributingTeamsColumns}
           projectId={projectId}
           isDataFetched={isDataFetched}
+          typeKey="type"
+          typeOptions={CONTRIBUTION_TYPE_OPTIONS}
         />
         <EcosystemTable
           id="affiliated_projects"
@@ -118,6 +126,8 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           columns={affiliatedProjectsColumns}
           projectId={projectId}
           isDataFetched={isDataFetched}
+          typeKey="affiliationType"
+          typeOptions={AFFILIATION_TYPE_OPTIONS}
         />
       </div>
     </div>

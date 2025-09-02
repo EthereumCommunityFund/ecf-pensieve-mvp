@@ -9,10 +9,15 @@ import { Select, SelectItem } from '@/components/base/select';
 import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
 import URLInput from '@/components/biz/FormAndTable/URLInput';
 
+export interface ITypeOption {
+  value: string;
+  label: string;
+}
+
 /**
  * Affiliation type options for select dropdown
  */
-export const AFFILIATION_TYPE_OPTIONS = [
+export const AFFILIATION_TYPE_OPTIONS: ITypeOption[] = [
   { value: 'subsidiary', label: 'Subsidiary' },
   { value: 'partnership', label: 'Partnership' },
   { value: 'shared_team', label: 'Shared team' },

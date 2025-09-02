@@ -8,7 +8,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   PageTableContainer,
@@ -18,6 +18,7 @@ import {
   TableRow,
   TableRowSkeleton,
 } from '@/components/biz/table';
+import { ITypeOption } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import CaretUpDown from '@/components/icons/CaretUpDown';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
@@ -31,6 +32,8 @@ interface EcosystemTableProps<T extends Record<string, any>> {
   columns: ColumnDef<T>[];
   projectId?: number;
   isDataFetched?: boolean;
+  typeKey: string;
+  typeOptions?: ITypeOption[];
 }
 
 function EcosystemTable<T extends Record<string, any>>({
@@ -41,13 +44,35 @@ function EcosystemTable<T extends Record<string, any>>({
   data,
   columns,
   isDataFetched = true,
+  typeKey,
+  typeOptions = [],
 }: EcosystemTableProps<T>) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize after component mount to avoid state update during render
   useEffect(() => {
     setIsInitialized(true);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Extract project IDs from the data using shared helper
@@ -59,13 +84,19 @@ function EcosystemTable<T extends Record<string, any>>({
   const { projectsMap, isLoading: isLoadingProjects } =
     useOptimizedProjectsByIds(projectIds);
 
+  // Filter data based on selected type
+  const filteredData = useMemo(() => {
+    if (selectedType === 'all' || !typeKey) return data;
+    return data.filter((item) => item[typeKey] === selectedType);
+  }, [data, selectedType, typeKey]);
+
   // Handle expand/collapse toggle
   const handleExpandCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {
@@ -86,11 +117,56 @@ function EcosystemTable<T extends Record<string, any>>({
           </p>
         </div>
         <div className="flex items-center gap-[10px]">
-          {/* TODO：selector filter */}
-          <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-            <CaretUpDown size={16} className="opacity-50" />
-            <span>{filterButtonText}</span>
-          </button>
+          {/* Type filter dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+            >
+              <CaretUpDown />
+              <span>
+                {selectedType === 'all'
+                  ? filterButtonText
+                  : typeOptions.find((opt) => opt.value === selectedType)
+                      ?.label || filterButtonText}
+              </span>
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full z-50 mt-[4px] min-w-[200px] rounded-[8px] border border-black/10 bg-white shadow-lg">
+                <div className="py-[4px]">
+                  <button
+                    onClick={() => {
+                      setSelectedType('all');
+                      setIsDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full px-[12px] py-[8px] text-left text-[13px] transition-colors hover:bg-black/[0.05]',
+                      selectedType === 'all' && 'bg-black/[0.05] font-[600]',
+                    )}
+                  >
+                    All Types
+                  </button>
+                  {typeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedType(option.value);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={cn(
+                        'w-full px-[12px] py-[8px] text-left text-[13px] transition-colors hover:bg-black/[0.05]',
+                        selectedType === option.value &&
+                          'bg-black/[0.05] font-[600]',
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleExpandCollapse}
             className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
@@ -162,7 +238,7 @@ function EcosystemTable<T extends Record<string, any>>({
                     })}
                   </TableRowSkeleton>
                 ))
-              ) : data.length === 0 ? (
+              ) : filteredData.length === 0 ? (
                 // Empty state
                 <tr className={cn(isCollapsed && 'hidden')}>
                   <td
