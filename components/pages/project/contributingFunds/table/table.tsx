@@ -1,13 +1,15 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Tray } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, Tray } from '@phosphor-icons/react';
 import {
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import {
@@ -19,6 +21,7 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
+import CaretUpDown from '@/components/icons/CaretUpDown';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
 
@@ -42,6 +45,12 @@ const GrantsTable: FC<GrantsTableProps> = ({
   onOpenModal,
 }) => {
   const columns = useGrantColumns(type);
+
+  // Sorting state
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Collapsed state for controlling visibility
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const { getItemRowData, isDataFetched } = useProjectTableData();
   const { data: givenGrantsData, isLoading: isLoadingGiven } =
@@ -73,6 +82,11 @@ const GrantsTable: FC<GrantsTableProps> = ({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     meta: {
       projectsMap,
       isLoadingProjects,
@@ -89,6 +103,38 @@ const GrantsTable: FC<GrantsTableProps> = ({
 
   // Determine if we should show skeleton
   const isLoading = isGivenType ? isLoadingGiven : !isDataFetched;
+
+  // Get current sorting state for UI display
+  const currentSort = sorting[0];
+  const isSortingByTime = currentSort?.id === 'date';
+  const isSortingByAmount = currentSort?.id === 'amount';
+  const sortDirection = currentSort?.desc ? 'desc' : 'asc';
+
+  // Handle sorting button clicks
+  const handleTimeSort = () => {
+    if (isSortingByTime) {
+      // If already sorting by time, toggle direction
+      setSorting([{ id: 'date', desc: !currentSort.desc }]);
+    } else {
+      // Start sorting by time ascending
+      setSorting([{ id: 'date', desc: false }]);
+    }
+  };
+
+  const handleAmountSort = () => {
+    if (isSortingByAmount) {
+      // If already sorting by amount, toggle direction
+      setSorting([{ id: 'amount', desc: !currentSort.desc }]);
+    } else {
+      // Start sorting by amount ascending
+      setSorting([{ id: 'amount', desc: false }]);
+    }
+  };
+
+  // Handle expand/collapse toggle
+  const handleExpandCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
   return (
     <div className="mb-[20px]">
@@ -110,23 +156,46 @@ const GrantsTable: FC<GrantsTableProps> = ({
             {description}
           </p>
         </div>
-        {/* Filter buttons - only shown for 'given' type */}
-        {/* {showActionButtons && (
-          <div className="flex items-center gap-[10px]">
-            <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-              <CaretUpDown size={16} weight="bold" className="opacity-50" />
-              <span>Time</span>
-            </button>
-            <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-              <CaretUpDown size={16} weight="bold" className="opacity-50" />
-              <span>Amount</span>
-            </button>
-            <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-              <CaretUpDown size={16} weight="bold" className="opacity-50" />
-              <span>Collapse Items</span>
-            </button>
-          </div>
-        )} */}
+
+        <div className="flex items-center gap-[10px]">
+          <button
+            onClick={handleTimeSort}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+          >
+            {isSortingByTime ? (
+              sortDirection === 'asc' ? (
+                <CaretUp size={16} />
+              ) : (
+                <CaretDown size={16} />
+              )
+            ) : (
+              <CaretUpDown size={16} className="opacity-50" />
+            )}
+            <span>Time</span>
+          </button>
+          <button
+            onClick={handleAmountSort}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+          >
+            {isSortingByAmount ? (
+              sortDirection === 'asc' ? (
+                <CaretUp size={16} />
+              ) : (
+                <CaretDown size={16} />
+              )
+            ) : (
+              <CaretUpDown size={16} className="opacity-50" />
+            )}
+            <span>Amount</span>
+          </button>
+          <button
+            onClick={handleExpandCollapse}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+          >
+            {isCollapsed ? <CaretDown size={16} /> : <CaretUp size={16} />}
+            <span>{isCollapsed ? 'Expand Items' : 'Collapse Items'}</span>
+          </button>
+        </div>
       </div>
 
       {showActionButtons && (
@@ -211,7 +280,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
                 ))
               ) : data.length === 0 ? (
                 // Empty state
-                <tr>
+                <tr className={cn(isCollapsed && 'hidden')}>
                   <td
                     colSpan={columns.length}
                     className="bg-white py-6 text-center"
@@ -234,6 +303,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
                         ? 'border-b border-black/5'
                         : '',
                       'bg-white transition-colors hover:bg-black/[0.02]',
+                      isCollapsed && 'hidden',
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => {
