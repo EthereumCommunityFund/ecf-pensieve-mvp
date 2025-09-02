@@ -126,6 +126,14 @@ function EcosystemTable<T extends Record<string, any>>({
         </div>
         <div className="flex items-center gap-[10px]">
           {/* Type filter dropdown */}
+          <button
+            onClick={() => {
+              onOpenModal?.(itemKey, 'viewItemProposal');
+            }}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+          >
+            View Item
+          </button>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -175,20 +183,13 @@ function EcosystemTable<T extends Record<string, any>>({
               </div>
             )}
           </div>
+
           <button
             onClick={handleExpandCollapse}
             className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
           >
             {isCollapsed ? <CaretDown size={16} /> : <CaretUp size={16} />}
             <span>{isCollapsed ? 'Expand Items' : 'Collapse Items'}</span>
-          </button>
-          <button
-            onClick={() => {
-              onOpenModal?.(itemKey, 'viewItemProposal');
-            }}
-            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
-          >
-            View Item
           </button>
         </div>
       </div>
