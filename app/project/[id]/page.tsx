@@ -214,18 +214,15 @@ const ProjectPage = () => {
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
 
-      <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
-        <TransparentScore
-          isDataFetched={isProjectFetched}
-          itemsTopWeight={project?.itemsTopWeight || {}}
-        />
-      </div>
-
-      <div className="mobile:mx-[10px] mx-[20px] mt-[30px]">
+      <div className="mobile:mx-[10px] mx-[20px] mt-[30px] flex flex-wrap items-center justify-between gap-[10px]">
         <ProjectTabs
           tabs={tabItems}
           activeTab={activeTab}
           onTabChange={handleTabChange}
+        />
+        <TransparentScore
+          isDataFetched={isProjectFetched}
+          itemsTopWeight={project?.itemsTopWeight || {}}
         />
       </div>
 
