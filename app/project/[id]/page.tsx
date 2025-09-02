@@ -267,7 +267,10 @@ const ProjectPage = () => {
             animate="center"
             exit="exit"
           >
-            <Ecosystem projectId={Number(projectId)} />
+            <Ecosystem
+              projectId={Number(projectId)}
+              onOpenModal={handleOpenModal}
+            />
           </motion.div>
         )}
       </AnimatePresence>

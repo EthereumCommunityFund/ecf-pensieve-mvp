@@ -22,9 +22,11 @@ import { ITypeOption } from '@/components/biz/table/embedTable/item/AffiliatedPr
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import CaretUpDown from '@/components/icons/CaretUpDown';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
+import { IPocItemKey } from '@/types/item';
 
 interface EcosystemTableProps<T extends Record<string, any>> {
   id: string;
+  itemKey: IPocItemKey;
   title: string;
   description: string;
   filterButtonText: string;
@@ -34,11 +36,16 @@ interface EcosystemTableProps<T extends Record<string, any>> {
   isDataFetched?: boolean;
   typeKey: string;
   typeOptions?: ITypeOption[];
+  onOpenModal?: (
+    itemKey: IPocItemKey,
+    contentType?: 'viewItemProposal' | 'submitPropose',
+  ) => void;
 }
 
 function EcosystemTable<T extends Record<string, any>>({
   id,
   title,
+  itemKey,
   description,
   filterButtonText,
   data,
@@ -46,6 +53,7 @@ function EcosystemTable<T extends Record<string, any>>({
   isDataFetched = true,
   typeKey,
   typeOptions = [],
+  onOpenModal,
 }: EcosystemTableProps<T>) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -173,6 +181,14 @@ function EcosystemTable<T extends Record<string, any>>({
           >
             {isCollapsed ? <CaretDown size={16} /> : <CaretUp size={16} />}
             <span>{isCollapsed ? 'Expand Items' : 'Collapse Items'}</span>
+          </button>
+          <button
+            onClick={() => {
+              onOpenModal?.(itemKey, 'viewItemProposal');
+            }}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+          >
+            View Item
           </button>
         </div>
       </div>
