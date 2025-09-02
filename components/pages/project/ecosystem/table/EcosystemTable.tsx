@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Tray } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, Tray } from '@phosphor-icons/react';
 import {
   ColumnDef,
   flexRender,
@@ -19,6 +19,7 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
+import CaretUpDown from '@/components/icons/CaretUpDown';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 
 interface EcosystemTableProps<T extends Record<string, any>> {
@@ -42,6 +43,7 @@ function EcosystemTable<T extends Record<string, any>>({
   isDataFetched = true,
 }: EcosystemTableProps<T>) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Initialize after component mount to avoid state update during render
   useEffect(() => {
@@ -56,6 +58,11 @@ function EcosystemTable<T extends Record<string, any>>({
 
   const { projectsMap, isLoading: isLoadingProjects } =
     useOptimizedProjectsByIds(projectIds);
+
+  // Handle expand/collapse toggle
+  const handleExpandCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
   const table = useReactTable({
     data,
@@ -78,16 +85,20 @@ function EcosystemTable<T extends Record<string, any>>({
             {description}
           </p>
         </div>
-        {/* <div className="flex items-center gap-[10px]">
+        <div className="flex items-center gap-[10px]">
+          {/* TODO：selector filter */}
           <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-            <CaretUpDown size={16} weight="bold" className="opacity-50" />
+            <CaretUpDown size={16} className="opacity-50" />
             <span>{filterButtonText}</span>
           </button>
-          <button className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]">
-            <CaretUpDown size={16} weight="bold" className="opacity-50" />
-            <span>Collapse Items</span>
+          <button
+            onClick={handleExpandCollapse}
+            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+          >
+            {isCollapsed ? <CaretDown size={16} /> : <CaretUp size={16} />}
+            <span>{isCollapsed ? 'Expand Items' : 'Collapse Items'}</span>
           </button>
-        </div> */}
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
@@ -153,7 +164,7 @@ function EcosystemTable<T extends Record<string, any>>({
                 ))
               ) : data.length === 0 ? (
                 // Empty state
-                <tr>
+                <tr className={cn(isCollapsed && 'hidden')}>
                   <td
                     colSpan={columns.length}
                     className="bg-white py-6 text-center"
@@ -176,6 +187,7 @@ function EcosystemTable<T extends Record<string, any>>({
                         ? 'border-b border-black/5'
                         : '',
                       'bg-white transition-colors hover:bg-black/[0.02]',
+                      isCollapsed && 'hidden',
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => {
