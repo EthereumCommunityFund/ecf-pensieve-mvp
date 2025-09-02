@@ -23,7 +23,7 @@ import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
   { key: 'profile', label: 'Profile' },
-  { key: 'contributing-funds', label: 'Contributing Funds' },
+  { key: 'contributing-funds', label: 'Fund Contributions' },
   { key: 'ecosystem', label: 'Ecosystem' },
 ];
 
