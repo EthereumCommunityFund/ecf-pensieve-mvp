@@ -18,7 +18,7 @@ const SubmitProposalCard: FC<IProps> = ({
   latestVotingEndedAt,
 }) => {
   const formattedLatestVotingEndedAt = useMemo(() => {
-    return formatDate(latestVotingEndedAt, 'MMM, DD, YYYY');
+    return formatDate(latestVotingEndedAt, 'YYYY-MM-DD');
   }, [latestVotingEndedAt]);
 
   return (

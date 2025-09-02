@@ -33,7 +33,7 @@ const TransparentScore: React.FC<ITransparentScoreProps> = ({
     <>
       <Button
         onPress={onOpen}
-        className="h-auto rounded-[6px] bg-transparent px-[10px] py-[8px]"
+        className="h-auto shrink-0 rounded-[6px] bg-transparent px-[10px] py-[8px]"
         disabled={!isDataFetched}
       >
         <div className="flex items-center justify-between gap-[10px]">

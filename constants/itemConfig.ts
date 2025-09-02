@@ -1030,4 +1030,65 @@ This helps us understand how decisions are made and who gets to participate.`,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
   },
+  affiliated_projects: {
+    key: 'affiliated_projects',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Organization,
+    isEssential: POC_ITEMS.affiliated_projects.isEssential,
+    label: 'Affiliated Projects',
+    description:
+      'Other partnerships and collaborations around campaigns, education, events and more.',
+    shortDescription: 'Projects affiliated with this project',
+    longDescription: `
+Projects that connected economically and legally. This is how the interdependence of different companies is noted.`,
+    weight: ALL_POC_ITEM_MAP.affiliated_projects.weight,
+    formDisplayType: 'affiliated_projects',
+    placeholder: '',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    // TODO validationSchema 还没设置
+  },
+  contributing_teams: {
+    key: 'contributing_teams',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
+    isEssential: POC_ITEMS.contributing_teams.isEssential,
+    label: 'Contributing Teams',
+    description:
+      'External groups or individuals who shaped the project through code, consulting, or mentorship',
+    shortDescription:
+      'Contributing teams are projects that contribute towards the development and improvement of the protocol. Below may have projects that have not linked themselves on ECF.',
+    longDescription: `
+Contributing teams represent the collaborative ecosystem that supports and enhances this project. These are external teams, organizations, or individuals who have made significant contributions through various means such as code development, technical consulting, mentorship, research, or strategic guidance. Their contributions help shape the project's direction, improve its technical implementation, and strengthen its position within the broader ecosystem.`,
+    weight: ALL_POC_ITEM_MAP.contributing_teams.weight,
+    formDisplayType: 'contributing_teams',
+    placeholder: '',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    // TODO validationSchema 还没设置
+  },
+  stack_integrations: {
+    key: 'stack_integrations',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.stack_integrations.isEssential,
+    label: 'Stack & Integrations',
+    description:
+      'The protocols, libraries and building blocks this project relies on or connects with.',
+    shortDescription: 'Technologies and protocols integrated with this project',
+    longDescription: `
+The technical dependencies, integrations, and building blocks that form the foundation of this project. This includes protocols, libraries, APIs, and other technical components that the project relies on or integrates with to deliver its functionality.`,
+    weight: ALL_POC_ITEM_MAP.stack_integrations.weight,
+    formDisplayType: 'stack_integrations',
+    placeholder: '',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    // TODO validationSchema 还没设置
+  },
 };

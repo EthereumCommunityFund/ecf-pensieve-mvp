@@ -2,9 +2,8 @@ import { cn, Tooltip } from '@heroui/react';
 import React from 'react';
 
 import { Button } from '@/components/base';
+import ApplicableSwitch from '@/components/biz/FormAndTable/ApplicableSwitch';
 import { InfoIcon, PaperClipIcon, PlusIcon } from '@/components/icons';
-
-import ApplicableSwitch from './ApplicableSwitch';
 
 export interface IFormItemUIContainerProps {
   label: string;

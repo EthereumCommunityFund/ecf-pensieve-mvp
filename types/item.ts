@@ -135,6 +135,9 @@ export type IFormDisplayType =
   | 'tablePhysicalEntity'
   | 'autoComplete'
   | 'fundingReceivedGrants'
+  | 'affiliated_projects'
+  | 'contributing_teams'
+  | 'stack_integrations'
   | 'roadmap'
   | 'smartContract'
   | 'multiContracts';
@@ -186,25 +189,58 @@ export interface IPhysicalEntity {
 
 export interface IFundingReceivedGrants {
   date: Date | null;
-  /**
-   * Organization identifier - supports multi-select and backward compatibility
-   * - New data format: string[] - project ID array (multi-select mode)
-   * - Legacy data format: string - project ID or project name (single-select compatibility)
-   * Note: Based on existing code comments, organization field actually stores projectId
-   */
   organization: string | string[];
-  /**
-   * Project donator identifiers - projects that have donated to this funding round
-   * Required field, supports up to 10 project IDs
-   * Format: string[] - array of project IDs
-   */
   projectDonator: string[];
   amount: string;
   reference?: string;
-  /**
-   * URL to expense sheet document showing detailed breakdown of grant fund utilization
-   * Optional field for transparency in fund allocation
-   */
   expenseSheetUrl?: string;
   _id?: string;
 }
+
+// Extended interface for useGivenGrantsData with backend relation fields
+export interface IFundingReceivedGrantsWithRelation
+  extends IFundingReceivedGrants {
+  sourceProjectId: number | null;
+  itemProposalId: number | null;
+  targetProjectId: number | null;
+  relationType: string | null;
+}
+
+export interface IAffiliatedProject {
+  project: string | string[];
+  affiliationType: string;
+  description?: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IContributingTeam {
+  project: string | string[];
+  type: string;
+  description?: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IStackIntegration {
+  project: string | string[];
+  type: string;
+  description?: string;
+  reference?: string;
+  repository?: string;
+  _id?: string;
+}
+
+// Type mapping for getItemRowData function
+export interface IItemDataTypeMap {
+  funding_received_grants: IFundingReceivedGrants;
+  affiliated_projects: IAffiliatedProject;
+  contributing_teams: IContributingTeam;
+  stack_integrations: IStackIntegration;
+  // Add more mappings as needed for other items that return arrays
+  // For items not in this map, the function will return any[]
+}
+
+// Helper type to get the data type for a specific item key
+export type GetItemDataType<K extends IPocItemKey> =
+  K extends keyof IItemDataTypeMap ? IItemDataTypeMap[K][] : any[];

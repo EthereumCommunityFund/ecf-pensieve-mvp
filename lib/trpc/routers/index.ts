@@ -9,6 +9,8 @@ import { listRouter } from './list';
 import { notificationRouter } from './notification';
 import { projectRouter } from './project';
 import { projectLogRouter } from './projectLog';
+import { projectNotificationSettingsRouter } from './projectNotificationSettings';
+import { projectRelationRouter } from './projectRelation';
 import { proposalRouter } from './proposal';
 import { rankRouter } from './rank';
 import { smartContractsRouter } from './smartContracts';
@@ -25,9 +27,11 @@ export const appRouter = router({
   likeProject: likeProjectRouter,
   list: listRouter,
   notification: notificationRouter,
+  projectNotificationSettings: projectNotificationSettingsRouter,
   active: activeRouter,
   vote: voteRouter,
   projectLog: projectLogRouter,
+  projectRelation: projectRelationRouter,
   rank: rankRouter,
   smartContracts: smartContractsRouter,
 });

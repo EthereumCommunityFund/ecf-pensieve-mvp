@@ -476,6 +476,7 @@ export const projectRouter = router({
     .input(
       z.object({
         ids: z.array(z.number()).min(1).max(100),
+        includeVoteRecords: z.boolean().optional().default(true),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -486,11 +487,13 @@ export const projectRouter = router({
           creator: true,
           proposals: {
             with: {
-              voteRecords: {
-                with: {
-                  creator: true,
+              ...(input.includeVoteRecords && {
+                voteRecords: {
+                  with: {
+                    creator: true,
+                  },
                 },
-              },
+              }),
               creator: true,
             },
           },

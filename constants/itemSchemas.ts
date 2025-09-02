@@ -7,9 +7,12 @@ import {
 } from '@/components/pages/project/create/types';
 import { NA_VALUE } from '@/constants/naSelection';
 import {
+  IAffiliatedProject,
+  IContributingTeam,
   IDateConstraints,
   IFundingReceivedGrants,
   IPhysicalEntity,
+  IStackIntegration,
 } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
 
@@ -216,6 +219,81 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
       .url('Please enter a valid URL')
       .optional(),
     expenseSheetUrl: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().optional(),
+  });
+
+const affiliatedProjectsSchema: yup.ObjectSchema<IAffiliatedProject> = yup
+  .object()
+  .shape({
+    project: yup
+      .mixed<string | string[]>()
+      .test('project-required', 'project is required', function (value) {
+        // Accept N/A as valid value
+        if (value === NA_VALUE) {
+          return true;
+        }
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+        return typeof value === 'string' && value.trim().length > 0;
+      })
+      .required('project is required'),
+    affiliationType: yup.string().required('Affiliation type is required'),
+    description: yup.string().optional(),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().required(),
+  });
+
+const contributingTeamsSchema: yup.ObjectSchema<IContributingTeam> = yup
+  .object()
+  .shape({
+    project: yup
+      .mixed<string | string[]>()
+      .test('project-required', 'project is required', function (value) {
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+        return typeof value === 'string' && value.trim().length > 0;
+      })
+      .required('project is required'),
+    type: yup.string().required('type is required'),
+    description: yup.string().optional(),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().optional(),
+  });
+
+const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
+  .object()
+  .shape({
+    project: yup
+      .mixed<string | string[]>()
+      .test('project-required', 'project is required', function (value) {
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+        return typeof value === 'string' && value.trim().length > 0;
+      })
+      .required('project is required'),
+    type: yup.string().required('type is required'),
+    description: yup.string().optional(),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    repository: yup
       .string()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
@@ -508,6 +586,24 @@ export const itemValidationSchemas = {
     .of(fundingReceivedGrantsSchema)
     .min(1, 'At least one funding received(grants) is required')
     .required('Funding received(grants) information is required'),
+
+  affiliated_projects: yup
+    .array()
+    .of(affiliatedProjectsSchema)
+    .min(1, 'At least one affiliated project is required')
+    .required('Affiliated project information is required'),
+
+  contributing_teams: yup
+    .array()
+    .of(contributingTeamsSchema)
+    .min(1, 'At least one contributing team is required')
+    .required('Contributing teams information is required'),
+
+  stack_integrations: yup
+    .array()
+    .of(stackIntegrationSchema)
+    .min(1, 'At least one stack & integration is required')
+    .required('Stack & Integrations information is required'),
 
   // Financial
   fundingStatus: yup

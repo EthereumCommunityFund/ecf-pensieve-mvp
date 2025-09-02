@@ -51,16 +51,21 @@ export class SmartContractService {
         .filter(Boolean);
 
       for (const address of addressList) {
-        if (!AddressValidator.isValidFormat(address)) {
+        // For custom chains (chains starting with "custom-"), skip EVM validation
+        const isCustomChain = contract.chain.startsWith('custom-');
+
+        if (!isCustomChain && !AddressValidator.isValidFormat(address)) {
           errors.push(
             `Invalid address format on ${contract.chain}: ${address}`,
           );
           continue;
         }
 
-        // Normalize to checksum format for consistency
-        const normalized =
-          AddressValidator.normalizeAddress(address).toLowerCase();
+        // Normalize to checksum format for consistency (skip for custom chains)
+        const normalized = isCustomChain
+          ? address.toLowerCase()
+          : AddressValidator.normalizeAddress(address).toLowerCase();
+
         if (addressSet.has(normalized)) {
           errors.push(`Duplicate address on ${contract.chain}: ${address}`);
           continue;

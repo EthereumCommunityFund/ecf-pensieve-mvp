@@ -1,5 +1,5 @@
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IPocItemKey } from '@/types/item';
+import { IFormDisplayType, IPocItemKey } from '@/types/item';
 
 export const getItemConfig = (key: IPocItemKey) => {
   return AllItemConfig[key];
@@ -101,4 +101,85 @@ export const calculateItemStatusFields = (
       isNotEssential && hasProposal && !hasValidatedLeadingProposal,
     ),
   };
+};
+
+export const isEmbedTableFormType = (formDisplayType: IFormDisplayType) => {
+  return (
+    formDisplayType &&
+    (formDisplayType === 'founderList' ||
+      formDisplayType === 'websites' ||
+      formDisplayType === 'social_links' ||
+      formDisplayType === 'affiliated_projects' ||
+      formDisplayType === 'contributing_teams' ||
+      formDisplayType === 'stack_integrations' ||
+      formDisplayType === 'tablePhysicalEntity' ||
+      formDisplayType === 'multiContracts' ||
+      formDisplayType === 'fundingReceivedGrants')
+  );
+};
+
+export const getDefaultEmbedTableFormItemValue = (
+  formDisplayType: IFormDisplayType,
+) => {
+  switch (formDisplayType) {
+    case 'founderList':
+      return [{ name: '', title: '', region: '', _id: crypto.randomUUID() }];
+    case 'fundingReceivedGrants':
+      return {
+        date: null,
+        organization: '',
+        amount: '',
+        expenseSheetUrl: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'websites':
+      return { url: '', title: '', _id: crypto.randomUUID() };
+    case 'social_links':
+      return { platform: '', url: '', _id: crypto.randomUUID() };
+    case 'tablePhysicalEntity':
+      return { legalName: '', country: '', _id: crypto.randomUUID() };
+    case 'affiliated_projects':
+      return {
+        project: '',
+        affiliationType: '',
+        description: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'contributing_teams':
+      return {
+        project: '',
+        type: '',
+        description: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'stack_integrations':
+      return {
+        project: '',
+        type: '',
+        description: '',
+        reference: '',
+        repository: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'multiContracts':
+      return {
+        id: crypto.randomUUID(),
+        chain: '',
+        addresses: '',
+      };
+    default:
+      return '';
+  }
+};
+
+export const getDefaultValueByFormType = (
+  formDisplayType: IFormDisplayType,
+): any => {
+  if (!isEmbedTableFormType(formDisplayType)) {
+    return '';
+  }
+  return [getDefaultEmbedTableFormItemValue(formDisplayType)];
 };

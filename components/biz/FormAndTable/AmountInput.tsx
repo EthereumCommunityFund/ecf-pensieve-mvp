@@ -2,6 +2,8 @@
 
 import React from 'react';
 
+import { formatAmount } from '@/utils/formatters';
+
 interface AmountInputProps {
   value?: string;
   onChange: (value: string) => void;
@@ -35,19 +37,6 @@ const AmountInput: React.FC<AmountInputProps> = ({
     }
 
     return cleaned;
-  };
-
-  const addThousandsSeparators = (num: string): string => {
-    const parts = num.split('.');
-    const integerPart = parts[0];
-    const decimalPart = parts[1];
-
-    // Add commas as thousands separators
-    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-    return decimalPart !== undefined
-      ? `${formattedInteger}.${decimalPart}`
-      : formattedInteger;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +82,7 @@ const AmountInput: React.FC<AmountInputProps> = ({
 
     if (inputValue && inputValue !== '0' && inputValue !== '0.00') {
       // Add thousands separators on blur for display
-      const displayValue = addThousandsSeparators(inputValue);
+      const displayValue = formatAmount(inputValue);
       // We keep the raw value in state but show formatted version
       e.target.value = displayValue;
     }
@@ -105,7 +94,7 @@ const AmountInput: React.FC<AmountInputProps> = ({
     e.target.value = rawValue;
   };
 
-  const displayValue = value ? addThousandsSeparators(value) : '';
+  const displayValue = value ? formatAmount(value) : '';
 
   return (
     <div className="w-full">

@@ -12,7 +12,10 @@ import {
 
 import RegionAutocomplete from '@/components/biz/table/RegionAutocomplete';
 
-import { IFounder, IProjectFormData } from '../types';
+import {
+  IFounder,
+  IProjectFormData,
+} from '../../../../pages/project/create/types';
 
 interface FounderFormItemTableProps {
   index: number;

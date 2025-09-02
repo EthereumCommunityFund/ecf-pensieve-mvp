@@ -37,7 +37,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
       <div
         ref={refs.menuRef}
         className={cn(
-          'flex flex-col gap-[10px] p-[10px] w-[160px]',
+          'flex flex-col gap-[10px] w-[160px]',
           state.isFixed ? 'fixed z-20' : 'relative',
           className,
         )}

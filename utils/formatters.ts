@@ -8,6 +8,43 @@ import dayjs from '@/lib/dayjs';
 import { IDateConstraints } from '@/types/item';
 
 /**
+ * Format amount with thousands separators
+ *
+ * Examples:
+ * - 1234 -> "1,234"
+ * - 1000000 -> "1,000,000"
+ * - 1234.56 -> "1,234.56"
+ * - "1234" -> "1,234"
+ *
+ * @param amount - The amount to format (string or number)
+ * @returns Formatted amount string with thousands separators
+ */
+export function formatAmount(
+  amount: string | number | null | undefined,
+): string {
+  if (!amount && amount !== 0) return '-';
+
+  // Convert to string and remove any existing commas
+  const cleanedAmount = String(amount).replace(/,/g, '');
+
+  // Check if it's a valid number
+  if (isNaN(Number(cleanedAmount))) return String(amount);
+
+  // Split into integer and decimal parts
+  const parts = cleanedAmount.split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1];
+
+  // Add thousands separators to integer part
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // Combine integer and decimal parts
+  return decimalPart !== undefined
+    ? `${formattedInteger}.${decimalPart}`
+    : formattedInteger;
+}
+
+/**
  * Format a number to a more readable format
  *
  * Examples:
@@ -66,14 +103,14 @@ export function formatNumber(
  * Format a date to a readable string format
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY')
+ * @param format - The format to use (default: 'YYYY-MM-DD')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @param useUTC - Whether to format in UTC timezone (default: false, uses local timezone)
  * @returns Formatted date string
  */
 export function formatDate(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY',
+  format: string = 'YYYY-MM-DD',
   fallback: string = '',
   useUTC: boolean = false,
 ): string {
@@ -94,13 +131,13 @@ export function formatDate(
  * Format a date to a readable string format with timezone
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param format - The format to use (default: 'YYYY-MM-DD HH:mm')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string with timezone info
  */
 export function formatDateWithTime(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY HH:mm',
+  format: string = 'YYYY-MM-DD HH:mm',
   fallback: string = '',
 ): string {
   if (!date) return fallback;
@@ -118,13 +155,13 @@ export function formatDateWithTime(
  * Format a date to a readable string format in GMT timezone
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param format - The format to use (default: 'YYYY-MM-DD HH:mm')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string in GMT timezone
  */
 export function formatDateWithTimeGMT(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY HH:mm',
+  format: string = 'YYYY-MM-DD HH:mm',
   fallback: string = '',
 ): string {
   if (!date) return fallback;
@@ -143,13 +180,13 @@ export function formatDateWithTimeGMT(
  * This is useful for displaying dates exactly as stored in the database
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY')
+ * @param format - The format to use (default: 'YYYY-MM-DD')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string in UTC timezone
  */
 export function formatDateAsUTC(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY',
+  format: string = 'YYYY-MM-DD',
   fallback: string = '',
 ): string {
   if (!date) return fallback;

@@ -9,7 +9,7 @@ import {
   UseFormRegister,
 } from 'react-hook-form';
 
-import { IProjectFormData } from '../types';
+import { IProjectFormData } from '../../../../pages/project/create/types';
 
 interface WebsiteFormItemTableProps {
   index: number;
