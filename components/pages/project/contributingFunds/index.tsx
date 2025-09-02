@@ -32,7 +32,8 @@ const ContributingFunds: FC<ContributingFundsProps> = ({
           Track the financial support this project has received through grants
           and donations.
         </p>
-        <div className="flex items-center gap-[10px]">
+        {/* hide view item and propose entry buttons */}
+        {/* <div className="flex items-center gap-[10px]">
           <button
             onClick={() => {
               onOpenModal?.('funding_received_grants', 'viewItemProposal');
@@ -49,7 +50,7 @@ const ContributingFunds: FC<ContributingFundsProps> = ({
           >
             Propose Entry
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Given (Grants) Section */}

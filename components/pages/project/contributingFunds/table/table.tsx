@@ -85,7 +85,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
   const description = isGivenType
     ? 'Externally documented when, to whom, and how much funding this project has provided.'
     : 'Document when, from whom, and how much funding this project has received.';
-  const showActionButtons = type === 'given';
+  const showActionButtons = type === 'received';
 
   // Determine if we should show skeleton
   const isLoading = isGivenType ? isLoadingGiven : !isDataFetched;
@@ -129,26 +129,28 @@ const GrantsTable: FC<GrantsTableProps> = ({
         )} */}
       </div>
 
-      {/* Action buttons section */}
-      {/* <div className="flex items-center gap-[10px] border-x border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
-        <button
-          onClick={() => {
-            // Open modal for viewing funding_received_grants item proposals
-            onOpenModal?.('funding_received_grants', 'viewItemProposal');
-          }}
-          className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
-        >
-          View Item
-        </button>
-        <button
-          onClick={() => {
-            onOpenModal?.('funding_received_grants', 'submitPropose');
-          }}
-          className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
-        >
-          Propose Entry
-        </button>
-      </div> */}
+      {showActionButtons && (
+        <div className="flex items-center gap-[10px] border-x border-black/10 bg-[rgba(229,229,229,0.70)] px-[10px] pb-[10px]">
+          {/* <button
+        onClick={() => {
+          // Open modal for viewing funding_received_grants item proposals
+          onOpenModal?.('funding_received_grants', 'viewItemProposal');
+        }}
+        className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
+      >
+        View Item
+      </button> */}
+          {}
+          <button
+            onClick={() => {
+              onOpenModal?.('funding_received_grants', 'submitPropose');
+            }}
+            className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
+          >
+            Propose Entry
+          </button>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
         <PageTableContainer>
