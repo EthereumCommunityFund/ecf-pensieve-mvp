@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
+import { motion } from 'framer-motion';
 import { FC } from 'react';
 
 interface Tab {
@@ -33,13 +34,20 @@ const ProjectTabs: FC<ProjectTabsProps> = ({
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
           className={cn(
-            'relative pb-[12px] text-[16px] font-[600] leading-[22px] transition-all',
+            'relative pb-[12px] text-[16px] font-[600] leading-[22px] transition-colors duration-300',
             activeTab === tab.key
-              ? 'text-black after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-[2px] after:bg-black'
+              ? 'text-black'
               : 'text-black/60 hover:text-black',
           )}
         >
           {tab.label}
+          {activeTab === tab.key && (
+            <motion.div
+              layoutId="activeTabIndicator"
+              className="absolute inset-x-0 -bottom-px h-[2px] bg-black"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
         </button>
       ))}
     </div>

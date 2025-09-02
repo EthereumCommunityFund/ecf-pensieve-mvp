@@ -1,6 +1,7 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -22,9 +23,33 @@ import { IPocItemKey } from '@/types/item';
 
 const tabItems = [
   { key: 'profile', label: 'Profile' },
-  { key: 'contributing-funds', label: 'Contributing Funds' },
+  { key: 'contributing-funds', label: 'Fund Contributions' },
   { key: 'ecosystem', label: 'Ecosystem' },
 ];
+
+// Animation variants for tab content
+const tabContentVariants = {
+  enter: {
+    opacity: 0,
+    x: 20,
+  },
+  center: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+    },
+  },
+};
 
 export type ITabKey = 'profile' | 'ecosystem' | 'contributing-funds';
 export type IModalContentType = 'viewItemProposal' | 'submitPropose';
@@ -189,38 +214,66 @@ const ProjectPage = () => {
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
 
-      <div className="mobile:mx-[10px] mobile:mt-[20px] mx-[20px] mt-[20px] flex justify-end">
+      <div className="mobile:mx-[10px] mx-[20px] mt-[30px] flex flex-wrap items-center justify-between gap-[10px]">
+        <ProjectTabs
+          tabs={tabItems}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
         <TransparentScore
           isDataFetched={isProjectFetched}
           itemsTopWeight={project?.itemsTopWeight || {}}
         />
       </div>
 
-      <div className="mobile:mx-[10px] mx-[20px] mt-[30px]">
-        <ProjectTabs
-          tabs={tabItems}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      </div>
-
-      {activeTab === 'profile' && (
-        <ProjectDetailTable
-          projectId={Number(projectId)}
-          isProposalsLoading={isProposalsLoading}
-          isProposalsFetched={isProposalsFetched}
-          onSubmitProposal={onSubmitProposal}
-          onOpenModal={handleOpenModal}
-          onMetricClick={handleMetricClick}
-        />
-      )}
-      {activeTab === 'contributing-funds' && (
-        <ContributingFunds
-          projectId={Number(projectId)}
-          onOpenModal={handleOpenModal}
-        />
-      )}
-      {activeTab === 'ecosystem' && <Ecosystem projectId={Number(projectId)} />}
+      <AnimatePresence mode="wait">
+        {activeTab === 'profile' && (
+          <motion.div
+            key="profile"
+            variants={tabContentVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            <ProjectDetailTable
+              projectId={Number(projectId)}
+              isProposalsLoading={isProposalsLoading}
+              isProposalsFetched={isProposalsFetched}
+              onSubmitProposal={onSubmitProposal}
+              onOpenModal={handleOpenModal}
+              onMetricClick={handleMetricClick}
+            />
+          </motion.div>
+        )}
+        {activeTab === 'contributing-funds' && (
+          <motion.div
+            key="contributing-funds"
+            variants={tabContentVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            <ContributingFunds
+              projectId={Number(projectId)}
+              onOpenModal={handleOpenModal}
+            />
+          </motion.div>
+        )}
+        {activeTab === 'ecosystem' && (
+          <motion.div
+            key="ecosystem"
+            variants={tabContentVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            <Ecosystem
+              projectId={Number(projectId)}
+              onOpenModal={handleOpenModal}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ProjectDetailMainModal
         isOpen={isModalOpen && !!selectedItemKey}

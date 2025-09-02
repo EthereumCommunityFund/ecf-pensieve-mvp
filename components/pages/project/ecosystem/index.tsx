@@ -2,6 +2,11 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
+import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
+import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
+import { IPocItemKey } from '@/types/item';
+
 import { useProjectTableData } from '../detail/table/hooks/useProjectTableData';
 
 import EcosystemNav from './nav/EcosystemNav';
@@ -15,9 +20,13 @@ import { EcosystemSection } from './types';
 
 interface EcosystemProps {
   projectId: number;
+  onOpenModal?: (
+    itemKey: IPocItemKey,
+    contentType?: 'viewItemProposal' | 'submitPropose',
+  ) => void;
 }
 
-const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
+const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
   const [activeSection, setActiveSection] =
     useState<EcosystemSection>('stack_integrations');
 
@@ -91,6 +100,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
       <div className="flex-1">
         <EcosystemTable
           id="stack_integrations"
+          itemKey="stack_integrations"
           title="Stack & Integrations"
           description="The protocols, libraries and building blocks this project relies on or connects with."
           filterButtonText="Relation"
@@ -98,9 +108,13 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           columns={stackIntegrationsColumns}
           projectId={projectId}
           isDataFetched={isDataFetched}
+          typeKey="type"
+          typeOptions={STACK_INTEGRATION_TYPE_OPTIONS}
+          onOpenModal={onOpenModal}
         />
         <EcosystemTable
           id="contributing_teams"
+          itemKey="contributing_teams"
           title="Contributing Teams"
           description="Teams and organizations that contribute to this project's development and growth."
           filterButtonText="Contribution Type"
@@ -108,9 +122,13 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           columns={contributingTeamsColumns}
           projectId={projectId}
           isDataFetched={isDataFetched}
+          typeKey="type"
+          typeOptions={CONTRIBUTION_TYPE_OPTIONS}
+          onOpenModal={onOpenModal}
         />
         <EcosystemTable
           id="affiliated_projects"
+          itemKey="affiliated_projects"
           title="Affiliated Projects"
           description="Related projects and partnerships within the ecosystem."
           filterButtonText="Affiliation Type"
@@ -118,6 +136,9 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId }) => {
           columns={affiliatedProjectsColumns}
           projectId={projectId}
           isDataFetched={isDataFetched}
+          typeKey="affiliationType"
+          typeOptions={AFFILIATION_TYPE_OPTIONS}
+          onOpenModal={onOpenModal}
         />
       </div>
     </div>
