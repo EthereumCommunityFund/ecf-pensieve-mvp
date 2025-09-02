@@ -14,6 +14,11 @@ interface IProjectFieldRendererProps {
   showProjectIconAndName?: boolean;
 }
 
+export const isProjectId = (value: string): boolean => {
+  // projectId is a numeric string, not 'N/A', and Number(value) > 0
+  return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
+};
+
 // Reusable project tag component
 export const ProjectColDisplay: React.FC<{
   project: IProject;
@@ -100,13 +105,19 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
     if (projects.length === 0) return <>N/A</>;
 
     return (
-      <div className="flex flex-col gap-[8px]">
-        {projects.map((project) => (
-          <ProjectColDisplay
-            key={project.id}
-            project={project}
-            showProjectIconAndName={showProjectIconAndName}
-          />
+      <div className="flex flex-wrap items-center">
+        {projects.map((project, index) => (
+          <React.Fragment key={project.id}>
+            <ProjectColDisplay
+              project={project}
+              showProjectIconAndName={showProjectIconAndName}
+            />
+            {index < projects.length - 1 && (
+              <span className="mx-1 text-[13px] leading-[20px] text-black">
+                ,{' '}
+              </span>
+            )}
+          </React.Fragment>
         ))}
       </div>
     );

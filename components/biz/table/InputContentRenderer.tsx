@@ -1,4 +1,4 @@
-import { Skeleton, Tooltip } from '@heroui/react';
+import { Tooltip } from '@heroui/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
@@ -8,12 +8,14 @@ import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQu
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
-import { ProjectColDisplay } from '@/components/biz/table/ProjectFieldRenderer';
+import {
+  isProjectId,
+  ProjectFieldRenderer,
+} from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
-import { IProject } from '@/types';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
@@ -58,63 +60,6 @@ interface IProps {
   isInExpandableRow?: boolean;
 }
 
-// Reusable component for rendering project fields
-const ProjectFieldRenderer: React.FC<{
-  projectValue: string | string[] | undefined;
-  projectsMap: Map<number, IProject> | undefined;
-  isLoadingProjects: boolean;
-  isProjectId: (value: string) => boolean;
-}> = ({ projectValue, projectsMap, isLoadingProjects, isProjectId }) => {
-  if (!projectValue) return <>N/A</>;
-
-  // Check if it's a string
-  if (typeof projectValue === 'string') {
-    if (projectValue === 'N/A') return <>N/A</>;
-
-    // Check if it's a projectId
-    if (isProjectId(projectValue)) {
-      if (isLoadingProjects) {
-        return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
-      }
-
-      const numId = parseInt(projectValue, 10);
-      const projectData = projectsMap?.get(numId);
-
-      if (projectData) {
-        return <ProjectColDisplay project={projectData} />;
-      }
-    }
-
-    // Legacy projectName data
-    return <>{projectValue}</>;
-  }
-
-  // Array of project IDs
-  if (Array.isArray(projectValue)) {
-    if (isLoadingProjects) {
-      return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
-    }
-
-    const projects = projectValue
-      .map((id: string) => {
-        const numId = parseInt(id, 10);
-        const projectData = projectsMap?.get(numId);
-        return projectData || null;
-      })
-      .filter((p): p is IProject => p !== null);
-
-    return (
-      <div className="flex flex-wrap items-center gap-[8px]">
-        {projects.map((project) => (
-          <ProjectColDisplay key={project.id} project={project} />
-        ))}
-      </div>
-    );
-  }
-
-  return <></>;
-};
-
 const InputContentRenderer: React.FC<IProps> = ({
   value,
   isEssential,
@@ -127,29 +72,20 @@ const InputContentRenderer: React.FC<IProps> = ({
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
-  // Helper function to check if a string value is a projectId
-  const isProjectId = useCallback((value: string): boolean => {
-    // projectId is a numeric string, not 'N/A', and Number(value) > 0
-    return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
-  }, []);
-
   // Helper function to extract projectIds from a field value
-  const extractProjectIds = useCallback(
-    (fieldValue: any): string[] => {
-      if (!fieldValue) return [];
+  const extractProjectIds = useCallback((fieldValue: any): string[] => {
+    if (!fieldValue) return [];
 
-      if (Array.isArray(fieldValue)) {
-        return fieldValue;
-      }
+    if (Array.isArray(fieldValue)) {
+      return fieldValue;
+    }
 
-      if (typeof fieldValue === 'string' && isProjectId(fieldValue)) {
-        return [fieldValue];
-      }
+    if (typeof fieldValue === 'string' && isProjectId(fieldValue)) {
+      return [fieldValue];
+    }
 
-      return [];
-    },
-    [isProjectId],
-  );
+    return [];
+  }, []);
 
   // For fundingReceivedGrants, affiliated_projects, contributing_teams, and stack_integrations, extract project IDs
   const projectIds = useMemo(() => {
@@ -1100,7 +1036,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={grant.organization}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1112,7 +1047,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={grant.projectDonator}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1267,7 +1201,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={item.project}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1419,7 +1352,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={item.project}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1578,7 +1510,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={item.project}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
