@@ -20,7 +20,8 @@ export const projectNotificationSettingsRouter = router({
         ),
       });
 
-      return setting;
+      // Return null instead of undefined for React Query compatibility
+      return setting ?? null;
     }),
 
   updateProjectNotificationSetting: protectedProcedure
