@@ -3,7 +3,6 @@ name: Bug Report
 about: Report a bug for ECF Pensieve
 title: '[BUG] '
 labels: 'bug'
-assignees: ''
 ---
 
 # Bug Report
