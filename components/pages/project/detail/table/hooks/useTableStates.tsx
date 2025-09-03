@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnPinningState } from '@tanstack/react-table';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { IItemSubCategoryEnum } from '@/types/item';
 
@@ -44,6 +44,10 @@ const OriginalColumnOrder = [
 export const useTableStates = () => {
   // Row expansion state
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  // Filter states
+  const [pendingFilter, setPendingFilter] = useState(false);
+  const [emptyFilter, setEmptyFilter] = useState(false);
 
   // Category expansion state management
   const [expanded, setExpanded] = useState(DefaultExpandedSubCat);
@@ -261,6 +265,128 @@ export const useTableStates = () => {
     }));
   }, []);
 
+  // Toggle filter states
+  const togglePendingFilter = useCallback(() => {
+    setPendingFilter((prev) => {
+      const newValue = !prev;
+      // If enabling pending filter, disable empty filter (mutual exclusion)
+      if (newValue) {
+        setEmptyFilter(false);
+      }
+      return newValue;
+    });
+  }, []);
+
+  const toggleEmptyFilter = useCallback(() => {
+    setEmptyFilter((prev) => {
+      const newValue = !prev;
+      // If enabling empty filter, disable pending filter (mutual exclusion)
+      if (newValue) {
+        setPendingFilter(false);
+        // Auto-expand all empty items sections
+        const allCategories = Object.keys(
+          emptyItemsExpanded,
+        ) as IItemSubCategoryEnum[];
+        const newEmptyItemsExpanded = allCategories.reduce(
+          (acc, cat) => ({ ...acc, [cat]: true }),
+          {} as Record<IItemSubCategoryEnum, boolean>,
+        );
+        setEmptyItemsExpanded(newEmptyItemsExpanded);
+      }
+      return newValue;
+    });
+  }, []);
+
+  // Toggle all categories expanded/collapsed
+  const toggleAllExpanded = useCallback(
+    (allRowKeys?: string[]) => {
+      const allCategories = Object.keys(expanded) as IItemSubCategoryEnum[];
+
+      // Check both category and row expansion states to determine the action
+      const anyCategoryCollapsed = allCategories.some((cat) => !expanded[cat]);
+      const anyRowCollapsed =
+        allRowKeys && allRowKeys.length > 0
+          ? allRowKeys.some((key) => !expandedRows[key])
+          : false;
+
+      // If anything is collapsed (either category or rows), expand all
+      // This ensures the first click always expands everything
+      const shouldExpandAll = anyCategoryCollapsed || anyRowCollapsed;
+
+      if (shouldExpandAll) {
+        // Expand all categories
+        const newExpanded = allCategories.reduce(
+          (acc, cat) => ({ ...acc, [cat]: true }),
+          {} as Record<IItemSubCategoryEnum, boolean>,
+        );
+        setExpanded(newExpanded);
+
+        // Also expand all empty items
+        setEmptyItemsExpanded(newExpanded);
+
+        // Expand all rows if keys are provided
+        if (allRowKeys && allRowKeys.length > 0) {
+          setExpandedRows((prev) => {
+            const newExpandedRows = { ...prev };
+            allRowKeys.forEach((key) => {
+              newExpandedRows[key] = true;
+            });
+            return newExpandedRows;
+          });
+        }
+      } else {
+        // Everything is expanded, so collapse all
+        const newExpanded = allCategories.reduce(
+          (acc, cat) => ({ ...acc, [cat]: false }),
+          {} as Record<IItemSubCategoryEnum, boolean>,
+        );
+        setExpanded(newExpanded);
+
+        // Also collapse all empty items
+        setEmptyItemsExpanded(newExpanded);
+
+        // Collapse all rows if keys are provided
+        if (allRowKeys && allRowKeys.length > 0) {
+          setExpandedRows((prev) => {
+            const newExpandedRows = { ...prev };
+            allRowKeys.forEach((key) => {
+              newExpandedRows[key] = false;
+            });
+            return newExpandedRows;
+          });
+        }
+      }
+    },
+    [expanded, expandedRows],
+  );
+
+  // Toggle all metrics visibility
+  const toggleAllMetrics = useCallback(() => {
+    const allCategories = Object.keys(metricsVisible) as IItemSubCategoryEnum[];
+    const anyHidden = allCategories.some((cat) => !metricsVisible[cat]);
+
+    const newVisibility = allCategories.reduce(
+      (acc, cat) => ({ ...acc, [cat]: anyHidden }),
+      {} as Record<IItemSubCategoryEnum, boolean>,
+    );
+
+    setMetricsVisible(newVisibility);
+  }, [metricsVisible]);
+
+  // Check if all categories are expanded
+  const isAllExpanded = useMemo(() => {
+    const allCategories = Object.keys(expanded) as IItemSubCategoryEnum[];
+    // Only check category expansion state for now
+    // Row expansion state will be checked dynamically when needed
+    return allCategories.every((cat) => expanded[cat]);
+  }, [expanded]);
+
+  // Check if all metrics are visible
+  const isAllMetricsVisible = useMemo(() => {
+    const allCategories = Object.keys(metricsVisible) as IItemSubCategoryEnum[];
+    return allCategories.every((cat) => metricsVisible[cat]);
+  }, [metricsVisible]);
+
   return {
     // States
     expandedRows,
@@ -269,6 +395,10 @@ export const useTableStates = () => {
     groupExpanded,
     metricsVisible,
     columnPinning,
+    pendingFilter,
+    emptyFilter,
+    isAllExpanded,
+    isAllMetricsVisible,
 
     // Actions
     toggleRowExpanded,
@@ -281,5 +411,9 @@ export const useTableStates = () => {
     isColumnPinned,
     cleanupInvalidPinnedColumns,
     resetColumnPinning,
+    togglePendingFilter,
+    toggleEmptyFilter,
+    toggleAllExpanded,
+    toggleAllMetrics,
   };
 };
