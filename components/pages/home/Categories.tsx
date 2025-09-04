@@ -32,13 +32,14 @@ export default function Categories({ className = '' }: IProps) {
           <Button
             key={category.value}
             size="sm"
-            className="h-[28px] rounded-full border border-black/10 bg-[#EBEBEB] text-[14px] leading-[18px] text-black/60"
+            className="rounded-full border border-black/10 bg-[#EBEBEB] px-[12px] py-[4px] text-[14px] leading-[18px] text-black/60"
             onPress={() =>
               router.push(
                 `/projects?cats=${encodeURIComponent(category.value)}`,
               )
             }
           >
+            {category.icon}
             {category.label}
           </Button>
         ))}
