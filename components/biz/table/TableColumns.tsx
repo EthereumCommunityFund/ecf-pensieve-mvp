@@ -309,6 +309,19 @@ const InputCell = ({
     onToggleExpand?.();
   }, [localExpanded, onToggleExpand]);
 
+  // Check if the cell should be clickable based on display type
+  const isTableDisplayType = [
+    'multiContracts',
+    'founderList',
+    'social_links',
+    'websites',
+    'tablePhysicalEntity',
+    'fundingReceivedGrants',
+    'affiliated_projects',
+    'contributing_teams',
+    'stack_integrations',
+  ].includes(finalDisplayFormType || '');
+
   if (isPendingValidation) {
     return (
       <div
@@ -387,6 +400,39 @@ const InputCell = ({
             />
           </div>
         </div>
+        {finalIsExpandable && (
+          <OptimizedExpandButton
+            isExpanded={localExpanded}
+            onToggleExpand={handleToggleExpand}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // For table display types, make the entire cell clickable
+  if (isTableDisplayType && finalIsExpandable) {
+    return (
+      <div
+        className="font-mona flex w-full cursor-pointer items-center justify-between gap-[10px] transition-colors"
+        onClick={handleToggleExpand}
+      >
+        <div
+          className="flex-1 overflow-hidden whitespace-normal break-all text-[13px] leading-[19px] text-black/80"
+          style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+        >
+          <InputContentRenderer
+            itemKey={itemKey}
+            value={value}
+            displayFormType={finalDisplayFormType}
+            isEssential={itemConfig?.isEssential || false}
+            isExpandable={finalIsExpandable}
+            isExpanded={localExpanded}
+            onToggleExpanded={handleToggleExpand}
+            isTableCell={true}
+          />
+        </div>
+
         {finalIsExpandable && (
           <OptimizedExpandButton
             isExpanded={localExpanded}

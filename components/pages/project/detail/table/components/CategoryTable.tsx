@@ -33,6 +33,8 @@ interface CategoryTableProps {
   project?: any;
   onToggleEmptyItems: (category: IItemSubCategoryEnum) => void;
   onToggleGroupExpanded: (groupKey: string) => void;
+  pendingFilter?: boolean;
+  emptyFilter?: boolean;
 }
 
 /**
@@ -50,9 +52,12 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   project,
   onToggleEmptyItems,
   onToggleGroupExpanded,
+  pendingFilter = false,
+  emptyFilter = false,
 }) => {
   const showSkeleton = isLoading || !project;
   const noDataForThisTable = table.options.data.length === 0;
+  const isFilterActive = pendingFilter || emptyFilter;
 
   // Create stable pinned column styles and position calculations
   // Use useMemo to stabilize columnPinningState, avoiding re-fetching on every render
@@ -243,7 +248,8 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     </thead>
   );
 
-  if (showSkeleton || noDataForThisTable) {
+  if (showSkeleton && !isFilterActive) {
+    // Show loading skeleton only when actually loading and no filters active
     return (
       <ScrollShadow
         className="rounded-b-[10px] border-x border-black/10 bg-white"
@@ -308,6 +314,38 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             <TableFooter colSpan={table.getAllColumns().length}>
               Loading...
             </TableFooter>
+          </tbody>
+        </table>
+      </ScrollShadow>
+    );
+  }
+
+  // Handle filtered empty state
+  if (noDataForThisTable && isFilterActive && !showSkeleton) {
+    return (
+      <ScrollShadow
+        className="rounded-b-[10px] border-x border-black/10 bg-white"
+        orientation="horizontal"
+      >
+        <table
+          className="box-border w-full border-separate border-spacing-0"
+          style={{ minWidth: 'max-content' }}
+        >
+          {colGroupDefinition}
+          {tableHeaders}
+          <tbody>
+            <tr>
+              <td
+                colSpan={table.getAllColumns().length}
+                className="border-b border-black/10 px-[20px] py-[60px] text-center text-[14px] text-black/50"
+              >
+                {emptyFilter
+                  ? 'No empty items found in this category'
+                  : pendingFilter
+                    ? 'No pending items found in this category'
+                    : 'No items found'}
+              </td>
+            </tr>
           </tbody>
         </table>
       </ScrollShadow>
