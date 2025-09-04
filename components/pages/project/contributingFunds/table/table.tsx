@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { CaretDown, CaretUp, Tray } from '@phosphor-icons/react';
+import { Tray } from '@phosphor-icons/react';
 import {
   flexRender,
   getCoreRowModel,
@@ -21,9 +21,10 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
-import CaretUpDown from '@/components/icons/CaretUpDown';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
+import ArrowsOutLineVerticalIcon from '@/components/icons/ArrowsOutLineVertical';
+import SortAscendingIcon from '@/components/icons/SortAscending';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
@@ -162,38 +163,30 @@ const GrantsTable: FC<GrantsTableProps> = ({
             onClick={handleTimeSort}
             className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
           >
-            {isSortingByTime ? (
-              sortDirection === 'asc' ? (
-                <CaretUp size={16} />
-              ) : (
-                <CaretDown size={16} />
-              )
-            ) : (
-              <CaretUpDown size={16} className="opacity-50" />
-            )}
+            <SortAscendingIcon
+              className={cn(isSortingByTime ? 'opacity-50' : 'opacity-20')}
+            />
             <span>Time</span>
           </button>
           <button
             onClick={handleAmountSort}
             className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
           >
-            {isSortingByAmount ? (
-              sortDirection === 'asc' ? (
-                <CaretUp size={16} />
-              ) : (
-                <CaretDown size={16} />
-              )
-            ) : (
-              <CaretUpDown size={16} className="opacity-50" />
-            )}
+            <SortAscendingIcon
+              className={cn(isSortingByAmount ? 'opacity-50' : 'opacity-20')}
+            />
             <span>Amount</span>
           </button>
           <button
             onClick={handleExpandCollapse}
             className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
           >
-            {isCollapsed ? <CaretDown size={16} /> : <CaretUp size={16} />}
-            <span>{isCollapsed ? 'Expand Items' : 'Collapse Items'}</span>
+            <ArrowsOutLineVerticalIcon
+              className={cn(isCollapsed ? 'opacity-50' : 'opacity-20')}
+            />
+            <span className="w-[100px]">
+              {isCollapsed ? 'Expand Items' : 'Collapse Items'}
+            </span>
           </button>
         </div>
       </div>
