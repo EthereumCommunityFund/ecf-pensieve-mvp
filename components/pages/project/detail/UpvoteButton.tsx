@@ -2,8 +2,8 @@ import { cn } from '@heroui/react';
 import { CaretUp } from '@phosphor-icons/react';
 import { FC, useCallback } from 'react';
 
-import { IProject } from '@/types';
 import { useUpvote } from '@/hooks/useUpvote';
+import { IProject } from '@/types';
 
 import ProjectActionButton from './ProjectActionButton';
 
