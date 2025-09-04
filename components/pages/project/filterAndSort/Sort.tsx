@@ -65,7 +65,9 @@ export default function ProjectSort() {
           isExpanded ? '' : 'rounded-[5px]'
         }`}
       >
-        <div className="flex items-center gap-[5px]">
+        <div
+          className={`flex items-center gap-[5px] ${!currentSort ? 'opacity-50' : ''}`}
+        >
           <SortDescendingIcon width={20} height={20} className="text-black" />
           <span className="text-[14px] font-semibold text-black">
             {getButtonLabel()}
@@ -74,7 +76,7 @@ export default function ProjectSort() {
         <CaretDownIcon
           width={16}
           height={16}
-          className={`text-black transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          className={`text-black transition-transform ${isExpanded ? 'rotate-180' : ''} ${!currentSort ? 'opacity-50' : ''}`}
         />
       </button>
 

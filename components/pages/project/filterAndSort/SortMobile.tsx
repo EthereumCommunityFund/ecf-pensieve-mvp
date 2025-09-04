@@ -63,13 +63,19 @@ export default function ProjectSortMobile() {
         onClick={() => setIsOpen(true)}
         className="flex h-10 grow items-center justify-between rounded-[5px] border border-black/10 bg-white p-[10px]"
       >
-        <div className="flex items-center gap-[5px]">
+        <div
+          className={`flex items-center gap-[5px] ${!currentSort ? 'opacity-50' : ''}`}
+        >
           <SortDescendingIcon width={20} height={20} className="text-black" />
           <span className="text-[14px] font-semibold text-black">
             {getButtonLabel()}
           </span>
         </div>
-        <CaretDownIcon width={16} height={16} className="text-black" />
+        <CaretDownIcon
+          width={16}
+          height={16}
+          className={`text-black ${!currentSort ? 'opacity-50' : ''}`}
+        />
       </button>
 
       {/* Overlay */}
