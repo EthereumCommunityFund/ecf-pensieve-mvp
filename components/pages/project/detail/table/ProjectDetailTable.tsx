@@ -345,7 +345,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
           // Padding: desktop larger, mobile smaller
           // 'px-[20px] tablet:px-[15px] mobile:px-[10px]',
           // Top margin and padding
-          'mt-[20px] pt-[20px]',
+          'pt-[20px]',
         )}
       >
         <div

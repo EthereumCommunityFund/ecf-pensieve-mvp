@@ -214,7 +214,7 @@ const ProjectPage = () => {
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
 
-      <div className="mobile:mx-[10px] mx-[20px] mt-[30px] flex flex-wrap items-center justify-between gap-[10px]">
+      <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
         <ProjectTabs
           tabs={tabItems}
           activeTab={activeTab}

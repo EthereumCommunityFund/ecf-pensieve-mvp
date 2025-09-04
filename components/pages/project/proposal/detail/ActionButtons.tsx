@@ -46,15 +46,19 @@ const CollapseButton: FC<ICollapseButtonProps> = ({ isExpanded, onChange }) => {
           </clipPath>
         </defs>
       </svg>
-      {isExpanded ? 'Collapse All' : 'Expand All'}
+      {isExpanded ? 'Collapse Items' : 'Expand Items'}
     </Button>
   );
 };
 
 interface IMetricButtonProps {
   onClick: () => void;
+  isVisible?: boolean;
 }
-const MetricButton: FC<IMetricButtonProps> = ({ onClick }) => {
+const MetricButton: FC<IMetricButtonProps> = ({
+  onClick,
+  isVisible = false,
+}) => {
   return (
     <Button
       color="secondary"
@@ -106,7 +110,7 @@ const MetricButton: FC<IMetricButtonProps> = ({ onClick }) => {
           </clipPath>
         </defs>
       </svg>
-      Metrics
+      {isVisible ? 'Hide Metrics' : 'Show Metrics'}
     </Button>
   );
 };

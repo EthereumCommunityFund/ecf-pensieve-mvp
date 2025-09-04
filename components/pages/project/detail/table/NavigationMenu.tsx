@@ -37,7 +37,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
       <div
         ref={refs.menuRef}
         className={cn(
-          'flex flex-col gap-[10px] w-[160px]',
+          'flex flex-col w-[160px]',
           state.isFixed ? 'fixed z-20' : 'relative',
           className,
         )}
@@ -52,7 +52,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
                   onCategoryClick(categoryConfig.subCategories[0].key)
                 }
                 className={cn(
-                  'cursor-pointer rounded-[6px] px-[10px] py-[10px] transition-all duration-200',
+                  'cursor-pointer rounded-[6px] px-[10px] py-[5px] transition-all duration-200',
                   'hover:opacity-80',
                   activeCategory === categoryConfig.subCategories[0].key
                     ? 'opacity-100 bg-black/10'
@@ -67,7 +67,7 @@ const NavigationMenu: FC<NavigationMenuProps> = ({
 
             {/* Sub-categories - render all sub-categories */}
             {categoryConfig.subCategories.length && (
-              <div className="mt-[10px] flex flex-col gap-[10px]">
+              <div className="flex flex-col">
                 {categoryConfig.subCategories.map((subCategoryConfig) => {
                   const isActive = activeCategory === subCategoryConfig.key;
 

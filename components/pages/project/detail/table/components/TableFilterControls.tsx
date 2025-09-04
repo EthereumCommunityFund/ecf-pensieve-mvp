@@ -44,7 +44,7 @@ const TableFilterControls: FC<TableFilterControlsProps> = ({
     'font-["Open_Sans"] font-semibold text-[13px] leading-[1.36] text-black/80';
 
   return (
-    <div className="flex items-center gap-[10px]">
+    <div className="flex flex-wrap items-center gap-[10px]">
       <button className={getButtonClasses()} onClick={onToggleAllExpanded}>
         <CaretUpDown size={16} weight="regular" className="opacity-50" />
         <span className={textClasses}>
