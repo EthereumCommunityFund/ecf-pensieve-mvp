@@ -7,6 +7,7 @@ import ShareButton from '@/components/biz/share/ShareButton';
 import { IProject } from '@/types';
 
 import BookmarkButton from './list/BookmarkButton';
+import UpvoteButton from './UpvoteButton';
 
 interface ProjectDetailCardProps {
   project?: IProject;
@@ -66,12 +67,11 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
         </div>
       </div>
 
-      {project.shortCode && (
-        <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
-          <BookmarkButton projectId={project.id} />
-          <ShareButton shortCode={project.shortCode} />
-        </div>
-      )}
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <UpvoteButton projectId={project.id} project={project} />
+        <BookmarkButton projectId={project.id} />
+        {project.shortCode && <ShareButton shortCode={project.shortCode} />}
+      </div>
     </div>
   );
 };
@@ -108,8 +108,9 @@ const ProjectDetailCardSkeleton = () => {
 
       {/* BookmarkButton and ShareButton skeleton */}
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
+        <Skeleton className="mobile:size-[32px] h-[40px] w-[100px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
       </div>
     </div>
   );
