@@ -35,14 +35,17 @@ const CategoryHeader: FC<CategoryHeaderProps> = ({
           {title}
         </p>
         {description && (
-          <p className="text-[13px] font-[600] leading-[18px] text-black/40">
+          <p className="text-[13px] font-[400] leading-[18px] text-black/40">
             {description}
           </p>
         )}
       </div>
       <div className="flex items-center justify-end gap-[10px]">
         <CollapseButton isExpanded={isExpanded} onChange={onToggle} />
-        <MetricButton onClick={() => onToggleMetrics?.(category)} />
+        <MetricButton
+          onClick={() => onToggleMetrics?.(category)}
+          isVisible={metricsVisible}
+        />
         {/* <FilterButton onClick={() => {}} /> */}
       </div>
     </div>

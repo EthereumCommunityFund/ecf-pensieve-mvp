@@ -170,7 +170,7 @@ const SupportColumnItem: FC<IProps> = ({
       </div>
 
       <Tooltip
-        content="Vote on Input"
+        content={isValidated ? 'Item Validated' : 'Vote on Input'}
         classNames={{
           content: 'p-[10px] rounded-[5px] border border-black/10',
         }}
@@ -180,7 +180,7 @@ const SupportColumnItem: FC<IProps> = ({
           color="secondary"
           size="sm"
           isIconOnly
-          isLoading={internalIsLoading} // Use internalIsLoading
+          isLoading={internalIsLoading && !isValidated} // Use internalIsLoading
           disabled={internalIsLoading || isUserVotedCurrentItemProposal} // Use internalIsLoading
           onPress={handleAction}
           className={cn(

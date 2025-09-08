@@ -13,6 +13,8 @@ export interface TableContainerProps {
   rounded?: boolean;
   /** Background color variant */
   background?: 'white' | 'transparent';
+  /** Whether to hide the scrollbar */
+  hideScrollBar?: boolean;
 }
 
 /**
@@ -133,6 +135,7 @@ export const ModalTableContainer = ({
 export const PageTableContainer = ({
   children,
   className,
+  hideScrollBar,
   // Destructure and ignore allowInternalBorderRadius to prevent it from reaching the DOM
   allowInternalBorderRadius,
   ...props
@@ -143,6 +146,7 @@ export const PageTableContainer = ({
     <ScrollShadow
       className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full overflow-x-scroll"
       orientation="horizontal"
+      hideScrollBar={hideScrollBar}
     >
       <TableContainer className={className} {...props}>
         {children}

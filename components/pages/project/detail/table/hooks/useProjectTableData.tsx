@@ -15,7 +15,16 @@ import { useProjectDetailContext } from '../../../context/projectDetailContext';
 import { IProposalCreator } from '../../types';
 import { IKeyItemDataForTable } from '../ProjectDetailTableColumns';
 
-export const useProjectTableData = () => {
+interface UseProjectTableDataOptions {
+  pendingFilter?: boolean;
+  emptyFilter?: boolean;
+}
+
+export const useProjectTableData = (
+  options: UseProjectTableDataOptions = {},
+) => {
+  const { pendingFilter = false, emptyFilter = false } = options;
+
   const {
     project,
     displayProposalDataListOfProject,
@@ -132,7 +141,28 @@ export const useProjectTableData = () => {
               legitimacyMetrics: itemConfig?.legitimacy || [],
               ...statusFields,
             };
-            result[subCategoryConfig.key].push(enhancedItem);
+
+            // Apply filters
+            const shouldInclude = (() => {
+              const isEmpty = isInputValueEmpty(item.input);
+              const isPending = statusFields.isPendingValidation;
+
+              // If empty filter is on, only show empty items
+              if (emptyFilter && !isEmpty) return false;
+
+              // If pending filter is on, only show pending items
+              if (pendingFilter && !isPending) return false;
+
+              // If no filters are active, show all items
+              if (!pendingFilter && !emptyFilter) return true;
+
+              // If filters are active, item must match at least one filter
+              return (emptyFilter && isEmpty) || (pendingFilter && isPending);
+            })();
+
+            if (shouldInclude) {
+              result[subCategoryConfig.key].push(enhancedItem);
+            }
           }
         });
 
@@ -161,9 +191,29 @@ export const useProjectTableData = () => {
               legitimacyMetrics: itemConfig?.legitimacy || [],
               ...statusFields,
             };
-            if (hasProposal || !isInputValueEmpty(existingItem.input)) {
+            // Apply filters
+            const shouldInclude = (() => {
+              const isEmpty = isInputValueEmpty(existingItem.input);
+              const isPending = statusFields.isPendingValidation;
+
+              // If empty filter is on, only show empty items
+              if (emptyFilter && !isEmpty) return false;
+
+              // If pending filter is on, only show pending items
+              if (pendingFilter && !isPending) return false;
+
+              // If no filters are active, show all items that have proposals or content
+              if (!pendingFilter && !emptyFilter) {
+                return hasProposal || !isEmpty;
+              }
+
+              // If filters are active, item must match at least one filter
+              return (emptyFilter && isEmpty) || (pendingFilter && isPending);
+            })();
+
+            if (shouldInclude) {
               result[subCategoryConfig.key].push(enhancedItem);
-            } else {
+            } else if (!pendingFilter && !emptyFilter) {
               currentCategoryEmptyItems.push({
                 ...enhancedItem,
                 isEmptyItem: true,
@@ -205,12 +255,32 @@ export const useProjectTableData = () => {
                 }),
                 ...statusFields,
               };
-              if (hasProposal) {
+              // Apply filters
+              const shouldInclude = (() => {
+                const isPending = statusFields.isPendingValidation;
+
+                // If empty filter is on, only show empty items (no proposal)
+                if (emptyFilter && hasProposal) return false;
+
+                // If pending filter is on, only show pending items
+                if (pendingFilter && !isPending) return false;
+
+                // If no filters are active, show all items
+                if (!pendingFilter && !emptyFilter) return true;
+
+                // If filters are active, item must match at least one filter
+                // For default items: they are empty if they don't have proposals
+                return (
+                  (emptyFilter && !hasProposal) || (pendingFilter && isPending)
+                );
+              })();
+
+              if (hasProposal && shouldInclude) {
                 result[subCategoryConfig.key].push({
                   ...defaultItem,
                   isEmptyItem: false,
                 });
-              } else {
+              } else if (!hasProposal && shouldInclude) {
                 currentCategoryEmptyItems.push(defaultItem);
               }
             }
@@ -231,6 +301,8 @@ export const useProjectTableData = () => {
     hasProposalKeys,
     generateEmptyTableData,
     generateEmptyItemsCounts,
+    pendingFilter,
+    emptyFilter,
   ]);
 
   const getItemRowData = useCallback(

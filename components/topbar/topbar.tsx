@@ -88,7 +88,7 @@ export function Topbar() {
       </div>
 
       {/* mobile */}
-      <div className="pc:hidden tablet:hidden flex size-full items-center justify-between px-5 lg:hidden">
+      <div className="pc:hidden tablet:hidden flex size-full items-center justify-between px-[10px] lg:hidden">
         <MobileMenu />
 
         <Link

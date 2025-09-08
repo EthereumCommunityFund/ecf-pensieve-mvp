@@ -31,6 +31,8 @@ interface CategoryTableSectionProps {
   onToggleAllRowsInCategory: (categoryRows: string[]) => void;
   metricsVisible?: boolean;
   onToggleMetrics?: () => void;
+  pendingFilter?: boolean;
+  emptyFilter?: boolean;
 }
 
 /**
@@ -54,6 +56,8 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
   onToggleAllRowsInCategory,
   metricsVisible,
   onToggleMetrics,
+  pendingFilter = false,
+  emptyFilter = false,
 }) => {
   // Get all row keys under current category
   const getCategoryRowKeys = () => {
@@ -89,6 +93,8 @@ export const CategoryTableSection: FC<CategoryTableSectionProps> = ({
           project={project}
           onToggleEmptyItems={onToggleEmptyItems}
           onToggleGroupExpanded={onToggleGroupExpanded}
+          pendingFilter={pendingFilter}
+          emptyFilter={emptyFilter}
         />
       </div>
     </div>
