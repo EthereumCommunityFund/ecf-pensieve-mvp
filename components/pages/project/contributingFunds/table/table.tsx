@@ -20,10 +20,10 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
-import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
-import { IPocItemKey } from '@/types/item';
 import ArrowsOutLineVerticalIcon from '@/components/icons/ArrowsOutLineVertical';
 import SortAscendingIcon from '@/components/icons/SortAscending';
+import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
+import { IPocItemKey } from '@/types/item';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
