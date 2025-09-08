@@ -39,7 +39,8 @@ export default function Categories({ className = '' }: IProps) {
               )
             }
           >
-            {category.icon}
+            {/* hide icon for now, 09.08 */}
+            {/* {category.icon} */}
             {category.label}
           </Button>
         ))}
