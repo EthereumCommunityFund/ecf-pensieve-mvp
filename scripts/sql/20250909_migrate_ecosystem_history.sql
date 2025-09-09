@@ -23,9 +23,9 @@ expanded AS (
     l.log_id,
     l.item_proposal_id,
     l.key,
-    elem AS item
+    value AS item
   FROM latest_logs l,
-  LATERAL jsonb_array_elements(l.value) AS elem
+  LATERAL jsonb_array_elements(l.value)
 ),
 ids_from_array AS (
   SELECT
@@ -80,7 +80,11 @@ SELECT
   source_id, target_id, relation_type,
   item_proposal_id, log_id, TRUE
 FROM ready
-ON CONFLICT (source_project_id, target_project_id, relation_type) DO NOTHING;
+ON CONFLICT (source_project_id, target_project_id, relation_type) 
+DO UPDATE SET 
+  is_active = TRUE,
+  item_proposal_id = EXCLUDED.item_proposal_id,
+  project_log_id = EXCLUDED.project_log_id;
 
 -- Show migration results
 SELECT relation_type, COUNT(*) AS total

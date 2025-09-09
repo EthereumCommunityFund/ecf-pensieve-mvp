@@ -1,7 +1,12 @@
 -- Add indexes for ecosystem relations queries
--- Note: For production deployment with large tables, consider using:
--- CREATE INDEX CONCURRENTLY pr_source_active_type_idx ...
--- This requires running outside of a transaction block.
+-- IMPORTANT: For production deployment with large tables, you should:
+-- 1. Run these CREATE INDEX statements with CONCURRENTLY option
+-- 2. Execute them outside of a transaction block
+-- 3. Monitor the progress as CONCURRENTLY operations can take longer
+-- Example:
+-- CREATE INDEX CONCURRENTLY pr_source_active_type_idx 
+--   ON project_relations (source_project_id, relation_type) 
+--   WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS pr_source_active_type_idx
 ON project_relations (source_project_id, relation_type)
 WHERE is_active = true;
@@ -17,6 +22,16 @@ DECLARE
   v_value JSONB;
   v_relation_type TEXT;
 BEGIN
+  -- Null protection for project_id
+  IF NEW.project_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Skip non-leading logs (consistent with historical migration)
+  IF NEW.is_not_leading = TRUE THEN
+    RETURN NEW;
+  END IF;
+
   -- Only process ecosystem relation keys
   IF NEW.key NOT IN ('affiliated_projects','contributing_teams','stack_integrations') THEN
     RETURN NEW;
@@ -48,8 +63,8 @@ BEGIN
 
   -- Parse project field (supports string | string[])
   WITH items AS (
-    SELECT elem AS item
-    FROM jsonb_array_elements(v_value) AS elem
+    SELECT value AS item
+    FROM jsonb_array_elements(v_value)
   ),
   ids_from_array AS (
     SELECT jsonb_array_elements_text(item->'project') AS id_text
@@ -84,7 +99,11 @@ BEGIN
     NEW.id,
     TRUE
   FROM ids
-  ON CONFLICT (source_project_id, target_project_id, relation_type) DO NOTHING;
+  ON CONFLICT (source_project_id, target_project_id, relation_type) 
+  DO UPDATE SET 
+    is_active = TRUE,
+    item_proposal_id = EXCLUDED.item_proposal_id,
+    project_log_id = EXCLUDED.project_log_id;
 
   RETURN NEW;
 END;
