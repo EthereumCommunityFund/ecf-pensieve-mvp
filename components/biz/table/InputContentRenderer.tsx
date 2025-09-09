@@ -58,6 +58,7 @@ interface IProps {
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
   isInExpandableRow?: boolean;
+  isTableCell?: boolean;
 }
 
 const InputContentRenderer: React.FC<IProps> = ({
@@ -68,6 +69,7 @@ const InputContentRenderer: React.FC<IProps> = ({
   isExpanded,
   onToggleExpanded,
   isInExpandableRow,
+  isTableCell,
 }) => {
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
@@ -303,8 +305,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -555,8 +562,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -639,8 +651,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -791,8 +808,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -927,8 +949,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1106,8 +1133,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1252,8 +1284,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1403,8 +1440,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1579,8 +1621,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1629,6 +1676,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     isInExpandableRow,
     isLoadingProjects,
     projectsMap,
+    isTableCell,
   ]);
 
   if (!displayFormType) {
@@ -1681,12 +1729,17 @@ const InputContentRenderer: React.FC<IProps> = ({
         className="cursor-pointer overflow-hidden break-all"
         style={{
           display: '-webkit-box',
-          WebkitLineClamp: 2,
+          WebkitLineClamp: 3,
           WebkitBoxOrient: 'vertical',
           wordBreak: 'break-all',
           overflowWrap: 'anywhere',
         }}
-        onClick={onToggleExpanded}
+        onClick={(e) => {
+          if (isTableCell) {
+            e.stopPropagation();
+          }
+          onToggleExpanded?.();
+        }}
       >
         {renderContent()}
       </div>

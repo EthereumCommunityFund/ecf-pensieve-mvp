@@ -91,8 +91,16 @@ export default function ProjectFilterMobile() {
         onClick={() => setIsOpen(true)}
         className="relative flex h-10 items-center gap-[5px] rounded-[5px] border border-none border-black/10 px-[14px] py-[5px]"
       >
-        <FunnelSimpleIcon width={20} height={20} className="text-black" />
-        <span className="text-[14px] font-semibold text-black">Filter</span>
+        <FunnelSimpleIcon
+          width={20}
+          height={20}
+          className={`text-black ${!hasActiveFilters ? 'opacity-50' : ''}`}
+        />
+        <span
+          className={`text-[14px] font-semibold text-black ${!hasActiveFilters ? 'opacity-50' : ''}`}
+        >
+          Filter
+        </span>
         {hasActiveFilters && (
           <div className="size-2 rounded-full bg-[#68C6AC]" />
         )}
