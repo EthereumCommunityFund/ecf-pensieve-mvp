@@ -25,7 +25,13 @@ export const projectRelations = pgTable(
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
     relationType: text('relation_type', {
-      enum: ['organization', 'donator'],
+      enum: [
+        'organization',
+        'donator',
+        'affiliated',
+        'contributing_team',
+        'stack_integration',
+      ],
     }).notNull(),
     itemProposalId: bigint('item_proposal_id', { mode: 'number' }).references(
       () => itemProposals.id,
