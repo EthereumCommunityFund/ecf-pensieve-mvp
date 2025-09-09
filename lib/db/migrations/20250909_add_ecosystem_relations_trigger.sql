@@ -1,4 +1,7 @@
 -- Add indexes for ecosystem relations queries
+-- Note: For production deployment with large tables, consider using:
+-- CREATE INDEX CONCURRENTLY pr_source_active_type_idx ...
+-- This requires running outside of a transaction block.
 CREATE INDEX IF NOT EXISTS pr_source_active_type_idx
 ON project_relations (source_project_id, relation_type)
 WHERE is_active = true;

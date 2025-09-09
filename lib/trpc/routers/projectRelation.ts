@@ -1,4 +1,4 @@
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, or } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { projectRelations } from '@/lib/db/schema';
@@ -9,7 +9,7 @@ export const projectRelationRouter = router({
   getFundingRelations: publicProcedure
     .input(
       z.object({
-        projectId: z.number(),
+        projectId: z.number().int().positive(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -21,6 +21,7 @@ export const projectRelationRouter = router({
           ),
           eq(projectRelations.isActive, true),
         ),
+        orderBy: desc(projectRelations.createdAt),
       });
 
       return {
@@ -54,7 +55,7 @@ export const projectRelationRouter = router({
   getEcosystemRelations: publicProcedure
     .input(
       z.object({
-        projectId: z.number(),
+        projectId: z.number().int().positive(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -71,6 +72,7 @@ export const projectRelationRouter = router({
           ]),
           eq(projectRelations.isActive, true),
         ),
+        orderBy: desc(projectRelations.createdAt),
       });
 
       return {
