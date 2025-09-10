@@ -5,6 +5,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
+import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
 
 import { useProjectTableData } from '../detail/table/hooks/useProjectTableData';
@@ -31,6 +32,22 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
     useState<EcosystemSection>('stack_integrations');
 
   const { getItemRowData, isDataFetched } = useProjectTableData();
+
+  // Call getEcosystemRelations API
+  const { data: ecosystemRelations } =
+    trpc.projectRelation.getEcosystemRelations.useQuery(
+      { projectId },
+      {
+        enabled: !!projectId,
+      },
+    );
+
+  // Log the API response when data is available
+  useEffect(() => {
+    if (ecosystemRelations) {
+      console.log('getEcosystemRelations API response:', ecosystemRelations);
+    }
+  }, [ecosystemRelations]);
 
   const stackIntegrationsData = useMemo(() => {
     return getItemRowData('stack_integrations');
