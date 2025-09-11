@@ -86,6 +86,14 @@ BEGIN
       SELECT * FROM ids_from_string
     ) u
     WHERE id_text ~ '^\d+$'  -- Only accept numeric IDs
+  ),
+  validated_ids AS (
+    SELECT i.id_text
+    FROM ids i
+    WHERE EXISTS (
+      SELECT 1 FROM projects p 
+      WHERE p.id = i.id_text::bigint
+    )
   )
   INSERT INTO project_relations (
     source_project_id, target_project_id, relation_type,
@@ -98,7 +106,7 @@ BEGIN
     NEW.item_proposal_id,
     NEW.id,
     TRUE
-  FROM ids
+  FROM validated_ids
   ON CONFLICT (source_project_id, target_project_id, relation_type) 
   DO UPDATE SET 
     is_active = TRUE,
