@@ -35,9 +35,11 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
   const stackIntegrationsData = useMemo(() => {
     return getItemRowData('stack_integrations');
   }, [getItemRowData]);
+
   const contributingTeamsData = useMemo(() => {
     return getItemRowData('contributing_teams');
   }, [getItemRowData]);
+
   const affiliatedProjectsData = useMemo(() => {
     return getItemRowData('affiliated_projects');
   }, [getItemRowData]);

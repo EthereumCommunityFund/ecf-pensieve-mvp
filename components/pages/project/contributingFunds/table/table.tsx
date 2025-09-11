@@ -19,11 +19,11 @@ import {
   TableRow,
   TableRowSkeleton,
 } from '@/components/biz/table';
-import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import ArrowsOutLineVerticalIcon from '@/components/icons/ArrowsOutLineVertical';
 import SortAscendingIcon from '@/components/icons/SortAscending';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
+import { extractProjectIdsByKeyName } from '@/utils/item';
 
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
@@ -72,7 +72,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
   // Extract project IDs from grants data using shared helper
   const projectIds = useMemo(() => {
     // For grants, extract from organization and projectDonator fields
-    return extractProjectIds(data, ['organization', 'projectDonator']);
+    return extractProjectIdsByKeyName(data, ['organization', 'projectDonator']);
   }, [data]);
 
   const { projectsMap, isLoading: isLoadingProjects } =

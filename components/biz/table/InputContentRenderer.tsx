@@ -8,10 +8,7 @@ import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQu
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
-import {
-  isProjectId,
-  ProjectFieldRenderer,
-} from '@/components/biz/table/ProjectFieldRenderer';
+import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
@@ -19,6 +16,7 @@ import dayjs from '@/lib/dayjs';
 import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
+  extractProjectIds,
   isInputValueEmpty,
   isInputValueNA,
   parseMultipleValue,
@@ -26,6 +24,11 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
+
+import {
+  isEmbedTableFormType,
+  isEmbedTableFormWithProjectSelector,
+} from './embedTable/embedTableUtils';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
 
@@ -74,27 +77,12 @@ const InputContentRenderer: React.FC<IProps> = ({
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
-  // Helper function to extract projectIds from a field value
-  const extractProjectIds = useCallback((fieldValue: any): string[] => {
-    if (!fieldValue) return [];
-
-    if (Array.isArray(fieldValue)) {
-      return fieldValue;
-    }
-
-    if (typeof fieldValue === 'string' && isProjectId(fieldValue)) {
-      return [fieldValue];
-    }
-
-    return [];
-  }, []);
-
   // For fundingReceivedGrants, affiliated_projects, contributing_teams, and stack_integrations, extract project IDs
-  const projectIds = useMemo(() => {
+  const projectIds = useMemo((): Array<string | number> => {
     const parsed = parseValue(formatValue);
     if (!parsed || !Array.isArray(parsed)) return [];
 
-    const ids: string[] = [];
+    const ids: Array<string | number> = [];
 
     if (displayFormType === 'fundingReceivedGrants') {
       parsed.forEach((grant: any) => {
@@ -121,10 +109,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     projectIds,
     {
       enabled:
-        (displayFormType === 'fundingReceivedGrants' ||
-          displayFormType === 'affiliated_projects' ||
-          displayFormType === 'contributing_teams' ||
-          displayFormType === 'stack_integrations') &&
+        isEmbedTableFormWithProjectSelector(displayFormType) &&
         projectIds.length > 0,
     },
   );
@@ -1696,18 +1681,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     );
   }
 
-  if (
-    isExpandable &&
-    displayFormType !== 'founderList' &&
-    displayFormType !== 'websites' &&
-    displayFormType !== 'social_links' &&
-    displayFormType !== 'affiliated_projects' &&
-    displayFormType !== 'contributing_teams' &&
-    displayFormType !== 'stack_integrations' &&
-    displayFormType !== 'tablePhysicalEntity' &&
-    displayFormType !== 'fundingReceivedGrants' &&
-    displayFormType !== 'multiContracts'
-  ) {
+  if (isExpandable && !isEmbedTableFormType(displayFormType)) {
     // If we're in an expandable row, show full content without line clamp
     if (isInExpandableRow) {
       return (

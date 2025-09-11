@@ -16,15 +16,56 @@ import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
 import { devLog } from '@/utils/devLog';
 import { idsArrayEqual } from '@/utils/formHelpers';
+import {
+  extractProjectIds,
+  getSingleSelectValue,
+  isLegacyStringValue,
+  isNumericProjectId,
+} from '@/utils/item';
 
 import SearchModal from './SearchModal';
 import SelectedProjectChip from './SelectedProjectChip';
 import SingleProjectName from './SingleProjectName';
 
+// Component for rendering single-select display content
+interface SingleSelectDisplayProps {
+  value: string | number | Array<string | number> | undefined;
+  selectedProjects: IProject[];
+  isLoadingProjects: boolean;
+  placeholder: React.ReactNode;
+}
+
+const SingleSelectDisplay: React.FC<SingleSelectDisplayProps> = ({
+  value,
+  selectedProjects,
+  isLoadingProjects,
+  placeholder,
+}) => {
+  const singleValue = getSingleSelectValue(value);
+
+  // Loading state for numeric project ID
+  if (isLoadingProjects && isNumericProjectId(singleValue)) {
+    return <Skeleton className="h-[16px] w-[100px] rounded-sm" />;
+  }
+
+  // Display selected project
+  if (selectedProjects.length > 0) {
+    return <SingleProjectName project={selectedProjects[0]} />;
+  }
+
+  // Display legacy string value
+  if (isLegacyStringValue(singleValue)) {
+    return <span className="font-[600] text-black">{singleValue}</span>;
+  }
+
+  // Display placeholder
+  return <>{placeholder}</>;
+};
+
 interface ProjectSearchSelectorProps {
-  value?: string | string[]; // project name/names or custom name/names
+  value?: string | number | Array<string | number>; // project id(s) or legacy project name(s)
   onChange: (
-    value: string | string[],
+    value: string | number | Array<string | number>,
     projectData?: IProject | IProject[],
   ) => void;
   onBlur?: () => void; // Optional onBlur handler for form integration
@@ -62,9 +103,32 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   );
 
   // Use N/A selection hook
+  // Convert value to string format for useNASelection
+  const naValue = useMemo(() => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) {
+      return value.map((v) => String(v));
+    }
+    return String(value);
+  }, [value]);
+
+  const naOnChange = useCallback(
+    (newValue: string | string[]) => {
+      // Convert back to original format
+      if (Array.isArray(newValue)) {
+        onChange(newValue.map((v) => (v === NA_VALUE ? v : Number(v) || v)));
+      } else {
+        onChange(
+          newValue === NA_VALUE ? newValue : Number(newValue) || newValue,
+        );
+      }
+    },
+    [onChange],
+  );
+
   const { isNASelected, selectNA, clearNA } = useNASelection(
-    value,
-    onChange,
+    naValue,
+    naOnChange,
     multiple,
   );
 
@@ -74,17 +138,18 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
 
   // Use hook to fetch project data by IDs
   // Memoize projectIds to avoid unnecessary re-renders
-  const projectIds = useMemo(() => {
-    if (multiple && Array.isArray(value)) {
-      return value;
+  const projectIds = useMemo<(string | number)[]>(() => {
+    // Handle N/A value
+    if (value === NA_VALUE) return [];
+
+    // For multiple select, use extractProjectIds directly
+    if (multiple) {
+      return extractProjectIds(value);
     }
-    // In single mode, if value is a projectId (not NA_VALUE), wrap it in array
-    if (!multiple && typeof value === 'string' && value !== NA_VALUE) {
-      // Check if it's a numeric string (projectId) or project name
-      const isProjectId = /^\d+$/.test(value);
-      return isProjectId ? [value] : [];
-    }
-    return [];
+
+    // For single select, get the single value and extract project IDs
+    const singleValue = getSingleSelectValue(value);
+    return extractProjectIds(singleValue);
   }, [multiple, value]);
 
   const { projects: fetchedProjects, isLoading: isLoadingProjects } =
@@ -129,8 +194,12 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
 
         return fetchedProjects;
       });
+    } else if (!isLoadingProjects && projectIds.length === 0) {
+      // Clear selected projects if no projectIds and not loading
+      setSelectedProjects([]);
+      setTempSelectedProjects([]);
     }
-  }, [fetchedProjects, multiple]); // can't add value to deps
+  }, [fetchedProjects, multiple, value, isLoadingProjects, projectIds.length]); // Added necessary dependencies
 
   // Use tRPC to search projects with React Query
   const {
@@ -285,9 +354,16 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
                         : 'text-black/70 font-[400]',
                     )}
                   >
-                    {(!multiple && selectedProjects.length > 0 ? (
-                      <SingleProjectName project={selectedProjects[0]} />
-                    ) : null) || placeholder}
+                    {!multiple ? (
+                      <SingleSelectDisplay
+                        value={value}
+                        selectedProjects={selectedProjects}
+                        isLoadingProjects={isLoadingProjects}
+                        placeholder={placeholder}
+                      />
+                    ) : (
+                      placeholder
+                    )}
                   </span>
                 </div>
               )}

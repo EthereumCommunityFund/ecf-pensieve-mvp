@@ -163,13 +163,3 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     tableComponent: 'StackIntegrationsTableItem',
   },
 };
-
-export const isDynamicFieldType = (
-  formDisplayType: IFormDisplayType,
-): formDisplayType is
-  | 'fundingReceivedGrants'
-  | 'affiliated_projects'
-  | 'contributing_teams'
-  | 'stack_integrations' => {
-  return formDisplayType in DYNAMIC_FIELDS_CONFIG;
-};
