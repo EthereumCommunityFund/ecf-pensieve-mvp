@@ -5,11 +5,11 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
-import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
 
 import { useProjectTableData } from '../detail/table/hooks/useProjectTableData';
 
+import { useReverseEcosystemData } from './hooks/useReverseEcosystemData';
 import EcosystemNav from './nav/EcosystemNav';
 import EcosystemTable from './table/EcosystemTable';
 import {
@@ -33,21 +33,13 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
 
   const { getItemRowData, isDataFetched } = useProjectTableData();
 
-  // Call getEcosystemRelations API
-  const { data: ecosystemRelations } =
-    trpc.projectRelation.getEcosystemRelations.useQuery(
-      { projectId },
-      {
-        enabled: !!projectId,
-      },
-    );
-
-  // Log the API response when data is available
-  useEffect(() => {
-    if (ecosystemRelations) {
-      console.log('getEcosystemRelations API response:', ecosystemRelations);
-    }
-  }, [ecosystemRelations]);
+  // Get reverse ecosystem data
+  const {
+    stackIntegrationsReverse,
+    contributingTeamsReverse,
+    affiliatedProjectsReverse,
+    isLoading: isLoadingReverse,
+  } = useReverseEcosystemData(projectId);
 
   const stackIntegrationsData = useMemo(() => {
     return getItemRowData('stack_integrations');
@@ -115,48 +107,128 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
         />
       </div>
       <div className="flex-1">
-        <EcosystemTable
-          id="stack_integrations"
-          itemKey="stack_integrations"
-          title="Stack & Integrations"
-          description="The protocols, libraries and building blocks this project relies on or connects with."
-          filterButtonText="Relation"
-          data={stackIntegrationsData}
-          columns={stackIntegrationsColumns}
-          projectId={projectId}
-          isDataFetched={isDataFetched}
-          typeKey="type"
-          typeOptions={STACK_INTEGRATION_TYPE_OPTIONS}
-          onOpenModal={onOpenModal}
-        />
-        <EcosystemTable
-          id="contributing_teams"
-          itemKey="contributing_teams"
-          title="Contributing Teams"
-          description="Teams and organizations that contribute to this project's development and growth."
-          filterButtonText="Contribution Type"
-          data={contributingTeamsData}
-          columns={contributingTeamsColumns}
-          projectId={projectId}
-          isDataFetched={isDataFetched}
-          typeKey="type"
-          typeOptions={CONTRIBUTION_TYPE_OPTIONS}
-          onOpenModal={onOpenModal}
-        />
-        <EcosystemTable
-          id="affiliated_projects"
-          itemKey="affiliated_projects"
-          title="Affiliated Projects"
-          description="Related projects and partnerships within the ecosystem."
-          filterButtonText="Affiliation Type"
-          data={affiliatedProjectsData}
-          columns={affiliatedProjectsColumns}
-          projectId={projectId}
-          isDataFetched={isDataFetched}
-          typeKey="affiliationType"
-          typeOptions={AFFILIATION_TYPE_OPTIONS}
-          onOpenModal={onOpenModal}
-        />
+        <div id="stack_integrations" className="mb-[60px]">
+          <h3 className="mb-[20px] text-[24px] font-bold">
+            Stack & Integrations
+          </h3>
+          <p className="mb-[30px] text-[14px] text-black/60">
+            The protocols, libraries and building blocks this project relies on
+            or connects with.
+          </p>
+
+          {/* Reverse table - Powered by */}
+          <EcosystemTable
+            id="stack_integrations_reverse"
+            itemKey="stack_integrations"
+            title="Powered by"
+            description="Following data are linked via external Pensieve project pages"
+            filterButtonText="Relation"
+            data={stackIntegrationsReverse}
+            columns={stackIntegrationsColumns}
+            projectId={projectId}
+            isDataFetched={!isLoadingReverse}
+            typeKey="type"
+            typeOptions={STACK_INTEGRATION_TYPE_OPTIONS}
+            onOpenModal={onOpenModal}
+          />
+
+          {/* Forward table - Empowering */}
+          <EcosystemTable
+            id="stack_integrations_forward"
+            itemKey="stack_integrations"
+            title="Empowering"
+            description="Following data are linked via this project"
+            filterButtonText="Relation"
+            data={stackIntegrationsData}
+            columns={stackIntegrationsColumns}
+            projectId={projectId}
+            isDataFetched={isDataFetched}
+            typeKey="type"
+            typeOptions={STACK_INTEGRATION_TYPE_OPTIONS}
+            onOpenModal={onOpenModal}
+          />
+        </div>
+        <div id="contributing_teams" className="mb-[60px]">
+          <h3 className="mb-[20px] text-[24px] font-bold">
+            Contributing Teams
+          </h3>
+          <p className="mb-[30px] text-[14px] text-black/60">
+            Teams and organizations that contribute to this project&apos;s
+            development and growth.
+          </p>
+
+          {/* Reverse table - External Linkage */}
+          <EcosystemTable
+            id="contributing_teams_reverse"
+            itemKey="contributing_teams"
+            title="External Linkage"
+            description="Following data are linked by external projects"
+            filterButtonText="Contribution Type"
+            data={contributingTeamsReverse}
+            columns={contributingTeamsColumns}
+            projectId={projectId}
+            isDataFetched={!isLoadingReverse}
+            typeKey="type"
+            typeOptions={CONTRIBUTION_TYPE_OPTIONS}
+            onOpenModal={onOpenModal}
+          />
+
+          {/* Forward table - This Project Linkage */}
+          <EcosystemTable
+            id="contributing_teams_forward"
+            itemKey="contributing_teams"
+            title="This Project Linkage"
+            description="Following data are linked by this project"
+            filterButtonText="Contribution Type"
+            data={contributingTeamsData}
+            columns={contributingTeamsColumns}
+            projectId={projectId}
+            isDataFetched={isDataFetched}
+            typeKey="type"
+            typeOptions={CONTRIBUTION_TYPE_OPTIONS}
+            onOpenModal={onOpenModal}
+          />
+        </div>
+        <div id="affiliated_projects" className="mb-[60px]">
+          <h3 className="mb-[20px] text-[24px] font-bold">
+            Affiliated Projects
+          </h3>
+          <p className="mb-[30px] text-[14px] text-black/60">
+            Related projects and partnerships within the ecosystem.
+          </p>
+
+          {/* Reverse table - External Affiliation */}
+          <EcosystemTable
+            id="affiliated_projects_reverse"
+            itemKey="affiliated_projects"
+            title="External Affiliation"
+            description="Partnerships recorded by other projects"
+            filterButtonText="Affiliation Type"
+            data={affiliatedProjectsReverse}
+            columns={affiliatedProjectsColumns}
+            projectId={projectId}
+            isDataFetched={!isLoadingReverse}
+            typeKey="affiliationType"
+            typeOptions={AFFILIATION_TYPE_OPTIONS}
+            onOpenModal={onOpenModal}
+          />
+
+          {/* Forward table - This Project Affiliation */}
+          <EcosystemTable
+            id="affiliated_projects_forward"
+            itemKey="affiliated_projects"
+            title="This Project Affiliation"
+            description="Partnerships recorded by this project"
+            filterButtonText="Affiliation Type"
+            data={affiliatedProjectsData}
+            columns={affiliatedProjectsColumns}
+            projectId={projectId}
+            isDataFetched={isDataFetched}
+            typeKey="affiliationType"
+            typeOptions={AFFILIATION_TYPE_OPTIONS}
+            onOpenModal={onOpenModal}
+          />
+        </div>
       </div>
     </div>
   );
