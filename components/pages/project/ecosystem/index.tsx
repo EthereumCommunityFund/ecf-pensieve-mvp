@@ -106,21 +106,23 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
           onSectionClick={handleSectionClick}
         />
       </div>
-      <div className="flex-1">
-        <div id="stack_integrations" className="mb-[60px]">
-          <h3 className="mb-[20px] text-[24px] font-bold">
-            Stack & Integrations
-          </h3>
-          <p className="mb-[30px] text-[14px] text-black/60">
-            The protocols, libraries and building blocks this project relies on
-            or connects with.
-          </p>
+      <div className="flex-1 space-y-[40px]">
+        <div id="stack_integrations" className="space-y-[20px]">
+          <div>
+            <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
+              Stack & Integrations
+            </h3>
+            <p className="text-[13px] text-black/40">
+              The protocols, libraries and building blocks this project relies
+              on or connects with.
+            </p>
+          </div>
 
           {/* Reverse table - Powered by */}
           <EcosystemTable
             id="stack_integrations_reverse"
             itemKey="stack_integrations"
-            title="Powered by"
+            title="Powered by:"
             description="Following data are linked via external Pensieve project pages"
             filterButtonText="Relation"
             data={stackIntegrationsReverse}
@@ -136,7 +138,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
           <EcosystemTable
             id="stack_integrations_forward"
             itemKey="stack_integrations"
-            title="Empowering"
+            title="Empowering:"
             description="Following data are linked via this project"
             filterButtonText="Relation"
             data={stackIntegrationsData}
@@ -148,14 +150,16 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
             onOpenModal={onOpenModal}
           />
         </div>
-        <div id="contributing_teams" className="mb-[60px]">
-          <h3 className="mb-[20px] text-[24px] font-bold">
-            Contributing Teams
-          </h3>
-          <p className="mb-[30px] text-[14px] text-black/60">
-            Teams and organizations that contribute to this project&apos;s
-            development and growth.
-          </p>
+        <div id="contributing_teams" className="space-y-[20px]">
+          <div>
+            <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
+              Contributing Teams
+            </h3>
+            <p className="text-[13px] text-black/40">
+              The protocols, libraries and building blocks this project relies
+              on or connects with.
+            </p>
+          </div>
 
           {/* Reverse table - External Linkage */}
           <EcosystemTable
@@ -189,13 +193,16 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
             onOpenModal={onOpenModal}
           />
         </div>
-        <div id="affiliated_projects" className="mb-[60px]">
-          <h3 className="mb-[20px] text-[24px] font-bold">
-            Affiliated Projects
-          </h3>
-          <p className="mb-[30px] text-[14px] text-black/60">
-            Related projects and partnerships within the ecosystem.
-          </p>
+        <div id="affiliated_projects" className="space-y-[20px]">
+          <div>
+            <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
+              Affiliated Projects
+            </h3>
+            <p className="text-[13px] text-black/40">
+              Other partnerships and collaborations around campaigns, education,
+              events and more.
+            </p>
+          </div>
 
           {/* Reverse table - External Affiliation */}
           <EcosystemTable
