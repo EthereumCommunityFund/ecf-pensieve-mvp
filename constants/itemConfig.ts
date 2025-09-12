@@ -1053,7 +1053,7 @@ Projects that connected economically and legally. This is how the interdependenc
   contributing_teams: {
     key: 'contributing_teams',
     category: IItemCategoryEnum.Organization,
-    subCategory: IItemSubCategoryEnum.Team,
+    subCategory: IItemSubCategoryEnum.Organization,
     isEssential: POC_ITEMS.contributing_teams.isEssential,
     label: 'Contributing Teams',
     description:

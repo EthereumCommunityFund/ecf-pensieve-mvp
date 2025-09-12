@@ -18,11 +18,11 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import { ITypeOption } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
-import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import ArrowsOutLineVerticalIcon from '@/components/icons/ArrowsOutLineVertical';
 import FunnelIcon from '@/components/icons/Funnel';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
+import { extractProjectIdsByKeyName } from '@/utils/item';
 
 interface EcosystemTableProps<T extends Record<string, any>> {
   id: string;
@@ -86,7 +86,7 @@ function EcosystemTable<T extends Record<string, any>>({
   // Extract project IDs from the data using shared helper
   const projectIds = useMemo(() => {
     if (!isInitialized) return [];
-    return extractProjectIds(data, 'project');
+    return extractProjectIdsByKeyName(data, 'project');
   }, [data, isInitialized]);
 
   const { projectsMap, isLoading: isLoadingProjects } =
