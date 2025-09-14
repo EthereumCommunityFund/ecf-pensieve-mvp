@@ -115,7 +115,7 @@ function EcosystemTable<T extends Record<string, any>>({
 
   return (
     <div id={id} className="mb-[48px]">
-      <div className="-mb-px flex items-center justify-between rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+      <div className="mobile:flex-col mobile:items-start -mb-px flex items-center justify-between gap-[4px] rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
@@ -193,7 +193,7 @@ function EcosystemTable<T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
+      <div className="mobile:overflow-auto overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
         <table className="w-full border-separate border-spacing-0">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
