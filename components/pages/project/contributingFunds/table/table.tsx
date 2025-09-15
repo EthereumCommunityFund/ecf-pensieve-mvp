@@ -249,7 +249,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
           <tbody>
             {isLoading ? (
               // Skeleton rows when loading
-              Array.from({ length: 4 }).map((_, rowIndex) => (
+              Array.from({ length: 1 }).map((_, rowIndex) => (
                 <TableRowSkeleton
                   key={`skeleton-row-${rowIndex}`}
                   isLastRow={rowIndex === 3}
