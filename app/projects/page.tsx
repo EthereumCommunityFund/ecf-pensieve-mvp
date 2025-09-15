@@ -78,8 +78,10 @@ const ProjectsContent = () => {
       ...sortParams,
     },
     {
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
+      refetchOnWindowFocus: false,
+      refetchOnMount: 'always',
+      staleTime: 0,
+      gcTime: 5 * 60 * 1000, // 5 minutes
     },
   );
 
@@ -114,21 +116,13 @@ const ProjectsContent = () => {
     }
   }, [data, offset]);
 
-  // Reset when filters change - use stable dependency
+  // Reset when filters (cats) or sort change. Also trigger a refetch to avoid stale UI
   const catsKey = cats?.join(',') || '';
+
   useEffect(() => {
     setOffset(0);
-    setAllProjects([]);
   }, [sort, catsKey]);
 
-  // Trigger refetch when query params change (including clearing filters)
-  useEffect(() => {
-    // Clear existing projects to show skeleton while refetching
-    setAllProjects([]);
-    refetchProjects();
-  }, [searchParams, refetchProjects]);
-
-  // Refetch data when page becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -140,6 +134,21 @@ const ProjectsContent = () => {
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetchProjects]);
+
+  // Handle browser back/forward cache (pageshow with persisted === true)
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      // When navigating back via BFCache, ensure data is fresh
+      if ((event as PageTransitionEvent).persisted) {
+        refetchProjects();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow as EventListener);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow as EventListener);
     };
   }, [refetchProjects]);
 

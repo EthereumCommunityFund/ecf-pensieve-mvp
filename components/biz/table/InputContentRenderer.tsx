@@ -342,7 +342,7 @@ const InputContentRenderer: React.FC<IProps> = ({
       case 'link':
         return (
           <Link
-            href={value}
+            href={normalizeUrl(value)}
             target="_blank"
             rel="noreferrer"
             className="break-all underline"
@@ -351,7 +351,7 @@ const InputContentRenderer: React.FC<IProps> = ({
               overflowWrap: 'anywhere',
             }}
           >
-            {value}
+            {normalizeUrl(value)}
           </Link>
         );
       case 'date':
