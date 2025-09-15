@@ -114,26 +114,17 @@ function EcosystemTable<T extends Record<string, any>>({
   });
 
   return (
-    <div id={id} className="mb-[48px]">
-      <div className="mobile:flex-col mobile:items-start -mb-px flex items-center justify-between gap-[4px] rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+    <div id={id} className="">
+      <div className="mobile:flex-col mobile:items-start -mb-px flex  items-center justify-between gap-[10px] rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
-          <p className="text-[18px] font-[700] leading-[25px] text-black/80">
+          <p className="text-[14px] font-[600] leading-[20px] text-black/80">
             {title}
           </p>
-          <p className="text-[13px] font-[400] leading-[18px] text-black/40">
+          <p className="text-[12px] font-[400] leading-[16px] text-black/40">
             {description}
           </p>
         </div>
         <div className="flex items-center gap-[10px]">
-          {/* Type filter dropdown */}
-          <button
-            onClick={() => {
-              onOpenModal?.(itemKey, 'viewItemProposal');
-            }}
-            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
-          >
-            View Item
-          </button>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -231,7 +222,7 @@ function EcosystemTable<T extends Record<string, any>>({
           <tbody>
             {!isDataFetched ? (
               // Skeleton rows when loading
-              Array.from({ length: 4 }).map((_, rowIndex) => (
+              Array.from({ length: 1 }).map((_, rowIndex) => (
                 <TableRowSkeleton
                   key={`skeleton-row-${rowIndex}`}
                   isLastRow={rowIndex === 3}
