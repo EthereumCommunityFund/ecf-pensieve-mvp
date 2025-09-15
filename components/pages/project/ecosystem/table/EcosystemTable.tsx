@@ -184,7 +184,7 @@ function EcosystemTable<T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
+      <div className="mobile:overflow-auto overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
         <table className="w-full border-separate border-spacing-0">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
