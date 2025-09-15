@@ -2,12 +2,12 @@ import { useEffect, useMemo } from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 
 import { IFormDisplayType } from '@/types/item';
-import { getDefaultEmbedTableFormItemValue } from '@/utils/item';
 
+import { DYNAMIC_FIELDS_CONFIG } from './dynamicFieldsConfig';
 import {
-  DYNAMIC_FIELDS_CONFIG,
+  getDefaultEmbedTableFormItemValue,
   isDynamicFieldType,
-} from './dynamicFieldsConfig';
+} from './embedTableUtils';
 
 interface DynamicFieldHandlers {
   fields: any[];

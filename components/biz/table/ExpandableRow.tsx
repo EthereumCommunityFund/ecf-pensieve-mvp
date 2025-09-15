@@ -5,8 +5,8 @@ import { FC } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IEssentialItemKey, IPocItemKey } from '@/types/item';
-import { isEmbedTableFormType } from '@/utils/item';
 
+import { isEmbedTableFormType } from './embedTable/embedTableUtils';
 import InputContentRenderer from './InputContentRenderer';
 
 interface ExpandableRowProps {

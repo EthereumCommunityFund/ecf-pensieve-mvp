@@ -20,11 +20,9 @@ import InputPrefix from '@/components/biz/FormAndTable/InputPrefix';
 import PhotoUpload from '@/components/biz/FormAndTable/PhotoUpload';
 import { MultiContractEntry } from '@/components/biz/project/smart-contracts';
 import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
-import {
-  DYNAMIC_FIELDS_CONFIG,
-  isDynamicFieldType,
-} from '@/components/biz/table/embedTable/dynamicFieldsConfig';
+import { DYNAMIC_FIELDS_CONFIG } from '@/components/biz/table/embedTable/dynamicFieldsConfig';
 import DynamicFieldTable from '@/components/biz/table/embedTable/DynamicFieldTable';
+import { isDynamicFieldType } from '@/components/biz/table/embedTable/embedTableUtils';
 import FounderFormItemTable from '@/components/biz/table/embedTable/item/FounderFormItemTable';
 import PhysicalEntityFormItemTable from '@/components/biz/table/embedTable/item/PhysicalEntityFormItemTable';
 import SocialLinkFormItemTable from '@/components/biz/table/embedTable/item/SocialLinkFormItemTable';

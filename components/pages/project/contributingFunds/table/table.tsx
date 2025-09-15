@@ -19,12 +19,13 @@ import {
   TableRow,
   TableRowSkeleton,
 } from '@/components/biz/table';
-import { extractProjectIds } from '@/components/biz/table/ProjectFieldRenderer';
 import ArrowsOutLineVerticalIcon from '@/components/icons/ArrowsOutLineVertical';
 import SortAscendingIcon from '@/components/icons/SortAscending';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
 import { IPocItemKey } from '@/types/item';
+import { extractProjectIdsByKeyName } from '@/utils/item';
 
+import { ProposeEntryButton } from '../../common/ProposeEntryButton';
 import { useProjectTableData } from '../../detail/table/hooks/useProjectTableData';
 
 import { GrantType, useGrantColumns } from './columns';
@@ -72,7 +73,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
   // Extract project IDs from grants data using shared helper
   const projectIds = useMemo(() => {
     // For grants, extract from organization and projectDonator fields
-    return extractProjectIds(data, ['organization', 'projectDonator']);
+    return extractProjectIdsByKeyName(data, ['organization', 'projectDonator']);
   }, [data]);
 
   const { projectsMap, isLoading: isLoadingProjects } =
@@ -139,7 +140,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
   return (
     <div className="mb-[20px]">
       {/* Category Header - matching CategoryHeader.tsx style */}
-      <div className="-mb-px flex items-center justify-between rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+      <div className="mobile:flex-col mobile:items-start -mb-px flex items-center justify-between gap-[4px] rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
           <p className="text-[18px] font-[700] leading-[25px] text-black/80">
             {title}
@@ -202,18 +203,18 @@ const GrantsTable: FC<GrantsTableProps> = ({
         View Item
       </button> */}
           {}
-          <button
-            onClick={() => {
-              onOpenModal?.('funding_received_grants', 'submitPropose');
-            }}
+          <ProposeEntryButton
+            itemKey="funding_received_grants"
+            data={receivedGrantsData}
+            onOpenModal={onOpenModal!}
             className="flex h-[30px] items-center justify-center rounded-[5px] border border-black/10 bg-[#DCDCDC] px-[10px] text-[13px] font-[400] leading-[18px] text-black transition-colors hover:bg-[#C8C8C8]"
           >
             Propose Entry
-          </button>
+          </ProposeEntryButton>
         </div>
       )}
 
-      <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
+      <div className="mobile:overflow-auto overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
         {/* <PageTableContainer > */}
         <table className="w-full border-separate border-spacing-0">
           <thead>
@@ -248,7 +249,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
           <tbody>
             {isLoading ? (
               // Skeleton rows when loading
-              Array.from({ length: 4 }).map((_, rowIndex) => (
+              Array.from({ length: 1 }).map((_, rowIndex) => (
                 <TableRowSkeleton
                   key={`skeleton-row-${rowIndex}`}
                   isLastRow={rowIndex === 3}

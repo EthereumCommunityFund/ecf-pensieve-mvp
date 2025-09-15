@@ -8,16 +8,11 @@ import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { IProject } from '@/types';
 
 interface IProjectFieldRendererProps {
-  projectValue: string | string[] | undefined;
+  projectValue: string | number | Array<string | number> | undefined;
   projectsMap: Map<number, IProject> | undefined;
   isLoadingProjects: boolean;
   showProjectIconAndName?: boolean;
 }
-
-export const isProjectId = (value: string): boolean => {
-  // projectId is a numeric string, not 'N/A', and Number(value) > 0
-  return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
-};
 
 // Reusable project tag component
 export const ProjectColDisplay: React.FC<{
@@ -45,7 +40,7 @@ export const ProjectColDisplay: React.FC<{
       target="_blank"
       className="inline-block cursor-pointer break-words text-[13px] font-[600] leading-[20px] hover:text-black/60 hover:underline"
     >
-      {project.name}
+      {projectName}
     </Link>
   );
 };
@@ -57,6 +52,24 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
   showProjectIconAndName,
 }) => {
   if (!projectValue) return <>N/A</>;
+
+  // Handle direct numeric ID
+  if (typeof projectValue === 'number') {
+    if (projectValue <= 0) return <>N/A</>;
+    if (isLoadingProjects) {
+      return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
+    }
+    const projectData = projectsMap?.get(projectValue);
+    if (projectData) {
+      return (
+        <ProjectColDisplay
+          project={projectData}
+          showProjectIconAndName={showProjectIconAndName}
+        />
+      );
+    }
+    return <>N/A</>;
+  }
 
   // Check if it's a string
   if (typeof projectValue === 'string') {
@@ -79,6 +92,8 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
           />
         );
       }
+      // If ID lookup failed, show N/A (avoid showing raw numeric string)
+      return <>N/A</>;
     }
 
     // Legacy projectName data
@@ -93,6 +108,9 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
 
     const projects = projectValue
       .map((id) => {
+        if (typeof id === 'number' && Number.isFinite(id) && id > 0) {
+          return projectsMap?.get(id);
+        }
         if (typeof id === 'string' && /^\d+$/.test(id)) {
           const numId = parseInt(id, 10);
           return projectsMap?.get(numId);
@@ -124,39 +142,4 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
   }
 
   return <>N/A</>;
-};
-
-export const extractProjectIds = (
-  data: any[],
-  keyNames: string | string[] = 'project',
-): string[] => {
-  if (!data || data.length === 0) return [];
-
-  const keys = Array.isArray(keyNames) ? keyNames : [keyNames];
-
-  const ids: string[] = [];
-
-  data.forEach((item: any) => {
-    keys.forEach((key) => {
-      const value = item[key];
-
-      if (value) {
-        if (Array.isArray(value)) {
-          const validArrayIds = value.filter(
-            (id) =>
-              typeof id === 'string' && /^\d+$/.test(id) && Number(id) > 0,
-          );
-          ids.push(...validArrayIds);
-        } else if (
-          typeof value === 'string' &&
-          /^\d+$/.test(value) &&
-          Number(value) > 0
-        ) {
-          ids.push(value);
-        }
-      }
-    });
-  });
-
-  return [...new Set(ids)];
 };

@@ -1,5 +1,5 @@
 import { AllItemConfig } from '@/constants/itemConfig';
-import { IFormDisplayType, IPocItemKey } from '@/types/item';
+import { IPocItemKey } from '@/types/item';
 
 export const getItemConfig = (key: IPocItemKey) => {
   return AllItemConfig[key];
@@ -73,6 +73,117 @@ export const parseValue = (value: any) => {
 };
 
 /**
+ * Check if a value is a valid project ID
+ * @param value - The value to check
+ * @returns Whether the value is a valid project ID
+ */
+export const isProjectId = (value: string | number): boolean => {
+  // Accept numeric strings or positive finite numbers; exclude 'N/A'
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value > 0;
+  }
+  return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
+};
+
+/**
+ * Get single value from a value that might be an array
+ * @param value - The value to extract from
+ * @returns The first value if array, otherwise the value itself
+ */
+export const getSingleSelectValue = (
+  value: string | number | Array<string | number> | undefined,
+): string | number | undefined => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+};
+
+/**
+ * Check if a value is a valid numeric project ID
+ * @param val - The value to check
+ * @returns Whether the value is a numeric project ID
+ */
+export const isNumericProjectId = (
+  val: string | number | undefined,
+): boolean => {
+  return (
+    val !== undefined &&
+    val !== 'N/A' &&
+    ((typeof val === 'string' && isProjectId(val)) ||
+      (typeof val === 'number' && isProjectId(val)))
+  );
+};
+
+/**
+ * Check if a value is a legacy string value (non-numeric project name)
+ * @param val - The value to check
+ * @returns Whether the value is a legacy string value
+ */
+export const isLegacyStringValue = (
+  val: string | number | undefined,
+): boolean => {
+  return (
+    typeof val === 'string' && val !== '' && val !== 'N/A' && !isProjectId(val)
+  );
+};
+
+/**
+ * Extract project IDs from a field value
+ * @param fieldValue - The value to extract IDs from (can be string, number, array, or null)
+ * @returns Array of valid project IDs
+ */
+export const extractProjectIds = (fieldValue: any): Array<string | number> => {
+  if (!fieldValue) return [];
+
+  if (Array.isArray(fieldValue)) {
+    // Accept both numeric strings and numbers
+    return fieldValue.filter(
+      (v) =>
+        (typeof v === 'string' && isProjectId(v)) ||
+        (typeof v === 'number' && isProjectId(v)),
+    );
+  }
+
+  if (
+    (typeof fieldValue === 'string' || typeof fieldValue === 'number') &&
+    isProjectId(fieldValue)
+  ) {
+    return [fieldValue];
+  }
+
+  return [];
+};
+
+/**
+ * Extract project IDs from an array of objects by key name
+ * @param data - Array of objects to search
+ * @param keyNames - Key name(s) to extract values from
+ * @returns Array of unique project ID strings
+ */
+export const extractProjectIdsByKeyName = (
+  data: any[],
+  keyNames: string | string[] = 'project',
+): string[] => {
+  if (!data || data.length === 0) return [];
+
+  const keys = Array.isArray(keyNames) ? keyNames : [keyNames];
+
+  const ids: Array<string | number> = [];
+
+  data.forEach((item: any) => {
+    keys.forEach((key) => {
+      const value = item[key];
+      const extractedIds = extractProjectIds(value);
+      ids.push(...extractedIds);
+    });
+  });
+
+  // Convert all IDs to strings and remove duplicates
+  return [...new Set(ids.map((id) => String(id)))];
+};
+
+/**
  * Calculate status fields for project data
  * @param itemKey - Key of the project field
  * @param hasProposal - Whether this field already has a proposal
@@ -101,85 +212,4 @@ export const calculateItemStatusFields = (
       isNotEssential && hasProposal && !hasValidatedLeadingProposal,
     ),
   };
-};
-
-export const isEmbedTableFormType = (formDisplayType: IFormDisplayType) => {
-  return (
-    formDisplayType &&
-    (formDisplayType === 'founderList' ||
-      formDisplayType === 'websites' ||
-      formDisplayType === 'social_links' ||
-      formDisplayType === 'affiliated_projects' ||
-      formDisplayType === 'contributing_teams' ||
-      formDisplayType === 'stack_integrations' ||
-      formDisplayType === 'tablePhysicalEntity' ||
-      formDisplayType === 'multiContracts' ||
-      formDisplayType === 'fundingReceivedGrants')
-  );
-};
-
-export const getDefaultEmbedTableFormItemValue = (
-  formDisplayType: IFormDisplayType,
-) => {
-  switch (formDisplayType) {
-    case 'founderList':
-      return [{ name: '', title: '', region: '', _id: crypto.randomUUID() }];
-    case 'fundingReceivedGrants':
-      return {
-        date: null,
-        organization: '',
-        amount: '',
-        expenseSheetUrl: '',
-        reference: '',
-        _id: crypto.randomUUID(),
-      };
-    case 'websites':
-      return { url: '', title: '', _id: crypto.randomUUID() };
-    case 'social_links':
-      return { platform: '', url: '', _id: crypto.randomUUID() };
-    case 'tablePhysicalEntity':
-      return { legalName: '', country: '', _id: crypto.randomUUID() };
-    case 'affiliated_projects':
-      return {
-        project: '',
-        affiliationType: '',
-        description: '',
-        reference: '',
-        _id: crypto.randomUUID(),
-      };
-    case 'contributing_teams':
-      return {
-        project: '',
-        type: '',
-        description: '',
-        reference: '',
-        _id: crypto.randomUUID(),
-      };
-    case 'stack_integrations':
-      return {
-        project: '',
-        type: '',
-        description: '',
-        reference: '',
-        repository: '',
-        _id: crypto.randomUUID(),
-      };
-    case 'multiContracts':
-      return {
-        id: crypto.randomUUID(),
-        chain: '',
-        addresses: '',
-      };
-    default:
-      return '';
-  }
-};
-
-export const getDefaultValueByFormType = (
-  formDisplayType: IFormDisplayType,
-): any => {
-  if (!isEmbedTableFormType(formDisplayType)) {
-    return '';
-  }
-  return [getDefaultEmbedTableFormItemValue(formDisplayType)];
 };
