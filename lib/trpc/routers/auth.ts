@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { loginNonces, profiles } from '@/lib/db/schema';
 import { invitationCodes } from '@/lib/db/schema/invitations';
 import { addDefaultListToUser } from '@/lib/services/listService';
+import { verifyTurnstileToken } from '@/lib/services/turnstile';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 const NONCE_EXPIRY_MS = 10 * 60 * 1000;
@@ -153,12 +154,37 @@ export const authRouter = router({
           .min(1, 'Username cannot be empty')
           .optional(),
         inviteCode: z.string().optional(),
+        turnstileToken: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { address, signature, message, username, inviteCode } = input;
+      const {
+        address,
+        signature,
+        message,
+        username,
+        inviteCode,
+        turnstileToken,
+      } = input;
+
       const normalizedAddress = address.toLowerCase();
       const email = getFakeEmail(normalizedAddress);
+
+      if (turnstileToken) {
+        const isValidToken = await verifyTurnstileToken(turnstileToken);
+        if (!isValidToken) {
+          console.error(
+            `[TRPC Verify] Turnstile verification failed for ${normalizedAddress}`,
+          );
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Human verification failed. Please try again.',
+          });
+        }
+        console.log(
+          `[TRPC Verify] Turnstile verification successful for ${normalizedAddress}`,
+        );
+      }
 
       verifySignature(message, signature, normalizedAddress);
 
