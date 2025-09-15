@@ -7,6 +7,7 @@ import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/ite
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
 import { IPocItemKey } from '@/types/item';
 
+import { ProposeEntryButton } from '../common/ProposeEntryButton';
 import { useProjectTableData } from '../detail/table/hooks/useProjectTableData';
 
 import { useReverseEcosystemData } from './hooks/useReverseEcosystemData';
@@ -121,14 +122,13 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
               </p>
             </div>
             <div className="flex items-center gap-[10px]">
-              <button
-                onClick={() => {
-                  onOpenModal?.('stack_integrations', 'submitPropose');
-                }}
-                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              <ProposeEntryButton
+                itemKey="stack_integrations"
+                data={stackIntegrationsData}
+                onOpenModal={onOpenModal!}
               >
                 Propose an Entry
-              </button>
+              </ProposeEntryButton>
               <button
                 onClick={() => {
                   onOpenModal?.('stack_integrations', 'viewItemProposal');
@@ -185,14 +185,13 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
             </div>
 
             <div className="flex items-center gap-[10px]">
-              <button
-                onClick={() => {
-                  onOpenModal?.('contributing_teams', 'submitPropose');
-                }}
-                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              <ProposeEntryButton
+                itemKey="contributing_teams"
+                data={contributingTeamsData}
+                onOpenModal={onOpenModal!}
               >
                 Propose an Entry
-              </button>
+              </ProposeEntryButton>
               <button
                 onClick={() => {
                   onOpenModal?.('contributing_teams', 'viewItemProposal');
@@ -249,14 +248,13 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
             </div>
 
             <div className="flex items-center gap-[10px]">
-              <button
-                onClick={() => {
-                  onOpenModal?.('affiliated_projects', 'submitPropose');
-                }}
-                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              <ProposeEntryButton
+                itemKey="affiliated_projects"
+                data={affiliatedProjectsData}
+                onOpenModal={onOpenModal!}
               >
                 Propose an Entry
-              </button>
+              </ProposeEntryButton>
               <button
                 onClick={() => {
                   onOpenModal?.('affiliated_projects', 'viewItemProposal');
