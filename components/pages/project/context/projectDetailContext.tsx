@@ -119,6 +119,11 @@ interface ProjectDetailContextType {
   // SubmitterModal operations
   showSubmitterModal: (submitter: IProposalCreator, validatedAt: Date) => void;
   closeSubmitterModal: () => void;
+
+  // Submit prefill data management
+  submitPrefillMap: Partial<Record<IPocItemKey, any>>;
+  setSubmitPrefill: (key: IPocItemKey, value: any) => void;
+  clearSubmitPrefill: (key: IPocItemKey) => void;
 }
 
 // Context default values
@@ -203,6 +208,11 @@ const createDefaultContext = (): ProjectDetailContextType => ({
   // SubmitterModal operations
   showSubmitterModal: () => {},
   closeSubmitterModal: () => {},
+
+  // Submit prefill data management
+  submitPrefillMap: {},
+  setSubmitPrefill: () => {},
+  clearSubmitPrefill: () => {},
 });
 
 // Create Context
@@ -234,6 +244,11 @@ export const ProjectDetailProvider = ({
   >({});
   const [inActionItemProposalIdMap, setInActionItemProposalIdMap] = useState<
     Record<number, boolean>
+  >({});
+
+  // Submit prefill data state
+  const [submitPrefillMap, setSubmitPrefillMap] = useState<
+    Partial<Record<IPocItemKey, any>>
   >({});
 
   // SubmitterModal state management
@@ -754,6 +769,19 @@ export const ProjectDetailProvider = ({
     setCurrentRefKey(null);
   }, []);
 
+  // Submit prefill data operations
+  const setSubmitPrefill = useCallback((key: IPocItemKey, value: any) => {
+    setSubmitPrefillMap((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const clearSubmitPrefill = useCallback((key: IPocItemKey) => {
+    setSubmitPrefillMap((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   // Context value assembly
   const contextValue = useMemo(
     (): ProjectDetailContextType => ({
@@ -837,6 +865,11 @@ export const ProjectDetailProvider = ({
       // SubmitterModal operations
       showSubmitterModal,
       closeSubmitterModal,
+
+      // Submit prefill data management
+      submitPrefillMap,
+      setSubmitPrefill,
+      clearSubmitPrefill,
     }),
     [
       // Basic project data dependencies
@@ -919,6 +952,11 @@ export const ProjectDetailProvider = ({
       // SubmitterModal operation dependencies
       showSubmitterModal,
       closeSubmitterModal,
+
+      // Submit prefill data management dependencies
+      submitPrefillMap,
+      setSubmitPrefill,
+      clearSubmitPrefill,
     ],
   );
 
