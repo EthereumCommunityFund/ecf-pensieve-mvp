@@ -31,7 +31,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
     <div
       className={cn(
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
-        'p-[20px] mobile:p-[14px]',
+        'p-[20px] mobile:p-[14px] pr-[200px] mobile:pb-[52px]',
         'bg-white border border-black/10 rounded-[10px]',
         'flex justify-start items-start gap-[20px] relative',
       )}
@@ -41,9 +41,9 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
         alt={getLeadingProjectName ? getLeadingProjectName() : project.name}
         width={100}
         height={100}
-        className="overflow-hidden rounded-[10px] border border-black/10 object-cover"
+        className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10 object-cover"
       />
-      <div className="flex flex-col gap-[10px]">
+      <div className="flex flex-1 flex-col gap-[10px]">
         <p className="text-[20px] font-[700] leading-tight text-[#202023]">
           {getLeadingProjectName ? getLeadingProjectName() : project.name}
         </p>
