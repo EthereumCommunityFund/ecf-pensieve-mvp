@@ -115,7 +115,7 @@ function EcosystemTable<T extends Record<string, any>>({
 
   return (
     <div id={id} className="">
-      <div className="-mb-px flex items-center justify-between rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
+      <div className="mobile:flex-col mobile:items-start -mb-px flex  items-center justify-between gap-[10px] rounded-t-[10px] border border-b-0 border-black/10 bg-[rgba(229,229,229,0.70)] p-[10px]">
         <div className="flex flex-col gap-[5px]">
           <p className="text-[14px] font-[600] leading-[20px] text-black/80">
             {title}
@@ -125,15 +125,6 @@ function EcosystemTable<T extends Record<string, any>>({
           </p>
         </div>
         <div className="flex items-center gap-[10px]">
-          {/* Type filter dropdown */}
-          <button
-            onClick={() => {
-              onOpenModal?.(itemKey, 'viewItemProposal');
-            }}
-            className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
-          >
-            View Item
-          </button>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}

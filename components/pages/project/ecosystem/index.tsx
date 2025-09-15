@@ -108,14 +108,34 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
       </div>
       <div className="flex-1 space-y-[40px]">
         <div id="stack_integrations" className="space-y-[20px]">
-          <div>
-            <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
-              Stack & Integrations
-            </h3>
-            <p className="text-[13px] text-black/40">
-              The protocols, libraries and building blocks this project relies
-              on or connects with.
-            </p>
+          <div className="mobile:flex-col mobile:items-start flex items-center justify-between gap-[10px]">
+            <div>
+              <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
+                Stack & Integrations
+              </h3>
+              <p className="text-[13px] text-black/40">
+                The protocols, libraries and building blocks this project relies
+                on or connects with.
+              </p>
+            </div>
+            <div className="flex items-center gap-[10px]">
+              <button
+                onClick={() => {
+                  onOpenModal?.('stack_integrations', 'submitPropose');
+                }}
+                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              >
+                Propose an Entry
+              </button>
+              <button
+                onClick={() => {
+                  onOpenModal?.('stack_integrations', 'viewItemProposal');
+                }}
+                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              >
+                View Item
+              </button>
+            </div>
           </div>
 
           {/* Reverse table - Powered by */}
@@ -151,14 +171,35 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
           />
         </div>
         <div id="contributing_teams" className="space-y-[20px]">
-          <div>
-            <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
-              Contributing Teams
-            </h3>
-            <p className="text-[13px] text-black/40">
-              The protocols, libraries and building blocks this project relies
-              on or connects with.
-            </p>
+          <div className="mobile:flex-col mobile:items-start flex items-center justify-between gap-[10px]">
+            <div>
+              <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
+                Contributing Teams
+              </h3>
+              <p className="text-[13px] text-black/40">
+                The protocols, libraries and building blocks this project relies
+                on or connects with.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-[10px]">
+              <button
+                onClick={() => {
+                  onOpenModal?.('contributing_teams', 'submitPropose');
+                }}
+                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              >
+                Propose an Entry
+              </button>
+              <button
+                onClick={() => {
+                  onOpenModal?.('contributing_teams', 'viewItemProposal');
+                }}
+                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              >
+                View Item
+              </button>
+            </div>
           </div>
 
           {/* Reverse table - External Linkage */}
@@ -194,14 +235,35 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
           />
         </div>
         <div id="affiliated_projects" className="space-y-[20px]">
-          <div>
-            <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
-              Affiliated Projects
-            </h3>
-            <p className="text-[13px] text-black/40">
-              Other partnerships and collaborations around campaigns, education,
-              events and more.
-            </p>
+          <div className="mobile:flex-col mobile:items-start flex items-center justify-between gap-[10px]">
+            <div>
+              <h3 className="mb-[5px] text-[18px] font-bold text-black/80">
+                Affiliated Projects
+              </h3>
+              <p className="text-[13px] text-black/40">
+                Other partnerships and collaborations around campaigns,
+                education, events and more.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-[10px]">
+              <button
+                onClick={() => {
+                  onOpenModal?.('affiliated_projects', 'submitPropose');
+                }}
+                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              >
+                Propose an Entry
+              </button>
+              <button
+                onClick={() => {
+                  onOpenModal?.('affiliated_projects', 'viewItemProposal');
+                }}
+                className="flex items-center gap-[5px] rounded-[5px] bg-black/[0.05] px-[10px] py-[5px] text-[13px] font-[600] text-black/80 transition-colors hover:bg-black/[0.08]"
+              >
+                View Item
+              </button>
+            </div>
           </div>
 
           {/* Reverse table - External Affiliation */}
