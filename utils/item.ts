@@ -1,4 +1,5 @@
 import { AllItemConfig } from '@/constants/itemConfig';
+import { isNAValue } from '@/constants/naSelection';
 import { IPocItemKey } from '@/types/item';
 
 export const getItemConfig = (key: IPocItemKey) => {
@@ -16,8 +17,14 @@ export const transformFormValue = (
   return isKeySetToNA ? '' : value;
 };
 export const isInputValueEmpty = (value: any) => {
+  // Treat null/undefined/empty string as empty
   if (value === null || value === undefined || value === '') return true;
 
+  // Treat string 'N/A' (case-insensitive) as empty
+  if (typeof value === 'string' && value.trim() && isNAValue(value))
+    return true;
+
+  // Try to parse JSON strings to actual values
   let actualValue = value;
   if (typeof value === 'string' && value.trim()) {
     try {
@@ -27,19 +34,30 @@ export const isInputValueEmpty = (value: any) => {
     }
   }
 
+  // Falsy values
   if (!actualValue) {
     return true;
   }
 
-  if (Array.isArray(actualValue) && actualValue.length === 0) {
-    return true;
+  // Empty arrays or arrays containing only empty-like/N/A values are empty
+  if (Array.isArray(actualValue)) {
+    if (actualValue.length === 0) return true;
+    const allEmptyLike = actualValue.every((v) => {
+      if (v === null || v === undefined) return true;
+      if (typeof v === 'string') {
+        const t = v.trim();
+        return t === '' || isNAValue(t);
+      }
+      return false;
+    });
+    if (allEmptyLike) return true;
   }
 
   return false;
 };
 
 export const isInputValueNA = (value: any) => {
-  return typeof value === 'string' && value?.trim()?.toLowerCase() === 'n/a';
+  return typeof value === 'string' && isNAValue(value);
 };
 
 export const parseMultipleValue = (value: any): string[] => {
@@ -82,7 +100,7 @@ export const isProjectId = (value: string | number): boolean => {
   if (typeof value === 'number') {
     return Number.isFinite(value) && value > 0;
   }
-  return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
+  return !isNAValue(value) && /^\d+$/.test(value) && Number(value) > 0;
 };
 
 /**
@@ -109,7 +127,7 @@ export const isNumericProjectId = (
 ): boolean => {
   return (
     val !== undefined &&
-    val !== 'N/A' &&
+    !(typeof val === 'string' && isNAValue(val)) &&
     ((typeof val === 'string' && isProjectId(val)) ||
       (typeof val === 'number' && isProjectId(val)))
   );
@@ -124,7 +142,10 @@ export const isLegacyStringValue = (
   val: string | number | undefined,
 ): boolean => {
   return (
-    typeof val === 'string' && val !== '' && val !== 'N/A' && !isProjectId(val)
+    typeof val === 'string' &&
+    val !== '' &&
+    !isNAValue(val) &&
+    !isProjectId(val)
   );
 };
 
