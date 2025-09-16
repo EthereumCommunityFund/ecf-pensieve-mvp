@@ -305,7 +305,7 @@ const AuthPrompt: React.FC = () => {
         </div>
         <ModalBody className="gap-5 px-5 pb-5 pt-4">
           <p className="text-sm text-gray-600">
-            {`Let's create your username. You can skip this or change it later. Default will be your address.`}
+            {`Let's create your username. You can change it later.`}
           </p>
           <div>
             <label
