@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast, InputOtp, Spinner } from '@heroui/react';
+import { addToast, Spinner } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import React, {
   useCallback,
@@ -84,7 +84,7 @@ const AuthPrompt: React.FC = () => {
   const { data: ensName } = useEnsName({ address });
   const [inputUsername, setInputUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
+  //const [inviteCode, setInviteCode] = useState('');
   const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const connectionIntentRef = useRef(false);
@@ -124,7 +124,7 @@ const AuthPrompt: React.FC = () => {
   useEffect(() => {
     if (isAuthPromptVisible) {
       setInputUsername('');
-      setInviteCode('');
+      //setInviteCode('');
       setShowAgreementModal(false);
       setUsernameError('');
     }
@@ -191,7 +191,7 @@ const AuthPrompt: React.FC = () => {
             ? inputUsername
             : ((ensName || formatDisplayedAddress(address)) as string);
 
-          await createProfile(usernameToUse, inviteCode);
+          await createProfile(usernameToUse);
         } catch (e: any) {
           addToast({
             title: e.message || 'Fail to create profile',
@@ -203,7 +203,7 @@ const AuthPrompt: React.FC = () => {
         }
       }
     },
-    [address, ensName, inputUsername, inviteCode, createProfile],
+    [address, ensName, inputUsername, createProfile],
   );
 
   const handleSkip = useCallback(() => {
@@ -236,7 +236,6 @@ const AuthPrompt: React.FC = () => {
 
     if (connectionIntentRef.current) {
       setInputUsername('');
-      setInviteCode('');
       try {
         await disconnectAsync();
       } catch (error) {
@@ -306,7 +305,7 @@ const AuthPrompt: React.FC = () => {
         </div>
         <ModalBody className="gap-5 px-5 pb-5 pt-4">
           <p className="text-sm text-gray-600">
-            {`Let's create your username. You can skip this or change it later. Default will be your address.`}
+            {`Let's create your username. You can change it later.`}
           </p>
           <div>
             <label
@@ -333,7 +332,7 @@ const AuthPrompt: React.FC = () => {
             )}
           </div>
 
-          <div>
+          {/*<div>
             <label
               htmlFor="inviteCodeInput"
               className="mb-1.5 block text-sm font-medium text-gray-700"
@@ -357,26 +356,21 @@ const AuthPrompt: React.FC = () => {
                   'w-10 h-10 text-center border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
               }}
             />
-          </div>
+          </div>*/}
 
           <div className="flex justify-between gap-[10px]">
             <Button
               onPress={handleContinue}
               color="primary"
               className="flex-1"
-              isDisabled={
-                !inputUsername.trim() ||
-                !inviteCode ||
-                inviteCode.length !== 6 ||
-                isAnyLoading
-              }
+              isDisabled={!inputUsername.trim() || isAnyLoading}
               isLoading={loadingButton === 'continue'}
             >
               Continue
             </Button>
           </div>
 
-          <div>
+          {/*<div>
             <p className="text-[13px] font-[700] leading-[20px] text-black/80">
               Do not have PoC Invitation Code?
             </p>
@@ -395,13 +389,12 @@ const AuthPrompt: React.FC = () => {
               ). Invitation code will be distributed in ECF Discord in direct
               messages.
             </p>
-          </div>
+          </div>*/}
         </ModalBody>
       </>
     );
   }, [
     inputUsername,
-    inviteCode,
     onInputChange,
     handleContinue,
     isCreatingProfile,
