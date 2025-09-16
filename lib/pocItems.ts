@@ -57,7 +57,7 @@ export const POC_ITEMS = {
   },
   orgStructure: {
     isEssential: true,
-    accountability_metric: 2,
+    accountability_metric: 3,
   },
   publicGoods: {
     isEssential: true,
@@ -87,7 +87,7 @@ export const POC_ITEMS = {
   },
   launch_plan: {
     isEssential: false,
-    accountability_metric: 2,
+    accountability_metric: 3,
   },
   roadmap: {
     isEssential: false,
@@ -100,7 +100,7 @@ export const POC_ITEMS = {
 
   audit_status: {
     isEssential: false,
-    accountability_metric: 1,
+    accountability_metric: 3,
   },
   dapp_category: {
     isEssential: false,
@@ -113,7 +113,7 @@ export const POC_ITEMS = {
 
   core_team: {
     isEssential: false,
-    accountability_metric: 2,
+    accountability_metric: 4,
   },
   team_incentives: {
     isEssential: false,
@@ -138,11 +138,11 @@ export const POC_ITEMS = {
   },
   token_sales: {
     isEssential: false,
-    accountability_metric: 2,
+    accountability_metric: 3,
   },
   budget_plans: {
     isEssential: false,
-    accountability_metric: 2,
+    accountability_metric: 3,
   },
   token_type: {
     isEssential: false,
@@ -190,7 +190,7 @@ export const POC_ITEMS = {
   },
   treasury_vault_address: {
     isEssential: false,
-    accountability_metric: 2,
+    accountability_metric: 4,
   },
   treasury_mechanism: {
     isEssential: false,

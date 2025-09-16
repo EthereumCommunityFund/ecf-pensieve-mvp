@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast, InputOtp, Spinner } from '@heroui/react';
+import { addToast, Spinner } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import React, {
   useCallback,
@@ -20,6 +20,10 @@ import {
   ModalHeader,
 } from '@/components/base';
 import { CreateProfileErrorPrefix, useAuth } from '@/context/AuthContext';
+
+import TurnstileWidget, {
+  TurnstileWidgetRef,
+} from '../turnstile/TurnstileWidget';
 
 import AgreementModal from './AgreementModal';
 import ConnectWalletButton from './ConnectWalletButton';
@@ -59,6 +63,7 @@ const AuthPrompt: React.FC = () => {
     isAuthPromptVisible,
     hideAuthPrompt,
     authenticate,
+    continueAuthWithTurnstile,
     createProfile,
     newUser,
     isNewUserRegistration,
@@ -66,11 +71,12 @@ const AuthPrompt: React.FC = () => {
     authError,
     connectSource,
     logout,
-    performFullLogoutAndReload, // Use this for hard reset on close sometimes
-    isAuthenticating, // Combined flag
+    performFullLogoutAndReload,
+    isAuthenticating,
     isCreatingProfile,
     isFetchingProfile,
     isLoggingIn,
+    needsTurnstile,
   } = useAuth();
 
   const { disconnectAsync } = useDisconnect();
@@ -78,10 +84,13 @@ const AuthPrompt: React.FC = () => {
   const { data: ensName } = useEnsName({ address });
   const [inputUsername, setInputUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
+  //const [inviteCode, setInviteCode] = useState('');
   const [loadingButton, setLoadingButton] = useState<LoadingButtonType>(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const connectionIntentRef = useRef(false);
+
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+  const [turnstileError, setTurnstileError] = useState(false);
 
   const isLoading = isAuthenticating || isCreatingProfile || isLoggingIn;
   const maxUsernameLength = 50;
@@ -115,11 +124,41 @@ const AuthPrompt: React.FC = () => {
   useEffect(() => {
     if (isAuthPromptVisible) {
       setInputUsername('');
-      setInviteCode('');
+      //setInviteCode('');
       setShowAgreementModal(false);
       setUsernameError('');
     }
   }, [isAuthPromptVisible]);
+
+  useEffect(() => {
+    if (!isAuthPromptVisible) {
+      setTurnstileError(false);
+      turnstileRef.current?.reset();
+    }
+  }, [isAuthPromptVisible]);
+
+  const handleTurnstileVerify = useCallback(
+    async (token: string) => {
+      try {
+        setTurnstileError(false);
+        await continueAuthWithTurnstile(token);
+      } catch (error) {
+        console.error('Failed to continue auth with Turnstile:', error);
+        turnstileRef.current?.reset();
+        setTurnstileError(true);
+      }
+    },
+    [continueAuthWithTurnstile],
+  );
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileError(true);
+    addToast({
+      title: 'Verification failed, please try again',
+      color: 'danger',
+      timeout: 3000,
+    });
+  }, []);
 
   const onInputChange = useCallback(
     (value: string) => {
@@ -152,7 +191,7 @@ const AuthPrompt: React.FC = () => {
             ? inputUsername
             : ((ensName || formatDisplayedAddress(address)) as string);
 
-          await createProfile(usernameToUse, inviteCode);
+          await createProfile(usernameToUse);
         } catch (e: any) {
           addToast({
             title: e.message || 'Fail to create profile',
@@ -164,7 +203,7 @@ const AuthPrompt: React.FC = () => {
         }
       }
     },
-    [address, ensName, inputUsername, inviteCode, createProfile],
+    [address, ensName, inputUsername, createProfile],
   );
 
   const handleSkip = useCallback(() => {
@@ -192,9 +231,11 @@ const AuthPrompt: React.FC = () => {
   }, []);
 
   const handleCloseAndReset = useCallback(async () => {
+    turnstileRef.current?.reset();
+    setTurnstileError(false);
+
     if (connectionIntentRef.current) {
       setInputUsername('');
-      setInviteCode('');
       try {
         await disconnectAsync();
       } catch (error) {
@@ -264,7 +305,7 @@ const AuthPrompt: React.FC = () => {
         </div>
         <ModalBody className="gap-5 px-5 pb-5 pt-4">
           <p className="text-sm text-gray-600">
-            {`Let's create your username. You can skip this or change it later. Default will be your address.`}
+            {`Let's create your username. You can change it later.`}
           </p>
           <div>
             <label
@@ -291,7 +332,7 @@ const AuthPrompt: React.FC = () => {
             )}
           </div>
 
-          <div>
+          {/*<div>
             <label
               htmlFor="inviteCodeInput"
               className="mb-1.5 block text-sm font-medium text-gray-700"
@@ -315,35 +356,21 @@ const AuthPrompt: React.FC = () => {
                   'w-10 h-10 text-center border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
               }}
             />
-          </div>
+          </div>*/}
 
           <div className="flex justify-between gap-[10px]">
-            {/* <Button
-              color="secondary"
-              className="flex-1"
-              onPress={handleSkip}
-              isDisabled={isAnyLoading}
-              isLoading={loadingButton === 'skip'}
-            >
-              Skip
-            </Button> */}
             <Button
               onPress={handleContinue}
               color="primary"
               className="flex-1"
-              isDisabled={
-                !inputUsername.trim() ||
-                !inviteCode ||
-                inviteCode.length !== 6 ||
-                isAnyLoading
-              }
+              isDisabled={!inputUsername.trim() || isAnyLoading}
               isLoading={loadingButton === 'continue'}
             >
               Continue
             </Button>
           </div>
 
-          <div>
+          {/*<div>
             <p className="text-[13px] font-[700] leading-[20px] text-black/80">
               Do not have PoC Invitation Code?
             </p>
@@ -362,13 +389,12 @@ const AuthPrompt: React.FC = () => {
               ). Invitation code will be distributed in ECF Discord in direct
               messages.
             </p>
-          </div>
+          </div>*/}
         </ModalBody>
       </>
     );
   }, [
     inputUsername,
-    inviteCode,
     onInputChange,
     handleContinue,
     isCreatingProfile,
@@ -409,7 +435,55 @@ const AuthPrompt: React.FC = () => {
     );
   }, [profile, hideAuthPrompt, isNewUserRegistration]);
 
+  const renderTurnstileContent = useMemo(() => {
+    return (
+      <>
+        <div className="flex w-full items-center justify-between border-b border-gray-200 px-[20px] py-[10px]">
+          <ModalHeader className="p-0 text-lg font-semibold text-gray-900">
+            Complete Verification
+          </ModalHeader>
+          <CloseButton onPress={handleCloseAndReset} />
+        </div>
+        <ModalBody className="gap-5 px-5 pb-5 pt-4">
+          <div className="text-center">
+            <p className="mb-2 text-sm text-gray-600">
+              Signature successful! Please complete the verification to
+              continue.
+            </p>
+            {turnstileError && (
+              <p className="mb-2 text-sm text-red-500">
+                Verification failed. Please try again.
+              </p>
+            )}
+          </div>
+          <div className="flex justify-center">
+            <TurnstileWidget
+              ref={turnstileRef}
+              onVerify={handleTurnstileVerify}
+              onError={handleTurnstileError}
+              theme="light"
+            />
+          </div>
+        </ModalBody>
+        <div className="w-full rounded-b-lg border-t border-gray-200 bg-gray-50 px-5 py-3">
+          <p className="text-center text-xs text-gray-500">
+            Protected by Cloudflare Turnstile
+          </p>
+        </div>
+      </>
+    );
+  }, [
+    handleTurnstileVerify,
+    handleTurnstileError,
+    handleCloseAndReset,
+    turnstileError,
+  ]);
+
   const renderModalContent = useCallback(() => {
+    if (needsTurnstile) {
+      return renderTurnstileContent;
+    }
+
     if (!isConnected) {
       return renderConnectWalletContent;
     }
@@ -417,6 +491,10 @@ const AuthPrompt: React.FC = () => {
     switch (authStatus) {
       case 'idle':
       case 'authenticating':
+      case 'awaiting_turnstile_verification':
+        if (needsTurnstile) {
+          return renderTurnstileContent;
+        }
         return renderConnectWalletContent;
 
       case 'creating_profile':
@@ -450,6 +528,8 @@ const AuthPrompt: React.FC = () => {
         );
     }
   }, [
+    needsTurnstile,
+    renderTurnstileContent,
     isConnected,
     authStatus,
     renderConnectWalletContent,
