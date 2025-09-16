@@ -72,7 +72,7 @@ interface IAuthContext {
 
   // Actions
   authenticate: () => Promise<void>;
-  createProfile: (username: string, inviteCode?: string) => Promise<void>;
+  createProfile: (username: string) => Promise<void>;
   logout: () => Promise<void>;
   performFullLogoutAndReload: () => Promise<void>;
   showAuthPrompt: (source?: ConnectSource) => void;
@@ -437,7 +437,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (userState.newUser) {
           turnstileTokenRef.current = turnstileToken;
           setNeedsTurnstile(false);
-          updateAuthState('authenticated');
+          updateAuthState('fetching_profile');
         } else {
           updateAuthState('fetching_profile');
           setNeedsTurnstile(false);
@@ -453,7 +453,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error: any) {
         setNeedsTurnstile(true);
         updateAuthState('awaiting_turnstile_verification');
-        handleError(error.message);
+        handleError(error.message, false, false);
       }
     },
     [
@@ -467,7 +467,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const createProfile = useCallback(
-    async (username: string, inviteCode?: string) => {
+    async (username: string) => {
       if (!address) {
         handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
         return;
@@ -481,15 +481,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           signature: signatureDataRef.current.signature!,
           message: signatureDataRef.current.message!,
           username,
-          inviteCode,
           turnstileToken: turnstileTokenRef.current!,
         });
 
         setUserState((prev) => ({ ...prev, isNewUserRegistration: true }));
         await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
+        turnstileTokenRef.current = null;
+        setNeedsTurnstile(true);
+        updateAuthState('awaiting_turnstile_verification');
         handleError(
           `${CreateProfileErrorPrefix}: ${error.message || 'Please try again'}`,
+          false,
+          false,
         );
       }
     },
