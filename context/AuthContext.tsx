@@ -194,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const resetAuthState = useCallback(() => {
+    turnstileTokenRef.current = null;
     setUserState({
       session: null,
       user: null,
@@ -434,6 +435,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { message, signature } = signatureDataRef.current;
 
         if (userState.newUser) {
+          turnstileTokenRef.current = turnstileToken;
           setNeedsTurnstile(false);
           updateAuthState('authenticated');
         } else {
@@ -451,7 +453,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error: any) {
         setNeedsTurnstile(true);
         updateAuthState('awaiting_turnstile_verification');
-        handleError(error.message || 'Verification failed');
+        handleError(error.message);
       }
     },
     [
@@ -480,6 +482,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           message: signatureDataRef.current.message!,
           username,
           inviteCode,
+          turnstileToken: turnstileTokenRef.current!,
         });
 
         setUserState((prev) => ({ ...prev, isNewUserRegistration: true }));

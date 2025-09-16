@@ -154,7 +154,7 @@ export const authRouter = router({
           .min(1, 'Username cannot be empty')
           .optional(),
         inviteCode: z.string().optional(),
-        turnstileToken: z.string().optional(),
+        turnstileToken: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
