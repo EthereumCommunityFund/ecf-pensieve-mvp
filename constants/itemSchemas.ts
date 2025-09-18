@@ -400,7 +400,6 @@ export const itemValidationSchemas = {
 
   openSource: yup
     .string()
-    .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is open source'),
 
   codeRepo: yup
@@ -664,6 +663,89 @@ export const itemValidationSchemas = {
   treasury_mechanism: yup.string().required('Treasury mechanism is required'),
 
   constitution: yup.string().required('Constitution is required'),
+
+  milestone_type: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one milestone type')
+    .required('Milestone type is required'),
+
+  software_license: yup.string().required('Software license is required'),
+
+  airdrops: yup.string().required('Airdrop status is required'),
+
+  team_location: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one team location')
+    .required('Team location is required'),
+
+  token_benefits: yup.string().required('Token benefits are required'),
+
+  token_risks: yup.string().required('Token risks are required'),
+
+  token_rights: yup.string().required('Token rights are required'),
+
+  token_obligations: yup.string().required('Token obligations are required'),
+
+  dapp_storage_stack: yup
+    .string()
+    .required('D-app storage stack information is required'),
+
+  dapp_account_management_stack: yup
+    .string()
+    .required('D-app account management stack information is required'),
+
+  dapp_logic_program_stack: yup
+    .string()
+    .required('D-app logic/program stack information is required'),
+
+  user_data_storage_stack: yup
+    .string()
+    .required('User data storage stack information is required'),
+
+  unique_value_proposition: yup
+    .string()
+    .required('Unique value proposition is required'),
+
+  audit_report: yup.string().required('Audit report details are required'),
+
+  previous_funding_rounds: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Previous funding rounds URL is required'),
+
+  vault_multi_sig_holder_addresses_step2: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Vault multi-sig holder reference is required'),
+
+  on_chain_treasury_step1: yup
+    .string()
+    .oneOf(['Yes', 'No'], 'Select whether an on-chain treasury exists')
+    .required('On-chain treasury status is required'),
+
+  token_utility: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one token utility')
+    .required('Token utility is required'),
+
+  blockchain_explorer: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Blockchain explorer URL is required'),
+
+  financial_status: yup.string().required('Financial status is required'),
+
+  income_revenue: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Income or revenue statement URL is required'),
 };
 
 export { founderSchema, smartFounderSchema };

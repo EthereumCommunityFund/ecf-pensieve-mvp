@@ -88,7 +88,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       longDescription:
         'Provide detailed context for Contributors (what is this one different from other team items).',
       weight: ALL_POC_ITEM_MAP['contributors'].weight,
-      formDisplayType: 'unknown',
+      formDisplayType: 'embedTable',
       placeholder: 'Provide details',
       showReference: true,
       showExpand: false,
@@ -440,8 +440,8 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
       // TODO: add validation schema
     },
-    d_app_storage_stack: {
-      key: 'd_app_storage_stack',
+    dapp_storage_stack: {
+      key: 'dapp_storage_stack',
       category: IItemCategoryEnum.Basics,
       subCategory: IItemSubCategoryEnum.BasicProfile,
       isEssential: false,
@@ -450,7 +450,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: 'Where is the project data stored?',
       longDescription:
         'Provide detailed context for D-app storage stack (Nov, 2022).',
-      weight: ALL_POC_ITEM_MAP['d_app_storage_stack'].weight,
+      weight: ALL_POC_ITEM_MAP['dapp_storage_stack'].weight,
       formDisplayType: 'string',
       placeholder: 'Enter details',
       showReference: true,
@@ -459,8 +459,8 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       legitimacy: [],
       // TODO: add validation schema
     },
-    d_app_account_management_stack: {
-      key: 'd_app_account_management_stack',
+    dapp_account_management_stack: {
+      key: 'dapp_account_management_stack',
       category: IItemCategoryEnum.Basics,
       subCategory: IItemSubCategoryEnum.BasicProfile,
       isEssential: false,
@@ -469,7 +469,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: 'How is the User Index managed on the dapp?',
       longDescription:
         'Provide detailed context for D-app Account Management(i.e ID) stack (Nov, 2022).',
-      weight: ALL_POC_ITEM_MAP['d_app_account_management_stack'].weight,
+      weight: ALL_POC_ITEM_MAP['dapp_account_management_stack'].weight,
       formDisplayType: 'string',
       placeholder: 'Enter details',
       showReference: true,
@@ -478,8 +478,8 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       legitimacy: [],
       // TODO: add validation schema
     },
-    d_app_logic_program_stack: {
-      key: 'd_app_logic_program_stack',
+    dapp_logic_program_stack: {
+      key: 'dapp_logic_program_stack',
       category: IItemCategoryEnum.Basics,
       subCategory: IItemSubCategoryEnum.BasicProfile,
       isEssential: false,
@@ -488,7 +488,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: "Where lies the project's backend?",
       longDescription:
         'Provide detailed context for D-app logic/program stack (Nov, 2022)\\.',
-      weight: ALL_POC_ITEM_MAP['d_app_logic_program_stack'].weight,
+      weight: ALL_POC_ITEM_MAP['dapp_logic_program_stack'].weight,
       formDisplayType: 'string',
       placeholder: 'Enter details',
       showReference: true,

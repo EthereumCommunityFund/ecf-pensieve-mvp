@@ -126,6 +126,7 @@ export type IFormDisplayType =
   | 'stringMultiple' // separate by comma
   | 'select'
   | 'selectMultiple'
+  | 'autoComplete'
   | 'img'
   | 'link'
   | 'date'
@@ -133,7 +134,6 @@ export type IFormDisplayType =
   | 'websites'
   | 'social_links'
   | 'tablePhysicalEntity'
-  | 'autoComplete'
   | 'fundingReceivedGrants'
   | 'affiliated_projects'
   | 'contributing_teams'

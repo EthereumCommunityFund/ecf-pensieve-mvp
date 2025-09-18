@@ -289,15 +289,15 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 3,
   },
-  d_app_storage_stack: {
+  dapp_storage_stack: {
     isEssential: false,
     accountability_metric: 3,
   },
-  d_app_account_management_stack: {
+  dapp_account_management_stack: {
     isEssential: false,
     accountability_metric: 3,
   },
-  d_app_logic_program_stack: {
+  dapp_logic_program_stack: {
     isEssential: false,
     accountability_metric: 3,
   },
