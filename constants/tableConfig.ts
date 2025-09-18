@@ -245,7 +245,12 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         description:
           'Key details about the project’s token, including its purpose, supply, and mechanics',
         items: ['tokenContract'],
-        itemsNotEssential: ['token_sales', 'token_type', 'token_launch_date'],
+        itemsNotEssential: [
+          'token_sales',
+          'token_type',
+          'token_launch_date',
+          'airdrops',
+        ],
         groups: [],
       },
     ],
