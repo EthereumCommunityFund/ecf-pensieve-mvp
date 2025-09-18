@@ -8,6 +8,7 @@ import {
 } from '@/types/item';
 
 import { AllCategories } from './category';
+import { COUNTRIES } from './countries';
 import {
   dateFoundedConstraints,
   dateLaunchConstraints,
@@ -1247,16 +1248,9 @@ The technical dependencies, integrations, and building blocks that form the foun
     placeholder: 'Select applicable regions',
     showReference: true,
     showExpand: false,
-    options: [
-      { value: 'North America', label: 'North America' },
-      { value: 'Europe', label: 'Europe' },
-      { value: 'Asia-Pacific', label: 'Asia-Pacific' },
-      { value: 'Latin America', label: 'Latin America' },
-      { value: 'Africa', label: 'Africa' },
-      { value: 'Middle East', label: 'Middle East' },
-      { value: 'Oceania', label: 'Oceania' },
-      { value: 'Remote / Global', label: 'Remote / Global' },
-    ],
+    options: COUNTRIES.slice(1, COUNTRIES.length).map((item) => {
+      return { value: item.label, label: item.label };
+    }),
     accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
     validationSchema: itemValidationSchemas.team_location,

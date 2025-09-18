@@ -196,7 +196,11 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         label: 'Organization',
         description: 'How the project is organized legally and operationally',
         items: ['orgStructure', 'publicGoods'],
-        itemsNotEssential: ['affiliated_projects', 'contributing_teams'],
+        itemsNotEssential: [
+          'affiliated_projects',
+          'contributing_teams',
+          'team_location',
+        ],
         groups: [],
       },
       {
