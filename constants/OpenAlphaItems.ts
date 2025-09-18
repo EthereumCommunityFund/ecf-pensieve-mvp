@@ -11,57 +11,6 @@ import { ALL_METRICS } from './metrics';
 
 export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
   {
-    org_structure: {
-      key: 'org_structure',
-      category: IItemCategoryEnum.Basics,
-      subCategory: IItemSubCategoryEnum.BasicProfile,
-      isEssential: false,
-      label: 'Org. Structure +',
-      description:
-        'The organization or group responsible for initiating, maintaining, and developing the project.',
-      shortDescription:
-        'The organization or group responsible for initiating, maintaining, and developing the project.',
-      longDescription: 'Provide detailed context for Org. Structure +.',
-      weight: ALL_POC_ITEM_MAP['org_structure'].weight,
-      formDisplayType: 'select',
-      placeholder: 'Select an option',
-      showReference: true,
-      showExpand: false,
-      accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
-      legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
-      options: [
-        { value: 'For-Profit Company', label: 'For-Profit Company' },
-        {
-          value: 'Non-Profit Organization / Association',
-          label: 'Non-Profit Organization / Association',
-        },
-        { value: 'Foundation', label: 'Foundation' },
-        { value: 'Cooperative', label: 'Cooperative' },
-        { value: 'DAO', label: 'DAO' },
-        { value: 'Federated DAO / SubDAO', label: 'Federated DAO / SubDAO' },
-        { value: 'Project within a DAO', label: 'Project within a DAO' },
-        { value: 'Anonymous Collective', label: 'Anonymous Collective' },
-        { value: 'Sole Developer', label: 'Sole Developer' },
-        {
-          value: 'University / Academic-Led Initiative',
-          label: 'University / Academic-Led Initiative',
-        },
-        {
-          value: 'Public-Private Partnership',
-          label: 'Public-Private Partnership',
-        },
-        {
-          value: 'Community-Led Initiative (no legal entity)',
-          label: 'Community-Led Initiative (no legal entity)',
-        },
-        {
-          value: 'Hybrid Structure (e.g. Company + DAO)',
-          label: 'Hybrid Structure (e.g. Company + DAO)',
-        },
-        { value: 'Evolving Structure', label: 'Evolving Structure' },
-      ],
-      // TODO: add validation schema
-    },
     // TODO: Potential duplicate with existing AllItemConfig
     adoption_plan: {
       key: 'adoption_plan',
