@@ -29,6 +29,37 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        { value: 'For-Profit Company', label: 'For-Profit Company' },
+        {
+          value: 'Non-Profit Organization / Association',
+          label: 'Non-Profit Organization / Association',
+        },
+        { value: 'Foundation', label: 'Foundation' },
+        { value: 'Cooperative', label: 'Cooperative' },
+        { value: 'DAO', label: 'DAO' },
+        { value: 'Federated DAO / SubDAO', label: 'Federated DAO / SubDAO' },
+        { value: 'Project within a DAO', label: 'Project within a DAO' },
+        { value: 'Anonymous Collective', label: 'Anonymous Collective' },
+        { value: 'Sole Developer', label: 'Sole Developer' },
+        {
+          value: 'University / Academic-Led Initiative',
+          label: 'University / Academic-Led Initiative',
+        },
+        {
+          value: 'Public-Private Partnership',
+          label: 'Public-Private Partnership',
+        },
+        {
+          value: 'Community-Led Initiative (no legal entity)',
+          label: 'Community-Led Initiative (no legal entity)',
+        },
+        {
+          value: 'Hybrid Structure (e.g. Company + DAO)',
+          label: 'Hybrid Structure (e.g. Company + DAO)',
+        },
+        { value: 'Evolving Structure', label: 'Evolving Structure' },
+      ],
       // TODO: add validation schema
     },
     // TODO: Potential duplicate with existing AllItemConfig
@@ -93,6 +124,31 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      options: [
+        { value: 'Access Token', label: 'Access Token' },
+        { value: 'Governance Token', label: 'Governance Token' },
+        {
+          value: 'Store of Value / Currency Token',
+          label: 'Store of Value / Currency Token',
+        },
+        {
+          value: 'Incentive / Reward Token',
+          label: 'Incentive / Reward Token',
+        },
+        {
+          value: 'Identity / Reputation Token',
+          label: 'Identity / Reputation Token',
+        },
+        { value: 'Asset-Backed Token', label: 'Asset-Backed Token' },
+        {
+          value: 'NFT (Non-Fungible Token)',
+          label: 'NFT (Non-Fungible Token)',
+        },
+        {
+          value: 'Hybrid / Multi-Role Token',
+          label: 'Hybrid / Multi-Role Token',
+        },
+      ],
       validationSchema: itemValidationSchemas.token_type,
     },
     contributors: {
@@ -805,6 +861,14 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        { value: 'Access & Payments', label: 'Access & Payments' },
+        { value: 'Governance & Rights', label: 'Governance & Rights' },
+        { value: 'Incentives & Rewards', label: 'Incentives & Rewards' },
+        { value: 'Financial Function', label: 'Financial Function' },
+        { value: 'Identity & Reputation', label: 'Identity & Reputation' },
+        { value: 'None/Not yet)', label: 'None/Not yet)' },
+      ],
       // TODO: add validation schema
     },
     board_incentive: {
@@ -906,6 +970,11 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      options: [
+        { value: 'Financial', label: 'Financial' },
+        { value: 'Partly Financial', label: 'Partly Financial' },
+        { value: 'Non Financial', label: 'Non Financial' },
+      ],
       validationSchema: itemValidationSchemas.dapp_category,
     },
     board_members: {
@@ -1429,6 +1498,22 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        { value: 'Actively Fundraising', label: 'Actively Fundraising' },
+        {
+          value: 'Funded / Capital Secured',
+          label: 'Funded / Capital Secured',
+        },
+        {
+          value: 'Grant Pending / In Review',
+          label: 'Grant Pending / In Review',
+        },
+        { value: 'Self-Funded', label: 'Self-Funded' },
+        { value: 'Public Crowdsale', label: 'Public Crowdsale' },
+        { value: 'Ongoing', label: 'Ongoing' },
+        { value: 'No Funding Required', label: 'No Funding Required' },
+        { value: 'Not Disclosed', label: 'Not Disclosed' },
+      ],
       // TODO: add validation schema
     },
     asset_statements: {
