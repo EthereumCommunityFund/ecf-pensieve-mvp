@@ -168,6 +168,11 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         itemsNotEssential: [
           'audit_status',
           'dapp_category',
+          'dapp_storage_stack',
+          'dapp_account_management_stack',
+          'dapp_logic_program_stack',
+          'user_data_storage_stack',
+          'unique_value_proposition',
           'protocol_built_on',
           'stack_integrations',
           'software_license',

@@ -1369,7 +1369,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: false,
-    label: 'D-app Storage Stack',
+    label: 'Dapp Storage Stack',
     description: 'Where is the project data stored?',
     shortDescription: 'Primary storage layer for the project.',
     longDescription:
@@ -1388,7 +1388,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: false,
-    label: 'D-app Account Management Stack',
+    label: 'Dapp Account Management Stack',
     description:
       'How is the user account or identity layer handled within the dapp?',
     shortDescription: 'Account or identity management layer.',
@@ -1408,7 +1408,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: false,
-    label: 'D-app Logic / Program Stack',
+    label: 'Dapp Logic / Program Stack',
     description: "Where is the project's backend logic executed?",
     shortDescription: 'Backend execution environment.',
     longDescription:

@@ -690,15 +690,15 @@ export const itemValidationSchemas = {
 
   dapp_storage_stack: yup
     .string()
-    .required('D-app storage stack information is required'),
+    .required('Dapp storage stack information is required'),
 
   dapp_account_management_stack: yup
     .string()
-    .required('D-app account management stack information is required'),
+    .required('Dapp account management stack information is required'),
 
   dapp_logic_program_stack: yup
     .string()
-    .required('D-app logic/program stack information is required'),
+    .required('Dapp logic/program stack information is required'),
 
   user_data_storage_stack: yup
     .string()
