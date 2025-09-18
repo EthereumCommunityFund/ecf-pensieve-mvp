@@ -140,7 +140,9 @@ export type IFormDisplayType =
   | 'stack_integrations'
   | 'roadmap'
   | 'smartContract'
-  | 'multiContracts';
+  | 'multiContracts'
+  | 'embedTable'
+  | 'unknown';
 
 export interface IGroupConfig {
   key: IItemGroupEnum;
