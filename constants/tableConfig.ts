@@ -258,6 +258,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'token_sales',
           'token_type',
           'token_launch_date',
+          'token_utility',
           'airdrops',
         ],
         groups: [],
