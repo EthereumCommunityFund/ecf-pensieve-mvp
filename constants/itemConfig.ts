@@ -1198,8 +1198,10 @@ The technical dependencies, integrations, and building blocks that form the foun
     showExpand: false,
     options: [
       { value: 'Open Source', label: 'Open Source' },
-      { value: 'Partially Open Source', label: 'Partially Open Source' },
-      { value: 'Closed Source', label: 'Closed Source' },
+      {
+        value: 'Partially Open Source(Closed Source)',
+        label: 'Partially Open Source(Closed Source)',
+      },
     ],
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],

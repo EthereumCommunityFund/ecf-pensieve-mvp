@@ -170,6 +170,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'dapp_category',
           'protocol_built_on',
           'stack_integrations',
+          'software_license',
         ],
         groups: [
           {
