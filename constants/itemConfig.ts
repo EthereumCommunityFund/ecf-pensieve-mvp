@@ -848,7 +848,10 @@ Native Tokens – the primary token of a blockchain network used for gas fees an
         label: 'Identity / Reputation Token',
       },
       { value: 'Asset-Backed Token', label: 'Asset-Backed Token' },
-      { value: 'NFT', label: 'NFT' },
+      {
+        value: 'NFT (Non-Fungible Token)',
+        label: 'NFT (Non-Fungible Token)',
+      },
       {
         value: 'Hybrid / Multi-Role Token',
         label: 'Hybrid / Multi-Role Token',
@@ -857,7 +860,8 @@ Native Tokens – the primary token of a blockchain network used for gas fees an
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
-    legitimacy: [ALL_METRICS.COMMUNITY_PARTICIPATION],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.token_type,
   },
   token_issuance_mechanism: {
     key: 'token_issuance_mechanism',
