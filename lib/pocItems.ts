@@ -229,7 +229,7 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 2,
   },
-  contributors_organizatio: {
+  contributors_organization: {
     isEssential: false,
     accountability_metric: 4,
   },

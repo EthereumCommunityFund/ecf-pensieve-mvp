@@ -172,8 +172,8 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       legitimacy: [],
       // TODO: add validation schema
     },
-    contributors_organizatio: {
-      key: 'contributors_organizatio',
+    contributors_organization: {
+      key: 'contributors_organization',
       category: IItemCategoryEnum.Organization,
       subCategory: IItemSubCategoryEnum.Organization,
       isEssential: false,
@@ -185,7 +185,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         "List contributors as those who contribute to a project in varying capacity however are not part of the project's core team.",
       longDescription:
         'Provide detailed context for Contributors + (present/past)(table w: name, address, social identifiers - either or)) (starting date).',
-      weight: ALL_POC_ITEM_MAP['contributors_organizatio'].weight,
+      weight: ALL_POC_ITEM_MAP['contributors_organization'].weight,
       formDisplayType: 'embedTable',
       placeholder: 'Use the embedded table to add entries',
       showReference: true,
