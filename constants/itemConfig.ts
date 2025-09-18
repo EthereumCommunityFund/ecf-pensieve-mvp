@@ -503,8 +503,13 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     placeholder: 'Type in a plan',
     showReference: true,
     showExpand: true,
-    accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.PERFORMANCE_EVAL],
-    legitimacy: [ALL_METRICS.COMMUNITY_ACCEPTANCE],
+    accountability: [
+      ALL_METRICS.PARTICIPATION,
+      ALL_METRICS.PERFORMANCE_EVAL,
+      ALL_METRICS.TRANSPARENCY,
+    ],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.adoption_plan,
   },
   launch_plan: {
     key: 'launch_plan',

@@ -11,31 +11,6 @@ import { ALL_METRICS } from './metrics';
 
 export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
   {
-    // TODO: Potential duplicate with existing AllItemConfig
-    adoption_plan: {
-      key: 'adoption_plan',
-      category: IItemCategoryEnum.Basics,
-      subCategory: IItemSubCategoryEnum.BasicProfile,
-      isEssential: false,
-      label: 'Adoption Plan',
-      description:
-        "The Project's go-to-market planning and focus on usability values.",
-      shortDescription:
-        "The Project's go-to-market planning and focus on usability values.",
-      longDescription: 'Provide detailed context for Adoption Plan.',
-      weight: ALL_POC_ITEM_MAP['adoption_plan'].weight,
-      formDisplayType: 'string',
-      placeholder: 'Enter details',
-      showReference: true,
-      showExpand: false,
-      accountability: [
-        ALL_METRICS.PARTICIPATION,
-        ALL_METRICS.PERFORMANCE_EVAL,
-        ALL_METRICS.TRANSPARENCY,
-      ],
-      legitimacy: [],
-      validationSchema: itemValidationSchemas.adoption_plan,
-    },
     advisors: {
       key: 'advisors',
       category: IItemCategoryEnum.Organization,
