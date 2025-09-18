@@ -1132,4 +1132,24 @@ The technical dependencies, integrations, and building blocks that form the foun
     legitimacy: [],
     // TODO validationSchema 还没设置
   },
+  constitution: {
+    key: 'constitution',
+    category: IItemCategoryEnum.Governance,
+    subCategory: IItemSubCategoryEnum.Governance,
+    isEssential: false,
+    label: 'Constitution +',
+    description:
+      'Is there a constitution (or something close) of this project/org',
+    shortDescription:
+      'Is there a constitution (or something close) of this project/org',
+    longDescription: 'Provide detailed context for Constitution +.',
+    weight: ALL_POC_ITEM_MAP['constitution'].weight,
+    formDisplayType: 'string',
+    placeholder: 'Enter details',
+    showReference: true,
+    showExpand: false,
+    accountability: [ALL_METRICS.PARTICIPATION],
+    legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+    validationSchema: itemValidationSchemas.constitution,
+  },
 };

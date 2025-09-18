@@ -256,7 +256,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         label: 'Governance',
         description: '',
         items: [],
-        itemsNotEssential: ['physical_entity'],
+        itemsNotEssential: ['physical_entity', 'constitution'],
         groups: [],
       },
     ],

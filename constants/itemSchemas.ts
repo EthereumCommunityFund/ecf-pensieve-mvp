@@ -662,6 +662,8 @@ export const itemValidationSchemas = {
     .required('Treasury vault address is required when applicable'),
 
   treasury_mechanism: yup.string().required('Treasury mechanism is required'),
+
+  constitution: yup.string().required('Constitution is required'),
 };
 
 export { founderSchema, smartFounderSchema };
