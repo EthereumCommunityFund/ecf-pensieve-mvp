@@ -20,6 +20,9 @@ export const DYNAMIC_FIELD_EMBED_TABLE_TYPES: IFormDisplayType[] = [
   'fundingReceivedGrants',
 ];
 
+/**
+ * used for reading project ids -> ProjectSelector
+ */
 export const EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES: IFormDisplayType[] = [
   'affiliated_projects',
   'contributing_teams',

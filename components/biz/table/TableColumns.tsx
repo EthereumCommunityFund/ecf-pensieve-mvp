@@ -28,6 +28,7 @@ import {
 } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
 import { isInputValueEmpty } from '@/utils/item';
+import { EMBED_TABLE_FORM_TYPES } from '@/constants/embedTable';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
@@ -310,17 +311,9 @@ const InputCell = ({
   }, [localExpanded, onToggleExpand]);
 
   // Check if the cell should be clickable based on display type
-  const isTableDisplayType = [
-    'multiContracts',
-    'founderList',
-    'social_links',
-    'websites',
-    'tablePhysicalEntity',
-    'fundingReceivedGrants',
-    'affiliated_projects',
-    'contributing_teams',
-    'stack_integrations',
-  ].includes(finalDisplayFormType || '');
+  const isTableDisplayType = EMBED_TABLE_FORM_TYPES.includes(
+    finalDisplayFormType!,
+  );
 
   if (isPendingValidation) {
     return (
