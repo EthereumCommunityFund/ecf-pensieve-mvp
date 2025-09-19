@@ -143,6 +143,7 @@ export type IEmbedTableFormDisplayType =
   | 'contributing_teams'
   | 'contributors'
   | 'contributors_organization'
+  | 'endorsers'
   | 'stack_integrations'
   | 'advisors'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
@@ -247,6 +248,13 @@ export interface IContributorsOrganization {
   _id?: string;
 }
 
+export interface IEndorser {
+  name: string;
+  socialIdentifier: string;
+  reference?: string;
+  _id?: string;
+}
+
 export interface IStackIntegration {
   project: string | string[];
   type: string;
@@ -271,6 +279,7 @@ export interface IItemDataTypeMap {
   contributing_teams: IContributingTeam;
   contributors: IContributors;
   contributors_organization: IContributorsOrganization;
+  endorsers: IEndorser;
   stack_integrations: IStackIntegration;
   advisors: IAdvisors;
   // Add more mappings as needed for other items that return arrays

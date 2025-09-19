@@ -19,6 +19,7 @@ import {
   IAdvisors,
   IContributors,
   IContributorsOrganization,
+  IEndorser,
   IFormDisplayType,
   IPhysicalEntity,
   IPocItemKey,
@@ -1942,6 +1943,148 @@ const InputContentRenderer: React.FC<IProps> = ({
             {parsed
               .map((item: IContributorsOrganization) => {
                 return `${item.name} - ${item.role}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+      case 'endorsers': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={getColumnConfig('endorsers', 'name')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('endorsers', 'name')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('endorsers', 'name')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('endorsers', 'socialIdentifier')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('endorsers', 'socialIdentifier')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'endorsers',
+                              'socialIdentifier',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('endorsers', 'reference')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('endorsers', 'reference')}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IEndorser, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={getColumnConfig('endorsers', 'name')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.name}
+                        </TableCell>
+                        <TableCell
+                          width={
+                            getColumnConfig('endorsers', 'socialIdentifier')
+                              ?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.socialIdentifier || '-'}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.reference ? (
+                            <Link
+                              href={item.reference}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary underline"
+                            >
+                              {item.reference}
+                            </Link>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IEndorser) => {
+                return `${item.name} - ${item.socialIdentifier}`;
               })
               .join(', ')}
           </>

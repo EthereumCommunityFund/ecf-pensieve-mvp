@@ -154,7 +154,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: 'someone who expresses strong approval',
       longDescription: 'Provide detailed context for Endorsers.',
       weight: ALL_POC_ITEM_MAP['endorsers'].weight,
-      formDisplayType: 'embedTable',
+      formDisplayType: 'endorsers',
       placeholder: 'Use the embedded table to add entries',
       showReference: true,
       showExpand: true,

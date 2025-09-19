@@ -72,6 +72,13 @@ export const getDefaultEmbedTableFormItemValue = (
         address: '',
         _id: crypto.randomUUID(),
       };
+    case 'endorsers':
+      return {
+        name: '',
+        socialIdentifier: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
     case 'stack_integrations':
       return {
         project: '',

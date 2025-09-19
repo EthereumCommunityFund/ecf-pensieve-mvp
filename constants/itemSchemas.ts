@@ -13,6 +13,7 @@ import {
   IContributors,
   IContributorsOrganization,
   IDateConstraints,
+  IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
   IStackIntegration,
@@ -281,6 +282,17 @@ const contributorsSchema: yup.ObjectSchema<IContributors> = yup.object().shape({
   name: yup.string().required('name is required'),
   role: yup.string().required('role is required'),
   address: yup.string().required('address or social identifier is required'),
+  _id: yup.string().optional(),
+});
+
+const endorsersSchema: yup.ObjectSchema<IEndorser> = yup.object().shape({
+  name: yup.string().required('name is required'),
+  socialIdentifier: yup.string().required('social identifier is required'),
+  reference: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .optional(),
   _id: yup.string().optional(),
 });
 
@@ -629,6 +641,12 @@ export const itemValidationSchemas = {
     .of(contributorsSchema)
     .min(1, 'At least one contributor is required')
     .required('Contributors information is required'),
+
+  endorsers: yup
+    .array()
+    .of(endorsersSchema)
+    .min(1, 'At least one endorser is required')
+    .required('Endorsers information is required'),
 
   contributors_organization: yup
     .array()

@@ -5,6 +5,7 @@ import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
 import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
 import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTableItem';
 import ContributorsTableItem from './item/ContributorsTableItem';
+import EndorsersTableItem from './item/EndorsersTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
@@ -187,6 +188,33 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     ],
     tableComponent: 'ContributorsOrganizationTableItem',
   },
+  endorsers: {
+    displayType: 'endorsers',
+    addButtonText: 'Add an Entry',
+    columns: [
+      {
+        key: 'name',
+        label: 'Name',
+        width: 240,
+        tooltip: 'Name of the endorser (individual or organization)',
+      },
+      {
+        key: 'socialIdentifier',
+        label: 'Social Identifier',
+        width: 240,
+        tooltip:
+          'Provide a verifiable handle or identifier (e.g. X, Farcaster, ENS) for this endorser',
+      },
+      {
+        key: 'reference',
+        label: 'Reference',
+        width: 260,
+        tooltip:
+          'Link or citation pointing to the endorsement statement or proof',
+      },
+    ],
+    tableComponent: 'EndorsersTableItem',
+  },
   stack_integrations: {
     displayType: 'stack_integrations',
     columns: [
@@ -267,6 +295,7 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   ContributingTeamsTableItem: ContributingTeamsTableItem,
   ContributorsTableItem: ContributorsTableItem,
   ContributorsOrganizationTableItem: ContributorsOrganizationTableItem,
+  EndorsersTableItem: EndorsersTableItem,
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
 };

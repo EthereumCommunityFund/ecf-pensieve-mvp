@@ -247,6 +247,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'budget_plans',
           'expense_statements',
           'runway',
+          'endorsers',
         ],
         groups: [],
       },

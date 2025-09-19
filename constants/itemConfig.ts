@@ -1160,6 +1160,27 @@ Contributing teams represent the collaborative ecosystem that supports and enhan
     ],
     validationSchema: itemValidationSchemas.contributors_organization,
   },
+  endorsers: {
+    key: 'endorsers',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.endorsers.isEssential,
+    label: 'Endorsers',
+    description:
+      'Record individuals or organizations publicly endorsing the project.',
+    shortDescription:
+      'Capture endorser name, social identifier, and a reference to the endorsement.',
+    longDescription:
+      'Use this table to surface third-party endorsements that provide social proof. Include a verifiable social identifier and, when possible, a reference link so community members can validate the endorsement independently.',
+    weight: ALL_POC_ITEM_MAP.endorsers.weight,
+    formDisplayType: 'endorsers',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
+    legitimacy: [ALL_METRICS.COMMUNITY_ACCEPTANCE],
+    validationSchema: itemValidationSchemas.endorsers,
+  },
   stack_integrations: {
     key: 'stack_integrations',
     category: IItemCategoryEnum.Technicals,
