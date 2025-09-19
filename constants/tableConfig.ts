@@ -219,6 +219,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'core_team',
           'team_incentives',
           'ownership_of_project',
+          'advisors',
         ],
         groups: [],
       },

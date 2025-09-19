@@ -3,7 +3,10 @@ import {
   EMBED_TABLE_FORM_TYPES,
   EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES,
 } from '@/constants/embedTable';
-import { IFormDisplayType } from '@/types/item';
+import { IFormDisplayType, IItemKey } from '@/types/item';
+
+import { DYNAMIC_FIELDS_CONFIG } from './dynamicFieldsConfig';
+import { ITypeOption } from './item/AffiliatedProjectsTableItem';
 
 export const isEmbedTableFormType = (formDisplayType: IFormDisplayType) => {
   return formDisplayType && EMBED_TABLE_FORM_TYPES.includes(formDisplayType);
@@ -70,6 +73,14 @@ export const getDefaultEmbedTableFormItemValue = (
         chain: '',
         addresses: '',
       };
+    case 'advisors':
+      return {
+        name: '',
+        title: '',
+        address: '',
+        active: '',
+        _id: crypto.randomUUID(),
+      };
     default:
       return '';
   }
@@ -130,4 +141,20 @@ export const isDynamicFieldType = (formDisplayType: IFormDisplayType) => {
   return (
     formDisplayType && DYNAMIC_FIELD_EMBED_TABLE_TYPES.includes(formDisplayType)
   );
+};
+
+export const BOOL_TYPE_OPTIONS: ITypeOption[] = [
+  { value: 'yes', label: 'YES' },
+  { value: 'no', label: 'NO' },
+];
+
+export const getColumnConfig = (itemKey: IItemKey, columnKey: string) => {
+  if (!DYNAMIC_FIELDS_CONFIG[itemKey]) return null;
+  const columns = DYNAMIC_FIELDS_CONFIG[itemKey].columns;
+  return columns.find((column) => columnKey === column.key);
+};
+
+export const getColumnTooltip = (itemKey: IItemKey, columnKey: string) => {
+  const config = getColumnConfig(itemKey, columnKey);
+  return config?.tooltip || '';
 };

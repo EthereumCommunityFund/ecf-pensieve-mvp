@@ -142,6 +142,7 @@ export type IEmbedTableFormDisplayType =
   | 'affiliated_projects'
   | 'contributing_teams'
   | 'stack_integrations'
+  | 'advisors'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
 
 export type IFormDisplayType =
@@ -239,12 +240,21 @@ export interface IStackIntegration {
   _id?: string;
 }
 
+export interface IAdvisors {
+  name: string;
+  title: string;
+  address: string;
+  active: string;
+  _id?: string;
+}
+
 // Type mapping for getItemRowData function
 export interface IItemDataTypeMap {
   funding_received_grants: IFundingReceivedGrants;
   affiliated_projects: IAffiliatedProject;
   contributing_teams: IContributingTeam;
   stack_integrations: IStackIntegration;
+  advisors: IAdvisors;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

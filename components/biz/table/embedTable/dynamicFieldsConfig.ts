@@ -1,9 +1,15 @@
 import { IFormDisplayType } from '@/types/item';
 
+import AdvisorsTableItem from './item/AdvisorsTableItem';
+import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
+import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
+import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
+import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
+
 export interface DynamicFieldColumn {
   key: string;
   label: string;
-  width: string;
+  width: number;
   tooltip?: string;
 }
 
@@ -11,7 +17,7 @@ export interface DynamicFieldConfig {
   displayType: IFormDisplayType;
   columns: DynamicFieldColumn[];
   addButtonText?: string;
-  tableComponent: string; // Component name to use for rendering
+  tableComponent: string; // Component name to use for rendering, important!
 }
 
 export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
@@ -21,41 +27,41 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       {
         key: 'date',
         label: 'Date',
-        width: '158px',
+        width: 158,
         tooltip: 'The Date of when this grant was given to this project',
       },
       {
         key: 'organization',
         label: 'Organization/Program',
-        width: '300px',
+        width: 300,
         tooltip:
           'This refers to the organization or program this project has received their grants from',
       },
       {
         key: 'projectDonator',
         label: 'Project Donator',
-        width: '300px',
+        width: 300,
         tooltip:
           'Projects that have donated to this funding round or acted as sponsors',
       },
       {
         key: 'amount',
         label: 'Amount (USD)',
-        width: '138px',
+        width: 138,
         tooltip:
           'This is the amount received at the time of this grant was given',
       },
       {
         key: 'expenseSheetUrl',
         label: 'Expense Sheet',
-        width: '200px',
+        width: 200,
         tooltip:
           'Link to detailed expense breakdown showing how the grant funds were utilized',
       },
       {
         key: 'reference',
         label: 'Reference',
-        width: '200px',
+        width: 200,
         tooltip:
           'This is the reference link that acts as evidence for this entry',
       },
@@ -69,25 +75,25 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       {
         key: 'project',
         label: 'Project',
-        width: '300px',
+        width: 300,
         tooltip: 'The project that has an affiliation with this project',
       },
       {
         key: 'affiliationType',
         label: 'Affiliation Type',
-        width: '180px',
+        width: 180,
         tooltip: 'The type of relationship between the projects',
       },
       {
         key: 'description',
         label: 'Description',
-        width: '250px',
+        width: 250,
         tooltip: 'Description of the affiliation relationship',
       },
       {
         key: 'reference',
         label: 'Reference',
-        width: '200px',
+        width: 200,
         tooltip: 'Reference link for more information about this affiliation',
       },
     ],
@@ -100,25 +106,25 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       {
         key: 'project',
         label: 'Project',
-        width: '300px',
+        width: 300,
         tooltip: 'The team or organization that contributed to this project',
       },
       {
         key: 'contributionArea',
         label: 'Area of Contribution',
-        width: '200px',
+        width: 200,
         tooltip: 'The type of contribution provided',
       },
       {
         key: 'description',
         label: 'Description',
-        width: '250px',
+        width: 250,
         tooltip: 'Description of the contribution',
       },
       {
         key: 'reference',
         label: 'Reference',
-        width: '200px',
+        width: 200,
         tooltip: 'Reference link for more information about this contribution',
       },
     ],
@@ -131,35 +137,78 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       {
         key: 'project',
         label: 'Project',
-        width: '240px',
+        width: 240,
         tooltip: 'The project or technology integrated with this project',
       },
       {
         key: 'type',
         label: 'Type',
-        width: '180px',
+        width: 180,
         tooltip: 'The type of integration or dependency',
       },
       {
         key: 'description',
         label: 'Description',
-        width: '200px',
+        width: 200,
         tooltip: 'Description of the integration',
       },
       {
         key: 'reference',
         label: 'Reference',
-        width: '180px',
+        width: 180,
         tooltip: 'Reference link for more information',
       },
       {
         key: 'repository',
         label: 'Repository',
-        width: '180px',
+        width: 180,
         tooltip: 'Repository link for the integration',
       },
     ],
     addButtonText: 'Add an Entry',
     tableComponent: 'StackIntegrationsTableItem',
   },
+  advisors: {
+    displayType: 'advisors',
+    addButtonText: 'Add an Entry',
+    columns: [
+      {
+        key: 'name',
+        label: 'Name',
+        width: 180,
+        tooltip:
+          'Full name or primary identifier of the advisor collaborating on this project',
+      },
+      {
+        key: 'title',
+        label: 'Title',
+        width: 240,
+        tooltip:
+          'Professional title or role the advisor fulfills for this project',
+      },
+      {
+        key: 'address',
+        label: 'Address',
+        width: 240,
+        tooltip: 'Public Address No || Social Identifier',
+      },
+      {
+        key: 'active',
+        label: 'Active',
+        width: 120,
+        tooltip:
+          'Indicates whether the advisor is currently active in supporting the project',
+      },
+    ],
+    tableComponent: 'AdvisorsTableItem',
+  },
+};
+
+// Map component names to actual FormAndTable
+export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  FundingReceivedGrantsTableItem: FundingReceivedGrantsTableItem,
+  AffiliatedProjectsTableItem: AffiliatedProjectsTableItem,
+  ContributingTeamsTableItem: ContributingTeamsTableItem,
+  StackIntegrationsTableItem: StackIntegrationsTableItem,
+  AdvisorsTableItem: AdvisorsTableItem,
 };

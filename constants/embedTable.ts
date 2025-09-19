@@ -11,6 +11,7 @@ export const EMBED_TABLE_FORM_TYPES: IFormDisplayType[] = [
   'tablePhysicalEntity',
   'multiContracts',
   'fundingReceivedGrants',
+  'advisors',
 ];
 
 export const DYNAMIC_FIELD_EMBED_TABLE_TYPES: IFormDisplayType[] = [
@@ -18,6 +19,7 @@ export const DYNAMIC_FIELD_EMBED_TABLE_TYPES: IFormDisplayType[] = [
   'contributing_teams',
   'stack_integrations',
   'fundingReceivedGrants',
+  'advisors',
 ];
 
 /**

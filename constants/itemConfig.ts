@@ -1583,4 +1583,22 @@ The technical dependencies, integrations, and building blocks that form the foun
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PERFORMANCE],
     validationSchema: itemValidationSchemas.income_revenue,
   },
+  advisors: {
+    key: 'advisors',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
+    isEssential: false,
+    label: 'Advisors',
+    description: 'who are the official advisors',
+    shortDescription: 'who are the official advisors',
+    longDescription: 'Provide detailed context for Advisors.',
+    weight: ALL_POC_ITEM_MAP['advisors'].weight,
+    formDisplayType: 'advisors',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
+    legitimacy: [ALL_METRICS.COMMUNITY_ACCEPTANCE],
+    // TODO: add validation schema
+  },
 };

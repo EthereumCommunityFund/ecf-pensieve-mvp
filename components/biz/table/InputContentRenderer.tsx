@@ -11,9 +11,15 @@ import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTabl
 import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
 import { getChainDisplayInfo } from '@/constants/chains';
+import { EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES } from '@/constants/embedTable';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
-import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
+import {
+  IAdvisors,
+  IFormDisplayType,
+  IPhysicalEntity,
+  IPocItemKey,
+} from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
   extractProjectIds,
@@ -24,9 +30,11 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
-import { EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES } from '@/constants/embedTable';
 
 import {
+  BOOL_TYPE_OPTIONS,
+  getColumnConfig,
+  getColumnTooltip,
   isEmbedTableFormType,
   isEmbedTableFormWithProjectSelector,
 } from './embedTable/embedTableUtils';
@@ -1645,6 +1653,145 @@ const InputContentRenderer: React.FC<IProps> = ({
                   return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'advisors': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={getColumnConfig('advisors', 'name')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'name')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'name')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={getColumnConfig('advisors', 'title')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'title')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'title')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={getColumnConfig('advisors', 'address')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'address')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'address')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'active')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'active')}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IAdvisors, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={getColumnConfig('advisors', 'name')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.name}
+                        </TableCell>
+                        <TableCell
+                          width={getColumnConfig('advisors', 'title')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.title}
+                        </TableCell>
+                        <TableCell
+                          width={getColumnConfig('advisors', 'address')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.address || '-'}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {getOptionLabel(item.active, BOOL_TYPE_OPTIONS)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IAdvisors) => {
+                return `${item.name} - ${item.title}`;
+              })
               .join(', ')}
           </>
         );

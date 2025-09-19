@@ -4,11 +4,10 @@ import React from 'react';
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import { PlusIcon } from '@/components/icons';
 
-import { DynamicFieldConfig } from './dynamicFieldsConfig';
-import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
-import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
-import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
-import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
+import {
+  DynamicFieldConfig,
+  TABLE_ITEM_COMPONENTS,
+} from './dynamicFieldsConfig';
 
 interface DynamicFieldTableProps {
   config: DynamicFieldConfig;
@@ -18,14 +17,6 @@ interface DynamicFieldTableProps {
   itemKey: string;
   errorMessage?: React.ReactNode;
 }
-
-// Map component names to actual FormAndTable
-const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  FundingReceivedGrantsTableItem: FundingReceivedGrantsTableItem,
-  AffiliatedProjectsTableItem: AffiliatedProjectsTableItem,
-  ContributingTeamsTableItem: ContributingTeamsTableItem,
-  StackIntegrationsTableItem: StackIntegrationsTableItem,
-};
 
 /**
  * Generic dynamic field table component that renders based on configuration
@@ -63,11 +54,10 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
                 key={column.key}
                 className={cn(
                   'flex h-full shrink-0 items-center px-[10px]',
-                  `w-[${column.width}]`,
+                  `w-[${column.width}px]`,
                   !isLast || hasActions ? 'border-r border-black/10' : '',
                   isLast && !hasActions ? 'bg-[#F5F5F5]' : '',
                 )}
-                style={{ width: column.width }}
               >
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">

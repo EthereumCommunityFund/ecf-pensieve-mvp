@@ -7,6 +7,7 @@ import {
 } from '@/components/pages/project/create/types';
 import { NA_VALUE } from '@/constants/naSelection';
 import {
+  IAdvisors,
   IAffiliatedProject,
   IContributingTeam,
   IDateConstraints,
@@ -273,6 +274,14 @@ const contributingTeamsSchema: yup.ObjectSchema<IContributingTeam> = yup
       .optional(),
     _id: yup.string().optional(),
   });
+
+const advisorsSchema: yup.ObjectSchema<IAdvisors> = yup.object().shape({
+  name: yup.string().required('name is required'),
+  title: yup.string().required('title is required'),
+  address: yup.string().required('address is required'),
+  active: yup.string().required('please select active option'),
+  _id: yup.string().optional(),
+});
 
 const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
   .object()
@@ -746,6 +755,12 @@ export const itemValidationSchemas = {
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Income or revenue statement URL is required'),
+
+  advisors: yup
+    .array()
+    .of(advisorsSchema)
+    .min(1, 'At least one advisor is required')
+    .required('advisor information is required'),
 };
 
 export { founderSchema, smartFounderSchema };
