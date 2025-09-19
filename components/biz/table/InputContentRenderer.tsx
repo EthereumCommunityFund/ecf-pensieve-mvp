@@ -24,6 +24,7 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
+import { EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES } from '@/constants/embedTable';
 
 import {
   isEmbedTableFormType,
@@ -84,21 +85,21 @@ const InputContentRenderer: React.FC<IProps> = ({
 
     const ids: Array<string | number> = [];
 
-    if (displayFormType === 'fundingReceivedGrants') {
-      parsed.forEach((grant: any) => {
-        // Extract from organization and projectDonator fields
-        ids.push(...extractProjectIds(grant.organization));
-        ids.push(...extractProjectIds(grant.projectDonator));
-      });
-    } else if (
-      displayFormType === 'affiliated_projects' ||
-      displayFormType === 'contributing_teams' ||
-      displayFormType === 'stack_integrations'
-    ) {
-      parsed.forEach((item: any) => {
-        // Extract from project field
-        ids.push(...extractProjectIds(item.project));
-      });
+    if (EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES.includes(displayFormType!)) {
+      // special, with two project fields
+      if (displayFormType === 'fundingReceivedGrants') {
+        parsed.forEach((grant: any) => {
+          // Extract from organization and projectDonator fields
+          ids.push(...extractProjectIds(grant.organization));
+          ids.push(...extractProjectIds(grant.projectDonator));
+        });
+      } else {
+        // treat [project] as project field key
+        parsed.forEach((item: any) => {
+          // Extract from project field
+          ids.push(...extractProjectIds(item.project));
+        });
+      }
     }
 
     return [...new Set(ids)]; // Remove duplicates
