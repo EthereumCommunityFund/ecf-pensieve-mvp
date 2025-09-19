@@ -16,6 +16,7 @@ import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/Pr
 import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import SablierEntry from '@/components/sablier/SablierEntry';
+import { EMBED_TABLE_FORM_TYPES } from '@/constants/embedTable';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -28,7 +29,6 @@ import {
 } from '@/types/item';
 import { formatDate } from '@/utils/formatters';
 import { isInputValueEmpty } from '@/utils/item';
-import { EMBED_TABLE_FORM_TYPES } from '@/constants/embedTable';
 
 import InputContentRenderer from './InputContentRenderer';
 import TooltipItemWeight from './TooltipItemWeight';
