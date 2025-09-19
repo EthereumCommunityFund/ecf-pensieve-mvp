@@ -52,7 +52,14 @@ export const EmbedTableCellWrapper: React.FC<EmbedTableCellWrapperProps> = ({
         !showRightBorder && 'border-r-0',
         className,
       )}
-      style={width ? { width: `${width}px` } : undefined}
+      style={
+        width
+          ? {
+              width,
+              minWidth: width,
+            }
+          : undefined
+      }
     >
       {children}
     </div>

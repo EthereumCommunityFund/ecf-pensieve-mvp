@@ -113,7 +113,7 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
         tooltip: 'The team or organization that contributed to this project',
       },
       {
-        key: 'contributionArea',
+        key: 'type',
         label: 'Area of Contribution',
         width: 200,
         tooltip: 'The type of contribution provided',
