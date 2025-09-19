@@ -4,6 +4,7 @@ import AdvisorsTableItem from './item/AdvisorsTableItem';
 import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
 import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
 import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTableItem';
+import ContributorsTableItem from './item/ContributorsTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
@@ -132,6 +133,33 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     addButtonText: 'Add an Entry',
     tableComponent: 'ContributingTeamsTableItem',
   },
+  contributors: {
+    displayType: 'contributors',
+    addButtonText: 'Add an Entry',
+    columns: [
+      {
+        key: 'name',
+        label: 'Name',
+        width: 240,
+        tooltip: 'Contributor name or identifier',
+      },
+      {
+        key: 'role',
+        label: 'Role',
+        width: 240,
+        tooltip:
+          'Role or capacity in which this contributor supports the project',
+      },
+      {
+        key: 'address',
+        label: 'Address / Social ID',
+        width: 360,
+        tooltip:
+          'Provide a verifiable on-chain address or social identifier for this contributor',
+      },
+    ],
+    tableComponent: 'ContributorsTableItem',
+  },
   contributors_organization: {
     displayType: 'contributors_organization',
     addButtonText: 'Add an Entry',
@@ -237,6 +265,7 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   FundingReceivedGrantsTableItem: FundingReceivedGrantsTableItem,
   AffiliatedProjectsTableItem: AffiliatedProjectsTableItem,
   ContributingTeamsTableItem: ContributingTeamsTableItem,
+  ContributorsTableItem: ContributorsTableItem,
   ContributorsOrganizationTableItem: ContributorsOrganizationTableItem,
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,

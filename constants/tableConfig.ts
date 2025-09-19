@@ -204,7 +204,6 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         itemsNotEssential: [
           'affiliated_projects',
           'contributing_teams',
-          'contributors_organization',
           'team_location',
         ],
         groups: [],
@@ -220,6 +219,8 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'core_team',
           'team_incentives',
           'ownership_of_project',
+          'contributors',
+          'contributors_organization',
           'advisors',
         ],
         groups: [],

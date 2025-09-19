@@ -78,7 +78,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
     contributors: {
       key: 'contributors',
       category: IItemCategoryEnum.Organization,
-      subCategory: IItemSubCategoryEnum.Organization,
+      subCategory: IItemSubCategoryEnum.Team,
       isEssential: false,
       label: 'Contributors (what is this one different from other team items)',
       description:
@@ -88,10 +88,10 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       longDescription:
         'Provide detailed context for Contributors (what is this one different from other team items).',
       weight: ALL_POC_ITEM_MAP['contributors'].weight,
-      formDisplayType: 'embedTable',
-      placeholder: 'Provide details',
+      formDisplayType: 'contributors',
+      placeholder: 'Use the embedded table to add entries',
       showReference: true,
-      showExpand: false,
+      showExpand: true,
       accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
       // TODO: add validation schema

@@ -7,6 +7,7 @@ import { AddressDisplay } from '@/components/base/AddressDisplay';
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { CONTRIBUTOR_ROLE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributorsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
 import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
@@ -16,6 +17,7 @@ import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import {
   IAdvisors,
+  IContributors,
   IContributorsOrganization,
   IFormDisplayType,
   IPhysicalEntity,
@@ -1654,6 +1656,132 @@ const InputContentRenderer: React.FC<IProps> = ({
                   return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'contributors': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={getColumnConfig('contributors', 'name')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('contributors', 'name')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('contributors', 'name')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={getColumnConfig('contributors', 'role')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('contributors', 'role')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('contributors', 'role')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('contributors', 'address')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IContributors, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={getColumnConfig('contributors', 'name')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.name}
+                        </TableCell>
+                        <TableCell
+                          width={getColumnConfig('contributors', 'role')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {getOptionLabel(item.role, CONTRIBUTOR_ROLE_OPTIONS)}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.address || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IContributors) => {
+                const roleLabel = getOptionLabel(
+                  item.role,
+                  CONTRIBUTOR_ROLE_OPTIONS,
+                );
+                return `${item.name} - ${roleLabel}`;
+              })
               .join(', ')}
           </>
         );

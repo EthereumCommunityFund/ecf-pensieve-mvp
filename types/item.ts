@@ -141,6 +141,7 @@ export type IEmbedTableFormDisplayType =
   | 'fundingReceivedGrants'
   | 'affiliated_projects'
   | 'contributing_teams'
+  | 'contributors'
   | 'contributors_organization'
   | 'stack_integrations'
   | 'advisors'
@@ -232,6 +233,13 @@ export interface IContributingTeam {
   _id?: string;
 }
 
+export interface IContributors {
+  name: string;
+  role: string;
+  address: string;
+  _id?: string;
+}
+
 export interface IContributorsOrganization {
   name: string;
   role: string;
@@ -261,6 +269,7 @@ export interface IItemDataTypeMap {
   funding_received_grants: IFundingReceivedGrants;
   affiliated_projects: IAffiliatedProject;
   contributing_teams: IContributingTeam;
+  contributors: IContributors;
   contributors_organization: IContributorsOrganization;
   stack_integrations: IStackIntegration;
   advisors: IAdvisors;

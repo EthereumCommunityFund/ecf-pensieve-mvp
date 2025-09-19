@@ -10,6 +10,7 @@ import {
   IAdvisors,
   IAffiliatedProject,
   IContributingTeam,
+  IContributors,
   IContributorsOrganization,
   IDateConstraints,
   IFundingReceivedGrants,
@@ -275,6 +276,13 @@ const contributingTeamsSchema: yup.ObjectSchema<IContributingTeam> = yup
       .optional(),
     _id: yup.string().optional(),
   });
+
+const contributorsSchema: yup.ObjectSchema<IContributors> = yup.object().shape({
+  name: yup.string().required('name is required'),
+  role: yup.string().required('role is required'),
+  address: yup.string().required('address or social identifier is required'),
+  _id: yup.string().optional(),
+});
 
 const contributorsOrganizationSchema: yup.ObjectSchema<IContributorsOrganization> =
   yup.object().shape({
@@ -615,6 +623,12 @@ export const itemValidationSchemas = {
     .of(contributingTeamsSchema)
     .min(1, 'At least one contributing team is required')
     .required('Contributing teams information is required'),
+
+  contributors: yup
+    .array()
+    .of(contributorsSchema)
+    .min(1, 'At least one contributor is required')
+    .required('Contributors information is required'),
 
   contributors_organization: yup
     .array()

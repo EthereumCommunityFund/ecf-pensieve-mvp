@@ -1113,10 +1113,31 @@ Contributing teams represent the collaborative ecosystem that supports and enhan
     legitimacy: [],
     // TODO validationSchema 还没设置
   },
+  contributors: {
+    key: 'contributors',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
+    isEssential: POC_ITEMS.contributors.isEssential,
+    label: 'Contributors',
+    description:
+      'Document contributors who support the project but are not part of the core team, including their roles and identifiers.',
+    shortDescription:
+      'Record contributor name, role, and public address or social ID.',
+    longDescription:
+      'Use this table to track non-core contributors—volunteers, researchers, assistants, or other supporters—who materially help the project. Capturing their role and a verifiable identifier increases accountability and community recognition.',
+    weight: ALL_POC_ITEM_MAP.contributors.weight,
+    formDisplayType: 'contributors',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.contributors,
+  },
   contributors_organization: {
     key: 'contributors_organization',
     category: IItemCategoryEnum.Organization,
-    subCategory: IItemSubCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
     isEssential: POC_ITEMS.contributors_organization.isEssential,
     label: 'Contributors + (present/past)',
     description:
