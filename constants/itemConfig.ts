@@ -1113,6 +1113,32 @@ Contributing teams represent the collaborative ecosystem that supports and enhan
     legitimacy: [],
     // TODO validationSchema 还没设置
   },
+  contributors_organization: {
+    key: 'contributors_organization',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Organization,
+    isEssential: POC_ITEMS.contributors_organization.isEssential,
+    label: 'Contributors + (present/past)',
+    description:
+      'List contributors who support the project in varying capacities but are not part of the core team.',
+    shortDescription:
+      'Capture contributor name, role, and either public address or social identifier.',
+    longDescription:
+      'Use this table to document current or past contributors who play active roles in the project beyond the core team. Include verifiable identifiers (on-chain address or social handle) to maintain transparency and accountability.',
+    weight: ALL_POC_ITEM_MAP.contributors_organization.weight,
+    formDisplayType: 'contributors_organization',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
+    legitimacy: [
+      ALL_METRICS.LEGITIMACY_BY_PROCESS,
+      ALL_METRICS.LEGITIMACY_BY_CONTINUITY,
+      ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
+      ALL_METRICS.WEB3_RESILIENCE,
+    ],
+    validationSchema: itemValidationSchemas.contributors_organization,
+  },
   stack_integrations: {
     key: 'stack_integrations',
     category: IItemCategoryEnum.Technicals,

@@ -7,6 +7,7 @@ export const EMBED_TABLE_FORM_TYPES: IFormDisplayType[] = [
   'social_links',
   'affiliated_projects',
   'contributing_teams',
+  'contributors_organization',
   'stack_integrations',
   'tablePhysicalEntity',
   'multiContracts',
@@ -17,6 +18,7 @@ export const EMBED_TABLE_FORM_TYPES: IFormDisplayType[] = [
 export const DYNAMIC_FIELD_EMBED_TABLE_TYPES: IFormDisplayType[] = [
   'affiliated_projects',
   'contributing_teams',
+  'contributors_organization',
   'stack_integrations',
   'fundingReceivedGrants',
   'advisors',

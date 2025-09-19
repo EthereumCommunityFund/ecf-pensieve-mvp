@@ -16,6 +16,7 @@ import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import {
   IAdvisors,
+  IContributorsOrganization,
   IFormDisplayType,
   IPhysicalEntity,
   IPocItemKey,
@@ -1653,6 +1654,167 @@ const InputContentRenderer: React.FC<IProps> = ({
                   return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'contributors_organization': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('contributors_organization', 'name')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'contributors_organization',
+                                'name',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors_organization',
+                              'name',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('contributors_organization', 'role')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'contributors_organization',
+                                'role',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors_organization',
+                              'role',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'contributors_organization',
+                                'address',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors_organization',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (item: IContributorsOrganization, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'contributors_organization',
+                                'name',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.name}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'contributors_organization',
+                                'role',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.role}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.address || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IContributorsOrganization) => {
+                return `${item.name} - ${item.role}`;
+              })
               .join(', ')}
           </>
         );

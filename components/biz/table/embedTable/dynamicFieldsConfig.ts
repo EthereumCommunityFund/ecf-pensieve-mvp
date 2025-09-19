@@ -3,6 +3,7 @@ import { IFormDisplayType } from '@/types/item';
 import AdvisorsTableItem from './item/AdvisorsTableItem';
 import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
 import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
+import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
@@ -131,6 +132,33 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     addButtonText: 'Add an Entry',
     tableComponent: 'ContributingTeamsTableItem',
   },
+  contributors_organization: {
+    displayType: 'contributors_organization',
+    addButtonText: 'Add an Entry',
+    columns: [
+      {
+        key: 'name',
+        label: 'Name',
+        width: 240,
+        tooltip:
+          'Full name or identifier for the contributor supporting this project',
+      },
+      {
+        key: 'role',
+        label: 'Role',
+        width: 240,
+        tooltip: 'Primary role or responsibility the contributor fulfills',
+      },
+      {
+        key: 'address',
+        label: 'Address / Social ID',
+        width: 320,
+        tooltip:
+          'Enter a verifiable on-chain address or social identifier for the contributor',
+      },
+    ],
+    tableComponent: 'ContributorsOrganizationTableItem',
+  },
   stack_integrations: {
     displayType: 'stack_integrations',
     columns: [
@@ -209,6 +237,7 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   FundingReceivedGrantsTableItem: FundingReceivedGrantsTableItem,
   AffiliatedProjectsTableItem: AffiliatedProjectsTableItem,
   ContributingTeamsTableItem: ContributingTeamsTableItem,
+  ContributorsOrganizationTableItem: ContributorsOrganizationTableItem,
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
 };

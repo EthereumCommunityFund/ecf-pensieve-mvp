@@ -110,7 +110,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       longDescription:
         'Provide detailed context for Contributors + (present/past)(table w: name, address, social identifiers - either or)) (starting date).',
       weight: ALL_POC_ITEM_MAP['contributors_organization'].weight,
-      formDisplayType: 'embedTable',
+      formDisplayType: 'contributors_organization',
       placeholder: 'Use the embedded table to add entries',
       showReference: true,
       showExpand: true,
