@@ -48,16 +48,16 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
           {config.columns.map((column, colIndex) => {
             const isLast = colIndex === config.columns.length - 1;
             const hasActions = fields.length > 1;
+            const shouldShowDivider = !isLast && config.columns.length > 1;
 
             return (
               <div
                 key={column.key}
                 className={cn(
                   'flex h-full shrink-0 items-center px-[10px]',
-                  `w-[${column.width}px]`,
-                  !isLast || hasActions ? 'border-r border-black/10' : '',
-                  isLast && !hasActions ? 'bg-[#F5F5F5]' : '',
+                  shouldShowDivider ? 'border-r border-black/10' : '',
                 )}
+                style={{ width: column.width }}
               >
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
@@ -71,9 +71,7 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
             );
           })}
           {fields.length > 1 && (
-            <div className="flex h-full w-[60px] items-center justify-center">
-              {/* Actions column header */}
-            </div>
+            <div className="flex h-full w-[60px] items-center justify-center" />
           )}
         </div>
 
