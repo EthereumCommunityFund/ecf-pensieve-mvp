@@ -120,7 +120,7 @@ export interface IItemConfig<K extends IItemKey> {
   componentsProps?: Record<string, any>; // For custom props of the components
 }
 
-export type IFormDisplayType =
+export type IBaseFormDisplayType =
   | 'string'
   | 'textarea'
   | 'stringMultiple' // separate by comma
@@ -130,18 +130,24 @@ export type IFormDisplayType =
   | 'img'
   | 'link'
   | 'date'
+  | 'smartContract';
+
+export type IEmbedTableFormDisplayType =
   | 'founderList'
   | 'websites'
   | 'social_links'
   | 'tablePhysicalEntity'
+  | 'multiContracts'
   | 'fundingReceivedGrants'
   | 'affiliated_projects'
   | 'contributing_teams'
   | 'stack_integrations'
-  | 'roadmap'
-  | 'smartContract'
-  | 'multiContracts'
-  | 'embedTable'
+  | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
+
+export type IFormDisplayType =
+  | IBaseFormDisplayType
+  | IEmbedTableFormDisplayType
+  | 'roadmap' // not confirm how to display
   | 'unknown';
 
 export interface IGroupConfig {
