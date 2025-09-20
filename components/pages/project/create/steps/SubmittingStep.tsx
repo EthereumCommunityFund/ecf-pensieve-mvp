@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
+import { ShareLinkIcon } from '@/components/icons';
 import CheckedCircleIcon from '@/components/icons/CheckCircle';
 import { ESSENTIAL_ITEM_WEIGHT_SUM, REWARD_PERCENT } from '@/lib/constants';
-import { ShareLinkIcon } from '@/components/icons';
 
 import ShareModal from '../ShareModal';
 import { IFormTypeEnum } from '../types';
