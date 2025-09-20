@@ -14,6 +14,7 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
+import { getShareUrlByShortCode } from '@/utils/share';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
@@ -245,7 +246,7 @@ const ProjectCard = ({
 
       {project.shortCode && (
         <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
-          <ShareButton shortCode={project.shortCode} />
+          <ShareButton shareUrl={getShareUrlByShortCode(project.shortCode)} />
         </div>
       )}
     </div>

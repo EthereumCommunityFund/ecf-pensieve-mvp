@@ -16,12 +16,10 @@ import { CopyIcon } from '@/components/icons';
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  shortCode: string;
+  shareUrl: string;
 }
 
-const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, shortCode }) => {
-  const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/p/${shortCode}`;
-
+const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, shareUrl }) => {
   const onCopySuccess = useCallback(() => {
     addToast({
       title: 'Success',
