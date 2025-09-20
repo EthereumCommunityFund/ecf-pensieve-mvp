@@ -28,7 +28,10 @@ export function useReverseEcosystemData(projectId: number) {
   const utils = trpc.useUtils();
 
   // Extract source IDs for each ecosystem section
-  const stackIntegrationsTargets = relations?.stackIntegrations.asTarget ?? [];
+  const stackIntegrationsTargets = useMemo(() => {
+    return relations?.stackIntegrations.asTarget ?? [];
+  }, [relations?.stackIntegrations.asTarget]);
+
   const stackIntegrationsSourceIds = useMemo(() => {
     return Array.from(
       new Set(
@@ -39,7 +42,10 @@ export function useReverseEcosystemData(projectId: number) {
     );
   }, [stackIntegrationsTargets]);
 
-  const contributingTeamsTargets = relations?.contributingTeams.asTarget ?? [];
+  const contributingTeamsTargets = useMemo(() => {
+    return relations?.contributingTeams.asTarget ?? [];
+  }, [relations?.contributingTeams.asTarget]);
+
   const contributingTeamsSourceIds = useMemo(() => {
     return Array.from(
       new Set(
@@ -50,8 +56,10 @@ export function useReverseEcosystemData(projectId: number) {
     );
   }, [contributingTeamsTargets]);
 
-  const affiliatedProjectsTargets =
-    relations?.affiliatedProjects.asTarget ?? [];
+  const affiliatedProjectsTargets = useMemo(() => {
+    return relations?.affiliatedProjects.asTarget ?? [];
+  }, [relations?.affiliatedProjects.asTarget]);
+
   const affiliatedProjectsSourceIds = useMemo(() => {
     return Array.from(
       new Set(
