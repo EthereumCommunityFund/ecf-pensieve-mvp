@@ -1,9 +1,16 @@
 import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
+import '@nomicfoundation/hardhat-verify';
 import 'dotenv/config';
 import type { HardhatUserConfig } from 'hardhat/config';
 import { configVariable } from 'hardhat/config';
 
-const config: HardhatUserConfig = {
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY ?? '';
+
+const config: HardhatUserConfig & {
+  etherscan?: {
+    apiKey?: Record<string, string>;
+  };
+} = {
   plugins: [hardhatToolboxViemPlugin],
   solidity: {
     profiles: {
@@ -49,6 +56,11 @@ const config: HardhatUserConfig = {
       chainType: 'l1',
       url: configVariable('SEPOLIA_RPC_URL'),
       accounts: [configVariable('SEPOLIA_PRIVATE_KEY')],
+    },
+  },
+  etherscan: {
+    apiKey: {
+      sepolia: ETHERSCAN_API_KEY,
     },
   },
 };
