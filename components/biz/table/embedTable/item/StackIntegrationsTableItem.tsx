@@ -1,13 +1,18 @@
 'use client';
 
-import { cn } from '@heroui/react';
-import { XCircle } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 import { Controller, FieldArrayWithId, useFormContext } from 'react-hook-form';
 
-import { Select, SelectItem } from '@/components/base/select';
 import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
-import URLInput from '@/components/biz/FormAndTable/URLInput';
+
+import {
+  EmbedTableCellWrapper,
+  EmbedTableRemoveButtonCell,
+  EmbedTableRow,
+  EmbedTableSelectCell,
+  EmbedTableTextInputCell,
+  EmbedTableURLInputCell,
+} from '../commonCells';
 
 import { ITypeOption } from './AffiliatedProjectsTableItem';
 
@@ -36,15 +41,12 @@ interface StackIntegrationsTableItemProps {
 }
 
 const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
-  field,
   index,
   remove,
   itemKey,
   canRemove,
 }) => {
   const { control } = useFormContext();
-
-  // Create stable field paths using useMemo
   const fieldPaths = useMemo(
     () => ({
       project: `${itemKey}.${index}.project`,
@@ -57,186 +59,71 @@ const StackIntegrationsTableItem: React.FC<StackIntegrationsTableItemProps> = ({
   );
 
   return (
-    <div
-      key={index}
-      className="flex min-h-[40px] w-full items-stretch border-b border-black/10 bg-white last:border-b-0"
-    >
-      {/* Project Column */}
-      <div className="flex w-[240px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
-        <Controller
-          name={fieldPaths.project}
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <ProjectSearchSelector
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                }}
-                onBlur={field.onBlur}
-                placeholder="ethereum"
-                multiple={false}
-                allowNA={false}
-                columnName="Project"
-                itemKey={'stack_integrations'}
-              />
-              {fieldState.error && (
-                <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message || 'Project is required'}
-                </span>
-              )}
-            </>
-          )}
-        />
-      </div>
-
-      {/* Type Column */}
-      <div className="flex w-[180px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
-        <Controller
-          name={fieldPaths.type}
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <Select
-                selectedKeys={field.value ? [field.value] : []}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  if (selectedKey !== undefined) {
-                    field.onChange(selectedKey);
-                  }
-                }}
-                placeholder="dependency"
-                aria-label="Select integration type"
-                classNames={{
-                  base: 'max-w-full',
-                  trigger: `h-[32px] min-h-[32px] border-none bg-transparent shadow-none px-0`,
-                  mainWrapper: 'border-none shadow-none',
-                  innerWrapper: 'px-0',
-                  listboxWrapper: 'bg-white !max-w-none',
-                  popoverContent: 'bg-white !min-w-[320px]',
-                }}
-                radius="none"
-              >
-                {STACK_INTEGRATION_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} textValue={option.label}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </Select>
-              {fieldState.error && (
-                <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message || 'Type is required'}
-                </span>
-              )}
-            </>
-          )}
-        />
-      </div>
-
-      {/* Description Column */}
-      <div className="flex w-[200px] shrink-0 items-center border-r border-black/10 px-[10px] py-[5px]">
-        <Controller
-          name={fieldPaths.description}
-          control={control}
-          render={({ field, fieldState }) => (
-            <div className="w-full">
-              <input
-                type="text"
-                value={field.value || ''}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                placeholder="Give a description"
-                className={cn(
-                  'h-[32px] w-full border-none bg-transparent px-0',
-                  'text-[14px] font-[400] leading-[19px] text-black',
-                  'placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0',
-                  fieldState.error && 'bg-red-50',
+    <EmbedTableRow>
+      <EmbedTableCellWrapper itemKey={itemKey} columnKey="project">
+        <div className="flex w-full flex-col justify-center">
+          <Controller
+            name={fieldPaths.project}
+            control={control}
+            render={({ field, fieldState }) => (
+              <>
+                <ProjectSearchSelector
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="ethereum"
+                  multiple={false}
+                  allowNA={false}
+                  columnName="Project"
+                  itemKey={'stack_integrations'}
+                />
+                {fieldState.error && (
+                  <span className="mt-1 text-[12px] text-red-500">
+                    {fieldState.error.message || 'Project is required'}
+                  </span>
                 )}
-                style={{
-                  boxShadow: 'none !important',
-                  outline: 'none !important',
-                  border: 'none !important',
-                }}
-              />
-              {fieldState.error && (
-                <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message}
-                </span>
-              )}
-            </div>
-          )}
-        />
-      </div>
-
-      {/* Reference Column */}
-      <div className="flex w-[180px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
-        <Controller
-          name={fieldPaths.reference}
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <URLInput
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="https://"
-                required={false}
-              />
-              {fieldState.error && (
-                <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message}
-                </span>
-              )}
-            </>
-          )}
-        />
-      </div>
-
-      {/* Repository Column */}
-      <div
-        className={cn(
-          'flex w-[180px] shrink-0 flex-col justify-center px-[10px] py-[5px]',
-          canRemove ? 'border-r border-black/10' : '',
-        )}
-      >
-        <Controller
-          name={fieldPaths.repository}
-          control={control}
-          render={({ field, fieldState }) => (
-            <>
-              <URLInput
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="https://"
-                required={false}
-              />
-              {fieldState.error && (
-                <span className="mt-1 text-[12px] text-red-500">
-                  {fieldState.error.message}
-                </span>
-              )}
-            </>
-          )}
-        />
-      </div>
-
-      {/* Delete Button Column */}
-      {canRemove && (
-        <div className="flex w-[60px] items-center justify-center">
-          <button
-            type="button"
-            className="flex size-[40px] cursor-pointer items-center justify-center rounded-full border-none bg-transparent p-[8px] opacity-30"
-            onClick={remove}
-            aria-label={`Remove stack integration ${index + 1}`}
-            style={{
-              outline: 'none',
-              boxShadow: 'none',
-            }}
-          >
-            <XCircle size={24} />
-          </button>
+              </>
+            )}
+          />
         </div>
-      )}
-    </div>
+      </EmbedTableCellWrapper>
+      <EmbedTableSelectCell
+        itemKey={itemKey}
+        columnKey="type"
+        name={fieldPaths.type}
+        placeholder="dependency"
+        options={STACK_INTEGRATION_TYPE_OPTIONS}
+        selectProps={{
+          classNames: {
+            popoverContent: 'bg-white !min-w-[320px]',
+          },
+        }}
+      />
+      <EmbedTableTextInputCell
+        itemKey={itemKey}
+        columnKey="description"
+        name={fieldPaths.description}
+        placeholder="Give a description"
+      />
+      <EmbedTableURLInputCell
+        itemKey={itemKey}
+        columnKey="reference"
+        name={fieldPaths.reference}
+        placeholder="https://"
+      />
+      <EmbedTableURLInputCell
+        itemKey={itemKey}
+        columnKey="repository"
+        name={fieldPaths.repository}
+        placeholder="https://"
+        showRightBorder={false}
+      />
+      <EmbedTableRemoveButtonCell
+        canRemove={canRemove}
+        onRemove={remove}
+        ariaLabel={`Remove stack integration ${index + 1}`}
+      />
+    </EmbedTableRow>
   );
 };
 

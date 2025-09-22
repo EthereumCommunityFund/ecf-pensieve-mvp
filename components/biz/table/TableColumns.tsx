@@ -16,6 +16,7 @@ import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/Pr
 import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
 import SablierEntry from '@/components/sablier/SablierEntry';
+import { EMBED_TABLE_FORM_TYPES } from '@/constants/embedTable';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -310,17 +311,9 @@ const InputCell = ({
   }, [localExpanded, onToggleExpand]);
 
   // Check if the cell should be clickable based on display type
-  const isTableDisplayType = [
-    'multiContracts',
-    'founderList',
-    'social_links',
-    'websites',
-    'tablePhysicalEntity',
-    'fundingReceivedGrants',
-    'affiliated_projects',
-    'contributing_teams',
-    'stack_integrations',
-  ].includes(finalDisplayFormType || '');
+  const isTableDisplayType = EMBED_TABLE_FORM_TYPES.includes(
+    finalDisplayFormType!,
+  );
 
   if (isPendingValidation) {
     return (
