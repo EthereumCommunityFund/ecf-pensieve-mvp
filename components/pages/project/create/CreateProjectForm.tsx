@@ -123,6 +123,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const [createdEntityId, setCreatedEntityId] = useState<number | undefined>(
     undefined,
   );
+  const [createdProposalId, setCreatedProposalId] = useState<
+    number | undefined
+  >(undefined);
 
   const methods = useForm<IProjectFormData>({
     resolver: yupResolver(projectSchema) as any,
@@ -210,6 +213,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       const performSubmit = async () => {
         setApiSubmissionStatus('pending');
         setCreatedEntityId(undefined);
+        setCreatedProposalId(undefined);
 
         if (formType === IFormTypeEnum.Project) {
           const payload = transformProjectData(
@@ -224,6 +228,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              setCreatedProposalId(data?.proposalId);
               fetchUserProfile();
             },
             onError: (error: any) => {
@@ -261,6 +266,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              setCreatedProposalId(data?.id);
               fetchUserProfile();
             },
             onError: (error: any) => {
@@ -647,8 +653,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 projectId={
                   formType === IFormTypeEnum.Proposal
                     ? projectId
-                    : projectData?.id
+                    : (createdEntityId ?? projectData?.id)
                 }
+                proposalId={createdProposalId}
                 apiStatus={apiSubmissionStatus}
               />
             </div>

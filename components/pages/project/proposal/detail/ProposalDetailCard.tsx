@@ -2,6 +2,7 @@ import { cn, Skeleton } from '@heroui/react';
 import { FC, useCallback, useMemo } from 'react';
 
 import { useProposalProgressModal } from '@/components/biz/modal/proposalProgress/Context';
+import ShareButton from '@/components/biz/share/ShareButton';
 import { InfoIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -28,7 +29,7 @@ interface IProposalDetailCardProps {
 
 const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
   const { profile } = useAuth();
-  const { proposal, proposalIndex, leadingProposalId } = props;
+  const { proposal, proposalIndex, leadingProposalId, projectId } = props;
 
   const proposalQueryOptions = useMemo(
     () => ({
@@ -90,6 +91,11 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
     openProposalProgressModal();
   }, [openProposalProgressModal]);
 
+  const shareUrl = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/project/pending/${projectId}/proposal/${proposal?.id}`;
+  }, [projectId, proposal]);
+
   if (!proposal) {
     return <ProposalDetailCardSkeleton />;
   }
@@ -132,58 +138,62 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
         </div>
       </div>
 
-      {/* progress */}
-      <div className="mobile:w-full flex w-[516px] flex-col gap-[10px] rounded-[10px] border border-black/10 px-[20px] py-[10px]">
-        <div className="flex flex-col gap-[5px]">
-          <div className="flex items-center justify-between">
-            {/* Percentage */}
-            <div className="flex items-center gap-[5px]">
-              <span className="font-mona text-[18px] font-[600] leading-[25px] text-black">
-                {formattedPercentageOfProposal}
-              </span>
-              <button
-                onClick={handleInfoIconClick}
-                className="-m-1 cursor-pointer rounded-sm p-1 opacity-30 transition-opacity duration-200 hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                aria-label="View proposal progress information"
-                title="Click to learn more about proposal progress"
-              >
-                <InfoIcon size={20} />
-              </button>
+      <div className="tablet:w-full mobile:w-full mobile:gap-[10px] flex flex-1 items-center justify-end gap-[20px]">
+        {/* progress */}
+        <div className="mobile:w-full tablet:w-full flex w-[516px]  flex-col gap-[10px] rounded-[10px] border border-black/10 px-[20px] py-[10px]">
+          <div className="flex flex-col gap-[5px]">
+            <div className="flex items-center justify-between">
+              {/* Percentage */}
+              <div className="flex items-center gap-[5px]">
+                <span className="font-mona text-[18px] font-[600] leading-[25px] text-black">
+                  {formattedPercentageOfProposal}
+                </span>
+                <button
+                  onClick={handleInfoIconClick}
+                  className="-m-1 cursor-pointer rounded-sm p-1 opacity-30 transition-opacity duration-200 hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  aria-label="View proposal progress information"
+                  title="Click to learn more about proposal progress"
+                >
+                  <InfoIcon size={20} />
+                </button>
+              </div>
+              {/* Total Supported */}
+              <div className="flex items-center gap-[10px] text-[14px] font-[600] leading-[19px] text-black/50">
+                <span>Total Points Supported:</span>
+                <span>{totalSupportedPointsOfProposal}</span>
+              </div>
             </div>
-            {/* Total Supported */}
-            <div className="flex items-center gap-[10px] text-[14px] font-[600] leading-[19px] text-black/50">
-              <span>Total Points Supported:</span>
-              <span>{totalSupportedPointsOfProposal}</span>
-            </div>
+
+            <ProgressLine
+              percentage={formattedPercentageOfProposal}
+              isProposalValidated={isProposalValidated}
+            />
           </div>
 
-          <ProgressLine
-            percentage={formattedPercentageOfProposal}
-            isProposalValidated={isProposalValidated}
-          />
+          <div className="flex flex-wrap items-center justify-between text-[14px] font-[600] leading-[19px] text-black">
+            <div className="flex items-center gap-[10px]">
+              <span>Min Points</span>
+              <div className="flex gap-[5px]">
+                <span className="">{ESSENTIAL_ITEM_WEIGHT_SUM}</span>
+                <span className="text-black/50">
+                  ({totalValidPointsOfProposal} supported)
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-[10px]">
+              <span>Min Participation</span>
+              <div className="flex gap-[5px]">
+                <span className="">{ESSENTIAL_ITEM_QUORUM_SUM}</span>
+                <span className="text-black/50">
+                  ({totalValidQuorumOfProposal} voted)
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between text-[14px] font-[600] leading-[19px] text-black">
-          <div className="flex items-center gap-[10px]">
-            <span>Min Points</span>
-            <div className="flex gap-[5px]">
-              <span className="">{ESSENTIAL_ITEM_WEIGHT_SUM}</span>
-              <span className="text-black/50">
-                ({totalValidPointsOfProposal} supported)
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-[10px]">
-            <span>Min Participation</span>
-            <div className="flex gap-[5px]">
-              <span className="">{ESSENTIAL_ITEM_QUORUM_SUM}</span>
-              <span className="text-black/50">
-                ({totalValidQuorumOfProposal} voted)
-              </span>
-            </div>
-          </div>
-        </div>
+        <ShareButton shareUrl={shareUrl} className="size-[40px]" />
       </div>
     </div>
   );
@@ -223,37 +233,41 @@ const ProposalDetailCardSkeleton = () => {
         </div>
       </div>
 
-      {/* progress */}
-      <div className="mobile:w-full flex w-[440px] flex-col gap-[10px] rounded-[10px] border border-black/10 px-[20px] py-[10px]">
-        <div className="flex flex-col gap-[5px]">
-          <div className="flex items-center justify-between">
-            {/* Percentage */}
-            <div className="flex items-center gap-[5px]">
-              <Skeleton className="h-[25px] w-[50px]" />
-              <Skeleton className="size-[32px] rounded-sm" />
+      <div className="tablet:w-full mobile:w-full mobile:gap-[10px] flex flex-1 items-center justify-end gap-[20px]">
+        {/* progress */}
+        <div className="mobile:w-full tablet:w-full flex w-[516px] flex-col gap-[10px] rounded-[10px] border border-black/10 px-[20px] py-[10px]">
+          <div className="flex flex-col gap-[5px]">
+            <div className="flex items-center justify-between">
+              {/* Percentage */}
+              <div className="flex items-center gap-[5px]">
+                <Skeleton className="h-[25px] w-[50px]" />
+                <Skeleton className="size-[32px] rounded-sm" />
+              </div>
+              {/* Total Supported */}
+              <div className="flex items-center gap-[10px]">
+                <Skeleton className="h-[19px] w-[100px]" />
+                <Skeleton className="h-[19px] w-[30px]" />
+              </div>
             </div>
-            {/* Total Supported */}
+
+            {/* Progress Line */}
+            <Skeleton className="h-[8px] w-full rounded-full" />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-[10px]">
+              <Skeleton className="h-[19px] w-[90px]" />
+              <Skeleton className="h-[19px] w-[40px]" />
+            </div>
+
             <div className="flex items-center gap-[10px]">
               <Skeleton className="h-[19px] w-[100px]" />
               <Skeleton className="h-[19px] w-[30px]" />
             </div>
           </div>
-
-          {/* Progress Line */}
-          <Skeleton className="h-[8px] w-full rounded-full" />
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-[10px]">
-            <Skeleton className="h-[19px] w-[90px]" />
-            <Skeleton className="h-[19px] w-[40px]" />
-          </div>
-
-          <div className="flex items-center gap-[10px]">
-            <Skeleton className="h-[19px] w-[100px]" />
-            <Skeleton className="h-[19px] w-[30px]" />
-          </div>
-        </div>
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-md" />
       </div>
     </div>
   );
