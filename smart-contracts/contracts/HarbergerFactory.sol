@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.28;
 
-import {ClassicalSlot} from "./ClassicalSlot.sol";
-import {CommonOwnershipSlot} from "./CommonOwnershipSlot.sol";
-import {SacredBondSlot} from "./SacredBondSlot.sol";
+import {ValuationTaxEnabledSlot} from "./ValuationTaxEnabledSlot.sol";
+import {ValuationTaxShieldedSlot} from "./ValuationTaxShieldedSlot.sol";
 
 /**
  * @title HarbergerFactory
@@ -20,9 +19,8 @@ contract HarbergerFactory {
 
     enum SlotType {
         Unknown,
-        Classical,
-        CommonOwnership,
-        SacredBond
+        ValuationTaxEnabled,
+        ValuationTaxShielded
     }
 
     struct SlotInfo {
@@ -39,16 +37,14 @@ contract HarbergerFactory {
 
     mapping(uint256 => SlotInfo) private _slots;
     mapping(address => SlotType) public slotTypeByAddress;
-    address[] private _classicalSlots;
-    address[] private _commonOwnershipSlots;
-    address[] private _sacredBondSlots;
+    address[] private _valuationTaxEnabledSlots;
+    address[] private _valuationTaxShieldedSlots;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event GlobalAddressesConfigured(address indexed treasury, address indexed governance);
-    event ClassicalSlotCreated(uint256 indexed slotId, address slotAddress);
-    event CommonOwnershipSlotCreated(uint256 indexed slotId, address slotAddress);
-    event SacredBondSlotCreated(uint256 indexed slotId, address slotAddress);
+    event ValuationTaxEnabledSlotCreated(uint256 indexed slotId, address slotAddress);
+    event ValuationTaxShieldedSlotCreated(uint256 indexed slotId, address slotAddress);
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert Unauthorized();
@@ -87,40 +83,7 @@ contract HarbergerFactory {
         emit OwnershipTransferred(previousOwner, newOwner);
     }
 
-    function createClassicalSlot(
-        uint256 contentUpdateLimit,
-        uint256 taxPeriodInSeconds,
-        uint256 annualTaxRate,
-        uint256 minBidIncrementRate,
-        uint256 minValuation,
-        uint256 dustRate
-    ) external onlyOwner returns (uint256 slotId, address slotAddress) {
-        if (treasury == address(0) || governance == address(0)) revert GlobalAddressesUnset();
-        if (taxPeriodInSeconds == 0 || annualTaxRate == 0) revert InvalidParameter();
-        if (minValuation == 0) revert InvalidParameter();
-
-        slotId = ++slotIdCounter;
-
-        ClassicalSlot slotInstance = new ClassicalSlot(
-            treasury,
-            governance,
-            contentUpdateLimit,
-            taxPeriodInSeconds,
-            annualTaxRate,
-            minBidIncrementRate,
-            minValuation,
-            dustRate
-        );
-
-        slotAddress = address(slotInstance);
-        _slots[slotId] = SlotInfo({slotAddress: slotAddress, slotType: SlotType.Classical});
-        slotTypeByAddress[slotAddress] = SlotType.Classical;
-        _classicalSlots.push(slotAddress);
-
-        emit ClassicalSlotCreated(slotId, slotAddress);
-    }
-
-    function createCommonOwnershipSlot(
+    function createValuationTaxEnabledSlot(
         uint256 bondRate,
         uint256 contentUpdateLimit,
         uint256 taxPeriodInSeconds,
@@ -137,7 +100,7 @@ contract HarbergerFactory {
 
         slotId = ++slotIdCounter;
 
-        CommonOwnershipSlot slotInstance = new CommonOwnershipSlot(
+        ValuationTaxEnabledSlot slotInstance = new ValuationTaxEnabledSlot(
             treasury,
             governance,
             bondRate,
@@ -150,14 +113,14 @@ contract HarbergerFactory {
         );
 
         slotAddress = address(slotInstance);
-        _slots[slotId] = SlotInfo({slotAddress: slotAddress, slotType: SlotType.CommonOwnership});
-        slotTypeByAddress[slotAddress] = SlotType.CommonOwnership;
-        _commonOwnershipSlots.push(slotAddress);
+        _slots[slotId] = SlotInfo({slotAddress: slotAddress, slotType: SlotType.ValuationTaxEnabled});
+        slotTypeByAddress[slotAddress] = SlotType.ValuationTaxEnabled;
+        _valuationTaxEnabledSlots.push(slotAddress);
 
-        emit CommonOwnershipSlotCreated(slotId, slotAddress);
+        emit ValuationTaxEnabledSlotCreated(slotId, slotAddress);
     }
 
-    function createSacredBondSlot(
+    function createValuationTaxShieldedSlot(
         uint256 bondRate,
         uint256 contentUpdateLimit,
         uint256 taxPeriodInSeconds,
@@ -172,7 +135,7 @@ contract HarbergerFactory {
 
         slotId = ++slotIdCounter;
 
-        SacredBondSlot slotInstance = new SacredBondSlot(
+        ValuationTaxShieldedSlot slotInstance = new ValuationTaxShieldedSlot(
             treasury,
             governance,
             bondRate,
@@ -184,11 +147,11 @@ contract HarbergerFactory {
         );
 
         slotAddress = address(slotInstance);
-        _slots[slotId] = SlotInfo({slotAddress: slotAddress, slotType: SlotType.SacredBond});
-        slotTypeByAddress[slotAddress] = SlotType.SacredBond;
-        _sacredBondSlots.push(slotAddress);
+        _slots[slotId] = SlotInfo({slotAddress: slotAddress, slotType: SlotType.ValuationTaxShielded});
+        slotTypeByAddress[slotAddress] = SlotType.ValuationTaxShielded;
+        _valuationTaxShieldedSlots.push(slotAddress);
 
-        emit SacredBondSlotCreated(slotId, slotAddress);
+        emit ValuationTaxShieldedSlotCreated(slotId, slotAddress);
     }
 
     function getSlot(uint256 slotId) external view returns (SlotInfo memory info) {
@@ -196,15 +159,11 @@ contract HarbergerFactory {
         if (info.slotAddress == address(0)) revert SlotDoesNotExist();
     }
 
-    function getClassicalSlots() external view returns (address[] memory slots_) {
-        slots_ = _classicalSlots;
+    function getValuationTaxEnabledSlots() external view returns (address[] memory slots_) {
+        slots_ = _valuationTaxEnabledSlots;
     }
 
-    function getCommonOwnershipSlots() external view returns (address[] memory slots_) {
-        slots_ = _commonOwnershipSlots;
-    }
-
-    function getSacredBondSlots() external view returns (address[] memory slots_) {
-        slots_ = _sacredBondSlots;
+    function getValuationTaxShieldedSlots() external view returns (address[] memory slots_) {
+        slots_ = _valuationTaxShieldedSlots;
     }
 }

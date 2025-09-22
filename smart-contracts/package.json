@@ -10,5 +10,10 @@
     "hardhat": "^3.0.6",
     "typescript": "~5.8.3",
     "viem": "^2.37.6"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^3.0.0",
+    "chai": "^6.0.1",
+    "mocha": "^11.7.2"
   }
 }

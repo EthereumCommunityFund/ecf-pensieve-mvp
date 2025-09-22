@@ -2,10 +2,10 @@
 pragma solidity ^0.8.28;
 
 /**
- * @title CommonOwnershipSlot
+ * @title ValuationTaxEnabledSlot
  * @notice Harberger-style ad slot variant where only a fraction of the valuation is bonded on-chain.
  */
-contract CommonOwnershipSlot {
+contract ValuationTaxEnabledSlot {
     uint256 private constant RATE_DENOMINATOR = 1e4; // basis points (10000 = 100%)
     uint256 private constant SECONDS_PER_YEAR = 365 days;
     uint256 private constant _NOT_ENTERED = 1;
@@ -36,6 +36,8 @@ contract CommonOwnershipSlot {
     event SlotReset(address indexed previousOwner);
     event AdCreativeUpdated(address indexed owner, string uri);
     event SlotPoked(address indexed operator, uint256 taxPaidUntil, uint256 valuationAfter);
+    event TreasuryPayment(uint256 amount);
+    event FundsSent(address indexed to, uint256 amount);
 
     address public immutable treasury;
     address public immutable governance;
@@ -54,6 +56,7 @@ contract CommonOwnershipSlot {
     uint256 public lockedValuation;
     uint256 public baseValuation;
     uint256 public taxPaidUntil;
+    uint256 public prepaidTaxBalance;
     uint256 public contentUpdateCount;
     string public currentAdURI;
 
@@ -63,6 +66,7 @@ contract CommonOwnershipSlot {
         address currentOwner;
         uint256 valuation;
         uint256 lockedValuation;
+        uint256 prepaidTaxBalance;
         uint256 taxPaidUntil;
         uint256 timeRemainingInSeconds;
         uint256 contentUpdateCount;
@@ -153,7 +157,7 @@ contract CommonOwnershipSlot {
         contentUpdateCount = 0;
         currentAdURI = newUri;
 
-        _forwardToTreasury(taxDue);
+        prepaidTaxBalance = taxDue;
 
         emit SlotClaimed(msg.sender, newValuation, lockedAmount, taxPaidUntil);
     }
@@ -166,6 +170,10 @@ contract CommonOwnershipSlot {
         address previousOwner = currentOwner;
         if (previousOwner == address(0)) revert SlotVacant();
         _settleOverdueTax();
+
+        uint256 refundableTax = prepaidTaxBalance;
+        prepaidTaxBalance = 0;
+
         if (taxPeriods == 0 || newValuation == 0) revert InvalidParameter();
         if (newValuation < minValuation) revert InvalidParameter();
 
@@ -175,13 +183,10 @@ contract CommonOwnershipSlot {
         uint256 lockedAmount = _calculateLockedAmount(newValuation);
         uint256 taxDue = _calculateTax(newValuation, taxPeriods);
         if (taxDue == 0) revert InvalidParameter();
+        if (msg.value != lockedAmount + taxDue) revert InvalidAmount();
 
-        uint256 requiredValue = lockedAmount + taxDue;
-        if (msg.value != requiredValue) revert InvalidAmount();
-
-        uint256 payout = lockedValuation;
-        uint256 coverage = taxPeriodInSeconds * taxPeriods;
-        uint256 newPaidThrough = block.timestamp + coverage;
+        uint256 refundAmount = lockedValuation + refundableTax;
+        uint256 newPaidThrough = block.timestamp + (taxPeriodInSeconds * taxPeriods);
 
         currentOwner = msg.sender;
         valuation = newValuation;
@@ -190,9 +195,11 @@ contract CommonOwnershipSlot {
         taxPaidUntil = newPaidThrough;
         contentUpdateCount = 0;
         currentAdURI = newUri;
+        prepaidTaxBalance = taxDue;
 
-        _forwardToTreasury(taxDue);
-        _sendValue(payable(previousOwner), payout);
+        if (refundAmount != 0) {
+            _sendValue(payable(previousOwner), refundAmount);
+        }
 
         emit SlotTakenOver(previousOwner, msg.sender, newValuation, lockedAmount, newPaidThrough);
     }
@@ -208,7 +215,7 @@ contract CommonOwnershipSlot {
         uint256 coverage = taxPeriodInSeconds * taxPeriods;
         taxPaidUntil = taxPaidUntil + coverage;
 
-        _forwardToTreasury(taxDue);
+        prepaidTaxBalance += taxDue;
 
         emit SlotRenewed(msg.sender, taxPaidUntil);
     }
@@ -220,6 +227,8 @@ contract CommonOwnershipSlot {
         if (block.timestamp < taxPaidUntil) revert TaxStillActive();
 
         uint256 payout = lockedValuation;
+        uint256 refundableTax = prepaidTaxBalance;
+        prepaidTaxBalance = 0;
 
         currentOwner = address(0);
         valuation = 0;
@@ -229,7 +238,7 @@ contract CommonOwnershipSlot {
         contentUpdateCount = 0;
         currentAdURI = "";
 
-        _sendValue(payable(previousOwner), payout);
+        _sendValue(payable(previousOwner), payout + refundableTax);
 
         emit SlotForfeited(previousOwner);
     }
@@ -248,6 +257,7 @@ contract CommonOwnershipSlot {
             taxPaidUntil = 0;
             contentUpdateCount = 0;
             currentAdURI = "";
+            prepaidTaxBalance = 0;
 
             emit SlotForfeited(previousOwner);
         } else {
@@ -261,6 +271,8 @@ contract CommonOwnershipSlot {
 
         _settleOverdueTax();
 
+        uint256 refundableTax = prepaidTaxBalance;
+        prepaidTaxBalance = 0;
         uint256 payout = lockedValuation;
 
         currentOwner = address(0);
@@ -271,7 +283,7 @@ contract CommonOwnershipSlot {
         contentUpdateCount = 0;
         currentAdURI = "";
 
-        _sendValue(payable(previousOwner), payout);
+        _sendValue(payable(previousOwner), payout + refundableTax);
 
         emit SlotReset(previousOwner);
     }
@@ -290,6 +302,7 @@ contract CommonOwnershipSlot {
             currentOwner: currentOwner,
             valuation: valuation,
             lockedValuation: lockedValuation,
+            prepaidTaxBalance: prepaidTaxBalance,
             taxPaidUntil: taxPaidUntil,
             timeRemainingInSeconds: block.timestamp >= taxPaidUntil
                 ? 0
@@ -319,6 +332,7 @@ contract CommonOwnershipSlot {
         return (valuation_ * bondRate) / RATE_DENOMINATOR;
     }
 
+    // TODO: Evaluate introducing an idempotent closed-form settlement formula.
     function _settleOverdueTax() private {
         if (currentOwner == address(0)) return;
         if (block.timestamp < taxPaidUntil) return;
@@ -335,13 +349,17 @@ contract CommonOwnershipSlot {
         uint256 overdueSeconds = block.timestamp - taxPaidUntil;
         uint256 periodsDue = (overdueSeconds / taxPeriodInSeconds) + 1;
         uint256 taxAccrued;
-        uint256 leftover;
+        uint256 ownerRefund;
 
         for (uint256 i = 0; i < periodsDue; ++i) {
             uint256 previousValuation = valuation;
             uint256 previousLocked = lockedValuation;
 
             if (previousValuation == 0 || previousLocked == 0) {
+                if (prepaidTaxBalance > 0) {
+                    ownerRefund += prepaidTaxBalance;
+                    prepaidTaxBalance = 0;
+                }
                 valuation = 0;
                 lockedValuation = 0;
                 baseValuation = 0;
@@ -351,36 +369,60 @@ contract CommonOwnershipSlot {
 
             uint256 theoreticalValuation = (previousValuation * TAX_BASE) / taxDenominator;
             uint256 theoreticalTax = previousValuation - theoreticalValuation;
-            uint256 taxPaid = theoreticalTax;
-            uint256 newValuation = theoreticalValuation;
+            uint256 taxRemaining = theoreticalTax;
 
-            if (taxPaid >= previousLocked) {
-                taxPaid = previousLocked;
-                newValuation = previousValuation > taxPaid ? previousValuation - taxPaid : 0;
+            if (prepaidTaxBalance > 0) {
+                uint256 taxFromPrepaid = prepaidTaxBalance >= taxRemaining ? taxRemaining : prepaidTaxBalance;
+                prepaidTaxBalance -= taxFromPrepaid;
+                taxRemaining -= taxFromPrepaid;
+                taxAccrued += taxFromPrepaid;
             }
 
-            taxAccrued += taxPaid;
+            uint256 taxFromLocked;
+            if (taxRemaining > 0) {
+                if (taxRemaining >= previousLocked) {
+                    taxFromLocked = previousLocked;
+                    taxRemaining -= previousLocked;
+                } else {
+                    taxFromLocked = taxRemaining;
+                    taxRemaining = 0;
+                }
+                taxAccrued += taxFromLocked;
+            } else {
+                taxFromLocked = 0;
+            }
 
-            if (previousLocked <= taxPaid) {
+            if (taxFromLocked >= previousLocked) {
                 valuation = 0;
                 lockedValuation = 0;
                 baseValuation = 0;
                 taxPaidUntil = block.timestamp;
+                if (prepaidTaxBalance > 0) {
+                    ownerRefund += prepaidTaxBalance;
+                    prepaidTaxBalance = 0;
+                }
                 break;
             }
 
-            uint256 remainingLocked = previousLocked - taxPaid;
+            uint256 newValuation = taxRemaining == 0
+                ? theoreticalValuation
+                : previousValuation > taxFromLocked ? previousValuation - taxFromLocked : 0;
+            uint256 remainingLocked = previousLocked - taxFromLocked;
 
             valuation = newValuation;
             lockedValuation = remainingLocked;
             taxPaidUntil += taxPeriodInSeconds;
 
             if (dustThresholdValuation != 0 && valuation <= dustThresholdValuation) {
-                leftover += remainingLocked;
+                ownerRefund += remainingLocked;
                 valuation = 0;
                 lockedValuation = 0;
                 baseValuation = 0;
                 taxPaidUntil = block.timestamp;
+                if (prepaidTaxBalance > 0) {
+                    ownerRefund += prepaidTaxBalance;
+                    prepaidTaxBalance = 0;
+                }
                 break;
             }
 
@@ -389,11 +431,15 @@ contract CommonOwnershipSlot {
             }
 
             if (valuation == 0 || lockedValuation == 0) {
-                leftover += lockedValuation;
+                ownerRefund += lockedValuation;
                 valuation = 0;
                 lockedValuation = 0;
                 baseValuation = 0;
                 taxPaidUntil = block.timestamp;
+                if (prepaidTaxBalance > 0) {
+                    ownerRefund += prepaidTaxBalance;
+                    prepaidTaxBalance = 0;
+                }
                 break;
             }
         }
@@ -402,16 +448,18 @@ contract CommonOwnershipSlot {
             _forwardToTreasury(taxAccrued);
         }
 
-        if (leftover > 0 && currentOwner != address(0)) {
-            _sendValue(payable(currentOwner), leftover);
+        if (ownerRefund > 0 && currentOwner != address(0)) {
+            _sendValue(payable(currentOwner), ownerRefund);
         }
     }
 
     function _forwardToTreasury(uint256 amount) private {
+        emit TreasuryPayment(amount);
         _sendValue(payable(treasury), amount);
     }
 
     function _sendValue(address payable to, uint256 amount) private {
+        emit FundsSent(to, amount);
         (bool success, ) = to.call{value: amount}("");
         if (!success) revert TransferFailed();
     }
