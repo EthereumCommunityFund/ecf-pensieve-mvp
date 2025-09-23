@@ -5,6 +5,7 @@ import { FC } from 'react';
 
 import ShareButton from '@/components/biz/share/ShareButton';
 import { IProject } from '@/types';
+import { getShareUrlByShortCode } from '@/utils/share';
 
 import BookmarkButton from './list/BookmarkButton';
 import UpvoteButton from './UpvoteButton';
@@ -70,7 +71,9 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
         <UpvoteButton projectId={project.id} project={project} />
         <BookmarkButton projectId={project.id} />
-        {project.shortCode && <ShareButton shortCode={project.shortCode} />}
+        {project.shortCode && (
+          <ShareButton shareUrl={getShareUrlByShortCode(project.shortCode)} />
+        )}
       </div>
     </div>
   );

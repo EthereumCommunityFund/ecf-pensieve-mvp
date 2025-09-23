@@ -35,7 +35,7 @@ const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, shareUrl }) => {
       classNames={{
         base: 'bg-white p-0',
         header: 'py-[10px] px-[20px]',
-        body: 'border-t border-black/10 p-[20px] flex flex-col gap-[14px]',
+        body: 'border-t border-black/10 p-[20px] mobile:p-[20px] flex flex-col gap-[14px]',
       }}
     >
       <ModalContent>

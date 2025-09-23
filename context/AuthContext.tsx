@@ -24,6 +24,7 @@ type AuthStatus =
   | 'fetching_profile'
   | 'creating_profile'
   | 'authenticated'
+  | 'awaiting_turnstile_verification'
   | 'error';
 
 type ConnectSource = 'connectButton' | 'invalidAction' | 'pageLoad';
@@ -71,13 +72,15 @@ interface IAuthContext {
 
   // Actions
   authenticate: () => Promise<void>;
-  createProfile: (username: string, inviteCode?: string) => Promise<void>;
+  createProfile: (username: string) => Promise<void>;
   logout: () => Promise<void>;
   performFullLogoutAndReload: () => Promise<void>;
   showAuthPrompt: (source?: ConnectSource) => void;
   hideAuthPrompt: () => void;
   setConnectSource: (source: ConnectSource) => void;
   fetchUserProfile: () => Promise<IProfile | null>;
+  needsTurnstile: boolean;
+  continueAuthWithTurnstile: (token: string) => Promise<void>;
 }
 
 export const CreateProfileErrorPrefix = '[Create Profile Failed]';
@@ -109,6 +112,8 @@ const initialContext: IAuthContext = {
   setConnectSource: () => {},
   createProfile: async () => {},
   fetchUserProfile: async () => null,
+  needsTurnstile: false,
+  continueAuthWithTurnstile: async () => {},
 };
 
 const AuthContext = createContext<IAuthContext>(initialContext);
@@ -142,6 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const signatureDataRef = useRef<SignatureData>({});
   const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
+
+  const [needsTurnstile, setNeedsTurnstile] = useState(false);
+  const turnstileTokenRef = useRef<string | null>(null);
 
   const { address, isConnected, chain } = useAccount();
   const { disconnectAsync } = useDisconnect();
@@ -186,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const resetAuthState = useCallback(() => {
+    turnstileTokenRef.current = null;
     setUserState({
       session: null,
       user: null,
@@ -337,6 +346,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (
       authState.status === 'authenticating' ||
       authState.status === 'fetching_profile' ||
+      authState.status === 'awaiting_turnstile_verification' ||
       authState.status === 'authenticated'
     ) {
       return;
@@ -366,6 +376,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!nonce) {
         handleError('Failed to retrieve nonce from server.', false, true);
+        return;
       }
 
       const message = createSiweMessage({
@@ -382,19 +393,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const signature = await signMessageAsync({ message });
       signatureDataRef.current = { message, signature };
 
-      if (!isRegistered) {
-        setUserState((prev) => ({ ...prev, newUser: true }));
-        updateAuthState('authenticated');
-        return;
-      } else {
-        const { token } = await verifyMutation.mutateAsync({
-          address,
-          signature,
-          message,
-        });
-
-        await handleSupabaseLogin(token);
-      }
+      setNeedsTurnstile(true);
+      updateAuthState('awaiting_turnstile_verification');
+      setUserState((prev) => ({
+        ...prev,
+        newUser: !isRegistered,
+      }));
     } catch (error: any) {
       const errorMessage =
         error.message || 'Authentication failed. Please try again.';
@@ -413,12 +417,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkRegistrationQuery,
     signMessageAsync,
     verifyMutation,
-    handleError,
     handleSupabaseLogin,
+    handleError,
   ]);
 
+  const continueAuthWithTurnstile = useCallback(
+    async (turnstileToken: string) => {
+      if (
+        !signatureDataRef.current.message ||
+        !signatureDataRef.current.signature
+      ) {
+        handleError('Missing signature data', false, true);
+        return;
+      }
+
+      try {
+        const { message, signature } = signatureDataRef.current;
+
+        if (userState.newUser) {
+          turnstileTokenRef.current = turnstileToken;
+          setNeedsTurnstile(false);
+          updateAuthState('fetching_profile');
+        } else {
+          updateAuthState('fetching_profile');
+          setNeedsTurnstile(false);
+
+          const { token } = await verifyMutation.mutateAsync({
+            address: address!,
+            signature,
+            message,
+            turnstileToken,
+          });
+          await handleSupabaseLogin(token);
+        }
+      } catch (error: any) {
+        setNeedsTurnstile(true);
+        updateAuthState('awaiting_turnstile_verification');
+        handleError(error.message, false, false);
+      }
+    },
+    [
+      address,
+      userState.newUser,
+      verifyMutation,
+      handleSupabaseLogin,
+      updateAuthState,
+      handleError,
+    ],
+  );
+
   const createProfile = useCallback(
-    async (username: string, inviteCode?: string) => {
+    async (username: string) => {
       if (!address) {
         handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
         return;
@@ -432,14 +481,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           signature: signatureDataRef.current.signature!,
           message: signatureDataRef.current.message!,
           username,
-          inviteCode,
+          turnstileToken: turnstileTokenRef.current!,
         });
 
         setUserState((prev) => ({ ...prev, isNewUserRegistration: true }));
         await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
+        turnstileTokenRef.current = null;
+        setNeedsTurnstile(true);
+        updateAuthState('awaiting_turnstile_verification');
         handleError(
           `${CreateProfileErrorPrefix}: ${error.message || 'Please try again'}`,
+          false,
+          false,
         );
       }
     },
@@ -590,6 +644,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     hideAuthPrompt,
     setConnectSource,
     fetchUserProfile,
+    needsTurnstile,
+    continueAuthWithTurnstile,
   };
 
   return (

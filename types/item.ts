@@ -120,27 +120,39 @@ export interface IItemConfig<K extends IItemKey> {
   componentsProps?: Record<string, any>; // For custom props of the components
 }
 
-export type IFormDisplayType =
+export type IBaseFormDisplayType =
   | 'string'
   | 'textarea'
   | 'stringMultiple' // separate by comma
   | 'select'
   | 'selectMultiple'
+  | 'autoComplete'
   | 'img'
   | 'link'
   | 'date'
+  | 'smartContract';
+
+export type IEmbedTableFormDisplayType =
   | 'founderList'
   | 'websites'
   | 'social_links'
   | 'tablePhysicalEntity'
-  | 'autoComplete'
+  | 'multiContracts'
   | 'fundingReceivedGrants'
   | 'affiliated_projects'
   | 'contributing_teams'
+  | 'contributors'
+  | 'contributors_organization'
+  | 'endorsers'
   | 'stack_integrations'
-  | 'roadmap'
-  | 'smartContract'
-  | 'multiContracts';
+  | 'advisors'
+  | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
+
+export type IFormDisplayType =
+  | IBaseFormDisplayType
+  | IEmbedTableFormDisplayType
+  | 'roadmap' // not confirm how to display
+  | 'unknown';
 
 export interface IGroupConfig {
   key: IItemGroupEnum;
@@ -222,6 +234,27 @@ export interface IContributingTeam {
   _id?: string;
 }
 
+export interface IContributors {
+  name: string;
+  role: string;
+  address: string;
+  _id?: string;
+}
+
+export interface IContributorsOrganization {
+  name: string;
+  role: string;
+  address: string;
+  _id?: string;
+}
+
+export interface IEndorser {
+  name: string;
+  socialIdentifier: string;
+  reference?: string;
+  _id?: string;
+}
+
 export interface IStackIntegration {
   project: string | string[];
   type: string;
@@ -231,12 +264,24 @@ export interface IStackIntegration {
   _id?: string;
 }
 
+export interface IAdvisors {
+  name: string;
+  title: string;
+  address: string;
+  active: string;
+  _id?: string;
+}
+
 // Type mapping for getItemRowData function
 export interface IItemDataTypeMap {
   funding_received_grants: IFundingReceivedGrants;
   affiliated_projects: IAffiliatedProject;
   contributing_teams: IContributingTeam;
+  contributors: IContributors;
+  contributors_organization: IContributorsOrganization;
+  endorsers: IEndorser;
   stack_integrations: IStackIntegration;
+  advisors: IAdvisors;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

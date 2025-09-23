@@ -1,6 +1,6 @@
 'use client';
 
-import { useDisclosure } from '@heroui/react';
+import { cn, useDisclosure } from '@heroui/react';
 import { FC } from 'react';
 
 import ShareModal from '@/components/biz/share/ShareModal';
@@ -8,24 +8,19 @@ import { ShareLinkIcon } from '@/components/icons';
 import ProjectActionButton from '@/components/pages/project/detail/ProjectActionButton';
 
 interface ShareButtonProps {
-  shortCode: string;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  shareUrl: string;
 }
 
-const ShareButton: FC<ShareButtonProps> = ({
-  shortCode,
-  className = '',
-  size = 'md',
-}) => {
+const ShareButton: FC<ShareButtonProps> = ({ className = '', shareUrl }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <>
       <ProjectActionButton onPress={onOpen}>
-        <ShareLinkIcon className="size-[20px]" />
+        <ShareLinkIcon className={cn('size-[20px]', className)} />
       </ProjectActionButton>
-      <ShareModal isOpen={isOpen} onClose={onClose} shortCode={shortCode} />
+      <ShareModal isOpen={isOpen} onClose={onClose} shareUrl={shareUrl} />
     </>
   );
 };

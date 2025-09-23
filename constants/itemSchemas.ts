@@ -7,9 +7,13 @@ import {
 } from '@/components/pages/project/create/types';
 import { NA_VALUE } from '@/constants/naSelection';
 import {
+  IAdvisors,
   IAffiliatedProject,
   IContributingTeam,
+  IContributors,
+  IContributorsOrganization,
   IDateConstraints,
+  IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
   IStackIntegration,
@@ -274,6 +278,40 @@ const contributingTeamsSchema: yup.ObjectSchema<IContributingTeam> = yup
     _id: yup.string().optional(),
   });
 
+const contributorsSchema: yup.ObjectSchema<IContributors> = yup.object().shape({
+  name: yup.string().required('name is required'),
+  role: yup.string().required('role is required'),
+  address: yup.string().required('address or social identifier is required'),
+  _id: yup.string().optional(),
+});
+
+const endorsersSchema: yup.ObjectSchema<IEndorser> = yup.object().shape({
+  name: yup.string().required('name is required'),
+  socialIdentifier: yup.string().required('social identifier is required'),
+  reference: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .optional(),
+  _id: yup.string().optional(),
+});
+
+const contributorsOrganizationSchema: yup.ObjectSchema<IContributorsOrganization> =
+  yup.object().shape({
+    name: yup.string().required('name is required'),
+    role: yup.string().required('role is required'),
+    address: yup.string().required('address or social identifier is required'),
+    _id: yup.string().optional(),
+  });
+
+const advisorsSchema: yup.ObjectSchema<IAdvisors> = yup.object().shape({
+  name: yup.string().required('name is required'),
+  title: yup.string().required('title is required'),
+  address: yup.string().required('address is required'),
+  active: yup.string().required('please select active option'),
+  _id: yup.string().optional(),
+});
+
 const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
   .object()
   .shape({
@@ -400,7 +438,6 @@ export const itemValidationSchemas = {
 
   openSource: yup
     .string()
-    .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is open source'),
 
   codeRepo: yup
@@ -599,6 +636,24 @@ export const itemValidationSchemas = {
     .min(1, 'At least one contributing team is required')
     .required('Contributing teams information is required'),
 
+  contributors: yup
+    .array()
+    .of(contributorsSchema)
+    .min(1, 'At least one contributor is required')
+    .required('Contributors information is required'),
+
+  endorsers: yup
+    .array()
+    .of(endorsersSchema)
+    .min(1, 'At least one endorser is required')
+    .required('Endorsers information is required'),
+
+  contributors_organization: yup
+    .array()
+    .of(contributorsOrganizationSchema)
+    .min(1, 'At least one contributor is required')
+    .required('Contributors organization information is required'),
+
   stack_integrations: yup
     .array()
     .of(stackIntegrationSchema)
@@ -662,6 +717,97 @@ export const itemValidationSchemas = {
     .required('Treasury vault address is required when applicable'),
 
   treasury_mechanism: yup.string().required('Treasury mechanism is required'),
+
+  constitution: yup.string().required('Constitution is required'),
+
+  milestone_type: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one milestone type')
+    .required('Milestone type is required'),
+
+  software_license: yup.string().required('Software license is required'),
+
+  airdrops: yup.string().required('Airdrop status is required'),
+
+  team_location: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one team location')
+    .required('Team location is required'),
+
+  token_benefits: yup.string().required('Token benefits are required'),
+
+  token_risks: yup.string().required('Token risks are required'),
+
+  token_rights: yup.string().required('Token rights are required'),
+
+  token_obligations: yup.string().required('Token obligations are required'),
+
+  dapp_storage_stack: yup
+    .string()
+    .required('Dapp storage stack information is required'),
+
+  dapp_account_management_stack: yup
+    .string()
+    .required('Dapp account management stack information is required'),
+
+  dapp_logic_program_stack: yup
+    .string()
+    .required('Dapp logic/program stack information is required'),
+
+  user_data_storage_stack: yup
+    .string()
+    .required('User data storage stack information is required'),
+
+  unique_value_proposition: yup
+    .string()
+    .required('Unique value proposition is required'),
+
+  audit_report: yup.string().required('Audit report details are required'),
+
+  previous_funding_rounds: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Previous funding rounds URL is required'),
+
+  vault_multi_sig_holder_addresses_step2: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Vault multi-sig holder reference is required'),
+
+  on_chain_treasury_step1: yup
+    .string()
+    .oneOf(['Yes', 'No'], 'Select whether an on-chain treasury exists')
+    .required('On-chain treasury status is required'),
+
+  token_utility: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'Select at least one token utility')
+    .required('Token utility is required'),
+
+  blockchain_explorer: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Blockchain explorer URL is required'),
+
+  financial_status: yup.string().required('Financial status is required'),
+
+  income_revenue: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Income or revenue statement URL is required'),
+
+  advisors: yup
+    .array()
+    .of(advisorsSchema)
+    .min(1, 'At least one advisor is required')
+    .required('advisor information is required'),
 };
 
 export { founderSchema, smartFounderSchema };

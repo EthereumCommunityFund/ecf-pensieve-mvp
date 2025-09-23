@@ -163,8 +163,14 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         itemsNotEssential: [
           'audit_status',
           'dapp_category',
+          'dapp_storage_stack',
+          'dapp_account_management_stack',
+          'dapp_logic_program_stack',
+          'user_data_storage_stack',
+          'unique_value_proposition',
           'protocol_built_on',
           'stack_integrations',
+          'software_license',
         ],
         groups: [
           {
@@ -190,7 +196,11 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         label: 'Organization',
         description: 'How the project is organized legally and operationally',
         items: ['orgStructure', 'publicGoods'],
-        itemsNotEssential: ['affiliated_projects', 'contributing_teams'],
+        itemsNotEssential: [
+          'affiliated_projects',
+          'contributing_teams',
+          'team_location',
+        ],
         groups: [],
       },
       {
@@ -204,6 +214,8 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'core_team',
           'team_incentives',
           'ownership_of_project',
+          'contributors_organization',
+          'advisors',
         ],
         groups: [],
       },
@@ -229,6 +241,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'budget_plans',
           'expense_statements',
           'runway',
+          'endorsers',
         ],
         groups: [],
       },
@@ -239,7 +252,13 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         description:
           'Key details about the project’s token, including its purpose, supply, and mechanics',
         items: ['tokenContract'],
-        itemsNotEssential: ['token_sales', 'token_type', 'token_launch_date'],
+        itemsNotEssential: [
+          'token_sales',
+          'token_type',
+          'token_launch_date',
+          'token_utility',
+          'airdrops',
+        ],
         groups: [],
       },
     ],
@@ -256,7 +275,11 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         label: 'Governance',
         description: '',
         items: [],
-        itemsNotEssential: ['physical_entity'],
+        itemsNotEssential: [
+          'physical_entity',
+          'constitution',
+          'on_chain_treasury_step1',
+        ],
         groups: [],
       },
     ],

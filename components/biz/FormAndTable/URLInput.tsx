@@ -5,6 +5,7 @@ import React from 'react';
 interface URLInputProps {
   value?: string;
   onChange: (value: string) => void;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   error?: string;
   placeholder?: string;
@@ -15,6 +16,7 @@ interface URLInputProps {
 const URLInput: React.FC<URLInputProps> = ({
   value = '',
   onChange,
+  onBlur,
   disabled = false,
   error,
   placeholder = 'https://',
@@ -71,6 +73,8 @@ const URLInput: React.FC<URLInputProps> = ({
         onChange(`https://${inputValue}`);
       }
     }
+
+    onBlur?.(e);
   };
 
   // const validationError = validateURL(value);

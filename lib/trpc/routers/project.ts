@@ -185,7 +185,10 @@ export const projectRouter = router({
             tx,
           );
 
-          return project;
+          return {
+            ...project,
+            proposalId: proposal.id,
+          };
         });
       } catch (error) {
         console.error('Error in createProject:', {

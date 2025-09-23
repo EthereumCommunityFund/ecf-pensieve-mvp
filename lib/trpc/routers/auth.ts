@@ -1,13 +1,13 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { ethers } from 'ethers';
 import { generateSiweNonce } from 'viem/siwe';
 import { z } from 'zod';
 
 import { loginNonces, profiles } from '@/lib/db/schema';
-import { invitationCodes } from '@/lib/db/schema/invitations';
 import { addDefaultListToUser } from '@/lib/services/listService';
+import { verifyTurnstileToken } from '@/lib/services/turnstile';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 const NONCE_EXPIRY_MS = 10 * 60 * 1000;
@@ -152,13 +152,38 @@ export const authRouter = router({
           .trim()
           .min(1, 'Username cannot be empty')
           .optional(),
-        inviteCode: z.string().optional(),
+        //inviteCode: z.string().optional(),
+        turnstileToken: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { address, signature, message, username, inviteCode } = input;
+      const {
+        address,
+        signature,
+        message,
+        username,
+        //inviteCode,
+        turnstileToken,
+      } = input;
+
       const normalizedAddress = address.toLowerCase();
       const email = getFakeEmail(normalizedAddress);
+
+      if (turnstileToken) {
+        const isValidToken = await verifyTurnstileToken(turnstileToken);
+        if (!isValidToken) {
+          console.error(
+            `[TRPC Verify] Turnstile verification failed for ${normalizedAddress}`,
+          );
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Human verification failed. Please try again.',
+          });
+        }
+        console.log(
+          `[TRPC Verify] Turnstile verification successful for ${normalizedAddress}`,
+        );
+      }
 
       verifySignature(message, signature, normalizedAddress);
 
@@ -264,7 +289,7 @@ export const authRouter = router({
         });
       }
 
-      let invitationCodeId: number;
+      /*let invitationCodeId: number;
       if (isNewUser) {
         if (!inviteCode) {
           throw new TRPCError({
@@ -310,7 +335,7 @@ export const authRouter = router({
             cause: error,
           });
         }
-      }
+      }*/
 
       let userId: string;
       try {
@@ -357,7 +382,7 @@ export const authRouter = router({
           userId: userId,
           address: normalizedAddress,
           name: username,
-          invitationCodeId: invitationCodeId!,
+          //invitationCodeId: invitationCodeId!,
         });
 
         // Verify profile was created successfully by querying it back
