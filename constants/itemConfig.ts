@@ -1206,7 +1206,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     category: IItemCategoryEnum.Governance,
     subCategory: IItemSubCategoryEnum.Governance,
     isEssential: false,
-    label: 'Constitution +',
+    label: 'Constitution',
     description:
       'Is there a constitution (or something close) of this project/org',
     shortDescription:
