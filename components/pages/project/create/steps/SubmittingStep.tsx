@@ -96,6 +96,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
 
   const {
     shareUrl,
+    shareImageUrl,
     loading: shareLinkLoading,
     error: shareLinkError,
     ensure: ensureShareLink,
@@ -318,7 +319,12 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
         </AnimatePresence>
       </div>
 
-      <ShareModal isOpen={isOpen} onClose={onClose} shareUrl={shareUrl} />
+      <ShareModal
+        isOpen={isOpen}
+        onClose={onClose}
+        shareUrl={shareUrl}
+        shareImageUrl={shareImageUrl}
+      />
     </div>
   );
 };

@@ -49,8 +49,20 @@ export const useShareLink = ({
     return '';
   }, [query.data, fallbackUrl]);
 
+  const shareImageUrl = useMemo(() => {
+    if (query.data?.code) {
+      const imagePath = `/api/share/og-image/${query.data.code}`;
+      const withVersion = query.data.imageVersion
+        ? `${imagePath}?v=${query.data.imageVersion}`
+        : imagePath;
+      return buildAbsoluteUrl(withVersion);
+    }
+    return null;
+  }, [query.data]);
+
   return {
     shareUrl,
+    shareImageUrl,
     payload: query.data ?? null,
     loading: query.isLoading,
     error: query.error ? query.error.message : null,

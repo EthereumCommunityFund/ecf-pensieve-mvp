@@ -17,9 +17,15 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   shareUrl: string;
+  shareImageUrl?: string | null;
 }
 
-const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, shareUrl }) => {
+const ShareModal: FC<ShareModalProps> = ({
+  isOpen,
+  onClose,
+  shareUrl,
+  shareImageUrl,
+}) => {
   const onCopySuccess = useCallback(() => {
     addToast({
       title: 'Success',
@@ -60,6 +66,18 @@ const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, shareUrl }) => {
               </Button>
             </CopyToClipboard>
           </div>
+          {shareImageUrl && (
+            <div className="flex flex-col gap-[10px]">
+              <div className="text-[16px] font-[600] text-black">Preview</div>
+              <div className="overflow-hidden rounded-[12px] border border-black/10 bg-[#F9F9F9]">
+                <img
+                  src={shareImageUrl}
+                  alt="Share preview"
+                  className="h-auto w-full"
+                />
+              </div>
+            </div>
+          )}
         </ModalBody>
       </ModalContent>
     </Modal>

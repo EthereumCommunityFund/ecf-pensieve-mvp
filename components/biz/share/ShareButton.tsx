@@ -10,6 +10,7 @@ import ProjectActionButton from '@/components/pages/project/detail/ProjectAction
 interface ShareButtonProps {
   className?: string;
   shareUrl: string;
+  shareImageUrl?: string | null;
   isLoading?: boolean;
   error?: string | null;
   onEnsure?: () => Promise<unknown> | void;
@@ -19,6 +20,7 @@ interface ShareButtonProps {
 const ShareButton: FC<ShareButtonProps> = ({
   className = '',
   shareUrl,
+  shareImageUrl,
   isLoading,
   error,
   onEnsure,
@@ -42,6 +44,7 @@ const ShareButton: FC<ShareButtonProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         shareUrl={shareUrl}
+        shareImageUrl={shareImageUrl}
         isLoading={isLoading}
         error={error}
         onRefresh={onRefresh}

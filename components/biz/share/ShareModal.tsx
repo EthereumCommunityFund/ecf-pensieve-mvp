@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast } from '@heroui/react';
+import { addToast, Image } from '@heroui/react';
 import { FC, useCallback } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
@@ -17,6 +17,7 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   shareUrl: string;
+  shareImageUrl?: string | null;
   isLoading?: boolean;
   error?: string | null;
   onRefresh?: () => Promise<unknown> | void;
@@ -26,6 +27,7 @@ const ShareModal: FC<ShareModalProps> = ({
   isOpen,
   onClose,
   shareUrl,
+  shareImageUrl,
   isLoading = false,
   error,
   onRefresh,
@@ -95,6 +97,17 @@ const ShareModal: FC<ShareModalProps> = ({
                   Retry
                 </button>
               )}
+            </div>
+          )}
+          {!isLoading && shareImageUrl && (
+            <div className="flex flex-col gap-[10px]">
+              <div className="overflow-hidden rounded-[12px] border border-black/10 bg-[#F9F9F9]">
+                <Image
+                  src={shareImageUrl}
+                  alt="Share preview"
+                  className="h-auto w-full border-none"
+                />
+              </div>
             </div>
           )}
         </ModalBody>

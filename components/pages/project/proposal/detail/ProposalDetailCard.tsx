@@ -101,6 +101,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
 
   const {
     shareUrl,
+    shareImageUrl,
     loading: shareLinkLoading,
     error: shareLinkError,
     ensure: ensureShareLink,
@@ -210,6 +211,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
 
         <ShareButton
           shareUrl={shareUrl}
+          shareImageUrl={shareImageUrl}
           className="size-[40px]"
           isLoading={shareLinkLoading}
           error={shareLinkError}

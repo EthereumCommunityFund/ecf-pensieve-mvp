@@ -18,8 +18,6 @@ export async function GET(
 
   const payload = await ShareService.getSharePayload(code);
 
-  console.log('code payload', code, payload);
-
   if (!payload || payload.visibility === 'private') {
     return new Response('Not Found', { status: 404 });
   }
