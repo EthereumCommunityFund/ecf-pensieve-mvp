@@ -1,7 +1,7 @@
-import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { cache } from 'react';
 
 import type { SharePayload } from '@/lib/services/share';
 import ShareService from '@/lib/services/share';
@@ -38,10 +38,11 @@ function buildMetadataFromPayload(
 
   const metadata = {
     title: payload.metadata.title,
-    description: payload.metadata.description,
+    description: payload.metadata.subtitle ?? payload.metadata.description,
     openGraph: {
       title: payload.metadata.title,
-      description: payload.metadata.description ?? undefined,
+      description:
+        payload.metadata.subtitle ?? payload.metadata.description ?? undefined,
       type: 'website',
       url: shareUrl,
       siteName: 'Pensieve',
@@ -57,7 +58,8 @@ function buildMetadataFromPayload(
     twitter: {
       card: 'summary_large_image',
       title: payload.metadata.title,
-      description: payload.metadata.description ?? undefined,
+      description:
+        payload.metadata.subtitle ?? payload.metadata.description ?? undefined,
       images: [ogImageUrl],
     },
     alternates: {
