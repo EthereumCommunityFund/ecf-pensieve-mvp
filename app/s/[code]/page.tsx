@@ -26,9 +26,8 @@ function buildMetadataFromPayload(
     origin,
   );
   const ogImageUrl =
-    payload.layout === 'itemProposal' || payload.layout === 'proposal'
-      ? projectLogoUrl
-      : fallbackOgImageUrl;
+    payload.layout === 'itemProposal' ? projectLogoUrl : fallbackOgImageUrl;
+  const ogImageSize = { width: 512, height: 512 };
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
   const robots =
@@ -52,8 +51,8 @@ function buildMetadataFromPayload(
       images: [
         {
           url: ogImageUrl,
-          width: 1200,
-          height: 630,
+          width: ogImageSize.width,
+          height: ogImageSize.height,
           alt: payload.metadata.title,
         },
       ],
@@ -71,6 +70,8 @@ function buildMetadataFromPayload(
     robots,
     other: {
       'og:see_also': targetUrl,
+      'og:image:width': String(ogImageSize.width),
+      'og:image:height': String(ogImageSize.height),
     },
   };
 
