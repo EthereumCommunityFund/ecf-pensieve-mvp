@@ -5,12 +5,12 @@ import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button } from '@/components/base/button';
 import { addToast } from '@/components/base/toast';
-import {
-  CaretDownIcon,
-  CaretUpIcon,
-  ShareIcon,
-  XCircleIcon,
-} from '@/components/icons';
+import { CaretDownIcon, CaretUpIcon, XCircleIcon } from '@/components/icons';
+import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
+import useShareLink from '@/hooks/useShareLink';
+import ShareItemIcon from '@/components/icons/ShareItem';
+
+import { useModalContext } from './ModalContext';
 
 interface ModalHeaderProps {
   onClose: () => void;
@@ -24,19 +24,65 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   onClose,
   breadcrumbs = { section: 'Section', item: 'Itemname' },
 }) => {
-  const copyLink = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return '';
+  const { itemKey } = useModalContext();
+  const { projectId, proposalsByProjectIdAndKey, displayProposalDataOfKey } =
+    useProjectDetailContext();
+
+  const itemProposalId = useMemo(() => {
+    const fromLeading =
+      proposalsByProjectIdAndKey?.leadingProposal?.itemProposalId;
+    const fromDisplayed = displayProposalDataOfKey?.proposalId;
+    const resolved = fromLeading ?? fromDisplayed;
+    return typeof resolved === 'number' ? resolved : undefined;
+  }, [
+    proposalsByProjectIdAndKey?.leadingProposal?.itemProposalId,
+    displayProposalDataOfKey?.proposalId,
+  ]);
+
+  const fallbackUrl = useMemo(() => {
+    if (projectId && itemKey) {
+      const encodedKey = encodeURIComponent(itemKey);
+      return `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${encodedKey}`;
     }
-    return window.location.href;
-  }, []);
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+    return '';
+  }, [projectId, itemKey]);
+
+  const {
+    shareUrl,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'itemProposal',
+    entityId: itemProposalId,
+    fallbackUrl,
+    enabled: !!itemProposalId,
+  });
 
   const onCopySuccess = useCallback(() => {
+    if (shareLinkError) {
+      addToast({
+        title: 'Failed to generate share link',
+        description: shareLinkError,
+        color: 'danger',
+      });
+      return;
+    }
     addToast({
-      title: 'Copy share link to clipboard',
+      title: 'Share link copied to clipboard',
       color: 'success',
     });
-  }, []);
+  }, [shareLinkError]);
+
+  const handleSharePress = useCallback(() => {
+    if (!itemProposalId) {
+      return;
+    }
+    void ensureShareLink();
+  }, [ensureShareLink, itemProposalId]);
 
   return (
     <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] p-5">
@@ -66,12 +112,15 @@ const ModalHeader: FC<ModalHeaderProps> = ({
         </div>
 
         {/* Share button */}
-        <CopyToClipboard text={copyLink} onCopy={onCopySuccess}>
+        <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
           <Button
             isIconOnly
+            isDisabled={shareLinkLoading}
             className="size-[24px] min-w-0 border-none bg-transparent p-[2px] opacity-30"
+            onPress={handleSharePress}
           >
-            <ShareIcon size={20} />
+            <ShareItemIcon />
+            {/* <ShareIcon size={20} /> */}
           </Button>
         </CopyToClipboard>
       </div>

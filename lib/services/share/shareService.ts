@@ -509,7 +509,9 @@ async function resolveItemProposalContext(
     return null;
   }
 
-  const label = formatReadableKey(itemProposal.key);
+  const rawKey = String(itemProposal.key);
+  const itemNameParam = encodeURIComponent(rawKey);
+  const label = formatReadableKey(rawKey);
   const valueText = valueToText(itemProposal.value);
 
   const metadata: ShareMetadata = {
@@ -546,7 +548,7 @@ async function resolveItemProposalContext(
   };
 
   const visibility = itemProposal.project.isPublished ? 'public' : 'unlisted';
-  const targetUrl = `/project/pending/${itemProposal.project.id}`;
+  const targetUrl = `/project/${itemProposal.project.id}?tab=project-data&notificationType=viewSubmission&itemName=${itemNameParam}`;
   const imageVersion = String(
     itemProposal.createdAt?.getTime?.() ??
       itemProposal.project.updatedAt?.getTime?.() ??
