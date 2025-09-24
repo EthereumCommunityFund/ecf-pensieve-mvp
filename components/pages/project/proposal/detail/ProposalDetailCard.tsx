@@ -5,6 +5,7 @@ import { useProposalProgressModal } from '@/components/biz/modal/proposalProgres
 import ShareButton from '@/components/biz/share/ShareButton';
 import { InfoIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
+import useShareLink from '@/hooks/useShareLink';
 import {
   ESSENTIAL_ITEM_QUORUM_SUM,
   ESSENTIAL_ITEM_WEIGHT_SUM,
@@ -91,10 +92,24 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
     openProposalProgressModal();
   }, [openProposalProgressModal]);
 
-  const shareUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${origin}/project/pending/${projectId}/proposal/${proposal?.id}`;
+  const fallbackSharePath = useMemo(() => {
+    if (!proposal) {
+      return '';
+    }
+    return `/project/pending/${projectId}/proposal/${proposal.id}`;
   }, [projectId, proposal]);
+
+  const {
+    shareUrl,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'proposal',
+    entityId: proposal?.id,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!proposal?.id,
+  });
 
   if (!proposal) {
     return <ProposalDetailCardSkeleton />;
@@ -193,7 +208,14 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           </div>
         </div>
 
-        <ShareButton shareUrl={shareUrl} className="size-[40px]" />
+        <ShareButton
+          shareUrl={shareUrl}
+          className="size-[40px]"
+          isLoading={shareLinkLoading}
+          error={shareLinkError}
+          onEnsure={ensureShareLink}
+          onRefresh={ensureShareLink}
+        />
       </div>
     </div>
   );
