@@ -480,6 +480,8 @@ function buildItemProposalDescription(options: {
   valueText?: string;
   authorName?: string | null;
   authorAddress?: string | null;
+  projectTagline?: string | null;
+  projectCategories?: string[];
 }): string | undefined {
   const segments: string[] = [];
   if (options.authorName) {
@@ -492,6 +494,12 @@ function buildItemProposalDescription(options: {
   }
   if (options.valueText) {
     segments.push(`Suggested update: ${options.valueText}`);
+  }
+  if (options.projectTagline) {
+    segments.push(options.projectTagline);
+  }
+  if (options.projectCategories && options.projectCategories.length > 0) {
+    segments.push(`Focus: ${options.projectCategories.slice(0, 3).join(', ')}`);
   }
 
   if (segments.length === 0) {
@@ -513,10 +521,19 @@ async function resolveItemProposalContext(
   const itemNameParam = encodeURIComponent(rawKey);
   const label = formatReadableKey(rawKey);
   const valueText = valueToText(itemProposal.value);
+  const projectCategories = itemProposal.project.categories ?? [];
+  const primarySummary =
+    valueText && valueText.length > 0
+      ? truncate(valueText, 160)
+      : typeof itemProposal.reason === 'string' && itemProposal.reason
+        ? truncate(itemProposal.reason, 160)
+        : itemProposal.project.tagline
+          ? truncate(itemProposal.project.tagline, 160)
+          : undefined;
 
   const metadata: ShareMetadata = {
-    title: `${itemProposal.project.name} · ${label} Proposal`,
-    subtitle: `Item proposal: ${label}`,
+    title: `Item Proposal · ${label} · ${itemProposal.project.name}`,
+    subtitle: primarySummary || `Item proposal: ${label}`,
     description: buildItemProposalDescription({
       reason:
         typeof itemProposal.reason === 'string'
@@ -525,13 +542,15 @@ async function resolveItemProposalContext(
       valueText,
       authorName: itemProposal.creator?.name ?? null,
       authorAddress: itemProposal.creator?.address ?? null,
+      projectTagline: itemProposal.project.tagline,
+      projectCategories,
     }),
     badge: 'Item Proposal',
     project: {
       id: itemProposal.project.id,
       name: itemProposal.project.name,
       tagline: itemProposal.project.tagline,
-      categories: itemProposal.project.categories ?? [],
+      categories: projectCategories,
       logoUrl: itemProposal.project.logoUrl,
       isPublished: itemProposal.project.isPublished,
     },
@@ -542,7 +561,7 @@ async function resolveItemProposalContext(
           avatarUrl: itemProposal.creator.avatarUrl,
         }
       : undefined,
-    tags: itemProposal.project.categories ?? [],
+    tags: projectCategories,
     highlights: valueText ? [{ label, value: valueText }] : undefined,
     timestamp: itemProposal.createdAt?.toISOString?.(),
   };
