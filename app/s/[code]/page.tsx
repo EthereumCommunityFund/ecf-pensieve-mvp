@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import { cache } from 'react';
 
 import type { SharePayload } from '@/lib/services/share';
 import ShareService from '@/lib/services/share';
@@ -15,10 +14,6 @@ interface PageProps {
     code: string;
   }>;
 }
-
-const getSharePayloadCached = cache((code: string) =>
-  ShareService.getSharePayload(code),
-);
 
 function buildMetadataFromPayload(
   payload: SharePayload,
@@ -222,7 +217,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { code } = await params;
-  const payload = await getSharePayloadCached(code);
+  const payload = await ShareService.getSharePayload(code);
 
   if (!payload || payload.visibility === 'private') {
     notFound();
@@ -234,7 +229,7 @@ export async function generateMetadata({
 
 export default async function SharePage({ params }: PageProps) {
   const { code } = await params;
-  const payload = await getSharePayloadCached(code);
+  const payload = await ShareService.getSharePayload(code);
 
   if (!payload || payload.visibility === 'private') {
     notFound();
