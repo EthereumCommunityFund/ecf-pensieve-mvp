@@ -125,12 +125,39 @@ export function renderShareOgImage(
             justifyContent: 'center',
           }}
         >
-          <img
-            src={logoUrl}
-            width={168}
-            height={168}
-            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-          />
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#0d1f23',
+            }}
+          >
+            <img
+              src={logoUrl}
+              width={168}
+              height={168}
+              style={{
+                objectFit: 'cover',
+                width: '100%',
+                height: '100%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                border: '8px solid rgba(255,255,255,0.35)',
+                borderRadius: '32px',
+              }}
+            />
+          </div>
         </div>
 
         <div

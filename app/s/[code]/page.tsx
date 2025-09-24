@@ -20,7 +20,14 @@ function buildMetadataFromPayload(
   origin: string,
 ): Metadata {
   const shareUrl = buildAbsoluteUrl(payload.sharePath, origin);
-  const ogImageUrl = `${buildAbsoluteUrl(`/api/share/og-image/${payload.code}`, origin)}?v=${payload.imageVersion}`;
+  const fallbackOgImageUrl = `${buildAbsoluteUrl(`/api/share/og-image/${payload.code}`, origin)}?v=${payload.imageVersion}`;
+  const ogImageUrl =
+    payload.layout === 'proposal'
+      ? buildAbsoluteUrl(
+          payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
+          origin,
+        )
+      : fallbackOgImageUrl;
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
   const robots =
