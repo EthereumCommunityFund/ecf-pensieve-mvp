@@ -8,15 +8,17 @@ export const runtime = 'nodejs';
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ code: string }> },
+  { params }: { params: { code: string } },
 ) {
-  const { code } = await context.params;
+  const { code } = await params;
 
   if (!code) {
     return new Response('Not Found', { status: 404 });
   }
 
   const payload = await ShareService.getSharePayload(code);
+
+  console.log('code payload', code, payload);
 
   if (!payload || payload.visibility === 'private') {
     return new Response('Not Found', { status: 404 });
@@ -32,6 +34,7 @@ export async function GET(
       height: 630,
       fonts,
       headers: {
+        'Content-Type': 'image/png',
         'Cache-Control':
           'public, s-maxage=604800, stale-while-revalidate=86400',
       },

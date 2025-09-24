@@ -1,37 +1,58 @@
-import fs from 'fs/promises';
-import path from 'path';
-
 import type { JSX } from 'react';
 import type { Font } from 'satori';
 
 import type { SharePayload } from '@/lib/services/share';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
-const FONT_DIR = path.join(process.cwd(), 'public/fonts');
+let fontsPromise: Promise<Font[]> | null = null;
+
+async function loadFontFromEdge(file: string, weight: number): Promise<Font> {
+  const response = await fetch(
+    new URL(`../../../public/fonts/${file}`, import.meta.url),
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to load font ${file}`);
+  }
+  const data = await response.arrayBuffer();
+  return {
+    name: 'MonaSans',
+    data,
+    style: 'normal',
+    weight: weight as Font['weight'],
+  };
+}
+
+async function loadFontFromNode(file: string, weight: number): Promise<Font> {
+  const [{ readFile }, { join }] = await Promise.all([
+    import('fs/promises'),
+    import('path'),
+  ]);
+  const data = await readFile(join(process.cwd(), 'public/fonts', file));
+  return {
+    name: 'MonaSans',
+    data,
+    style: 'normal',
+    weight: weight as Font['weight'],
+  };
+}
+
+async function loadFont(file: string, weight: number): Promise<Font> {
+  const isNodeRuntime =
+    typeof process !== 'undefined' && !!process.versions?.node;
+  return isNodeRuntime
+    ? loadFontFromNode(file, weight)
+    : loadFontFromEdge(file, weight);
+}
 
 export async function getOgFonts(): Promise<Font[]> {
-  const fonts = (await Promise.all([
-    fs.readFile(path.join(FONT_DIR, 'MonaSans-Regular.ttf')).then((data) => ({
-      name: 'MonaSans',
-      data,
-      style: 'normal' as const,
-      weight: 400 as unknown as Font['weight'],
-    })),
-    fs.readFile(path.join(FONT_DIR, 'MonaSans-SemiBold.ttf')).then((data) => ({
-      name: 'MonaSans',
-      data,
-      style: 'normal' as const,
-      weight: 600 as unknown as Font['weight'],
-    })),
-    fs.readFile(path.join(FONT_DIR, 'MonaSans-Bold.ttf')).then((data) => ({
-      name: 'MonaSans',
-      data,
-      style: 'normal' as const,
-      weight: 700 as unknown as Font['weight'],
-    })),
-  ])) as Font[];
-
-  return fonts;
+  if (!fontsPromise) {
+    fontsPromise = Promise.all([
+      loadFont('MonaSans-Regular.ttf', 400),
+      loadFont('MonaSans-SemiBold.ttf', 600),
+      loadFont('MonaSans-Bold.ttf', 700),
+    ]);
+  }
+  return fontsPromise;
 }
 
 function toAbsolute(url: string | null | undefined, origin: string): string {
@@ -55,9 +76,173 @@ function getBadgeLabel(payload: SharePayload): string {
   }
 }
 
-export function renderShareOgImage(
+function truncate(text: string, max: number): string {
+  if (!text) {
+    return '';
+  }
+  return text.length > max ? `${text.slice(0, max - 3)}...` : text;
+}
+
+function renderProposalSubmittedOgImage(
   payload: SharePayload,
-  origin: string = getAppOrigin(),
+  origin: string,
+): JSX.Element {
+  const projectName = truncate(payload.metadata.project.name ?? '', 36);
+  const tagline = truncate(
+    payload.metadata.subtitle || payload.metadata.project.tagline || '',
+    220,
+  );
+  const description = truncate(payload.metadata.description ?? '', 360);
+  const logoUrl = toAbsolute(payload.metadata.project.logoUrl, origin);
+
+  return (
+    <div
+      style={{
+        width: '1200px',
+        height: '630px',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '80px',
+        background:
+          'linear-gradient(168deg, rgba(40, 193, 150, 1) 0%, rgba(255, 255, 255, 1) 100%)',
+        fontFamily: 'MonaSans',
+        color: '#0C1C22',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+            }}
+          >
+            <img
+              src={buildAbsoluteUrl('/pensieve-logo.svg', origin)}
+              width={72}
+              height={72}
+              alt="Pensieve logo"
+            />
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+              }}
+            >
+              <span
+                style={{ fontSize: '42px', fontWeight: 700, color: '#0C1C22' }}
+              >
+                Pensieve
+              </span>
+              <span style={{ fontSize: '24px', opacity: 0.6 }}>
+                Decentralized Social Consensus & Community Knowledge Bases
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            borderRadius: '16px',
+            border: '3px solid rgba(70, 162, 135, 1)',
+            padding: '12px 24px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '16px',
+            background: 'rgba(255,255,255,0.35)',
+          }}
+        >
+          <img
+            src={buildAbsoluteUrl('/CheckCircle.svg', origin)}
+            width={48}
+            height={48}
+            alt="Check circle"
+          />
+          <span style={{ fontSize: '30px', fontWeight: 700, color: '#2D8F66' }}>
+            Proposal submitted
+          </span>
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginTop: '40px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '32px',
+          padding: '28px',
+          borderRadius: '18px',
+          background: 'rgba(255,255,255,0.55)',
+          border: '2px solid rgba(255,255,255,0.8)',
+        }}
+      >
+        <img
+          src={logoUrl}
+          width={210}
+          height={210}
+          alt="Project logo"
+          style={{
+            borderRadius: '18px',
+            border: '1px solid rgba(0,0,0,0.08)',
+            background: '#ffffff',
+            objectFit: 'cover',
+          }}
+        />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            color: '#0C1C22',
+            flex: 1,
+            maxWidth: '720px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '44px',
+              fontWeight: 700,
+              wordBreak: 'break-word',
+            }}
+          >
+            {projectName}
+          </span>
+          {tagline && (
+            <span
+              style={{
+                fontSize: '24px',
+                opacity: 0.75,
+                lineHeight: 1.3,
+                wordBreak: 'break-word',
+              }}
+            >
+              {tagline}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function renderDefaultShareOgImage(
+  payload: SharePayload,
+  origin: string,
 ): JSX.Element {
   const { metadata } = payload;
   const badge = getBadgeLabel(payload);
@@ -291,4 +476,15 @@ export function renderShareOgImage(
       </div>
     </div>
   );
+}
+
+export function renderShareOgImage(
+  payload: SharePayload,
+  origin: string = getAppOrigin(),
+): JSX.Element {
+  if (payload.layout === 'proposal') {
+    return renderProposalSubmittedOgImage(payload, origin);
+  }
+
+  return renderDefaultShareOgImage(payload, origin);
 }

@@ -20,14 +20,16 @@ function buildMetadataFromPayload(
   origin: string,
 ): Metadata {
   const shareUrl = buildAbsoluteUrl(payload.sharePath, origin);
-  const fallbackOgImageUrl = `${buildAbsoluteUrl(`/api/share/og-image/${payload.code}`, origin)}?v=${payload.imageVersion}`;
+  const dynamicOgImageUrl = `${buildAbsoluteUrl(`/api/share/og-image/${payload.code}`, origin)}?v=${payload.imageVersion}`;
   const projectLogoUrl = buildAbsoluteUrl(
     payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
     origin,
   );
-  const ogImageUrl =
-    payload.layout === 'itemProposal' ? projectLogoUrl : fallbackOgImageUrl;
-  const ogImageSize = { width: 512, height: 512 };
+  const isItemProposal = payload.layout === 'itemProposal';
+  const ogImageUrl = isItemProposal ? projectLogoUrl : dynamicOgImageUrl;
+  const ogImageSize = isItemProposal
+    ? { width: 512, height: 512 }
+    : { width: 1200, height: 630 };
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
   const robots =
@@ -70,8 +72,6 @@ function buildMetadataFromPayload(
     robots,
     other: {
       'og:see_also': targetUrl,
-      'og:image:width': String(ogImageSize.width),
-      'og:image:height': String(ogImageSize.height),
     },
   };
 
