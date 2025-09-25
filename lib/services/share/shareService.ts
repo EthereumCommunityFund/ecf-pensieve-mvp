@@ -145,13 +145,23 @@ export interface ShareMetric {
   secondary?: string;
   unit?: string;
 }
-
+export interface ShareItemMetadata {
+  key: string;
+  category: string;
+  updates?: number;
+  submissions?: number;
+  weight?: number;
+  supported?: number;
+  initialWeight?: number;
+  type: 'item' | 'pending' | 'empty';
+}
 export interface ShareMetadata {
   title: string;
   subtitle?: string;
   description?: string;
   badge?: string;
   project: ShareProjectMetadata;
+  item?: ShareItemMetadata;
   author?: ShareAuthorMetadata;
   tags?: string[];
   highlights?: ShareHighlight[];
