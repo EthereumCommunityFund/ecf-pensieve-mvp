@@ -1,8 +1,9 @@
 import type { JSX } from 'react';
 
+import { QUORUM_AMOUNT } from '@/lib/constants';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
-import type { SharePayload } from './shareService';
+import type { ShareItemMetadata, SharePayload } from './shareService';
 
 interface ShareCardOptions {
   origin?: string;
@@ -743,4 +744,520 @@ export function renderShareCardForPreview(
   origin?: string,
 ): JSX.Element {
   return renderShareCard(payload, { origin, mode: 'preview' });
+}
+
+function renderItemProposalBody(
+  item: ShareItemMetadata | undefined,
+  origin: string,
+): JSX.Element | null {
+  if (!item) {
+    return null;
+  }
+
+  switch (item.type) {
+    case 'item':
+    case undefined: {
+      const itemStats = [
+        {
+          label: 'Updates',
+          icon: '/UploadSimple.svg',
+          alt: 'Updates icon',
+          value: item.updates,
+        },
+        {
+          label: 'Submissions',
+          icon: '/Users.svg',
+          alt: 'Submissions icon',
+          value: item.submissions,
+        },
+        {
+          label: 'Item weight',
+          icon: '/CaretCircleUp.svg',
+          alt: 'Item weight icon',
+          value: item.weight,
+        },
+      ];
+
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '141px',
+            paddingTop: '40px',
+            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+            boxSizing: 'border-box',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'flex-start',
+            flexDirection: 'row',
+            gap: '40px',
+          }}
+        >
+          {itemStats.map(({ label, icon, alt, value }) => (
+            <div
+              key={label}
+              style={{
+                width: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                gap: '10px',
+              }}
+            >
+              <div
+                style={{
+                  height: '50px',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: '20px',
+                }}
+              >
+                <img
+                  src={buildAbsoluteUrl(icon, origin)}
+                  width={48}
+                  height={48}
+                  alt={alt}
+                />
+                <div
+                  style={{
+                    height: '50px',
+                    justifyContent: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    color: 'black',
+                    fontSize: 18,
+                    fontFamily: 'Mona Sans',
+                    fontWeight: '500',
+                    lineHeight: 24,
+                    wordWrap: 'break-word',
+                  }}
+                >
+                  {value ?? 'N/A'}
+                </div>
+              </div>
+              <div
+                style={{
+                  height: '50px',
+                  opacity: 0.5,
+                  color: 'black',
+                  fontSize: 24,
+                  fontFamily: 'Mona Sans',
+                  fontWeight: '500',
+                  wordWrap: 'break-word',
+                }}
+              >
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    case 'pending':
+      const pendingStats = [
+        {
+          label: 'Supported',
+          icon: '/Users.svg',
+          alt: 'Supported icon',
+          value: `${item.supported} of ${QUORUM_AMOUNT}`,
+        },
+        {
+          label: 'Item weight',
+          icon: '/CaretCircleUp.svg',
+          alt: 'Item weight icon',
+          value: item.weight,
+        },
+      ];
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '141px',
+            paddingTop: '40px',
+            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+            boxSizing: 'border-box',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'flex-start',
+            gap: '40px',
+          }}
+        >
+          <div
+            style={{
+              padding: '10px 20px 10px 20px',
+              height: '80px',
+              border: '1px solid rgba(126, 169, 255, 0.4)',
+              boxSizing: 'border-box',
+              display: 'flex',
+              justifyContent: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '10px',
+              background: 'rgba(126, 169, 255, 0.1)',
+            }}
+          >
+            <img
+              src={buildAbsoluteUrl('/GitPullRequest.svg', origin)}
+              width={56}
+              height={56}
+              alt="Git pull request"
+            />
+            <div
+              style={{
+                color: '#608BE1',
+                fontSize: 24,
+                fontFamily: 'Mona Sans',
+                fontWeight: '500',
+                wordWrap: 'break-word',
+              }}
+            >
+              Pending Validation
+            </div>
+          </div>
+
+          {pendingStats.map(({ label, icon, alt, value }) => (
+            <div
+              key={label}
+              style={{
+                width: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                gap: '10px',
+              }}
+            >
+              <div
+                style={{
+                  height: '50px',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: '20px',
+                }}
+              >
+                <img
+                  src={buildAbsoluteUrl(icon, origin)}
+                  width={48}
+                  height={48}
+                  alt={alt}
+                />
+                <div
+                  style={{
+                    justifyContent: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    color: 'black',
+                    fontSize: 18,
+                    fontFamily: 'Mona Sans',
+                    fontWeight: '500',
+                    lineHeight: 24,
+                    wordWrap: 'break-word',
+                  }}
+                >
+                  {value ?? 'N/A'}
+                </div>
+              </div>
+              <div
+                style={{
+                  opacity: 0.5,
+                  color: 'black',
+                  fontSize: 24,
+                  fontFamily: 'Mona Sans',
+                  fontWeight: '500',
+                  wordWrap: 'break-word',
+                }}
+              >
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    case 'empty':
+      const emptyStats = [
+        {
+          label: 'Starting weight',
+          icon: '/CoinVertical.svg',
+          alt: 'Starting weight icon',
+          value: item.initialWeight,
+        },
+      ];
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '141px',
+            paddingTop: '40px',
+            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+            boxSizing: 'border-box',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'flex-start',
+            gap: '40px',
+          }}
+        >
+          <div
+            style={{
+              padding: '10px 20px 10px 20px',
+              height: '80px',
+              border: '1px solid rgba(126, 169, 255, 0.4)',
+              boxSizing: 'border-box',
+              display: 'flex',
+              justifyContent: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '10px',
+              background: 'rgba(126, 169, 255, 0.1)',
+            }}
+          >
+            <img
+              src={buildAbsoluteUrl('/PencilCircle.svg', origin)}
+              width={56}
+              height={56}
+              alt="Pencil circle"
+            />
+            <div
+              style={{
+                color: '#608BE1',
+                fontSize: 24,
+                fontFamily: 'Mona Sans',
+                fontWeight: '500',
+                wordWrap: 'break-word',
+              }}
+            >
+              Empty Item
+            </div>
+          </div>
+
+          {emptyStats.map(({ label, icon, alt, value }) => (
+            <div
+              key={label}
+              style={{
+                width: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                gap: '10px',
+              }}
+            >
+              <div
+                style={{
+                  height: '50px',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: '20px',
+                }}
+              >
+                <img
+                  src={buildAbsoluteUrl(icon, origin)}
+                  width={48}
+                  height={48}
+                  alt={alt}
+                />
+                <div
+                  style={{
+                    justifyContent: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    color: 'black',
+                    fontSize: 18,
+                    fontFamily: 'Mona Sans',
+                    fontWeight: '500',
+                    lineHeight: 24,
+                    wordWrap: 'break-word',
+                  }}
+                >
+                  {value ?? 'N/A'}
+                </div>
+              </div>
+              <div
+                style={{
+                  height: '50px',
+                  opacity: 0.5,
+                  color: 'black',
+                  fontSize: 24,
+                  fontFamily: 'Mona Sans',
+                  fontWeight: '500',
+                  wordWrap: 'break-word',
+                }}
+              >
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    default:
+      return null;
+  }
+}
+
+function renderItemProposalOgImage(
+  payload: SharePayload,
+  origin: string,
+): JSX.Element {
+  const logoUrl = payload.metadata.project.logoUrl;
+  const projectName = truncate(payload.metadata.project.name ?? '', 36);
+  const itemName = truncate(payload.metadata.item?.key ?? '', 36);
+  const category = truncate(payload.metadata.item?.category ?? '', 36);
+  return (
+    <div
+      style={{
+        width: '1200px',
+        height: '630px',
+        padding: '40px',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#ffffff',
+        fontFamily: 'MonaSans',
+        color: '#0C1C22',
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          gap: '100px',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            gap: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+          }}
+        >
+          <div
+            style={{
+              height: '100px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '20px',
+              justifyContent: 'flex-start',
+            }}
+          >
+            <img
+              src={logoUrl!}
+              width={100}
+              height={100}
+              style={{
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: 10,
+                background: 'white',
+                objectFit: 'contain',
+              }}
+              alt="Project Logo"
+            />
+            <div
+              style={{
+                opacity: 0.8,
+                justifyContent: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                color: 'black',
+                fontSize: 30,
+                fontFamily: 'Inter',
+                fontWeight: '1800',
+                lineHeight: 35,
+                wordWrap: 'break-word',
+              }}
+            >
+              {projectName}
+            </div>
+          </div>
+          <div
+            style={{
+              width: '100%',
+              height: '70px',
+              paddingLeft: 20,
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              flexDirection: 'row',
+              gap: 10,
+              display: 'flex',
+            }}
+          >
+            <img
+              src={buildAbsoluteUrl('/ArrowElbowDownRight.svg', origin)}
+              width={30}
+              height={39}
+              alt="Arrow elbow down right"
+            />
+            <div
+              style={{
+                opacity: 0.5,
+                justifyContent: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                color: 'black',
+                fontSize: 25,
+                fontFamily: 'Inter',
+                fontWeight: '600',
+                textTransform: 'capitalize',
+                lineHeight: 24,
+                wordWrap: 'break-word',
+              }}
+            >
+              {category} /
+            </div>
+            <div
+              style={{
+                justifyContent: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                color: 'black',
+                fontSize: 25,
+                fontFamily: 'Inter',
+                fontWeight: '600',
+                textTransform: 'capitalize',
+                lineHeight: 24,
+                wordWrap: 'break-word',
+              }}
+            >
+              {itemName}
+            </div>
+          </div>
+        </div>
+        {renderItemProposalBody(payload.metadata.item, origin)}
+        <div
+          style={{
+            width: '100%',
+            height: '35px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <img
+            src={buildAbsoluteUrl('/new-pensieve-logo.svg', origin)}
+            width={54}
+            height={32}
+            alt="New pensieve logo"
+          />
+          <div
+            style={{
+              color: 'black',
+              fontSize: 22,
+              fontFamily: 'Mona Sans',
+              fontWeight: '600',
+              wordWrap: 'break-word',
+            }}
+          >
+            Pensieve.ecf
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
