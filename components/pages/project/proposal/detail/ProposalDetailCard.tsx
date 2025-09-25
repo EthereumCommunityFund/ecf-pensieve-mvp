@@ -102,6 +102,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
   const {
     shareUrl,
     shareImageUrl,
+    payload: sharePayload,
     loading: shareLinkLoading,
     error: shareLinkError,
     ensure: ensureShareLink,
@@ -217,6 +218,7 @@ const ProposalDetailCard: FC<IProposalDetailCardProps> = (props) => {
           error={shareLinkError}
           onEnsure={ensureShareLink}
           onRefresh={ensureShareLink}
+          payload={sharePayload}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast } from '@heroui/react';
+import { addToast, Image } from '@heroui/react';
 import { FC, useCallback } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
@@ -39,7 +39,7 @@ const ShareModal: FC<ShareModalProps> = ({
       isOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
       classNames={{
-        base: 'bg-white p-0',
+        base: 'bg-white p-0 min-w-[540px] mobile:min-w-[400px]',
         header: 'py-[10px] px-[20px]',
         body: 'border-t border-black/10 p-[20px] mobile:p-[20px] flex flex-col gap-[14px]',
       }}
@@ -68,14 +68,11 @@ const ShareModal: FC<ShareModalProps> = ({
           </div>
           {shareImageUrl && (
             <div className="flex flex-col gap-[10px]">
-              <div className="text-[16px] font-[600] text-black">Preview</div>
-              <div className="overflow-hidden rounded-[12px] border border-black/10 bg-[#F9F9F9]">
-                <img
-                  src={shareImageUrl}
-                  alt="Share preview"
-                  className="h-auto w-full"
-                />
-              </div>
+              <Image
+                src={shareImageUrl}
+                alt="Share preview"
+                className="h-auto w-full overflow-hidden rounded-[8px] shadow-none"
+              />
             </div>
           )}
         </ModalBody>

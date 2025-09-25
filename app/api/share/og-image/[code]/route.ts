@@ -1,8 +1,10 @@
 import { ImageResponse } from '@vercel/og';
 
 import ShareService from '@/lib/services/share';
-
-import { getOgFonts, renderShareOgImage } from '../../ogImageRenderer';
+import {
+  getOgFonts,
+  renderShareOgImage,
+} from '@/lib/services/share/ogImageRenderer';
 
 export const runtime = 'nodejs';
 
@@ -28,8 +30,8 @@ export async function GET(
     const element = renderShareOgImage(payload, origin);
 
     return new ImageResponse(element, {
-      width: 1200,
-      height: 630,
+      width: 540,
+      height: 300,
       fonts,
       headers: {
         'Content-Type': 'image/png',

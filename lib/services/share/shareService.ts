@@ -1,9 +1,16 @@
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 
+import { ESSENTIAL_ITEM_QUORUM_SUM } from '@/lib/constants';
 import { db } from '@/lib/db';
-import { itemProposals, proposals, shareLinks } from '@/lib/db/schema';
+import {
+  itemProposals,
+  proposals,
+  shareLinks,
+  voteRecords,
+} from '@/lib/db/schema';
 import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
+import ProposalVoteUtils from '@/utils/proposal';
 
 type ShareLinkRecord = typeof shareLinks.$inferSelect;
 type ShareLinkInsert = typeof shareLinks.$inferInsert;
@@ -82,6 +89,19 @@ export interface ShareProjectMetadata {
   isPublished?: boolean;
 }
 
+export interface ShareBadge {
+  label: string;
+  tone?: 'neutral' | 'info' | 'success' | 'warning';
+}
+
+export interface ShareMetric {
+  key: string;
+  title: string;
+  primary: string;
+  secondary?: string;
+  unit?: string;
+}
+
 export interface ShareMetadata {
   title: string;
   subtitle?: string;
@@ -92,6 +112,9 @@ export interface ShareMetadata {
   tags?: string[];
   highlights?: ShareHighlight[];
   timestamp?: string;
+  statusBadge?: ShareBadge;
+  badges?: ShareBadge[];
+  stats?: ShareMetric[];
 }
 
 export interface SharePayload {
@@ -171,6 +194,13 @@ function truncate(text: string, maxLength: number): string {
     return text;
   }
   return `${text.slice(0, maxLength - 1).trim()}...`;
+}
+
+function formatInteger(value: number): string {
+  if (!Number.isFinite(value)) {
+    return '0';
+  }
+  return new Intl.NumberFormat('en-US').format(Math.round(value || 0));
 }
 
 function formatReadableKey(key: string): string {
@@ -400,6 +430,100 @@ async function resolveProposalContext(
     return null;
   }
 
+  const [projectVotes, projectProposals] = await Promise.all([
+    db.query.voteRecords.findMany({
+      where: eq(voteRecords.projectId, proposal.projectId),
+      columns: {
+        id: true,
+        createdAt: true,
+        proposalId: true,
+        key: true,
+        weight: true,
+        projectId: true,
+      },
+      with: {
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
+          },
+        },
+      },
+    }),
+    db.query.proposals.findMany({
+      where: eq(proposals.projectId, proposal.projectId),
+      columns: {
+        id: true,
+        createdAt: true,
+      },
+      orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
+    }),
+  ]);
+
+  const votesForProposal = projectVotes.filter(
+    (vote) => vote.proposalId === proposal.id,
+  );
+
+  const proposalVoteResult = ProposalVoteUtils.getVoteResultOfProposal({
+    proposalId: proposal.id,
+    votesOfProposal: votesForProposal as any,
+  });
+
+  const projectVoteResult = ProposalVoteUtils.getVoteResultOfProject({
+    projectId: proposal.projectId,
+    votesOfProject: projectVotes as any,
+    proposals: projectProposals as any,
+  });
+
+  const proposalIndex = projectProposals.findIndex(
+    (item) => item.id === proposal.id,
+  );
+  const proposalNumber = proposalIndex >= 0 ? proposalIndex + 1 : 1;
+
+  const isLeading =
+    projectVoteResult.leadingProposalId === proposal.id &&
+    proposalVoteResult.percentageOfProposal > 0;
+  const isWinner =
+    isLeading && projectVoteResult.leadingProposalResult?.isProposalValidated;
+
+  const statusBadge: ShareBadge = proposal.project.isPublished
+    ? { label: 'Published Project', tone: 'success' }
+    : { label: 'Pending Project', tone: 'info' };
+
+  const badges: ShareBadge[] = [
+    {
+      label: `Proposal #${proposalNumber}`,
+      tone: 'neutral',
+    },
+  ];
+
+  if (isLeading || isWinner) {
+    badges.push({
+      label: isWinner ? 'Winning Proposal' : 'Leading Proposal',
+      tone: isWinner ? 'success' : 'info',
+    });
+  }
+
+  const stats: ShareMetric[] = [
+    {
+      key: 'progress',
+      title: 'Progress',
+      primary: proposalVoteResult.formattedPercentageOfProposal,
+    },
+    {
+      key: 'support',
+      title: 'Total Support',
+      primary: formatInteger(proposalVoteResult.totalSupportedPointsOfProposal),
+    },
+    {
+      key: 'participation',
+      title: 'Minimum Participation',
+      primary: `${proposalVoteResult.totalValidQuorumOfProposal} / ${ESSENTIAL_ITEM_QUORUM_SUM}`,
+    },
+  ];
+
   const items = Array.isArray(proposal.items)
     ? (proposal.items as Array<{ key: string; value: unknown }>)
     : [];
@@ -455,14 +579,21 @@ async function resolveProposalContext(
     tags: categories,
     highlights,
     timestamp: proposal.createdAt?.toISOString?.(),
+    statusBadge,
+    badges,
+    stats,
   };
 
   const visibility = proposal.project.isPublished ? 'public' : 'unlisted';
   const targetUrl = `/project/pending/${proposal.project.id}/proposal/${proposal.id}`;
+  const latestVoteTimestamp =
+    proposalVoteResult.latestVotingEndedAt?.getTime?.() ?? 0;
   const imageVersion = String(
-    proposal.createdAt?.getTime?.() ??
-      proposal.project.updatedAt?.getTime?.() ??
-      proposal.id,
+    Math.max(
+      proposal.createdAt?.getTime?.() ?? 0,
+      proposal.project.updatedAt?.getTime?.() ?? 0,
+      latestVoteTimestamp,
+    ),
   );
 
   return {

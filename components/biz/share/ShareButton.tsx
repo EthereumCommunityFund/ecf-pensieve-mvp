@@ -6,6 +6,7 @@ import { FC, useCallback } from 'react';
 import ShareModal from '@/components/biz/share/ShareModal';
 import { ShareLinkIcon } from '@/components/icons';
 import ProjectActionButton from '@/components/pages/project/detail/ProjectActionButton';
+import type { SharePayload } from '@/lib/services/share';
 
 interface ShareButtonProps {
   className?: string;
@@ -15,6 +16,7 @@ interface ShareButtonProps {
   error?: string | null;
   onEnsure?: () => Promise<unknown> | void;
   onRefresh?: () => Promise<unknown> | void;
+  payload?: SharePayload | null;
 }
 
 const ShareButton: FC<ShareButtonProps> = ({
@@ -25,6 +27,7 @@ const ShareButton: FC<ShareButtonProps> = ({
   error,
   onEnsure,
   onRefresh,
+  payload,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -48,6 +51,7 @@ const ShareButton: FC<ShareButtonProps> = ({
         isLoading={isLoading}
         error={error}
         onRefresh={onRefresh}
+        payload={payload}
       />
     </>
   );
