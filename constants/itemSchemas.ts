@@ -608,6 +608,10 @@ export const itemValidationSchemas = {
     .string()
     .required('Ownership of project is required'),
 
+  ownership_of_projects: yup
+    .string()
+    .required('Ownership of projects is required'),
+
   governance_structure: yup
     .string()
     .required('Governance structure is required'),

@@ -682,6 +682,25 @@ This field identifies the underlying infrastructure your project is technically 
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
     legitimacy: [],
   },
+  ownership_of_projects: {
+    key: 'ownership_of_projects',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
+    isEssential: POC_ITEMS.ownership_of_projects.isEssential,
+    label: 'Ownership of Projects +',
+    description:
+      "the individuals or groups who have authority, accountability, and decision-making power over the project's direction, scope, and outcomes",
+    shortDescription:
+      "the individuals or groups who have authority, accountability, and decision-making power over the project's direction, scope, and outcomes",
+    weight: ALL_POC_ITEM_MAP.ownership_of_projects.weight,
+    formDisplayType: 'string',
+    placeholder: 'Enter details',
+    showReference: true,
+    showExpand: false,
+    accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.ownership_of_projects,
+  },
   project_funded_date: {
     key: 'project_funded_date',
     category: IItemCategoryEnum.Financial,

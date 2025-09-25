@@ -213,7 +213,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         itemsNotEssential: [
           'core_team',
           'team_incentives',
-          'ownership_of_project',
+          'ownership_of_projects',
           'contributors_organization',
           'advisors',
         ],
