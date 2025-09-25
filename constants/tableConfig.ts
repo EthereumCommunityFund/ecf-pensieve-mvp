@@ -162,6 +162,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
         itemsNotEssential: [
           'audit_status',
+          'smart_contract_audits',
           'dapp_category',
           'dapp_storage_stack',
           'dapp_account_management_stack',

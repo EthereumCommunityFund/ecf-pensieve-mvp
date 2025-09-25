@@ -494,6 +494,12 @@ export const itemValidationSchemas = {
 
   audit_status: yup.string().required('Audit status is required'),
 
+  // Smart Contract Audits (boolean via Yes/No select)
+  // Align to Airdrops style: required string with Yes/No options at UI layer
+  smart_contract_audits: yup
+    .string()
+    .required('Smart contract audits status is required'),
+
   dapp_category: yup.string().required('Dapp category is required'),
 
   protocol_built_on: yup.string().required('Protocol built on is required'),
