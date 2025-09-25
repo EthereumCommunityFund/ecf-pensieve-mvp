@@ -5,7 +5,7 @@ import ShareService from '@/lib/services/share';
 import { publicProcedure, router } from '../server';
 
 const ensureInput = z.object({
-  entityType: z.enum(['proposal', 'itemProposal']),
+  entityType: z.enum(['proposal', 'itemProposal', 'project']),
   entityId: z.union([z.string().min(1), z.number()]),
 });
 

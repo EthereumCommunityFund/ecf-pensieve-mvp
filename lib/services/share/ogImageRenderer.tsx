@@ -56,7 +56,7 @@ export async function getOgFonts(): Promise<Font[]> {
   return fontsPromise;
 }
 
-function renderProposalOgImage(
+function renderCenteredCard(
   payload: SharePayload,
   origin: string,
 ): JSX.Element {
@@ -72,6 +72,20 @@ function renderProposalOgImage(
       {renderShareCardForOg(payload, origin)}
     </div>
   );
+}
+
+function renderProposalOgImage(
+  payload: SharePayload,
+  origin: string,
+): JSX.Element {
+  return renderCenteredCard(payload, origin);
+}
+
+function renderProjectOgImage(
+  payload: SharePayload,
+  origin: string,
+): JSX.Element {
+  return renderCenteredCard(payload, origin);
 }
 
 function renderDefaultOgImage(
@@ -104,6 +118,10 @@ export function renderShareOgImage(
   switch (payload.layout) {
     case 'proposal':
       return renderProposalOgImage(payload, origin);
+    case 'project':
+    case 'projectPublished':
+    case 'projectPending':
+      return renderProjectOgImage(payload, origin);
     default:
       return renderDefaultOgImage(payload, origin);
   }

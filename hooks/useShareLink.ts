@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { trpc, type RouterOutputs } from '@/lib/trpc/client';
 import { buildAbsoluteUrl } from '@/lib/utils/url';
 
-export type ShareEntityType = 'proposal' | 'itemProposal';
+export type ShareEntityType = 'proposal' | 'itemProposal' | 'project';
 
 export interface UseShareLinkOptions {
   entityType: ShareEntityType;

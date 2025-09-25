@@ -1,9 +1,11 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 
 import { ESSENTIAL_ITEM_QUORUM_SUM } from '@/lib/constants';
 import { db } from '@/lib/db';
 import {
   itemProposals,
+  projectSnaps,
+  projects,
   proposals,
   shareLinks,
   voteRecords,
@@ -11,6 +13,18 @@ import {
 import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 import ProposalVoteUtils from '@/utils/proposal';
+
+import {
+  calculateTransparencyScore,
+  extractArray,
+  formatInteger,
+  formatReadableKey,
+  getItemValueFromSnap,
+  normalizeItemsTopWeight,
+  shortenAddress,
+  truncate,
+  valueToText,
+} from './shareUtils';
 
 type ShareLinkRecord = typeof shareLinks.$inferSelect;
 type ShareLinkInsert = typeof shareLinks.$inferInsert;
@@ -63,11 +77,41 @@ type ItemProposalRecord = {
   } | null;
 };
 
+type ProjectRecord = {
+  id: number;
+  name: string;
+  tagline: string;
+  categories: string[];
+  logoUrl: string;
+  isPublished: boolean;
+  updatedAt: Date;
+  itemsTopWeight: unknown;
+  support: number;
+};
+
+type ProjectSnapRecord = {
+  id: number;
+  projectId: number;
+  createdAt: Date;
+  name: string | null;
+  categories: string[] | null;
+  items: Array<{ key: string; value: unknown }>;
+};
+
 export type ShareEntityType = 'proposal' | 'itemProposal' | 'project';
-const SUPPORTED_ENTITY_TYPES: ShareEntityType[] = ['proposal', 'itemProposal'];
+const SUPPORTED_ENTITY_TYPES: ShareEntityType[] = [
+  'proposal',
+  'itemProposal',
+  'project',
+];
 
 export type ShareVisibility = 'public' | 'unlisted' | 'private';
-export type ShareLayout = 'proposal' | 'itemProposal' | 'project';
+export type ShareLayout =
+  | 'proposal'
+  | 'itemProposal'
+  | 'project'
+  | 'projectPublished'
+  | 'projectPending';
 
 export interface ShareHighlight {
   label: string;
@@ -183,87 +227,6 @@ function mergeVisibility(
   b: ShareVisibility,
 ): ShareVisibility {
   return VISIBILITY_WEIGHT[a] >= VISIBILITY_WEIGHT[b] ? a : b;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-  return `${text.slice(0, maxLength - 1).trim()}...`;
-}
-
-function formatInteger(value: number): string {
-  if (!Number.isFinite(value)) {
-    return '0';
-  }
-  return new Intl.NumberFormat('en-US').format(Math.round(value || 0));
-}
-
-function formatReadableKey(key: string): string {
-  return key
-    .replace(/_/g, ' ')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/^(.)/, (match) => match.toUpperCase());
-}
-
-function valueToText(value: unknown): string {
-  if (value === null || value === undefined) {
-    return '';
-  }
-
-  if (typeof value === 'string') {
-    return value.trim();
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    const parts = value
-      .map((item) => valueToText(item))
-      .filter((item) => item && item.length > 0);
-    const unique = Array.from(new Set(parts));
-    return unique.join(', ');
-  }
-
-  if (isRecord(value)) {
-    const preferredKeys = ['value', 'label', 'name', 'title', 'url'];
-    for (const key of preferredKeys) {
-      if (key in value && value[key] != null) {
-        const text = valueToText(value[key]);
-        if (text) {
-          return text;
-        }
-      }
-    }
-    return truncate(JSON.stringify(value), 120);
-  }
-
-  return '';
-}
-
-function shortenAddress(
-  address?: string | null,
-  length: number = 4,
-): string | undefined {
-  if (!address || address.length < length * 2 + 2) {
-    return address ?? undefined;
-  }
-  return `${address.slice(0, length + 2)}...${address.slice(-length)}`;
-}
-
-function extractArray<T = string>(value: unknown): T[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value as T[];
 }
 
 function buildProposalHighlights(
@@ -420,6 +383,60 @@ async function fetchItemProposal(
   });
 
   return itemProposal ?? null;
+}
+
+async function fetchProjectRecord(
+  entityId: string,
+): Promise<ProjectRecord | null> {
+  const numericId = Number(entityId);
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    return null;
+  }
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, numericId),
+    columns: {
+      id: true,
+      name: true,
+      tagline: true,
+      categories: true,
+      logoUrl: true,
+      isPublished: true,
+      updatedAt: true,
+      itemsTopWeight: true,
+      support: true,
+    },
+  });
+
+  return project ?? null;
+}
+
+async function fetchLatestProjectSnap(
+  projectId: number,
+): Promise<ProjectSnapRecord | null> {
+  const snap = await db.query.projectSnaps.findFirst({
+    where: eq(projectSnaps.projectId, projectId),
+    columns: {
+      id: true,
+      projectId: true,
+      createdAt: true,
+      name: true,
+      categories: true,
+      items: true,
+    },
+    orderBy: (table) => [desc(table.createdAt)],
+  });
+
+  if (!snap) {
+    return null;
+  }
+
+  return {
+    ...snap,
+    items: Array.isArray(snap.items)
+      ? (snap.items as Array<{ key: string; value: unknown }>)
+      : [],
+  };
 }
 
 async function resolveProposalContext(
@@ -715,6 +732,165 @@ async function resolveItemProposalContext(
   };
 }
 
+async function resolveProjectContext(
+  entityId: string,
+): Promise<EntityContext | null> {
+  const project = await fetchProjectRecord(entityId);
+  if (!project) {
+    return null;
+  }
+
+  const [latestSnap, projectProposals, projectVotes, itemProposalCountResult] =
+    await Promise.all([
+      fetchLatestProjectSnap(project.id),
+      db.query.proposals.findMany({
+        where: eq(proposals.projectId, project.id),
+        columns: {
+          id: true,
+          createdAt: true,
+        },
+        orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
+      }),
+      db.query.voteRecords.findMany({
+        where: eq(voteRecords.projectId, project.id),
+        columns: {
+          id: true,
+          createdAt: true,
+          proposalId: true,
+          key: true,
+          weight: true,
+          projectId: true,
+        },
+        with: {
+          creator: {
+            columns: {
+              userId: true,
+              name: true,
+              avatarUrl: true,
+              address: true,
+            },
+          },
+        },
+      }),
+      db
+        .select({ count: sql<number>`COUNT(*)::int` })
+        .from(itemProposals)
+        .where(eq(itemProposals.projectId, project.id)),
+    ]);
+
+  const totalItemProposals = Number(itemProposalCountResult[0]?.count ?? 0);
+  const categories = project.categories ?? latestSnap?.categories ?? [];
+  const tags = Array.from(new Set(categories.filter(Boolean))).slice(0, 6);
+  const snapItems = latestSnap?.items ?? [];
+  const itemsTopWeight = normalizeItemsTopWeight(project.itemsTopWeight);
+  const transparencyScore = calculateTransparencyScore(itemsTopWeight);
+
+  const summaryFromSnap = getItemValueFromSnap(snapItems, 'mainDescription');
+  const taglineFromSnap = getItemValueFromSnap(snapItems, 'tagline');
+  const description = summaryFromSnap || project.tagline;
+  const subtitle = taglineFromSnap || project.tagline;
+
+  const latestVoteTimestamp = projectVotes.reduce((latest, vote) => {
+    const time = vote.createdAt?.getTime?.() ?? 0;
+    return time > latest ? time : latest;
+  }, 0);
+
+  const statusBadge: ShareBadge = project.isPublished
+    ? { label: 'Published Project', tone: 'success' }
+    : { label: 'Pending Project', tone: 'info' };
+
+  let stats: ShareMetric[];
+  const layout: ShareLayout = project.isPublished
+    ? 'projectPublished'
+    : 'projectPending';
+
+  if (project.isPublished) {
+    const clampedTransparency = Math.min(100, Math.max(transparencyScore, 0));
+    stats = [
+      {
+        key: 'transparency',
+        title: 'Transparency',
+        primary: `${clampedTransparency}%`,
+      },
+      {
+        key: 'communityVotes',
+        title: 'Community Votes',
+        primary: formatInteger(project.support ?? 0),
+      },
+      {
+        key: 'totalContributions',
+        title: 'Total Contributions',
+        primary: formatInteger(totalItemProposals),
+      },
+    ];
+  } else {
+    const projectVoteResult = ProposalVoteUtils.getVoteResultOfProject({
+      projectId: project.id,
+      votesOfProject: projectVotes as any,
+      proposals: projectProposals as any,
+    });
+
+    const progressValue =
+      projectVoteResult.leadingProposalResult?.formattedPercentageOfProposal ??
+      '0%';
+
+    stats = [
+      {
+        key: 'progress',
+        title: 'Progress',
+        primary: progressValue,
+      },
+      {
+        key: 'totalProposals',
+        title: 'Total Proposals',
+        primary: formatInteger(projectProposals.length),
+      },
+    ];
+  }
+
+  const metadata: ShareMetadata = {
+    title: project.name,
+    subtitle: subtitle ? truncate(subtitle, 140) : undefined,
+    description: description ? truncate(description, 200) : undefined,
+    project: {
+      id: project.id,
+      name: project.name,
+      tagline: project.tagline,
+      categories,
+      logoUrl: project.logoUrl,
+      isPublished: project.isPublished,
+    },
+    tags,
+    statusBadge,
+    stats,
+  };
+
+  const targetUrl = project.isPublished
+    ? `/project/${project.id}`
+    : `/project/pending/${project.id}`;
+
+  const visibility: ShareVisibility = project.isPublished
+    ? 'public'
+    : 'unlisted';
+
+  const imageVersion = String(
+    Math.max(
+      project.updatedAt?.getTime?.() ?? 0,
+      latestSnap?.createdAt?.getTime?.() ?? 0,
+      latestVoteTimestamp,
+    ),
+  );
+
+  return {
+    layout,
+    targetUrl,
+    visibility,
+    parentId: null,
+    metadata,
+    imageVersion,
+  };
+}
+
 async function resolveEntityContext(
   entityType: ShareEntityType,
   entityId: string,
@@ -724,6 +900,8 @@ async function resolveEntityContext(
       return resolveProposalContext(entityId);
     case 'itemProposal':
       return resolveItemProposalContext(entityId);
+    case 'project':
+      return resolveProjectContext(entityId);
     default:
       return null;
   }
