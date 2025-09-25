@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 
 import { ESSENTIAL_ITEM_QUORUM_SUM } from '@/lib/constants';
 import { db } from '@/lib/db';
@@ -750,7 +750,7 @@ async function resolveProjectContext(
     return null;
   }
 
-  const [latestSnap, projectProposals, projectVotes, itemProposalCountResult] =
+  const [latestSnap, projectProposals, projectVotes, itemProposalCreators] =
     await Promise.all([
       fetchLatestProjectSnap(project.id),
       db.query.proposals.findMany({
@@ -758,6 +758,16 @@ async function resolveProjectContext(
         columns: {
           id: true,
           createdAt: true,
+        },
+        with: {
+          creator: {
+            columns: {
+              userId: true,
+              name: true,
+              avatarUrl: true,
+              address: true,
+            },
+          },
         },
         orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
       }),
@@ -783,12 +793,27 @@ async function resolveProjectContext(
         },
       }),
       db
-        .select({ count: sql<number>`COUNT(*)::int` })
+        .select({ creatorId: itemProposals.creator })
         .from(itemProposals)
-        .where(eq(itemProposals.projectId, project.id)),
+        .where(eq(itemProposals.projectId, project.id))
+        .groupBy(itemProposals.creator),
     ]);
 
-  const totalItemProposals = Number(itemProposalCountResult[0]?.count ?? 0);
+  const uniqueContributorIds = new Set<string>();
+  projectVotes
+    .map((vote) => vote.creator?.userId)
+    .filter((id): id is string => Boolean(id))
+    .forEach((id) => uniqueContributorIds.add(id));
+
+  projectProposals
+    .map((proposal) => proposal.creator?.userId)
+    .filter((id): id is string => Boolean(id))
+    .forEach((id) => uniqueContributorIds.add(id));
+
+  itemProposalCreators
+    .map((record) => record.creatorId)
+    .filter((id): id is string => Boolean(id))
+    .forEach((id) => uniqueContributorIds.add(id));
   const categories = project.categories ?? latestSnap?.categories ?? [];
   const tags = Array.from(new Set(categories.filter(Boolean))).slice(0, 6);
   const snapItems = latestSnap?.items ?? [];
@@ -830,7 +855,7 @@ async function resolveProjectContext(
       {
         key: 'totalContributions',
         title: 'Total Contributions',
-        primary: formatInteger(totalItemProposals),
+        primary: formatInteger(uniqueContributorIds.size),
       },
     ];
   } else {

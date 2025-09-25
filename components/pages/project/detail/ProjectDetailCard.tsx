@@ -1,11 +1,11 @@
 'use client';
 
 import { cn, Image, Skeleton } from '@heroui/react';
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import ShareButton from '@/components/biz/share/ShareButton';
+import useShareLink from '@/hooks/useShareLink';
 import { IProject } from '@/types';
-import { getShareUrlByShortCode } from '@/utils/share';
 
 import BookmarkButton from './list/BookmarkButton';
 import UpvoteButton from './UpvoteButton';
@@ -25,6 +25,27 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
   getLeadingCategories,
   getLeadingLogoUrl,
 }) => {
+  const fallbackSharePath = useMemo(() => {
+    if (!project) {
+      return '';
+    }
+    return `/project/${project.id}`;
+  }, [project]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    payload: sharePayload,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'project',
+    entityId: project?.id,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!project?.id,
+  });
+
   if (!project) {
     return <ProjectDetailCardSkeleton />;
   }
@@ -71,9 +92,16 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
         <UpvoteButton projectId={project.id} project={project} />
         <BookmarkButton projectId={project.id} />
-        {project.shortCode && (
-          <ShareButton shareUrl={getShareUrlByShortCode(project.shortCode)} />
-        )}
+        <ShareButton
+          shareUrl={shareUrl}
+          shareImageUrl={shareImageUrl}
+          className="size-[40px]"
+          isLoading={shareLinkLoading}
+          error={shareLinkError}
+          onEnsure={ensureShareLink}
+          onRefresh={ensureShareLink}
+          payload={sharePayload}
+        />
       </div>
     </div>
   );
