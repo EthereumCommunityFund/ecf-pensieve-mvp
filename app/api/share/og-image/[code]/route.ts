@@ -1,4 +1,5 @@
 import { ImageResponse } from '@vercel/og';
+import type { NextRequest } from 'next/server';
 
 import ShareService from '@/lib/services/share';
 import {
@@ -9,8 +10,8 @@ import {
 export const runtime = 'nodejs';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { code: string } },
+  request: NextRequest,
+  { params }: { params: Promise<{ code: string }> },
 ) {
   const { code } = await params;
 
