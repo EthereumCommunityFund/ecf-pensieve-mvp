@@ -45,7 +45,7 @@ const PUBLISHED_PROJECT_STATS = [
   {
     key: 'transparency',
     label: 'Transparency',
-    icon: '/images/share/PlayCircle.svg',
+    icon: '/images/share/ShieldStar.svg',
   },
   {
     key: 'communityVotes',
@@ -216,7 +216,7 @@ function renderMetricRow(
                 fontSize: '18px',
                 lineHeight: '24px',
                 fontWeight: 500,
-                color: 'rgba(0,0,0,0.65)',
+                color: 'rgba(0,0,0,0.5)',
               }}
             >
               {getGenericStatValue(payload, stat.key)}
@@ -577,7 +577,7 @@ function renderPublishedProjectCard(
                 {payload.metadata.subtitle}
               </span>
             )}
-            {payload.metadata.description && (
+            {/* {payload.metadata.description && (
               <span
                 style={{
                   fontSize: '14px',
@@ -587,7 +587,7 @@ function renderPublishedProjectCard(
               >
                 {payload.metadata.description}
               </span>
-            )}
+            )} */}
           </div>
           {renderTagPills(tags)}
         </div>
