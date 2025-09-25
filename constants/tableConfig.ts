@@ -237,6 +237,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         items: ['fundingStatus'],
         itemsNotEssential: [
           'funding_received_grants',
+          'private_funding_rounds',
           'project_funded_date',
           'budget_plans',
           'expense_statements',

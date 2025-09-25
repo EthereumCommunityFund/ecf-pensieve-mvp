@@ -16,6 +16,7 @@ import {
   IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
+  IPrivateFundingRound,
   IStackIntegration,
 } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
@@ -227,6 +228,23 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
+    _id: yup.string().optional(),
+  });
+
+const privateFundingRoundSchema: yup.ObjectSchema<IPrivateFundingRound> = yup
+  .object()
+  .shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .required('date is required'),
+    amount: yup.string().required('amount is required'),
+    textName: yup.string().required('name is required'),
+    amountShares: yup.string().optional(),
     _id: yup.string().optional(),
   });
 
@@ -627,6 +645,12 @@ export const itemValidationSchemas = {
     .of(fundingReceivedGrantsSchema)
     .min(1, 'At least one funding received(grants) is required')
     .required('Funding received(grants) information is required'),
+
+  private_funding_rounds: yup
+    .array()
+    .of(privateFundingRoundSchema)
+    .min(1, 'At least one private funding round is required')
+    .required('Private funding rounds information is required'),
 
   affiliated_projects: yup
     .array()

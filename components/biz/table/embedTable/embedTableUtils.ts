@@ -102,6 +102,14 @@ export const getDefaultEmbedTableFormItemValue = (
         active: '',
         _id: crypto.randomUUID(),
       };
+    case 'private_funding_rounds':
+      return {
+        date: null,
+        amount: '',
+        textName: '',
+        amountShares: '',
+        _id: crypto.randomUUID(),
+      };
     default:
       return '';
   }

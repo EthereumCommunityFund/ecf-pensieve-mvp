@@ -1147,7 +1147,7 @@ const InputContentRenderer: React.FC<IProps> = ({
             </div>
           );
         }
-
+        // Default collapsed summary
         return (
           <>
             {parsed
@@ -1167,6 +1167,144 @@ const InputContentRenderer: React.FC<IProps> = ({
           </>
         );
       }
+      case 'private_funding_rounds': {
+        const parsed = parseValue(value);
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={158} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Date</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'date',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={138} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Amount (USD)</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'amount',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Name</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'textName',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Allocation/Shares</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'amountShares',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        round: {
+                          date: Date | string;
+                          amount: string;
+                          textName: string;
+                          amountShares?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={158}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.date
+                              ? dayjs.utc(round.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={138}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.amount ? formatAmount(round.amount) : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.textName || '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.amountShares || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+        break;
+      }
+
       case 'affiliated_projects': {
         const parsed = parseValue(value);
 

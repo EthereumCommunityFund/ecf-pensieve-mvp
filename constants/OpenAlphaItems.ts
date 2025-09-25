@@ -696,13 +696,13 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         'Includes the data: date, fundraising size, participants, price, smart contract address',
       longDescription: 'Provide detailed context for Private Funding Rounds.',
       weight: ALL_POC_ITEM_MAP['private_funding_rounds'].weight,
-      formDisplayType: 'embedTable',
+      formDisplayType: 'private_funding_rounds',
       placeholder: 'Use the embedded table to add entries',
       showReference: true,
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
-      // TODO: add validation schema
+      validationSchema: itemValidationSchemas.private_funding_rounds,
     },
     // TODO: Potential duplicate with existing AllItemConfig
     token_sales: {

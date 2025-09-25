@@ -146,6 +146,7 @@ export type IEmbedTableFormDisplayType =
   | 'endorsers'
   | 'stack_integrations'
   | 'advisors'
+  | 'private_funding_rounds'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
 
 export type IFormDisplayType =
@@ -272,6 +273,19 @@ export interface IAdvisors {
   _id?: string;
 }
 
+// Private Funding Rounds table row type
+export interface IPrivateFundingRound {
+  /** Round date */
+  date: Date | null;
+  /** Fundraising size, keep string for formatting like "$1,000,000" */
+  amount: string;
+  /** Textual name for the round (investor/participant/label) */
+  textName: string;
+  /** Amount of shares or allocation (e.g. %, tokens) */
+  amountShares?: string;
+  _id?: string;
+}
+
 // Type mapping for getItemRowData function
 export interface IItemDataTypeMap {
   funding_received_grants: IFundingReceivedGrants;
@@ -282,6 +296,7 @@ export interface IItemDataTypeMap {
   endorsers: IEndorser;
   stack_integrations: IStackIntegration;
   advisors: IAdvisors;
+  private_funding_rounds: IPrivateFundingRound;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

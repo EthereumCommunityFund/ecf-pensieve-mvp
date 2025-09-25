@@ -7,6 +7,7 @@ import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTa
 import ContributorsTableItem from './item/ContributorsTableItem';
 import EndorsersTableItem from './item/EndorsersTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
+import PrivateFundingRoundsTableItem from './item/PrivateFundingRoundsTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
 export interface DynamicFieldColumn {
@@ -286,6 +287,32 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     ],
     tableComponent: 'AdvisorsTableItem',
   },
+  private_funding_rounds: {
+    displayType: 'private_funding_rounds',
+    addButtonText: 'Add a Round',
+    columns: [
+      { key: 'date', label: 'Date', width: 158, tooltip: 'Funding round date' },
+      {
+        key: 'amount',
+        label: 'Amount (USD)',
+        width: 138,
+        tooltip: 'Total amount raised in this round',
+      },
+      {
+        key: 'textName',
+        label: 'Name',
+        width: 300,
+        tooltip: 'Textual name/participant for this round',
+      },
+      {
+        key: 'amountShares',
+        label: 'amountShares',
+        width: 180,
+        tooltip: 'amountShares',
+      },
+    ],
+    tableComponent: 'PrivateFundingRoundsTableItem',
+  },
 };
 
 // Map component names to actual FormAndTable
@@ -298,4 +325,5 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   EndorsersTableItem: EndorsersTableItem,
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
+  PrivateFundingRoundsTableItem: PrivateFundingRoundsTableItem,
 };
