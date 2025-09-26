@@ -13,7 +13,7 @@ import {
 } from '@/components/base/modal';
 import { CopyIcon } from '@/components/icons';
 import type { SharePayload } from '@/lib/services/share';
-import { renderShareCardForPreview } from '@/lib/services/share/shareCardElements';
+import { renderShareCard } from '@/lib/services/share/shareCardElements';
 import { getAppOrigin } from '@/lib/utils/url';
 
 interface ShareModalProps {
@@ -59,7 +59,7 @@ const ShareModal: FC<ShareModalProps> = ({
       typeof window !== 'undefined' && window.location?.origin
         ? window.location.origin
         : getAppOrigin();
-    return renderShareCardForPreview(payload, origin);
+    return renderShareCard(payload, { origin, mode: 'preview' });
   }, [payload]);
 
   return (

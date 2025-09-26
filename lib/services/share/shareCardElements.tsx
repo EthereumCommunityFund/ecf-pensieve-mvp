@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
@@ -171,6 +171,95 @@ function renderTagPills(tags: string[]): JSX.Element | null {
   );
 }
 
+interface MetricItemStyleOverrides {
+  container?: CSSProperties;
+  row?: CSSProperties;
+  icon?: CSSProperties;
+  value?: CSSProperties;
+  label?: CSSProperties;
+}
+
+interface MetricItemProps {
+  origin: string;
+  icon: string;
+  label: string;
+  value?: string | number | null;
+  alt?: string;
+  iconWidth?: number;
+  iconHeight?: number;
+  styles?: MetricItemStyleOverrides;
+  valueFallback?: string;
+}
+
+function MetricItem({
+  origin,
+  icon,
+  label,
+  value,
+  alt,
+  iconWidth,
+  iconHeight,
+  styles,
+  valueFallback = 'N/A',
+}: MetricItemProps): JSX.Element {
+  const hasValue = value !== undefined && value !== null && value !== '';
+  const displayValue = hasValue ? value : valueFallback;
+
+  const containerStyle: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    rowGap: '8px',
+    ...styles?.container,
+  };
+
+  const rowStyle: CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    ...styles?.row,
+  };
+
+  const iconStyle: CSSProperties = {
+    opacity: 0.5,
+    ...styles?.icon,
+  };
+
+  const valueStyle: CSSProperties = {
+    fontSize: '18px',
+    lineHeight: '24px',
+    fontWeight: 600,
+    color: COLORS.statValue,
+    ...styles?.value,
+  };
+
+  const labelStyle: CSSProperties = {
+    fontSize: '14px',
+    fontWeight: 500,
+    lineHeight: '20px',
+    color: 'rgba(0,0,0,0.5)',
+    ...styles?.label,
+  };
+
+  const resolvedIconWidth = iconWidth ?? 24;
+  const resolvedIconHeight = iconHeight ?? 24;
+
+  return (
+    <div style={containerStyle}>
+      <div style={rowStyle}>
+        <img
+          src={buildAbsoluteUrl(icon, origin)}
+          width={resolvedIconWidth}
+          height={resolvedIconHeight}
+          alt={alt ?? label}
+          style={iconStyle}
+        />
+        <span style={valueStyle}>{String(displayValue)}</span>
+      </div>
+      <span style={labelStyle}>{label}</span>
+    </div>
+  );
+}
+
 function renderMetricRow(
   payload: SharePayload,
   layout: ReadonlyArray<{
@@ -190,50 +279,22 @@ function renderMetricRow(
       }}
     >
       {layout.map((stat) => (
-        <div
+        <MetricItem
           key={stat.key}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            rowGap: '8px',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
-          >
-            <img
-              src={`${origin}${stat.icon}`}
-              width={24}
-              height={24}
-              alt={stat.key}
-              style={{ opacity: 0.5 }}
-            />
-            <span
-              style={{
-                fontSize: '18px',
-                lineHeight: '24px',
-                fontWeight: 500,
-                color: 'rgba(0,0,0,0.5)',
-              }}
-            >
-              {getGenericStatValue(payload, stat.key)}
-            </span>
-          </div>
-          <span
-            style={{
-              fontSize: '14px',
+          origin={origin}
+          icon={stat.icon}
+          label={stat.label}
+          value={getGenericStatValue(payload, stat.key)}
+          styles={{
+            value: {
               fontWeight: 500,
-              lineHeight: '20px',
+              color: 'rgba(0,0,0,0.5)',
+            },
+            label: {
               color: 'rgba(0,0,0,0.45)',
-            }}
-          >
-            {stat.label}
-          </span>
-        </div>
+            },
+          }}
+        />
       ))}
     </div>
   );
@@ -258,7 +319,7 @@ function renderProposalCard(
       badge.label?.toLowerCase().includes('leading'),
     )?.label ?? null;
 
-  const containerStyle: React.CSSProperties = {
+  const containerStyle: CSSProperties = {
     width: `${CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '8px',
@@ -609,6 +670,124 @@ function renderPublishedProjectCard(
   );
 }
 
+function renderItemProposalCard(
+  payload: SharePayload,
+  options: ShareCardOptions,
+): JSX.Element {
+  const origin = options.origin ?? getAppOrigin();
+  const projectLogo = buildAbsoluteUrl(
+    payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
+    origin,
+  );
+  const projectName = truncate(payload.metadata.project.name, 36);
+  const itemName = truncate(payload.metadata.item?.key, 36);
+  const categoryName = truncate(payload.metadata.item?.category, 36);
+
+  const containerStyle: CSSProperties = {
+    width: `${CARD_WIDTH}px`,
+    padding: '20px',
+    borderRadius: '12px',
+    border: `1px solid rgba(0,0,0,0.1)`,
+    background: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    rowGap: '20px',
+    fontFamily: FONT_FAMILY,
+  };
+
+  if (options.mode === 'preview') {
+    containerStyle.boxShadow = '0px 18px 36px rgba(102, 112, 134, 0.18)';
+  }
+
+  return (
+    <div style={containerStyle}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <img
+            src={projectLogo}
+            width={60}
+            height={60}
+            alt={payload.metadata.project.name || 'Project logo'}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '5px',
+              objectFit: 'cover',
+              border: '1px solid rgba(0,0,0,0.1)',
+              background: '#fff',
+            }}
+          />
+          <span
+            style={{
+              fontSize: '24px',
+              fontWeight: 600,
+              color: 'rgba(0,0,0,0.8)',
+              lineHeight: 1.2,
+            }}
+          >
+            {projectName}
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '20px',
+            fontWeight: 500,
+            color: '#000',
+          }}
+        >
+          <img
+            src={buildAbsoluteUrl('/ArrowElbowDownRight.svg', origin)}
+            width={24}
+            height={24}
+            alt="Category"
+            style={{ opacity: 0.5 }}
+          />
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px',
+            }}
+          >
+            <span style={{ opacity: 0.5 }}>{categoryName}</span>
+            <span style={{ color: 'rgba(0,0,0,0.35)' }}>/</span>
+            <span style={{}}>{itemName}</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'block',
+          height: '1px',
+          background: 'rgba(0,0,0,0.1)',
+        }}
+      ></div>
+
+      {renderItemProposalBody(payload.metadata.item, origin)}
+
+      {renderShareFooter(origin)}
+    </div>
+  );
+}
+
 function renderPendingProjectCard(
   payload: SharePayload,
   options: ShareCardOptions,
@@ -710,40 +889,28 @@ function renderPendingProjectCard(
   );
 }
 
-function renderShareCard(
+export function renderShareCard(
   payload: SharePayload,
   options: ShareCardOptions = {},
 ): JSX.Element {
   switch (payload.layout) {
     case 'proposal':
       return renderProposalCard(payload, options);
+    case 'itemProposal':
+      return renderItemProposalCard(payload, options);
+    case 'projectPublished':
+      return renderPublishedProjectCard(payload, options);
+    case 'projectPending':
+      return renderPendingProjectCard(payload, options);
     case 'project': {
       const isPublished = payload.metadata.project.isPublished ?? true;
       return isPublished
         ? renderPublishedProjectCard(payload, options)
         : renderPendingProjectCard(payload, options);
     }
-    case 'projectPublished':
-      return renderPublishedProjectCard(payload, options);
-    case 'projectPending':
-      return renderPendingProjectCard(payload, options);
     default:
       return renderFallbackCard(payload, options);
   }
-}
-
-export function renderShareCardForOg(
-  payload: SharePayload,
-  origin: string,
-): JSX.Element {
-  return renderShareCard(payload, { origin, mode: 'og' });
-}
-
-export function renderShareCardForPreview(
-  payload: SharePayload,
-  origin?: string,
-): JSX.Element {
-  return renderShareCard(payload, { origin, mode: 'preview' });
 }
 
 function renderItemProposalBody(
@@ -782,75 +949,46 @@ function renderItemProposalBody(
         <div
           style={{
             width: '100%',
-            height: '141px',
-            paddingTop: '40px',
-            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
             boxSizing: 'border-box',
             display: 'flex',
             justifyContent: 'flex-start',
             alignItems: 'flex-start',
             flexDirection: 'row',
-            gap: '40px',
+            gap: '15px',
           }}
         >
           {itemStats.map(({ label, icon, alt, value }) => (
-            <div
+            <MetricItem
               key={label}
-              style={{
-                width: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-                gap: '10px',
-              }}
-            >
-              <div
-                style={{
-                  height: '50px',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '20px',
-                }}
-              >
-                <img
-                  src={buildAbsoluteUrl(icon, origin)}
-                  width={48}
-                  height={48}
-                  alt={alt}
-                />
-                <div
-                  style={{
-                    height: '50px',
-                    justifyContent: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    color: 'black',
-                    fontSize: 18,
-                    fontFamily: 'Mona Sans',
-                    fontWeight: '500',
-                    lineHeight: 24,
-                    wordWrap: 'break-word',
-                  }}
-                >
-                  {value ?? 'N/A'}
-                </div>
-              </div>
-              <div
-                style={{
-                  height: '50px',
+              origin={origin}
+              icon={icon}
+              alt={alt}
+              label={label}
+              value={value}
+              styles={{
+                container: {
+                  width: 'auto',
+                  gap: '5px',
+                },
+                row: {
+                  opacity: 0.5,
+                },
+                value: {
+                  color: 'black',
+                  fontSize: 18,
+                  fontFamily: 'Mona Sans',
+                  fontWeight: 500,
+                  lineHeight: '24px',
+                },
+                label: {
                   opacity: 0.5,
                   color: 'black',
-                  fontSize: 24,
+                  fontSize: 14,
                   fontFamily: 'Mona Sans',
-                  fontWeight: '500',
-                  wordWrap: 'break-word',
-                }}
-              >
-                {label}
-              </div>
-            </div>
+                  fontWeight: 500,
+                },
+              }}
+            />
           ))}
         </div>
       );
@@ -918,61 +1056,39 @@ function renderItemProposalBody(
           </div>
 
           {pendingStats.map(({ label, icon, alt, value }) => (
-            <div
+            <MetricItem
               key={label}
-              style={{
-                width: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-                gap: '10px',
-              }}
-            >
-              <div
-                style={{
-                  height: '50px',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
+              origin={origin}
+              icon={icon}
+              alt={alt}
+              label={label}
+              value={value}
+              iconWidth={48}
+              iconHeight={48}
+              styles={{
+                container: {
+                  width: 'auto',
+                  gap: '10px',
+                },
+                row: {
                   gap: '20px',
-                }}
-              >
-                <img
-                  src={buildAbsoluteUrl(icon, origin)}
-                  width={48}
-                  height={48}
-                  alt={alt}
-                />
-                <div
-                  style={{
-                    justifyContent: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    color: 'black',
-                    fontSize: 18,
-                    fontFamily: 'Mona Sans',
-                    fontWeight: '500',
-                    lineHeight: 24,
-                    wordWrap: 'break-word',
-                  }}
-                >
-                  {value ?? 'N/A'}
-                </div>
-              </div>
-              <div
-                style={{
+                },
+                value: {
+                  color: 'black',
+                  fontSize: 18,
+                  fontFamily: 'Mona Sans',
+                  fontWeight: 500,
+                  lineHeight: '24px',
+                },
+                label: {
                   opacity: 0.5,
                   color: 'black',
                   fontSize: 24,
                   fontFamily: 'Mona Sans',
-                  fontWeight: '500',
-                  wordWrap: 'break-word',
-                }}
-              >
-                {label}
-              </div>
-            </div>
+                  fontWeight: 500,
+                },
+              }}
+            />
           ))}
         </div>
       );
@@ -1033,231 +1149,43 @@ function renderItemProposalBody(
           </div>
 
           {emptyStats.map(({ label, icon, alt, value }) => (
-            <div
+            <MetricItem
               key={label}
-              style={{
-                width: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-                gap: '10px',
-              }}
-            >
-              <div
-                style={{
-                  height: '50px',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
+              origin={origin}
+              icon={icon}
+              alt={alt}
+              label={label}
+              value={value}
+              iconWidth={48}
+              iconHeight={48}
+              styles={{
+                container: {
+                  width: 'auto',
+                  gap: '10px',
+                },
+                row: {
                   gap: '20px',
-                }}
-              >
-                <img
-                  src={buildAbsoluteUrl(icon, origin)}
-                  width={48}
-                  height={48}
-                  alt={alt}
-                />
-                <div
-                  style={{
-                    justifyContent: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    color: 'black',
-                    fontSize: 18,
-                    fontFamily: 'Mona Sans',
-                    fontWeight: '500',
-                    lineHeight: 24,
-                    wordWrap: 'break-word',
-                  }}
-                >
-                  {value ?? 'N/A'}
-                </div>
-              </div>
-              <div
-                style={{
-                  height: '50px',
+                },
+                value: {
+                  color: 'black',
+                  fontSize: 18,
+                  fontFamily: 'Mona Sans',
+                  fontWeight: 500,
+                  lineHeight: '24px',
+                },
+                label: {
                   opacity: 0.5,
                   color: 'black',
                   fontSize: 24,
                   fontFamily: 'Mona Sans',
-                  fontWeight: '500',
-                  wordWrap: 'break-word',
-                }}
-              >
-                {label}
-              </div>
-            </div>
+                  fontWeight: 500,
+                },
+              }}
+            />
           ))}
         </div>
       );
     default:
       return null;
   }
-}
-
-function renderItemProposalOgImage(
-  payload: SharePayload,
-  origin: string,
-): JSX.Element {
-  const logoUrl = payload.metadata.project.logoUrl;
-  const projectName = truncate(payload.metadata.project.name ?? '', 36);
-  const itemName = truncate(payload.metadata.item?.key ?? '', 36);
-  const category = truncate(payload.metadata.item?.category ?? '', 36);
-  return (
-    <div
-      style={{
-        width: '1200px',
-        height: '630px',
-        padding: '40px',
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#ffffff',
-        fontFamily: 'MonaSans',
-        color: '#0C1C22',
-      }}
-    >
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-start',
-          gap: '100px',
-        }}
-      >
-        <div
-          style={{
-            width: '100%',
-            gap: '10px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-          }}
-        >
-          <div
-            style={{
-              height: '100px',
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'row',
-              gap: '20px',
-              justifyContent: 'flex-start',
-            }}
-          >
-            <img
-              src={logoUrl!}
-              width={100}
-              height={100}
-              style={{
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                borderRadius: 10,
-                background: 'white',
-                objectFit: 'contain',
-              }}
-              alt="Project Logo"
-            />
-            <div
-              style={{
-                opacity: 0.8,
-                justifyContent: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                color: 'black',
-                fontSize: 30,
-                fontFamily: 'Inter',
-                fontWeight: '1800',
-                lineHeight: 35,
-                wordWrap: 'break-word',
-              }}
-            >
-              {projectName}
-            </div>
-          </div>
-          <div
-            style={{
-              width: '100%',
-              height: '70px',
-              paddingLeft: 20,
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              flexDirection: 'row',
-              gap: 10,
-              display: 'flex',
-            }}
-          >
-            <img
-              src={buildAbsoluteUrl('/ArrowElbowDownRight.svg', origin)}
-              width={30}
-              height={39}
-              alt="Arrow elbow down right"
-            />
-            <div
-              style={{
-                opacity: 0.5,
-                justifyContent: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                color: 'black',
-                fontSize: 25,
-                fontFamily: 'Inter',
-                fontWeight: '600',
-                textTransform: 'capitalize',
-                lineHeight: 24,
-                wordWrap: 'break-word',
-              }}
-            >
-              {category} /
-            </div>
-            <div
-              style={{
-                justifyContent: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                color: 'black',
-                fontSize: 25,
-                fontFamily: 'Inter',
-                fontWeight: '600',
-                textTransform: 'capitalize',
-                lineHeight: 24,
-                wordWrap: 'break-word',
-              }}
-            >
-              {itemName}
-            </div>
-          </div>
-        </div>
-        {renderItemProposalBody(payload.metadata.item, origin)}
-        <div
-          style={{
-            width: '100%',
-            height: '35px',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: '10px',
-          }}
-        >
-          <img
-            src={buildAbsoluteUrl('/new-pensieve-logo.svg', origin)}
-            width={54}
-            height={32}
-            alt="New pensieve logo"
-          />
-          <div
-            style={{
-              color: 'black',
-              fontSize: 22,
-              fontFamily: 'Mona Sans',
-              fontWeight: '600',
-              wordWrap: 'break-word',
-            }}
-          >
-            Pensieve.ecf
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }

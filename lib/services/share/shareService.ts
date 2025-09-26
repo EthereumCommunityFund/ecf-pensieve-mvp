@@ -1,9 +1,12 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 
-import { ESSENTIAL_ITEM_QUORUM_SUM } from '@/lib/constants';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { ProjectTableFieldCategory } from '@/constants/tableConfig';
+import { ALL_POC_ITEM_MAP, ESSENTIAL_ITEM_QUORUM_SUM } from '@/lib/constants';
 import { db } from '@/lib/db';
 import {
   itemProposals,
+  projectLogs,
   projectSnaps,
   projects,
   proposals,
@@ -12,6 +15,7 @@ import {
 } from '@/lib/db/schema';
 import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
+import { IPocItemKey } from '@/types/item';
 import ProposalVoteUtils from '@/utils/proposal';
 
 import {
@@ -43,6 +47,8 @@ type ProposalRecord = {
     logoUrl: string;
     isPublished: boolean;
     updatedAt: Date;
+    itemsTopWeight: unknown;
+    hasProposalKeys: string[];
   } | null;
   creator: {
     userId: string;
@@ -68,6 +74,8 @@ type ItemProposalRecord = {
     logoUrl: string;
     isPublished: boolean;
     updatedAt: Date;
+    itemsTopWeight: unknown;
+    hasProposalKeys: string[];
   } | null;
   creator: {
     userId: string;
@@ -148,11 +156,12 @@ export interface ShareMetric {
 export interface ShareItemMetadata {
   key: string;
   category: string;
+  rawKey?: string;
   updates?: number;
   submissions?: number;
-  weight?: number;
+  weight?: number | string;
   supported?: number;
-  initialWeight?: number;
+  initialWeight?: number | string;
   type: 'item' | 'pending' | 'empty';
 }
 export interface ShareMetadata {
@@ -334,6 +343,8 @@ async function fetchProposal(entityId: string): Promise<ProposalRecord | null> {
           logoUrl: true,
           isPublished: true,
           updatedAt: true,
+          itemsTopWeight: true,
+          hasProposalKeys: true,
         },
       },
       creator: {
@@ -379,6 +390,8 @@ async function fetchItemProposal(
           logoUrl: true,
           isPublished: true,
           updatedAt: true,
+          itemsTopWeight: true,
+          hasProposalKeys: true,
         },
       },
       creator: {
@@ -667,6 +680,36 @@ function buildItemProposalDescription(options: {
   return truncate(segments.join(' · '), 220);
 }
 
+function resolveItemCategoryLabels(key: string): {
+  category: string;
+  item: string;
+} {
+  const typedKey = key as IPocItemKey;
+  const config = AllItemConfig[typedKey];
+  const itemLabel = config?.label ?? formatReadableKey(key);
+
+  if (config) {
+    const categoryConfig = ProjectTableFieldCategory.find(
+      (category) => category.key === config.category,
+    );
+
+    const categoryLabel =
+      categoryConfig?.label ??
+      categoryConfig?.title ??
+      formatReadableKey(String(config.category));
+
+    return {
+      category: categoryLabel,
+      item: itemLabel,
+    };
+  }
+
+  return {
+    category: 'Item',
+    item: formatReadableKey(key),
+  };
+}
+
 async function resolveItemProposalContext(
   entityId: string,
 ): Promise<EntityContext | null> {
@@ -677,9 +720,88 @@ async function resolveItemProposalContext(
 
   const rawKey = String(itemProposal.key);
   const itemNameParam = encodeURIComponent(rawKey);
-  const label = formatReadableKey(rawKey);
+  const { category: categoryLabel, item: itemDisplayName } =
+    resolveItemCategoryLabels(rawKey);
+  const fallbackLabel = formatReadableKey(rawKey);
+  const displayLabel = itemDisplayName || fallbackLabel;
   const valueText = valueToText(itemProposal.value);
   const projectCategories = itemProposal.project.categories ?? [];
+  const normalizedItemsTopWeight = normalizeItemsTopWeight(
+    itemProposal.project.itemsTopWeight,
+  );
+  const itemWeightNumber = Number(normalizedItemsTopWeight[rawKey] ?? 0);
+  const typedKey = rawKey as IPocItemKey;
+  const baseWeight = ALL_POC_ITEM_MAP[typedKey]?.weight ?? 0;
+
+  const [
+    updatesCount,
+    submissionsCount,
+    latestProjectLog,
+    latestValidatedLog,
+    voteAggregate,
+  ] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(projectLogs)
+      .where(
+        and(
+          eq(projectLogs.projectId, itemProposal.projectId),
+          eq(projectLogs.key, rawKey),
+          eq(projectLogs.isNotLeading, false),
+        ),
+      )
+      .then((rows) => rows[0]?.count ?? 0),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(itemProposals)
+      .where(
+        and(
+          eq(itemProposals.projectId, itemProposal.projectId),
+          eq(itemProposals.key, rawKey),
+        ),
+      )
+      .then((rows) => rows[0]?.count ?? 0),
+    db.query.projectLogs.findFirst({
+      where: and(
+        eq(projectLogs.projectId, itemProposal.projectId),
+        eq(projectLogs.key, rawKey),
+      ),
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+    }),
+    db.query.projectLogs.findFirst({
+      where: and(
+        eq(projectLogs.projectId, itemProposal.projectId),
+        eq(projectLogs.key, rawKey),
+        eq(projectLogs.isNotLeading, false),
+      ),
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+    }),
+    db
+      .select({
+        totalWeight: sql<number>`COALESCE(sum(${voteRecords.weight}), 0)`,
+        supporterCount: sql<number>`count(distinct ${voteRecords.creator})::int`,
+        latestVoteAt: sql<Date | null>`max(${voteRecords.createdAt})`,
+      })
+      .from(voteRecords)
+      .where(
+        and(
+          eq(voteRecords.projectId, itemProposal.projectId),
+          eq(voteRecords.key, rawKey),
+          eq(voteRecords.itemProposalId, itemProposal.id),
+        ),
+      )
+      .then((rows) => rows[0] ?? null),
+  ]);
+
+  const latestLogTimestamp = latestProjectLog?.createdAt?.getTime?.() ?? 0;
+  const latestValidatedTimestamp =
+    latestValidatedLog?.createdAt?.getTime?.() ?? 0;
+  const voteSupporterCount = voteAggregate?.supporterCount ?? 0;
+  const totalVoteWeight = Number(voteAggregate?.totalWeight ?? 0);
+  const latestVoteAt = voteAggregate?.latestVoteAt ?? null;
+  const latestVoteTimestamp =
+    latestVoteAt instanceof Date ? (latestVoteAt.getTime?.() ?? 0) : 0;
+
   const primarySummary =
     valueText && valueText.length > 0
       ? truncate(valueText, 160)
@@ -689,9 +811,46 @@ async function resolveItemProposalContext(
           ? truncate(itemProposal.project.tagline, 160)
           : undefined;
 
+  const isCurrentValidated =
+    latestValidatedLog?.itemProposalId === itemProposal.id;
+  const hasValidatedLog = Boolean(latestValidatedLog);
+  const isFirstSubmission = submissionsCount <= 1;
+  const isValueEmpty = !valueText || valueText.length === 0;
+
+  let itemType: ShareItemMetadata['type'];
+  if (isCurrentValidated) {
+    itemType = 'item';
+  } else if (
+    !hasValidatedLog &&
+    voteSupporterCount === 0 &&
+    (isFirstSubmission || isValueEmpty)
+  ) {
+    itemType = 'empty';
+  } else {
+    itemType = 'pending';
+  }
+
+  const itemMetadata: ShareItemMetadata = {
+    key: displayLabel,
+    rawKey: rawKey,
+    category: categoryLabel,
+    type: itemType,
+  };
+
+  if (itemType === 'item') {
+    itemMetadata.updates = updatesCount;
+    itemMetadata.submissions = submissionsCount;
+    itemMetadata.weight = formatInteger(itemWeightNumber);
+  } else if (itemType === 'pending') {
+    itemMetadata.supported = voteSupporterCount;
+    itemMetadata.weight = formatInteger(totalVoteWeight);
+  } else {
+    itemMetadata.initialWeight = formatInteger(baseWeight);
+  }
+
   const metadata: ShareMetadata = {
-    title: `Item Proposal · ${label} · ${itemProposal.project.name}`,
-    subtitle: primarySummary || `Item proposal: ${label}`,
+    title: `Item Proposal · ${displayLabel} · ${itemProposal.project.name}`,
+    subtitle: primarySummary || `Item proposal: ${displayLabel}`,
     description: buildItemProposalDescription({
       reason:
         typeof itemProposal.reason === 'string'
@@ -720,16 +879,24 @@ async function resolveItemProposalContext(
         }
       : undefined,
     tags: projectCategories,
-    highlights: valueText ? [{ label, value: valueText }] : undefined,
+    highlights: valueText
+      ? [{ label: displayLabel, value: valueText }]
+      : undefined,
+    item: itemMetadata,
     timestamp: itemProposal.createdAt?.toISOString?.(),
   };
 
   const visibility = itemProposal.project.isPublished ? 'public' : 'unlisted';
   const targetUrl = `/project/${itemProposal.project.id}?tab=project-data&notificationType=viewSubmission&itemName=${itemNameParam}`;
   const imageVersion = String(
-    itemProposal.createdAt?.getTime?.() ??
-      itemProposal.project.updatedAt?.getTime?.() ??
-      itemProposal.id,
+    Math.max(
+      itemProposal.createdAt?.getTime?.() ?? 0,
+      itemProposal.project.updatedAt?.getTime?.() ?? 0,
+      latestLogTimestamp,
+      latestValidatedTimestamp,
+      latestVoteTimestamp,
+      Number(itemProposal.id),
+    ),
   );
 
   return {

@@ -1,14 +1,14 @@
 'use client';
 
+import { useDisclosure } from '@heroui/react';
 import { FC, useCallback, useMemo } from 'react';
-import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button } from '@/components/base/button';
-import { addToast } from '@/components/base/toast';
+import ShareModal from '@/components/biz/share/ShareModal';
 import { CaretDownIcon, CaretUpIcon, XCircleIcon } from '@/components/icons';
+import ShareItemIcon from '@/components/icons/ShareItem';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import useShareLink from '@/hooks/useShareLink';
-import ShareItemIcon from '@/components/icons/ShareItem';
 
 import { useModalContext } from './ModalContext';
 
@@ -52,9 +52,12 @@ const ModalHeader: FC<ModalHeaderProps> = ({
 
   const {
     shareUrl,
+    shareImageUrl,
+    payload: sharePayload,
     loading: shareLinkLoading,
     error: shareLinkError,
     ensure: ensureShareLink,
+    refresh: refreshShareLink,
   } = useShareLink({
     entityType: 'itemProposal',
     entityId: itemProposalId,
@@ -62,27 +65,15 @@ const ModalHeader: FC<ModalHeaderProps> = ({
     enabled: !!itemProposalId,
   });
 
-  const onCopySuccess = useCallback(() => {
-    if (shareLinkError) {
-      addToast({
-        title: 'Failed to generate share link',
-        description: shareLinkError,
-        color: 'danger',
-      });
-      return;
-    }
-    addToast({
-      title: 'Share link copied to clipboard',
-      color: 'success',
-    });
-  }, [shareLinkError]);
+  const { isOpen, onOpen, onClose: closeModal } = useDisclosure();
 
   const handleSharePress = useCallback(() => {
     if (!itemProposalId) {
       return;
     }
+    onOpen();
     void ensureShareLink();
-  }, [ensureShareLink, itemProposalId]);
+  }, [ensureShareLink, itemProposalId, onOpen]);
 
   return (
     <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] p-5">
@@ -112,17 +103,14 @@ const ModalHeader: FC<ModalHeaderProps> = ({
         </div>
 
         {/* Share button */}
-        <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
-          <Button
-            isIconOnly
-            isDisabled={shareLinkLoading}
-            className="size-[24px] min-w-0 border-none bg-transparent p-[2px] opacity-30"
-            onPress={handleSharePress}
-          >
-            <ShareItemIcon />
-            {/* <ShareIcon size={20} /> */}
-          </Button>
-        </CopyToClipboard>
+        <Button
+          isIconOnly
+          isDisabled={shareLinkLoading}
+          className="size-[24px] min-w-0 border-none bg-transparent p-[2px] opacity-30"
+          onPress={handleSharePress}
+        >
+          <ShareItemIcon />
+        </Button>
       </div>
 
       {/* Right side - Close button */}
@@ -133,6 +121,17 @@ const ModalHeader: FC<ModalHeaderProps> = ({
       >
         <XCircleIcon size={24} />
       </Button>
+
+      <ShareModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        shareUrl={shareUrl}
+        shareImageUrl={shareImageUrl}
+        isLoading={shareLinkLoading}
+        error={shareLinkError}
+        onRefresh={refreshShareLink}
+        payload={sharePayload}
+      />
     </div>
   );
 };

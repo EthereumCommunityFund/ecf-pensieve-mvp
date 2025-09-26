@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import type { Font } from 'satori';
 
 import type { SharePayload } from '@/lib/services/share';
-import { renderShareCardForOg } from '@/lib/services/share/shareCardElements';
+import { renderShareCard } from '@/lib/services/share/shareCardElements';
 import { getAppOrigin } from '@/lib/utils/url';
 
 let fontsPromise: Promise<Font[]> | null = null;
@@ -56,73 +56,22 @@ export async function getOgFonts(): Promise<Font[]> {
   return fontsPromise;
 }
 
-function renderCenteredCard(
-  payload: SharePayload,
-  origin: string,
-): JSX.Element {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#FFF',
-      }}
-    >
-      {renderShareCardForOg(payload, origin)}
-    </div>
-  );
-}
-
-function renderProposalOgImage(
-  payload: SharePayload,
-  origin: string,
-): JSX.Element {
-  return renderCenteredCard(payload, origin);
-}
-
-function renderProjectOgImage(
-  payload: SharePayload,
-  origin: string,
-): JSX.Element {
-  return renderCenteredCard(payload, origin);
-}
-
-function renderDefaultOgImage(
-  payload: SharePayload,
-  origin: string,
-): JSX.Element {
-  return (
-    <div
-      style={{
-        width: '1200px',
-        height: '630px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#FFFFFF',
-        padding: '80px',
-        boxSizing: 'border-box',
-        fontFamily: 'MonaSans',
-      }}
-    >
-      {renderShareCardForOg(payload, origin)}
-    </div>
-  );
-}
-
 export function renderShareOgImage(
   payload: SharePayload,
   origin: string = getAppOrigin(),
 ): JSX.Element {
-  switch (payload.layout) {
-    case 'proposal':
-      return renderProposalOgImage(payload, origin);
-    case 'project':
-    case 'projectPublished':
-    case 'projectPending':
-      return renderProjectOgImage(payload, origin);
-    default:
-      return renderDefaultOgImage(payload, origin);
-  }
+  return (
+    <div
+      style={{
+        width: '540px',
+        height: '300px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#FFFFFF',
+      }}
+    >
+      {renderShareCard(payload, { origin, mode: 'og' })}
+    </div>
+  );
 }
