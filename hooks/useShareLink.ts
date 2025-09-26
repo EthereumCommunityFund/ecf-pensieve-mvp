@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { trpc, type RouterOutputs } from '@/lib/trpc/client';
 import { buildAbsoluteUrl } from '@/lib/utils/url';
@@ -30,11 +30,27 @@ export const useShareLink = ({
       entityId: (entityId ?? 0) as number | string,
     },
     {
-      enabled: isEnabled,
+      enabled: false,
       retry: 1,
       refetchOnWindowFocus: false,
     },
   );
+
+  const ensureShareLink = useCallback(async () => {
+    if (!isEnabled) {
+      return null;
+    }
+    const result = await query.refetch();
+    return result.data ?? null;
+  }, [isEnabled, query]);
+
+  const refreshShareLink = useCallback(async () => {
+    if (!isEnabled) {
+      return null;
+    }
+    const result = await query.refetch();
+    return result.data ?? null;
+  }, [isEnabled, query]);
 
   const shareUrl = useMemo(() => {
     if (query.data?.shareUrl) {
@@ -64,10 +80,10 @@ export const useShareLink = ({
     shareUrl,
     shareImageUrl,
     payload: query.data ?? null,
-    loading: query.isLoading,
+    loading: query.isFetching && !query.data,
     error: query.error ? query.error.message : null,
-    refresh: query.refetch,
-    ensure: query.refetch,
+    refresh: refreshShareLink,
+    ensure: ensureShareLink,
   } as const;
 };
 
