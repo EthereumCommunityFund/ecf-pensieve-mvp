@@ -27,9 +27,7 @@ function buildMetadataFromPayload(
   );
   const isItemProposal = payload.layout === 'itemProposal';
   const ogImageUrl = isItemProposal ? projectLogoUrl : dynamicOgImageUrl;
-  const ogImageSize = isItemProposal
-    ? { width: 512, height: 512 }
-    : { width: 1200, height: 630 };
+  const ogImageSize = { width: 540, height: 300 };
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
   const robots =
