@@ -1240,10 +1240,12 @@ async function buildPayloadFromRecord(
   }
 
   const recordVisibility = normalizeVisibility(record.visibility);
-  const effectiveVisibility = mergeVisibility(
-    recordVisibility,
-    context.visibility,
-  );
+  const contextVisibility = context.visibility;
+
+  const effectiveVisibility =
+    recordVisibility === 'unlisted' && contextVisibility === 'public'
+      ? 'public'
+      : mergeVisibility(recordVisibility, contextVisibility);
 
   await maybeRefreshShareLink(record, context, effectiveVisibility);
 
