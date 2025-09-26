@@ -83,11 +83,11 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   const { isOpen, onOpen, onClose: closeModal } = useDisclosure();
 
   const handleSharePress = useCallback(() => {
-    if (!itemProposalId) {
-      return;
-    }
     onOpen();
-    void ensureShareLink();
+
+    if (itemProposalId) {
+      void ensureShareLink();
+    }
   }, [ensureShareLink, itemProposalId, onOpen]);
 
   return (

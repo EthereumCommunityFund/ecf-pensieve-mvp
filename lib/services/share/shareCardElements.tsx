@@ -1012,21 +1012,18 @@ function renderItemProposalBody(
         <div
           style={{
             width: '100%',
-            height: '141px',
-            paddingTop: '40px',
-            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
             boxSizing: 'border-box',
             display: 'flex',
             justifyContent: 'flex-start',
             alignItems: 'flex-start',
-            gap: '40px',
+            gap: '20px',
           }}
         >
           <div
             style={{
-              padding: '10px 20px 10px 20px',
-              height: '80px',
+              padding: '5px 10px',
               border: '1px solid rgba(126, 169, 255, 0.4)',
+              borderRadius: '4px',
               boxSizing: 'border-box',
               display: 'flex',
               justifyContent: 'flex-start',
@@ -1038,14 +1035,14 @@ function renderItemProposalBody(
           >
             <img
               src={buildAbsoluteUrl('/GitPullRequest.svg', origin)}
-              width={56}
-              height={56}
+              width={24}
+              height={24}
               alt="Git pull request"
             />
             <div
               style={{
                 color: '#608BE1',
-                fontSize: 24,
+                fontSize: 16,
                 fontFamily: 'Mona Sans',
                 fontWeight: '500',
                 wordWrap: 'break-word',
@@ -1063,15 +1060,15 @@ function renderItemProposalBody(
               alt={alt}
               label={label}
               value={value}
-              iconWidth={48}
-              iconHeight={48}
+              iconWidth={24}
+              iconHeight={24}
               styles={{
                 container: {
                   width: 'auto',
-                  gap: '10px',
+                  gap: '5px',
                 },
                 row: {
-                  gap: '20px',
+                  opacity: 0.5,
                 },
                 value: {
                   color: 'black',
@@ -1083,7 +1080,7 @@ function renderItemProposalBody(
                 label: {
                   opacity: 0.5,
                   color: 'black',
-                  fontSize: 24,
+                  fontSize: 14,
                   fontFamily: 'Mona Sans',
                   fontWeight: 500,
                 },

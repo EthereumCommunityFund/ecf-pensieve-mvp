@@ -814,17 +814,12 @@ async function resolveItemProposalContext(
   const isCurrentValidated =
     latestValidatedLog?.itemProposalId === itemProposal.id;
   const hasValidatedLog = Boolean(latestValidatedLog);
-  const isFirstSubmission = submissionsCount <= 1;
-  const isValueEmpty = !valueText || valueText.length === 0;
+  const hasAnySubmission = submissionsCount > 0;
 
   let itemType: ShareItemMetadata['type'];
   if (isCurrentValidated) {
     itemType = 'item';
-  } else if (
-    !hasValidatedLog &&
-    voteSupporterCount === 0 &&
-    (isFirstSubmission || isValueEmpty)
-  ) {
+  } else if (!hasValidatedLog && !hasAnySubmission) {
     itemType = 'empty';
   } else {
     itemType = 'pending';
