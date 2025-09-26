@@ -3,7 +3,15 @@ import type { CSSProperties, JSX } from 'react';
 import { QUORUM_AMOUNT } from '@/lib/constants';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
+import {
+  MetricItem,
+  renderMetricRow,
+  renderShareFooter,
+  renderTagPills,
+  resolveProjectTags,
+} from './baseComponents';
 import type { ShareItemMetadata, SharePayload } from './shareService';
+import { getStatValue, truncate } from './shareUtils';
 
 interface ShareCardOptions {
   origin?: string;
@@ -13,22 +21,7 @@ interface ShareCardOptions {
 const CARD_WIDTH = 540;
 const FONT_FAMILY = 'Mona Sans, Inter, sans-serif';
 
-const COLORS = {
-  border: '#E1E5EE',
-  background: '#FFFFFF',
-  statusBg: '#EAF2FF',
-  statusBorder: '#C2D8FF',
-  statusText: '#1F5FD7',
-  name: '#111827',
-  muted: '#4B5563',
-  statTitle: '#5C6478',
-  statValue: '#101828',
-  footer: '#7C8499',
-  badgeBorder: 'rgba(45, 164, 120, 0.45)',
-  badgeBg: '#EFFBF4',
-};
-
-const STAT_LAYOUT = [
+export const STAT_LAYOUT = [
   { key: 'progress', label: 'Progress', icon: '/images/share/PlayCircle.svg' },
   {
     key: 'support',
@@ -73,233 +66,6 @@ const PENDING_PROJECT_STATS = [
   },
 ] as const;
 
-function truncate(text: string | undefined | null, limit: number): string {
-  if (!text) return '';
-  return text.length > limit ? `${text.slice(0, limit - 3)}...` : text;
-}
-
-function formatNumber(value: string | undefined): string {
-  if (!value) return '0';
-  const numeric = Number(value.replace(/[^0-9.-]/g, ''));
-  if (Number.isNaN(numeric)) {
-    return value;
-  }
-  return new Intl.NumberFormat('en-US').format(numeric);
-}
-
-function getStatValue(
-  payload: SharePayload,
-  key: (typeof STAT_LAYOUT)[number]['key'],
-): string {
-  const direct = payload.metadata.stats?.find(
-    (stat) => stat.key === key,
-  )?.primary;
-  const fallback =
-    payload.metadata.highlights?.[
-      STAT_LAYOUT.findIndex((item) => item.key === key)
-    ]?.value;
-  switch (key) {
-    case 'progress':
-      return direct ?? fallback ?? '0%';
-    case 'support':
-      return formatNumber(direct ?? fallback);
-    case 'participation':
-      return direct ?? fallback ?? '0 / 0';
-    default:
-      return '—';
-  }
-}
-
-function getGenericStatValue(payload: SharePayload, key: string): string {
-  return (
-    payload.metadata.stats?.find((stat) => stat.key === key)?.primary ?? '—'
-  );
-}
-
-function renderShareFooter(origin: string): JSX.Element {
-  return (
-    <div
-      style={{
-        marginTop: '20px',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        opacity: '0.3',
-      }}
-    >
-      <img
-        src={`${origin}/images/share/Logo.svg`}
-        width={137}
-        height={20}
-        alt="Logo"
-      />
-    </div>
-  );
-}
-
-function renderTagPills(tags: string[]): JSX.Element | null {
-  if (tags.length === 0) {
-    return null;
-  }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '8px',
-      }}
-    >
-      {tags.map((tag) => (
-        <span
-          key={tag}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '6px 10px',
-            borderRadius: '6px',
-            background: 'rgba(0,0,0,0.05)',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: 'rgba(0,0,0,0.7)',
-          }}
-        >
-          {tag}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-interface MetricItemStyleOverrides {
-  container?: CSSProperties;
-  row?: CSSProperties;
-  icon?: CSSProperties;
-  value?: CSSProperties;
-  label?: CSSProperties;
-}
-
-interface MetricItemProps {
-  origin: string;
-  icon: string;
-  label: string;
-  value?: string | number | null;
-  alt?: string;
-  iconWidth?: number;
-  iconHeight?: number;
-  styles?: MetricItemStyleOverrides;
-  valueFallback?: string;
-}
-
-function MetricItem({
-  origin,
-  icon,
-  label,
-  value,
-  alt,
-  iconWidth,
-  iconHeight,
-  styles,
-  valueFallback = 'N/A',
-}: MetricItemProps): JSX.Element {
-  const hasValue = value !== undefined && value !== null && value !== '';
-  const displayValue = hasValue ? value : valueFallback;
-
-  const containerStyle: CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    rowGap: '8px',
-    ...styles?.container,
-  };
-
-  const rowStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    ...styles?.row,
-  };
-
-  const iconStyle: CSSProperties = {
-    opacity: 0.5,
-    ...styles?.icon,
-  };
-
-  const valueStyle: CSSProperties = {
-    fontSize: '18px',
-    lineHeight: '24px',
-    fontWeight: 600,
-    color: COLORS.statValue,
-    ...styles?.value,
-  };
-
-  const labelStyle: CSSProperties = {
-    fontSize: '14px',
-    fontWeight: 500,
-    lineHeight: '20px',
-    color: 'rgba(0,0,0,0.5)',
-    ...styles?.label,
-  };
-
-  const resolvedIconWidth = iconWidth ?? 24;
-  const resolvedIconHeight = iconHeight ?? 24;
-
-  return (
-    <div style={containerStyle}>
-      <div style={rowStyle}>
-        <img
-          src={buildAbsoluteUrl(icon, origin)}
-          width={resolvedIconWidth}
-          height={resolvedIconHeight}
-          alt={alt ?? label}
-          style={iconStyle}
-        />
-        <span style={valueStyle}>{String(displayValue)}</span>
-      </div>
-      <span style={labelStyle}>{label}</span>
-    </div>
-  );
-}
-
-function renderMetricRow(
-  payload: SharePayload,
-  layout: ReadonlyArray<{
-    key: string;
-    label: string;
-    icon: string;
-  }>,
-  origin: string,
-): JSX.Element {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
-        gap: '20px',
-      }}
-    >
-      {layout.map((stat) => (
-        <MetricItem
-          key={stat.key}
-          origin={origin}
-          icon={stat.icon}
-          label={stat.label}
-          value={getGenericStatValue(payload, stat.key)}
-          styles={{
-            value: {
-              fontWeight: 500,
-              color: 'rgba(0,0,0,0.5)',
-            },
-            label: {
-              color: 'rgba(0,0,0,0.45)',
-            },
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function renderProposalCard(
   payload: SharePayload,
   options: ShareCardOptions,
@@ -323,13 +89,14 @@ function renderProposalCard(
     width: `${CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '8px',
-    border: `1px solid ${COLORS.border}`,
+    border: `1px solid rgba(0,0,0,0.1)`,
     background: '#fff',
     boxSizing: 'border-box',
     fontFamily: FONT_FAMILY,
-    color: COLORS.name,
+    color: '#111827',
     display: 'flex',
     flexDirection: 'column',
+    gap: '20px',
   };
 
   if (options.mode === 'preview') {
@@ -374,7 +141,6 @@ function renderProposalCard(
       {/* proposal name status */}
       <div
         style={{
-          marginTop: '10px',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -414,7 +180,7 @@ function renderProposalCard(
                   padding: '4px 8px',
                   borderRadius: '5px',
                   border: `1px solid rgba(104, 204, 174, 0.80)`,
-                  background: COLORS.badgeBg,
+                  background: '#EFFBF4',
                   color: '#40A486',
                   fontSize: '16px',
                   lineHeight: '22px',
@@ -433,8 +199,6 @@ function renderProposalCard(
           width: '100%',
           height: '1px',
           background: 'rgba(0,0,0,0.1)',
-          marginTop: '20px',
-          marginBottom: '20px',
         }}
       />
 
@@ -517,8 +281,8 @@ function renderFallbackCard(
         width: `${CARD_WIDTH}px`,
         padding: '28px',
         borderRadius: '16px',
-        border: `1px solid ${COLORS.border}`,
-        background: COLORS.background,
+        border: `1px solid rgba(0,0,0,0.1)`,
+        background: '#fff',
         display: 'flex',
         flexDirection: 'column',
         rowGap: '14px',
@@ -529,12 +293,12 @@ function renderFallbackCard(
         {payload.metadata.title}
       </span>
       {payload.metadata.subtitle && (
-        <span style={{ fontSize: '16px', color: COLORS.muted }}>
+        <span style={{ fontSize: '16px', color: '#4B5563' }}>
           {payload.metadata.subtitle}
         </span>
       )}
       {payload.metadata.description && (
-        <span style={{ fontSize: '14px', color: COLORS.muted }}>
+        <span style={{ fontSize: '14px', color: '#4B5563' }}>
           {payload.metadata.description}
         </span>
       )}
@@ -556,13 +320,6 @@ function renderFallbackCard(
   );
 }
 
-function resolveProjectTags(payload: SharePayload): string[] {
-  const tags = payload.metadata.tags?.length
-    ? payload.metadata.tags
-    : (payload.metadata.project.categories ?? []);
-  return tags.filter(Boolean).slice(0, 4);
-}
-
 function renderPublishedProjectCard(
   payload: SharePayload,
   options: ShareCardOptions,
@@ -580,33 +337,33 @@ function renderPublishedProjectCard(
         width: `${CARD_WIDTH}px`,
         padding: '24px',
         borderRadius: '12px',
-        border: `1px solid ${COLORS.border}`,
-        background: COLORS.background,
+        border: `1px solid rgba(0,0,0,0.1)`,
+        background: '#fff',
         display: 'flex',
         flexDirection: 'column',
         rowGap: '24px',
         fontFamily: FONT_FAMILY,
-        color: COLORS.name,
+        color: '#111827',
       }}
     >
       <div
         style={{
           display: 'flex',
           alignItems: 'flex-start',
-          gap: '18px',
+          gap: '10px',
         }}
       >
         <img
           src={projectLogo}
-          width={72}
-          height={72}
+          width={60}
+          height={60}
           alt={payload.metadata.project.name || 'Project logo'}
           style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '16px',
+            width: '60px',
+            height: '60px',
+            borderRadius: '5px',
             objectFit: 'cover',
-            border: '1px solid rgba(0,0,0,0.08)',
+            border: '1px solid rgba(0,0,0,0.1)',
             background: '#F5F5F5',
           }}
         />
@@ -622,10 +379,12 @@ function renderPublishedProjectCard(
             style={{
               display: 'flex',
               flexDirection: 'column',
-              rowGap: '6px',
+              rowGap: '5px',
             }}
           >
-            <span style={{ fontSize: '24px', fontWeight: 600 }}>
+            <span
+              style={{ fontSize: '24px', fontWeight: 600, lineHeight: 1.2 }}
+            >
               {payload.metadata.project.name}
             </span>
             {payload.metadata.subtitle && (
@@ -634,22 +393,12 @@ function renderPublishedProjectCard(
                   fontSize: '16px',
                   fontWeight: 500,
                   color: 'rgba(0,0,0,0.65)',
+                  lineHeight: '18px',
                 }}
               >
                 {payload.metadata.subtitle}
               </span>
             )}
-            {/* {payload.metadata.description && (
-              <span
-                style={{
-                  fontSize: '14px',
-                  color: 'rgba(0,0,0,0.55)',
-                  lineHeight: '20px',
-                }}
-              >
-                {payload.metadata.description}
-              </span>
-            )} */}
           </div>
           {renderTagPills(tags)}
         </div>
@@ -745,7 +494,7 @@ function renderItemProposalCard(
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             gap: '10px',
             fontSize: '20px',
             fontWeight: 500,
@@ -757,7 +506,7 @@ function renderItemProposalCard(
             width={24}
             height={24}
             alt="Category"
-            style={{ opacity: 0.5 }}
+            style={{ opacity: 0.5, marginTop: '3px' }}
           />
           <div
             style={{
@@ -802,13 +551,13 @@ function renderPendingProjectCard(
         width: `${CARD_WIDTH}px`,
         padding: '20px',
         borderRadius: '12px',
-        border: `1px solid ${COLORS.border}`,
-        background: COLORS.background,
+        border: `1px solid rgba(0,0,0,0.1)`,
+        background: '#fff',
         display: 'flex',
         flexDirection: 'column',
         rowGap: '20px',
         fontFamily: FONT_FAMILY,
-        color: COLORS.name,
+        color: '#111827',
       }}
     >
       <div
@@ -889,30 +638,6 @@ function renderPendingProjectCard(
   );
 }
 
-export function renderShareCard(
-  payload: SharePayload,
-  options: ShareCardOptions = {},
-): JSX.Element {
-  switch (payload.layout) {
-    case 'proposal':
-      return renderProposalCard(payload, options);
-    case 'itemProposal':
-      return renderItemProposalCard(payload, options);
-    case 'projectPublished':
-      return renderPublishedProjectCard(payload, options);
-    case 'projectPending':
-      return renderPendingProjectCard(payload, options);
-    case 'project': {
-      const isPublished = payload.metadata.project.isPublished ?? true;
-      return isPublished
-        ? renderPublishedProjectCard(payload, options)
-        : renderPendingProjectCard(payload, options);
-    }
-    default:
-      return renderFallbackCard(payload, options);
-  }
-}
-
 function renderItemProposalBody(
   item: ShareItemMetadata | undefined,
   origin: string,
@@ -965,29 +690,6 @@ function renderItemProposalBody(
               alt={alt}
               label={label}
               value={value}
-              styles={{
-                container: {
-                  width: 'auto',
-                  gap: '5px',
-                },
-                row: {
-                  opacity: 0.5,
-                },
-                value: {
-                  color: 'black',
-                  fontSize: 18,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: 500,
-                  lineHeight: '24px',
-                },
-                label: {
-                  opacity: 0.5,
-                  color: 'black',
-                  fontSize: 14,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: 500,
-                },
-              }}
             />
           ))}
         </div>
@@ -1060,31 +762,6 @@ function renderItemProposalBody(
               alt={alt}
               label={label}
               value={value}
-              iconWidth={24}
-              iconHeight={24}
-              styles={{
-                container: {
-                  width: 'auto',
-                  gap: '5px',
-                },
-                row: {
-                  opacity: 0.5,
-                },
-                value: {
-                  color: 'black',
-                  fontSize: 18,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: 500,
-                  lineHeight: '24px',
-                },
-                label: {
-                  opacity: 0.5,
-                  color: 'black',
-                  fontSize: 14,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: 500,
-                },
-              }}
             />
           ))}
         </div>
@@ -1150,36 +827,35 @@ function renderItemProposalBody(
               alt={alt}
               label={label}
               value={value}
-              iconWidth={24}
-              iconHeight={24}
-              styles={{
-                container: {
-                  width: 'auto',
-                  gap: '5px',
-                },
-                row: {
-                  gap: '10px',
-                },
-                value: {
-                  color: 'black',
-                  fontSize: 18,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: 500,
-                  lineHeight: '24px',
-                },
-                label: {
-                  opacity: 0.5,
-                  color: 'black',
-                  fontSize: 14,
-                  fontFamily: 'Mona Sans',
-                  fontWeight: 500,
-                },
-              }}
             />
           ))}
         </div>
       );
     default:
       return null;
+  }
+}
+
+export function renderShareCard(
+  payload: SharePayload,
+  options: ShareCardOptions = {},
+): JSX.Element {
+  switch (payload.layout) {
+    case 'proposal':
+      return renderProposalCard(payload, options);
+    case 'itemProposal':
+      return renderItemProposalCard(payload, options);
+    case 'projectPublished':
+      return renderPublishedProjectCard(payload, options);
+    case 'projectPending':
+      return renderPendingProjectCard(payload, options);
+    case 'project': {
+      const isPublished = payload.metadata.project.isPublished ?? true;
+      return isPublished
+        ? renderPublishedProjectCard(payload, options)
+        : renderPendingProjectCard(payload, options);
+    }
+    default:
+      return renderFallbackCard(payload, options);
   }
 }

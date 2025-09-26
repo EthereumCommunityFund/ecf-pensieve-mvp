@@ -1,6 +1,9 @@
 import { AllItemKeysInPage } from '@/constants/tableConfig';
 import { ALL_POC_ITEM_MAP, WEIGHT } from '@/lib/constants';
 
+import { STAT_LAYOUT } from './shareCardElements';
+import type { SharePayload } from './shareService';
+
 const TOTAL_GENESIS_WEIGHT_SUM = AllItemKeysInPage.reduce((sum, key) => {
   const item = ALL_POC_ITEM_MAP[key];
   if (!item) {
@@ -9,13 +12,6 @@ const TOTAL_GENESIS_WEIGHT_SUM = AllItemKeysInPage.reduce((sum, key) => {
   const genesisWeight = (item.accountability_metric || 0) * WEIGHT;
   return sum + genesisWeight;
 }, 0);
-
-export function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-  return `${text.slice(0, maxLength - 1).trim()}...`;
-}
 
 export function formatInteger(value: number): string {
   if (!Number.isFinite(value)) {
@@ -144,4 +140,52 @@ export function getItemValueFromSnap(
     return '';
   }
   return valueToText(entry.value);
+}
+
+export function truncate(
+  text: string | undefined | null,
+  limit: number,
+): string {
+  if (!text) return '';
+  return text.length > limit ? `${text.slice(0, limit - 3)}...` : text;
+}
+
+function formatNumber(value: string | undefined): string {
+  if (!value) return '0';
+  const numeric = Number(value.replace(/[^0-9.-]/g, ''));
+  if (Number.isNaN(numeric)) {
+    return value;
+  }
+  return new Intl.NumberFormat('en-US').format(numeric);
+}
+export function getStatValue(
+  payload: SharePayload,
+  key: (typeof STAT_LAYOUT)[number]['key'],
+): string {
+  const direct = payload.metadata.stats?.find(
+    (stat) => stat.key === key,
+  )?.primary;
+  const fallback =
+    payload.metadata.highlights?.[
+      STAT_LAYOUT.findIndex((item) => item.key === key)
+    ]?.value;
+  switch (key) {
+    case 'progress':
+      return direct ?? fallback ?? '0%';
+    case 'support':
+      return formatNumber(direct ?? fallback);
+    case 'participation':
+      return direct ?? fallback ?? '0 / 0';
+    default:
+      return '—';
+  }
+}
+
+export function getGenericStatValue(
+  payload: SharePayload,
+  key: string,
+): string {
+  return (
+    payload.metadata.stats?.find((stat) => stat.key === key)?.primary ?? '—'
+  );
 }
