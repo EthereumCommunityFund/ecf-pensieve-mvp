@@ -131,7 +131,7 @@ export function renderTagPills(tags: string[]): JSX.Element | null {
         <span
           key={tag}
           style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '5px 10px',

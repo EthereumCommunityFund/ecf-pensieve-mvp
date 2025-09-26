@@ -713,6 +713,11 @@ function resolveItemCategoryLabels(key: string): {
 async function resolveItemProposalContext(
   entityId: string,
 ): Promise<EntityContext | null> {
+  const emptyParams = parseEmptyItemEntityId(entityId);
+  if (emptyParams) {
+    return resolveEmptyItemContext(emptyParams);
+  }
+
   const itemProposal = await fetchItemProposal(entityId);
   if (!itemProposal || !itemProposal.project) {
     return null;
@@ -899,6 +904,101 @@ async function resolveItemProposalContext(
     targetUrl,
     visibility,
     parentId: String(itemProposal.project.id),
+    metadata,
+    imageVersion,
+  };
+}
+
+function parseEmptyItemEntityId(
+  entityId: string,
+): { projectId: number; itemKey: string } | null {
+  if (!entityId.startsWith('empty:')) {
+    return null;
+  }
+
+  const segments = entityId.split(':');
+  if (segments.length < 3) {
+    return null;
+  }
+
+  const projectId = Number(segments[1]);
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return null;
+  }
+
+  const encodedKey = segments.slice(2).join(':');
+  const decodedKey = decodeURIComponent(encodedKey);
+  if (!decodedKey) {
+    return null;
+  }
+
+  return {
+    projectId,
+    itemKey: decodedKey,
+  };
+}
+
+async function resolveEmptyItemContext({
+  projectId,
+  itemKey,
+}: {
+  projectId: number;
+  itemKey: string;
+}): Promise<EntityContext | null> {
+  const project = await fetchProjectRecord(String(projectId));
+  if (!project) {
+    return null;
+  }
+
+  const rawKey = String(itemKey);
+  const encodedKey = encodeURIComponent(rawKey);
+  const { category: categoryLabel, item: itemDisplayName } =
+    resolveItemCategoryLabels(rawKey);
+  const fallbackLabel = formatReadableKey(rawKey);
+  const displayLabel = itemDisplayName || fallbackLabel;
+  const projectCategories = project.categories ?? [];
+  const typedKey = rawKey as IPocItemKey;
+  const baseWeight = ALL_POC_ITEM_MAP[typedKey]?.weight ?? 0;
+  const formattedWeight = formatInteger(baseWeight);
+
+  const metadata: ShareMetadata = {
+    title: `Item Proposal · ${displayLabel} · ${project.name}`,
+    subtitle: project.tagline
+      ? truncate(project.tagline, 160)
+      : 'This item does not have submissions yet.',
+    description: `Help kick-start the "${displayLabel}" item by submitting the first proposal. Starting weight: ${formattedWeight}.`,
+    badge: 'Item Proposal',
+    statusBadge: { label: 'Empty Item', tone: 'info' },
+    badges: [{ label: 'Empty Item', tone: 'info' }],
+    project: {
+      id: project.id,
+      name: project.name,
+      tagline: project.tagline,
+      categories: projectCategories,
+      logoUrl: project.logoUrl,
+      isPublished: project.isPublished,
+    },
+    tags: projectCategories,
+    item: {
+      key: displayLabel,
+      rawKey,
+      category: categoryLabel,
+      type: 'empty',
+      initialWeight: formattedWeight,
+    },
+  };
+
+  const visibility = project.isPublished ? 'public' : 'unlisted';
+  const targetUrl = `/project/${project.id}?tab=project-data&notificationType=viewSubmission&itemName=${encodedKey}`;
+  const imageVersion = String(
+    Math.max(project.updatedAt?.getTime?.() || 0, Number(project.id) || 0),
+  );
+
+  return {
+    layout: 'itemProposal',
+    targetUrl,
+    visibility,
+    parentId: String(project.id),
     metadata,
     imageVersion,
   };

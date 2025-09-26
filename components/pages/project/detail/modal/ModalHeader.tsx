@@ -8,7 +8,9 @@ import ShareModal from '@/components/biz/share/ShareModal';
 import { CaretDownIcon, CaretUpIcon, XCircleIcon } from '@/components/icons';
 import ShareItemIcon from '@/components/icons/ShareItem';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
-import useShareLink from '@/hooks/useShareLink';
+import useShareLink, { type ShareEntityType } from '@/hooks/useShareLink';
+import { buildEmptyItemSharePayload } from '@/lib/services/share/shareCardElements';
+import type { SharePayload } from '@/lib/services/share/shareService';
 
 import { useModalContext } from './ModalContext';
 
@@ -25,8 +27,12 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   breadcrumbs = { section: 'Section', item: 'Itemname' },
 }) => {
   const { itemKey } = useModalContext();
-  const { projectId, proposalsByProjectIdAndKey, displayProposalDataOfKey } =
-    useProjectDetailContext();
+  const {
+    projectId,
+    project,
+    proposalsByProjectIdAndKey,
+    displayProposalDataOfKey,
+  } = useProjectDetailContext();
 
   const itemProposalId = useMemo(() => {
     const fromLeading =
@@ -65,6 +71,21 @@ const ModalHeader: FC<ModalHeaderProps> = ({
     return '';
   }, [projectId, itemKey]);
 
+  const emptyEntityId = useMemo(() => {
+    if (!itemProposalId && projectId && itemKey) {
+      return `empty:${projectId}:${encodeURIComponent(itemKey)}`;
+    }
+    return null;
+  }, [itemProposalId, projectId, itemKey]);
+
+  const shareEntityId = itemProposalId ?? emptyEntityId ?? projectId;
+  const shareEntityType: ShareEntityType =
+    itemProposalId || emptyEntityId ? 'itemProposal' : 'project';
+  const shareQueryEnabled =
+    typeof shareEntityId === 'number'
+      ? Number.isFinite(shareEntityId) && shareEntityId > 0
+      : typeof shareEntityId === 'string' && shareEntityId.length > 0;
+
   const {
     shareUrl,
     shareImageUrl,
@@ -74,21 +95,51 @@ const ModalHeader: FC<ModalHeaderProps> = ({
     ensure: ensureShareLink,
     refresh: refreshShareLink,
   } = useShareLink({
-    entityType: 'itemProposal',
-    entityId: itemProposalId,
+    entityType: shareEntityType,
+    entityId: shareEntityId,
     fallbackUrl,
-    enabled: !!itemProposalId,
+    enabled: shareQueryEnabled,
   });
+
+  const emptySharePayload = useMemo<SharePayload | null>(() => {
+    if (itemProposalId || !project || !itemKey || !emptyEntityId) {
+      return null;
+    }
+
+    return buildEmptyItemSharePayload({
+      project: {
+        id: project.id,
+        name: project.name,
+        tagline: project.tagline,
+        categories: project.categories,
+        logoUrl: project.logoUrl,
+        isPublished: project.isPublished,
+      },
+      itemKey,
+      fallbackUrl,
+    });
+  }, [emptyEntityId, itemProposalId, project, itemKey, fallbackUrl]);
+
+  const previewPayload = useMemo<SharePayload | null>(() => {
+    return sharePayload ?? emptySharePayload;
+  }, [emptySharePayload, sharePayload]);
+
+  const previewShareImageUrl = useMemo(() => {
+    if (sharePayload) {
+      return shareImageUrl;
+    }
+    return null;
+  }, [shareImageUrl, sharePayload]);
 
   const { isOpen, onOpen, onClose: closeModal } = useDisclosure();
 
   const handleSharePress = useCallback(() => {
     onOpen();
 
-    if (itemProposalId) {
+    if (shareQueryEnabled) {
       void ensureShareLink();
     }
-  }, [ensureShareLink, itemProposalId, onOpen]);
+  }, [ensureShareLink, onOpen, shareQueryEnabled]);
 
   return (
     <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.1)] p-5">
@@ -141,11 +192,11 @@ const ModalHeader: FC<ModalHeaderProps> = ({
         isOpen={isOpen}
         onClose={closeModal}
         shareUrl={shareUrl}
-        shareImageUrl={shareImageUrl}
+        shareImageUrl={previewShareImageUrl}
         isLoading={shareLinkLoading}
         error={shareLinkError}
         onRefresh={refreshShareLink}
-        payload={sharePayload}
+        payload={previewPayload}
       />
     </div>
   );

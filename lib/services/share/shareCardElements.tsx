@@ -1,6 +1,8 @@
 import type { CSSProperties, JSX } from 'react';
 
-import { QUORUM_AMOUNT } from '@/lib/constants';
+import { AllItemConfig } from '@/constants/itemConfig';
+import { ProjectTableFieldCategory } from '@/constants/tableConfig';
+import { ALL_POC_ITEM_MAP, QUORUM_AMOUNT } from '@/lib/constants';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
 import {
@@ -11,7 +13,25 @@ import {
   resolveProjectTags,
 } from './baseComponents';
 import type { ShareItemMetadata, SharePayload } from './shareService';
-import { getStatValue, truncate } from './shareUtils';
+import {
+  formatInteger,
+  formatReadableKey,
+  getStatValue,
+  truncate,
+} from './shareUtils';
+
+interface EmptyItemSharePayloadOptions {
+  project: {
+    id?: number;
+    name?: string;
+    tagline?: string | null;
+    categories?: string[] | null;
+    logoUrl?: string | null;
+    isPublished?: boolean | null;
+  };
+  itemKey?: string | null;
+  fallbackUrl: string;
+}
 
 interface ShareCardOptions {
   origin?: string;
@@ -71,6 +91,7 @@ function renderProposalCard(
   options: ShareCardOptions,
 ): JSX.Element {
   const origin = options.origin ?? getAppOrigin();
+  const isOgMode = options.mode === 'og';
   const projectLogo = buildAbsoluteUrl(
     payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
     origin,
@@ -89,7 +110,7 @@ function renderProposalCard(
     width: `${CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '8px',
-    border: `1px solid rgba(0,0,0,0.1)`,
+    border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
     background: '#fff',
     boxSizing: 'border-box',
     fontFamily: FONT_FAMILY,
@@ -274,21 +295,21 @@ function renderFallbackCard(
     payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
     origin,
   );
+  const isOgMode = options.mode === 'og';
+  const containerStyle: CSSProperties = {
+    width: `${CARD_WIDTH}px`,
+    padding: '28px',
+    borderRadius: '16px',
+    border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
+    background: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    rowGap: '14px',
+    fontFamily: FONT_FAMILY,
+  };
 
   return (
-    <div
-      style={{
-        width: `${CARD_WIDTH}px`,
-        padding: '28px',
-        borderRadius: '16px',
-        border: `1px solid rgba(0,0,0,0.1)`,
-        background: '#fff',
-        display: 'flex',
-        flexDirection: 'column',
-        rowGap: '14px',
-        fontFamily: FONT_FAMILY,
-      }}
-    >
+    <div style={containerStyle}>
       <span style={{ fontSize: '24px', fontWeight: 700 }}>
         {payload.metadata.title}
       </span>
@@ -325,6 +346,7 @@ function renderPublishedProjectCard(
   options: ShareCardOptions,
 ): JSX.Element {
   const origin = options.origin ?? getAppOrigin();
+  const isOgMode = options.mode === 'og';
   const projectLogo = buildAbsoluteUrl(
     payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
     origin,
@@ -337,7 +359,7 @@ function renderPublishedProjectCard(
         width: `${CARD_WIDTH}px`,
         padding: '24px',
         borderRadius: '12px',
-        border: `1px solid rgba(0,0,0,0.1)`,
+        border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
         background: '#fff',
         display: 'flex',
         flexDirection: 'column',
@@ -424,6 +446,7 @@ function renderItemProposalCard(
   options: ShareCardOptions,
 ): JSX.Element {
   const origin = options.origin ?? getAppOrigin();
+  const isOgMode = options.mode === 'og';
   const projectLogo = buildAbsoluteUrl(
     payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
     origin,
@@ -436,7 +459,7 @@ function renderItemProposalCard(
     width: `${CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '12px',
-    border: `1px solid rgba(0,0,0,0.1)`,
+    border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
     background: '#fff',
     display: 'flex',
     flexDirection: 'column',
@@ -542,24 +565,25 @@ function renderPendingProjectCard(
   options: ShareCardOptions,
 ): JSX.Element {
   const origin = options.origin ?? getAppOrigin();
+  const isOgMode = options.mode === 'og';
   const statusLabel = payload.metadata.statusBadge?.label ?? 'Pending Project';
   const tags = resolveProjectTags(payload);
 
+  const containerStyle: CSSProperties = {
+    width: `${CARD_WIDTH}px`,
+    padding: '20px',
+    borderRadius: '12px',
+    border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
+    background: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    rowGap: '20px',
+    fontFamily: FONT_FAMILY,
+    color: '#111827',
+  };
+
   return (
-    <div
-      style={{
-        width: `${CARD_WIDTH}px`,
-        padding: '20px',
-        borderRadius: '12px',
-        border: `1px solid rgba(0,0,0,0.1)`,
-        background: '#fff',
-        display: 'flex',
-        flexDirection: 'column',
-        rowGap: '20px',
-        fontFamily: FONT_FAMILY,
-        color: '#111827',
-      }}
-    >
+    <div style={containerStyle}>
       <div
         style={{
           display: 'flex',
@@ -772,7 +796,7 @@ function renderItemProposalBody(
           label: 'Starting weight',
           icon: '/CoinVertical.svg',
           alt: 'Starting weight icon',
-          value: item.initialWeight,
+          value: item.initialWeight ?? '0',
         },
       ];
       return (
@@ -858,4 +882,95 @@ export function renderShareCard(
     default:
       return renderFallbackCard(payload, options);
   }
+}
+
+function resolveEmptyItemLabels(itemKey?: string | null): {
+  itemLabel: string;
+  categoryLabel: string;
+} {
+  if (!itemKey) {
+    return {
+      itemLabel: 'Item',
+      categoryLabel: 'Item',
+    };
+  }
+
+  const typedKey = itemKey as keyof typeof AllItemConfig;
+  const itemConfig = AllItemConfig[typedKey];
+  const itemLabel = itemConfig?.label ?? formatReadableKey(itemKey);
+
+  if (itemConfig?.category) {
+    const categoryConfig = ProjectTableFieldCategory.find(
+      (category) => category.key === itemConfig.category,
+    );
+    const categoryLabel =
+      categoryConfig?.label ??
+      categoryConfig?.title ??
+      formatReadableKey(String(itemConfig.category));
+
+    return { itemLabel, categoryLabel };
+  }
+
+  return {
+    itemLabel,
+    categoryLabel: 'Item',
+  };
+}
+
+export function buildEmptyItemSharePayload({
+  project,
+  itemKey,
+  fallbackUrl,
+}: EmptyItemSharePayloadOptions): SharePayload | null {
+  if (!itemKey || !project?.id || !project.name) {
+    return null;
+  }
+
+  const { itemLabel, categoryLabel } = resolveEmptyItemLabels(itemKey);
+  const typedKey = itemKey as keyof typeof ALL_POC_ITEM_MAP;
+  const baseWeight = ALL_POC_ITEM_MAP[typedKey]?.weight ?? 0;
+  const formattedWeight = formatInteger(baseWeight);
+
+  const categories = project.categories ?? [];
+  const now = new Date();
+
+  return {
+    code: `empty-${project.id}-${itemKey}`,
+    entityType: 'itemProposal',
+    entityId: `empty-${project.id}-${itemKey}`,
+    sharePath: fallbackUrl,
+    targetUrl: fallbackUrl,
+    parentId: String(project.id),
+    visibility: project.isPublished ? 'public' : 'unlisted',
+    metadata: {
+      title: `Item Proposal · ${itemLabel} · ${project.name}`,
+      subtitle: project.tagline?.length
+        ? truncate(project.tagline, 160)
+        : 'This item does not have submissions yet.',
+      description: `Help kick-start the "${itemLabel}" item by submitting the first proposal. Starting weight: ${formattedWeight}.`,
+      badge: 'Item Proposal',
+      statusBadge: { label: 'Empty Item', tone: 'info' },
+      badges: [{ label: 'Empty Item', tone: 'info' }],
+      project: {
+        id: project.id,
+        name: project.name,
+        tagline: project.tagline ?? undefined,
+        categories,
+        logoUrl: project.logoUrl ?? undefined,
+        isPublished: project.isPublished ?? undefined,
+      },
+      tags: categories,
+      item: {
+        key: itemLabel,
+        rawKey: itemKey,
+        category: categoryLabel,
+        type: 'empty',
+        initialWeight: formattedWeight,
+      },
+    },
+    imageVersion: '0',
+    layout: 'itemProposal',
+    createdAt: now,
+    updatedAt: now,
+  };
 }
