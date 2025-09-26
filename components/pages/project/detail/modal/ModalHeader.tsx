@@ -31,12 +31,27 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   const itemProposalId = useMemo(() => {
     const fromLeading =
       proposalsByProjectIdAndKey?.leadingProposal?.itemProposalId;
+    if (typeof fromLeading === 'number') {
+      return fromLeading;
+    }
+
     const fromDisplayed = displayProposalDataOfKey?.proposalId;
-    const resolved = fromLeading ?? fromDisplayed;
-    return typeof resolved === 'number' ? resolved : undefined;
+    if (typeof fromDisplayed === 'number') {
+      return fromDisplayed;
+    }
+
+    const fallbackQueueProposalId =
+      proposalsByProjectIdAndKey?.allItemProposals?.find((proposal) =>
+        Number.isInteger(proposal?.id),
+      )?.id;
+
+    return typeof fallbackQueueProposalId === 'number'
+      ? fallbackQueueProposalId
+      : undefined;
   }, [
-    proposalsByProjectIdAndKey?.leadingProposal?.itemProposalId,
     displayProposalDataOfKey?.proposalId,
+    proposalsByProjectIdAndKey?.allItemProposals,
+    proposalsByProjectIdAndKey?.leadingProposal?.itemProposalId,
   ]);
 
   const fallbackUrl = useMemo(() => {
