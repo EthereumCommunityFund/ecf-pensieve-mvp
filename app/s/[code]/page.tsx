@@ -21,12 +21,6 @@ function buildMetadataFromPayload(
 ): Metadata {
   const shareUrl = buildAbsoluteUrl(payload.sharePath, origin);
   const dynamicOgImageUrl = `${buildAbsoluteUrl(`/api/share/og-image/${payload.code}`, origin)}?v=${payload.imageVersion}`;
-  const projectLogoUrl = buildAbsoluteUrl(
-    payload.metadata.project.logoUrl ?? '/pensieve-logo.svg',
-    origin,
-  );
-  const isItemProposal = payload.layout === 'itemProposal';
-  const ogImageUrl = isItemProposal ? projectLogoUrl : dynamicOgImageUrl;
   const ogImageSize = { width: 540, height: 300 };
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
@@ -50,7 +44,7 @@ function buildMetadataFromPayload(
       siteName: 'Pensieve',
       images: [
         {
-          url: ogImageUrl,
+          url: dynamicOgImageUrl,
           width: ogImageSize.width,
           height: ogImageSize.height,
           alt: payload.metadata.title,
@@ -62,7 +56,7 @@ function buildMetadataFromPayload(
       title: payload.metadata.title,
       description:
         payload.metadata.subtitle ?? payload.metadata.description ?? undefined,
-      images: [ogImageUrl],
+      images: [dynamicOgImageUrl],
     },
     alternates: {
       canonical: shareUrl,
