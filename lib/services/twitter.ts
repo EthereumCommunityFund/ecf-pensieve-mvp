@@ -7,6 +7,60 @@ interface ProjectData {
   logoUrl: string;
 }
 
+const MAX_TWEET_LENGTH = 280;
+
+function truncateWithEllipsis(text: string, maxLength: number): string {
+  if (maxLength <= 0) {
+    return '';
+  }
+
+  const normalizedText = text.trim();
+
+  if (normalizedText.length <= maxLength) {
+    return normalizedText;
+  }
+
+  if (maxLength === 1) {
+    return '…';
+  }
+
+  const sliceLength = maxLength - 1;
+  let truncated = normalizedText.slice(0, sliceLength);
+
+  for (let i = truncated.length - 1; i >= 0; i -= 1) {
+    if (/\s/.test(truncated[i])) {
+      truncated = truncated.slice(0, i);
+      break;
+    }
+  }
+
+  return `${truncated.trimEnd()}…`;
+}
+
+function buildTweet(
+  projectName: string,
+  projectTagline: string | null,
+  platformUrl: string,
+): string {
+  const lines = ['!! New page on Pensieve!', `Name: ${projectName}`];
+
+  if (projectTagline !== null) {
+    lines.push(`Tagline: ${projectTagline}`);
+  }
+
+  lines.push(
+    '',
+    `✅ View + validate:: ${platformUrl}`,
+    '',
+    '',
+    "Built by contributors. Governed by citizens. Help keep Ethereum's memory honest",
+    '',
+    '#PensieveECF: the open source knowledge base for Web3.',
+  );
+
+  return lines.join('\n');
+}
+
 async function getTwitterClient() {
   const { TwitterApi } = await import('twitter-api-v2');
 
@@ -29,20 +83,46 @@ async function getTwitterClient() {
 
 function generateTweetContent(project: ProjectData): string {
   const platformUrl = `${getHost()}/project/${project.id}`;
+  const name = project.name.trim();
+  const tagline = project.tagline.trim();
 
-  return `!! New page on Pensieve!
-Name: ${project.name}
-Tagline: ${project.tagline}
+  let tweet = buildTweet(name, tagline, platformUrl);
 
-✅ View + validate:: ${platformUrl}
+  if (tweet.length <= MAX_TWEET_LENGTH) {
+    return tweet;
+  }
 
-🗳 Validate facts
-🗳 Upvote trusted projects
-🗳 Share and co-curate history
+  const baseWithEmptyTagline = buildTweet(name, '', platformUrl);
+  const availableForTagline = MAX_TWEET_LENGTH - baseWithEmptyTagline.length;
 
-Built by contributors. Governed by citizens. Help keep Ethereum's memory honest
+  if (availableForTagline > 0) {
+    const truncatedTagline = truncateWithEllipsis(tagline, availableForTagline);
+    tweet = truncatedTagline
+      ? buildTweet(name, truncatedTagline, platformUrl)
+      : buildTweet(name, null, platformUrl);
 
-#PensieveECF: the open source knowledge base for Web3.`;
+    if (tweet.length <= MAX_TWEET_LENGTH) {
+      return tweet;
+    }
+  }
+
+  tweet = buildTweet(name, null, platformUrl);
+
+  if (tweet.length <= MAX_TWEET_LENGTH) {
+    return tweet;
+  }
+
+  const baseWithEmptyName = buildTweet('', null, platformUrl);
+  const availableForName = MAX_TWEET_LENGTH - baseWithEmptyName.length;
+  const truncatedName = truncateWithEllipsis(name, availableForName);
+
+  tweet = buildTweet(truncatedName, null, platformUrl);
+
+  if (tweet.length <= MAX_TWEET_LENGTH) {
+    return tweet;
+  }
+
+  return truncateWithEllipsis(tweet, MAX_TWEET_LENGTH);
 }
 
 async function generateProjectImage(project: ProjectData): Promise<Buffer> {
