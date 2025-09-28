@@ -94,6 +94,13 @@ export const getDefaultEmbedTableFormItemValue = (
         auditorName: '',
         _id: crypto.randomUUID(),
       };
+    case 'previous_funding_rounds':
+      return {
+        date: null,
+        amount: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
     case 'multiContracts':
       return {
         id: crypto.randomUUID(),

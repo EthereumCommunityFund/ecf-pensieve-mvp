@@ -17,6 +17,7 @@ import {
   IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
+  IPreviousFundingRound,
   IPrivateFundingRound,
   IStackIntegration,
 } from '@/types/item';
@@ -246,6 +247,27 @@ const privateFundingRoundSchema: yup.ObjectSchema<IPrivateFundingRound> = yup
     amount: yup.string().required('amount is required'),
     textName: yup.string().required('name is required'),
     amountShares: yup.string().optional(),
+    _id: yup.string().optional(),
+  });
+
+const previousFundingRoundSchema: yup.ObjectSchema<IPreviousFundingRound> = yup
+  .object()
+  .shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .nullable()
+      .required('date is required'),
+    amount: yup.string().required('amount is required'),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
     _id: yup.string().optional(),
   });
 
@@ -669,6 +691,12 @@ export const itemValidationSchemas = {
     .min(1, 'At least one private funding round is required')
     .required('Private funding rounds information is required'),
 
+  previous_funding_rounds: yup
+    .array()
+    .of(previousFundingRoundSchema)
+    .min(1, 'At least one previous funding round is required')
+    .required('Previous funding rounds information is required'),
+
   affiliated_projects: yup
     .array()
     .of(affiliatedProjectsSchema)
@@ -814,12 +842,6 @@ export const itemValidationSchemas = {
   unique_value_proposition: yup
     .string()
     .required('Unique value proposition is required'),
-
-  previous_funding_rounds: yup
-    .string()
-    .transform(normalizeUrl)
-    .url('Please enter a valid URL')
-    .required('Previous funding rounds URL is required'),
 
   vault_multi_sig_holder_addresses_step2: yup
     .string()

@@ -147,6 +147,7 @@ export type IEmbedTableFormDisplayType =
   | 'stack_integrations'
   | 'advisors'
   | 'private_funding_rounds'
+  | 'previous_funding_rounds'
   | 'audit_report'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
 
@@ -293,6 +294,13 @@ export interface IPrivateFundingRound {
   _id?: string;
 }
 
+export interface IPreviousFundingRound {
+  date: Date | null;
+  amount: string;
+  reference?: string;
+  _id?: string;
+}
+
 // Type mapping for getItemRowData function
 export interface IItemDataTypeMap {
   funding_received_grants: IFundingReceivedGrants;
@@ -305,6 +313,7 @@ export interface IItemDataTypeMap {
   advisors: IAdvisors;
   private_funding_rounds: IPrivateFundingRound;
   audit_report: IAuditReport;
+  previous_funding_rounds: IPreviousFundingRound;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

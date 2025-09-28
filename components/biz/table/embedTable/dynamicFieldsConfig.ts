@@ -8,6 +8,7 @@ import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTa
 import ContributorsTableItem from './item/ContributorsTableItem';
 import EndorsersTableItem from './item/EndorsersTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
+import PreviousFundingRoundsTableItem from './item/PreviousFundingRoundsTableItem';
 import PrivateFundingRoundsTableItem from './item/PrivateFundingRoundsTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
@@ -314,6 +315,32 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     ],
     tableComponent: 'PrivateFundingRoundsTableItem',
   },
+  previous_funding_rounds: {
+    displayType: 'previous_funding_rounds',
+    addButtonText: 'Add a Round',
+    columns: [
+      {
+        key: 'date',
+        label: 'Date',
+        width: 200,
+        tooltip: 'Date when this funding round was announced or closed',
+      },
+      {
+        key: 'amount',
+        label: 'Amount (USD)',
+        width: 240,
+        tooltip: 'Total amount raised in the round',
+      },
+      {
+        key: 'reference',
+        label: 'If applicable',
+        width: 240,
+        tooltip:
+          'Optional link to a press release, announcement, or documentation verifying the round',
+      },
+    ],
+    tableComponent: 'PreviousFundingRoundsTableItem',
+  },
   audit_report: {
     displayType: 'audit_report',
     addButtonText: 'Add an Entity',
@@ -346,5 +373,6 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
   PrivateFundingRoundsTableItem: PrivateFundingRoundsTableItem,
+  PreviousFundingRoundsTableItem: PreviousFundingRoundsTableItem,
   AuditReportTableItem: AuditReportTableItem,
 };

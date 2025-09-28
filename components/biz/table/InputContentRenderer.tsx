@@ -24,6 +24,7 @@ import {
   IFormDisplayType,
   IPhysicalEntity,
   IPocItemKey,
+  IPreviousFundingRound,
 } from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
@@ -1168,6 +1169,209 @@ const InputContentRenderer: React.FC<IProps> = ({
           </>
         );
       }
+      case 'previous_funding_rounds': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return (
+            <span className="text-gray-400">No previous funding rounds</span>
+          );
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('previous_funding_rounds', 'date')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('previous_funding_rounds', 'date')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'date',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('previous_funding_rounds', 'amount')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'amount',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'amount',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        isLast
+                        width={
+                          getColumnConfig(
+                            'previous_funding_rounds',
+                            'reference',
+                          )?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'reference',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'reference',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (item: IPreviousFundingRound, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={
+                              getColumnConfig('previous_funding_rounds', 'date')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.date
+                              ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'amount',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.amount ? formatAmount(item.amount) : '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'reference',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IPreviousFundingRound) => {
+                const dateLabel = item?.date
+                  ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                  : 'N/A';
+                const amountLabel = item?.amount
+                  ? formatAmount(item.amount)
+                  : 'N/A';
+                const referenceLabel = item?.reference
+                  ? normalizeUrl(item.reference)
+                  : null;
+                return referenceLabel
+                  ? `${dateLabel} - ${amountLabel} - ${referenceLabel}`
+                  : `${dateLabel} - ${amountLabel}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+
       case 'private_funding_rounds': {
         const parsed = parseValue(value);
         if (!Array.isArray(parsed)) {

@@ -582,20 +582,21 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       subCategory: IItemSubCategoryEnum.Finances,
       isEssential: false,
       label: 'Previous Funding Rounds',
-      description: 'List of previous successful funding rounds of the project',
+      description:
+        'List previously completed funding rounds with their dates, amounts raised, and (if available) a supporting link.',
       shortDescription:
         'List of previous successful funding rounds of the project',
-      longDescription: 'Provide detailed context for Previous Funding Rounds.',
+      longDescription:
+        'Provide detailed context for Previous Funding Rounds, including when each round closed, the total amount raised, and an optional reference link that verifies the information.',
       weight: ALL_POC_ITEM_MAP['previous_funding_rounds'].weight,
-      formDisplayType: 'link',
-      placeholder: 'https://example.com',
+      formDisplayType: 'previous_funding_rounds',
+      placeholder: 'Use the embedded table to add entries',
       showReference: true,
-      showExpand: false,
+      showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [
         ALL_METRICS.LEGITIMACY_BY_CONTINUITY,
         ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
-        ALL_METRICS.WEB3_RESILIENCE,
       ],
       // TODO: add validation schema
     },
