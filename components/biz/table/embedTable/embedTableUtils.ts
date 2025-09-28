@@ -88,6 +88,12 @@ export const getDefaultEmbedTableFormItemValue = (
         repository: '',
         _id: crypto.randomUUID(),
       };
+    case 'audit_report':
+      return {
+        reportLink: '',
+        auditorName: '',
+        _id: crypto.randomUUID(),
+      };
     case 'multiContracts':
       return {
         id: crypto.randomUUID(),

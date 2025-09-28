@@ -2,6 +2,7 @@ import { IFormDisplayType } from '@/types/item';
 
 import AdvisorsTableItem from './item/AdvisorsTableItem';
 import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
+import AuditReportTableItem from './item/AuditReportTableItem';
 import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
 import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTableItem';
 import ContributorsTableItem from './item/ContributorsTableItem';
@@ -313,6 +314,25 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     ],
     tableComponent: 'PrivateFundingRoundsTableItem',
   },
+  audit_report: {
+    displayType: 'audit_report',
+    addButtonText: 'Add an Entity',
+    columns: [
+      {
+        key: 'reportLink',
+        label: 'Report Link',
+        width: 300,
+        tooltip: 'Public URL to the published audit report',
+      },
+      {
+        key: 'auditorName',
+        label: 'Auditor Name',
+        width: 260,
+        tooltip: 'Auditing firm or individual responsible for the report',
+      },
+    ],
+    tableComponent: 'AuditReportTableItem',
+  },
 };
 
 // Map component names to actual FormAndTable
@@ -326,4 +346,5 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
   PrivateFundingRoundsTableItem: PrivateFundingRoundsTableItem,
+  AuditReportTableItem: AuditReportTableItem,
 };

@@ -547,10 +547,10 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         'data analysis, investigation, detection and prevention of crimes and illegal transactions in the networks of cryptocurrency and blockchain companies.',
       longDescription: 'Provide detailed context for Audit Report.',
       weight: ALL_POC_ITEM_MAP['audit_report'].weight,
-      formDisplayType: 'string',
-      placeholder: 'Enter details',
+      formDisplayType: 'audit_report',
+      placeholder: 'Use the embedded table to add entries',
       showReference: true,
-      showExpand: false,
+      showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
       // TODO: add validation schema

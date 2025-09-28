@@ -16,6 +16,7 @@ export const EMBED_TABLE_FORM_TYPES: IFormDisplayType[] = [
   'fundingReceivedGrants',
   'advisors',
   'private_funding_rounds',
+  'audit_report',
 ];
 
 export const DYNAMIC_FIELD_EMBED_TABLE_TYPES: IFormDisplayType[] = [
@@ -28,6 +29,7 @@ export const DYNAMIC_FIELD_EMBED_TABLE_TYPES: IFormDisplayType[] = [
   'fundingReceivedGrants',
   'advisors',
   'private_funding_rounds',
+  'audit_report',
 ];
 
 /**

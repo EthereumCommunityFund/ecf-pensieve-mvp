@@ -17,6 +17,7 @@ import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import {
   IAdvisors,
+  IAuditReport,
   IContributors,
   IContributorsOrganization,
   IEndorser,
@@ -1303,6 +1304,149 @@ const InputContentRenderer: React.FC<IProps> = ({
           );
         }
         break;
+      }
+
+      case 'audit_report': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('audit_report', 'reportLink')?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('audit_report', 'reportLink')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'audit_report',
+                              'reportLink',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        isLast
+                        width={
+                          getColumnConfig('audit_report', 'auditorName')?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('audit_report', 'auditorName')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'audit_report',
+                              'auditorName',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IAuditReport, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={
+                            getColumnConfig('audit_report', 'reportLink')?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.reportLink ? (
+                            <Link
+                              href={normalizeUrl(item.reportLink)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(item.reportLink)}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          width={
+                            getColumnConfig('audit_report', 'auditorName')
+                              ?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.auditorName || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IAuditReport) => {
+                if (item.auditorName) {
+                  return item.auditorName;
+                }
+                if (item.reportLink) {
+                  return normalizeUrl(item.reportLink);
+                }
+                return 'Audit report';
+              })
+              .join(', ')}
+          </>
+        );
       }
 
       case 'affiliated_projects': {

@@ -147,6 +147,7 @@ export type IEmbedTableFormDisplayType =
   | 'stack_integrations'
   | 'advisors'
   | 'private_funding_rounds'
+  | 'audit_report'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
 
 export type IFormDisplayType =
@@ -249,6 +250,12 @@ export interface IContributorsOrganization {
   _id?: string;
 }
 
+export interface IAuditReport {
+  reportLink: string;
+  auditorName: string;
+  _id?: string;
+}
+
 export interface IEndorser {
   name: string;
   socialIdentifier: string;
@@ -297,6 +304,7 @@ export interface IItemDataTypeMap {
   stack_integrations: IStackIntegration;
   advisors: IAdvisors;
   private_funding_rounds: IPrivateFundingRound;
+  audit_report: IAuditReport;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

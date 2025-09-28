@@ -9,6 +9,7 @@ import { NA_VALUE } from '@/constants/naSelection';
 import {
   IAdvisors,
   IAffiliatedProject,
+  IAuditReport,
   IContributingTeam,
   IContributors,
   IContributorsOrganization,
@@ -357,6 +358,16 @@ const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
     _id: yup.string().optional(),
   });
 
+const auditReportSchema: yup.ObjectSchema<IAuditReport> = yup.object().shape({
+  reportLink: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Report link is required'),
+  auditorName: yup.string().required('Auditor name is required'),
+  _id: yup.string().optional(),
+});
+
 export const itemValidationSchemas = {
   // Basics
   name: yup
@@ -694,6 +705,12 @@ export const itemValidationSchemas = {
     .min(1, 'At least one stack & integration is required')
     .required('Stack & Integrations information is required'),
 
+  audit_report: yup
+    .array()
+    .of(auditReportSchema)
+    .min(1, 'At least one audit report is required')
+    .required('Audit report information is required'),
+
   // Financial
   fundingStatus: yup
     .string()
@@ -797,8 +814,6 @@ export const itemValidationSchemas = {
   unique_value_proposition: yup
     .string()
     .required('Unique value proposition is required'),
-
-  audit_report: yup.string().required('Audit report details are required'),
 
   previous_funding_rounds: yup
     .string()
