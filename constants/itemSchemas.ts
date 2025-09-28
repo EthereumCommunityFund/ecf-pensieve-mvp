@@ -14,6 +14,7 @@ import {
   IContributors,
   IContributorsOrganization,
   IDateConstraints,
+  IDecentralizedGovernanceEntry,
   IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
@@ -268,6 +269,15 @@ const previousFundingRoundSchema: yup.ObjectSchema<IPreviousFundingRound> = yup
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
+    _id: yup.string().optional(),
+  });
+
+const decentralizedGovernanceSchema: yup.ObjectSchema<IDecentralizedGovernanceEntry> =
+  yup.object().shape({
+    address: yup
+      .string()
+      .required('Governance address is required')
+      .matches(/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum address'),
     _id: yup.string().optional(),
   });
 
@@ -696,6 +706,12 @@ export const itemValidationSchemas = {
     .of(previousFundingRoundSchema)
     .min(1, 'At least one previous funding round is required')
     .required('Previous funding rounds information is required'),
+
+  decentralized_governance: yup
+    .array()
+    .of(decentralizedGovernanceSchema)
+    .min(1, 'At least one governance address is required')
+    .required('Decentralized governance information is required'),
 
   affiliated_projects: yup
     .array()

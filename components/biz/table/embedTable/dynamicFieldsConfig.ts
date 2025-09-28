@@ -6,6 +6,7 @@ import AuditReportTableItem from './item/AuditReportTableItem';
 import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
 import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTableItem';
 import ContributorsTableItem from './item/ContributorsTableItem';
+import DecentralizedGovernanceTableItem from './item/DecentralizedGovernanceTableItem';
 import EndorsersTableItem from './item/EndorsersTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
 import PreviousFundingRoundsTableItem from './item/PreviousFundingRoundsTableItem';
@@ -333,13 +334,27 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       },
       {
         key: 'reference',
-        label: 'If applicable',
+        label: 'If Applicable Link',
         width: 240,
         tooltip:
           'Optional link to a press release, announcement, or documentation verifying the round',
       },
     ],
     tableComponent: 'PreviousFundingRoundsTableItem',
+  },
+  decentralized_governance: {
+    displayType: 'decentralized_governance',
+    addButtonText: 'Add an Address',
+    columns: [
+      {
+        key: 'address',
+        label: 'Governance Address',
+        width: 600,
+        tooltip:
+          'Ethereum address (multisig signer, council member, or executor) authorized to enact governance decisions',
+      },
+    ],
+    tableComponent: 'DecentralizedGovernanceTableItem',
   },
   audit_report: {
     displayType: 'audit_report',
@@ -373,6 +388,7 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
   PrivateFundingRoundsTableItem: PrivateFundingRoundsTableItem,
+  DecentralizedGovernanceTableItem: DecentralizedGovernanceTableItem,
   PreviousFundingRoundsTableItem: PreviousFundingRoundsTableItem,
   AuditReportTableItem: AuditReportTableItem,
 };

@@ -728,20 +728,20 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
       validationSchema: itemValidationSchemas.token_sales,
     },
-    decentralised_governance: {
-      key: 'decentralised_governance',
+    decentralized_governance: {
+      key: 'decentralized_governance',
       category: IItemCategoryEnum.Financial,
       subCategory: IItemSubCategoryEnum.Finances,
       isEssential: false,
-      label: 'Decentralised Governance',
+      label: 'Decentralized Governance',
       description:
         'An added layer of security by requiring more than one key to authorize a transaction/decision in governance',
       shortDescription:
         'An added layer of security by requiring more than one key to authorize a transaction/decision in governance',
-      longDescription: 'Provide detailed context for Decentralised Governance.',
-      weight: ALL_POC_ITEM_MAP['decentralised_governance'].weight,
-      formDisplayType: 'embedTable',
-      placeholder: 'Use the embedded table to add entries',
+      longDescription: 'Provide detailed context for Decentralized Governance.',
+      weight: ALL_POC_ITEM_MAP['decentralized_governance'].weight,
+      formDisplayType: 'decentralized_governance',
+      placeholder: 'Add governance address',
       showReference: true,
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],

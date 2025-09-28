@@ -240,6 +240,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'funding_received_grants',
           'private_funding_rounds',
           'previous_funding_rounds',
+          'decentralized_governance',
           'audit_report',
           'project_funded_date',
           'budget_plans',

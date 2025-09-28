@@ -20,6 +20,7 @@ import {
   IAuditReport,
   IContributors,
   IContributorsOrganization,
+  IDecentralizedGovernanceEntry,
   IEndorser,
   IFormDisplayType,
   IPhysicalEntity,
@@ -1367,6 +1368,111 @@ const InputContentRenderer: React.FC<IProps> = ({
                   ? `${dateLabel} - ${amountLabel} - ${referenceLabel}`
                   : `${dateLabel} - ${amountLabel}`;
               })
+              .join(', ')}
+          </>
+        );
+      }
+
+      case 'decentralized_governance': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return <span className="text-gray-400">No governance addresses</span>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('decentralized_governance', 'address')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'decentralized_governance',
+                                'address',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'decentralized_governance',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (entry: IDecentralizedGovernanceEntry, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig(
+                                'decentralized_governance',
+                                'address',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {entry?.address || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((entry: IDecentralizedGovernanceEntry) => entry?.address)
+              .filter(Boolean)
               .join(', ')}
           </>
         );
