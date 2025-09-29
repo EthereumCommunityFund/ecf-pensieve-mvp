@@ -2,11 +2,15 @@ import { IFormDisplayType } from '@/types/item';
 
 import AdvisorsTableItem from './item/AdvisorsTableItem';
 import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
+import AuditReportTableItem from './item/AuditReportTableItem';
 import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
 import ContributorsOrganizationTableItem from './item/ContributorsOrganizationTableItem';
 import ContributorsTableItem from './item/ContributorsTableItem';
+import DecentralizedGovernanceTableItem from './item/DecentralizedGovernanceTableItem';
 import EndorsersTableItem from './item/EndorsersTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
+import PreviousFundingRoundsTableItem from './item/PreviousFundingRoundsTableItem';
+import PrivateFundingRoundsTableItem from './item/PrivateFundingRoundsTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
 export interface DynamicFieldColumn {
@@ -286,6 +290,91 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     ],
     tableComponent: 'AdvisorsTableItem',
   },
+  private_funding_rounds: {
+    displayType: 'private_funding_rounds',
+    addButtonText: 'Add a Round',
+    columns: [
+      { key: 'date', label: 'Date', width: 158, tooltip: 'Funding round date' },
+      {
+        key: 'amount',
+        label: 'Amount (USD)',
+        width: 138,
+        tooltip: 'Total amount raised in this round',
+      },
+      {
+        key: 'textName',
+        label: 'Name',
+        width: 300,
+        tooltip: 'Textual name/participant for this round',
+      },
+      {
+        key: 'amountShares',
+        label: 'amountShares',
+        width: 180,
+        tooltip: 'amountShares',
+      },
+    ],
+    tableComponent: 'PrivateFundingRoundsTableItem',
+  },
+  previous_funding_rounds: {
+    displayType: 'previous_funding_rounds',
+    addButtonText: 'Add a Round',
+    columns: [
+      {
+        key: 'date',
+        label: 'Date',
+        width: 200,
+        tooltip: 'Date when this funding round was announced or closed',
+      },
+      {
+        key: 'amount',
+        label: 'Amount (USD)',
+        width: 240,
+        tooltip: 'Total amount raised in the round',
+      },
+      {
+        key: 'reference',
+        label: 'If Applicable Link',
+        width: 240,
+        tooltip:
+          'Optional link to a press release, announcement, or documentation verifying the round',
+      },
+    ],
+    tableComponent: 'PreviousFundingRoundsTableItem',
+  },
+  decentralized_governance: {
+    displayType: 'decentralized_governance',
+    addButtonText: 'Add an Address',
+    columns: [
+      {
+        key: 'address',
+        label: 'Governance Address',
+        width: 600,
+        tooltip:
+          'Ethereum address (multisig signer, council member, or executor) authorized to enact governance decisions',
+      },
+    ],
+    tableComponent: 'DecentralizedGovernanceTableItem',
+  },
+  audit_report: {
+    displayType: 'audit_report',
+    addButtonText: 'Add an Entity',
+    columns: [
+      {
+        key: 'reportLink',
+        label: 'Report Link',
+        width: 300,
+        tooltip: 'Public URL to the published audit report',
+      },
+      {
+        key: 'auditorName',
+        label: 'Auditor Name',
+        width: 260,
+        tooltip: 'Auditing firm or individual responsible for the report',
+      },
+    ],
+    tableComponent: 'AuditReportTableItem',
+  },
 };
 
 // Map component names to actual FormAndTable
@@ -298,4 +387,8 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   EndorsersTableItem: EndorsersTableItem,
   StackIntegrationsTableItem: StackIntegrationsTableItem,
   AdvisorsTableItem: AdvisorsTableItem,
+  PrivateFundingRoundsTableItem: PrivateFundingRoundsTableItem,
+  DecentralizedGovernanceTableItem: DecentralizedGovernanceTableItem,
+  PreviousFundingRoundsTableItem: PreviousFundingRoundsTableItem,
+  AuditReportTableItem: AuditReportTableItem,
 };

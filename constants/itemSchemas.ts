@@ -9,13 +9,17 @@ import { NA_VALUE } from '@/constants/naSelection';
 import {
   IAdvisors,
   IAffiliatedProject,
+  IAuditReport,
   IContributingTeam,
   IContributors,
   IContributorsOrganization,
   IDateConstraints,
+  IDecentralizedGovernanceEntry,
   IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
+  IPreviousFundingRound,
+  IPrivateFundingRound,
   IStackIntegration,
 } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
@@ -230,6 +234,53 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
     _id: yup.string().optional(),
   });
 
+const privateFundingRoundSchema: yup.ObjectSchema<IPrivateFundingRound> = yup
+  .object()
+  .shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .required('date is required'),
+    amount: yup.string().required('amount is required'),
+    textName: yup.string().required('name is required'),
+    amountShares: yup.string().optional(),
+    _id: yup.string().optional(),
+  });
+
+const previousFundingRoundSchema: yup.ObjectSchema<IPreviousFundingRound> = yup
+  .object()
+  .shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .nullable()
+      .required('date is required'),
+    amount: yup.string().required('amount is required'),
+    reference: yup
+      .string()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().optional(),
+  });
+
+const decentralizedGovernanceSchema: yup.ObjectSchema<IDecentralizedGovernanceEntry> =
+  yup.object().shape({
+    address: yup
+      .string()
+      .required('Governance address is required')
+      .matches(/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum address'),
+    _id: yup.string().optional(),
+  });
+
 const affiliatedProjectsSchema: yup.ObjectSchema<IAffiliatedProject> = yup
   .object()
   .shape({
@@ -338,6 +389,16 @@ const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
       .optional(),
     _id: yup.string().optional(),
   });
+
+const auditReportSchema: yup.ObjectSchema<IAuditReport> = yup.object().shape({
+  reportLink: yup
+    .string()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Report link is required'),
+  auditorName: yup.string().required('Auditor name is required'),
+  _id: yup.string().optional(),
+});
 
 export const itemValidationSchemas = {
   // Basics
@@ -476,6 +537,12 @@ export const itemValidationSchemas = {
 
   audit_status: yup.string().required('Audit status is required'),
 
+  // Smart Contract Audits (boolean via Yes/No select)
+  // Align to Airdrops style: required string with Yes/No options at UI layer
+  smart_contract_audits: yup
+    .string()
+    .required('Smart contract audits status is required'),
+
   dapp_category: yup.string().required('Dapp category is required'),
 
   protocol_built_on: yup.string().required('Protocol built on is required'),
@@ -608,6 +675,10 @@ export const itemValidationSchemas = {
     .string()
     .required('Ownership of project is required'),
 
+  ownership_of_projects: yup
+    .string()
+    .required('Ownership of projects is required'),
+
   governance_structure: yup
     .string()
     .required('Governance structure is required'),
@@ -623,6 +694,24 @@ export const itemValidationSchemas = {
     .of(fundingReceivedGrantsSchema)
     .min(1, 'At least one funding received(grants) is required')
     .required('Funding received(grants) information is required'),
+
+  private_funding_rounds: yup
+    .array()
+    .of(privateFundingRoundSchema)
+    .min(1, 'At least one private funding round is required')
+    .required('Private funding rounds information is required'),
+
+  previous_funding_rounds: yup
+    .array()
+    .of(previousFundingRoundSchema)
+    .min(1, 'At least one previous funding round is required')
+    .required('Previous funding rounds information is required'),
+
+  decentralized_governance: yup
+    .array()
+    .of(decentralizedGovernanceSchema)
+    .min(1, 'At least one governance address is required')
+    .required('Decentralized governance information is required'),
 
   affiliated_projects: yup
     .array()
@@ -659,6 +748,12 @@ export const itemValidationSchemas = {
     .of(stackIntegrationSchema)
     .min(1, 'At least one stack & integration is required')
     .required('Stack & Integrations information is required'),
+
+  audit_report: yup
+    .array()
+    .of(auditReportSchema)
+    .min(1, 'At least one audit report is required')
+    .required('Audit report information is required'),
 
   // Financial
   fundingStatus: yup
@@ -716,6 +811,11 @@ export const itemValidationSchemas = {
     )
     .required('Treasury vault address is required when applicable'),
 
+  vault_address_step2: yup
+    .string()
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum address')
+    .required('Vault treasury address is required'),
+
   treasury_mechanism: yup.string().required('Treasury mechanism is required'),
 
   constitution: yup.string().required('Constitution is required'),
@@ -763,14 +863,6 @@ export const itemValidationSchemas = {
   unique_value_proposition: yup
     .string()
     .required('Unique value proposition is required'),
-
-  audit_report: yup.string().required('Audit report details are required'),
-
-  previous_funding_rounds: yup
-    .string()
-    .transform(normalizeUrl)
-    .url('Please enter a valid URL')
-    .required('Previous funding rounds URL is required'),
 
   vault_multi_sig_holder_addresses_step2: yup
     .string()

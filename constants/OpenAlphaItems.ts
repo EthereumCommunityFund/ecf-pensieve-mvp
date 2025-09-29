@@ -547,10 +547,10 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         'data analysis, investigation, detection and prevention of crimes and illegal transactions in the networks of cryptocurrency and blockchain companies.',
       longDescription: 'Provide detailed context for Audit Report.',
       weight: ALL_POC_ITEM_MAP['audit_report'].weight,
-      formDisplayType: 'string',
-      placeholder: 'Enter details',
+      formDisplayType: 'audit_report',
+      placeholder: 'Use the embedded table to add entries',
       showReference: true,
-      showExpand: false,
+      showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
       // TODO: add validation schema
@@ -568,7 +568,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       longDescription:
         'Provide detailed context for Vault (treasury) Address + step2.',
       weight: ALL_POC_ITEM_MAP['vault_address_step2'].weight,
-      formDisplayType: 'smartContract',
+      formDisplayType: 'string',
       placeholder: '0x...',
       showReference: true,
       showExpand: false,
@@ -582,20 +582,21 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       subCategory: IItemSubCategoryEnum.Finances,
       isEssential: false,
       label: 'Previous Funding Rounds',
-      description: 'List of previous successful funding rounds of the project',
+      description:
+        'List previously completed funding rounds with their dates, amounts raised, and (if available) a supporting link.',
       shortDescription:
         'List of previous successful funding rounds of the project',
-      longDescription: 'Provide detailed context for Previous Funding Rounds.',
+      longDescription:
+        'Provide detailed context for Previous Funding Rounds, including when each round closed, the total amount raised, and an optional reference link that verifies the information.',
       weight: ALL_POC_ITEM_MAP['previous_funding_rounds'].weight,
-      formDisplayType: 'link',
-      placeholder: 'https://example.com',
+      formDisplayType: 'previous_funding_rounds',
+      placeholder: 'Use the embedded table to add entries',
       showReference: true,
-      showExpand: false,
+      showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [
         ALL_METRICS.LEGITIMACY_BY_CONTINUITY,
         ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
-        ALL_METRICS.WEB3_RESILIENCE,
       ],
       // TODO: add validation schema
     },
@@ -696,13 +697,13 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         'Includes the data: date, fundraising size, participants, price, smart contract address',
       longDescription: 'Provide detailed context for Private Funding Rounds.',
       weight: ALL_POC_ITEM_MAP['private_funding_rounds'].weight,
-      formDisplayType: 'embedTable',
+      formDisplayType: 'private_funding_rounds',
       placeholder: 'Use the embedded table to add entries',
       showReference: true,
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
-      // TODO: add validation schema
+      validationSchema: itemValidationSchemas.private_funding_rounds,
     },
     // TODO: Potential duplicate with existing AllItemConfig
     token_sales: {
@@ -727,20 +728,20 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
       validationSchema: itemValidationSchemas.token_sales,
     },
-    decentralised_governance: {
-      key: 'decentralised_governance',
+    decentralized_governance: {
+      key: 'decentralized_governance',
       category: IItemCategoryEnum.Financial,
       subCategory: IItemSubCategoryEnum.Finances,
       isEssential: false,
-      label: 'Decentralised Governance',
+      label: 'Decentralized Governance',
       description:
         'An added layer of security by requiring more than one key to authorize a transaction/decision in governance',
       shortDescription:
         'An added layer of security by requiring more than one key to authorize a transaction/decision in governance',
-      longDescription: 'Provide detailed context for Decentralised Governance.',
-      weight: ALL_POC_ITEM_MAP['decentralised_governance'].weight,
-      formDisplayType: 'embedTable',
-      placeholder: 'Use the embedded table to add entries',
+      longDescription: 'Provide detailed context for Decentralized Governance.',
+      weight: ALL_POC_ITEM_MAP['decentralized_governance'].weight,
+      formDisplayType: 'decentralized_governance',
+      placeholder: 'Add governance address',
       showReference: true,
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],

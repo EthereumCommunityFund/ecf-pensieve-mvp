@@ -15,6 +15,7 @@ import {
   itemValidationSchemas,
 } from './itemSchemas';
 import { ALL_METRICS } from './metrics';
+import { NA_VALUE } from './naSelection';
 
 export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
   name: {
@@ -627,6 +628,28 @@ This field identifies the underlying infrastructure your project is technically 
     ],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
   },
+  smart_contract_audits: {
+    key: 'smart_contract_audits',
+    category: IItemCategoryEnum.Technicals,
+    subCategory: IItemSubCategoryEnum.Development,
+    isEssential: POC_ITEMS.smart_contract_audits.isEssential,
+    label: 'Smart Contract Audits',
+    description: "Were the project's smart contract audited?",
+    shortDescription: "Were the project's smart contract audited?",
+    longDescription: `Indicates whether the project's smart contracts have undergone third-party security audits. This helps evaluate the project's commitment to safety, transparency, and risk mitigation.`,
+    weight: ALL_POC_ITEM_MAP.smart_contract_audits.weight,
+    formDisplayType: 'select',
+    placeholder: 'Select an option',
+    options: [
+      { value: 'Yes', label: 'Yes' },
+      { value: 'No', label: 'No' },
+    ],
+    showReference: true,
+    showExpand: false,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.smart_contract_audits,
+  },
   core_team: {
     key: 'core_team',
     category: IItemCategoryEnum.Organization,
@@ -681,6 +704,25 @@ This field identifies the underlying infrastructure your project is technically 
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
     legitimacy: [],
+  },
+  ownership_of_projects: {
+    key: 'ownership_of_projects',
+    category: IItemCategoryEnum.Organization,
+    subCategory: IItemSubCategoryEnum.Team,
+    isEssential: POC_ITEMS.ownership_of_projects.isEssential,
+    label: 'Ownership of Projects +',
+    description:
+      "the individuals or groups who have authority, accountability, and decision-making power over the project's direction, scope, and outcomes",
+    shortDescription:
+      "the individuals or groups who have authority, accountability, and decision-making power over the project's direction, scope, and outcomes",
+    weight: ALL_POC_ITEM_MAP.ownership_of_projects.weight,
+    formDisplayType: 'string',
+    placeholder: 'Enter details',
+    showReference: true,
+    showExpand: false,
+    accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.ownership_of_projects,
   },
   project_funded_date: {
     key: 'project_funded_date',
@@ -800,7 +842,7 @@ This field provides a breakdown of the project’s expenses, offering transparen
     options: [
       { value: 'Yes', label: 'Yes' },
       { value: 'No', label: 'No' },
-      { value: 'N/A', label: 'N/A' },
+      { value: NA_VALUE, label: NA_VALUE },
     ],
     showReference: true,
     accountability: [
@@ -860,6 +902,7 @@ Native Tokens – the primary token of a blockchain network used for gas fees an
       { value: 'Native Token', label: 'Native Token' },
     ],
     showReference: true,
+    showApplicable: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
     legitimacy: [],
     validationSchema: itemValidationSchemas.token_type,
@@ -912,6 +955,7 @@ Native Tokens – the primary token of a blockchain network used for gas fees an
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
+    showApplicable: true,
   },
   total: {
     key: 'total',
@@ -979,6 +1023,7 @@ This helps us understand how decisions are made and who gets to participate.`,
     placeholder: 'Add legal entity information',
     showReference: true,
     showExpand: true,
+    showApplicable: true,
     accountability: [
       ALL_METRICS.TRANSPARENCY,
       ALL_METRICS.KEY_ACCOUNTABILITY_ITEM,
@@ -1047,7 +1092,7 @@ This helps us understand how decisions are made and who gets to participate.`,
       },
       { value: 'Treasury Mining', label: 'Treasury Mining' },
       { value: 'Other', label: 'Other (input value)' },
-      { value: 'N/A', label: 'N/A' },
+      { value: NA_VALUE, label: NA_VALUE },
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
@@ -1071,6 +1116,88 @@ This helps us understand how decisions are made and who gets to participate.`,
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
+  },
+  audit_report: {
+    key: 'audit_report',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.audit_report.isEssential,
+    label: 'Audit Report',
+    description:
+      'Document independent security or financial audits, including who performed them and where to review the report.',
+    shortDescription:
+      'data analysis, investigation, detection and prevention of crimes and illegal transactions in the networks of cryptocurrency and blockchain companies.',
+    longDescription: `Use this table to list formal audit reports that evaluate the project’s code, treasury, governance, or financial statements. Each entry should link directly to the published report and identify the auditor or firm responsible. If the auditor provides a dedicated landing page or credential URL, include it to help reviewers verify authenticity. Adding every relevant audit helps demonstrate the project’s commitment to transparency and risk management.`,
+    weight: ALL_POC_ITEM_MAP.audit_report.weight,
+    formDisplayType: 'audit_report',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.audit_report,
+  },
+  previous_funding_rounds: {
+    key: 'previous_funding_rounds',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.previous_funding_rounds.isEssential,
+    label: 'Previous Funding Rounds',
+    description:
+      'Document public funding rounds the project has completed, including their dates, amounts, and (optionally) a supporting reference.',
+    shortDescription:
+      'Historical funding rounds with amount raised and optional source link.',
+    longDescription: `Use this table to log prior funding rounds that have already been announced or completed. Record the closing date, the total amount raised (in USD equivalent), and when available a link to a credible source such as a press release, governance post, or public disclosure. Maintaining this history helps evaluators understand the project’s fundraising trajectory and resilience over time.`,
+    weight: ALL_POC_ITEM_MAP.previous_funding_rounds.weight,
+    formDisplayType: 'previous_funding_rounds',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [
+      ALL_METRICS.LEGITIMACY_BY_CONTINUITY,
+      ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
+    ],
+    validationSchema: itemValidationSchemas.previous_funding_rounds,
+  },
+  decentralized_governance: {
+    key: 'decentralized_governance',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.decentralized_governance.isEssential,
+    label: 'Decentralized Governance',
+    description:
+      'List the Ethereum addresses (multisig signers, councils, or executors) that can authorize governance actions.',
+    shortDescription:
+      'Governance signer addresses responsible for executing decisions.',
+    longDescription: `Use this table to catalog the on-chain addresses that hold authority within your governance system — for example multisig signers, DAO executors, or other wallets empowered to enact proposals. Providing these addresses improves transparency around who can move funds or upgrade contracts. Each entry must be a valid Ethereum address so reviewers can verify ownership and activity on-chain.`,
+    weight: ALL_POC_ITEM_MAP.decentralized_governance.weight,
+    formDisplayType: 'decentralized_governance',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
+    legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+    validationSchema: itemValidationSchemas.decentralized_governance,
+  },
+  private_funding_rounds: {
+    key: 'private_funding_rounds',
+    category: IItemCategoryEnum.Financial,
+    subCategory: IItemSubCategoryEnum.Finances,
+    isEssential: POC_ITEMS.private_funding_rounds.isEssential,
+    label: 'Private Funding Rounds',
+    description:
+      'Includes the data: date, fundraising size, participants, price, smart contract address',
+    shortDescription:
+      'Structured records of private rounds: date, amount, participants, price and related contract address.',
+    weight: ALL_POC_ITEM_MAP.private_funding_rounds.weight,
+    formDisplayType: 'private_funding_rounds',
+    placeholder: 'Use the embedded table to add entries',
+    showReference: true,
+    showExpand: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.private_funding_rounds,
   },
   affiliated_projects: {
     key: 'affiliated_projects',
@@ -1221,6 +1348,26 @@ The technical dependencies, integrations, and building blocks that form the foun
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
     validationSchema: itemValidationSchemas.constitution,
   },
+  vault_address_step2: {
+    key: 'vault_address_step2',
+    category: IItemCategoryEnum.Governance,
+    subCategory: IItemSubCategoryEnum.Governance,
+    isEssential: POC_ITEMS.vault_address_step2.isEssential,
+    label: 'Vault (treasury) Address',
+    description:
+      'Share the smart contract address safeguarding the treasury and who approves access.',
+    shortDescription:
+      'The vault address is meant to present the smart contract address where the treasury stored and also the people having the authority to get/approve the access to this address.',
+    longDescription:
+      'Publish the on-chain smart contract address that currently holds the treasury funds, along with context on who can authorize transfers (e.g., multisig signers or DAO executors). This disclosure increases transparency, enables independent verification, and clarifies the governance safeguards around treasury custody.',
+    weight: ALL_POC_ITEM_MAP['vault_address_step2'].weight,
+    formDisplayType: 'string',
+    placeholder: '0x...',
+    showReference: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.vault_address_step2,
+  },
   milestone_type: {
     key: 'milestone_type',
     category: IItemCategoryEnum.Basics,
@@ -1292,6 +1439,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     placeholder: 'Select an option',
     showReference: true,
     showExpand: false,
+    showApplicable: true,
     options: [
       { value: 'Yes', label: 'Yes' },
       { value: 'No', label: 'No' },
@@ -1568,6 +1716,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     placeholder: 'Select applicable utilities',
     showReference: true,
     showExpand: false,
+    showApplicable: true,
     options: [
       { value: 'Access & Payments', label: 'Access & Payments' },
       { value: 'Governance & Rights', label: 'Governance & Rights' },

@@ -88,6 +88,19 @@ export const getDefaultEmbedTableFormItemValue = (
         repository: '',
         _id: crypto.randomUUID(),
       };
+    case 'audit_report':
+      return {
+        reportLink: '',
+        auditorName: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'previous_funding_rounds':
+      return {
+        date: null,
+        amount: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
     case 'multiContracts':
       return {
         id: crypto.randomUUID(),
@@ -100,6 +113,14 @@ export const getDefaultEmbedTableFormItemValue = (
         title: '',
         address: '',
         active: '',
+        _id: crypto.randomUUID(),
+      };
+    case 'private_funding_rounds':
+      return {
+        date: null,
+        amount: '',
+        textName: '',
+        amountShares: '',
         _id: crypto.randomUUID(),
       };
     default:

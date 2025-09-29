@@ -17,12 +17,15 @@ import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import {
   IAdvisors,
+  IAuditReport,
   IContributors,
   IContributorsOrganization,
+  IDecentralizedGovernanceEntry,
   IEndorser,
   IFormDisplayType,
   IPhysicalEntity,
   IPocItemKey,
+  IPreviousFundingRound,
 } from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
@@ -34,6 +37,7 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
+import { NA_VALUE } from '@/constants/naSelection';
 
 import {
   BOOL_TYPE_OPTIONS,
@@ -188,7 +192,7 @@ const InputContentRenderer: React.FC<IProps> = ({
           references = value.references || [];
 
           if (!applicable) {
-            return <span className="text-gray-500">N/A</span>;
+            return <span className="text-gray-500">{NA_VALUE}</span>;
           }
         }
 
@@ -1147,7 +1151,7 @@ const InputContentRenderer: React.FC<IProps> = ({
             </div>
           );
         }
-
+        // Default collapsed summary
         return (
           <>
             {parsed
@@ -1167,6 +1171,595 @@ const InputContentRenderer: React.FC<IProps> = ({
           </>
         );
       }
+      case 'previous_funding_rounds': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return (
+            <span className="text-gray-400">No previous funding rounds</span>
+          );
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('previous_funding_rounds', 'date')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('previous_funding_rounds', 'date')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'date',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('previous_funding_rounds', 'amount')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'amount',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'amount',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        isLast
+                        width={
+                          getColumnConfig(
+                            'previous_funding_rounds',
+                            'reference',
+                          )?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'reference',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'reference',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (item: IPreviousFundingRound, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={
+                              getColumnConfig('previous_funding_rounds', 'date')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.date
+                              ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'amount',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.amount ? formatAmount(item.amount) : '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'reference',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IPreviousFundingRound) => {
+                const dateLabel = item?.date
+                  ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                  : NA_VALUE;
+                const amountLabel = item?.amount
+                  ? formatAmount(item.amount)
+                  : NA_VALUE;
+                const referenceLabel = item?.reference
+                  ? normalizeUrl(item.reference)
+                  : null;
+                return referenceLabel
+                  ? `${dateLabel} - ${amountLabel} - ${referenceLabel}`
+                  : `${dateLabel} - ${amountLabel}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+
+      case 'decentralized_governance': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return <span className="text-gray-400">No governance addresses</span>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('decentralized_governance', 'address')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'decentralized_governance',
+                                'address',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'decentralized_governance',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (entry: IDecentralizedGovernanceEntry, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig(
+                                'decentralized_governance',
+                                'address',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {entry?.address || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((entry: IDecentralizedGovernanceEntry) => entry?.address)
+              .filter(Boolean)
+              .join(', ')}
+          </>
+        );
+      }
+
+      case 'private_funding_rounds': {
+        const parsed = parseValue(value);
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={158} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Date</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'date',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={138} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Amount (USD)</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'amount',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Name</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'textName',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Allocation/Shares</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'amountShares',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        round: {
+                          date: Date | string;
+                          amount: string;
+                          textName: string;
+                          amountShares?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={158}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.date
+                              ? dayjs.utc(round.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={138}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.amount ? formatAmount(round.amount) : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.textName || '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.amountShares || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+        break;
+      }
+
+      case 'audit_report': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('audit_report', 'reportLink')?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('audit_report', 'reportLink')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'audit_report',
+                              'reportLink',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        isLast
+                        width={
+                          getColumnConfig('audit_report', 'auditorName')?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('audit_report', 'auditorName')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'audit_report',
+                              'auditorName',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IAuditReport, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={
+                            getColumnConfig('audit_report', 'reportLink')?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.reportLink ? (
+                            <Link
+                              href={normalizeUrl(item.reportLink)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(item.reportLink)}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          width={
+                            getColumnConfig('audit_report', 'auditorName')
+                              ?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.auditorName || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IAuditReport) => {
+                if (item.auditorName) {
+                  return item.auditorName;
+                }
+                if (item.reportLink) {
+                  return normalizeUrl(item.reportLink);
+                }
+                return 'Audit report';
+              })
+              .join(', ')}
+          </>
+        );
+      }
+
       case 'affiliated_projects': {
         const parsed = parseValue(value);
 
@@ -1472,7 +2065,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                     item.type,
                     CONTRIBUTION_TYPE_OPTIONS,
                   );
-                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}`;
+                  return `${projectName} - ${typeLabel}: ${item.description || NA_VALUE}${item.reference ? ` - ${item.reference}` : ''}`;
                 },
               )
               .join(', ')}
@@ -1654,7 +2247,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                     item.type,
                     STACK_INTEGRATION_TYPE_OPTIONS,
                   );
-                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
+                  return `${projectName} - ${typeLabel}: ${item.description || NA_VALUE}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
               .join(', ')}
@@ -2255,11 +2848,7 @@ const InputContentRenderer: React.FC<IProps> = ({
   const isValueEmpty = isInputValueEmpty(value);
 
   if (isValueEmpty || isInputValueNA(value)) {
-    return !isEssential ? (
-      <span className="font-sans text-[14px] font-semibold">{`---`}</span>
-    ) : (
-      <span>n/a</span>
-    );
+    return <span className="font-sans text-[14px]">{NA_VALUE}</span>;
   }
 
   if (isExpandable && !isEmbedTableFormType(displayFormType)) {

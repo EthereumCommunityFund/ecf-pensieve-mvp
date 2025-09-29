@@ -146,6 +146,10 @@ export type IEmbedTableFormDisplayType =
   | 'endorsers'
   | 'stack_integrations'
   | 'advisors'
+  | 'private_funding_rounds'
+  | 'previous_funding_rounds'
+  | 'decentralized_governance'
+  | 'audit_report'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
 
 export type IFormDisplayType =
@@ -248,6 +252,12 @@ export interface IContributorsOrganization {
   _id?: string;
 }
 
+export interface IAuditReport {
+  reportLink: string;
+  auditorName: string;
+  _id?: string;
+}
+
 export interface IEndorser {
   name: string;
   socialIdentifier: string;
@@ -272,6 +282,31 @@ export interface IAdvisors {
   _id?: string;
 }
 
+// Private Funding Rounds table row type
+export interface IPrivateFundingRound {
+  /** Round date */
+  date: Date | null;
+  /** Fundraising size, keep string for formatting like "$1,000,000" */
+  amount: string;
+  /** Textual name for the round (investor/participant/label) */
+  textName: string;
+  /** Amount of shares or allocation (e.g. %, tokens) */
+  amountShares?: string;
+  _id?: string;
+}
+
+export interface IPreviousFundingRound {
+  date: Date | null;
+  amount: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IDecentralizedGovernanceEntry {
+  address: string;
+  _id?: string;
+}
+
 // Type mapping for getItemRowData function
 export interface IItemDataTypeMap {
   funding_received_grants: IFundingReceivedGrants;
@@ -282,6 +317,10 @@ export interface IItemDataTypeMap {
   endorsers: IEndorser;
   stack_integrations: IStackIntegration;
   advisors: IAdvisors;
+  private_funding_rounds: IPrivateFundingRound;
+  audit_report: IAuditReport;
+  previous_funding_rounds: IPreviousFundingRound;
+  decentralized_governance: IDecentralizedGovernanceEntry;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

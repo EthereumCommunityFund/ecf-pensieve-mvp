@@ -1,5 +1,5 @@
 import { AllItemConfig } from '@/constants/itemConfig';
-import { isNAValue } from '@/constants/naSelection';
+import { isNAValue, NA_VALUE } from '@/constants/naSelection';
 import { IPocItemKey } from '@/types/item';
 
 export const getItemConfig = (key: IPocItemKey) => {
@@ -14,7 +14,7 @@ export const transformFormValue = (
   const itemConfig = getItemConfig(key);
   const isFieldApplicable = !!itemConfig?.showApplicable;
   const isKeySetToNA = isFieldApplicable && !fieldApplicability[key];
-  return isKeySetToNA ? '' : value;
+  return isKeySetToNA ? NA_VALUE : value;
 };
 export const isInputValueEmpty = (value: any) => {
   // Treat null/undefined/empty string as empty
@@ -216,10 +216,17 @@ export const calculateItemStatusFields = (
   hasProposal: boolean,
   existingItem?: { input: any; isNotLeading?: boolean },
 ) => {
-  const hasValidatedLeadingProposal =
-    existingItem && !isInputValueEmpty(existingItem.input);
+  const itemConfig = AllItemConfig[itemKey as IPocItemKey];
+  const isFieldNAEligible = !!itemConfig?.showApplicable;
+  const existingInput = existingItem?.input;
+  const isInputMarkedNA =
+    isInputValueNA(existingInput) ||
+    (isFieldNAEligible && hasProposal && isInputValueEmpty(existingInput));
+  const hasValidatedLeadingProposal = Boolean(
+    existingItem && (!isInputValueEmpty(existingInput) || isInputMarkedNA),
+  );
   const isNotLeading = existingItem?.isNotLeading === true;
-  const isNotEssential = !AllItemConfig[itemKey as IPocItemKey]?.isEssential;
+  const isNotEssential = !itemConfig?.isEssential;
 
   return {
     // Non-essential field and currently has no proposal
