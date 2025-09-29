@@ -6,6 +6,7 @@ import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { Button } from '@/components/base';
 import { ShareLinkIcon } from '@/components/icons';
 import CheckedCircleIcon from '@/components/icons/CheckCircle';
+import useShareLink from '@/hooks/useShareLink';
 import { ESSENTIAL_ITEM_WEIGHT_SUM, REWARD_PERCENT } from '@/lib/constants';
 
 import ShareModal from '../ShareModal';
@@ -86,18 +87,39 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
     return isProject ? proposalId : entityId;
   }, [apiStatus, isProject, proposalId, entityId]);
 
-  const shareUrl = useMemo(() => {
+  const fallbackSharePath = useMemo(() => {
     if (!shareProjectId || !shareProposalId) {
       return '';
     }
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const path = `/project/pending/${shareProjectId}/proposal/${shareProposalId}`;
-    return `${origin}${path}`;
+    return `/project/pending/${shareProjectId}/proposal/${shareProposalId}`;
   }, [shareProjectId, shareProposalId]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'proposal',
+    entityId: shareProposalId,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!shareProposalId,
+  });
 
   const handleBackToContribute = useCallback(() => {
     router.back();
   }, [router]);
+
+  const handleOpenShare = useCallback(() => {
+    onOpen();
+    if (shareProposalId) {
+      void ensureShareLink();
+    }
+    if (shareLinkError) {
+      console.error('Failed to ensure share link:', shareLinkError);
+    }
+  }, [ensureShareLink, onOpen, shareProposalId, shareLinkError]);
 
   const handleViewEntity = useCallback(() => {
     if (apiStatus === 'success' && entityId) {
@@ -178,7 +200,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
           <div className="mobile:flex-col mobile:pt-0 flex flex-1 justify-between gap-[10px] pt-[20px]">
             <Button
               color="secondary"
-              onClick={onOpen}
+              onClick={handleOpenShare}
               type="button"
               className="px-[20px]"
               disabled={!shareProjectId || !shareProposalId}
@@ -297,7 +319,13 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
         </AnimatePresence>
       </div>
 
-      <ShareModal isOpen={isOpen} onClose={onClose} shareUrl={shareUrl} />
+      <ShareModal
+        isOpen={isOpen}
+        onClose={onClose}
+        shareUrl={shareUrl}
+        shareImageUrl={shareImageUrl}
+        isLoading={shareLinkLoading}
+      />
     </div>
   );
 };

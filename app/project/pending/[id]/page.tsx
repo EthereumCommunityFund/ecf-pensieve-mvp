@@ -10,11 +10,11 @@ import PublishingTip from '@/components/pages/project/proposal/common/Publishing
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
 import { useAuth } from '@/context/AuthContext';
+import useShareLink from '@/hooks/useShareLink';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
 import ProposalVoteUtils from '@/utils/proposal';
-import { getShareUrlByShortCode } from '@/utils/share';
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
@@ -187,6 +187,29 @@ const ProjectCard = ({
   leadingProposal?: IProposal;
   canBePublished?: boolean;
 }) => {
+  const fallbackSharePath = useMemo(() => {
+    if (!project) {
+      return '';
+    }
+    return project.isPublished
+      ? `/project/${project.id}`
+      : `/project/pending/${project.id}`;
+  }, [project]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    payload: sharePayload,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'project',
+    entityId: project?.id,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!project?.id,
+  });
+
   if (!project) {
     return <ProjectCardSkeleton />;
   }
@@ -244,11 +267,18 @@ const ProjectCard = ({
         </div>
       </div>
 
-      {project.shortCode && (
-        <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
-          <ShareButton shareUrl={getShareUrlByShortCode(project.shortCode)} />
-        </div>
-      )}
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+        <ShareButton
+          shareUrl={shareUrl}
+          shareImageUrl={shareImageUrl}
+          className="size-[40px]"
+          isLoading={shareLinkLoading}
+          error={shareLinkError}
+          onEnsure={ensureShareLink}
+          onRefresh={ensureShareLink}
+          payload={sharePayload}
+        />
+      </div>
     </div>
   );
 };

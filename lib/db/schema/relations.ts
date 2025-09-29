@@ -25,7 +25,12 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   createdProjects: many(projects),
   createdProposals: many(proposals),
   votes: many(voteRecords),
-  notifications: many(notifications),
+  notificationsAsRecipient: many(notifications, {
+    relationName: 'notificationUser',
+  }),
+  notificationsAsVoter: many(notifications, {
+    relationName: 'notificationVoter',
+  }),
   activeLogs: many(activeLogs, { relationName: 'userActiveLogs' }),
   proposalCreatorLogs: many(activeLogs, {
     relationName: 'proposalCreatorLogs',
@@ -145,6 +150,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(profiles, {
     fields: [notifications.userId],
     references: [profiles.userId],
+    relationName: 'notificationUser',
   }),
   project: one(projects, {
     fields: [notifications.projectId],
@@ -161,6 +167,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   voter: one(profiles, {
     fields: [notifications.voter_id],
     references: [profiles.userId],
+    relationName: 'notificationVoter',
   }),
 }));
 
