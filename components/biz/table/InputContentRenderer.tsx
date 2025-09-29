@@ -37,6 +37,7 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
+import { NA_VALUE } from '@/constants/naSelection';
 
 import {
   BOOL_TYPE_OPTIONS,
@@ -191,7 +192,7 @@ const InputContentRenderer: React.FC<IProps> = ({
           references = value.references || [];
 
           if (!applicable) {
-            return <span className="text-gray-500">N/A</span>;
+            return <span className="text-gray-500">{NA_VALUE}</span>;
           }
         }
 
@@ -1357,10 +1358,10 @@ const InputContentRenderer: React.FC<IProps> = ({
               .map((item: IPreviousFundingRound) => {
                 const dateLabel = item?.date
                   ? dayjs.utc(item.date).format('YYYY-MM-DD')
-                  : 'N/A';
+                  : NA_VALUE;
                 const amountLabel = item?.amount
                   ? formatAmount(item.amount)
-                  : 'N/A';
+                  : NA_VALUE;
                 const referenceLabel = item?.reference
                   ? normalizeUrl(item.reference)
                   : null;
@@ -2064,7 +2065,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                     item.type,
                     CONTRIBUTION_TYPE_OPTIONS,
                   );
-                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}`;
+                  return `${projectName} - ${typeLabel}: ${item.description || NA_VALUE}${item.reference ? ` - ${item.reference}` : ''}`;
                 },
               )
               .join(', ')}
@@ -2246,7 +2247,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                     item.type,
                     STACK_INTEGRATION_TYPE_OPTIONS,
                   );
-                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
+                  return `${projectName} - ${typeLabel}: ${item.description || NA_VALUE}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
               .join(', ')}
@@ -2847,11 +2848,7 @@ const InputContentRenderer: React.FC<IProps> = ({
   const isValueEmpty = isInputValueEmpty(value);
 
   if (isValueEmpty || isInputValueNA(value)) {
-    return !isEssential ? (
-      <span className="font-sans text-[14px] font-semibold">{`---`}</span>
-    ) : (
-      <span>n/a</span>
-    );
+    return <span className="font-sans text-[14px]">{NA_VALUE}</span>;
   }
 
   if (isExpandable && !isEmbedTableFormType(displayFormType)) {

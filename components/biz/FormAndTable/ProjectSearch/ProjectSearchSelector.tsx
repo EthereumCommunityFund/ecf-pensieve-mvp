@@ -73,9 +73,9 @@ interface ProjectSearchSelectorProps {
   error?: string;
   placeholder?: string;
   columnName?: string;
-  multiple?: boolean; // 是否启用多选模式
-  allowNA?: boolean; // 是否显示 N/A 选项
-  naLabel?: string; // N/A 按钮文本
+  multiple?: boolean;
+  allowNA?: boolean;
+  naLabel?: string;
   itemKey: IPocItemKey;
   searchModalTitle?: string;
 }
@@ -89,7 +89,7 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   placeholder = 'Search or select organization',
   multiple = false,
   allowNA = false,
-  naLabel = 'N/A',
+  naLabel = NA_VALUE,
   searchModalTitle,
   itemKey,
   columnName = 'project',
@@ -102,7 +102,6 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
     [],
   );
 
-  // Use N/A selection hook
   // Convert value to string format for useNASelection
   const naValue = useMemo(() => {
     if (!value) return undefined;
@@ -139,7 +138,6 @@ const ProjectSearchSelector: React.FC<ProjectSearchSelectorProps> = ({
   // Use hook to fetch project data by IDs
   // Memoize projectIds to avoid unnecessary re-renders
   const projectIds = useMemo<(string | number)[]>(() => {
-    // Handle N/A value
     if (value === NA_VALUE) return [];
 
     // For multiple select, use extractProjectIds directly

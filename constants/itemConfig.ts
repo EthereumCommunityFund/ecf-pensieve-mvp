@@ -15,6 +15,7 @@ import {
   itemValidationSchemas,
 } from './itemSchemas';
 import { ALL_METRICS } from './metrics';
+import { NA_VALUE } from './naSelection';
 
 export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
   name: {
@@ -841,7 +842,7 @@ This field provides a breakdown of the project’s expenses, offering transparen
     options: [
       { value: 'Yes', label: 'Yes' },
       { value: 'No', label: 'No' },
-      { value: 'N/A', label: 'N/A' },
+      { value: NA_VALUE, label: NA_VALUE },
     ],
     showReference: true,
     accountability: [
@@ -901,6 +902,7 @@ Native Tokens – the primary token of a blockchain network used for gas fees an
       { value: 'Native Token', label: 'Native Token' },
     ],
     showReference: true,
+    showApplicable: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
     legitimacy: [],
     validationSchema: itemValidationSchemas.token_type,
@@ -953,6 +955,7 @@ Native Tokens – the primary token of a blockchain network used for gas fees an
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
+    showApplicable: true,
   },
   total: {
     key: 'total',
@@ -1020,6 +1023,7 @@ This helps us understand how decisions are made and who gets to participate.`,
     placeholder: 'Add legal entity information',
     showReference: true,
     showExpand: true,
+    showApplicable: true,
     accountability: [
       ALL_METRICS.TRANSPARENCY,
       ALL_METRICS.KEY_ACCOUNTABILITY_ITEM,
@@ -1088,7 +1092,7 @@ This helps us understand how decisions are made and who gets to participate.`,
       },
       { value: 'Treasury Mining', label: 'Treasury Mining' },
       { value: 'Other', label: 'Other (input value)' },
-      { value: 'N/A', label: 'N/A' },
+      { value: NA_VALUE, label: NA_VALUE },
     ],
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
@@ -1435,6 +1439,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     placeholder: 'Select an option',
     showReference: true,
     showExpand: false,
+    showApplicable: true,
     options: [
       { value: 'Yes', label: 'Yes' },
       { value: 'No', label: 'No' },
@@ -1711,6 +1716,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     placeholder: 'Select applicable utilities',
     showReference: true,
     showExpand: false,
+    showApplicable: true,
     options: [
       { value: 'Access & Payments', label: 'Access & Payments' },
       { value: 'Governance & Rights', label: 'Governance & Rights' },

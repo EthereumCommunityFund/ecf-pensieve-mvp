@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
+import { isNAValue, NA_VALUE } from '@/constants/naSelection';
 import { generateUUID } from '@/lib/utils/uuid';
 
 /**
@@ -10,10 +11,16 @@ export const useSmartContractsData = (
   data: string | any | null | undefined,
 ) => {
   return useMemo(() => {
+    // Handle NA marker explicitly
+    const isNA =
+      data === NA_VALUE ||
+      (Array.isArray(data) && data.length === 1 && data[0] === NA_VALUE) ||
+      (typeof data === 'object' && data !== null && data.applicable === false);
+
     // Handle null/undefined
-    if (!data) {
+    if (!data || isNA) {
       return {
-        applicable: true,
+        applicable: false,
         contracts: [] as SmartContract[],
         references: [] as string[],
         isEmpty: true,
@@ -23,19 +30,31 @@ export const useSmartContractsData = (
 
     // Handle legacy string format
     if (typeof data === 'string') {
+      const trimmed = data.trim();
+
+      if (!trimmed || isNAValue(trimmed)) {
+        return {
+          applicable: false,
+          contracts: [] as SmartContract[],
+          references: [] as string[],
+          isEmpty: true,
+          isLegacyFormat: true,
+        };
+      }
+
       return {
         applicable: true,
-        contracts: data.trim()
+        contracts: trimmed
           ? ([
               {
                 id: generateUUID(),
                 chain: 'ethereum',
-                addresses: data,
+                addresses: trimmed,
               },
             ] as SmartContract[])
           : [],
         references: [] as string[],
-        isEmpty: !data.trim(),
+        isEmpty: !trimmed,
         isLegacyFormat: true,
       };
     }
@@ -107,7 +126,7 @@ export const useSmartContractsDisplay = (
   return useMemo(() => {
     if (!applicable) {
       return {
-        summary: 'N/A',
+        summary: NA_VALUE,
         details: null,
         isEmpty: true,
       };

@@ -815,7 +815,9 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
                 }}
               >
                 <PlusIcon size={16} />
-                Add Physical Entity
+                <span className="text-[14px] font-[400] leading-[19px]">
+                  Add Physical Entity
+                </span>
               </button>
             </div>
           </div>
