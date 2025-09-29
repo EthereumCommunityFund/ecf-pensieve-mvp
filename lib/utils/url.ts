@@ -1,3 +1,5 @@
+import { FallbackOrigin, isDev, isProduction } from '@/constants/env';
+
 export function getAppOrigin(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
@@ -5,15 +7,17 @@ export function getAppOrigin(): string {
 
   const envOrigin =
     process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
 
   if (envOrigin) {
     return envOrigin.replace(/\/$/, '');
   }
 
-  // Fallback for local development or unknown environment
-  return 'https://pensieve.ecf.network';
+  return isProduction
+    ? FallbackOrigin.prod
+    : isDev
+      ? FallbackOrigin.dev
+      : FallbackOrigin.local;
 }
 
 export function buildAbsoluteUrl(
