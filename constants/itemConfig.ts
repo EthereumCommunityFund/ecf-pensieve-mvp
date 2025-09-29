@@ -1344,6 +1344,26 @@ The technical dependencies, integrations, and building blocks that form the foun
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
     validationSchema: itemValidationSchemas.constitution,
   },
+  vault_address_step2: {
+    key: 'vault_address_step2',
+    category: IItemCategoryEnum.Governance,
+    subCategory: IItemSubCategoryEnum.Governance,
+    isEssential: POC_ITEMS.vault_address_step2.isEssential,
+    label: 'Vault (treasury) Address',
+    description:
+      'Share the smart contract address safeguarding the treasury and who approves access.',
+    shortDescription:
+      'The vault address is meant to present the smart contract address where the treasury stored and also the people having the authority to get/approve the access to this address.',
+    longDescription:
+      'Publish the on-chain smart contract address that currently holds the treasury funds, along with context on who can authorize transfers (e.g., multisig signers or DAO executors). This disclosure increases transparency, enables independent verification, and clarifies the governance safeguards around treasury custody.',
+    weight: ALL_POC_ITEM_MAP['vault_address_step2'].weight,
+    formDisplayType: 'string',
+    placeholder: '0x...',
+    showReference: true,
+    accountability: [ALL_METRICS.TRANSPARENCY],
+    legitimacy: [],
+    validationSchema: itemValidationSchemas.vault_address_step2,
+  },
   milestone_type: {
     key: 'milestone_type',
     category: IItemCategoryEnum.Basics,

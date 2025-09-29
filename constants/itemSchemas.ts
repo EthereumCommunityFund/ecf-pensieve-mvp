@@ -811,6 +811,11 @@ export const itemValidationSchemas = {
     )
     .required('Treasury vault address is required when applicable'),
 
+  vault_address_step2: yup
+    .string()
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum address')
+    .required('Vault treasury address is required'),
+
   treasury_mechanism: yup.string().required('Treasury mechanism is required'),
 
   constitution: yup.string().required('Constitution is required'),

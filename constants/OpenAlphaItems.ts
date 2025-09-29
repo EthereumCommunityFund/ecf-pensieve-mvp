@@ -568,7 +568,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       longDescription:
         'Provide detailed context for Vault (treasury) Address + step2.',
       weight: ALL_POC_ITEM_MAP['vault_address_step2'].weight,
-      formDisplayType: 'smartContract',
+      formDisplayType: 'string',
       placeholder: '0x...',
       showReference: true,
       showExpand: false,

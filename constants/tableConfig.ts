@@ -284,6 +284,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'physical_entity',
           'constitution',
           'on_chain_treasury_step1',
+          'vault_address_step2',
         ],
         groups: [],
       },
