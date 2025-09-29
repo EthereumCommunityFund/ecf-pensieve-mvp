@@ -324,6 +324,7 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
         onClose={onClose}
         shareUrl={shareUrl}
         shareImageUrl={shareImageUrl}
+        isLoading={shareLinkLoading}
       />
     </div>
   );

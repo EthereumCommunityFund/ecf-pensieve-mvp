@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast, Image } from '@heroui/react';
+import { addToast, Image, Skeleton } from '@heroui/react';
 import { FC, useCallback } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
@@ -18,6 +18,7 @@ interface ShareModalProps {
   onClose: () => void;
   shareUrl: string;
   shareImageUrl?: string | null;
+  isLoading?: boolean;
 }
 
 const ShareModal: FC<ShareModalProps> = ({
@@ -25,6 +26,7 @@ const ShareModal: FC<ShareModalProps> = ({
   onClose,
   shareUrl,
   shareImageUrl,
+  isLoading = false,
 }) => {
   const onCopySuccess = useCallback(() => {
     addToast({
@@ -55,18 +57,23 @@ const ShareModal: FC<ShareModalProps> = ({
           </div>
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">
             <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
-              <span className="truncate">{shareUrl}</span>
+              {isLoading ? (
+                <Skeleton className="h-[32px] w-full rounded-md" />
+              ) : (
+                <span className="truncate">{shareUrl}</span>
+              )}
             </div>
             <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
               <Button
                 isIconOnly
+                isDisabled={isLoading}
                 className="border-none bg-transparent p-0 hover:bg-gray-200"
               >
                 <CopyIcon width={20} height={20} />
               </Button>
             </CopyToClipboard>
           </div>
-          {shareImageUrl && (
+          {!isLoading && shareImageUrl && (
             <div className="flex flex-col gap-[10px]">
               <Image
                 src={shareImageUrl}

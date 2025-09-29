@@ -1,6 +1,6 @@
 'use client';
 
-import { addToast, Image } from '@heroui/react';
+import { addToast, Image, Skeleton } from '@heroui/react';
 import { FC, useCallback, useMemo } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
@@ -81,26 +81,24 @@ const ShareModal: FC<ShareModalProps> = ({
           <div className="text-[14px] leading-[18px] text-black/60">
             Copy link below to share to friends
           </div>
-          {isLoading ? (
-            <div className="flex items-center justify-between rounded-[8px] border border-black/10 bg-[#F9F9F9] px-[12px] py-[10px] text-[14px] text-black/60">
-              Generating share link...
-            </div>
-          ) : (
-            <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">
-              <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
+          <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">
+            <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
+              {isLoading ? (
+                <Skeleton className="h-[32px] w-full rounded-md" />
+              ) : (
                 <span className="truncate">{shareUrl}</span>
-              </div>
-              <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
-                <Button
-                  isIconOnly
-                  isDisabled={isLoading}
-                  className="border-none bg-transparent p-0 hover:bg-gray-200"
-                >
-                  <CopyIcon width={20} height={20} />
-                </Button>
-              </CopyToClipboard>
+              )}
             </div>
-          )}
+            <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
+              <Button
+                isIconOnly
+                isDisabled={isLoading}
+                className="border-none bg-transparent p-0 hover:bg-gray-200"
+              >
+                <CopyIcon width={20} height={20} />
+              </Button>
+            </CopyToClipboard>
+          </div>
           {error && (
             <div className="flex items-start justify-between rounded-[8px] border border-red-200 bg-red-50 px-[12px] py-[10px] text-[13px] text-red-600">
               <span className="pr-4">{error}</span>
