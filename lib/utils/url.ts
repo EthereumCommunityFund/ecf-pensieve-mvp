@@ -13,7 +13,7 @@ export function getAppOrigin(): string {
   }
 
   // Fallback for local development or unknown environment
-  return 'http://localhost:3000';
+  return 'https://pensieve.ecf.network';
 }
 
 export function buildAbsoluteUrl(
