@@ -212,7 +212,7 @@ const HomeList = () => {
           onLoadMore={() => {}}
           isFetchingNextPage={isFetchingNextGenesis}
           emptyMessage="No transparent projects found"
-          onSuccess={refetchAll}
+          onSuccess={(_result) => refetchAll()}
           showCreator={false}
           showUpvote={false}
           showTransparentScore={true}
@@ -247,7 +247,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={refetchAll}
+            onSuccess={(_result) => refetchAll()}
             showCreator={false}
             showUpvote={true}
             showTransparentScore={false}
@@ -274,7 +274,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={refetchAll}
+            onSuccess={(_result) => refetchAll()}
             showCreator={false}
             showUpvote={false}
             showTransparentScore={false}
@@ -301,7 +301,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={refetchAll}
+            onSuccess={(_result) => refetchAll()}
             showCreator={false}
             showUpvote={false}
             showTransparentScore={false}
@@ -328,7 +328,7 @@ const HomeList = () => {
             onLoadMore={() => {}}
             isFetchingNextPage={false}
             emptyMessage="No projects found"
-            onSuccess={refetchAll}
+            onSuccess={(_result) => refetchAll()}
             showCreator={false}
             showUpvote={false}
             showTransparentScore={false}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { Button, ECFButton } from '@/components/base/button';
-import { useUpvote } from '@/hooks/useUpvote';
+import { UpvoteActionResult, useUpvote } from '@/hooks/useUpvote';
 import { IProject } from '@/types';
 
 import ProjectCard, { ProjectCardSkeleton } from './ProjectCard';
@@ -15,7 +15,7 @@ interface ProjectListWrapperProps {
   projectList: IProject[];
   emptyMessage: string;
   onLoadMore: () => void;
-  onSuccess: () => void;
+  onSuccess?: (result: UpvoteActionResult) => void;
   showCreator?: boolean;
   showTransparentScore?: boolean;
   showUpvote?: boolean;

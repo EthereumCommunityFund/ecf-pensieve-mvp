@@ -120,7 +120,9 @@ const PublicListPage = () => {
 
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
-      onSuccess: refetchListProjects,
+      onSuccess: (_result) => {
+        refetchListProjects();
+      },
     });
 
   if (isLoading) {
