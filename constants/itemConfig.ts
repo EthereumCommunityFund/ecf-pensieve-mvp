@@ -250,7 +250,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.dateLaunch.isEssential,
-    label: 'Product Launch Date',
+    label: 'Launch Date',
     description:
       'Select the date when the main product or service was launched (if applicable).',
     shortDescription: 'The official date of a product launch.',
