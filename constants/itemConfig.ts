@@ -158,7 +158,7 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.websites.isEssential,
-    label: 'Websites',
+    label: 'Links & Contacts',
     description: 'provide the main website for this project',
     shortDescription:
       'These are relevant links to a project’s website, their social media, among other sources.',
