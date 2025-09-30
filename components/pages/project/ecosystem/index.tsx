@@ -144,7 +144,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
           <EcosystemTable
             id="stack_integrations_reverse"
             itemKey="stack_integrations"
-            title="Powered by:"
+            title="Empowering:"
             description="Following data are linked via external Pensieve project pages"
             filterButtonText="Relation"
             data={stackIntegrationsReverse}
@@ -160,7 +160,7 @@ const Ecosystem: FC<EcosystemProps> = ({ projectId, onOpenModal }) => {
           <EcosystemTable
             id="stack_integrations_forward"
             itemKey="stack_integrations"
-            title="Empowering:"
+            title="Powered by:"
             description="Following data are linked via this project"
             filterButtonText="Relation"
             data={stackIntegrationsData}
