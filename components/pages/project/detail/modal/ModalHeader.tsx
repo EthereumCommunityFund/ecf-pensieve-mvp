@@ -170,12 +170,12 @@ const ModalHeader: FC<ModalHeaderProps> = ({
 
         {/* Share button */}
         <Button
-          isIconOnly
           isDisabled={shareLinkLoading}
-          className="size-[24px] min-w-0 border-none bg-transparent p-[2px] opacity-30"
+          className="flex items-center gap-1 border-none bg-transparent px-2 py-1 opacity-60 hover:opacity-100"
           onPress={handleSharePress}
         >
-          <ShareItemIcon />
+          <ShareItemIcon className="size-[20px]" />
+          <span className="text-sm">Share to get support</span>
         </Button>
       </div>
 

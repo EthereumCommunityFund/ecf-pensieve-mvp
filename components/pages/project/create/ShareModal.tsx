@@ -52,8 +52,18 @@ const ShareModal: FC<ShareModalProps> = ({
           <div className="text-[18px] font-[600] leading-[18px] text-black">
             Share Link
           </div>
-          <div className="text-[14px] leading-[18px] text-black/60">
-            Copy link below to share to friends
+          <div className="space-y-2">
+            <div className="text-[14px] leading-[18px] text-black/60">
+              Copy link below to share with friends
+            </div>
+            <div className="text-[13px] leading-[18px] text-black/50">
+              This link can be shared across multiple social media platforms and
+              generates a social graph preview.
+              <span className="italic">
+                {' '}
+                (X/Twitter may need a few minutes to fetch the preview image)
+              </span>
+            </div>
           </div>
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">
             <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
