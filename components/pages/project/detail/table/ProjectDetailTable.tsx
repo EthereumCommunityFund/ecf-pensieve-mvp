@@ -335,7 +335,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   };
 
   return (
-    <div className="mobile:mx-[10px] tablet:mx-[14px] relative">
+    <div className="tablet:mx-[14px] mobile:mx-[10px] relative">
       {/* Main container - ensure centered on all screen sizes */}
       <div
         className={cn(
@@ -442,6 +442,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                 </div>
               ))}
             </div>
+            <div className="mb-[600px]"></div>
           </div>
         </div>
       </div>
