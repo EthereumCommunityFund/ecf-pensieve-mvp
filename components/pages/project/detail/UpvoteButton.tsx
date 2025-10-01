@@ -10,11 +10,28 @@ import ProjectActionButton from './ProjectActionButton';
 export interface IUpvoteButtonProps {
   projectId: number;
   project: IProject;
+  onVoteSuccess?: () => void | Promise<void>;
 }
 
-const UpvoteButton: FC<IUpvoteButtonProps> = ({ projectId, project }) => {
+const UpvoteButton: FC<IUpvoteButtonProps> = ({
+  projectId,
+  project,
+  onVoteSuccess,
+}) => {
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
-    useUpvote();
+    useUpvote({
+      onSuccess: onVoteSuccess
+        ? async (result) => {
+            console.log(
+              '[UpvoteButton] Vote success, refetching project data...',
+              result,
+            );
+            // Call the refetch after successful vote
+            await onVoteSuccess();
+            console.log('[UpvoteButton] Project data refetch completed');
+          }
+        : undefined,
+    });
 
   const projectLikeRecord = getProjectLikeRecord(projectId);
 

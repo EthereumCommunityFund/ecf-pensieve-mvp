@@ -1,11 +1,13 @@
 'use client';
 
 import { cn, Image, Skeleton } from '@heroui/react';
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import ShareButton from '@/components/biz/share/ShareButton';
 import useShareLink from '@/hooks/useShareLink';
 import { IProject } from '@/types';
+
+import { useProjectDetailContext } from '../context/projectDetailContext';
 
 import BookmarkButton from './list/BookmarkButton';
 import UpvoteButton from './UpvoteButton';
@@ -25,6 +27,20 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
   getLeadingCategories,
   getLeadingLogoUrl,
 }) => {
+  const { refetchProject } = useProjectDetailContext();
+
+  const handleVoteSuccess = useCallback(async () => {
+    console.log(
+      '[ProjectDetailCard] Refetching project data after vote...',
+      project?.id,
+    );
+    const result = await refetchProject();
+    console.log(
+      '[ProjectDetailCard] Project refetch result:',
+      result?.data?.support,
+    );
+  }, [refetchProject, project?.id]);
+
   const fallbackSharePath = useMemo(() => {
     if (!project) {
       return '';
@@ -90,7 +106,11 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       </div>
 
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
-        <UpvoteButton projectId={project.id} project={project} />
+        <UpvoteButton
+          projectId={project.id}
+          project={project}
+          onVoteSuccess={handleVoteSuccess}
+        />
         <BookmarkButton projectId={project.id} />
         <ShareButton
           shareUrl={shareUrl}
