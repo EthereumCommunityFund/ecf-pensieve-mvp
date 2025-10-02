@@ -24,7 +24,6 @@ function buildMetadataFromPayload(
   const dynamicOgImageUrl = buildShareOgImageUrl({
     code: payload.code,
     version: payload.imageVersion,
-    timestamp: payload.imageTimestamp,
     origin,
   });
   const ogImageSize = { width: 540, height: 300 };
