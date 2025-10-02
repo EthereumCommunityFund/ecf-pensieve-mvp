@@ -933,6 +933,7 @@ export function buildEmptyItemSharePayload({
 
   const categories = project.categories ?? [];
   const now = new Date();
+  const imageVersionValue = now.getTime();
 
   return {
     code: `empty-${project.id}-${itemKey}`,
@@ -968,7 +969,8 @@ export function buildEmptyItemSharePayload({
         initialWeight: formattedWeight,
       },
     },
-    imageVersion: '0',
+    imageVersion: String(imageVersionValue),
+    imageTimestamp: imageVersionValue,
     layout: 'itemProposal',
     createdAt: now,
     updatedAt: now,

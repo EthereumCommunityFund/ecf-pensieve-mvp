@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import type { SharePayload } from '@/lib/services/share';
 import ShareService from '@/lib/services/share';
+import { buildShareOgImageUrl } from '@/lib/services/share/url';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,12 @@ function buildMetadataFromPayload(
   origin: string,
 ): Metadata {
   const shareUrl = buildAbsoluteUrl(payload.sharePath, origin);
-  const dynamicOgImageUrl = `${buildAbsoluteUrl(`/api/share/og-image/${payload.code}`, origin)}?v=${payload.imageVersion}`;
+  const dynamicOgImageUrl = buildShareOgImageUrl({
+    code: payload.code,
+    version: payload.imageVersion,
+    timestamp: payload.imageTimestamp,
+    origin,
+  });
   const ogImageSize = { width: 540, height: 300 };
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
