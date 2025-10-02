@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
@@ -190,10 +190,19 @@ export interface SharePayload {
   visibility: ShareVisibility;
   metadata: ShareMetadata;
   imageVersion: string;
+  imageTimestamp: number;
   layout: ShareLayout;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const PROJECT_FIELD_OVERRIDE_KEYS = [
+  'name',
+  'tagline',
+  'logoUrl',
+  'categories',
+] as const;
+type ProjectFieldOverrideKey = (typeof PROJECT_FIELD_OVERRIDE_KEYS)[number];
 
 export interface CreateShareLinkInput {
   entityType: ShareEntityType;
@@ -210,6 +219,7 @@ interface EntityContext {
   parentId?: string | null;
   metadata: ShareMetadata;
   imageVersion: string;
+  imageTimestamp: number;
 }
 
 const VISIBILITY_WEIGHT: Record<ShareVisibility, number> = {
@@ -246,6 +256,41 @@ function mergeVisibility(
   b: ShareVisibility,
 ): ShareVisibility {
   return VISIBILITY_WEIGHT[a] >= VISIBILITY_WEIGHT[b] ? a : b;
+}
+
+function resolveImageMeta(
+  values: Array<Date | number | string | null | undefined>,
+): { version: string; timestamp: number } {
+  const numericValues = values
+    .map((value) => {
+      if (value == null) {
+        return 0;
+      }
+      if (value instanceof Date) {
+        return value.getTime();
+      }
+      const coerced =
+        typeof value === 'number'
+          ? value
+          : typeof value === 'string'
+            ? Number(value)
+            : Number.NaN;
+      if (!Number.isNaN(coerced)) {
+        return coerced;
+      }
+      const parsed = new Date(String(value)).getTime();
+      return Number.isNaN(parsed) ? 0 : parsed;
+    })
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  const timestamp = numericValues.length
+    ? Math.max(...numericValues)
+    : Date.now();
+
+  return {
+    version: String(timestamp),
+    timestamp,
+  };
 }
 
 function buildProposalHighlights(
@@ -628,13 +673,11 @@ async function resolveProposalContext(
   const targetUrl = `/project/pending/${proposal.project.id}/proposal/${proposal.id}`;
   const latestVoteTimestamp =
     proposalVoteResult.latestVotingEndedAt?.getTime?.() ?? 0;
-  const imageVersion = String(
-    Math.max(
-      proposal.createdAt?.getTime?.() ?? 0,
-      proposal.project.updatedAt?.getTime?.() ?? 0,
-      latestVoteTimestamp,
-    ),
-  );
+  const imageMeta = resolveImageMeta([
+    proposal.createdAt,
+    proposal.project.updatedAt,
+    latestVoteTimestamp,
+  ]);
 
   return {
     layout: 'proposal',
@@ -642,7 +685,8 @@ async function resolveProposalContext(
     visibility,
     parentId: String(proposal.project.id),
     metadata,
-    imageVersion,
+    imageVersion: imageMeta.version,
+    imageTimestamp: imageMeta.timestamp,
   };
 }
 
@@ -710,9 +754,196 @@ function resolveItemCategoryLabels(key: string): {
   };
 }
 
+function extractMediaUrl(value: unknown): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    if (typeof record.url === 'string') {
+      return record.url;
+    }
+    if (typeof record.value === 'string') {
+      return record.value;
+    }
+  }
+
+  return undefined;
+}
+
+function extractCategories(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return Array.from(
+      new Set(
+        value
+          .map((entry) => {
+            if (!entry) return null;
+            if (typeof entry === 'string') {
+              return entry.trim();
+            }
+            if (typeof entry === 'object') {
+              const record = entry as Record<string, unknown>;
+              const candidate =
+                record.label ?? record.name ?? record.value ?? record.title;
+              if (
+                typeof candidate === 'string' &&
+                candidate.trim().length > 0
+              ) {
+                return candidate.trim();
+              }
+            }
+            return null;
+          })
+          .filter((item): item is string => Boolean(item)),
+      ),
+    );
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+
+  return [];
+}
+
+function applyProjectOverridesFromItem(
+  metadata: ShareMetadata,
+  options: {
+    rawKey: string;
+    valueText?: string;
+    rawValue: unknown;
+    displayLabel?: string;
+    isPrimaryKey?: boolean;
+    context?: 'item' | 'project';
+  },
+): void {
+  const projectMeta = metadata.project;
+  if (!projectMeta) {
+    return;
+  }
+
+  const isPrimary = options.isPrimaryKey ?? false;
+  const displayLabel =
+    options.displayLabel ??
+    projectMeta.name ??
+    formatReadableKey(options.rawKey);
+  const context = options.context ?? 'item';
+
+  switch (options.rawKey) {
+    case 'name': {
+      if (options.valueText && options.valueText.length > 0) {
+        projectMeta.name = options.valueText;
+        if (context === 'item' && isPrimary) {
+          metadata.title = `Item Proposal · ${displayLabel} · ${projectMeta.name}`;
+        }
+        if (context === 'project') {
+          metadata.title = projectMeta.name;
+        }
+      }
+      break;
+    }
+    case 'tagline': {
+      if (options.valueText && options.valueText.length > 0) {
+        projectMeta.tagline = options.valueText;
+        if (isPrimary || !metadata.subtitle || context === 'project') {
+          metadata.subtitle = options.valueText;
+        }
+        if (isPrimary || !metadata.description || context === 'project') {
+          metadata.description = options.valueText;
+        }
+      }
+      break;
+    }
+    case 'logoUrl': {
+      const mediaUrl = extractMediaUrl(options.rawValue);
+      if (mediaUrl) {
+        projectMeta.logoUrl = mediaUrl;
+      }
+      break;
+    }
+    case 'categories': {
+      const categories = extractCategories(options.rawValue);
+      if (categories.length > 0) {
+        projectMeta.categories = categories.slice(0, 6);
+        metadata.tags = categories.slice(0, 6);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+interface ProjectFieldOverride {
+  key: ProjectFieldOverrideKey;
+  valueText?: string;
+  rawValue: unknown;
+  displayLabel: string;
+  createdAt: Date | null;
+}
+
+async function fetchProjectFieldOverrides(
+  projectId: number,
+): Promise<ProjectFieldOverride[]> {
+  const rows = await db.query.projectLogs.findMany({
+    where: and(
+      eq(projectLogs.projectId, projectId),
+      inArray(projectLogs.key, PROJECT_FIELD_OVERRIDE_KEYS),
+      eq(projectLogs.isNotLeading, false),
+    ),
+    with: {
+      itemProposal: {
+        columns: {
+          value: true,
+          createdAt: true,
+        },
+      },
+    },
+    orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+  });
+
+  const seen = new Map<ProjectFieldOverrideKey, ProjectFieldOverride>();
+
+  for (const row of rows) {
+    const key = row.key as ProjectFieldOverrideKey | null;
+    if (!key || seen.has(key)) {
+      continue;
+    }
+
+    const value = row.itemProposal?.value ?? null;
+    const textValue = valueToText(value);
+    const valueText = textValue && textValue.length > 0 ? textValue : undefined;
+
+    seen.set(key, {
+      key,
+      valueText,
+      rawValue: value,
+      displayLabel: formatReadableKey(key),
+      createdAt: row.createdAt ?? row.itemProposal?.createdAt ?? null,
+    });
+  }
+
+  return PROJECT_FIELD_OVERRIDE_KEYS.filter((key) => seen.has(key)).map(
+    (key) => seen.get(key)!,
+  );
+}
+
 async function resolveItemProposalContext(
   entityId: string,
 ): Promise<EntityContext | null> {
+  const aggregateParams = parseItemAggregateEntityId(entityId);
+  if (aggregateParams) {
+    return resolveItemAggregateContext(aggregateParams);
+  }
+
   const emptyParams = parseEmptyItemEntityId(entityId);
   if (emptyParams) {
     return resolveEmptyItemContext(emptyParams);
@@ -744,6 +975,8 @@ async function resolveItemProposalContext(
     latestProjectLog,
     latestValidatedLog,
     voteAggregate,
+    latestOwnLog,
+    projectFieldOverrides,
   ] = await Promise.all([
     db
       .select({ count: sql<number>`count(*)::int` })
@@ -796,6 +1029,14 @@ async function resolveItemProposalContext(
         ),
       )
       .then((rows) => rows[0] ?? null),
+    db.query.projectLogs.findFirst({
+      where: and(
+        eq(projectLogs.projectId, itemProposal.projectId),
+        eq(projectLogs.itemProposalId, itemProposal.id),
+      ),
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+    }),
+    fetchProjectFieldOverrides(itemProposal.project.id),
   ]);
 
   const latestLogTimestamp = latestProjectLog?.createdAt?.getTime?.() ?? 0;
@@ -806,6 +1047,18 @@ async function resolveItemProposalContext(
   const latestVoteAt = voteAggregate?.latestVoteAt ?? null;
   const latestVoteTimestamp =
     latestVoteAt instanceof Date ? (latestVoteAt.getTime?.() ?? 0) : 0;
+  const imageMeta = resolveImageMeta([
+    itemProposal.createdAt,
+    itemProposal.project.updatedAt,
+    latestProjectLog?.createdAt ?? latestLogTimestamp,
+    latestValidatedLog?.createdAt ?? latestValidatedTimestamp,
+    latestVoteAt,
+    itemProposal.id,
+    latestOwnLog?.createdAt,
+    ...projectFieldOverrides
+      .map((override) => override.createdAt)
+      .filter(Boolean),
+  ]);
 
   const primarySummary =
     valueText && valueText.length > 0
@@ -816,15 +1069,17 @@ async function resolveItemProposalContext(
           ? truncate(itemProposal.project.tagline, 160)
           : undefined;
 
-  const isCurrentValidated =
-    latestValidatedLog?.itemProposalId === itemProposal.id;
-  const hasValidatedLog = Boolean(latestValidatedLog);
   const hasAnySubmission = submissionsCount > 0;
 
+  const latestOwnLogIsNotLeading = latestOwnLog?.isNotLeading ?? null;
+  const hasEverBeenLeading = Boolean(latestOwnLog);
+  const isCurrentlyLeading =
+    hasEverBeenLeading && latestOwnLogIsNotLeading === false;
+
   let itemType: ShareItemMetadata['type'];
-  if (isCurrentValidated) {
+  if (isCurrentlyLeading) {
     itemType = 'item';
-  } else if (!hasValidatedLog && !hasAnySubmission) {
+  } else if (!hasAnySubmission) {
     itemType = 'empty';
   } else {
     itemType = 'pending';
@@ -846,6 +1101,16 @@ async function resolveItemProposalContext(
     itemMetadata.weight = formatInteger(totalVoteWeight);
   } else {
     itemMetadata.initialWeight = formatInteger(baseWeight);
+  }
+
+  let statusBadge: ShareBadge | undefined;
+
+  if (isCurrentlyLeading) {
+    statusBadge = { label: 'Leading Proposal', tone: 'success' };
+  } else if (!hasAnySubmission) {
+    statusBadge = { label: 'Empty Item', tone: 'info' };
+  } else {
+    statusBadge = { label: 'Pending Validation', tone: 'info' };
   }
 
   const metadata: ShareMetadata = {
@@ -884,20 +1149,35 @@ async function resolveItemProposalContext(
       : undefined,
     item: itemMetadata,
     timestamp: itemProposal.createdAt?.toISOString?.(),
+    statusBadge,
+    badges: statusBadge ? [statusBadge] : undefined,
   };
+
+  applyProjectOverridesFromItem(metadata, {
+    rawKey,
+    valueText,
+    rawValue: itemProposal.value,
+    displayLabel,
+    isPrimaryKey: true,
+    context: 'item',
+  });
+
+  for (const override of projectFieldOverrides) {
+    applyProjectOverridesFromItem(metadata, {
+      rawKey: override.key,
+      valueText: override.valueText,
+      rawValue: override.rawValue,
+      displayLabel: override.displayLabel,
+      isPrimaryKey: override.key === rawKey,
+      context: 'item',
+    });
+  }
+
+  metadata.title = `Item Proposal · ${displayLabel} · ${metadata.project.name}`;
+  metadata.tags = (metadata.project.categories ?? []).slice(0, 6);
 
   const visibility = itemProposal.project.isPublished ? 'public' : 'unlisted';
   const targetUrl = `/project/${itemProposal.project.id}?tab=project-data&notificationType=viewSubmission&itemName=${itemNameParam}`;
-  const imageVersion = String(
-    Math.max(
-      itemProposal.createdAt?.getTime?.() ?? 0,
-      itemProposal.project.updatedAt?.getTime?.() ?? 0,
-      latestLogTimestamp,
-      latestValidatedTimestamp,
-      latestVoteTimestamp,
-      Number(itemProposal.id),
-    ),
-  );
 
   return {
     layout: 'itemProposal',
@@ -905,7 +1185,37 @@ async function resolveItemProposalContext(
     visibility,
     parentId: String(itemProposal.project.id),
     metadata,
-    imageVersion,
+    imageVersion: imageMeta.version,
+    imageTimestamp: imageMeta.timestamp,
+  };
+}
+
+function parseItemAggregateEntityId(
+  entityId: string,
+): { projectId: number; itemKey: string } | null {
+  if (!entityId.startsWith('item:')) {
+    return null;
+  }
+
+  const segments = entityId.split(':');
+  if (segments.length < 3) {
+    return null;
+  }
+
+  const projectId = Number(segments[1]);
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return null;
+  }
+
+  const encodedKey = segments.slice(2).join(':');
+  const decodedKey = decodeURIComponent(encodedKey);
+  if (!decodedKey) {
+    return null;
+  }
+
+  return {
+    projectId,
+    itemKey: decodedKey,
   };
 }
 
@@ -988,11 +1298,28 @@ async function resolveEmptyItemContext({
     },
   };
 
+  const overrides = await fetchProjectFieldOverrides(project.id);
+  for (const override of overrides) {
+    applyProjectOverridesFromItem(metadata, {
+      rawKey: override.key,
+      valueText: override.valueText,
+      rawValue: override.rawValue,
+      displayLabel: override.displayLabel,
+      isPrimaryKey: override.key === rawKey,
+      context: 'item',
+    });
+  }
+
+  metadata.title = `Item Proposal · ${displayLabel} · ${metadata.project.name}`;
+  metadata.tags = (metadata.project.categories ?? []).slice(0, 6);
+
   const visibility = project.isPublished ? 'public' : 'unlisted';
   const targetUrl = `/project/${project.id}?tab=project-data&notificationType=viewSubmission&itemName=${encodedKey}`;
-  const imageVersion = String(
-    Math.max(project.updatedAt?.getTime?.() || 0, Number(project.id) || 0),
-  );
+  const imageMeta = resolveImageMeta([
+    project.updatedAt,
+    project.id,
+    ...overrides.map((override) => override.createdAt).filter(Boolean),
+  ]);
 
   return {
     layout: 'itemProposal',
@@ -1000,8 +1327,62 @@ async function resolveEmptyItemContext({
     visibility,
     parentId: String(project.id),
     metadata,
-    imageVersion,
+    imageVersion: imageMeta.version,
+    imageTimestamp: imageMeta.timestamp,
   };
+}
+
+async function resolveItemAggregateContext({
+  projectId,
+  itemKey,
+}: {
+  projectId: number;
+  itemKey: string;
+}): Promise<EntityContext | null> {
+  const rawKey = String(itemKey);
+
+  const [latestLeadingLog, latestSubmission] = await Promise.all([
+    db.query.projectLogs.findFirst({
+      where: and(
+        eq(projectLogs.projectId, projectId),
+        eq(projectLogs.key, rawKey),
+        eq(projectLogs.isNotLeading, false),
+      ),
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+    }),
+    db.query.itemProposals.findFirst({
+      where: and(
+        eq(itemProposals.projectId, projectId),
+        eq(itemProposals.key, rawKey),
+      ),
+      orderBy: (table, { desc }) => [desc(table.createdAt)],
+    }),
+  ]);
+
+  const latestLeadingTimestamp = latestLeadingLog?.createdAt?.getTime?.() ?? 0;
+  const latestSubmissionTimestamp =
+    latestSubmission?.createdAt?.getTime?.() ?? 0;
+
+  let candidateId: number | null = latestLeadingLog?.itemProposalId ?? null;
+
+  if (
+    latestSubmission &&
+    latestSubmissionTimestamp >= latestLeadingTimestamp &&
+    Number.isInteger(latestSubmission.id)
+  ) {
+    candidateId = latestSubmission.id ?? candidateId;
+  }
+
+  if (!candidateId || !Number.isInteger(candidateId)) {
+    return resolveEmptyItemContext({ projectId, itemKey: rawKey });
+  }
+
+  const context = await resolveItemProposalContext(String(candidateId));
+  if (context) {
+    return context;
+  }
+
+  return resolveEmptyItemContext({ projectId, itemKey: rawKey });
 }
 
 async function resolveProjectContext(
@@ -1012,54 +1393,60 @@ async function resolveProjectContext(
     return null;
   }
 
-  const [latestSnap, projectProposals, projectVotes, itemProposalCreators] =
-    await Promise.all([
-      fetchLatestProjectSnap(project.id),
-      db.query.proposals.findMany({
-        where: eq(proposals.projectId, project.id),
-        columns: {
-          id: true,
-          createdAt: true,
-        },
-        with: {
-          creator: {
-            columns: {
-              userId: true,
-              name: true,
-              avatarUrl: true,
-              address: true,
-            },
+  const [
+    latestSnap,
+    projectProposals,
+    projectVotes,
+    itemProposalCreators,
+    projectFieldOverrides,
+  ] = await Promise.all([
+    fetchLatestProjectSnap(project.id),
+    db.query.proposals.findMany({
+      where: eq(proposals.projectId, project.id),
+      columns: {
+        id: true,
+        createdAt: true,
+      },
+      with: {
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
           },
         },
-        orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
-      }),
-      db.query.voteRecords.findMany({
-        where: eq(voteRecords.projectId, project.id),
-        columns: {
-          id: true,
-          createdAt: true,
-          proposalId: true,
-          key: true,
-          weight: true,
-          projectId: true,
-        },
-        with: {
-          creator: {
-            columns: {
-              userId: true,
-              name: true,
-              avatarUrl: true,
-              address: true,
-            },
+      },
+      orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
+    }),
+    db.query.voteRecords.findMany({
+      where: eq(voteRecords.projectId, project.id),
+      columns: {
+        id: true,
+        createdAt: true,
+        proposalId: true,
+        key: true,
+        weight: true,
+        projectId: true,
+      },
+      with: {
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
           },
         },
-      }),
-      db
-        .select({ creatorId: itemProposals.creator })
-        .from(itemProposals)
-        .where(eq(itemProposals.projectId, project.id))
-        .groupBy(itemProposals.creator),
-    ]);
+      },
+    }),
+    db
+      .select({ creatorId: itemProposals.creator })
+      .from(itemProposals)
+      .where(eq(itemProposals.projectId, project.id))
+      .groupBy(itemProposals.creator),
+    fetchProjectFieldOverrides(project.id),
+  ]);
 
   const uniqueContributorIds = new Set<string>();
   projectVotes
@@ -1162,6 +1549,24 @@ async function resolveProjectContext(
     stats,
   };
 
+  for (const override of projectFieldOverrides) {
+    applyProjectOverridesFromItem(metadata, {
+      rawKey: override.key,
+      valueText: override.valueText,
+      rawValue: override.rawValue,
+      displayLabel: override.displayLabel,
+      isPrimaryKey: true,
+      context: 'project',
+    });
+  }
+
+  metadata.title = metadata.project.name;
+  const resolvedCategories = metadata.project.categories ?? [];
+  metadata.tags = Array.from(new Set(resolvedCategories.filter(Boolean))).slice(
+    0,
+    6,
+  );
+
   const targetUrl = project.isPublished
     ? `/project/${project.id}`
     : `/project/pending/${project.id}`;
@@ -1169,14 +1574,14 @@ async function resolveProjectContext(
   const visibility: ShareVisibility = project.isPublished
     ? 'public'
     : 'unlisted';
-
-  const imageVersion = String(
-    Math.max(
-      project.updatedAt?.getTime?.() ?? 0,
-      latestSnap?.createdAt?.getTime?.() ?? 0,
-      latestVoteTimestamp,
-    ),
-  );
+  const imageMeta = resolveImageMeta([
+    project.updatedAt,
+    latestSnap?.createdAt,
+    latestVoteTimestamp,
+    ...projectFieldOverrides
+      .map((override) => override.createdAt)
+      .filter(Boolean),
+  ]);
 
   return {
     layout,
@@ -1184,7 +1589,8 @@ async function resolveProjectContext(
     visibility,
     parentId: null,
     metadata,
-    imageVersion,
+    imageVersion: imageMeta.version,
+    imageTimestamp: imageMeta.timestamp,
   };
 }
 
@@ -1259,6 +1665,7 @@ async function buildPayloadFromRecord(
     visibility: effectiveVisibility,
     metadata: context.metadata,
     imageVersion: context.imageVersion,
+    imageTimestamp: context.imageTimestamp,
     layout: context.layout,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
@@ -1289,8 +1696,62 @@ export async function ensureShareLink(
     ),
   });
 
-  if (existing) {
-    const payload = await buildPayloadFromRecord(existing);
+  let resolvedExisting = existing;
+
+  if (
+    !resolvedExisting &&
+    entityType === 'itemProposal' &&
+    entityId.startsWith('item:')
+  ) {
+    const aggregateParams = parseItemAggregateEntityId(entityId);
+    if (aggregateParams) {
+      const encodedKey = encodeURIComponent(aggregateParams.itemKey);
+      const fallbackEntityIds = [
+        `empty:${aggregateParams.projectId}:${encodedKey}`,
+      ];
+
+      const candidateProposalIds = await db
+        .select({ id: itemProposals.id })
+        .from(itemProposals)
+        .where(
+          and(
+            eq(itemProposals.projectId, aggregateParams.projectId),
+            eq(itemProposals.key, aggregateParams.itemKey),
+          ),
+        );
+
+      fallbackEntityIds.push(
+        ...candidateProposalIds
+          .map((record) => (record.id != null ? String(record.id) : null))
+          .filter((value): value is string => Boolean(value)),
+      );
+
+      if (fallbackEntityIds.length > 0) {
+        const legacyLink = await db.query.shareLinks.findFirst({
+          where: and(
+            eq(shareLinks.entityType, entityType),
+            inArray(shareLinks.entityId, fallbackEntityIds),
+          ),
+        });
+
+        if (legacyLink) {
+          if (legacyLink.entityId !== entityId) {
+            await db
+              .update(shareLinks)
+              .set({ entityId })
+              .where(eq(shareLinks.id, legacyLink.id));
+          }
+
+          resolvedExisting = await db.query.shareLinks.findFirst({
+            where: eq(shareLinks.id, legacyLink.id),
+          });
+        }
+      }
+    }
+  }
+
+  if (resolvedExisting) {
+    const payload = await buildPayloadFromRecord(resolvedExisting);
     if (!payload) {
       throw new ShareServiceError('Share payload unavailable', 404);
     }

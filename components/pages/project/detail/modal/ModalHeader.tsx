@@ -71,16 +71,19 @@ const ModalHeader: FC<ModalHeaderProps> = ({
     return '';
   }, [projectId, itemKey]);
 
-  const emptyEntityId = useMemo(() => {
-    if (!itemProposalId && projectId && itemKey) {
-      return `empty:${projectId}:${encodeURIComponent(itemKey)}`;
+  const aggregateEntityId = useMemo(() => {
+    if (projectId && itemKey) {
+      return `item:${projectId}:${encodeURIComponent(itemKey)}`;
     }
     return null;
-  }, [itemProposalId, projectId, itemKey]);
+  }, [projectId, itemKey]);
 
-  const shareEntityId = itemProposalId ?? emptyEntityId ?? projectId;
-  const shareEntityType: ShareEntityType =
-    itemProposalId || emptyEntityId ? 'itemProposal' : 'project';
+  const shareEntityId = aggregateEntityId ?? itemProposalId ?? projectId;
+  const shareEntityType: ShareEntityType = aggregateEntityId
+    ? 'itemProposal'
+    : itemProposalId
+      ? 'itemProposal'
+      : 'project';
   const shareQueryEnabled =
     typeof shareEntityId === 'number'
       ? Number.isFinite(shareEntityId) && shareEntityId > 0
@@ -102,7 +105,7 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   });
 
   const emptySharePayload = useMemo<SharePayload | null>(() => {
-    if (itemProposalId || !project || !itemKey || !emptyEntityId) {
+    if (itemProposalId || !project || !itemKey) {
       return null;
     }
 
@@ -118,7 +121,7 @@ const ModalHeader: FC<ModalHeaderProps> = ({
       itemKey,
       fallbackUrl,
     });
-  }, [emptyEntityId, itemProposalId, project, itemKey, fallbackUrl]);
+  }, [itemProposalId, project, itemKey, fallbackUrl]);
 
   const previewPayload = useMemo<SharePayload | null>(() => {
     return sharePayload ?? emptySharePayload;

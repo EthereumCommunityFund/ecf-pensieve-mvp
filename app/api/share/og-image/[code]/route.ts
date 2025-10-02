@@ -26,20 +26,40 @@ export async function GET(
   }
 
   try {
+    const timestampParam = request.nextUrl.searchParams.get('ts');
+    let normalizedTimestamp = payload.imageTimestamp;
+
+    if (timestampParam != null && timestampParam.trim().length > 0) {
+      const parsedTimestamp = Number(timestampParam);
+      if (Number.isFinite(parsedTimestamp)) {
+        normalizedTimestamp = parsedTimestamp;
+      }
+    }
     const fonts = await getOgFonts();
     const origin = new URL(request.url).origin;
     const element = renderShareOgImage(payload, origin);
 
-    return new ImageResponse(element, {
+    const response = new ImageResponse(element, {
       width: 540,
       height: 300,
       fonts,
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control':
-          'public, s-maxage=604800, stale-while-revalidate=86400',
-      },
     });
+
+    response.headers.set('Content-Type', 'image/png');
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=604800, stale-while-revalidate=86400',
+    );
+
+    if (Number.isFinite(normalizedTimestamp)) {
+      response.headers.set(
+        'Last-Modified',
+        new Date(normalizedTimestamp).toUTCString(),
+      );
+      response.headers.set('ETag', `W/"share-${code}-${normalizedTimestamp}"`);
+    }
+
+    return response;
   } catch (error) {
     console.error('Failed to generate share OG image:', error);
     return new Response('Internal Server Error', { status: 500 });

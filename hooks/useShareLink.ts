@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 
+import { buildShareOgImageUrl } from '@/lib/services/share/url';
 import { trpc, type RouterOutputs } from '@/lib/trpc/client';
 import { buildAbsoluteUrl } from '@/lib/utils/url';
 
@@ -54,7 +55,10 @@ export const useShareLink = ({
 
   const shareUrl = useMemo(() => {
     if (query.data?.shareUrl) {
-      return query.data.shareUrl;
+      const baseUrl = query.data.shareUrl;
+      const timestamp = query.data.imageTimestamp ?? Date.now();
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      return `${baseUrl}${separator}ts=${timestamp}`;
     }
     if (fallbackUrl) {
       return buildAbsoluteUrl(fallbackUrl);
@@ -67,11 +71,11 @@ export const useShareLink = ({
 
   const shareImageUrl = useMemo(() => {
     if (query.data?.code) {
-      const imagePath = `/api/share/og-image/${query.data.code}`;
-      const withVersion = query.data.imageVersion
-        ? `${imagePath}?v=${query.data.imageVersion}`
-        : imagePath;
-      return buildAbsoluteUrl(withVersion);
+      return buildShareOgImageUrl({
+        code: query.data.code,
+        version: query.data.imageVersion,
+        timestamp: query.data.imageTimestamp,
+      });
     }
     return null;
   }, [query.data]);
