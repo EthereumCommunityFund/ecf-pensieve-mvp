@@ -5,6 +5,8 @@ import { FC, useCallback, useMemo } from 'react';
 
 import ShareButton from '@/components/biz/share/ShareButton';
 import useShareLink from '@/hooks/useShareLink';
+import type { UpvoteActionResult } from '@/hooks/useUpvote';
+import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 
 import { useProjectDetailContext } from '../context/projectDetailContext';
@@ -28,15 +30,68 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
   getLeadingLogoUrl,
 }) => {
   const { refetchProject } = useProjectDetailContext();
+  const utils = trpc.useUtils();
 
-  const handleVoteSuccess = useCallback(async () => {
-    console.log(
-      '[ProjectDetailCard] Refetching project data after vote...',
-      project?.id,
-    );
-    await refetchProject();
-    console.log('[ProjectDetailCard] Project refetched');
-  }, [refetchProject, project?.id]);
+  const handleVoteSuccess = useCallback(
+    async ({ projectId, previousWeight, newWeight }: UpvoteActionResult) => {
+      if (!projectId) {
+        return;
+      }
+
+      const weightDelta = newWeight - previousWeight;
+      const likeCountDelta =
+        previousWeight === 0 && newWeight > 0
+          ? 1
+          : previousWeight > 0 && newWeight === 0
+            ? -1
+            : 0;
+
+      if (weightDelta !== 0 || likeCountDelta !== 0) {
+        utils.project.getProjectById.setData({ id: projectId }, (oldData) => {
+          if (!oldData) {
+            return oldData;
+          }
+
+          let hasChanges = false;
+          let nextSupport = oldData.support ?? 0;
+          if (weightDelta !== 0) {
+            const updatedSupport = Math.max(0, nextSupport + weightDelta);
+            if (updatedSupport !== nextSupport) {
+              nextSupport = updatedSupport;
+              hasChanges = true;
+            }
+          }
+
+          let nextLikeCount = oldData.likeCount;
+          if (typeof nextLikeCount === 'number' && likeCountDelta !== 0) {
+            const updatedLikeCount = Math.max(
+              0,
+              nextLikeCount + likeCountDelta,
+            );
+            if (updatedLikeCount !== nextLikeCount) {
+              nextLikeCount = updatedLikeCount;
+              hasChanges = true;
+            }
+          }
+
+          if (!hasChanges) {
+            return oldData;
+          }
+
+          return {
+            ...oldData,
+            ...(weightDelta !== 0 ? { support: nextSupport } : {}),
+            ...(typeof nextLikeCount === 'number' && likeCountDelta !== 0
+              ? { likeCount: nextLikeCount }
+              : {}),
+          };
+        });
+      }
+
+      await refetchProject();
+    },
+    [refetchProject, utils.project.getProjectById],
+  );
 
   const fallbackSharePath = useMemo(() => {
     if (!project) {

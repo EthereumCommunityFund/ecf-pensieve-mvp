@@ -2,6 +2,7 @@ import { cn } from '@heroui/react';
 import { CaretUp } from '@phosphor-icons/react';
 import { FC, useCallback } from 'react';
 
+import type { UpvoteActionResult } from '@/hooks/useUpvote';
 import { useUpvote } from '@/hooks/useUpvote';
 import { IProject } from '@/types';
 
@@ -10,7 +11,7 @@ import ProjectActionButton from './ProjectActionButton';
 export interface IUpvoteButtonProps {
   projectId: number;
   project: IProject;
-  onVoteSuccess?: () => void | Promise<void>;
+  onVoteSuccess?: (result: UpvoteActionResult) => void | Promise<void>;
 }
 
 const UpvoteButton: FC<IUpvoteButtonProps> = ({
@@ -22,13 +23,7 @@ const UpvoteButton: FC<IUpvoteButtonProps> = ({
     useUpvote({
       onSuccess: onVoteSuccess
         ? async (result) => {
-            console.log(
-              '[UpvoteButton] Vote success, refetching project data...',
-              result,
-            );
-            // Call the refetch after successful vote
-            await onVoteSuccess();
-            console.log('[UpvoteButton] Project data refetch completed');
+            await onVoteSuccess(result);
           }
         : undefined,
     });
