@@ -814,6 +814,105 @@ function extractCategories(value: unknown): string[] {
   return [];
 }
 
+interface ProjectSnapshotBaseFields {
+  baseName: string;
+  baseTagline: string;
+  baseLogo?: string;
+  baseCategories: string[];
+  summaryFromSnap: string;
+}
+
+function buildProjectSnapshotBaseFields(
+  project: ProjectRecord,
+  snap: ProjectSnapRecord | null,
+): ProjectSnapshotBaseFields {
+  const snapItems = snap?.items ?? [];
+  const snapItemValueMap = new Map<string, unknown>(
+    snapItems.map((item) => [item.key, item.value]),
+  );
+  const getSnapValue = (key: string): unknown => {
+    return snapItemValueMap.has(key) ? snapItemValueMap.get(key) : undefined;
+  };
+
+  const nameFromSnap = valueToText(getSnapValue('name'));
+  const taglineFromSnap = valueToText(getSnapValue('tagline'));
+  const logoFromSnap = extractMediaUrl(getSnapValue('logoUrl'));
+  const categoriesFromSnapItems = extractCategories(getSnapValue('categories'));
+  const categoriesFromProject = Array.isArray(project.categories)
+    ? project.categories
+    : [];
+  const categoriesFromSnapMeta = Array.isArray(snap?.categories)
+    ? (snap.categories as string[])
+    : [];
+
+  const baseName = nameFromSnap || project.name || '';
+  const baseTagline = taglineFromSnap || project.tagline || '';
+  const baseLogo = logoFromSnap || project.logoUrl || undefined;
+  const baseCategories =
+    categoriesFromSnapItems.length > 0
+      ? categoriesFromSnapItems
+      : categoriesFromProject.length > 0
+        ? categoriesFromProject
+        : categoriesFromSnapMeta;
+
+  const summaryFromSnap = getItemValueFromSnap(snapItems, 'mainDescription');
+
+  return {
+    baseName,
+    baseTagline,
+    baseLogo,
+    baseCategories,
+    summaryFromSnap,
+  };
+}
+
+function isLeadingAggregateContext(
+  context: EntityContext | null | undefined,
+): boolean {
+  if (!context) {
+    return false;
+  }
+  const itemType = context.metadata.item?.type;
+  if (itemType === 'item') {
+    return true;
+  }
+  const label = context.metadata.statusBadge?.label;
+  return label === 'Leading Proposal';
+}
+
+function getAggregateStringValue(
+  context: EntityContext | null | undefined,
+  key: 'name' | 'tagline' | 'logoUrl',
+): string | undefined {
+  if (!context || !isLeadingAggregateContext(context)) {
+    return undefined;
+  }
+  const projectMeta = context.metadata.project;
+  const candidate = projectMeta?.[key];
+  if (typeof candidate !== 'string') {
+    return undefined;
+  }
+  const trimmed = candidate.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function getAggregateCategoriesValue(
+  context: EntityContext | null | undefined,
+): string[] | undefined {
+  if (!context || !isLeadingAggregateContext(context)) {
+    return undefined;
+  }
+  const projectMeta = context.metadata.project;
+  if (!projectMeta || !Array.isArray(projectMeta.categories)) {
+    return undefined;
+  }
+  const filtered = projectMeta.categories.filter(
+    (entry): entry is string =>
+      typeof entry === 'string' && entry.trim().length > 0,
+  );
+  return filtered.length > 0 ? filtered : undefined;
+}
+
 function applyProjectOverridesFromItem(
   metadata: ShareMetadata,
   options: {
@@ -888,6 +987,7 @@ interface ProjectFieldOverride {
   rawValue: unknown;
   displayLabel: string;
   createdAt: Date | null;
+  isNotLeading: boolean;
 }
 
 async function fetchProjectFieldOverrides(
@@ -897,7 +997,6 @@ async function fetchProjectFieldOverrides(
     where: and(
       eq(projectLogs.projectId, projectId),
       inArray(projectLogs.key, PROJECT_FIELD_OVERRIDE_KEYS),
-      eq(projectLogs.isNotLeading, false),
     ),
     with: {
       itemProposal: {
@@ -910,11 +1009,11 @@ async function fetchProjectFieldOverrides(
     orderBy: (logs, { desc }) => [desc(logs.createdAt)],
   });
 
-  const seen = new Map<ProjectFieldOverrideKey, ProjectFieldOverride>();
+  const grouped = new Map<ProjectFieldOverrideKey, ProjectFieldOverride[]>();
 
   for (const row of rows) {
     const key = row.key as ProjectFieldOverrideKey | null;
-    if (!key || seen.has(key)) {
+    if (!key) {
       continue;
     }
 
@@ -922,18 +1021,38 @@ async function fetchProjectFieldOverrides(
     const textValue = valueToText(value);
     const valueText = textValue && textValue.length > 0 ? textValue : undefined;
 
-    seen.set(key, {
+    const candidate: ProjectFieldOverride = {
       key,
       valueText,
       rawValue: value,
       displayLabel: formatReadableKey(key),
       createdAt: row.createdAt ?? row.itemProposal?.createdAt ?? null,
-    });
+      isNotLeading: row.isNotLeading ?? false,
+    };
+
+    const list = grouped.get(key) ?? [];
+    list.push(candidate);
+    grouped.set(key, list);
   }
 
-  return PROJECT_FIELD_OVERRIDE_KEYS.filter((key) => seen.has(key)).map(
-    (key) => seen.get(key)!,
-  );
+  const result: ProjectFieldOverride[] = [];
+
+  for (const key of PROJECT_FIELD_OVERRIDE_KEYS) {
+    const candidates = grouped.get(key);
+    if (!candidates || candidates.length === 0) {
+      continue;
+    }
+
+    const leadingCandidate = candidates.find(
+      (candidate) => candidate.isNotLeading === false,
+    );
+
+    if (leadingCandidate) {
+      result.push(leadingCandidate);
+    }
+  }
+
+  return result;
 }
 
 async function resolveItemProposalContext(
@@ -1153,14 +1272,16 @@ async function resolveItemProposalContext(
     badges: statusBadge ? [statusBadge] : undefined,
   };
 
-  applyProjectOverridesFromItem(metadata, {
-    rawKey,
-    valueText,
-    rawValue: itemProposal.value,
-    displayLabel,
-    isPrimaryKey: true,
-    context: 'item',
-  });
+  if (isCurrentlyLeading) {
+    applyProjectOverridesFromItem(metadata, {
+      rawKey,
+      valueText,
+      rawValue: itemProposal.value,
+      displayLabel,
+      isPrimaryKey: true,
+      context: 'item',
+    });
+  }
 
   for (const override of projectFieldOverrides) {
     applyProjectOverridesFromItem(metadata, {
@@ -1341,36 +1462,37 @@ async function resolveItemAggregateContext({
 }): Promise<EntityContext | null> {
   const rawKey = String(itemKey);
 
-  const [latestLeadingLog, latestSubmission] = await Promise.all([
-    db.query.projectLogs.findFirst({
-      where: and(
-        eq(projectLogs.projectId, projectId),
-        eq(projectLogs.key, rawKey),
-        eq(projectLogs.isNotLeading, false),
-      ),
-      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
-    }),
-    db.query.itemProposals.findFirst({
-      where: and(
-        eq(itemProposals.projectId, projectId),
-        eq(itemProposals.key, rawKey),
-      ),
-      orderBy: (table, { desc }) => [desc(table.createdAt)],
-    }),
-  ]);
+  const [latestLeadingLog, latestProjectLog, latestSubmission] =
+    await Promise.all([
+      db.query.projectLogs.findFirst({
+        where: and(
+          eq(projectLogs.projectId, projectId),
+          eq(projectLogs.key, rawKey),
+          eq(projectLogs.isNotLeading, false),
+        ),
+        orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+      }),
+      db.query.projectLogs.findFirst({
+        where: and(
+          eq(projectLogs.projectId, projectId),
+          eq(projectLogs.key, rawKey),
+        ),
+        orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+      }),
+      db.query.itemProposals.findFirst({
+        where: and(
+          eq(itemProposals.projectId, projectId),
+          eq(itemProposals.key, rawKey),
+        ),
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      }),
+    ]);
 
-  const latestLeadingTimestamp = latestLeadingLog?.createdAt?.getTime?.() ?? 0;
-  const latestSubmissionTimestamp =
-    latestSubmission?.createdAt?.getTime?.() ?? 0;
+  const candidateLog = latestLeadingLog ?? latestProjectLog;
+  let candidateId: number | null = candidateLog?.itemProposalId ?? null;
 
-  let candidateId: number | null = latestLeadingLog?.itemProposalId ?? null;
-
-  if (
-    latestSubmission &&
-    latestSubmissionTimestamp >= latestLeadingTimestamp &&
-    Number.isInteger(latestSubmission.id)
-  ) {
-    candidateId = latestSubmission.id ?? candidateId;
+  if (!candidateId && Number.isInteger(latestSubmission?.id)) {
+    candidateId = latestSubmission?.id ?? null;
   }
 
   if (!candidateId || !Number.isInteger(candidateId)) {
@@ -1393,60 +1515,78 @@ async function resolveProjectContext(
     return null;
   }
 
-  const [
-    latestSnap,
-    projectProposals,
-    projectVotes,
-    itemProposalCreators,
-    projectFieldOverrides,
-  ] = await Promise.all([
-    fetchLatestProjectSnap(project.id),
-    db.query.proposals.findMany({
-      where: eq(proposals.projectId, project.id),
-      columns: {
-        id: true,
-        createdAt: true,
-      },
-      with: {
-        creator: {
-          columns: {
-            userId: true,
-            name: true,
-            avatarUrl: true,
-            address: true,
+  const [latestSnap, projectProposals, projectVotes, itemProposalCreators] =
+    await Promise.all([
+      fetchLatestProjectSnap(project.id),
+      db.query.proposals.findMany({
+        where: eq(proposals.projectId, project.id),
+        columns: {
+          id: true,
+          createdAt: true,
+        },
+        with: {
+          creator: {
+            columns: {
+              userId: true,
+              name: true,
+              avatarUrl: true,
+              address: true,
+            },
           },
         },
-      },
-      orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
-    }),
-    db.query.voteRecords.findMany({
-      where: eq(voteRecords.projectId, project.id),
-      columns: {
-        id: true,
-        createdAt: true,
-        proposalId: true,
-        key: true,
-        weight: true,
-        projectId: true,
-      },
-      with: {
-        creator: {
-          columns: {
-            userId: true,
-            name: true,
-            avatarUrl: true,
-            address: true,
+        orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
+      }),
+      db.query.voteRecords.findMany({
+        where: eq(voteRecords.projectId, project.id),
+        columns: {
+          id: true,
+          createdAt: true,
+          proposalId: true,
+          key: true,
+          weight: true,
+          projectId: true,
+        },
+        with: {
+          creator: {
+            columns: {
+              userId: true,
+              name: true,
+              avatarUrl: true,
+              address: true,
+            },
           },
         },
-      },
+      }),
+      db
+        .select({ creatorId: itemProposals.creator })
+        .from(itemProposals)
+        .where(eq(itemProposals.projectId, project.id))
+        .groupBy(itemProposals.creator),
+    ]);
+
+  const aggregateFieldContexts = await Promise.all(
+    PROJECT_FIELD_OVERRIDE_KEYS.map(async (key) => {
+      try {
+        const context = await resolveItemAggregateContext({
+          projectId: project.id,
+          itemKey: key,
+        });
+        return { key, context } as const;
+      } catch (error) {
+        console.error(
+          'Failed to resolve aggregate context for project field:',
+          key,
+          error,
+        );
+        return { key, context: null } as const;
+      }
     }),
-    db
-      .select({ creatorId: itemProposals.creator })
-      .from(itemProposals)
-      .where(eq(itemProposals.projectId, project.id))
-      .groupBy(itemProposals.creator),
-    fetchProjectFieldOverrides(project.id),
-  ]);
+  );
+
+  const aggregateContextMap = new Map<
+    ProjectFieldOverrideKey,
+    EntityContext | null
+  >(aggregateFieldContexts.map(({ key, context }) => [key, context]));
 
   const uniqueContributorIds = new Set<string>();
   projectVotes
@@ -1463,16 +1603,40 @@ async function resolveProjectContext(
     .map((record) => record.creatorId)
     .filter((id): id is string => Boolean(id))
     .forEach((id) => uniqueContributorIds.add(id));
-  const categories = project.categories ?? latestSnap?.categories ?? [];
-  const tags = Array.from(new Set(categories.filter(Boolean))).slice(0, 6);
-  const snapItems = latestSnap?.items ?? [];
+
+  const { baseName, baseTagline, baseLogo, baseCategories, summaryFromSnap } =
+    buildProjectSnapshotBaseFields(project, latestSnap ?? null);
+
   const itemsTopWeight = normalizeItemsTopWeight(project.itemsTopWeight);
   const transparencyScore = calculateTransparencyScore(itemsTopWeight);
 
-  const summaryFromSnap = getItemValueFromSnap(snapItems, 'mainDescription');
-  const taglineFromSnap = getItemValueFromSnap(snapItems, 'tagline');
-  const description = summaryFromSnap || project.tagline;
-  const subtitle = taglineFromSnap || project.tagline;
+  const subtitle = baseTagline || project.tagline || '';
+  const description = summaryFromSnap || subtitle || project.tagline || '';
+
+  const aggregateNameContext = aggregateContextMap.get('name');
+  const aggregateTaglineContext = aggregateContextMap.get('tagline');
+  const aggregateLogoContext = aggregateContextMap.get('logoUrl');
+  const aggregateCategoriesContext = aggregateContextMap.get('categories');
+
+  const displayName =
+    getAggregateStringValue(aggregateNameContext, 'name') || baseName;
+
+  const aggregatedTagline = getAggregateStringValue(
+    aggregateTaglineContext,
+    'tagline',
+  );
+  const displayTagline =
+    aggregatedTagline || baseTagline || project.tagline || subtitle || '';
+
+  const displayLogo =
+    getAggregateStringValue(aggregateLogoContext, 'logoUrl') || baseLogo;
+
+  const displayCategories =
+    getAggregateCategoriesValue(aggregateCategoriesContext) || baseCategories;
+
+  const displayTags = Array.from(
+    new Set((displayCategories ?? []).filter(Boolean)),
+  ).slice(0, 6);
 
   const latestVoteTimestamp = projectVotes.reduce((latest, vote) => {
     const time = vote.createdAt?.getTime?.() ?? 0;
@@ -1533,39 +1697,29 @@ async function resolveProjectContext(
   }
 
   const metadata: ShareMetadata = {
-    title: project.name,
-    subtitle: subtitle ? truncate(subtitle, 140) : undefined,
-    description: description ? truncate(description, 200) : undefined,
+    title: displayName,
+    subtitle: displayTagline
+      ? truncate(displayTagline, 140)
+      : subtitle
+        ? truncate(subtitle, 140)
+        : undefined,
+    description: description
+      ? truncate(description, 200)
+      : displayTagline
+        ? truncate(displayTagline, 200)
+        : undefined,
     project: {
       id: project.id,
-      name: project.name,
-      tagline: project.tagline,
-      categories,
-      logoUrl: project.logoUrl,
+      name: displayName,
+      tagline: displayTagline || project.tagline,
+      categories: displayCategories,
+      logoUrl: displayLogo,
       isPublished: project.isPublished,
     },
-    tags,
+    tags: displayTags,
     statusBadge,
     stats,
   };
-
-  for (const override of projectFieldOverrides) {
-    applyProjectOverridesFromItem(metadata, {
-      rawKey: override.key,
-      valueText: override.valueText,
-      rawValue: override.rawValue,
-      displayLabel: override.displayLabel,
-      isPrimaryKey: true,
-      context: 'project',
-    });
-  }
-
-  metadata.title = metadata.project.name;
-  const resolvedCategories = metadata.project.categories ?? [];
-  metadata.tags = Array.from(new Set(resolvedCategories.filter(Boolean))).slice(
-    0,
-    6,
-  );
 
   const targetUrl = project.isPublished
     ? `/project/${project.id}`
@@ -1574,13 +1728,15 @@ async function resolveProjectContext(
   const visibility: ShareVisibility = project.isPublished
     ? 'public'
     : 'unlisted';
+  const aggregateFieldTimestamps = aggregateFieldContexts
+    .map(({ context }) => context?.imageTimestamp)
+    .filter((value): value is number => typeof value === 'number');
+
   const imageMeta = resolveImageMeta([
     project.updatedAt,
     latestSnap?.createdAt,
     latestVoteTimestamp,
-    ...projectFieldOverrides
-      .map((override) => override.createdAt)
-      .filter(Boolean),
+    ...aggregateFieldTimestamps,
   ]);
 
   return {
