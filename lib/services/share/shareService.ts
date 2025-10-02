@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { LRUCache } from 'lru-cache';
 
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
@@ -31,7 +32,6 @@ import {
 } from './shareUtils';
 
 type ShareLinkRecord = typeof shareLinks.$inferSelect;
-type ShareLinkInsert = typeof shareLinks.$inferInsert;
 
 type ProposalRecord = {
   id: number;
@@ -194,6 +194,29 @@ export interface SharePayload {
   layout: ShareLayout;
   createdAt: Date;
   updatedAt: Date;
+}
+
+const shareLookupCache = new LRUCache<string, Promise<unknown>>({
+  max: 512,
+  ttl: 1000 * 30,
+});
+
+async function getCachedValue<T>(
+  key: string,
+  loader: () => Promise<T>,
+): Promise<T> {
+  const cached = shareLookupCache.get(key) as Promise<T> | undefined;
+  if (cached) {
+    return cached;
+  }
+
+  const pending = loader().catch((error) => {
+    shareLookupCache.delete(key);
+    throw error;
+  });
+
+  shareLookupCache.set(key, pending as Promise<unknown>);
+  return pending;
 }
 
 const PROJECT_FIELD_OVERRIDE_KEYS = [
@@ -369,41 +392,43 @@ async function fetchProposal(entityId: string): Promise<ProposalRecord | null> {
     return null;
   }
 
-  const proposal = await db.query.proposals.findFirst({
-    where: eq(proposals.id, numericId),
-    columns: {
-      id: true,
-      projectId: true,
-      createdAt: true,
-      items: true,
-      refs: true,
-    },
-    with: {
-      project: {
-        columns: {
-          id: true,
-          name: true,
-          tagline: true,
-          categories: true,
-          logoUrl: true,
-          isPublished: true,
-          updatedAt: true,
-          itemsTopWeight: true,
-          hasProposalKeys: true,
+  return getCachedValue(`proposal:${numericId}`, async () => {
+    const proposal = await db.query.proposals.findFirst({
+      where: eq(proposals.id, numericId),
+      columns: {
+        id: true,
+        projectId: true,
+        createdAt: true,
+        items: true,
+        refs: true,
+      },
+      with: {
+        project: {
+          columns: {
+            id: true,
+            name: true,
+            tagline: true,
+            categories: true,
+            logoUrl: true,
+            isPublished: true,
+            updatedAt: true,
+            itemsTopWeight: true,
+            hasProposalKeys: true,
+          },
+        },
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
+          },
         },
       },
-      creator: {
-        columns: {
-          userId: true,
-          name: true,
-          avatarUrl: true,
-          address: true,
-        },
-      },
-    },
-  });
+    });
 
-  return proposal ?? null;
+    return proposal ?? null;
+  });
 }
 
 async function fetchItemProposal(
@@ -414,43 +439,45 @@ async function fetchItemProposal(
     return null;
   }
 
-  const itemProposal = await db.query.itemProposals.findFirst({
-    where: eq(itemProposals.id, numericId),
-    columns: {
-      id: true,
-      projectId: true,
-      key: true,
-      value: true,
-      ref: true,
-      reason: true,
-      createdAt: true,
-    },
-    with: {
-      project: {
-        columns: {
-          id: true,
-          name: true,
-          tagline: true,
-          categories: true,
-          logoUrl: true,
-          isPublished: true,
-          updatedAt: true,
-          itemsTopWeight: true,
-          hasProposalKeys: true,
+  return getCachedValue(`itemProposal:${numericId}`, async () => {
+    const itemProposal = await db.query.itemProposals.findFirst({
+      where: eq(itemProposals.id, numericId),
+      columns: {
+        id: true,
+        projectId: true,
+        key: true,
+        value: true,
+        ref: true,
+        reason: true,
+        createdAt: true,
+      },
+      with: {
+        project: {
+          columns: {
+            id: true,
+            name: true,
+            tagline: true,
+            categories: true,
+            logoUrl: true,
+            isPublished: true,
+            updatedAt: true,
+            itemsTopWeight: true,
+            hasProposalKeys: true,
+          },
+        },
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
+          },
         },
       },
-      creator: {
-        columns: {
-          userId: true,
-          name: true,
-          avatarUrl: true,
-          address: true,
-        },
-      },
-    },
-  });
+    });
 
-  return itemProposal ?? null;
+    return itemProposal ?? null;
+  });
 }
 
 async function fetchProjectRecord(
@@ -461,50 +488,54 @@ async function fetchProjectRecord(
     return null;
   }
 
-  const project = await db.query.projects.findFirst({
-    where: eq(projects.id, numericId),
-    columns: {
-      id: true,
-      name: true,
-      tagline: true,
-      categories: true,
-      logoUrl: true,
-      isPublished: true,
-      updatedAt: true,
-      itemsTopWeight: true,
-      support: true,
-    },
-  });
+  return getCachedValue(`project:${numericId}`, async () => {
+    const project = await db.query.projects.findFirst({
+      where: eq(projects.id, numericId),
+      columns: {
+        id: true,
+        name: true,
+        tagline: true,
+        categories: true,
+        logoUrl: true,
+        isPublished: true,
+        updatedAt: true,
+        itemsTopWeight: true,
+        support: true,
+      },
+    });
 
-  return project ?? null;
+    return project ?? null;
+  });
 }
 
 async function fetchLatestProjectSnap(
   projectId: number,
 ): Promise<ProjectSnapRecord | null> {
-  const snap = await db.query.projectSnaps.findFirst({
-    where: eq(projectSnaps.projectId, projectId),
-    columns: {
-      id: true,
-      projectId: true,
-      createdAt: true,
-      name: true,
-      categories: true,
-      items: true,
-    },
-    orderBy: (table) => [desc(table.createdAt)],
+  return getCachedValue(`projectSnap:${projectId}`, async () => {
+    const snap = await db.query.projectSnaps.findFirst({
+      where: eq(projectSnaps.projectId, projectId),
+      columns: {
+        id: true,
+        projectId: true,
+        createdAt: true,
+        name: true,
+        categories: true,
+        items: true,
+      },
+      orderBy: (table) => [desc(table.createdAt)],
+    });
+
+    if (!snap) {
+      return null;
+    }
+
+    return {
+      ...snap,
+      items: Array.isArray(snap.items)
+        ? (snap.items as Array<{ key: string; value: unknown }>)
+        : [],
+    };
   });
-
-  if (!snap) {
-    return null;
-  }
-
-  return {
-    ...snap,
-    items: Array.isArray(snap.items)
-      ? (snap.items as Array<{ key: string; value: unknown }>)
-      : [],
-  };
 }
 
 async function resolveProposalContext(
@@ -864,53 +895,6 @@ function buildProjectSnapshotBaseFields(
     baseCategories,
     summaryFromSnap,
   };
-}
-
-function isLeadingAggregateContext(
-  context: EntityContext | null | undefined,
-): boolean {
-  if (!context) {
-    return false;
-  }
-  const itemType = context.metadata.item?.type;
-  if (itemType === 'item') {
-    return true;
-  }
-  const label = context.metadata.statusBadge?.label;
-  return label === 'Leading Proposal';
-}
-
-function getAggregateStringValue(
-  context: EntityContext | null | undefined,
-  key: 'name' | 'tagline' | 'logoUrl',
-): string | undefined {
-  if (!context || !isLeadingAggregateContext(context)) {
-    return undefined;
-  }
-  const projectMeta = context.metadata.project;
-  const candidate = projectMeta?.[key];
-  if (typeof candidate !== 'string') {
-    return undefined;
-  }
-  const trimmed = candidate.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function getAggregateCategoriesValue(
-  context: EntityContext | null | undefined,
-): string[] | undefined {
-  if (!context || !isLeadingAggregateContext(context)) {
-    return undefined;
-  }
-  const projectMeta = context.metadata.project;
-  if (!projectMeta || !Array.isArray(projectMeta.categories)) {
-    return undefined;
-  }
-  const filtered = projectMeta.categories.filter(
-    (entry): entry is string =>
-      typeof entry === 'string' && entry.trim().length > 0,
-  );
-  return filtered.length > 0 ? filtered : undefined;
 }
 
 function applyProjectOverridesFromItem(
@@ -1515,78 +1499,65 @@ async function resolveProjectContext(
     return null;
   }
 
-  const [latestSnap, projectProposals, projectVotes, itemProposalCreators] =
-    await Promise.all([
-      fetchLatestProjectSnap(project.id),
-      db.query.proposals.findMany({
-        where: eq(proposals.projectId, project.id),
-        columns: {
-          id: true,
-          createdAt: true,
-        },
-        with: {
-          creator: {
-            columns: {
-              userId: true,
-              name: true,
-              avatarUrl: true,
-              address: true,
-            },
+  const [
+    latestSnap,
+    projectProposals,
+    projectVotes,
+    itemProposalCreators,
+    projectFieldOverrides,
+  ] = await Promise.all([
+    fetchLatestProjectSnap(project.id),
+    db.query.proposals.findMany({
+      where: eq(proposals.projectId, project.id),
+      columns: {
+        id: true,
+        createdAt: true,
+      },
+      with: {
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
           },
         },
-        orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
-      }),
-      db.query.voteRecords.findMany({
-        where: eq(voteRecords.projectId, project.id),
-        columns: {
-          id: true,
-          createdAt: true,
-          proposalId: true,
-          key: true,
-          weight: true,
-          projectId: true,
-        },
-        with: {
-          creator: {
-            columns: {
-              userId: true,
-              name: true,
-              avatarUrl: true,
-              address: true,
-            },
-          },
-        },
-      }),
-      db
-        .select({ creatorId: itemProposals.creator })
-        .from(itemProposals)
-        .where(eq(itemProposals.projectId, project.id))
-        .groupBy(itemProposals.creator),
-    ]);
-
-  const aggregateFieldContexts = await Promise.all(
-    PROJECT_FIELD_OVERRIDE_KEYS.map(async (key) => {
-      try {
-        const context = await resolveItemAggregateContext({
-          projectId: project.id,
-          itemKey: key,
-        });
-        return { key, context } as const;
-      } catch (error) {
-        console.error(
-          'Failed to resolve aggregate context for project field:',
-          key,
-          error,
-        );
-        return { key, context: null } as const;
-      }
+      },
+      orderBy: () => [asc(proposals.createdAt), asc(proposals.id)],
     }),
-  );
+    db.query.voteRecords.findMany({
+      where: eq(voteRecords.projectId, project.id),
+      columns: {
+        id: true,
+        createdAt: true,
+        proposalId: true,
+        key: true,
+        weight: true,
+        projectId: true,
+      },
+      with: {
+        creator: {
+          columns: {
+            userId: true,
+            name: true,
+            avatarUrl: true,
+            address: true,
+          },
+        },
+      },
+    }),
+    db
+      .select({ creatorId: itemProposals.creator })
+      .from(itemProposals)
+      .where(eq(itemProposals.projectId, project.id))
+      .groupBy(itemProposals.creator),
+    fetchProjectFieldOverrides(project.id),
+  ]);
 
-  const aggregateContextMap = new Map<
+  const projectFieldOverrideMap = new Map<
     ProjectFieldOverrideKey,
-    EntityContext | null
-  >(aggregateFieldContexts.map(({ key, context }) => [key, context]));
+    ProjectFieldOverride
+  >(projectFieldOverrides.map((override) => [override.key, override]));
 
   const uniqueContributorIds = new Set<string>();
   projectVotes
@@ -1610,38 +1581,48 @@ async function resolveProjectContext(
   const itemsTopWeight = normalizeItemsTopWeight(project.itemsTopWeight);
   const transparencyScore = calculateTransparencyScore(itemsTopWeight);
 
-  const subtitle = baseTagline || project.tagline || '';
-  const description = summaryFromSnap || subtitle || project.tagline || '';
+  const fallbackSubtitle = baseTagline || project.tagline || '';
+  const fallbackDescription =
+    summaryFromSnap || fallbackSubtitle || project.tagline || '';
 
-  const aggregateNameContext = aggregateContextMap.get('name');
-  const aggregateTaglineContext = aggregateContextMap.get('tagline');
-  const aggregateLogoContext = aggregateContextMap.get('logoUrl');
-  const aggregateCategoriesContext = aggregateContextMap.get('categories');
+  const overrideName = projectFieldOverrideMap.get('name');
+  const overrideTagline = projectFieldOverrideMap.get('tagline');
+  const overrideLogo = projectFieldOverrideMap.get('logoUrl');
+  const overrideCategories = projectFieldOverrideMap.get('categories');
 
+  const displayNameCandidate = overrideName?.valueText?.trim();
   const displayName =
-    getAggregateStringValue(aggregateNameContext, 'name') || baseName;
+    displayNameCandidate && displayNameCandidate.length > 0
+      ? displayNameCandidate
+      : baseName;
 
-  const aggregatedTagline = getAggregateStringValue(
-    aggregateTaglineContext,
-    'tagline',
-  );
+  const aggregatedTagline =
+    overrideTagline?.valueText && overrideTagline.valueText.trim().length > 0
+      ? overrideTagline.valueText.trim()
+      : undefined;
   const displayTagline =
-    aggregatedTagline || baseTagline || project.tagline || subtitle || '';
+    aggregatedTagline || baseTagline || project.tagline || '';
 
-  const displayLogo =
-    getAggregateStringValue(aggregateLogoContext, 'logoUrl') || baseLogo;
+  const aggregatedLogo = overrideLogo
+    ? extractMediaUrl(overrideLogo.rawValue)
+    : undefined;
+  const displayLogo = aggregatedLogo || baseLogo;
+
+  const overrideCategoriesList = overrideCategories
+    ? extractCategories(overrideCategories.rawValue)
+    : undefined;
 
   const displayCategories =
-    getAggregateCategoriesValue(aggregateCategoriesContext) || baseCategories;
+    overrideCategoriesList && overrideCategoriesList.length > 0
+      ? overrideCategoriesList
+      : baseCategories;
+
+  const primaryDescriptionSource =
+    summaryFromSnap || displayTagline || fallbackDescription;
 
   const displayTags = Array.from(
     new Set((displayCategories ?? []).filter(Boolean)),
   ).slice(0, 6);
-
-  const latestVoteTimestamp = projectVotes.reduce((latest, vote) => {
-    const time = vote.createdAt?.getTime?.() ?? 0;
-    return time > latest ? time : latest;
-  }, 0);
 
   const statusBadge: ShareBadge = project.isPublished
     ? { label: 'Published Project', tone: 'success' }
@@ -1700,14 +1681,12 @@ async function resolveProjectContext(
     title: displayName,
     subtitle: displayTagline
       ? truncate(displayTagline, 140)
-      : subtitle
-        ? truncate(subtitle, 140)
+      : fallbackSubtitle
+        ? truncate(fallbackSubtitle, 140)
         : undefined,
-    description: description
-      ? truncate(description, 200)
-      : displayTagline
-        ? truncate(displayTagline, 200)
-        : undefined,
+    description: primaryDescriptionSource
+      ? truncate(primaryDescriptionSource, 200)
+      : undefined,
     project: {
       id: project.id,
       name: displayName,
@@ -1728,14 +1707,16 @@ async function resolveProjectContext(
   const visibility: ShareVisibility = project.isPublished
     ? 'public'
     : 'unlisted';
-  const aggregateFieldTimestamps = aggregateFieldContexts
-    .map(({ context }) => context?.imageTimestamp)
-    .filter((value): value is number => typeof value === 'number');
+  const aggregateFieldTimestamps = projectFieldOverrides
+    .map((override) => override.createdAt?.getTime?.())
+    .filter(
+      (value): value is number =>
+        typeof value === 'number' && Number.isFinite(value) && value > 0,
+    );
 
   const imageMeta = resolveImageMeta([
     project.updatedAt,
     latestSnap?.createdAt,
-    latestVoteTimestamp,
     ...aggregateFieldTimestamps,
   ]);
 
@@ -1765,32 +1746,6 @@ async function resolveEntityContext(
       return null;
   }
 }
-async function maybeRefreshShareLink(
-  record: ShareLinkRecord,
-  context: EntityContext,
-  visibility: ShareVisibility,
-): Promise<void> {
-  const updates: Partial<ShareLinkInsert> = {};
-
-  if (record.targetUrl !== context.targetUrl) {
-    updates.targetUrl = context.targetUrl;
-  }
-
-  if (record.visibility !== visibility) {
-    updates.visibility = visibility;
-  }
-
-  if (context.parentId && record.parentId !== context.parentId) {
-    updates.parentId = context.parentId;
-  }
-
-  if (Object.keys(updates).length === 0) {
-    return;
-  }
-
-  await db.update(shareLinks).set(updates).where(eq(shareLinks.id, record.id));
-}
-
 async function buildPayloadFromRecord(
   record: ShareLinkRecord,
 ): Promise<SharePayload | null> {
@@ -1808,8 +1763,6 @@ async function buildPayloadFromRecord(
     recordVisibility === 'unlisted' && contextVisibility === 'public'
       ? 'public'
       : mergeVisibility(recordVisibility, contextVisibility);
-
-  await maybeRefreshShareLink(record, context, effectiveVisibility);
 
   return {
     code: record.code,
