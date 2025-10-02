@@ -25,6 +25,7 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { IItemCategoryEnum } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+import { NA_VALUE } from '@/constants/naSelection';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -549,11 +550,31 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         [field]: value,
       }));
 
+      const fieldKey = field as keyof IProjectFormData;
+
       if (!value) {
-        clearErrors(field as keyof IProjectFormData);
+        setValue(fieldKey, NA_VALUE as any, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+        clearErrors(fieldKey);
+      } else {
+        const defaultSnapshot = getDefaultProjectFormData();
+        const defaultValue =
+          defaultSnapshot[fieldKey] !== undefined
+            ? defaultSnapshot[fieldKey]
+            : '';
+
+        setValue(fieldKey, defaultValue as any, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+        clearErrors(fieldKey);
       }
     },
-    [clearErrors],
+    [clearErrors, setValue],
   );
 
   const stepProps = {

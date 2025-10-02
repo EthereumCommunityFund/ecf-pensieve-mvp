@@ -19,6 +19,7 @@ import {
   IReferenceData,
 } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { NA_VALUE } from '@/constants/naSelection';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
@@ -95,6 +96,11 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     return { [itemConfig.key]: defaultValue };
   }, [itemConfig.key, itemConfig.formDisplayType]);
 
+  const itemValidationSchema = useMemo(
+    () => createItemValidationSchema(itemKey, fieldApplicability),
+    [itemKey, fieldApplicability],
+  );
+
   const methods = useForm<IFormData>({
     defaultValues: defaultFormValues,
     mode: 'onSubmit', // Key: Use onSubmit to avoid validation on onChange
@@ -104,7 +110,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     shouldFocusError: false, // Key: Prevent side effects on focus
     shouldUseNativeValidation: false, // Key: Disable native validation
     // Re-enable yupResolver with safer configuration
-    resolver: yupResolver(createItemValidationSchema(itemKey), {
+    resolver: yupResolver(itemValidationSchema, {
       abortEarly: false,
       stripUnknown: false,
     }),
@@ -113,6 +119,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   const {
     control,
     clearErrors,
+    resetField,
+    setValue,
     reset,
     handleSubmit,
     watch,
@@ -143,11 +151,31 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         ...prev,
         [field]: value,
       }));
+
+      const fieldName = field as string;
+
       if (!value) {
-        clearErrors(field as keyof IProjectFormData);
+        setValue(fieldName as any, NA_VALUE as any, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+        clearErrors(fieldName as any);
+      } else {
+        const fieldItemConfig = AllItemConfig[field as IPocItemKey];
+        const defaultValue = fieldItemConfig
+          ? getDefaultValueByFormType(fieldItemConfig.formDisplayType)
+          : '';
+
+        resetField(fieldName as any, {
+          defaultValue: defaultValue as any,
+          keepError: false,
+          keepDirty: false,
+        });
+        clearErrors(fieldName as any);
       }
     },
-    [clearErrors],
+    [clearErrors, resetField, setValue],
   );
 
   const getFieldReference = useCallback(
@@ -202,7 +230,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         itemConfig.showApplicable && !fieldApplicability[itemConfig.key];
 
       // Convert date values to UTC for consistent backend storage
-      let valueToSubmit = isApplicableFalse ? '' : formValue;
+      let valueToSubmit = isApplicableFalse ? NA_VALUE : formValue;
 
       if (itemConfig.formDisplayType === 'date' && formValue instanceof Date) {
         valueToSubmit = dayjs

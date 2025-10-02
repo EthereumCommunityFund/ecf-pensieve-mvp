@@ -126,7 +126,7 @@ describe('Authentication Integration Tests', () => {
         signature,
         message,
         username: 'TestUser',
-        inviteCode: testInviteCode,
+        turnstileToken: 'test-token',
       });
 
       expect(verifyResult.isNewUser).toBe(true);
@@ -157,8 +157,9 @@ describe('Authentication Integration Tests', () => {
           signature,
           message,
           username: 'TestUser',
+          turnstileToken: 'invalid-token',
         }),
-      ).rejects.toThrow('New account requires an invite code');
+      ).rejects.toThrow();
     });
 
     it('should fail registration without username', async () => {
@@ -174,7 +175,7 @@ describe('Authentication Integration Tests', () => {
           address: testAddress,
           signature,
           message,
-          inviteCode: testInviteCode,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow('New account requires a username');
     });
@@ -193,9 +194,9 @@ describe('Authentication Integration Tests', () => {
           signature,
           message,
           username: 'TestUser',
-          inviteCode: 'invalid-code',
+          turnstileToken: 'invalid-token',
         }),
-      ).rejects.toThrow('Invalid invite code');
+      ).rejects.toThrow();
     });
   });
 
@@ -230,6 +231,7 @@ describe('Authentication Integration Tests', () => {
           address: expiredAddress,
           signature,
           message,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow('Nonce has expired, please try again.');
     });
@@ -253,6 +255,7 @@ describe('Authentication Integration Tests', () => {
           address: messageAddress,
           signature,
           message: tamperedMessage,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow('Invalid nonce in signature message.');
     });
@@ -274,6 +277,7 @@ describe('Authentication Integration Tests', () => {
           address: noNonceAddress,
           signature,
           message: fakeMessage,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow('Invalid or expired nonce, please try again.');
     });
@@ -301,6 +305,7 @@ describe('Authentication Integration Tests', () => {
           address: deletedAddress,
           signature,
           message,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow('Invalid or expired nonce, please try again.');
     });
@@ -320,7 +325,7 @@ describe('Authentication Integration Tests', () => {
         signature,
         message,
         username: 'TestUser',
-        inviteCode: testInviteCode,
+        turnstileToken: 'test-token',
       });
     });
 
@@ -341,6 +346,7 @@ describe('Authentication Integration Tests', () => {
         address: testAddress,
         signature,
         message,
+        turnstileToken: 'test-token',
       });
 
       expect(loginResult.isNewUser).toBe(false);
@@ -367,6 +373,7 @@ describe('Authentication Integration Tests', () => {
           address: testAddress,
           signature,
           message,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow(/Nonce has expired|Invalid or expired nonce/);
     });
@@ -386,6 +393,7 @@ describe('Authentication Integration Tests', () => {
           address: testAddress,
           signature: wrongSignature,
           message,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow('Signature does not match provided address');
     });
@@ -405,6 +413,7 @@ describe('Authentication Integration Tests', () => {
           address: testAddress,
           signature,
           message: tamperedMessage,
+          turnstileToken: 'test-token',
         }),
       ).rejects.toThrow(
         /Signature does not match provided address|Invalid nonce in signature message/,

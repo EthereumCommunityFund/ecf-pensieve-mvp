@@ -18,6 +18,7 @@ import {
   TableRowSkeleton,
 } from '@/components/biz/table';
 import { ITypeOption } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
+import { CloseIcon } from '@/components/icons';
 import ArrowsOutLineVerticalIcon from '@/components/icons/ArrowsOutLineVertical';
 import FunnelIcon from '@/components/icons/Funnel';
 import { useOptimizedProjectsByIds } from '@/hooks/useOptimizedProjectsByIds';
@@ -160,9 +161,18 @@ function EcosystemTable<T extends Record<string, any>>({
                         'w-full px-[12px] py-[8px] text-left text-[13px] transition-colors hover:bg-black/[0.05]',
                         selectedType === option.value &&
                           'bg-black/[0.05] font-[600]',
+                        'flex justify-between items-center',
                       )}
                     >
                       {option.label}
+
+                      {selectedType === option.value && (
+                        <CloseIcon
+                          className="opacity-30 hover:opacity-60"
+                          width={16}
+                          height={16}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>

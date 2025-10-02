@@ -17,4 +17,5 @@ export * from './projectSnaps';
 export * from './proposals';
 export * from './ranks';
 export * from './relations';
+export * from './shareLinks';
 export * from './voteRecords';

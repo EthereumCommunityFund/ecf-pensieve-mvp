@@ -3,7 +3,7 @@
 import { cn } from '@heroui/react';
 import React from 'react';
 
-import { NAButtonProps } from '@/constants/naSelection';
+import { NA_VALUE, NAButtonProps } from '@/constants/naSelection';
 
 /**
  * NAButton Component
@@ -11,7 +11,7 @@ import { NAButtonProps } from '@/constants/naSelection';
  * Follows existing design system specifications
  */
 const NAButton = React.memo<NAButtonProps>(
-  ({ onClick, disabled = false, className, children = 'N/A' }) => {
+  ({ onClick, disabled = false, className, children = NA_VALUE }) => {
     return (
       <button
         type="button"

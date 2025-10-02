@@ -13,6 +13,7 @@ import { projectNotificationSettingsRouter } from './projectNotificationSettings
 import { projectRelationRouter } from './projectRelation';
 import { proposalRouter } from './proposal';
 import { rankRouter } from './rank';
+import { shareRouter } from './share';
 import { smartContractsRouter } from './smartContracts';
 import { userRouter } from './user';
 import { voteRouter } from './vote';
@@ -34,6 +35,7 @@ export const appRouter = router({
   projectRelation: projectRelationRouter,
   rank: rankRouter,
   smartContracts: smartContractsRouter,
+  share: shareRouter,
 });
 
 export type AppRouter = typeof appRouter;

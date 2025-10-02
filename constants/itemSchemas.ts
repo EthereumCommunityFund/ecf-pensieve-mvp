@@ -9,13 +9,17 @@ import { NA_VALUE } from '@/constants/naSelection';
 import {
   IAdvisors,
   IAffiliatedProject,
+  IAuditReport,
   IContributingTeam,
   IContributors,
   IContributorsOrganization,
   IDateConstraints,
+  IDecentralizedGovernanceEntry,
   IEndorser,
   IFundingReceivedGrants,
   IPhysicalEntity,
+  IPreviousFundingRound,
+  IPrivateFundingRound,
   IStackIntegration,
 } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
@@ -59,46 +63,48 @@ yup.addMethod(
 );
 
 const founderSchema: yup.ObjectSchema<IFounder> = yup.object().shape({
-  name: yup.string().required('Founder name is required'),
-  title: yup.string().required('Founder title is required'),
-  region: yup.string().optional(),
-  _id: yup.string().optional(),
+  name: yup.string().trim().required('Founder name is required'),
+  title: yup.string().trim().required('Founder title is required'),
+  region: yup.string().trim().optional(),
+  _id: yup.string().trim().optional(),
 });
 
 // Create a smart founder validation schema with strict validation on submission
 const smartFounderSchema = yup.object().shape({
-  name: yup.string().required('Founder name is required'),
-  title: yup.string().required('Founder title is required'),
-  region: yup.string().optional(),
-  _id: yup.string().optional(),
+  name: yup.string().trim().required('Founder name is required'),
+  title: yup.string().trim().required('Founder title is required'),
+  region: yup.string().trim().optional(),
+  _id: yup.string().trim().optional(),
 });
 
 const websiteSchema: yup.ObjectSchema<IWebsite> = yup.object().shape({
   url: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Project website is required'),
-  title: yup.string().required('Project website title is required'),
-  _id: yup.string().optional(),
+  title: yup.string().trim().required('Project website title is required'),
+  _id: yup.string().trim().optional(),
 });
 
 const socialLinkSchema: yup.ObjectSchema<ISocialLink> = yup.object().shape({
-  platform: yup.string().required('Social platform is required'),
+  platform: yup.string().trim().required('Social platform is required'),
   url: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Social link URL is required'),
-  _id: yup.string().optional(),
+  _id: yup.string().trim().optional(),
 });
 
 const physicalEntitySchema: yup.ObjectSchema<IPhysicalEntity> = yup
   .object()
   .shape({
-    legalName: yup.string().required('Legal name is required'),
-    country: yup.string().optional(),
-    _id: yup.string().optional(),
+    legalName: yup.string().trim().required('Legal name is required'),
+    country: yup.string().trim().optional(),
+    _id: yup.string().trim().optional(),
   });
 
 export const dateFoundedConstraints: IDateConstraints = {
@@ -197,7 +203,7 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
       .required('organization is required'),
     projectDonator: yup
       .array()
-      .of(yup.string().required('Project ID is required'))
+      .of(yup.string().trim().required('Project ID is required'))
       .min(1, 'At least one project donator is required')
       .test(
         'project-donator-limit',
@@ -216,18 +222,69 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
         },
       )
       .required('Project donator is required'),
-    amount: yup.string().required('amount is required'),
+    amount: yup.string().trim().required('amount is required'),
     reference: yup
       .string()
+      .trim()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
     expenseSheetUrl: yup
       .string()
+      .trim()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
-    _id: yup.string().optional(),
+    _id: yup.string().trim().optional(),
+  });
+
+const privateFundingRoundSchema: yup.ObjectSchema<IPrivateFundingRound> = yup
+  .object()
+  .shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .required('date is required'),
+    amount: yup.string().trim().required('amount is required'),
+    textName: yup.string().trim().required('name is required'),
+    amountShares: yup.string().trim().optional(),
+    _id: yup.string().trim().optional(),
+  });
+
+const previousFundingRoundSchema: yup.ObjectSchema<IPreviousFundingRound> = yup
+  .object()
+  .shape({
+    date: yup
+      .date()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .nullable()
+      .required('date is required'),
+    amount: yup.string().trim().required('amount is required'),
+    reference: yup
+      .string()
+      .trim()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().trim().optional(),
+  });
+
+const decentralizedGovernanceSchema: yup.ObjectSchema<IDecentralizedGovernanceEntry> =
+  yup.object().shape({
+    address: yup
+      .string()
+      .trim()
+      .required('Governance address is required')
+      .matches(/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum address'),
+    _id: yup.string().trim().optional(),
   });
 
 const affiliatedProjectsSchema: yup.ObjectSchema<IAffiliatedProject> = yup
@@ -246,14 +303,18 @@ const affiliatedProjectsSchema: yup.ObjectSchema<IAffiliatedProject> = yup
         return typeof value === 'string' && value.trim().length > 0;
       })
       .required('project is required'),
-    affiliationType: yup.string().required('Affiliation type is required'),
-    description: yup.string().optional(),
+    affiliationType: yup
+      .string()
+      .trim()
+      .required('Affiliation type is required'),
+    description: yup.string().trim().optional(),
     reference: yup
       .string()
+      .trim()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
-    _id: yup.string().required(),
+    _id: yup.string().trim().required(),
   });
 
 const contributingTeamsSchema: yup.ObjectSchema<IContributingTeam> = yup
@@ -268,48 +329,59 @@ const contributingTeamsSchema: yup.ObjectSchema<IContributingTeam> = yup
         return typeof value === 'string' && value.trim().length > 0;
       })
       .required('project is required'),
-    type: yup.string().required('type is required'),
-    description: yup.string().optional(),
+    type: yup.string().trim().required('type is required'),
+    description: yup.string().trim().optional(),
     reference: yup
       .string()
+      .trim()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
-    _id: yup.string().optional(),
+    _id: yup.string().trim().optional(),
   });
 
 const contributorsSchema: yup.ObjectSchema<IContributors> = yup.object().shape({
-  name: yup.string().required('name is required'),
-  role: yup.string().required('role is required'),
-  address: yup.string().required('address or social identifier is required'),
-  _id: yup.string().optional(),
+  name: yup.string().trim().required('name is required'),
+  role: yup.string().trim().required('role is required'),
+  address: yup
+    .string()
+    .trim()
+    .required('address or social identifier is required'),
+  _id: yup.string().trim().optional(),
 });
 
 const endorsersSchema: yup.ObjectSchema<IEndorser> = yup.object().shape({
-  name: yup.string().required('name is required'),
-  socialIdentifier: yup.string().required('social identifier is required'),
+  name: yup.string().trim().required('name is required'),
+  socialIdentifier: yup
+    .string()
+    .trim()
+    .required('social identifier is required'),
   reference: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .optional(),
-  _id: yup.string().optional(),
+  _id: yup.string().trim().optional(),
 });
 
 const contributorsOrganizationSchema: yup.ObjectSchema<IContributorsOrganization> =
   yup.object().shape({
-    name: yup.string().required('name is required'),
-    role: yup.string().required('role is required'),
-    address: yup.string().required('address or social identifier is required'),
-    _id: yup.string().optional(),
+    name: yup.string().trim().required('name is required'),
+    role: yup.string().trim().required('role is required'),
+    address: yup
+      .string()
+      .trim()
+      .required('address or social identifier is required'),
+    _id: yup.string().trim().optional(),
   });
 
 const advisorsSchema: yup.ObjectSchema<IAdvisors> = yup.object().shape({
-  name: yup.string().required('name is required'),
-  title: yup.string().required('title is required'),
-  address: yup.string().required('address is required'),
-  active: yup.string().required('please select active option'),
-  _id: yup.string().optional(),
+  name: yup.string().trim().required('name is required'),
+  title: yup.string().trim().required('title is required'),
+  address: yup.string().trim().required('address is required'),
+  active: yup.string().trim().required('please select active option'),
+  _id: yup.string().trim().optional(),
 });
 
 const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
@@ -324,49 +396,65 @@ const stackIntegrationSchema: yup.ObjectSchema<IStackIntegration> = yup
         return typeof value === 'string' && value.trim().length > 0;
       })
       .required('project is required'),
-    type: yup.string().required('type is required'),
-    description: yup.string().optional(),
+    type: yup.string().trim().required('type is required'),
+    description: yup.string().trim().optional(),
     reference: yup
       .string()
+      .trim()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
     repository: yup
       .string()
+      .trim()
       .transform(normalizeUrl)
       .url('Please enter a valid URL')
       .optional(),
-    _id: yup.string().optional(),
+    _id: yup.string().trim().optional(),
   });
+
+const auditReportSchema: yup.ObjectSchema<IAuditReport> = yup.object().shape({
+  reportLink: yup
+    .string()
+    .trim()
+    .transform(normalizeUrl)
+    .url('Please enter a valid URL')
+    .required('Report link is required'),
+  auditorName: yup.string().trim().required('Auditor name is required'),
+  _id: yup.string().trim().optional(),
+});
 
 export const itemValidationSchemas = {
   // Basics
   name: yup
     .string()
+    .trim()
     .required('Project name is required')
     .max(250, 'Project name cannot exceed 250 characters'),
 
   tagline: yup
     .string()
+    .trim()
     .required('Tagline is required')
     .max(250, 'Tagline cannot exceed 250 characters'),
 
   categories: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'Select at least one category')
     .required('Categories are required'),
 
   tags: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'Select at least one tag')
     .required('Tags are required'),
 
-  mainDescription: yup.string().required('Main description is required'),
+  mainDescription: yup.string().trim().required('Main description is required'),
 
   logoUrl: yup
     .string()
+    .trim()
     .url('Invalid Logo URL')
     .required('Project logo is required'),
 
@@ -399,12 +487,14 @@ export const itemValidationSchemas = {
 
   appUrl: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('App URL is required when applicable'),
 
   whitePaper: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Whitepaper URL is required when applicable'),
@@ -427,21 +517,23 @@ export const itemValidationSchemas = {
     )
     .required('Launch date is required when applicable'),
 
-  adoption_plan: yup.string().required('Adoption plan is required'),
+  adoption_plan: yup.string().trim().required('Adoption plan is required'),
 
-  launch_plan: yup.string().required('Launch plan is required'),
+  launch_plan: yup.string().trim().required('Launch plan is required'),
 
-  roadmap: yup.string().required('Roadmap is required'),
+  roadmap: yup.string().trim().required('Roadmap is required'),
 
   // Technicals
-  devStatus: yup.string().required('Development status is required'),
+  devStatus: yup.string().trim().required('Development status is required'),
 
   openSource: yup
     .string()
+    .trim()
     .required('Please select whether the project is open source'),
 
   codeRepo: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Code repository URL is required when applicable'),
@@ -450,10 +542,11 @@ export const itemValidationSchemas = {
     .array()
     .of(
       yup.object().shape({
-        id: yup.string().required(),
-        chain: yup.string().required('Chain selection is required'),
+        id: yup.string().trim().required(),
+        chain: yup.string().trim().required('Chain selection is required'),
         addresses: yup
           .string()
+          .trim()
           .required('Contract addresses are required')
           .test(
             'valid-addresses',
@@ -474,17 +567,31 @@ export const itemValidationSchemas = {
     .min(1, 'At least one smart contract is required')
     .required('Smart contracts are required when applicable'),
 
-  audit_status: yup.string().required('Audit status is required'),
+  audit_status: yup.string().trim().required('Audit status is required'),
 
-  dapp_category: yup.string().required('Dapp category is required'),
+  // Smart Contract Audits (boolean via Yes/No select)
+  // Align to Airdrops style: required string with Yes/No options at UI layer
+  smart_contract_audits: yup
+    .string()
+    .trim()
+    .required('Smart contract audits status is required'),
 
-  protocol_built_on: yup.string().required('Protocol built on is required'),
+  dapp_category: yup.string().trim().required('Dapp category is required'),
+
+  protocol_built_on: yup
+    .string()
+    .trim()
+    .required('Protocol built on is required'),
 
   // Organization
-  orgStructure: yup.string().required('Organization structure is required'),
+  orgStructure: yup
+    .string()
+    .trim()
+    .required('Organization structure is required'),
 
   publicGoods: yup
     .string()
+    .trim()
     .oneOf(['Yes', 'No', ''], 'Please select a valid option')
     .required('Please select whether the project is a public good'),
 
@@ -602,14 +709,21 @@ export const itemValidationSchemas = {
     )
     .required('Core team information is required'),
 
-  team_incentives: yup.string().required('Team incentives is required'),
+  team_incentives: yup.string().trim().required('Team incentives is required'),
 
   ownership_of_project: yup
     .string()
+    .trim()
     .required('Ownership of project is required'),
+
+  ownership_of_projects: yup
+    .string()
+    .trim()
+    .required('Ownership of projects is required'),
 
   governance_structure: yup
     .string()
+    .trim()
     .required('Governance structure is required'),
 
   physical_entity: yup
@@ -623,6 +737,24 @@ export const itemValidationSchemas = {
     .of(fundingReceivedGrantsSchema)
     .min(1, 'At least one funding received(grants) is required')
     .required('Funding received(grants) information is required'),
+
+  private_funding_rounds: yup
+    .array()
+    .of(privateFundingRoundSchema)
+    .min(1, 'At least one private funding round is required')
+    .required('Private funding rounds information is required'),
+
+  previous_funding_rounds: yup
+    .array()
+    .of(previousFundingRoundSchema)
+    .min(1, 'At least one previous funding round is required')
+    .required('Previous funding rounds information is required'),
+
+  decentralized_governance: yup
+    .array()
+    .of(decentralizedGovernanceSchema)
+    .min(1, 'At least one governance address is required')
+    .required('Decentralized governance information is required'),
 
   affiliated_projects: yup
     .array()
@@ -660,13 +792,21 @@ export const itemValidationSchemas = {
     .min(1, 'At least one stack & integration is required')
     .required('Stack & Integrations information is required'),
 
+  audit_report: yup
+    .array()
+    .of(auditReportSchema)
+    .min(1, 'At least one audit report is required')
+    .required('Audit report information is required'),
+
   // Financial
   fundingStatus: yup
     .string()
+    .trim()
     .required('Funding status is required when applicable'),
 
   tokenContract: yup
     .string()
+    .trim()
     .matches(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format')
     .required('Token contract address is required when applicable'),
 
@@ -674,131 +814,154 @@ export const itemValidationSchemas = {
 
   budget_plans: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Budget plans URL is required'),
 
   expense_statements: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Expense statements URL is required'),
 
-  runway: yup.string().required('Runway is required'),
+  runway: yup.string().trim().required('Runway is required'),
 
   income_and_revenue_statements: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'At least one income/revenue statement is required')
     .required('Income and revenue statements are required'),
 
-  token_sales: yup.string().required('Token sales status is required'),
+  token_sales: yup.string().trim().required('Token sales status is required'),
 
   token_type: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'Select at least one token type')
     .required('Token type is required'),
 
   token_issuance_mechanism: yup
     .string()
+    .trim()
     .required('Token issuance mechanism is required'),
 
   token_launch_date: yup.date().required('Token launch date is required'),
 
-  total: yup.string().required('Total investment is required'),
+  total: yup.string().trim().required('Total investment is required'),
 
   treasury_vault_address: yup
     .string()
+    .trim()
     .matches(
       /^(0x[a-fA-F0-9]{40}|N\/A)$/,
       'Invalid format. Use Ethereum address or N/A',
     )
     .required('Treasury vault address is required when applicable'),
 
-  treasury_mechanism: yup.string().required('Treasury mechanism is required'),
+  vault_address_step2: yup
+    .string()
+    .trim()
+    .matches(/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum address')
+    .required('Vault treasury address is required'),
 
-  constitution: yup.string().required('Constitution is required'),
+  treasury_mechanism: yup
+    .string()
+    .trim()
+    .required('Treasury mechanism is required'),
+
+  constitution: yup.string().trim().required('Constitution is required'),
 
   milestone_type: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'Select at least one milestone type')
     .required('Milestone type is required'),
 
-  software_license: yup.string().required('Software license is required'),
+  software_license: yup
+    .string()
+    .trim()
+    .required('Software license is required'),
 
-  airdrops: yup.string().required('Airdrop status is required'),
+  airdrops: yup.string().trim().required('Airdrop status is required'),
 
   team_location: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'Select at least one team location')
     .required('Team location is required'),
 
-  token_benefits: yup.string().required('Token benefits are required'),
+  token_benefits: yup.string().trim().required('Token benefits are required'),
 
-  token_risks: yup.string().required('Token risks are required'),
+  token_risks: yup.string().trim().required('Token risks are required'),
 
-  token_rights: yup.string().required('Token rights are required'),
+  token_rights: yup.string().trim().required('Token rights are required'),
 
-  token_obligations: yup.string().required('Token obligations are required'),
+  token_obligations: yup
+    .string()
+    .trim()
+    .required('Token obligations are required'),
 
   dapp_storage_stack: yup
     .string()
+    .trim()
     .required('Dapp storage stack information is required'),
 
   dapp_account_management_stack: yup
     .string()
+    .trim()
     .required('Dapp account management stack information is required'),
 
   dapp_logic_program_stack: yup
     .string()
+    .trim()
     .required('Dapp logic/program stack information is required'),
 
   user_data_storage_stack: yup
     .string()
+    .trim()
     .required('User data storage stack information is required'),
 
   unique_value_proposition: yup
     .string()
+    .trim()
     .required('Unique value proposition is required'),
-
-  audit_report: yup.string().required('Audit report details are required'),
-
-  previous_funding_rounds: yup
-    .string()
-    .transform(normalizeUrl)
-    .url('Please enter a valid URL')
-    .required('Previous funding rounds URL is required'),
 
   vault_multi_sig_holder_addresses_step2: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Vault multi-sig holder reference is required'),
 
   on_chain_treasury_step1: yup
     .string()
+    .trim()
     .oneOf(['Yes', 'No'], 'Select whether an on-chain treasury exists')
     .required('On-chain treasury status is required'),
 
   token_utility: yup
     .array()
-    .of(yup.string().required())
+    .of(yup.string().trim().required())
     .min(1, 'Select at least one token utility')
     .required('Token utility is required'),
 
   blockchain_explorer: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Blockchain explorer URL is required'),
 
-  financial_status: yup.string().required('Financial status is required'),
+  financial_status: yup
+    .string()
+    .trim()
+    .required('Financial status is required'),
 
   income_revenue: yup
     .string()
+    .trim()
     .transform(normalizeUrl)
     .url('Please enter a valid URL')
     .required('Income or revenue statement URL is required'),

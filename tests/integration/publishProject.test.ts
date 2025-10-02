@@ -130,7 +130,7 @@ describe('Vote Integration Tests', () => {
         signature,
         message,
         username: `TestVoteUser${i}`,
-        inviteCode: insertedCode.code,
+        turnstileToken: 'test-token',
       });
 
       const profileData = await db.query.profiles.findFirst({

@@ -66,7 +66,7 @@ describe('Project Integration Tests', () => {
       signature,
       message,
       username: 'TestProjectUser',
-      inviteCode: testInviteCode,
+      turnstileToken: 'test-token',
     });
 
     const profileData = await db.query.profiles.findFirst({

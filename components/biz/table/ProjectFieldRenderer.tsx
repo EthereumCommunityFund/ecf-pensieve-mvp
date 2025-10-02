@@ -4,6 +4,7 @@ import { Image, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import React from 'react';
 
+import { NA_VALUE } from '@/constants/naSelection';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { IProject } from '@/types';
 
@@ -51,11 +52,11 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
   isLoadingProjects,
   showProjectIconAndName,
 }) => {
-  if (!projectValue) return <>N/A</>;
+  if (!projectValue) return <>{NA_VALUE}</>;
 
   // Handle direct numeric ID
   if (typeof projectValue === 'number') {
-    if (projectValue <= 0) return <>N/A</>;
+    if (projectValue <= 0) return <>{NA_VALUE}</>;
     if (isLoadingProjects) {
       return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
     }
@@ -68,12 +69,12 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
         />
       );
     }
-    return <>N/A</>;
+    return <>{NA_VALUE}</>;
   }
 
   // Check if it's a string
   if (typeof projectValue === 'string') {
-    if (projectValue === 'N/A') return <>N/A</>;
+    if (projectValue === NA_VALUE) return <>{NA_VALUE}</>;
 
     // Check if it's a projectId (numeric string)
     if (/^\d+$/.test(projectValue) && Number(projectValue) > 0) {
@@ -93,7 +94,7 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
         );
       }
       // If ID lookup failed, show N/A (avoid showing raw numeric string)
-      return <>N/A</>;
+      return <>{NA_VALUE}</>;
     }
 
     // Legacy projectName data
@@ -120,7 +121,7 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
       // Filter out both null and undefined entries to avoid runtime errors
       .filter((p): p is IProject => Boolean(p));
 
-    if (projects.length === 0) return <>N/A</>;
+    if (projects.length === 0) return <>{NA_VALUE}</>;
 
     return (
       <div className="flex flex-wrap items-center">
@@ -141,5 +142,5 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
     );
   }
 
-  return <>N/A</>;
+  return <>{NA_VALUE}</>;
 };

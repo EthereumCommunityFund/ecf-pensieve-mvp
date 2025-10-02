@@ -7,8 +7,17 @@ import UpvoteModal from '@/components/biz/modal/upvote/UpvoteModal';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
+export type UpvoteActionResultType = 'like' | 'update' | 'withdraw';
+
+export interface UpvoteActionResult {
+  projectId: number;
+  previousWeight: number;
+  newWeight: number;
+  type: UpvoteActionResultType;
+}
+
 interface UseUpvoteOptions {
-  onSuccess?: () => void | Promise<void | any>;
+  onSuccess?: (result: UpvoteActionResult) => void | Promise<void>;
 }
 
 export function useUpvote(options: UseUpvoteOptions = {}) {
@@ -54,9 +63,16 @@ export function useUpvote(options: UseUpvoteOptions = {}) {
 
   // Like project mutation
   const likeProjectMutation = trpc.likeProject.likeProject.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      const previousWeight =
+        projectLikeRecordMap.get(variables.projectId)?.weight || 0;
       await Promise.all([
-        onSuccess?.(),
+        onSuccess?.({
+          projectId: variables.projectId,
+          previousWeight,
+          newWeight: variables.weight,
+          type: 'like',
+        }),
         refetchUserVotedProjects(),
         refetchUserAvailableWeight(),
       ]);
@@ -79,9 +95,16 @@ export function useUpvote(options: UseUpvoteOptions = {}) {
 
   const updateLikeProjectMutation =
     trpc.likeProject.updateLikeProject.useMutation({
-      onSuccess: async () => {
+      onSuccess: async (_data, variables) => {
+        const previousWeight =
+          projectLikeRecordMap.get(variables.projectId)?.weight || 0;
         await Promise.all([
-          onSuccess?.(),
+          onSuccess?.({
+            projectId: variables.projectId,
+            previousWeight,
+            newWeight: variables.weight,
+            type: 'update',
+          }),
           refetchUserVotedProjects(),
           refetchUserAvailableWeight(),
         ]);
@@ -103,9 +126,16 @@ export function useUpvote(options: UseUpvoteOptions = {}) {
     });
 
   const withdrawLikeMutation = trpc.likeProject.withdrawLike.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      const previousWeight =
+        projectLikeRecordMap.get(variables.projectId)?.weight || 0;
       await Promise.all([
-        onSuccess?.(),
+        onSuccess?.({
+          projectId: variables.projectId,
+          previousWeight,
+          newWeight: 0,
+          type: 'withdraw',
+        }),
         refetchUserVotedProjects(),
         refetchUserAvailableWeight(),
       ]);

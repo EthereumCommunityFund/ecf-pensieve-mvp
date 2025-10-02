@@ -43,13 +43,20 @@ export function createDynamicProjectSchema(
 
 export function createItemValidationSchema(
   itemKey: string,
+  fieldApplicability?: Record<string, boolean>,
 ): yup.ObjectSchema<any> {
   const validationSchema =
     itemValidationSchemas[itemKey as keyof typeof itemValidationSchemas];
 
   const schemaShape: Record<string, yup.Schema<any>> = {};
 
-  if (validationSchema) {
+  const isApplicable = fieldApplicability
+    ? fieldApplicability[itemKey] !== false
+    : true;
+
+  if (!isApplicable) {
+    schemaShape[itemKey] = yup.mixed().optional();
+  } else if (validationSchema) {
     schemaShape[itemKey] = validationSchema;
   } else {
     schemaShape[itemKey] = yup.string().required(`${itemKey} is required`);

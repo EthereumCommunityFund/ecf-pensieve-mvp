@@ -162,6 +162,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
         itemsNotEssential: [
           'audit_status',
+          'smart_contract_audits',
           'dapp_category',
           'dapp_storage_stack',
           'dapp_account_management_stack',
@@ -213,7 +214,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         itemsNotEssential: [
           'core_team',
           'team_incentives',
-          'ownership_of_project',
+          'ownership_of_projects',
           'contributors_organization',
           'advisors',
         ],
@@ -237,6 +238,10 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
         items: ['fundingStatus'],
         itemsNotEssential: [
           'funding_received_grants',
+          'private_funding_rounds',
+          'previous_funding_rounds',
+          'decentralized_governance',
+          'audit_report',
           'project_funded_date',
           'budget_plans',
           'expense_statements',
@@ -279,6 +284,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'physical_entity',
           'constitution',
           'on_chain_treasury_step1',
+          'vault_address_step2',
         ],
         groups: [],
       },

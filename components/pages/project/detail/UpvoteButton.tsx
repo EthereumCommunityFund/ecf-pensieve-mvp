@@ -2,6 +2,7 @@ import { cn } from '@heroui/react';
 import { CaretUp } from '@phosphor-icons/react';
 import { FC, useCallback } from 'react';
 
+import type { UpvoteActionResult } from '@/hooks/useUpvote';
 import { useUpvote } from '@/hooks/useUpvote';
 import { IProject } from '@/types';
 
@@ -10,11 +11,22 @@ import ProjectActionButton from './ProjectActionButton';
 export interface IUpvoteButtonProps {
   projectId: number;
   project: IProject;
+  onVoteSuccess?: (result: UpvoteActionResult) => void | Promise<void>;
 }
 
-const UpvoteButton: FC<IUpvoteButtonProps> = ({ projectId, project }) => {
+const UpvoteButton: FC<IUpvoteButtonProps> = ({
+  projectId,
+  project,
+  onVoteSuccess,
+}) => {
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
-    useUpvote();
+    useUpvote({
+      onSuccess: onVoteSuccess
+        ? async (result) => {
+            await onVoteSuccess(result);
+          }
+        : undefined,
+    });
 
   const projectLikeRecord = getProjectLikeRecord(projectId);
 

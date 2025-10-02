@@ -1,9 +1,12 @@
-import 'dotenv/config';
-
 import { stdin as input, stdout as output } from 'node:process';
 import readline from 'node:readline/promises';
 
+import { config as loadEnv } from 'dotenv';
+
 import { sendProjectPublishTweet } from '../lib/services/twitter';
+
+loadEnv();
+loadEnv({ path: '.env.local', override: true });
 
 type RawProject = {
   id: number | string;
@@ -114,7 +117,13 @@ async function main() {
       process.exitCode = 1;
     }
   } catch (error) {
-    console.error('Tweet sending threw an error:', error);
+    console.error('Tweet sending threw an error.');
+    if (error instanceof Error) {
+      console.error(error.message);
+      console.error(error.stack);
+    } else {
+      console.error(error);
+    }
     process.exit(1);
   }
 }

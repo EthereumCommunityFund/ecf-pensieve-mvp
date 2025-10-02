@@ -337,7 +337,7 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 2,
   },
-  decentralised_governance: {
+  decentralized_governance: {
     isEssential: false,
     accountability_metric: 5,
   },
