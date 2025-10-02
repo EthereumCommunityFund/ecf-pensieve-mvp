@@ -34,11 +34,8 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       '[ProjectDetailCard] Refetching project data after vote...',
       project?.id,
     );
-    const result = await refetchProject();
-    console.log(
-      '[ProjectDetailCard] Project refetch result:',
-      result?.data?.support,
-    );
+    await refetchProject();
+    console.log('[ProjectDetailCard] Project refetched');
   }, [refetchProject, project?.id]);
 
   const fallbackSharePath = useMemo(() => {

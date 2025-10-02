@@ -123,7 +123,7 @@ describe('ItemProposal Integration Tests', () => {
         signature,
         message,
         username: `TestItemProposalUser${i}`,
-        inviteCode: insertedCode.code,
+        turnstileToken: 'test-token',
       });
 
       const profileData = await db.query.profiles.findFirst({

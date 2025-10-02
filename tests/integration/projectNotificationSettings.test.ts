@@ -66,7 +66,7 @@ describe('Project Notification Settings Integration Tests', () => {
       signature,
       message,
       username: 'TestNotifSettingsUser',
-      inviteCode: testInviteCode,
+      turnstileToken: 'test-token',
     });
 
     const profileData = await db.query.profiles.findFirst({
@@ -94,7 +94,7 @@ describe('Project Notification Settings Integration Tests', () => {
       signature: secondSignature,
       message: secondMessage,
       username: 'SecondTestUser',
-      inviteCode: testInviteCode,
+      turnstileToken: 'test-token',
     });
 
     const secondProfileData = await db.query.profiles.findFirst({
