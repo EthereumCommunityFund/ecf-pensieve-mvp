@@ -119,7 +119,9 @@ const ProfileListDetailPage = () => {
 
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
-      onSuccess: refetchListProjects,
+      onSuccess: (_result) => {
+        refetchListProjects();
+      },
     });
 
   // Initialize edit state when listItems change

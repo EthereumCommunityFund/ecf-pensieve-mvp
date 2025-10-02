@@ -65,7 +65,7 @@ describe('LikeProject Integration Tests', () => {
         signature,
         message,
         username: `TestUser${Date.now()}`,
-        inviteCode: inviteCode,
+        turnstileToken: 'test-token',
       });
     } catch (error: any) {
       console.error('Auth error:', error.message);

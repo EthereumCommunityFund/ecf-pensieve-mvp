@@ -39,7 +39,9 @@ export default function Upvotes() {
   // Use the upvote hook with refresh callback
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
-      onSuccess: refetchUpvotedProjects,
+      onSuccess: (_result) => {
+        refetchUpvotedProjects();
+      },
     });
 
   // Create a map for efficient projectLikeRecord lookup for this specific page
