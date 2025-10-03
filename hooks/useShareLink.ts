@@ -74,6 +74,7 @@ export const useShareLink = ({
       return buildShareOgImageUrl({
         code: query.data.code,
         version: query.data.imageVersion,
+        timestamp: query.data.imageTimestamp,
       });
     }
     return null;
