@@ -1132,8 +1132,9 @@ interface ProjectShareAggregates {
 async function fetchProjectShareAggregates(
   projectId: number,
 ): Promise<ProjectShareAggregates> {
-  const rows = (await db.execute(
-    sql`
+  return getCachedValue(`projectShareAggregates:${projectId}`, async () => {
+    const rows = (await db.execute(
+      sql`
       WITH proposal_creators AS (
         SELECT p.creator
         FROM ${proposals} AS p
@@ -1156,95 +1157,103 @@ async function fetchProjectShareAggregates(
         UNION
         SELECT creator FROM vote_creators
       )
-      SELECT
-        (SELECT COUNT(*)::int FROM ${proposals} AS p2 WHERE p2.project_id = ${projectId}) AS proposal_count,
-        (SELECT COUNT(DISTINCT creator)::int FROM combined_creators WHERE creator IS NOT NULL) AS unique_contributors,
-        (SELECT COUNT(DISTINCT creator)::int FROM vote_creators WHERE creator IS NOT NULL) AS vote_supporter_count,
-        COALESCE((SELECT SUM(weight) FROM vote_creators), 0)::float AS vote_total_weight,
-        (SELECT MAX(created_at) FROM vote_creators) AS latest_vote_at;
-    `,
-  )) as Array<{
-    proposal_count: number | string | null;
-    unique_contributors: number | string | null;
-    vote_supporter_count: number | string | null;
-    vote_total_weight: number | string | null;
-    latest_vote_at: Date | string | null;
-  }>;
+        SELECT
+          (SELECT COUNT(*)::int FROM ${proposals} AS p2 WHERE p2.project_id = ${projectId}) AS proposal_count,
+          (SELECT COUNT(DISTINCT creator)::int FROM combined_creators WHERE creator IS NOT NULL) AS unique_contributors,
+          (SELECT COUNT(DISTINCT creator)::int FROM vote_creators WHERE creator IS NOT NULL) AS vote_supporter_count,
+          COALESCE((SELECT SUM(weight) FROM vote_creators), 0)::float AS vote_total_weight,
+          (SELECT MAX(created_at) FROM vote_creators) AS latest_vote_at;
+      `,
+    )) as Array<{
+      proposal_count: number | string | null;
+      unique_contributors: number | string | null;
+      vote_supporter_count: number | string | null;
+      vote_total_weight: number | string | null;
+      latest_vote_at: Date | string | null;
+    }>;
 
-  const record = rows[0] ?? null;
+    const record = rows[0] ?? null;
 
-  return {
-    proposalCount:
-      record?.proposal_count != null ? Number(record.proposal_count) : 0,
-    uniqueContributors:
-      record?.unique_contributors != null
-        ? Number(record.unique_contributors)
-        : 0,
-    voteSupporterCount:
-      record?.vote_supporter_count != null
-        ? Number(record.vote_supporter_count)
-        : 0,
-    voteTotalWeight:
-      record?.vote_total_weight != null ? Number(record.vote_total_weight) : 0,
-    latestVoteAt:
-      record?.latest_vote_at instanceof Date
-        ? record.latest_vote_at
-        : record?.latest_vote_at
-          ? new Date(record.latest_vote_at)
-          : null,
-  };
+    return {
+      proposalCount:
+        record?.proposal_count != null ? Number(record.proposal_count) : 0,
+      uniqueContributors:
+        record?.unique_contributors != null
+          ? Number(record.unique_contributors)
+          : 0,
+      voteSupporterCount:
+        record?.vote_supporter_count != null
+          ? Number(record.vote_supporter_count)
+          : 0,
+      voteTotalWeight:
+        record?.vote_total_weight != null
+          ? Number(record.vote_total_weight)
+          : 0,
+      latestVoteAt:
+        record?.latest_vote_at instanceof Date
+          ? record.latest_vote_at
+          : record?.latest_vote_at
+            ? new Date(record.latest_vote_at)
+            : null,
+    };
+  });
 }
 
 async function fetchProjectFieldOverrides(
   projectId: number,
 ): Promise<ProjectFieldOverride[]> {
-  const keys = PROJECT_FIELD_OVERRIDE_KEYS as readonly string[];
-  const candidateMap = await fetchLatestCandidatesForKeysBatch(projectId, keys);
+  return getCachedValue(`projectFieldOverrides:${projectId}`, async () => {
+    const keys = PROJECT_FIELD_OVERRIDE_KEYS as readonly string[];
+    const candidateMap = await fetchLatestCandidatesForKeysBatch(
+      projectId,
+      keys,
+    );
 
-  const candidateIds = Array.from(
-    new Set(
-      Array.from(candidateMap.values())
-        .map((entry) => (entry?.id != null ? Number(entry.id) : null))
-        .filter(
-          (entry): entry is number =>
-            typeof entry === 'number' && Number.isFinite(entry),
-        ),
-    ),
-  );
+    const candidateIds = Array.from(
+      new Set(
+        Array.from(candidateMap.values())
+          .map((entry) => (entry?.id != null ? Number(entry.id) : null))
+          .filter(
+            (entry): entry is number =>
+              typeof entry === 'number' && Number.isFinite(entry),
+          ),
+      ),
+    );
 
-  if (candidateIds.length === 0) {
-    return [];
-  }
-
-  const snapshots = await resolveItemProposalsContextBatch(candidateIds);
-
-  const overrides: ProjectFieldOverride[] = [];
-
-  for (const key of PROJECT_FIELD_OVERRIDE_KEYS) {
-    const selection = candidateMap.get(key);
-    if (!selection?.id) {
-      continue;
+    if (candidateIds.length === 0) {
+      return [];
     }
 
-    const snapshot = snapshots.get(selection.id);
-    if (!snapshot || snapshot.key !== key) {
-      continue;
+    const snapshots = await resolveItemProposalsContextBatch(candidateIds);
+
+    const overrides: ProjectFieldOverride[] = [];
+
+    for (const key of PROJECT_FIELD_OVERRIDE_KEYS) {
+      const selection = candidateMap.get(key);
+      if (!selection?.id) {
+        continue;
+      }
+
+      const snapshot = snapshots.get(selection.id);
+      if (!snapshot || snapshot.key !== key) {
+        continue;
+      }
+
+      const rawValue = snapshot.value ?? null;
+      const textValue = valueToText(rawValue);
+
+      overrides.push({
+        key,
+        valueText: textValue && textValue.length > 0 ? textValue : undefined,
+        rawValue,
+        displayLabel: formatReadableKey(key),
+        createdAt: snapshot.createdAt,
+        isNotLeading: selection.source !== 'leading',
+      });
     }
 
-    const rawValue = snapshot.value ?? null;
-    const textValue = valueToText(rawValue);
-
-    overrides.push({
-      key,
-      valueText: textValue && textValue.length > 0 ? textValue : undefined,
-      rawValue,
-      displayLabel: formatReadableKey(key),
-      createdAt: snapshot.createdAt,
-      isNotLeading: selection.source !== 'leading',
-    });
-  }
-
-  return overrides;
+    return overrides;
+  });
 }
 
 async function resolveItemProposalContext(
@@ -1957,7 +1966,7 @@ async function resolveProjectContext(
   };
 }
 
-async function resolveEntityContext(
+async function resolveEntityContextDirect(
   entityType: ShareEntityType,
   entityId: string,
 ): Promise<EntityContext | null> {
@@ -1972,39 +1981,82 @@ async function resolveEntityContext(
       return null;
   }
 }
+async function resolveEntityContext(
+  entityType: ShareEntityType,
+  entityId: string,
+): Promise<EntityContext | null> {
+  const cacheKey = `entityContext:${entityType}:${entityId}`;
+  return getCachedValue(cacheKey, () =>
+    resolveEntityContextDirect(entityType, entityId),
+  );
+}
+
+interface BuildPayloadOptions {
+  preloadedContext?: EntityContext | null;
+  disableCache?: boolean;
+}
+
+function buildPayloadCacheKey(record: ShareLinkRecord): string {
+  const normalizedType = normalizeEntityType(record.entityType);
+  const updatedSource =
+    record.updatedAt ?? record.createdAt ?? new Date().toISOString();
+  const updatedTimestamp =
+    updatedSource instanceof Date
+      ? updatedSource.getTime()
+      : new Date(updatedSource).getTime();
+  const safeTimestamp = Number.isFinite(updatedTimestamp)
+    ? updatedTimestamp
+    : Date.now();
+  return `sharePayload:${normalizedType}:${record.entityId}:${record.code}:${safeTimestamp}`;
+}
+
 async function buildPayloadFromRecord(
   record: ShareLinkRecord,
+  options?: BuildPayloadOptions,
 ): Promise<SharePayload | null> {
-  const entityType = normalizeEntityType(record.entityType);
-  const context = await resolveEntityContext(entityType, record.entityId);
+  const { preloadedContext, disableCache } = options ?? {};
+  const cacheKey = buildPayloadCacheKey(record);
 
-  if (!context) {
-    return null;
+  const loader = async (): Promise<SharePayload | null> => {
+    const entityType = normalizeEntityType(record.entityType);
+    const context =
+      preloadedContext ??
+      (await resolveEntityContext(entityType, record.entityId));
+
+    if (!context) {
+      return null;
+    }
+
+    const recordVisibility = normalizeVisibility(record.visibility);
+    const contextVisibility = context.visibility;
+
+    const effectiveVisibility =
+      recordVisibility === 'unlisted' && contextVisibility === 'public'
+        ? 'public'
+        : mergeVisibility(recordVisibility, contextVisibility);
+
+    return {
+      code: record.code,
+      entityType,
+      entityId: record.entityId,
+      sharePath: `/s/${record.code}`,
+      targetUrl: context.targetUrl,
+      parentId: context.parentId ?? record.parentId ?? null,
+      visibility: effectiveVisibility,
+      metadata: context.metadata,
+      imageVersion: context.imageVersion,
+      imageTimestamp: context.imageTimestamp,
+      layout: context.layout,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
+  };
+
+  if (disableCache) {
+    return loader();
   }
 
-  const recordVisibility = normalizeVisibility(record.visibility);
-  const contextVisibility = context.visibility;
-
-  const effectiveVisibility =
-    recordVisibility === 'unlisted' && contextVisibility === 'public'
-      ? 'public'
-      : mergeVisibility(recordVisibility, contextVisibility);
-
-  return {
-    code: record.code,
-    entityType,
-    entityId: record.entityId,
-    sharePath: `/s/${record.code}`,
-    targetUrl: context.targetUrl,
-    parentId: context.parentId ?? record.parentId ?? null,
-    visibility: effectiveVisibility,
-    metadata: context.metadata,
-    imageVersion: context.imageVersion,
-    imageTimestamp: context.imageTimestamp,
-    layout: context.layout,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-  };
+  return getCachedValue(cacheKey, loader);
 }
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -2136,7 +2188,9 @@ export async function ensureShareLink(
       throw new ShareServiceError('Failed to create share link', 500);
     }
 
-    const payload = await buildPayloadFromRecord(created);
+    const payload = await buildPayloadFromRecord(created, {
+      preloadedContext: context,
+    });
     if (!payload) {
       throw new ShareServiceError('Share payload unavailable', 404);
     }
