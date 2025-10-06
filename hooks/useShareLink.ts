@@ -24,6 +24,7 @@ export const useShareLink = ({
   enabled = true,
 }: UseShareLinkOptions) => {
   const isEnabled = enabled && entityId !== undefined && entityId !== null;
+  const shouldPrefetch = isEnabled && entityType === 'project';
 
   const query = trpc.share.ensure.useQuery(
     {
@@ -31,9 +32,12 @@ export const useShareLink = ({
       entityId: (entityId ?? 0) as number | string,
     },
     {
-      enabled: false,
+      enabled: shouldPrefetch,
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: 1000 * 60,
+      gcTime: 1000 * 60 * 5,
     },
   );
 
@@ -41,8 +45,11 @@ export const useShareLink = ({
     if (!isEnabled) {
       return null;
     }
+    if (query.data && !query.isFetching) {
+      return query.data;
+    }
     const result = await query.refetch();
-    return result.data ?? null;
+    return result.data ?? query.data ?? null;
   }, [isEnabled, query]);
 
   const refreshShareLink = useCallback(async () => {
@@ -50,7 +57,7 @@ export const useShareLink = ({
       return null;
     }
     const result = await query.refetch();
-    return result.data ?? null;
+    return result.data ?? query.data ?? null;
   }, [isEnabled, query]);
 
   const shareUrl = useMemo(() => {
@@ -74,6 +81,7 @@ export const useShareLink = ({
       return buildShareOgImageUrl({
         code: query.data.code,
         version: query.data.imageVersion,
+        timestamp: query.data.imageTimestamp,
       });
     }
     return null;

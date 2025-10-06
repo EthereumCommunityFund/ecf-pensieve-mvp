@@ -4,6 +4,21 @@ import superJSON from 'superjson';
 import { db } from '@/lib/db';
 import { getServiceSupabase } from '@/lib/supabase/client';
 
+const SYSTEM_TOKEN_HEADER = 'x-ai-system-token';
+
+const parseSystemTokenEnv = (envValue: string | undefined) => {
+  if (!envValue) {
+    return [];
+  }
+
+  return envValue
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+};
+
+const AI_SYSTEM_TOKEN_MAP = parseSystemTokenEnv(process.env.AI_SYSTEM_TOKENS);
+
 export type Context = {
   user: { id: string } | null;
   db: typeof db;
@@ -14,6 +29,15 @@ export const createTRPCContext = async (opts: {
   headers: Headers;
 }): Promise<Context> => {
   const supabase = getServiceSupabase();
+
+  const systemToken = opts.headers.get(SYSTEM_TOKEN_HEADER);
+  if (systemToken) {
+    return {
+      user: { id: systemToken },
+      db,
+      supabase,
+    };
+  }
 
   const authHeader = opts.headers.get('authorization');
   if (!authHeader) {
