@@ -8,16 +8,17 @@ import {
   DropdownTrigger,
   Spinner,
 } from '@heroui/react';
-import { FC, memo, useCallback, useEffect, useState } from 'react';
+import { FC, memo, useCallback, useState } from 'react';
 
-import { addToast, Button } from '@/components/base';
+import { addToast } from '@/components/base';
 import { EyeIcon } from '@/components/icons/EyeIcon';
 import {
   NotificationConfigDropdownProps,
   NotificationMode,
 } from '@/components/pages/project/detail/notification/notification';
-import { getErrorMessage } from '@/components/pages/project/detail/notification/notificationError';
 import { useAuth } from '@/context/AuthContext';
+
+import ProjectActionButton from '../ProjectActionButton';
 
 import { useNotificationSettings } from './useNotificationSettings';
 
@@ -182,20 +183,7 @@ const NotificationConfigDropdown: FC<NotificationConfigDropdownProps> = ({
     [updateSetting],
   );
 
-  // Show error if any
-  useEffect(() => {
-    if (error) {
-      addToast({
-        title: getErrorMessage(error),
-        color: 'danger',
-      });
-    }
-  }, [error]);
-
-  // Don't show the button if user is not logged in
-  if (!profile) {
-    return null;
-  }
+  const isButtonDisabled = disabled || isLoading || !profile;
 
   return (
     <Dropdown
@@ -207,17 +195,12 @@ const NotificationConfigDropdown: FC<NotificationConfigDropdownProps> = ({
       }}
     >
       <DropdownTrigger>
-        <Button
-          isIconOnly
-          disabled={disabled || isLoading}
-          isLoading={isLoading}
-          className={cn(
-            'rounded-[4px] bg-black/5 hover:bg-black/10 size-[40px] p-[8px] mobile:size-[32px] mobile:p-[6px]',
-            className,
-          )}
+        <ProjectActionButton
+          disabled={disabled || isLoading || !profile}
+          className={isButtonDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
         >
           <EyeIcon />
-        </Button>
+        </ProjectActionButton>
       </DropdownTrigger>
 
       <DropdownMenu

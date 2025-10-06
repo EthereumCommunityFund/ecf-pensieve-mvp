@@ -268,7 +268,7 @@ const ProjectCard = ({
         </div>
       </div>
 
-      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
         <NotificationConfigDropdown projectId={project.id} />
         <ShareButton
           shareUrl={shareUrl}
@@ -322,9 +322,9 @@ const ProjectCardSkeleton = () => {
       </div>
 
       {/* ShareButton skeleton */}
-      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
-        <Skeleton className="size-[32px] rounded-[6px]" />
-        <Skeleton className="size-[32px] rounded-[6px]" />
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
       </div>
     </div>
   );

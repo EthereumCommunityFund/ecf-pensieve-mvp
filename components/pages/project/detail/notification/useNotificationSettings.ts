@@ -4,11 +4,13 @@ import {
   NotificationMode,
   UseNotificationSettingsReturn,
 } from '@/components/pages/project/detail/notification/notification';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
 export function useNotificationSettings(
   projectId: number,
 ): UseNotificationSettingsReturn {
+  const { profile } = useAuth();
   const [optimisticMode, setOptimisticMode] = useState<NotificationMode | null>(
     null,
   );
@@ -22,7 +24,7 @@ export function useNotificationSettings(
   } = trpc.projectNotificationSettings.getProjectNotificationSetting.useQuery(
     { projectId },
     {
-      enabled: !!projectId && projectId > 0,
+      enabled: !!projectId && projectId > 0 && !!profile,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
