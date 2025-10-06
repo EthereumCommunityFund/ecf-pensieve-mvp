@@ -2,7 +2,7 @@
 
 import { Image } from '@heroui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -14,10 +14,14 @@ import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { useAuth } from '@/context/AuthContext';
+import { useOffsetPagination } from '@/hooks/useOffsetPagination';
+import { UpvoteActionResult } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { SortBy, SortOrder } from '@/types/sort';
 import { devLog } from '@/utils/devLog';
+
+const PAGE_SIZE = 10;
 
 const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
@@ -60,9 +64,14 @@ const ProjectsContent = () => {
     return sort ? parseSortParam(sort) : {};
   }, [sort]);
 
-  const [offset, setOffset] = useState(0);
-  const [allProjects, setAllProjects] = useState<IProject[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const {
+    offset,
+    items: projectList,
+    isLoadingMore,
+    handleLoadMore,
+    setPageData,
+    reset,
+  } = useOffsetPagination<IProject>({ pageSize: PAGE_SIZE });
 
   const {
     data,
@@ -71,15 +80,17 @@ const ProjectsContent = () => {
     refetch: refetchProjects,
   } = trpc.project.getProjects.useQuery(
     {
-      limit: 10,
+      limit: PAGE_SIZE,
       offset,
       isPublished: true,
       ...(cats && cats.length > 0 && { categories: cats }),
       ...sortParams,
     },
     {
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
+      refetchOnWindowFocus: false,
+      refetchOnMount: 'always',
+      staleTime: 0,
+      gcTime: 5 * 60 * 1000, // 5 minutes
     },
   );
 
@@ -91,44 +102,80 @@ const ProjectsContent = () => {
     router.push('/project/create');
   }, [profile, showAuthPrompt, router]);
 
-  const onUpvoteSuccess = () => {
-    refetchProjects();
-  };
+  const handleUpvoteSuccess = useCallback(
+    (result: UpvoteActionResult) => {
+      const { projectId, previousWeight, newWeight } = result;
+      const weightDelta = newWeight - previousWeight;
 
-  const handleLoadMore = async () => {
-    setIsLoadingMore(true);
-    setOffset((prev) => prev + 10);
-  };
+      const currentProject = projectList.find(
+        (project) => project.id === projectId,
+      );
+
+      if (!currentProject) {
+        reset({ soft: true });
+        return;
+      }
+
+      if (sort === 'top-community-trusted') {
+        const currentSupport = currentProject.support || 0;
+        const newSupport = currentSupport + weightDelta;
+
+        if (weightDelta !== 0) {
+          const pageStart = Math.floor(offset / PAGE_SIZE) * PAGE_SIZE;
+          const pageEnd = pageStart + PAGE_SIZE - 1;
+
+          const previousBoundarySupport =
+            pageStart > 0
+              ? (projectList[pageStart - 1]?.support ??
+                Number.POSITIVE_INFINITY)
+              : undefined;
+          const nextBoundarySupport =
+            projectList.length > pageEnd + 1
+              ? (projectList[pageEnd + 1]?.support ?? Number.NEGATIVE_INFINITY)
+              : undefined;
+
+          const shouldMoveUp =
+            weightDelta > 0 &&
+            typeof previousBoundarySupport === 'number' &&
+            newSupport > previousBoundarySupport;
+
+          const shouldMoveDown =
+            weightDelta < 0 &&
+            typeof nextBoundarySupport === 'number' &&
+            newSupport < nextBoundarySupport;
+
+          if (shouldMoveUp || shouldMoveDown) {
+            reset({ soft: true });
+            return;
+          }
+        }
+      }
+
+      refetchProjects();
+    },
+    [projectList, reset, sort, offset, refetchProjects],
+  );
 
   // Manage accumulated projects list
   useEffect(() => {
-    if (data?.items) {
-      if (offset === 0) {
-        // First load or refresh
-        setAllProjects(data.items as IProject[]);
-      } else {
-        // Load more
-        setAllProjects((prev) => [...prev, ...(data.items as IProject[])]);
-      }
-      setIsLoadingMore(false);
+    if (!data?.items) {
+      return;
     }
-  }, [data, offset]);
 
-  // Reset when filters change - use stable dependency
+    if (typeof data.offset === 'number' && data.offset !== offset) {
+      return;
+    }
+
+    setPageData(data.items as IProject[], data.offset ?? offset);
+  }, [data, offset, setPageData]);
+
+  // Reset when filters (cats) or sort change. Also trigger a refetch to avoid stale UI
   const catsKey = cats?.join(',') || '';
-  useEffect(() => {
-    setOffset(0);
-    setAllProjects([]);
-  }, [sort, catsKey]);
 
-  // Trigger refetch when query params change (including clearing filters)
   useEffect(() => {
-    // Clear existing projects to show skeleton while refetching
-    setAllProjects([]);
-    refetchProjects();
-  }, [searchParams, refetchProjects]);
+    reset();
+  }, [sort, catsKey, reset]);
 
-  // Refetch data when page becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -143,7 +190,22 @@ const ProjectsContent = () => {
     };
   }, [refetchProjects]);
 
-  const { projectList, title, description, emptyMessage } = useMemo(() => {
+  // Handle browser back/forward cache (pageshow with persisted === true)
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      // When navigating back via BFCache, ensure data is fresh
+      if ((event as PageTransitionEvent).persisted) {
+        refetchProjects();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow as EventListener);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow as EventListener);
+    };
+  }, [refetchProjects]);
+
+  const { title, description, emptyMessage } = useMemo(() => {
     // Determine title and description based on sort parameter
     let pageTitle: string;
     let pageDescription: string;
@@ -180,12 +242,11 @@ const ProjectsContent = () => {
     }
 
     return {
-      projectList: allProjects,
       title: pageTitle,
       description: pageDescription,
       emptyMessage: pageEmptyMessage,
     };
-  }, [sort, cats, allProjects]);
+  }, [sort, cats]);
 
   const showUpvote = useMemo(() => {
     return sort !== 'top-transparent';
@@ -196,10 +257,10 @@ const ProjectsContent = () => {
   }, [sort]);
 
   useEffect(() => {
-    if (allProjects.length > 0) {
-      devLog('projectList', allProjects);
+    if (projectList.length > 0) {
+      devLog('projectList', projectList);
     }
-  }, [allProjects]);
+  }, [projectList]);
 
   return (
     <div className="pb-10">
@@ -268,7 +329,7 @@ const ProjectsContent = () => {
             projectList={projectList}
             emptyMessage={emptyMessage}
             onLoadMore={handleLoadMore}
-            onSuccess={onUpvoteSuccess}
+            onSuccess={handleUpvoteSuccess}
             showTransparentScore={showTransparentScore}
             showUpvote={showUpvote}
             showCreator={true}

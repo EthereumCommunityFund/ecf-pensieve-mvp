@@ -1,38 +1,58 @@
 'use client';
 
 import { cn, useDisclosure } from '@heroui/react';
-import { FC } from 'react';
+import { FC, useCallback } from 'react';
 
-import { Button } from '@/components/base';
 import ShareModal from '@/components/biz/share/ShareModal';
 import { ShareLinkIcon } from '@/components/icons';
+import ProjectActionButton from '@/components/pages/project/detail/ProjectActionButton';
+import type { SharePayload } from '@/lib/services/share';
 
 interface ShareButtonProps {
-  shortCode: string;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  shareUrl: string;
+  shareImageUrl?: string | null;
+  isLoading?: boolean;
+  error?: string | null;
+  onEnsure?: () => Promise<unknown> | void;
+  onRefresh?: () => Promise<unknown> | void;
+  payload?: SharePayload | null;
 }
 
 const ShareButton: FC<ShareButtonProps> = ({
-  shortCode,
   className = '',
-  size = 'md',
+  shareUrl,
+  shareImageUrl,
+  isLoading,
+  error,
+  onEnsure,
+  onRefresh,
+  payload,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const handleOpen = useCallback(() => {
+    onOpen();
+    if (onEnsure) {
+      void onEnsure();
+    }
+  }, [onEnsure, onOpen]);
+
   return (
     <>
-      <Button
-        isIconOnly
-        className={cn(
-          'rounded-[4px] bg-black/5 hover:bg-black/10 size-[40px] p-[8px] mobile:size-[32px] mobile:p-[6px]',
-          className,
-        )}
-        onPress={onOpen}
-      >
-        <ShareLinkIcon className="mobile:size-[20px] size-[24px]" />
-      </Button>
-      <ShareModal isOpen={isOpen} onClose={onClose} shortCode={shortCode} />
+      <ProjectActionButton onPress={handleOpen}>
+        <ShareLinkIcon className={cn('size-[20px]', className)} />
+      </ProjectActionButton>
+      <ShareModal
+        isOpen={isOpen}
+        onClose={onClose}
+        shareUrl={shareUrl}
+        shareImageUrl={shareImageUrl}
+        isLoading={isLoading}
+        error={error}
+        onRefresh={onRefresh}
+        payload={payload}
+      />
     </>
   );
 };

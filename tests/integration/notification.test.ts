@@ -49,7 +49,7 @@ describe('Notification Integration Tests', () => {
       signature,
       message,
       username: 'TestNotificationUser',
-      inviteCode: testInviteCode,
+      turnstileToken: 'test-token',
     });
 
     const profileData = await db.query.profiles.findFirst({

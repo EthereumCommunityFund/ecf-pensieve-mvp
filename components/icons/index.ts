@@ -64,6 +64,7 @@ export { default as SortDescendingIcon } from './SortDescending';
 export { default as SquareIcon } from './Square';
 export { default as TableIcon } from './Table';
 export { default as TagIcon } from './Tag';
+export { default as TapHandIcon } from './TapHand';
 export { default as ThumbsUpIcon } from './ThumbsUp';
 export { default as TrashIcon } from './Trash';
 export { default as TrendDownIcon } from './TrendDownIcon';

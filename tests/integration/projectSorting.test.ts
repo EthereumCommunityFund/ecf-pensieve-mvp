@@ -57,7 +57,7 @@ describe('Project Sorting Integration Tests', () => {
       message,
       signature,
       username: 'TestSortingUser',
-      inviteCode: testInviteCode,
+      turnstileToken: 'test-token',
     });
 
     const profileData = await db.query.profiles.findFirst({

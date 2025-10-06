@@ -1,13 +1,19 @@
 'use client';
 
 import { cn, Image, Skeleton } from '@heroui/react';
-import { FC } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import ShareButton from '@/components/biz/share/ShareButton';
+import useShareLink from '@/hooks/useShareLink';
+import type { UpvoteActionResult } from '@/hooks/useUpvote';
+import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
+
+import { useProjectDetailContext } from '../context/projectDetailContext';
 
 import BookmarkButton from './list/BookmarkButton';
 import NotificationConfigDropdown from './notification/NotificationConfigDropdown';
+import UpvoteButton from './UpvoteButton';
 
 interface ProjectDetailCardProps {
   project?: IProject;
@@ -24,6 +30,91 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
   getLeadingCategories,
   getLeadingLogoUrl,
 }) => {
+  const { refetchProject } = useProjectDetailContext();
+  const utils = trpc.useUtils();
+
+  const handleVoteSuccess = useCallback(
+    async ({ projectId, previousWeight, newWeight }: UpvoteActionResult) => {
+      if (!projectId) {
+        return;
+      }
+
+      const weightDelta = newWeight - previousWeight;
+      const likeCountDelta =
+        previousWeight === 0 && newWeight > 0
+          ? 1
+          : previousWeight > 0 && newWeight === 0
+            ? -1
+            : 0;
+
+      if (weightDelta !== 0 || likeCountDelta !== 0) {
+        utils.project.getProjectById.setData({ id: projectId }, (oldData) => {
+          if (!oldData) {
+            return oldData;
+          }
+
+          let hasChanges = false;
+          let nextSupport = oldData.support ?? 0;
+          if (weightDelta !== 0) {
+            const updatedSupport = Math.max(0, nextSupport + weightDelta);
+            if (updatedSupport !== nextSupport) {
+              nextSupport = updatedSupport;
+              hasChanges = true;
+            }
+          }
+
+          let nextLikeCount = oldData.likeCount;
+          if (typeof nextLikeCount === 'number' && likeCountDelta !== 0) {
+            const updatedLikeCount = Math.max(
+              0,
+              nextLikeCount + likeCountDelta,
+            );
+            if (updatedLikeCount !== nextLikeCount) {
+              nextLikeCount = updatedLikeCount;
+              hasChanges = true;
+            }
+          }
+
+          if (!hasChanges) {
+            return oldData;
+          }
+
+          return {
+            ...oldData,
+            ...(weightDelta !== 0 ? { support: nextSupport } : {}),
+            ...(typeof nextLikeCount === 'number' && likeCountDelta !== 0
+              ? { likeCount: nextLikeCount }
+              : {}),
+          };
+        });
+      }
+
+      await refetchProject();
+    },
+    [refetchProject, utils.project.getProjectById],
+  );
+
+  const fallbackSharePath = useMemo(() => {
+    if (!project) {
+      return '';
+    }
+    return `/project/${project.id}`;
+  }, [project]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    payload: sharePayload,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'project',
+    entityId: project?.id,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!project?.id,
+  });
+
   if (!project) {
     return <ProjectDetailCardSkeleton />;
   }
@@ -31,7 +122,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
     <div
       className={cn(
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
-        'p-[20px] mobile:p-[14px]',
+        'p-[20px] mobile:p-[14px] pr-[200px] mobile:pb-[52px]',
         'bg-white border border-black/10 rounded-[10px]',
         'flex justify-start items-start gap-[20px] relative',
       )}
@@ -41,9 +132,9 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
         alt={getLeadingProjectName ? getLeadingProjectName() : project.name}
         width={100}
         height={100}
-        className="overflow-hidden rounded-[10px] border border-black/10 object-cover"
+        className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10 object-cover"
       />
-      <div className="flex flex-col gap-[10px]">
+      <div className="flex flex-1 flex-col gap-[10px]">
         <p className="text-[20px] font-[700] leading-tight text-[#202023]">
           {getLeadingProjectName ? getLeadingProjectName() : project.name}
         </p>
@@ -68,9 +159,23 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
       </div>
 
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <UpvoteButton
+          projectId={project.id}
+          project={project}
+          onVoteSuccess={handleVoteSuccess}
+        />
         <BookmarkButton projectId={project.id} />
-        {project.shortCode && <ShareButton shortCode={project.shortCode} />}
         <NotificationConfigDropdown projectId={project.id} />
+        <ShareButton
+          shareUrl={shareUrl}
+          shareImageUrl={shareImageUrl}
+          className="size-[40px]"
+          isLoading={shareLinkLoading}
+          error={shareLinkError}
+          onEnsure={ensureShareLink}
+          onRefresh={ensureShareLink}
+          payload={sharePayload}
+        />
       </div>
     </div>
   );
@@ -108,9 +213,10 @@ const ProjectDetailCardSkeleton = () => {
 
       {/* BookmarkButton and ShareButton skeleton */}
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
+        <Skeleton className="mobile:size-[32px] h-[40px] w-[100px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
       </div>
     </div>
   );

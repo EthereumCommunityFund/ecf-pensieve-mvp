@@ -1,4 +1,4 @@
-import { Skeleton, Tooltip } from '@heroui/react';
+import { Tooltip } from '@heroui/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { memo, useCallback, useMemo } from 'react';
@@ -7,16 +7,30 @@ import { AddressDisplay } from '@/components/base/AddressDisplay';
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
+import { CONTRIBUTOR_ROLE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributorsTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
-import { ProjectColDisplay } from '@/components/biz/table/ProjectFieldRenderer';
+import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
 import { getChainDisplayInfo } from '@/constants/chains';
+import { EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES } from '@/constants/embedTable';
+import { NA_VALUE } from '@/constants/naSelection';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
-import { IProject } from '@/types';
-import { IFormDisplayType, IPhysicalEntity, IPocItemKey } from '@/types/item';
+import {
+  IAdvisors,
+  IAuditReport,
+  IContributors,
+  IContributorsOrganization,
+  IDecentralizedGovernanceEntry,
+  IEndorser,
+  IFormDisplayType,
+  IPhysicalEntity,
+  IPocItemKey,
+  IPreviousFundingRound,
+} from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
+  extractProjectIds,
   isInputValueEmpty,
   isInputValueNA,
   parseMultipleValue,
@@ -24,6 +38,14 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
+
+import {
+  BOOL_TYPE_OPTIONS,
+  getColumnConfig,
+  getColumnTooltip,
+  isEmbedTableFormType,
+  isEmbedTableFormWithProjectSelector,
+} from './embedTable/embedTableUtils';
 
 import { TableCell, TableContainer, TableHeader, TableRow } from './index';
 
@@ -56,64 +78,8 @@ interface IProps {
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
   isInExpandableRow?: boolean;
+  isTableCell?: boolean;
 }
-
-// Reusable component for rendering project fields
-const ProjectFieldRenderer: React.FC<{
-  projectValue: string | string[] | undefined;
-  projectsMap: Map<number, IProject> | undefined;
-  isLoadingProjects: boolean;
-  isProjectId: (value: string) => boolean;
-}> = ({ projectValue, projectsMap, isLoadingProjects, isProjectId }) => {
-  if (!projectValue) return <>N/A</>;
-
-  // Check if it's a string
-  if (typeof projectValue === 'string') {
-    if (projectValue === 'N/A') return <>N/A</>;
-
-    // Check if it's a projectId
-    if (isProjectId(projectValue)) {
-      if (isLoadingProjects) {
-        return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
-      }
-
-      const numId = parseInt(projectValue, 10);
-      const projectData = projectsMap?.get(numId);
-
-      if (projectData) {
-        return <ProjectColDisplay project={projectData} />;
-      }
-    }
-
-    // Legacy projectName data
-    return <>{projectValue}</>;
-  }
-
-  // Array of project IDs
-  if (Array.isArray(projectValue)) {
-    if (isLoadingProjects) {
-      return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
-    }
-
-    const projects = projectValue
-      .map((id: string) => {
-        const numId = parseInt(id, 10);
-        const projectData = projectsMap?.get(numId);
-        return projectData || null;
-      })
-      .filter((p): p is IProject => p !== null);
-
-    return (
-      <div className="flex flex-wrap items-center gap-[8px]">
-        {projects.map((project) => (
-          <ProjectColDisplay key={project.id} project={project} />
-        ))}
-      </div>
-    );
-  }
-
-  return <></>;
-};
 
 const InputContentRenderer: React.FC<IProps> = ({
   value,
@@ -123,56 +89,33 @@ const InputContentRenderer: React.FC<IProps> = ({
   isExpanded,
   onToggleExpanded,
   isInExpandableRow,
+  isTableCell,
 }) => {
   const formatValue =
     typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
 
-  // Helper function to check if a string value is a projectId
-  const isProjectId = useCallback((value: string): boolean => {
-    // projectId is a numeric string, not 'N/A', and Number(value) > 0
-    return value !== 'N/A' && /^\d+$/.test(value) && Number(value) > 0;
-  }, []);
-
-  // Helper function to extract projectIds from a field value
-  const extractProjectIds = useCallback(
-    (fieldValue: any): string[] => {
-      if (!fieldValue) return [];
-
-      if (Array.isArray(fieldValue)) {
-        return fieldValue;
-      }
-
-      if (typeof fieldValue === 'string' && isProjectId(fieldValue)) {
-        return [fieldValue];
-      }
-
-      return [];
-    },
-    [isProjectId],
-  );
-
   // For fundingReceivedGrants, affiliated_projects, contributing_teams, and stack_integrations, extract project IDs
-  const projectIds = useMemo(() => {
+  const projectIds = useMemo((): Array<string | number> => {
     const parsed = parseValue(formatValue);
     if (!parsed || !Array.isArray(parsed)) return [];
 
-    const ids: string[] = [];
+    const ids: Array<string | number> = [];
 
-    if (displayFormType === 'fundingReceivedGrants') {
-      parsed.forEach((grant: any) => {
-        // Extract from organization and projectDonator fields
-        ids.push(...extractProjectIds(grant.organization));
-        ids.push(...extractProjectIds(grant.projectDonator));
-      });
-    } else if (
-      displayFormType === 'affiliated_projects' ||
-      displayFormType === 'contributing_teams' ||
-      displayFormType === 'stack_integrations'
-    ) {
-      parsed.forEach((item: any) => {
-        // Extract from project field
-        ids.push(...extractProjectIds(item.project));
-      });
+    if (EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES.includes(displayFormType!)) {
+      // special, with two project fields
+      if (displayFormType === 'fundingReceivedGrants') {
+        parsed.forEach((grant: any) => {
+          // Extract from organization and projectDonator fields
+          ids.push(...extractProjectIds(grant.organization));
+          ids.push(...extractProjectIds(grant.projectDonator));
+        });
+      } else {
+        // treat [project] as project field key
+        parsed.forEach((item: any) => {
+          // Extract from project field
+          ids.push(...extractProjectIds(item.project));
+        });
+      }
     }
 
     return [...new Set(ids)]; // Remove duplicates
@@ -183,10 +126,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     projectIds,
     {
       enabled:
-        (displayFormType === 'fundingReceivedGrants' ||
-          displayFormType === 'affiliated_projects' ||
-          displayFormType === 'contributing_teams' ||
-          displayFormType === 'stack_integrations') &&
+        isEmbedTableFormWithProjectSelector(displayFormType) &&
         projectIds.length > 0,
     },
   );
@@ -252,7 +192,7 @@ const InputContentRenderer: React.FC<IProps> = ({
           references = value.references || [];
 
           if (!applicable) {
-            return <span className="text-gray-500">N/A</span>;
+            return <span className="text-gray-500">{NA_VALUE}</span>;
           }
         }
 
@@ -367,8 +307,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -414,7 +359,7 @@ const InputContentRenderer: React.FC<IProps> = ({
       case 'link':
         return (
           <Link
-            href={value}
+            href={normalizeUrl(value)}
             target="_blank"
             rel="noreferrer"
             className="break-all underline"
@@ -423,7 +368,7 @@ const InputContentRenderer: React.FC<IProps> = ({
               overflowWrap: 'anywhere',
             }}
           >
-            {value}
+            {normalizeUrl(value)}
           </Link>
         );
       case 'date':
@@ -619,8 +564,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -703,8 +653,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -855,8 +810,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -991,8 +951,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1100,7 +1065,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={grant.organization}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1112,7 +1076,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={grant.projectDonator}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1172,8 +1135,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1183,7 +1151,7 @@ const InputContentRenderer: React.FC<IProps> = ({
             </div>
           );
         }
-
+        // Default collapsed summary
         return (
           <>
             {parsed
@@ -1203,6 +1171,595 @@ const InputContentRenderer: React.FC<IProps> = ({
           </>
         );
       }
+      case 'previous_funding_rounds': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return (
+            <span className="text-gray-400">No previous funding rounds</span>
+          );
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('previous_funding_rounds', 'date')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('previous_funding_rounds', 'date')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'date',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('previous_funding_rounds', 'amount')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'amount',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'amount',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        isLast
+                        width={
+                          getColumnConfig(
+                            'previous_funding_rounds',
+                            'reference',
+                          )?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'reference',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'previous_funding_rounds',
+                              'reference',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (item: IPreviousFundingRound, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={
+                              getColumnConfig('previous_funding_rounds', 'date')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.date
+                              ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'amount',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.amount ? formatAmount(item.amount) : '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig(
+                                'previous_funding_rounds',
+                                'reference',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IPreviousFundingRound) => {
+                const dateLabel = item?.date
+                  ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                  : NA_VALUE;
+                const amountLabel = item?.amount
+                  ? formatAmount(item.amount)
+                  : NA_VALUE;
+                const referenceLabel = item?.reference
+                  ? normalizeUrl(item.reference)
+                  : null;
+                return referenceLabel
+                  ? `${dateLabel} - ${amountLabel} - ${referenceLabel}`
+                  : `${dateLabel} - ${amountLabel}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+
+      case 'decentralized_governance': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return <span className="text-gray-400">No governance addresses</span>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('decentralized_governance', 'address')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'decentralized_governance',
+                                'address',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'decentralized_governance',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (entry: IDecentralizedGovernanceEntry, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig(
+                                'decentralized_governance',
+                                'address',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {entry?.address || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((entry: IDecentralizedGovernanceEntry) => entry?.address)
+              .filter(Boolean)
+              .join(', ')}
+          </>
+        );
+      }
+
+      case 'private_funding_rounds': {
+        const parsed = parseValue(value);
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader width={158} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Date</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'date',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={138} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Amount (USD)</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'amount',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={300} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Name</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'textName',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast width={180} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Allocation/Shares</span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'private_funding_rounds' as IPocItemKey,
+                              'amountShares',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (
+                        round: {
+                          date: Date | string;
+                          amount: string;
+                          textName: string;
+                          amountShares?: string;
+                        },
+                        index: number,
+                      ) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={158}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.date
+                              ? dayjs.utc(round.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={138}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.amount ? formatAmount(round.amount) : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={300}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.textName || '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={180}
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {round.amountShares || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+        break;
+      }
+
+      case 'audit_report': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('audit_report', 'reportLink')?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('audit_report', 'reportLink')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'audit_report',
+                              'reportLink',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        isLast
+                        width={
+                          getColumnConfig('audit_report', 'auditorName')?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('audit_report', 'auditorName')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'audit_report',
+                              'auditorName',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IAuditReport, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={
+                            getColumnConfig('audit_report', 'reportLink')?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.reportLink ? (
+                            <Link
+                              href={normalizeUrl(item.reportLink)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline"
+                            >
+                              {normalizeUrl(item.reportLink)}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          width={
+                            getColumnConfig('audit_report', 'auditorName')
+                              ?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.auditorName || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IAuditReport) => {
+                if (item.auditorName) {
+                  return item.auditorName;
+                }
+                if (item.reportLink) {
+                  return normalizeUrl(item.reportLink);
+                }
+                return 'Audit report';
+              })
+              .join(', ')}
+          </>
+        );
+      }
+
       case 'affiliated_projects': {
         const parsed = parseValue(value);
 
@@ -1267,7 +1824,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={item.project}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1319,8 +1875,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1419,7 +1980,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={item.project}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1471,8 +2031,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1500,7 +2065,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                     item.type,
                     CONTRIBUTION_TYPE_OPTIONS,
                   );
-                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}`;
+                  return `${projectName} - ${typeLabel}: ${item.description || NA_VALUE}${item.reference ? ` - ${item.reference}` : ''}`;
                 },
               )
               .join(', ')}
@@ -1578,7 +2143,6 @@ const InputContentRenderer: React.FC<IProps> = ({
                               projectValue={item.project}
                               projectsMap={projectsMap}
                               isLoadingProjects={isLoadingProjects}
-                              isProjectId={isProjectId}
                             />
                           </TableCell>
                           <TableCell
@@ -1648,8 +2212,13 @@ const InputContentRenderer: React.FC<IProps> = ({
           return (
             <div className="w-full">
               <button
-                onClick={onToggleExpanded}
-                className="group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors"
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
               >
                 <TableIcon size={20} color="black" className="opacity-70" />
                 <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
@@ -1678,9 +2247,577 @@ const InputContentRenderer: React.FC<IProps> = ({
                     item.type,
                     STACK_INTEGRATION_TYPE_OPTIONS,
                   );
-                  return `${projectName} - ${typeLabel}: ${item.description || 'N/A'}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
+                  return `${projectName} - ${typeLabel}: ${item.description || NA_VALUE}${item.reference ? ` - ${item.reference}` : ''}${item.repository ? ` - ${item.repository}` : ''}`;
                 },
               )
+              .join(', ')}
+          </>
+        );
+      }
+      case 'contributors': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={getColumnConfig('contributors', 'name')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('contributors', 'name')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('contributors', 'name')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={getColumnConfig('contributors', 'role')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('contributors', 'role')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('contributors', 'role')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('contributors', 'address')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IContributors, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={getColumnConfig('contributors', 'name')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.name}
+                        </TableCell>
+                        <TableCell
+                          width={getColumnConfig('contributors', 'role')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {getOptionLabel(item.role, CONTRIBUTOR_ROLE_OPTIONS)}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.address || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IContributors) => {
+                const roleLabel = getOptionLabel(
+                  item.role,
+                  CONTRIBUTOR_ROLE_OPTIONS,
+                );
+                return `${item.name} - ${roleLabel}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+      case 'contributors_organization': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={
+                          getColumnConfig('contributors_organization', 'name')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'contributors_organization',
+                                'name',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors_organization',
+                              'name',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('contributors_organization', 'role')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'contributors_organization',
+                                'role',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors_organization',
+                              'role',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig(
+                                'contributors_organization',
+                                'address',
+                              )?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'contributors_organization',
+                              'address',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (item: IContributorsOrganization, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'contributors_organization',
+                                'name',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.name}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig(
+                                'contributors_organization',
+                                'role',
+                              )?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.role}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item.address || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IContributorsOrganization) => {
+                return `${item.name} - ${item.role}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+      case 'endorsers': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={getColumnConfig('endorsers', 'name')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('endorsers', 'name')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('endorsers', 'name')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={
+                          getColumnConfig('endorsers', 'socialIdentifier')
+                            ?.width
+                        }
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {
+                              getColumnConfig('endorsers', 'socialIdentifier')
+                                ?.label
+                            }
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip(
+                              'endorsers',
+                              'socialIdentifier',
+                            )}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('endorsers', 'reference')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('endorsers', 'reference')}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IEndorser, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={getColumnConfig('endorsers', 'name')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.name}
+                        </TableCell>
+                        <TableCell
+                          width={
+                            getColumnConfig('endorsers', 'socialIdentifier')
+                              ?.width
+                          }
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.socialIdentifier || '-'}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.reference ? (
+                            <Link
+                              href={item.reference}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary underline"
+                            >
+                              {item.reference}
+                            </Link>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IEndorser) => {
+                return `${item.name} - ${item.socialIdentifier}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+      case 'advisors': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      <TableHeader
+                        width={getColumnConfig('advisors', 'name')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'name')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'name')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={getColumnConfig('advisors', 'title')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'title')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'title')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader
+                        width={getColumnConfig('advisors', 'address')?.width}
+                        isContainerBordered
+                      >
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'address')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'address')}
+                          />
+                        </div>
+                      </TableHeader>
+                      <TableHeader isLast isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>
+                            {getColumnConfig('advisors', 'active')?.label}
+                          </span>
+                          <TooltipWithQuestionIcon
+                            content={getColumnTooltip('advisors', 'active')}
+                          />
+                        </div>
+                      </TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map((item: IAdvisors, index: number) => (
+                      <TableRow
+                        key={index}
+                        isLastRow={index === parsed.length - 1}
+                      >
+                        <TableCell
+                          width={getColumnConfig('advisors', 'name')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.name}
+                        </TableCell>
+                        <TableCell
+                          width={getColumnConfig('advisors', 'title')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.title}
+                        </TableCell>
+                        <TableCell
+                          width={getColumnConfig('advisors', 'address')?.width}
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {item.address || '-'}
+                        </TableCell>
+                        <TableCell
+                          isLast
+                          isContainerBordered
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          {getOptionLabel(item.active, BOOL_TYPE_OPTIONS)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IAdvisors) => {
+                return `${item.name} - ${item.title}`;
+              })
               .join(', ')}
           </>
         );
@@ -1698,6 +2835,7 @@ const InputContentRenderer: React.FC<IProps> = ({
     isInExpandableRow,
     isLoadingProjects,
     projectsMap,
+    isTableCell,
   ]);
 
   if (!displayFormType) {
@@ -1710,25 +2848,10 @@ const InputContentRenderer: React.FC<IProps> = ({
   const isValueEmpty = isInputValueEmpty(value);
 
   if (isValueEmpty || isInputValueNA(value)) {
-    return !isEssential ? (
-      <span className="font-sans text-[14px] font-semibold">{`---`}</span>
-    ) : (
-      <span>n/a</span>
-    );
+    return <span className="font-sans text-[14px]">{NA_VALUE}</span>;
   }
 
-  if (
-    isExpandable &&
-    displayFormType !== 'founderList' &&
-    displayFormType !== 'websites' &&
-    displayFormType !== 'social_links' &&
-    displayFormType !== 'affiliated_projects' &&
-    displayFormType !== 'contributing_teams' &&
-    displayFormType !== 'stack_integrations' &&
-    displayFormType !== 'tablePhysicalEntity' &&
-    displayFormType !== 'fundingReceivedGrants' &&
-    displayFormType !== 'multiContracts'
-  ) {
+  if (isExpandable && !isEmbedTableFormType(displayFormType)) {
     // If we're in an expandable row, show full content without line clamp
     if (isInExpandableRow) {
       return (
@@ -1750,12 +2873,17 @@ const InputContentRenderer: React.FC<IProps> = ({
         className="cursor-pointer overflow-hidden break-all"
         style={{
           display: '-webkit-box',
-          WebkitLineClamp: 2,
+          WebkitLineClamp: 3,
           WebkitBoxOrient: 'vertical',
           wordBreak: 'break-all',
           overflowWrap: 'anywhere',
         }}
-        onClick={onToggleExpanded}
+        onClick={(e) => {
+          if (isTableCell) {
+            e.stopPropagation();
+          }
+          onToggleExpanded?.();
+        }}
       >
         {renderContent()}
       </div>

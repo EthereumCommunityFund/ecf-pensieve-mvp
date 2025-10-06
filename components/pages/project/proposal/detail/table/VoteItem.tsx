@@ -115,7 +115,7 @@ const VoteItem: FC<IProps> = ({
       </div>
 
       <Tooltip
-        content="Vote on Input"
+        content={isValidated ? 'Item Validated' : 'Vote on Input'}
         classNames={{
           content: 'p-[10px] rounded-[5px] border border-black/10',
         }}
@@ -125,7 +125,7 @@ const VoteItem: FC<IProps> = ({
           color="secondary"
           size="sm"
           isIconOnly
-          isLoading={isLoading}
+          isLoading={isLoading && !isValidated}
           disabled={isLoading || isUserVoted}
           onPress={onAction}
           className={cn(

@@ -8,6 +8,10 @@ import { IModalContentType } from '@/app/project/[id]/page';
 import { addToast } from '@/components/base';
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
+import {
+  getDefaultValueByFormType,
+  isEmbedTableFormType,
+} from '@/components/biz/table/embedTable/embedTableUtils';
 import FormItemManager from '@/components/pages/project/create/form/FormItemManager';
 import {
   IFormTypeEnum,
@@ -15,10 +19,10 @@ import {
   IReferenceData,
 } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { NA_VALUE } from '@/constants/naSelection';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
-import { getDefaultValueByFormType, isEmbedTableFormType } from '@/utils/item';
 import { createItemValidationSchema } from '@/utils/schema';
 
 import { useProjectDetailContext } from '../../context/projectDetailContext';
@@ -57,7 +61,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   onBackToSubmissionQueue,
 }) => {
   const { id: projectId } = useParams();
-  const { refetchAll } = useProjectDetailContext();
+  const { refetchAll, submitPrefillMap, clearSubmitPrefill } =
+    useProjectDetailContext();
 
   const [fieldApplicability, setFieldApplicability] = useState<
     Record<string, boolean>
@@ -91,6 +96,11 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     return { [itemConfig.key]: defaultValue };
   }, [itemConfig.key, itemConfig.formDisplayType]);
 
+  const itemValidationSchema = useMemo(
+    () => createItemValidationSchema(itemKey, fieldApplicability),
+    [itemKey, fieldApplicability],
+  );
+
   const methods = useForm<IFormData>({
     defaultValues: defaultFormValues,
     mode: 'onSubmit', // Key: Use onSubmit to avoid validation on onChange
@@ -100,7 +110,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     shouldFocusError: false, // Key: Prevent side effects on focus
     shouldUseNativeValidation: false, // Key: Disable native validation
     // Re-enable yupResolver with safer configuration
-    resolver: yupResolver(createItemValidationSchema(itemKey), {
+    resolver: yupResolver(itemValidationSchema, {
       abortEarly: false,
       stripUnknown: false,
     }),
@@ -109,6 +119,8 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
   const {
     control,
     clearErrors,
+    resetField,
+    setValue,
     reset,
     handleSubmit,
     watch,
@@ -139,11 +151,31 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         ...prev,
         [field]: value,
       }));
+
+      const fieldName = field as string;
+
       if (!value) {
-        clearErrors(field as keyof IProjectFormData);
+        setValue(fieldName as any, NA_VALUE as any, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+        clearErrors(fieldName as any);
+      } else {
+        const fieldItemConfig = AllItemConfig[field as IPocItemKey];
+        const defaultValue = fieldItemConfig
+          ? getDefaultValueByFormType(fieldItemConfig.formDisplayType)
+          : '';
+
+        resetField(fieldName as any, {
+          defaultValue: defaultValue as any,
+          keepError: false,
+          keepDirty: false,
+        });
+        clearErrors(fieldName as any);
       }
     },
-    [clearErrors],
+    [clearErrors, resetField, setValue],
   );
 
   const getFieldReference = useCallback(
@@ -198,7 +230,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
         itemConfig.showApplicable && !fieldApplicability[itemConfig.key];
 
       // Convert date values to UTC for consistent backend storage
-      let valueToSubmit = isApplicableFalse ? '' : formValue;
+      let valueToSubmit = isApplicableFalse ? NA_VALUE : formValue;
 
       if (itemConfig.formDisplayType === 'date' && formValue instanceof Date) {
         valueToSubmit = dayjs
@@ -284,6 +316,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
       onSuccess: (data) => {
         setSubmissionStep('success');
         refetchAll();
+        clearSubmitPrefill(itemKey);
       },
       onError: (error: any) => {
         console.error('createItemProposal error', error);
@@ -295,6 +328,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     itemKey,
     projectId,
     refetchAll,
+    clearSubmitPrefill,
   ]);
 
   // Use useRef to track form initialization state
@@ -338,51 +372,23 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
     clearErrorsRef.current(); // Clear all error states
 
-    // CRITICAL FIX: Always use default values for new proposals to prevent data contamination
-    // NEVER use displayProposalDataOfKey in SubmitItemProposal - this is for creating NEW proposals
-    // The displayProposalDataOfKey is meant for viewing existing proposals, not creating new ones
-    const isEditingExistingProposal = false;
+    // Check if we have prefill data for embed tables
+    const formType = itemConfig.formDisplayType;
+    const prefillRows = submitPrefillMap[itemKey];
+    const hasPrefill =
+      isEmbedTableFormType(formType) &&
+      Array.isArray(prefillRows) &&
+      prefillRows.length > 0;
 
-    if (isEditingExistingProposal) {
-      // Handle existing data
-      let valueToSet = displayProposalDataOfKey?.input;
-
-      // For array-based types, ensure value is in array format with _id
-      if (isEmbedTableFormType(itemConfig.formDisplayType)) {
-        if (typeof valueToSet === 'string') {
-          try {
-            // Try to parse JSON string
-            valueToSet = JSON.parse(valueToSet);
-          } catch (error) {
-            // If parsing fails, set to default value
-            valueToSet = getDefaultValueByFormType(itemConfig.formDisplayType);
-          }
-        }
-
-        // Ensure array format with _id
-        if (Array.isArray(valueToSet)) {
-          valueToSet = valueToSet.map((item: any) => ({
-            ...item,
-            _id: item._id || crypto.randomUUID(),
-          }));
-        } else {
-          // Set default value if not array
-          valueToSet = getDefaultValueByFormType(itemConfig.formDisplayType);
-        }
-      }
-
-      // Use reset to set entire form values, ensuring all fields are correctly updated
-      resetRef.current({
-        [itemConfig.key]: valueToSet,
-      });
+    if (hasPrefill) {
+      // Use prefill data from context
+      resetRef.current({ [itemConfig.key]: prefillRows });
       setReferences([]);
+      setEditReason('');
     } else {
-      const defaultValue = getDefaultValueByFormType(
-        itemConfig.formDisplayType,
-      );
-      resetRef.current({
-        [itemConfig.key]: defaultValue,
-      });
+      // Use default value
+      const defaultValue = getDefaultValueByFormType(formType);
+      resetRef.current({ [itemConfig.key]: defaultValue });
       setReferences([]);
       setEditReason('');
     }
@@ -391,6 +397,7 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
     displayProposalDataOfKey, // Add this dependency to ensure form re-initialization after data loads
     itemConfig.formDisplayType,
     itemConfig.key,
+    submitPrefillMap,
   ]);
 
   // Removed field value monitoring as new validation method doesn't clear field values, backup mechanism no longer needed
@@ -414,8 +421,9 @@ const SubmitItemProposal: FC<ISubmitItemProposalProps> = ({
 
   const onCloseModal = useCallback(() => {
     clearStatus();
+    clearSubmitPrefill(itemKey);
     onClose();
-  }, [onClose, clearStatus]);
+  }, [onClose, clearStatus, clearSubmitPrefill, itemKey]);
 
   const onViewProposal = useCallback(() => {
     clearStatus();

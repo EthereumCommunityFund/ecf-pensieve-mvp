@@ -1,6 +1,8 @@
 import { Button, cn, Tooltip } from '@heroui/react';
 import React from 'react';
 
+import { NA_VALUE } from '@/constants/naSelection';
+
 export interface ApplicableSwitchProps {
   isApplicable: boolean;
   onChange: (isApplicable: boolean) => void;
@@ -54,7 +56,7 @@ const ApplicableSwitch: React.FC<ApplicableSwitchProps> = ({
           )}
           onPress={() => onChange(false)}
         >
-          N/A
+          {NA_VALUE}
         </Button>
       </div>
     </Tooltip>

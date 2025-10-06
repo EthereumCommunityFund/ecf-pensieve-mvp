@@ -17,7 +17,9 @@ const ProjectListWithUpvote = (props: IProjectListWithUpvoteProps) => {
   // Use the upvote hook with refresh callback
   const { handleUpvote, getProjectLikeRecord, UpvoteModalComponent } =
     useUpvote({
-      onSuccess: onRefetch,
+      onSuccess: (_result) => {
+        onRefetch?.();
+      },
     });
 
   return (

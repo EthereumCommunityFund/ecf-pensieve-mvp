@@ -136,10 +136,7 @@ export default function ProjectFilter() {
             }`}
             style={scrollbarStyles}
           >
-            {AllCategories.slice(
-              0,
-              expandedSections.categories ? undefined : INITIAL_ITEMS_COUNT,
-            ).map((category) => {
+            {AllCategories.map((category) => {
               const isSelected = currentFilters.categories.includes(
                 category.value,
               );

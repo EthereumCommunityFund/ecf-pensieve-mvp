@@ -3,7 +3,7 @@
 import { cn } from '@heroui/react';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import Link from 'next/link';
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
@@ -14,6 +14,7 @@ import TableSectionHeader from '../../proposal/detail/TableSectionHeader';
 import NavigationMenu from './NavigationMenu';
 import { useProjectTableColumns } from './ProjectDetailTableColumns';
 import { CategoryTableSection } from './components/CategoryTableSection';
+import TableFilterControls from './components/TableFilterControls';
 import { useProjectTableData } from './hooks/useProjectTableData';
 import { useTableNavigation } from './hooks/useTableNavigation';
 import { useTableStates } from './hooks/useTableStates';
@@ -47,8 +48,37 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     isLeadingProposalsFetched,
   } = useProjectDetailContext();
 
+  const {
+    expandedRows,
+    expanded,
+    emptyItemsExpanded,
+    groupExpanded,
+    metricsVisible,
+    columnPinning,
+    pendingFilter,
+    emptyFilter,
+    isAllExpanded,
+    isAllMetricsVisible,
+    toggleRowExpanded,
+    toggleCategory,
+    toggleEmptyItems,
+    toggleGroupExpanded,
+    toggleMetricsVisible,
+    toggleAllRowsInCategory,
+    toggleColumnPinning,
+    isColumnPinned,
+    cleanupInvalidPinnedColumns,
+    togglePendingFilter,
+    toggleEmptyFilter,
+    toggleAllExpanded,
+    toggleAllMetrics,
+  } = useTableStates();
+
   // Custom hooks for data and state management
-  const { tableData, emptyItemsCounts } = useProjectTableData();
+  const { tableData, emptyItemsCounts } = useProjectTableData({
+    pendingFilter,
+    emptyFilter,
+  });
 
   // Create a unique key for forcing table re-renders when data changes
   const tableKey = useMemo(() => {
@@ -59,25 +89,41 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
     );
     return `${project?.id || 0}-${weightKeysCount}-${totalWeightSum}`;
   }, [project?.id, project?.itemsTopWeight]);
-  const {
-    expandedRows,
-    expanded,
-    emptyItemsExpanded,
-    groupExpanded,
-    metricsVisible,
-    columnPinning,
-    toggleRowExpanded,
-    toggleCategory,
-    toggleEmptyItems,
-    toggleGroupExpanded,
-    toggleMetricsVisible,
-    toggleAllRowsInCategory,
-    toggleColumnPinning,
-    isColumnPinned,
-    cleanupInvalidPinnedColumns,
-  } = useTableStates();
   const { activeCategory, categoryRefs, handleCategoryClick } =
     useTableNavigation();
+
+  // Collect all row keys from all tables
+  const getAllRowKeys = useCallback(() => {
+    const allKeys: string[] = [];
+    Object.keys(tableData).forEach((category) => {
+      const categoryData = tableData[category as IItemSubCategoryEnum];
+      if (categoryData) {
+        categoryData.forEach((row) => {
+          if (row.key) {
+            allKeys.push(row.key);
+          }
+        });
+      }
+    });
+    return allKeys;
+  }, [tableData]);
+
+  // Wrap toggleAllExpanded to pass all row keys
+  const handleToggleAllExpanded = useCallback(() => {
+    const allRowKeys = getAllRowKeys();
+    toggleAllExpanded(allRowKeys);
+  }, [getAllRowKeys, toggleAllExpanded]);
+
+  // Calculate if all items are truly expanded (categories and rows)
+  const isAllItemsExpanded = useMemo(() => {
+    if (!isAllExpanded) return false;
+
+    // Check if all rows are expanded
+    const allRowKeys = getAllRowKeys();
+    if (allRowKeys.length === 0) return isAllExpanded;
+
+    return allRowKeys.every((key) => expandedRows[key] !== false);
+  }, [isAllExpanded, getAllRowKeys, expandedRows]);
 
   // Table meta data for column components
   const coreTableMeta = useMemo(
@@ -289,7 +335,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="tablet:mx-[14px] mobile:mx-[10px] relative">
       {/* Main container - ensure centered on all screen sizes */}
       <div
         className={cn(
@@ -299,7 +345,7 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
           // Padding: desktop larger, mobile smaller
           // 'px-[20px] tablet:px-[15px] mobile:px-[10px]',
           // Top margin and padding
-          'mt-[20px] pt-[20px]',
+          'pt-[20px]',
         )}
       >
         <div
@@ -346,6 +392,20 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
               is where truth is validated by communities, not gatekeepers.
             </div>
 
+            {/* Filter controls */}
+            <div className="mb-[30px]">
+              <TableFilterControls
+                pendingFilter={pendingFilter}
+                emptyFilter={emptyFilter}
+                isAllExpanded={isAllItemsExpanded}
+                isAllMetricsVisible={isAllMetricsVisible}
+                onTogglePendingFilter={togglePendingFilter}
+                onToggleEmptyFilter={toggleEmptyFilter}
+                onToggleAllExpanded={handleToggleAllExpanded}
+                onToggleAllMetrics={toggleAllMetrics}
+              />
+            </div>
+
             {/* Category tables */}
             <div className="flex flex-col gap-[40px]">
               {ProjectTableFieldCategory.map((cat) => (
@@ -375,11 +435,14 @@ const ProjectDetailTable: FC<IProjectTableProps> = ({
                       onToggleAllRowsInCategory={toggleAllRowsInCategory}
                       metricsVisible={metricsVisible[subCat.key]}
                       onToggleMetrics={() => toggleMetricsVisible(subCat.key)}
+                      pendingFilter={pendingFilter}
+                      emptyFilter={emptyFilter}
                     />
                   ))}
                 </div>
               ))}
             </div>
+            <div className="mb-[600px]"></div>
           </div>
         </div>
       </div>

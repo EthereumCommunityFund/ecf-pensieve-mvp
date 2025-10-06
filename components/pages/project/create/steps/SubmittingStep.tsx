@@ -1,12 +1,15 @@
-import { cn } from '@heroui/react';
+import { cn, useDisclosure } from '@heroui/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/base';
+import { ShareLinkIcon } from '@/components/icons';
 import CheckedCircleIcon from '@/components/icons/CheckCircle';
+import useShareLink from '@/hooks/useShareLink';
 import { ESSENTIAL_ITEM_WEIGHT_SUM, REWARD_PERCENT } from '@/lib/constants';
 
+import ShareModal from '../ShareModal';
 import { IFormTypeEnum } from '../types';
 
 type ApiStatus = 'idle' | 'pending' | 'success' | 'error';
@@ -22,6 +25,7 @@ interface ISubmittingStepProps {
   entityId?: number;
   projectId?: number;
   apiStatus: ApiStatus;
+  proposalId?: number;
 }
 
 const RewardWeight = ESSENTIAL_ITEM_WEIGHT_SUM * REWARD_PERCENT;
@@ -52,8 +56,11 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
   entityId,
   projectId,
   apiStatus,
+  proposalId,
 }) => {
   const router = useRouter();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const isProject = formType === IFormTypeEnum.Project;
 
   const viewButtonText = isProject ? 'View Your Project' : 'View Your Proposal';
@@ -65,9 +72,54 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
       : `/project/pending/${projectId!}/proposal/${entityId}`;
   }, [isProject, entityId, projectId, apiStatus]);
 
+  // Always prefer the proposal route so recipients land on the detailed view
+  const shareProjectId = useMemo(() => {
+    if (apiStatus !== 'success') {
+      return undefined;
+    }
+    return isProject ? entityId : projectId;
+  }, [apiStatus, isProject, entityId, projectId]);
+
+  const shareProposalId = useMemo(() => {
+    if (apiStatus !== 'success') {
+      return undefined;
+    }
+    return isProject ? proposalId : entityId;
+  }, [apiStatus, isProject, proposalId, entityId]);
+
+  const fallbackSharePath = useMemo(() => {
+    if (!shareProjectId || !shareProposalId) {
+      return '';
+    }
+    return `/project/pending/${shareProjectId}/proposal/${shareProposalId}`;
+  }, [shareProjectId, shareProposalId]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'proposal',
+    entityId: shareProposalId,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!shareProposalId,
+  });
+
   const handleBackToContribute = useCallback(() => {
     router.back();
   }, [router]);
+
+  const handleOpenShare = useCallback(() => {
+    onOpen();
+    if (shareProposalId) {
+      void ensureShareLink();
+    }
+    if (shareLinkError) {
+      console.error('Failed to ensure share link:', shareLinkError);
+    }
+  }, [ensureShareLink, onOpen, shareProposalId, shareLinkError]);
 
   const handleViewEntity = useCallback(() => {
     if (apiStatus === 'success' && entityId) {
@@ -145,25 +197,39 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
       {
         id: 'buttons',
         children: (
-          <div className="mobile:flex-col mobile:pt-0 flex flex-1 justify-end gap-[10px] pt-[20px]">
+          <div className="mobile:flex-col mobile:pt-0 flex flex-1 justify-between gap-[10px] pt-[20px]">
             <Button
               color="secondary"
-              onClick={handleBackToContribute}
+              onClick={handleOpenShare}
               type="button"
               className="px-[20px]"
-              disabled={!entityId}
+              disabled={!shareProjectId || !shareProposalId}
             >
-              Back to Contribute
+              <ShareLinkIcon className="size-[20px]" />
+              <span>Share Proposal</span>
             </Button>
-            <Button
-              color="primary"
-              onClick={handleViewEntity}
-              type="button"
-              className="px-[30px]"
-              disabled={!entityId || !viewButtonLink || viewButtonLink === '#'}
-            >
-              {viewButtonText}
-            </Button>
+            <div className="mobile:flex-col mobile:pt-0 flex flex-1 justify-end gap-[10px]">
+              <Button
+                color="secondary"
+                onClick={handleBackToContribute}
+                type="button"
+                className="px-[20px]"
+                disabled={!entityId}
+              >
+                Back to Contribute
+              </Button>
+              <Button
+                color="primary"
+                onClick={handleViewEntity}
+                type="button"
+                className="px-[30px]"
+                disabled={
+                  !entityId || !viewButtonLink || viewButtonLink === '#'
+                }
+              >
+                {viewButtonText}
+              </Button>
+            </div>
           </div>
         ),
       },
@@ -177,6 +243,8 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
     handleBackToContribute,
     handleViewEntity,
     isProject,
+    shareProjectId,
+    shareProposalId,
   ]);
 
   if (apiStatus === 'idle' || apiStatus === 'error') {
@@ -250,6 +318,14 @@ const SubmittingStep: FC<ISubmittingStepProps> = ({
           )}
         </AnimatePresence>
       </div>
+
+      <ShareModal
+        isOpen={isOpen}
+        onClose={onClose}
+        shareUrl={shareUrl}
+        shareImageUrl={shareImageUrl}
+        isLoading={shareLinkLoading}
+      />
     </div>
   );
 };

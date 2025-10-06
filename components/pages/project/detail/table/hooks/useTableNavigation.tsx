@@ -31,10 +31,21 @@ export const useTableNavigation = () => {
   const handleCategoryClick = useCallback((category: IItemSubCategoryEnum) => {
     const targetElement = categoryRefs.current[category];
     if (targetElement) {
-      targetElement.scrollIntoView({
+      // Get the element's position
+      const elementRect = targetElement.getBoundingClientRect();
+      const absoluteElementTop = elementRect.top + window.scrollY;
+
+      // Account for sticky header/navigation offset (adjust this value as needed)
+      const offset = 140; // Adjust based on your sticky header height
+      const scrollToPosition = absoluteElementTop - offset;
+
+      // Smooth scroll to the calculated position
+      window.scrollTo({
+        top: scrollToPosition,
         behavior: 'smooth',
-        block: 'start',
       });
+
+      // Set active category immediately for better UX
       setActiveCategory(category);
     }
   }, []);
@@ -42,24 +53,55 @@ export const useTableNavigation = () => {
   // Listen to scroll, update currently active category
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100; // Add offset
+      // Use a smaller offset to detect when section is near the top of viewport
+      const scrollPosition = window.scrollY + 150; // Offset for sticky header/navigation
 
-      // Find currently visible category
-      let currentCategory = IItemSubCategoryEnum.BasicProfile;
+      // Get all category positions and sort them
+      const categoryPositions: Array<{
+        key: IItemSubCategoryEnum;
+        top: number;
+      }> = [];
 
       Object.entries(categoryRefs.current).forEach(([key, element]) => {
         if (element) {
           const rect = element.getBoundingClientRect();
           const elementTop = rect.top + window.scrollY;
-
-          if (scrollPosition >= elementTop) {
-            currentCategory = key as IItemSubCategoryEnum;
-          }
+          categoryPositions.push({
+            key: key as IItemSubCategoryEnum,
+            top: elementTop,
+          });
         }
       });
 
+      // Sort by position (top to bottom)
+      categoryPositions.sort((a, b) => a.top - b.top);
+
+      // Find the active category - the last one whose top is above scroll position
+      let currentCategory = IItemSubCategoryEnum.BasicProfile;
+
+      for (let i = 0; i < categoryPositions.length; i++) {
+        const current = categoryPositions[i];
+        const next = categoryPositions[i + 1];
+
+        if (scrollPosition >= current.top) {
+          // If this is the last category or we haven't reached the next one yet
+          if (!next || scrollPosition < next.top) {
+            currentCategory = current.key;
+            break;
+          }
+          // If we've passed this category, continue to check the next one
+          currentCategory = current.key;
+        } else {
+          // If we haven't reached this category yet, stop
+          break;
+        }
+      }
+
       setActiveCategory(currentCategory);
     };
+
+    // Run once on mount to set initial state
+    handleScroll();
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);

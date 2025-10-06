@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { TRPCError } from '@trpc/server';
 import {
   and,
@@ -44,73 +46,166 @@ import {
 } from '@/lib/services/projectSortingService';
 import { sendProjectPublishTweet } from '@/lib/services/twitter';
 import { updateUserWeight } from '@/lib/services/userWeightService';
+import type { Context } from '@/lib/trpc/server';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/server';
 import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 import { generateUniqueShortCode } from '@/lib/utils/shortCodeUtils';
 
+import { fileRouter } from './file';
 import { proposalRouter } from './proposal';
+
+const LOGO_MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/gif',
+  'image/webp',
+]);
+
+const inferImageType = (url: string, header: string | null) => {
+  const normalizedHeader = header?.split(';')[0].trim().toLowerCase() ?? null;
+  if (normalizedHeader && ALLOWED_IMAGE_TYPES.has(normalizedHeader)) {
+    return normalizedHeader;
+  }
+
+  let pathname: string | null = null;
+  try {
+    pathname = new URL(url).pathname;
+  } catch (error) {
+    pathname = url;
+  }
+
+  const lastSegment = pathname.split('/').pop() ?? '';
+  const extension = lastSegment.split('.').pop()?.toLowerCase() ?? '';
+
+  if (!extension) {
+    return null;
+  }
+
+  const extensionMap: Record<string, string> = {
+    png: 'image/png',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+  };
+
+  return extensionMap[extension] ?? null;
+};
+
+const uploadExternalLogo = async (ctx: Context, logoUrl: string) => {
+  let response: Response;
+  try {
+    response = await fetch(logoUrl);
+  } catch (error) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Failed to fetch logo from the provided URL',
+      cause: error,
+    });
+  }
+
+  if (!response.ok) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Failed to fetch logo from the provided URL',
+    });
+  }
+
+  const mimeType = inferImageType(
+    logoUrl,
+    response.headers.get('content-type'),
+  );
+  if (!mimeType || !ALLOWED_IMAGE_TYPES.has(mimeType)) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Unsupported logo image type',
+    });
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+
+  if (buffer.byteLength === 0) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Downloaded logo file is empty',
+    });
+  }
+
+  if (buffer.byteLength > LOGO_MAX_FILE_SIZE) {
+    throw new TRPCError({
+      code: 'PAYLOAD_TOO_LARGE',
+      message: 'Logo file exceeds size limit',
+    });
+  }
+
+  const fileCaller = fileRouter.createCaller(ctx);
+  const uploadResult = await fileCaller.uploadFile({
+    data: `data:${mimeType};base64,${buffer.toString('base64')}`,
+    type: mimeType,
+  });
+
+  return uploadResult.url;
+};
+
+const baseProjectInputSchema = z.object({
+  name: z.string().min(1, 'Name cannot be empty'),
+  tagline: z.string().min(1, 'Tagline cannot be empty'),
+  categories: z.array(z.string()).min(1, 'At least one category is required'),
+  mainDescription: z.string().min(1, 'Main description cannot be empty'),
+  logoUrl: z.string().min(1, 'Logo URL cannot be empty'),
+  websites: z
+    .array(
+      z.object({
+        title: z.string().min(1, 'Website title cannot be empty'),
+        url: z.string().min(1, 'Website URL cannot be empty'),
+      }),
+    )
+    .min(1, 'At least one website is required'),
+  appUrl: z.string().nullable(),
+  dateFounded: z.date(),
+  dateLaunch: z.date().nullable(),
+  devStatus: z.string().min(1, 'Development status cannot be empty'),
+  fundingStatus: z.string().nullable(),
+  openSource: z.boolean(),
+  codeRepo: z.string().nullable(),
+  tokenContract: z.string().nullable(),
+  orgStructure: z.string().min(1, 'Organization structure cannot be empty'),
+  publicGoods: z.boolean(),
+  founders: z
+    .array(
+      z.object({
+        name: z.string().min(1, 'Founder name cannot be empty'),
+        title: z.string().min(1, 'Founder title cannot be empty'),
+        region: z.string().optional(),
+      }),
+    )
+    .min(1, 'At least one founder is required'),
+  tags: z.array(z.string()).min(1, 'At least one tag is required'),
+  whitePaper: z.string().nullable(),
+  dappSmartContracts: z
+    .array(
+      z.object({
+        id: z.string(),
+        chain: z.string(),
+        addresses: z.string(),
+      }),
+    )
+    .nullable(),
+  refs: z
+    .array(
+      z.object({
+        key: z.string().min(1, 'Key cannot be empty'),
+        value: z.string().min(1, 'Value cannot be empty'),
+      }),
+    )
+    .nullable(),
+});
 
 export const projectRouter = router({
   createProject: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1, 'Name cannot be empty'),
-        tagline: z.string().min(1, 'Tagline cannot be empty'),
-        categories: z
-          .array(z.string())
-          .min(1, 'At least one category is required'),
-        mainDescription: z.string().min(1, 'Main description cannot be empty'),
-        logoUrl: z.string().min(1, 'Logo URL cannot be empty'),
-        websites: z
-          .array(
-            z.object({
-              title: z.string().min(1, 'Website title cannot be empty'),
-              url: z.string().min(1, 'Website URL cannot be empty'),
-            }),
-          )
-          .min(1, 'At least one website is required'),
-        appUrl: z.string().nullable(),
-        dateFounded: z.date(),
-        dateLaunch: z.date().nullable(),
-        devStatus: z.string().min(1, 'Development status cannot be empty'),
-        fundingStatus: z.string().nullable(),
-        openSource: z.boolean(),
-        codeRepo: z.string().nullable(),
-        tokenContract: z.string().nullable(),
-        orgStructure: z
-          .string()
-          .min(1, 'Organization structure cannot be empty'),
-        publicGoods: z.boolean(),
-        founders: z
-          .array(
-            z.object({
-              name: z.string().min(1, 'Founder name cannot be empty'),
-              title: z.string().min(1, 'Founder title cannot be empty'),
-              region: z.string().optional(),
-            }),
-          )
-          .min(1, 'At least one founder is required'),
-        tags: z.array(z.string()).min(1, 'At least one tag is required'),
-        whitePaper: z.string().nullable(),
-        dappSmartContracts: z
-          .array(
-            z.object({
-              id: z.string(),
-              chain: z.string(),
-              addresses: z.string(),
-            }),
-          )
-          .nullable(),
-        refs: z
-          .array(
-            z.object({
-              key: z.string().min(1, 'Key cannot be empty'),
-              value: z.string().min(1, 'Value cannot be empty'),
-            }),
-          )
-          .nullable(),
-      }),
-    )
+    .input(baseProjectInputSchema)
     .mutation(async ({ ctx, input }) => {
       try {
         return await ctx.db.transaction(async (tx) => {
@@ -185,7 +280,10 @@ export const projectRouter = router({
             tx,
           );
 
-          return project;
+          return {
+            ...project,
+            proposalId: proposal.id,
+          };
         });
       } catch (error) {
         console.error('Error in createProject:', {
@@ -199,6 +297,170 @@ export const projectRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create project',
+          cause: error,
+        });
+      }
+    }),
+
+  createProjectViaAI: protectedProcedure
+    .input(baseProjectInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id;
+      if (!userId || process.env.AI_SYSTEM_USER_ID_SET === userId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Current user is not authorized for AI project creation',
+        });
+      }
+
+      let publishMetadata: any = null;
+
+      try {
+        const normalizedInput = {
+          ...input,
+          logoUrl: await uploadExternalLogo(ctx, input.logoUrl),
+        };
+
+        const result = await ctx.db.transaction(async (tx) => {
+          const proposalItems = Object.entries(normalizedInput)
+            .filter(([key]) => key !== 'refs')
+            .map(([key, value]) => ({ key, value }));
+
+          const hasProposalKeys = proposalItems.map((item) => item.key);
+
+          const itemsTopWeight = Object.fromEntries(
+            proposalItems
+              .filter((item) => typeof item.key === 'string')
+              .map((item) => [item.key, 0]),
+          );
+
+          const shortCode = await generateUniqueShortCode(async (code) => {
+            const existing = await tx.query.projects.findFirst({
+              where: eq(projects.shortCode, code),
+            });
+            return !!existing;
+          });
+
+          const [project] = await tx
+            .insert(projects)
+            .values({
+              ...normalizedInput,
+              creator: userId,
+              hasProposalKeys,
+              shortCode,
+              isPublished: true,
+              itemsTopWeight,
+            })
+            .returning();
+
+          if (!project) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'project not found',
+            });
+          }
+
+          const caller = proposalRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
+
+          const proposal = await caller.createProposal({
+            projectId: project.id,
+            items: proposalItems,
+            ...(normalizedInput.refs && { refs: normalizedInput.refs }),
+          });
+
+          const refMap = new Map(
+            normalizedInput.refs?.map((ref) => [ref.key, ref.value]) ?? [],
+          );
+
+          if (proposalItems.length > 0) {
+            const itemProposalValues = proposalItems.map((item) => ({
+              key: item.key,
+              value: item.value ?? '',
+              ref: refMap.get(String(item.key)) ?? null,
+              projectId: project.id,
+              creator: proposal.creator,
+            }));
+
+            const insertedItemProposals = await tx
+              .insert(itemProposals)
+              .values(itemProposalValues)
+              .returning({
+                id: itemProposals.id,
+                key: itemProposals.key,
+              });
+
+            if (insertedItemProposals.length > 0) {
+              await tx.insert(projectLogs).values(
+                insertedItemProposals.map((item) => ({
+                  projectId: project.id,
+                  itemProposalId: item.id,
+                  key: item.key,
+                })),
+              );
+            }
+
+            await tx.insert(projectSnaps).values({
+              projectId: project.id,
+              items: proposalItems,
+            });
+          }
+
+          const publishedGenesisWeight = calculatePublishedGenesisWeight(
+            project.hasProposalKeys || [],
+          );
+
+          await tx.insert(ranks).values({
+            projectId: project.id,
+            publishedGenesisWeight,
+          });
+
+          publishMetadata = {
+            id: project.id,
+            name: project.name,
+            tagline: project.tagline,
+            logoUrl: project.logoUrl,
+          };
+
+          return {
+            id: project.id,
+          };
+        });
+
+        revalidateTag(CACHE_TAGS.PROJECTS);
+
+        if (publishMetadata) {
+          try {
+            const success = await sendProjectPublishTweet(publishMetadata);
+            if (success) {
+              console.log(
+                `Tweet sent successfully for project ${publishMetadata.id}`,
+              );
+            } else {
+              console.log(
+                `Failed to send tweet for project ${publishMetadata.id}`,
+              );
+            }
+          } catch (tweetError) {
+            console.error('Failed to send tweet notifications:', tweetError);
+          }
+        }
+
+        return result;
+      } catch (error) {
+        console.error('Error in createProjectViaAI:', {
+          userId: ctx.user.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create AI project',
           cause: error,
         });
       }

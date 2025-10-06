@@ -18,6 +18,7 @@ import {
   transformProjectData,
   transformProposalData,
 } from '@/components/pages/project/create/utils/form';
+import { NA_VALUE } from '@/constants/naSelection';
 import { useAuth } from '@/context/AuthContext';
 import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import dayjs from '@/lib/dayjs';
@@ -123,6 +124,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const [createdEntityId, setCreatedEntityId] = useState<number | undefined>(
     undefined,
   );
+  const [createdProposalId, setCreatedProposalId] = useState<
+    number | undefined
+  >(undefined);
 
   const methods = useForm<IProjectFormData>({
     resolver: yupResolver(projectSchema) as any,
@@ -210,6 +214,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       const performSubmit = async () => {
         setApiSubmissionStatus('pending');
         setCreatedEntityId(undefined);
+        setCreatedProposalId(undefined);
 
         if (formType === IFormTypeEnum.Project) {
           const payload = transformProjectData(
@@ -224,6 +229,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              setCreatedProposalId(data?.proposalId);
               fetchUserProfile();
             },
             onError: (error: any) => {
@@ -261,6 +267,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
             onSuccess: (data) => {
               setApiSubmissionStatus('success');
               setCreatedEntityId(data?.id);
+              setCreatedProposalId(data?.id);
               fetchUserProfile();
             },
             onError: (error: any) => {
@@ -543,11 +550,31 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         [field]: value,
       }));
 
+      const fieldKey = field as keyof IProjectFormData;
+
       if (!value) {
-        clearErrors(field as keyof IProjectFormData);
+        setValue(fieldKey, NA_VALUE as any, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+        clearErrors(fieldKey);
+      } else {
+        const defaultSnapshot = getDefaultProjectFormData();
+        const defaultValue =
+          defaultSnapshot[fieldKey] !== undefined
+            ? defaultSnapshot[fieldKey]
+            : '';
+
+        setValue(fieldKey, defaultValue as any, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+        clearErrors(fieldKey);
       }
     },
-    [clearErrors],
+    [clearErrors, setValue],
   );
 
   const stepProps = {
@@ -647,8 +674,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 projectId={
                   formType === IFormTypeEnum.Proposal
                     ? projectId
-                    : projectData?.id
+                    : (createdEntityId ?? projectData?.id)
                 }
+                proposalId={createdProposalId}
                 apiStatus={apiSubmissionStatus}
               />
             </div>

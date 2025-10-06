@@ -70,7 +70,7 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
         <DropdownTrigger>
           <Button
             size="sm"
-            className="border-none bg-[rgba(0,0,0,0.05)] px-[10px] py-[4px]"
+            className="shrink-0 border-none bg-[rgba(0,0,0,0.05)] px-[10px] py-[4px]"
           >
             <Image
               src={profile?.avatarUrl ?? '/images/user/avatar_p.png'}

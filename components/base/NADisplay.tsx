@@ -4,7 +4,7 @@ import { cn } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { NADisplayProps } from '@/constants/naSelection';
+import { NA_VALUE, NADisplayProps } from '@/constants/naSelection';
 
 /**
  * NADisplay Component
@@ -12,7 +12,7 @@ import { NADisplayProps } from '@/constants/naSelection';
  * Used in Organization/Program column when N/A is selected
  */
 const NADisplay = React.memo<NADisplayProps>(
-  ({ onClear, label = 'N/A', className }) => {
+  ({ onClear, label = NA_VALUE, className }) => {
     return (
       <div
         className={cn(

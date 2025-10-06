@@ -8,7 +8,19 @@ export const NA_VALUE = 'N/A' as const;
 
 // Type guard to check if value is N/A
 export const isNAValue = (value: string | string[] | undefined): boolean => {
-  return value === NA_VALUE;
+  // Case-insensitive check for string 'N/A'
+  if (typeof value === 'string') {
+    return value.trim().toLowerCase() === NA_VALUE.toLowerCase();
+  }
+  // Allow simple array case: treat as NA if array has single NA string
+  if (Array.isArray(value)) {
+    return (
+      value.length === 1 &&
+      typeof value[0] === 'string' &&
+      value[0].trim().toLowerCase() === NA_VALUE.toLowerCase()
+    );
+  }
+  return false;
 };
 
 // Process organization value to determine display state

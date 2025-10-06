@@ -13,6 +13,7 @@ import {
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
+import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { trpc } from '@/lib/trpc/client';
 import {
   ILeadingProposalHistory,
@@ -119,6 +120,11 @@ interface ProjectDetailContextType {
   // SubmitterModal operations
   showSubmitterModal: (submitter: IProposalCreator, validatedAt: Date) => void;
   closeSubmitterModal: () => void;
+
+  // Submit prefill data management
+  submitPrefillMap: Partial<Record<IPocItemKey, any>>;
+  setSubmitPrefill: (key: IPocItemKey, value: any) => void;
+  clearSubmitPrefill: (key: IPocItemKey) => void;
 }
 
 // Context default values
@@ -203,6 +209,11 @@ const createDefaultContext = (): ProjectDetailContextType => ({
   // SubmitterModal operations
   showSubmitterModal: () => {},
   closeSubmitterModal: () => {},
+
+  // Submit prefill data management
+  submitPrefillMap: {},
+  setSubmitPrefill: () => {},
+  clearSubmitPrefill: () => {},
 });
 
 // Create Context
@@ -234,6 +245,11 @@ export const ProjectDetailProvider = ({
   >({});
   const [inActionItemProposalIdMap, setInActionItemProposalIdMap] = useState<
     Record<number, boolean>
+  >({});
+
+  // Submit prefill data state
+  const [submitPrefillMap, setSubmitPrefillMap] = useState<
+    Partial<Record<IPocItemKey, any>>
   >({});
 
   // SubmitterModal state management
@@ -402,81 +418,32 @@ export const ProjectDetailProvider = ({
     project?.hasProposalKeys,
   ]);
 
+  const {
+    projectName: resolvedProjectName,
+    tagline: resolvedTagline,
+    categories: resolvedCategories,
+    logoUrl: resolvedLogoUrl,
+  } = useProjectItemValue(project ?? null);
+
   // Utility function: Get leading project name
   const getLeadingProjectName = useCallback(() => {
-    // Try to get the leading name from proposals
-    const nameProposal = displayProposalDataListOfProject?.find(
-      (item) => item.key === 'name',
-    );
-
-    // If we have a leading name proposal that's not marked as "not leading", use it
-    if (nameProposal && !nameProposal.isNotLeading && nameProposal.input) {
-      return nameProposal.input as string;
-    }
-
-    // Otherwise, fallback to the basic project name
-    return project?.name || '';
-  }, [displayProposalDataListOfProject, project?.name]);
+    return typeof resolvedProjectName === 'string' ? resolvedProjectName : '';
+  }, [resolvedProjectName]);
 
   // Utility function: Get leading project tagline
   const getLeadingTagline = useCallback(() => {
-    // Try to get the leading tagline from proposals
-    const taglineProposal = displayProposalDataListOfProject?.find(
-      (item) => item.key === 'tagline',
-    );
-
-    // If we have a leading tagline proposal that's not marked as "not leading", use it
-    if (
-      taglineProposal &&
-      !taglineProposal.isNotLeading &&
-      taglineProposal.input
-    ) {
-      return taglineProposal.input as string;
-    }
-
-    // Otherwise, fallback to the basic project tagline
-    return project?.tagline || '';
-  }, [displayProposalDataListOfProject, project?.tagline]);
+    return typeof resolvedTagline === 'string' ? resolvedTagline : '';
+  }, [resolvedTagline]);
 
   // Utility function: Get leading project categories
   const getLeadingCategories = useCallback(() => {
-    // Try to get the leading categories from proposals
-    const categoriesProposal = displayProposalDataListOfProject?.find(
-      (item) => item.key === 'categories',
-    );
-
-    // If we have a leading categories proposal that's not marked as "not leading", use it
-    if (
-      categoriesProposal &&
-      !categoriesProposal.isNotLeading &&
-      categoriesProposal.input
-    ) {
-      return categoriesProposal.input as string[];
-    }
-
-    // Otherwise, fallback to the basic project categories
-    return project?.categories || [];
-  }, [displayProposalDataListOfProject, project?.categories]);
+    return Array.isArray(resolvedCategories) ? resolvedCategories : [];
+  }, [resolvedCategories]);
 
   // Utility function: Get leading project logo URL
   const getLeadingLogoUrl = useCallback(() => {
-    // Try to get the leading logo URL from proposals
-    const logoUrlProposal = displayProposalDataListOfProject?.find(
-      (item) => item.key === 'logoUrl',
-    );
-
-    // If we have a leading logo URL proposal that's not marked as "not leading", use it
-    if (
-      logoUrlProposal &&
-      !logoUrlProposal.isNotLeading &&
-      logoUrlProposal.input
-    ) {
-      return logoUrlProposal.input as string;
-    }
-
-    // Otherwise, fallback to the basic project logo URL
-    return project?.logoUrl || '';
-  }, [displayProposalDataListOfProject, project?.logoUrl]);
+    return typeof resolvedLogoUrl === 'string' ? resolvedLogoUrl : '';
+  }, [resolvedLogoUrl]);
 
   // Calculate display data for current selected key
   const displayProposalDataOfKey = useMemo(() => {
@@ -754,6 +721,19 @@ export const ProjectDetailProvider = ({
     setCurrentRefKey(null);
   }, []);
 
+  // Submit prefill data operations
+  const setSubmitPrefill = useCallback((key: IPocItemKey, value: any) => {
+    setSubmitPrefillMap((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const clearSubmitPrefill = useCallback((key: IPocItemKey) => {
+    setSubmitPrefillMap((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   // Context value assembly
   const contextValue = useMemo(
     (): ProjectDetailContextType => ({
@@ -837,6 +817,11 @@ export const ProjectDetailProvider = ({
       // SubmitterModal operations
       showSubmitterModal,
       closeSubmitterModal,
+
+      // Submit prefill data management
+      submitPrefillMap,
+      setSubmitPrefill,
+      clearSubmitPrefill,
     }),
     [
       // Basic project data dependencies
@@ -919,6 +904,11 @@ export const ProjectDetailProvider = ({
       // SubmitterModal operation dependencies
       showSubmitterModal,
       closeSubmitterModal,
+
+      // Submit prefill data management dependencies
+      submitPrefillMap,
+      setSubmitPrefill,
+      clearSubmitPrefill,
     ],
   );
 

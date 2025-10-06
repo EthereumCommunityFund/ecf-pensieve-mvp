@@ -65,11 +65,14 @@ export function Topbar() {
       <div className="mobile:hidden size-full px-5">
         <div className="flex h-full items-center justify-between">
           <div className="flex h-full items-center gap-5">
-            <Link href="/" className="flex h-full min-w-[171px] items-center">
+            <Link
+              href="/"
+              className="flex h-full min-w-[171px] shrink-0 items-center"
+            >
               <Image
-                src="/images/Logo.png"
+                src="/penseive-logo-full-green.svg"
                 alt="ECF"
-                className="h-auto w-[171px]"
+                className="h-auto w-[171px] shrink-0 rounded-none"
               />
             </Link>
 
@@ -88,14 +91,18 @@ export function Topbar() {
       </div>
 
       {/* mobile */}
-      <div className="pc:hidden tablet:hidden flex size-full items-center justify-between px-5 lg:hidden">
+      <div className="pc:hidden tablet:hidden flex size-full items-center justify-between px-[10px] lg:hidden">
         <MobileMenu />
 
         <Link
           href="/"
           className="flex h-full min-w-[172px] flex-1 items-center justify-center"
         >
-          <Image src="/images/Logo.png" alt="ECF" className="h-[24px] w-auto" />
+          <Image
+            src="/penseive-logo-full-green.svg"
+            alt="ECF"
+            className="h-auto w-[171px] shrink-0 rounded-none"
+          />
         </Link>
 
         <div className="flex items-center justify-end gap-[10px]">

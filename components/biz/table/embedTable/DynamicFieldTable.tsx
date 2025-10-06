@@ -4,11 +4,10 @@ import React from 'react';
 import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQuestionIcon';
 import { PlusIcon } from '@/components/icons';
 
-import { DynamicFieldConfig } from './dynamicFieldsConfig';
-import AffiliatedProjectsTableItem from './item/AffiliatedProjectsTableItem';
-import ContributingTeamsTableItem from './item/ContributingTeamsTableItem';
-import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
-import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
+import {
+  DynamicFieldConfig,
+  TABLE_ITEM_COMPONENTS,
+} from './dynamicFieldsConfig';
 
 interface DynamicFieldTableProps {
   config: DynamicFieldConfig;
@@ -18,14 +17,6 @@ interface DynamicFieldTableProps {
   itemKey: string;
   errorMessage?: React.ReactNode;
 }
-
-// Map component names to actual FormAndTable
-const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  FundingReceivedGrantsTableItem: FundingReceivedGrantsTableItem,
-  AffiliatedProjectsTableItem: AffiliatedProjectsTableItem,
-  ContributingTeamsTableItem: ContributingTeamsTableItem,
-  StackIntegrationsTableItem: StackIntegrationsTableItem,
-};
 
 /**
  * Generic dynamic field table component that renders based on configuration
@@ -57,17 +48,16 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
           {config.columns.map((column, colIndex) => {
             const isLast = colIndex === config.columns.length - 1;
             const hasActions = fields.length > 1;
+            const shouldShowDivider = !isLast && config.columns.length > 1;
 
             return (
               <div
                 key={column.key}
                 className={cn(
                   'flex h-full shrink-0 items-center px-[10px]',
-                  `w-[${column.width}]`,
-                  !isLast || hasActions ? 'border-r border-black/10' : '',
-                  isLast && !hasActions ? 'bg-[#F5F5F5]' : '',
+                  shouldShowDivider ? 'border-r border-black/10' : '',
                 )}
-                style={{ width: column.width }}
+                style={{ width: column.width, minWidth: column.width }}
               >
                 <div className="flex items-center gap-[5px]">
                   <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
@@ -81,9 +71,7 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
             );
           })}
           {fields.length > 1 && (
-            <div className="flex h-full w-[60px] items-center justify-center">
-              {/* Actions column header */}
-            </div>
+            <div className="flex h-full w-[60px] items-center justify-center" />
           )}
         </div>
 

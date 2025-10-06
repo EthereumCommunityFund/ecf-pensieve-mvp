@@ -11,6 +11,7 @@ import PublishingTip from '@/components/pages/project/proposal/common/Publishing
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
 import { useAuth } from '@/context/AuthContext';
+import useShareLink from '@/hooks/useShareLink';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -187,6 +188,29 @@ const ProjectCard = ({
   leadingProposal?: IProposal;
   canBePublished?: boolean;
 }) => {
+  const fallbackSharePath = useMemo(() => {
+    if (!project) {
+      return '';
+    }
+    return project.isPublished
+      ? `/project/${project.id}`
+      : `/project/pending/${project.id}`;
+  }, [project]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    payload: sharePayload,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'project',
+    entityId: project?.id,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!project?.id,
+  });
+
   if (!project) {
     return <ProjectCardSkeleton />;
   }
@@ -244,9 +268,18 @@ const ProjectCard = ({
         </div>
       </div>
 
-      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
-        {project.shortCode && <ShareButton shortCode={project.shortCode} />}
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
         <NotificationConfigDropdown projectId={project.id} />
+        <ShareButton
+          shareUrl={shareUrl}
+          shareImageUrl={shareImageUrl}
+          className="size-[40px]"
+          isLoading={shareLinkLoading}
+          error={shareLinkError}
+          onEnsure={ensureShareLink}
+          onRefresh={ensureShareLink}
+          payload={sharePayload}
+        />
       </div>
     </div>
   );
@@ -289,9 +322,9 @@ const ProjectCardSkeleton = () => {
       </div>
 
       {/* ShareButton skeleton */}
-      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
-        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px]" />
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+        <Skeleton className="size-[32px] rounded-[6px]" />
+        <Skeleton className="size-[32px] rounded-[6px]" />
       </div>
     </div>
   );

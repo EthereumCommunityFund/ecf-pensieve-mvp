@@ -2,7 +2,7 @@
 
 import { Image } from '@heroui/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -13,27 +13,29 @@ import ProposalRequirements from '@/components/pages/project/ProposalRequirement
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import ScanPendingProject from '@/components/pages/ScanPendingProject';
 import { useAuth } from '@/context/AuthContext';
+import { useOffsetPagination } from '@/hooks/useOffsetPagination';
 import { trpc } from '@/lib/trpc/client';
 import type { IProject } from '@/types';
+
+const PAGE_SIZE = 10;
 
 const PendingProjectsPage = () => {
   const router = useRouter();
   const { profile, showAuthPrompt } = useAuth();
 
-  const [offset, setOffset] = useState(0);
-  const [allProjects, setAllProjects] = useState<IProject[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const {
+    offset,
+    items: projectList,
+    isLoadingMore,
+    handleLoadMore,
+    setPageData,
+  } = useOffsetPagination<IProject>({ pageSize: PAGE_SIZE });
 
   const { data, isLoading } = trpc.project.getProjects.useQuery({
-    limit: 10,
+    limit: PAGE_SIZE,
     offset,
     isPublished: false,
   });
-
-  const handleLoadMore = async () => {
-    setIsLoadingMore(true);
-    setOffset((prev) => prev + 10);
-  };
 
   const handleProposeProject = () => {
     if (!profile) {
@@ -46,14 +48,9 @@ const PendingProjectsPage = () => {
   // Manage accumulated projects list
   useEffect(() => {
     if (data?.items) {
-      if (offset === 0) {
-        setAllProjects(data.items as IProject[]);
-      } else {
-        setAllProjects((prev) => [...prev, ...(data.items as IProject[])]);
-      }
-      setIsLoadingMore(false);
+      setPageData(data.items as IProject[], data.offset ?? offset);
     }
-  }, [data, offset]);
+  }, [data, offset, setPageData]);
 
   return (
     <div className="pb-10">
@@ -100,9 +97,9 @@ const PendingProjectsPage = () => {
                   <PendingProjectCardSkeleton key={index} />
                 ))}
               </>
-            ) : allProjects.length > 0 ? (
+            ) : projectList.length > 0 ? (
               <>
-                {allProjects.map((project) => (
+                {projectList.map((project) => (
                   <PendingProjectCard
                     key={project.id}
                     project={project}

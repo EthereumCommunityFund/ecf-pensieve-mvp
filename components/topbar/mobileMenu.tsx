@@ -19,7 +19,7 @@ export default function MobileMenu() {
   return (
     <>
       <div
-        className="cursor-pointer rounded-[5px] px-2.5 py-1 hover:bg-[rgba(0,0,0,0.1)]"
+        className="shrink-0 cursor-pointer rounded-[5px] p-0 hover:bg-[rgba(0,0,0,0.1)]"
         onClick={onOpen}
       >
         <Image

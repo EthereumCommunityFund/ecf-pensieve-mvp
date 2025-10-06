@@ -4,11 +4,12 @@ import { Image, Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import React from 'react';
 
+import { NA_VALUE } from '@/constants/naSelection';
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { IProject } from '@/types';
 
 interface IProjectFieldRendererProps {
-  projectValue: string | string[] | undefined;
+  projectValue: string | number | Array<string | number> | undefined;
   projectsMap: Map<number, IProject> | undefined;
   isLoadingProjects: boolean;
   showProjectIconAndName?: boolean;
@@ -40,7 +41,7 @@ export const ProjectColDisplay: React.FC<{
       target="_blank"
       className="inline-block cursor-pointer break-words text-[13px] font-[600] leading-[20px] hover:text-black/60 hover:underline"
     >
-      {project.name}
+      {projectName}
     </Link>
   );
 };
@@ -51,11 +52,29 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
   isLoadingProjects,
   showProjectIconAndName,
 }) => {
-  if (!projectValue) return <>N/A</>;
+  if (!projectValue) return <>{NA_VALUE}</>;
+
+  // Handle direct numeric ID
+  if (typeof projectValue === 'number') {
+    if (projectValue <= 0) return <>{NA_VALUE}</>;
+    if (isLoadingProjects) {
+      return <Skeleton className="h-[20px] w-[50px] rounded-sm" />;
+    }
+    const projectData = projectsMap?.get(projectValue);
+    if (projectData) {
+      return (
+        <ProjectColDisplay
+          project={projectData}
+          showProjectIconAndName={showProjectIconAndName}
+        />
+      );
+    }
+    return <>{NA_VALUE}</>;
+  }
 
   // Check if it's a string
   if (typeof projectValue === 'string') {
-    if (projectValue === 'N/A') return <>N/A</>;
+    if (projectValue === NA_VALUE) return <>{NA_VALUE}</>;
 
     // Check if it's a projectId (numeric string)
     if (/^\d+$/.test(projectValue) && Number(projectValue) > 0) {
@@ -74,6 +93,8 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
           />
         );
       }
+      // If ID lookup failed, show N/A (avoid showing raw numeric string)
+      return <>{NA_VALUE}</>;
     }
 
     // Legacy projectName data
@@ -88,6 +109,9 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
 
     const projects = projectValue
       .map((id) => {
+        if (typeof id === 'number' && Number.isFinite(id) && id > 0) {
+          return projectsMap?.get(id);
+        }
         if (typeof id === 'string' && /^\d+$/.test(id)) {
           const numId = parseInt(id, 10);
           return projectsMap?.get(numId);
@@ -97,55 +121,26 @@ export const ProjectFieldRenderer: React.FC<IProjectFieldRendererProps> = ({
       // Filter out both null and undefined entries to avoid runtime errors
       .filter((p): p is IProject => Boolean(p));
 
-    if (projects.length === 0) return <>N/A</>;
+    if (projects.length === 0) return <>{NA_VALUE}</>;
 
     return (
-      <div className="flex flex-col gap-[8px]">
-        {projects.map((project) => (
-          <ProjectColDisplay
-            key={project.id}
-            project={project}
-            showProjectIconAndName={showProjectIconAndName}
-          />
+      <div className="flex flex-wrap items-center">
+        {projects.map((project, index) => (
+          <React.Fragment key={project.id}>
+            <ProjectColDisplay
+              project={project}
+              showProjectIconAndName={showProjectIconAndName}
+            />
+            {index < projects.length - 1 && (
+              <span className="mx-1 text-[13px] leading-[20px] text-black">
+                ,{' '}
+              </span>
+            )}
+          </React.Fragment>
         ))}
       </div>
     );
   }
 
-  return <>N/A</>;
-};
-
-export const extractProjectIds = (
-  data: any[],
-  keyNames: string | string[] = 'project',
-): string[] => {
-  if (!data || data.length === 0) return [];
-
-  const keys = Array.isArray(keyNames) ? keyNames : [keyNames];
-
-  const ids: string[] = [];
-
-  data.forEach((item: any) => {
-    keys.forEach((key) => {
-      const value = item[key];
-
-      if (value) {
-        if (Array.isArray(value)) {
-          const validArrayIds = value.filter(
-            (id) =>
-              typeof id === 'string' && /^\d+$/.test(id) && Number(id) > 0,
-          );
-          ids.push(...validArrayIds);
-        } else if (
-          typeof value === 'string' &&
-          /^\d+$/.test(value) &&
-          Number(value) > 0
-        ) {
-          ids.push(value);
-        }
-      }
-    });
-  });
-
-  return [...new Set(ids)];
+  return <>{NA_VALUE}</>;
 };

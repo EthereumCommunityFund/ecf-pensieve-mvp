@@ -66,7 +66,7 @@ describe('Project Integration Tests', () => {
       signature,
       message,
       username: 'TestProjectUser',
-      inviteCode: testInviteCode,
+      turnstileToken: 'test-token',
     });
 
     const profileData = await db.query.profiles.findFirst({
@@ -105,6 +105,7 @@ describe('Project Integration Tests', () => {
       expect(result.creator).toBe(testUserId);
       expect(result.isPublished).toBe(false);
       expect(result.id).toBeDefined();
+      expect(result.proposalId).toBeDefined();
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
     });
