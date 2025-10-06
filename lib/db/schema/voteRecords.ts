@@ -6,8 +6,10 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';
@@ -57,6 +59,17 @@ export const voteRecords = pgTable(
         table.itemProposalId,
         table.key,
       ),
+      proposalVoteUniqueIdx: uniqueIndex(
+        'vote_records_proposal_vote_unique_idx',
+      )
+        .on(table.creator, table.proposalId, table.key)
+        .where(sql`${table.proposalId} IS NOT NULL`),
+
+      itemProposalVoteUniqueIdx: uniqueIndex(
+        'vote_records_item_proposal_vote_unique_idx',
+      )
+        .on(table.creator, table.itemProposalId, table.key)
+        .where(sql`${table.itemProposalId} IS NOT NULL`),
     };
   },
 );

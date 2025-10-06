@@ -243,6 +243,13 @@ export const voteRouter = router({
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
 
+          if (!updatedVote) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Vote switch failed, please retry',
+            });
+          }
+
           logUserActivity.vote.update(
             {
               userId: ctx.user.id,

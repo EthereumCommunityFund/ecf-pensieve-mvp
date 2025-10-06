@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "vote_records_proposal_vote_unique_idx" ON "vote_records" USING btree ("creator","proposal_id","key") WHERE "vote_records"."proposal_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "vote_records_item_proposal_vote_unique_idx" ON "vote_records" USING btree ("creator","item_proposal_id","key") WHERE "vote_records"."item_proposal_id" IS NOT NULL;
