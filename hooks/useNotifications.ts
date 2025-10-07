@@ -10,6 +10,7 @@ import {
 } from '@/components/notification/NotificationItem';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationType } from '@/lib/services/notification';
+import { getItemValueFromSnap } from '@/lib/services/share/shareUtils';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
@@ -116,6 +117,30 @@ const useRealNotifications = () => {
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
     (notification: any): NotificationItemData => {
+      const projectName = (() => {
+        const snapItems = notification.projectSnaps?.items;
+        const proposalItems = notification.proposal?.items;
+        if (Array.isArray(snapItems)) {
+          const name = getItemValueFromSnap(snapItems, 'name');
+          if (name) {
+            return name;
+          }
+        }
+
+        if (typeof notification.project?.name === 'string') {
+          return notification.project.name;
+        }
+
+        if (Array.isArray(proposalItems)) {
+          const name = getItemValueFromSnap(proposalItems, 'name');
+          if (name) {
+            return name;
+          }
+        }
+
+        return 'project';
+      })();
+
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
         switch (type) {
@@ -124,7 +149,7 @@ const useRealNotifications = () => {
               type,
               title: 'Your input has lost sufficient support',
               itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              projectName,
               buttonText: 'View Submission',
             };
           case 'itemProposalBecameLeading':
@@ -132,7 +157,7 @@ const useRealNotifications = () => {
               type,
               title: 'Your input is now leading',
               itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              projectName,
               buttonText: 'View Submission',
             };
           case 'itemProposalSupported':
@@ -140,7 +165,7 @@ const useRealNotifications = () => {
               type,
               title: 'Your input has been supported',
               itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              projectName,
               userName:
                 notification.voter?.name ||
                 notification.voter?.address ||
@@ -154,7 +179,7 @@ const useRealNotifications = () => {
               type,
               title: 'Your proposal has been supported',
               itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              projectName,
               userName:
                 notification.voter?.name ||
                 notification.voter?.address ||
@@ -167,7 +192,7 @@ const useRealNotifications = () => {
               type,
               title: 'Your item proposal has passed',
               itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              projectName,
               userName:
                 notification.voter?.name ||
                 notification.voter?.address ||
@@ -179,7 +204,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your proposal has passed!',
-              projectName: notification.project?.name || 'project',
+              projectName,
               buttonText: 'View Published Project',
               hasMultipleActions: false,
             };
@@ -188,7 +213,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Project has been published',
-              projectName: notification.project?.name || 'project',
+              projectName,
               buttonText: 'View Published Project',
             };
           // Create project -> contributionPoints
@@ -226,6 +251,7 @@ const useRealNotifications = () => {
         id: notification.id.toString(),
         timeAgo,
         isRead,
+        projectName,
         voter: notification.voter as IVoterOfNotification,
         ...content,
       } as NotificationItemData;
