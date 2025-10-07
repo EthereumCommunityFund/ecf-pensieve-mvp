@@ -96,11 +96,10 @@ export function useNotificationSettings(
   const updateSetting = useCallback(
     (mode: NotificationMode) => {
       if (!projectId || projectId <= 0) {
-        console.error('Invalid project ID');
-        return;
+        return Promise.reject(new Error('Invalid project ID'));
       }
 
-      updateMutation.mutate({
+      return updateMutation.mutateAsync({
         projectId,
         notificationMode: mode,
       });
@@ -109,13 +108,14 @@ export function useNotificationSettings(
   );
 
   // Determine the current mode (prioritize optimistic update)
-  const currentMode = optimisticMode || setting?.notificationMode;
+  const currentMode =
+    optimisticMode || setting?.notificationMode || 'all_events';
 
   return {
     setting: setting
       ? {
           ...setting,
-          notificationMode: currentMode || setting.notificationMode,
+          notificationMode: currentMode,
         }
       : undefined,
     isLoading,

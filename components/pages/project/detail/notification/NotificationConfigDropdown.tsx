@@ -20,6 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 
 import ProjectActionButton from '../ProjectActionButton';
 
+import { mapTRPCError } from './notificationError';
 import { useNotificationSettings } from './useNotificationSettings';
 
 const CheckboxIcon = ({ checked }: { checked: boolean }) => {
@@ -132,53 +133,65 @@ const NotificationConfigDropdown: FC<NotificationConfigDropdownProps> = ({
   const { profile } = useAuth();
 
   // Use the notification settings hook
-  const { setting, isLoading, error, updateSetting, isUpdating } =
+  const { setting, isLoading, updateSetting, isUpdating } =
     useNotificationSettings(projectId);
 
   // Determine the current notification mode
-  const currentMode = setting?.notificationMode || 'my_contributions';
+  const currentMode = setting?.notificationMode || 'all_events';
   const isMuted = currentMode === 'muted';
   const selectMyContribution = currentMode === 'my_contributions';
   const selectAllEvent = currentMode === 'all_events';
 
   // Handle mute all toggle
-  const onMuteAll = useCallback(() => {
-    const newMode: NotificationMode = isMuted ? 'my_contributions' : 'muted';
-    updateSetting(newMode);
-
-    addToast({
-      title: isMuted
-        ? 'Notifications enabled for my contributions'
-        : 'All notifications muted',
-      color: 'success',
-    });
-
-    // Close dropdown after a short delay
-    setTimeout(() => setIsOpen(false), 500);
+  const onMuteAll = useCallback(async () => {
+    const newMode: NotificationMode = isMuted ? 'all_events' : 'muted';
+    try {
+      await updateSetting(newMode);
+      addToast({
+        title:
+          newMode === 'muted'
+            ? 'All notifications muted'
+            : 'Notifications enabled for all events',
+        color: 'success',
+      });
+      setTimeout(() => setIsOpen(false), 500);
+    } catch (err) {
+      const { message } = mapTRPCError(err);
+      addToast({
+        title: message,
+        color: 'danger',
+      });
+    }
   }, [isMuted, updateSetting]);
 
   // Handle notification type selection
   const onCheck = useCallback(
-    (type: 'myContributions' | 'allEvents') => {
+    async (type: 'myContributions' | 'allEvents') => {
       const modeMap: Record<string, NotificationMode> = {
         myContributions: 'my_contributions',
         allEvents: 'all_events',
       };
 
-      updateSetting(modeMap[type]);
+      try {
+        await updateSetting(modeMap[type]);
+        const messageMap = {
+          myContributions: 'Notifications set to your contributions only',
+          allEvents: 'Notifications enabled for all events',
+        };
 
-      const messageMap = {
-        myContributions: 'Notifications set to your contributions only',
-        allEvents: 'Notifications enabled for all events',
-      };
+        addToast({
+          title: messageMap[type],
+          color: 'success',
+        });
 
-      addToast({
-        title: messageMap[type],
-        color: 'success',
-      });
-
-      // Close dropdown after selection
-      setTimeout(() => setIsOpen(false), 500);
+        setTimeout(() => setIsOpen(false), 500);
+      } catch (err) {
+        const { message } = mapTRPCError(err);
+        addToast({
+          title: message,
+          color: 'danger',
+        });
+      }
     },
     [updateSetting],
   );
