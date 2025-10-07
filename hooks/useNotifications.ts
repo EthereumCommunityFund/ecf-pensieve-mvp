@@ -8,6 +8,7 @@ import {
   IVoterOfNotification,
   NotificationItemData,
 } from '@/components/notification/NotificationItem';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationType } from '@/lib/services/notification';
 import { getItemValueFromSnap } from '@/lib/services/share/shareUtils';
@@ -141,6 +142,15 @@ const useRealNotifications = () => {
         return 'project';
       })();
 
+      const resolveItemLabel = (key?: string | null): string => {
+        if (!key) {
+          return 'item';
+        }
+
+        const config = AllItemConfig[key as keyof typeof AllItemConfig];
+        return config?.label ?? key;
+      };
+
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
         switch (type) {
@@ -148,7 +158,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input has lost sufficient support',
-              itemName: notification.itemProposal?.key || 'item',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: 'View Submission',
             };
@@ -156,7 +166,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input is now leading',
-              itemName: notification.itemProposal?.key || 'item',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: 'View Submission',
             };
@@ -164,7 +174,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input has been supported',
-              itemName: notification.itemProposal?.key || 'item',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               userName:
                 notification.voter?.name ||
@@ -178,7 +188,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your proposal has been supported',
-              itemName: notification.itemProposal?.key || 'item',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               userName:
                 notification.voter?.name ||
@@ -191,7 +201,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your item proposal has passed',
-              itemName: notification.itemProposal?.key || 'item',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               userName:
                 notification.voter?.name ||
