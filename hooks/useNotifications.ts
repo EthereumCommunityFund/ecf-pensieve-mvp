@@ -17,7 +17,7 @@ import { formatTimeAgo } from '@/lib/utils';
 
 const useRealNotifications = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const utils = trpc.useUtils();
 
   const {
@@ -117,7 +117,16 @@ const useRealNotifications = () => {
 
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
-    (notification: any): NotificationItemData => {
+    (notification: any): NotificationItemData | null => {
+      if (
+        notification.type === 'itemProposalSupported' &&
+        user?.id === notification.voter?.userId &&
+        notification.itemProposal?.creator?.userId ===
+          notification.voter?.userId
+      ) {
+        return null;
+      }
+
       const projectName = (() => {
         const snapItems = notification.projectSnaps?.items;
         const proposalItems = notification.proposal?.items;
@@ -150,6 +159,23 @@ const useRealNotifications = () => {
         const config = AllItemConfig[key as keyof typeof AllItemConfig];
         return config?.label ?? key;
       };
+
+      const creatorProfile =
+        notification.itemProposal?.creator || notification.proposal?.creator;
+
+      const creatorDisplayName =
+        creatorProfile?.name || creatorProfile?.address || 'someone';
+      const isCreatedByCurrentUser =
+        creatorProfile?.userId === notification.userId;
+
+      const actorProfile = creatorProfile
+        ? {
+            name: creatorProfile.name,
+            address: creatorProfile.address,
+            userId: creatorProfile.userId,
+            avatarUrl: creatorProfile.avatarUrl,
+          }
+        : undefined;
 
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
@@ -229,16 +255,38 @@ const useRealNotifications = () => {
           // Create project -> contributionPoints
           // TODO: UI can add createProposal type, redirecting to project/pending/[projectId]/proposal/[proposal] page
           case 'createProposal':
+            return {
+              type: 'createProposal' as FrontendNotificationType,
+              title: isCreatedByCurrentUser
+                ? 'You created a proposal'
+                : `${creatorDisplayName} created a proposal`,
+              projectName,
+              buttonText: '',
+              hideButton: true,
+              actor: actorProfile,
+              actorIsSelf: isCreatedByCurrentUser,
+            };
           // Project published successfully, with reward points, showing `contributionPoints` type
           case 'proposalPass':
           // Only create not essential item will be notified -> contributionPoints
-          // TODO: UI can add createItemProposal type
           case 'createItemProposal':
+            return {
+              type: 'createItemProposal' as FrontendNotificationType,
+              title: isCreatedByCurrentUser
+                ? 'You created a new input'
+                : `${creatorDisplayName} created a new input`,
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
+              buttonText: '',
+              hideButton: true,
+              actor: actorProfile,
+              actorIsSelf: isCreatedByCurrentUser,
+            };
           case 'itemProposalPass':
             return {
               type: 'contributionPoints' as FrontendNotificationType,
               title: 'You have gained contribution points',
-              itemName: notification.reward?.toString() || '0',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
               buttonText: '',
               hideButton: true,
             };
@@ -266,7 +314,7 @@ const useRealNotifications = () => {
         ...content,
       } as NotificationItemData;
     },
-    [],
+    [user],
   );
 
   // Transform notifications data
@@ -274,21 +322,30 @@ const useRealNotifications = () => {
     if (!allNotificationsData?.pages) return [];
     return allNotificationsData.pages
       .flatMap((page) => page.notifications)
-      .map(transformNotification);
+      .map(transformNotification)
+      .filter((notification): notification is NotificationItemData =>
+        Boolean(notification),
+      );
   }, [allNotificationsData, transformNotification]);
 
   const unreadNotifications = useMemo(() => {
     if (!unreadNotificationsData?.pages) return [];
     return unreadNotificationsData.pages
       .flatMap((page) => page.notifications)
-      .map(transformNotification);
+      .map(transformNotification)
+      .filter((notification): notification is NotificationItemData =>
+        Boolean(notification),
+      );
   }, [unreadNotificationsData, transformNotification]);
 
   const archivedNotifications = useMemo(() => {
     if (!archivedNotificationsData?.pages) return [];
     return archivedNotificationsData.pages
       .flatMap((page) => page.notifications)
-      .map(transformNotification);
+      .map(transformNotification)
+      .filter((notification): notification is NotificationItemData =>
+        Boolean(notification),
+      );
   }, [archivedNotificationsData, transformNotification]);
 
   // Action handlers
@@ -451,6 +508,12 @@ const useRealNotifications = () => {
     refetchArchived,
   ]);
 
+  const handleManualRefresh = useCallback(() => {
+    Promise.all([refetchAll(), refetchUnread(), refetchArchived()]).catch(
+      (error) => console.error('Error during manual refresh:', error),
+    );
+  }, [refetchAll, refetchUnread, refetchArchived]);
+
   const handleSettings = useCallback(() => {
     router.push('/settings/notifications');
   }, [router]);
@@ -496,6 +559,7 @@ const useRealNotifications = () => {
     handleMarkAllAsRead,
     handleArchiveAll,
     handleSettings,
+    handleManualRefresh,
 
     // Auth state
     isAuthenticated,

@@ -47,10 +47,29 @@ export const notificationRouter = router({
             columns: {
               items: true,
             },
+            with: {
+              creator: {
+                columns: {
+                  userId: true,
+                  name: true,
+                  address: true,
+                },
+              },
+            },
           },
           itemProposal: {
             columns: {
               key: true,
+            },
+            with: {
+              creator: {
+                columns: {
+                  userId: true,
+                  name: true,
+                  address: true,
+                  avatarUrl: true,
+                },
+              },
             },
           },
           voter: {

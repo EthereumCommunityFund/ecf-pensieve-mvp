@@ -11,12 +11,14 @@ export interface NotificationActionsProps {
   onSettings?: () => void;
   onArchiveAll?: () => void;
   isArchivingAll?: boolean;
+  onRefreshNotifications?: () => void;
 }
 
 export const NotificationActions: React.FC<NotificationActionsProps> = ({
   onSettings,
   onArchiveAll,
   isArchivingAll = false,
+  onRefreshNotifications,
 }) => {
   const [isTriggeringCron, setIsTriggeringCron] = useState(false);
   const showCronButton =
@@ -37,6 +39,12 @@ export const NotificationActions: React.FC<NotificationActionsProps> = ({
           title: 'Notification cron job triggered successfully',
           color: 'success',
         });
+
+        if (onRefreshNotifications) {
+          setTimeout(() => {
+            onRefreshNotifications();
+          }, 500);
+        }
       } else {
         throw new Error(`Failed with status: ${response.status}`);
       }

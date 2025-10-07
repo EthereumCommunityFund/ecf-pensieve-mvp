@@ -39,12 +39,14 @@ export interface NotificationItemData {
   projectName?: string;
   userName?: string;
   voter?: IVoterOfNotification;
+  actor?: IVoterOfNotification;
   timeAgo: string;
   buttonText: string;
   isRead?: boolean;
   hasMultipleActions?: boolean;
   secondaryButtonText?: string;
   hideButton?: boolean;
+  actorIsSelf?: boolean;
 }
 
 export interface NotificationItemProps {
@@ -259,10 +261,31 @@ const formatNotificationText = (itemData: NotificationItemData) => {
         </div>
       );
     case 'createProposal':
+      if (itemData.actorIsSelf) {
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[14px] leading-[20px] text-black">
+              Your proposal for
+            </span>
+            {projectName && (
+              <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+                <span className="text-[13px] leading-[18px] text-black">
+                  {projectName}
+                </span>
+              </div>
+            )}
+            <span className="text-[14px] leading-[20px] text-black">
+              has been created
+            </span>
+          </div>
+        );
+      }
+
       return (
         <div className="flex flex-wrap items-center gap-1">
+          <VoterAvatar voter={itemData.actor} />
           <span className="text-[14px] leading-[20px] text-black">
-            Your proposal for
+            created a proposal for
           </span>
           {projectName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
@@ -295,10 +318,41 @@ const formatNotificationText = (itemData: NotificationItemData) => {
         </div>
       );
     case 'createItemProposal':
+      if (itemData.actorIsSelf) {
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[14px] leading-[20px] text-black">
+              Your input for
+            </span>
+            {itemName && (
+              <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+                <span className="text-[13px] leading-[18px] text-black">
+                  {itemName}
+                </span>
+              </div>
+            )}
+            <span className="text-[14px] leading-[20px] text-black opacity-50">
+              in
+            </span>
+            {projectName && (
+              <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+                <span className="text-[13px] leading-[18px] text-black">
+                  {projectName}
+                </span>
+              </div>
+            )}
+            <span className="text-[14px] leading-[20px] text-black">
+              has been created
+            </span>
+          </div>
+        );
+      }
+
       return (
         <div className="flex flex-wrap items-center gap-1">
+          <VoterAvatar voter={itemData.actor} />
           <span className="text-[14px] leading-[20px] text-black">
-            Your input for
+            created an input for
           </span>
           {itemName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
@@ -317,9 +371,6 @@ const formatNotificationText = (itemData: NotificationItemData) => {
               </span>
             </div>
           )}
-          <span className="text-[14px] leading-[20px] text-black">
-            has been created
-          </span>
         </div>
       );
     case 'itemProposalPass':
