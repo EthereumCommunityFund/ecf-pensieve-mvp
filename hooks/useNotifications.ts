@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { NotificationType } from '@/lib/services/notification';
 import { trpc } from '@/lib/trpc/client';
+import { formatTimeAgo } from '@/lib/utils';
 
 const useRealNotifications = () => {
   const router = useRouter();
@@ -115,21 +116,6 @@ const useRealNotifications = () => {
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
     (notification: any): NotificationItemData => {
-      const getTimeAgo = (date: Date): string => {
-        const now = new Date();
-        const diffInMs = now.getTime() - date.getTime();
-        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-
-        if (diffInHours < 1) {
-          return '0h ago';
-        } else if (diffInHours < 24) {
-          return `${diffInHours}h ago`;
-        } else {
-          const diffInDays = Math.floor(diffInHours / 24);
-          return `${diffInDays}d ago`;
-        }
-      };
-
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
         switch (type) {
@@ -232,10 +218,13 @@ const useRealNotifications = () => {
 
       const content = getTransformedContent(notification);
       const isRead = !!notification.readAt;
+      const timeAgo = formatTimeAgo(notification.createdAt, {
+        fallback: 'Just now',
+      });
 
       return {
         id: notification.id.toString(),
-        timeAgo: getTimeAgo(notification.createdAt),
+        timeAgo,
         isRead,
         voter: notification.voter as IVoterOfNotification,
         ...content,
