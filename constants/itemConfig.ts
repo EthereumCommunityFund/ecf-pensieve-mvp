@@ -769,6 +769,7 @@ This field identifies the underlying infrastructure your project is technically 
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
     legitimacy: [],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
   },
   expense_statements: {
     key: 'expense_statements',
@@ -804,6 +805,7 @@ This field provides a breakdown of the project’s expenses, offering transparen
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PERFORMANCE],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
   },
   income_and_revenue_statements: {
     key: 'income_and_revenue_statements',
@@ -850,6 +852,7 @@ This field provides a breakdown of the project’s expenses, offering transparen
       ALL_METRICS.KEY_ACCOUNTABILITY_ITEM,
     ],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
   },
   token_type: {
     key: 'token_type',
@@ -1135,6 +1138,7 @@ This helps us understand how decisions are made and who gets to participate.`,
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.audit_report,
   },
   previous_funding_rounds: {
@@ -1158,6 +1162,7 @@ This helps us understand how decisions are made and who gets to participate.`,
       ALL_METRICS.LEGITIMACY_BY_CONTINUITY,
       ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
     ],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.previous_funding_rounds,
   },
   decentralized_governance: {
@@ -1178,6 +1183,7 @@ This helps us understand how decisions are made and who gets to participate.`,
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.decentralized_governance,
   },
   private_funding_rounds: {
@@ -1197,6 +1203,7 @@ This helps us understand how decisions are made and who gets to participate.`,
     showExpand: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.private_funding_rounds,
   },
   affiliated_projects: {
@@ -1366,6 +1373,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     showReference: true,
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.vault_address_step2,
   },
   milestone_type: {
@@ -1698,6 +1706,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     ],
     accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.on_chain_treasury_step1,
   },
   token_utility: {
@@ -1727,6 +1736,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     ],
     accountability: [ALL_METRICS.TRANSPARENCY],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.token_utility,
   },
   blockchain_explorer: {
@@ -1798,6 +1808,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     showExpand: false,
     accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
     legitimacy: [ALL_METRICS.LEGITIMACY_BY_PERFORMANCE],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.income_revenue,
   },
   investment_stage: {
@@ -1830,6 +1841,7 @@ The technical dependencies, integrations, and building blocks that form the foun
       ALL_METRICS.COMMUNITY_ACCEPTANCE,
       ALL_METRICS.LEGITIMACY_BY_PROCESS,
     ],
+    extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
     validationSchema: itemValidationSchemas.investment_stage,
   },
   advisors: {
