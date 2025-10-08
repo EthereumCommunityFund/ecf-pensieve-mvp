@@ -35,6 +35,7 @@ const ProjectsContent = () => {
   }, [catsParam]);
 
   const sort = searchParams.get('sort');
+  const isAccountableSort = sort === 'top-accountable';
 
   // Parse sort parameter into sortBy and sortOrder
   const parseSortParam = (sortParam: string) => {
@@ -61,8 +62,12 @@ const ProjectsContent = () => {
   };
 
   const sortParams = useMemo(() => {
-    return sort ? parseSortParam(sort) : {};
-  }, [sort]);
+    if (!sort || isAccountableSort) {
+      return {};
+    }
+
+    return parseSortParam(sort);
+  }, [sort, isAccountableSort]);
 
   const {
     offset,
@@ -91,8 +96,65 @@ const ProjectsContent = () => {
       refetchOnMount: 'always',
       staleTime: 0,
       gcTime: 5 * 60 * 1000, // 5 minutes
+      enabled: !isAccountableSort,
     },
   );
+
+  const {
+    data: accountableData,
+    isLoading: isLoadingAccountable,
+    isFetchingNextPage: isFetchingNextAccountable,
+    hasNextPage: hasNextAccountable,
+    fetchNextPage: fetchNextAccountable,
+    refetch: refetchAccountable,
+  } = trpc.rank.getTopRanksByGenesisSupportPaginated.useInfiniteQuery(
+    {
+      limit: PAGE_SIZE,
+    },
+    {
+      getNextPageParam: (lastPage) =>
+        lastPage.hasNextPage ? lastPage.nextCursor : undefined,
+      refetchOnWindowFocus: false,
+      refetchOnMount: 'always',
+      staleTime: 0,
+      enabled: isAccountableSort,
+    },
+  );
+
+  const accountableProjectList = useMemo(() => {
+    if (!accountableData?.pages) {
+      return [] as IProject[];
+    }
+
+    return accountableData.pages.flatMap((page) =>
+      page.items.map((item) => item.project),
+    ) as unknown as IProject[];
+  }, [accountableData]);
+
+  const displayedProjects = isAccountableSort
+    ? accountableProjectList
+    : projectList;
+
+  const isListLoading = isAccountableSort
+    ? isLoadingAccountable && displayedProjects.length === 0
+    : (isLoading || (isFetching && offset === 0)) && projectList.length === 0;
+
+  const isListFetchingNext = isAccountableSort
+    ? isFetchingNextAccountable
+    : isLoadingMore;
+
+  const hasListNextPage = isAccountableSort
+    ? hasNextAccountable
+    : data?.hasNextPage;
+
+  const handleLoadMoreAction = useCallback(() => {
+    if (isAccountableSort) {
+      void fetchNextAccountable();
+      return;
+    }
+
+    handleLoadMore();
+  }, [isAccountableSort, fetchNextAccountable, handleLoadMore]);
 
   const handleProposeProject = useCallback(() => {
     if (!profile) {
@@ -104,6 +166,11 @@ const ProjectsContent = () => {
 
   const handleUpvoteSuccess = useCallback(
     (result: UpvoteActionResult) => {
+      if (sort === 'top-accountable') {
+        refetchAccountable();
+        return;
+      }
+
       const { projectId, previousWeight, newWeight } = result;
       const weightDelta = newWeight - previousWeight;
 
@@ -153,7 +220,7 @@ const ProjectsContent = () => {
 
       refetchProjects();
     },
-    [projectList, reset, sort, offset, refetchProjects],
+    [projectList, reset, sort, offset, refetchProjects, refetchAccountable],
   );
 
   // Manage accumulated projects list
@@ -179,7 +246,11 @@ const ProjectsContent = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        refetchProjects();
+        if (isAccountableSort) {
+          refetchAccountable();
+        } else {
+          refetchProjects();
+        }
       }
     };
 
@@ -188,14 +259,18 @@ const ProjectsContent = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [refetchProjects]);
+  }, [isAccountableSort, refetchProjects, refetchAccountable]);
 
   // Handle browser back/forward cache (pageshow with persisted === true)
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       // When navigating back via BFCache, ensure data is fresh
       if ((event as PageTransitionEvent).persisted) {
-        refetchProjects();
+        if (isAccountableSort) {
+          refetchAccountable();
+        } else {
+          refetchProjects();
+        }
       }
     };
 
@@ -203,7 +278,7 @@ const ProjectsContent = () => {
     return () => {
       window.removeEventListener('pageshow', handlePageShow as EventListener);
     };
-  }, [refetchProjects]);
+  }, [isAccountableSort, refetchProjects, refetchAccountable]);
 
   const { title, description, emptyMessage } = useMemo(() => {
     // Determine title and description based on sort parameter
@@ -219,6 +294,10 @@ const ProjectsContent = () => {
       pageTitle = 'Top Community-trusted';
       pageDescription = `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`;
       pageEmptyMessage = 'No community-trusted projects found';
+    } else if (sort === 'top-accountable') {
+      pageTitle = 'Top Accountable Projects';
+      pageDescription = `This rank combines signals from transparency and community trust. Accountable score = completion rate × sqrt(vote weight).`;
+      pageEmptyMessage = 'No accountable projects found';
     } else {
       // For multiple categories, show a generic title
       const categoryDisplay =
@@ -262,6 +341,12 @@ const ProjectsContent = () => {
     }
   }, [projectList]);
 
+  useEffect(() => {
+    if (isAccountableSort && accountableProjectList.length > 0) {
+      devLog('accountableProjectList', accountableProjectList);
+    }
+  }, [isAccountableSort, accountableProjectList]);
+
   return (
     <div className="pb-10">
       <div className="mb-[20px] flex w-full items-start justify-start gap-5 rounded-[10px] border border-[rgba(0,0,0,0.1)] bg-white p-5">
@@ -302,7 +387,9 @@ const ProjectsContent = () => {
       <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
         <div className="w-full flex-1">
           <div className="border-b border-black/10 px-2.5 py-4">
-            {sort === 'top-transparent' || sort === 'top-community-trusted' ? (
+            {sort === 'top-transparent' ||
+            sort === 'top-community-trusted' ||
+            sort === 'top-accountable' ? (
               <>
                 <h1 className="text-[24px] font-[700] leading-[1.4] text-black/80">
                   {title}
@@ -320,15 +407,12 @@ const ProjectsContent = () => {
           </div>
 
           <ProjectListWrapper
-            isLoading={
-              (isLoading || (isFetching && offset === 0)) &&
-              projectList.length === 0
-            }
-            isFetchingNextPage={isLoadingMore}
-            hasNextPage={data?.hasNextPage}
-            projectList={projectList}
+            isLoading={isListLoading}
+            isFetchingNextPage={isListFetchingNext}
+            hasNextPage={hasListNextPage}
+            projectList={displayedProjects}
             emptyMessage={emptyMessage}
-            onLoadMore={handleLoadMore}
+            onLoadMore={handleLoadMoreAction}
             onSuccess={handleUpvoteSuccess}
             showTransparentScore={showTransparentScore}
             showUpvote={showUpvote}
