@@ -18,4 +18,5 @@ export * from './proposals';
 export * from './ranks';
 export * from './relations';
 export * from './shareLinks';
+export * from './userActionLogs';
 export * from './voteRecords';
