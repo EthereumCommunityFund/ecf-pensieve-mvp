@@ -836,6 +836,11 @@ export const itemValidationSchemas = {
 
   token_sales: yup.string().trim().required('Token sales status is required'),
 
+  investment_stage: yup
+    .string()
+    .trim()
+    .required('Investment stage is required'),
+
   token_type: yup
     .array()
     .of(yup.string().trim().required())

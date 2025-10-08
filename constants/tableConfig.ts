@@ -237,6 +237,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'A look at the project’s financial setup, including capital flows and long-term sustainability',
         items: ['fundingStatus'],
         itemsNotEssential: [
+          'investment_stage',
           'funding_received_grants',
           'private_funding_rounds',
           'previous_funding_rounds',

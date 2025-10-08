@@ -1831,6 +1831,37 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       ],
       // TODO: add validation schema
     },
+    investment_stage: {
+      key: 'investment_stage',
+      category: IItemCategoryEnum.Financial,
+      subCategory: IItemSubCategoryEnum.Finances,
+      isEssential: false,
+      label: 'Investment Stage',
+      description: 'Current investment stage and type e.g. seed, VC',
+      shortDescription: 'Current investment stage and type e.g. seed, VC',
+      longDescription: 'Provide detailed context for Investment Stage.',
+      weight: ALL_POC_ITEM_MAP['investment_stage'].weight,
+      formDisplayType: 'select',
+      placeholder: 'Select an option',
+      showReference: true,
+      showExpand: false,
+      accountability: [ALL_METRICS.TRANSPARENCY],
+      legitimacy: [
+        ALL_METRICS.COMMUNITY_ACCEPTANCE,
+        ALL_METRICS.LEGITIMACY_BY_PROCESS,
+      ],
+      options: [
+        { value: 'Pre-Seed', label: 'Pre-Seed' },
+        { value: 'Seed', label: 'Seed' },
+        { value: 'Series A', label: 'Series A' },
+        { value: 'Series B', label: 'Series B' },
+        { value: 'Series C+', label: 'Series C+' },
+        { value: 'Token Listed', label: 'Token Listed' },
+        { value: 'Grant Funded', label: 'Grant Funded' },
+        { value: 'Acquired/Merged', label: 'Acquired/Merged' },
+      ],
+      // TODO: add validation schema
+    },
     fundraising_price: {
       key: 'fundraising_price',
       category: IItemCategoryEnum.Financial,
