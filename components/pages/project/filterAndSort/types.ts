@@ -4,7 +4,11 @@ export interface FilterState {
   tags: string[]; // Reserved for future
 }
 
-export type FilterSection = 'categories' | 'locations' | 'tags';
+export type FilterSection =
+  | 'categories'
+  | 'locations'
+  | 'tags'
+  | 'customFilters';
 
 export interface SortOption {
   value: string;

@@ -11,6 +11,9 @@ import {
 } from '@/components/icons';
 import { AllCategories } from '@/constants/category';
 
+import CustomFilterPanel from '../customFilters/CustomFilterPanel';
+import { type AdvancedFilterCard } from '../customFilters/types';
+
 import { CustomCheckbox } from './CustomCheckbox';
 import { type FilterSection, type FilterState } from './types';
 import {
@@ -20,7 +23,25 @@ import {
   updateFilterParams,
 } from './utils';
 
-export default function ProjectFilterMobile() {
+interface ProjectFilterMobileProps {
+  advancedFilters: AdvancedFilterCard[];
+  onCreateAdvancedFilter: () => void;
+  onEditAdvancedFilter: (id: string) => void;
+  onRemoveAdvancedFilter: (id: string) => void;
+  onClearAdvancedFilters: () => void;
+  canUseAdvancedFilters: boolean;
+  disabledReason?: string;
+}
+
+export default function ProjectFilterMobile({
+  advancedFilters,
+  onCreateAdvancedFilter,
+  onEditAdvancedFilter,
+  onRemoveAdvancedFilter,
+  onClearAdvancedFilters,
+  canUseAdvancedFilters,
+  disabledReason,
+}: ProjectFilterMobileProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<FilterSection | null>(
     null,
@@ -58,6 +79,8 @@ export default function ProjectFilterMobile() {
   };
 
   const hasActiveFilters = checkHasActiveFilters(currentFilters);
+  const hasAdvancedFilters = advancedFilters.length > 0;
+  const hasAnyFilters = hasActiveFilters || hasAdvancedFilters;
 
   const getSectionLabel = (section: FilterSection): string => {
     switch (section) {
@@ -67,6 +90,8 @@ export default function ProjectFilterMobile() {
         return 'Location';
       case 'tags':
         return 'Tags';
+      case 'customFilters':
+        return 'Custom Filters';
     }
   };
 
@@ -81,6 +106,8 @@ export default function ProjectFilterMobile() {
         return locations.map((loc) => ({ value: loc, label: loc }));
       case 'tags':
         return []; // Reserved for future
+      case 'customFilters':
+        return [];
     }
   };
 
@@ -94,16 +121,14 @@ export default function ProjectFilterMobile() {
         <FunnelSimpleIcon
           width={20}
           height={20}
-          className={`text-black ${!hasActiveFilters ? 'opacity-50' : ''}`}
+          className={`text-black ${!hasAnyFilters ? 'opacity-50' : ''}`}
         />
         <span
-          className={`text-[14px] font-semibold text-black ${!hasActiveFilters ? 'opacity-50' : ''}`}
+          className={`text-[14px] font-semibold text-black ${!hasAnyFilters ? 'opacity-50' : ''}`}
         >
           Filter
         </span>
-        {hasActiveFilters && (
-          <div className="size-2 rounded-full bg-[#68C6AC]" />
-        )}
+        {hasAnyFilters && <div className="size-2 rounded-full bg-[#68C6AC]" />}
       </button>
 
       {/* Overlay */}
@@ -201,6 +226,36 @@ export default function ProjectFilterMobile() {
                   />
                 </button>
 
+                {/* Custom Filters Section */}
+                <button
+                  onClick={() => setActiveSection('customFilters')}
+                  className="flex min-h-[39px] items-center gap-[5px] rounded-[5px] border border-black/10 p-[10px]"
+                >
+                  <div className="flex w-full flex-1 flex-col items-start">
+                    <div className="flex items-center gap-[5px]">
+                      <span className="text-[14px] font-semibold text-black">
+                        Custom Filters
+                      </span>
+                      {hasAdvancedFilters && (
+                        <div className="size-2 rounded-full bg-[#68C6AC]" />
+                      )}
+                    </div>
+                    {hasAdvancedFilters && (
+                      <div className="flex flex-wrap gap-[5px]">
+                        <span className="text-left text-[10px] font-normal text-black/50">
+                          {advancedFilters.length} active filter
+                          {advancedFilters.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <CaretDownIcon
+                    width={16}
+                    height={16}
+                    className="-rotate-90 text-black"
+                  />
+                </button>
+
                 {/* Location Section */}
                 {/* <button
                   onClick={() => setActiveSection('locations')}
@@ -231,9 +286,14 @@ export default function ProjectFilterMobile() {
                 </button> */}
 
                 {/* Clear All Filters */}
-                {hasActiveFilters && (
+                {hasAnyFilters && (
                   <button
-                    onClick={clearAllFilters}
+                    onClick={() => {
+                      clearAllFilters();
+                      if (hasAdvancedFilters) {
+                        onClearAdvancedFilters();
+                      }
+                    }}
                     className="mt-[10px] flex h-[28px] items-center justify-center gap-[5px] py-[4px]"
                   >
                     <span className="text-[13px] font-semibold text-black/50">
@@ -260,29 +320,30 @@ export default function ProjectFilterMobile() {
                       {getSectionLabel(activeSection)}
                     </span>
                   </button>
-                  {currentFilters[activeSection].length > 0 && (
-                    <button
-                      onClick={() => {
-                        const params = clearFilterParams(
-                          searchParams,
-                          activeSection,
-                        );
-                        router.push(
-                          `/projects${
-                            params.toString() ? `?${params.toString()}` : ''
-                          }`,
-                        );
-                      }}
-                      className="flex items-center gap-[5px] text-[13px] font-normal text-black/50"
-                    >
-                      Clear this filter
-                      <CircleXIcon
-                        width={18}
-                        height={18}
-                        className="text-black"
-                      />
-                    </button>
-                  )}
+                  {activeSection !== 'customFilters' &&
+                    currentFilters[activeSection].length > 0 && (
+                      <button
+                        onClick={() => {
+                          const params = clearFilterParams(
+                            searchParams,
+                            activeSection,
+                          );
+                          router.push(
+                            `/projects${
+                              params.toString() ? `?${params.toString()}` : ''
+                            }`,
+                          );
+                        }}
+                        className="flex items-center gap-[5px] text-[13px] font-normal text-black/50"
+                      >
+                        Clear this filter
+                        <CircleXIcon
+                          width={18}
+                          height={18}
+                          className="text-black"
+                        />
+                      </button>
+                    )}
                 </div>
 
                 {/* Section Info */}
@@ -293,41 +354,70 @@ export default function ProjectFilterMobile() {
                 )}
 
                 {/* Options List */}
-                <div className="flex flex-col gap-[5px]">
-                  {getSectionItems(activeSection).map((item) => {
-                    const isSelected = currentFilters[activeSection].includes(
-                      item.value,
-                    );
-                    return (
-                      <button
-                        key={item.value}
-                        onClick={() =>
-                          handleFilterChange(
-                            activeSection,
-                            item.value,
-                            !isSelected,
-                          )
+                {activeSection === 'customFilters' ? (
+                  <div className="pt-[10px]">
+                    <CustomFilterPanel
+                      filters={advancedFilters}
+                      onCreate={() => {
+                        if (!canUseAdvancedFilters) {
+                          return;
                         }
-                        className={`flex h-[32px] items-center justify-between rounded-[5px] px-[8px] py-[4px] ${
-                          isSelected
-                            ? 'bg-[#EBEBEB]'
-                            : 'bg-white hover:bg-[#F5F5F5]'
-                        }`}
-                      >
-                        <span
-                          className={`text-[14px] ${
+                        onCreateAdvancedFilter();
+                        setIsOpen(false);
+                      }}
+                      onEdit={(id) => {
+                        onEditAdvancedFilter(id);
+                        setIsOpen(false);
+                      }}
+                      onRemove={(id) => {
+                        onRemoveAdvancedFilter(id);
+                      }}
+                      onClearAll={() => {
+                        onClearAdvancedFilters();
+                        setActiveSection(null);
+                      }}
+                      variant="mobile"
+                      isDisabled={!canUseAdvancedFilters}
+                      disabledReason={disabledReason}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-[5px]">
+                    {getSectionItems(activeSection).map((item) => {
+                      const isSelected = currentFilters[activeSection].includes(
+                        item.value,
+                      );
+                      return (
+                        <button
+                          key={item.value}
+                          onClick={() =>
+                            handleFilterChange(
+                              activeSection,
+                              item.value,
+                              !isSelected,
+                            )
+                          }
+                          className={`flex h-[32px] items-center justify-between rounded-[5px] px-[8px] py-[4px] ${
                             isSelected
-                              ? 'font-semibold text-black'
-                              : 'font-normal text-black/80'
+                              ? 'bg-[#EBEBEB]'
+                              : 'bg-white hover:bg-[#F5F5F5]'
                           }`}
                         >
-                          {item.label}
-                        </span>
-                        <CustomCheckbox checked={isSelected} />
-                      </button>
-                    );
-                  })}
-                </div>
+                          <span
+                            className={`text-[14px] ${
+                              isSelected
+                                ? 'font-semibold text-black'
+                                : 'font-normal text-black/80'
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                          <CustomCheckbox checked={isSelected} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
