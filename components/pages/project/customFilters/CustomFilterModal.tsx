@@ -121,7 +121,7 @@ const CustomFilterModal = ({
     const options: FieldOption[] = [
       {
         key: 'label:special',
-        label: 'Special Conditions',
+        label: 'Hot Conditions',
         isLabel: true,
       },
       ...specialFields.map((field) => ({
@@ -418,7 +418,7 @@ const CustomFilterModal = ({
             isDisabled={Boolean(item.isLabel)}
             className={
               item.isLabel
-                ? 'cursor-default px-[8px] py-[6px] text-[11px] font-semibold uppercase tracking-[0.08em] text-black/40'
+                ? 'cursor-default px-[8px] py-[6px] text-[11px] font-semibold tracking-[0.08em] text-black/40'
                 : undefined
             }
             textValue={item.label}
