@@ -1,5 +1,5 @@
+import { PencilSimple, UploadSimple } from '@phosphor-icons/react';
 import { Fragment, memo } from 'react';
-import { PencilSimple } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base/button';
 import { CircleXIcon, GearSixIcon } from '@/components/icons';
@@ -92,6 +92,16 @@ const CustomFilterCard = ({
             className="opacity-50"
           />
           Edit Filters
+        </Button>
+
+        <Button
+          size="sm"
+          onPress={onEdit}
+          disabled
+          className="flex h-[32px] cursor-not-allowed items-center justify-center gap-[6px] rounded-[6px] border  border-black/10 text-[14px] font-semibold text-black/30"
+        >
+          <UploadSimple width={18} height={18} className="opacity-50" />
+          Save as Feed (coming soon)
         </Button>
       </div>
     </div>
