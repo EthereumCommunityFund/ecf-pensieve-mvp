@@ -2,20 +2,9 @@ export type AdvancedFilterConnector = 'AND' | 'OR';
 
 export type AdvancedFilterFieldType = 'special' | 'select';
 
-export type AdvancedSpecialFieldKey =
-  | 'tokenContract'
-  | 'preInvestmentStage'
-  | 'financialDisclosure'
-  | 'contactPoint';
+export type AdvancedSpecialFieldKey = 'presetCondition';
 
-export type AdvancedFilterOperator =
-  | 'is'
-  | 'is_not'
-  | 'is_empty'
-  | 'is_not_empty'
-  | 'pre_stage'
-  | 'financial_complete'
-  | 'has_contact';
+export type AdvancedFilterOperator = 'is' | 'is_not';
 
 export interface AdvancedFilterCondition {
   id: string;
@@ -36,16 +25,11 @@ export interface AdvancedFilterModalResult {
   conditions: AdvancedFilterCondition[];
 }
 
-export interface SpecialFieldOperatorOption {
-  value: AdvancedFilterOperator;
-  label: string;
-}
-
 export interface SpecialFieldDefinition {
   key: AdvancedSpecialFieldKey;
   label: string;
   description?: string;
-  operators: SpecialFieldOperatorOption[];
+  options: SelectFieldOption[];
 }
 
 export interface SelectFieldDefinition {

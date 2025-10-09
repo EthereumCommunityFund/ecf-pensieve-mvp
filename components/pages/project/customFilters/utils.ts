@@ -22,6 +22,35 @@ import {
 
 const PRE_STAGE_VALUES = ['Pre-Seed'];
 
+type PresetConditionValue =
+  | 'token_less'
+  | 'pre_investment_stage'
+  | 'financial_disclosure_filled'
+  | 'contact_point_available';
+
+type PresetConditionOption = SelectFieldOption & {
+  value: PresetConditionValue;
+};
+
+const PRESET_CONDITION_OPTIONS: PresetConditionOption[] = [
+  {
+    value: 'token_less',
+    label: 'Token-less (non-traded) projects',
+  },
+  {
+    value: 'pre_investment_stage',
+    label: 'Pre-investment stage projects',
+  },
+  {
+    value: 'financial_disclosure_filled',
+    label: 'Financial disclosure item filled',
+  },
+  {
+    value: 'contact_point_available',
+    label: 'Must have contact point in “Links & Contacts”',
+  },
+];
+
 const SELECT_FIELD_DEFINITIONS: SelectFieldDefinition[] = Object.values(
   AllItemConfig,
 )
@@ -54,41 +83,13 @@ const FINANCIAL_DISCLOSURE_KEYS: string[] = Object.values(AllItemConfig)
 const OPERATOR_LABEL_MAP: Record<AdvancedFilterOperator, string> = {
   is: 'is',
   is_not: 'is not',
-  is_empty: 'is empty',
-  is_not_empty: 'is not empty',
-  pre_stage: 'is in pre stage',
-  financial_complete: 'has financial disclosure filled',
-  has_contact: 'has valid contact',
 };
 
 const SPECIAL_FIELD_DEFINITIONS: SpecialFieldDefinition[] = [
   {
-    key: 'tokenContract',
-    label: 'Token-less (non-traded) projects',
-    operators: [
-      { value: 'is_empty', label: 'is empty' },
-      { value: 'is_not_empty', label: 'is not empty' },
-    ],
-  },
-  {
-    key: 'preInvestmentStage',
-    label: 'Pre-investment stage projects',
-    operators: [{ value: 'pre_stage', label: 'is in pre stage' }],
-  },
-  {
-    key: 'financialDisclosure',
-    label: 'Financial disclosure item filled',
-    operators: [
-      {
-        value: 'financial_complete',
-        label: 'is fully filled',
-      },
-    ],
-  },
-  {
-    key: 'contactPoint',
-    label: 'Must have contact point in “Links & Contacts”',
-    operators: [{ value: 'has_contact', label: 'has contact point' }],
+    key: 'presetCondition',
+    label: 'Preset Condition',
+    options: PRESET_CONDITION_OPTIONS,
   },
 ];
 
@@ -269,61 +270,78 @@ const evaluateSpecialCondition = (
   project: IProject,
   key: AdvancedSpecialFieldKey,
   operator: AdvancedFilterOperator,
+  expectedValue?: string,
 ): boolean => {
-  switch (key) {
-    case 'tokenContract': {
+  if (key !== 'presetCondition') {
+    return false;
+  }
+
+  if (!expectedValue) {
+    return false;
+  }
+
+  const specialField = SPECIAL_FIELD_MAP.get(key);
+  if (!specialField) {
+    return false;
+  }
+
+  const options = specialField.options as PresetConditionOption[];
+  const option = options.find((item) => item.value === expectedValue);
+
+  if (!option) {
+    return false;
+  }
+
+  let matched = false;
+
+  switch (option.value) {
+    case 'token_less': {
       const value = getProjectValue(project, 'tokenContract');
-      const hasValue = hasNonEmptyValue(value);
-      if (operator === 'is_empty') {
-        return !hasValue;
-      }
-      if (operator === 'is_not_empty') {
-        return hasValue;
-      }
-      return false;
+      matched = !hasNonEmptyValue(value);
+      break;
     }
-    case 'preInvestmentStage': {
+    case 'pre_investment_stage': {
       const value = getProjectValue(project, 'investment_stage');
-      if (!value || typeof value !== 'string') {
-        return false;
+      if (value && typeof value === 'string') {
+        matched = PRE_STAGE_VALUES.some(
+          (stage) => stage.toLowerCase() === value.toLowerCase(),
+        );
       }
-      if (operator !== 'pre_stage') {
-        return false;
-      }
-      return PRE_STAGE_VALUES.some(
-        (stage) => stage.toLowerCase() === value.toLowerCase(),
-      );
+      break;
     }
-    case 'financialDisclosure': {
-      if (operator !== 'financial_complete') {
-        return false;
-      }
-
+    case 'financial_disclosure_filled': {
       if (FINANCIAL_DISCLOSURE_KEYS.length === 0) {
-        return false;
+        matched = false;
+      } else {
+        matched = FINANCIAL_DISCLOSURE_KEYS.every((itemKey) =>
+          hasNonEmptyValue(getProjectValue(project, itemKey)),
+        );
       }
-
-      return FINANCIAL_DISCLOSURE_KEYS.every((itemKey) =>
-        hasNonEmptyValue(getProjectValue(project, itemKey)),
-      );
+      break;
     }
-    case 'contactPoint': {
-      if (operator !== 'has_contact') {
-        return false;
-      }
+    case 'contact_point_available': {
       const websites = normalizeWebsites(getProjectValue(project, 'websites'));
-      if (websites.length === 0) {
-        return false;
-      }
-      return websites.some((entry) => {
+      matched = websites.some((entry) => {
         const url = typeof entry.url === 'string' ? entry.url.trim() : '';
         const title = typeof entry.title === 'string' ? entry.title.trim() : '';
         return url.length > 0 && title.length > 0;
       });
+      break;
     }
     default:
-      return false;
+      matched = false;
+      break;
   }
+
+  if (operator === 'is') {
+    return matched;
+  }
+
+  if (operator === 'is_not') {
+    return !matched;
+  }
+
+  return false;
 };
 
 const evaluateCondition = (
@@ -339,6 +357,7 @@ const evaluateCondition = (
       project,
       condition.fieldKey as AdvancedSpecialFieldKey,
       condition.operator,
+      condition.value,
     );
   }
 
@@ -383,38 +402,98 @@ export const filterProjectsByAdvancedFilters = (
   );
 };
 
+const migrateLegacySpecialCondition = (
+  condition: AdvancedFilterCondition,
+): AdvancedFilterCondition => {
+  if (condition.fieldType !== 'special' || !condition.fieldKey) {
+    return condition;
+  }
+
+  if (condition.fieldKey === 'presetCondition') {
+    return condition;
+  }
+
+  if (condition.fieldKey === 'hotCondition') {
+    return {
+      ...condition,
+      fieldKey: 'presetCondition',
+    };
+  }
+
+  const operator = condition.operator as string | undefined;
+
+  switch (condition.fieldKey) {
+    case 'tokenContract':
+      return {
+        ...condition,
+        fieldKey: 'presetCondition',
+        operator: operator === 'is_not_empty' ? 'is_not' : 'is',
+        value: 'token_less',
+      };
+    case 'preInvestmentStage':
+      return {
+        ...condition,
+        fieldKey: 'presetCondition',
+        operator: 'is',
+        value: 'pre_investment_stage',
+      };
+    case 'financialDisclosure':
+      return {
+        ...condition,
+        fieldKey: 'presetCondition',
+        operator: 'is',
+        value: 'financial_disclosure_filled',
+      };
+    case 'contactPoint':
+      return {
+        ...condition,
+        fieldKey: 'presetCondition',
+        operator: 'is',
+        value: 'contact_point_available',
+      };
+    default:
+      return condition;
+  }
+};
+
 const sanitizeCondition = (
   condition: AdvancedFilterCondition,
 ): AdvancedFilterCondition | null => {
-  if (!condition.fieldType || !condition.fieldKey || !condition.operator) {
+  const normalized = migrateLegacySpecialCondition(condition);
+
+  if (!normalized.fieldType || !normalized.fieldKey || !normalized.operator) {
     return null;
   }
 
-  if (condition.fieldType === 'select' && !condition.value) {
-    return null;
+  if (normalized.fieldType === 'special') {
+    const specialField = SPECIAL_FIELD_MAP.get(
+      normalized.fieldKey as AdvancedSpecialFieldKey,
+    );
+    if (!specialField || !normalized.value) {
+      return null;
+    }
+    const options = specialField.options as PresetConditionOption[];
+    if (!options.some((option) => option.value === normalized.value)) {
+      return null;
+    }
   }
 
-  if (
-    condition.fieldType === 'special' &&
-    !SPECIAL_FIELD_MAP.has(condition.fieldKey as AdvancedSpecialFieldKey)
-  ) {
-    return null;
-  }
-
-  if (
-    condition.fieldType === 'select' &&
-    !SELECT_FIELD_DEFINITION_MAP.has(condition.fieldKey)
-  ) {
-    return null;
+  if (normalized.fieldType === 'select') {
+    if (!normalized.value) {
+      return null;
+    }
+    if (!SELECT_FIELD_DEFINITION_MAP.has(normalized.fieldKey)) {
+      return null;
+    }
   }
 
   return {
-    id: condition.id ?? generateConditionId(),
-    connector: condition.connector,
-    fieldType: condition.fieldType,
-    fieldKey: condition.fieldKey,
-    operator: condition.operator,
-    value: condition.value,
+    id: normalized.id ?? generateConditionId(),
+    connector: normalized.connector,
+    fieldType: normalized.fieldType,
+    fieldKey: normalized.fieldKey,
+    operator: normalized.operator,
+    value: normalized.value,
   };
 };
 
@@ -540,6 +619,11 @@ export const buildFilterSummary = (
         operatorLabel = condition.operator
           ? getOperatorLabel(condition.operator)
           : undefined;
+        const options = (special?.options ?? []) as PresetConditionOption[];
+        const optionLabel = options.find(
+          (option) => option.value === condition.value,
+        )?.label;
+        valueLabel = optionLabel ?? condition.value ?? undefined;
         label = `${special?.label ?? condition.fieldKey}`.trim();
       } else if (condition.fieldType === 'select') {
         const select = getSelectFieldByKey(condition.fieldKey ?? '');

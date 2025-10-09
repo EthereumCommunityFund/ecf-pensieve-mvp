@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type Key } from 'react';
+import { ScrollShadow } from '@heroui/react';
 
 import { Button } from '@/components/base/button';
 import {
@@ -25,7 +26,6 @@ import {
   createEmptyCondition,
   createEmptyFilter,
   generateFilterId,
-  getOperatorLabel,
   getSelectFieldByKey,
   getSelectFieldDefinitions,
   getSpecialFieldByKey,
@@ -56,7 +56,7 @@ const isConditionComplete = (condition: AdvancedFilterCondition): boolean => {
     return false;
   }
 
-  if (condition.fieldType === 'select') {
+  if (condition.fieldType === 'select' || condition.fieldType === 'special') {
     return Boolean(condition.value);
   }
 
@@ -82,11 +82,6 @@ const isAdvancedFilterOperator = (
   switch (value) {
     case 'is':
     case 'is_not':
-    case 'is_empty':
-    case 'is_not_empty':
-    case 'pre_stage':
-    case 'financial_complete':
-    case 'has_contact':
       return true;
     default:
       return false;
@@ -121,7 +116,7 @@ const CustomFilterModal = ({
     const options: FieldOption[] = [
       {
         key: 'label:special',
-        label: 'Hot Conditions',
+        label: 'Preset Conditions',
         isLabel: true,
       },
       ...specialFields.map((field) => ({
@@ -204,13 +199,14 @@ const CustomFilterModal = ({
             const definition = getSpecialFieldByKey(
               key as AdvancedSpecialFieldKey,
             );
-            const defaultOperator = definition?.operators[0]?.value;
+            const defaultOperator: AdvancedFilterOperator = 'is';
+            const defaultOption = definition?.options?.[0];
             return {
               ...condition,
               fieldType: 'special',
               fieldKey: key,
-              operator: defaultOperator ?? condition.operator,
-              value: undefined,
+              operator: defaultOperator,
+              value: defaultOption?.value,
             };
           }
 
@@ -432,36 +428,7 @@ const CustomFilterModal = ({
 
   const renderOperatorSelector = (condition: AdvancedFilterCondition) => {
     if (!condition.fieldType || !condition.fieldKey) {
-      return <div className={readOnlyCellClass}>Select field first</div>;
-    }
-
-    if (condition.fieldType === 'special') {
-      const field = getSpecialFieldByKey(
-        condition.fieldKey as AdvancedSpecialFieldKey,
-      );
-      const options = field?.operators ?? [];
-      const selectedOperator = condition.operator ?? options[0]?.value ?? '';
-
-      return (
-        <Select
-          selectedKeys={
-            selectedOperator ? new Set([selectedOperator]) : new Set<string>()
-          }
-          onSelectionChange={(keys) => {
-            const selected = getFirstSelectionValue(keys);
-            if (!selected || !isAdvancedFilterOperator(selected)) {
-              return;
-            }
-            handleOperatorChange(condition.id, selected);
-          }}
-          aria-label="Condition operator"
-          classNames={baseSelectClassNames}
-        >
-          {options.map((option) => (
-            <SelectItem key={option.value}>{option.label}</SelectItem>
-          ))}
-        </Select>
-      );
+      return <div className={readOnlyCellClass}>operator</div>;
     }
 
     const selectedOperator = condition.operator ?? 'is';
@@ -515,10 +482,32 @@ const CustomFilterModal = ({
     }
 
     if (condition.fieldType === 'special') {
-      const operatorLabel = condition.operator
-        ? getOperatorLabel(condition.operator)
-        : 'Select operator';
-      return <div className={readOnlyCellClass}>{operatorLabel}</div>;
+      const field = getSpecialFieldByKey(
+        condition.fieldKey as AdvancedSpecialFieldKey,
+      );
+      const options = field?.options ?? [];
+
+      return (
+        <Select
+          selectedKeys={
+            condition.value ? new Set([condition.value]) : new Set<string>()
+          }
+          onSelectionChange={(keys) => {
+            const selected = getFirstSelectionValue(keys);
+            if (!selected) {
+              return;
+            }
+            handleValueChange(condition.id, selected);
+          }}
+          aria-label="Condition value"
+          placeholder="Select value"
+          classNames={baseSelectClassNames}
+        >
+          {options.map((option) => (
+            <SelectItem key={option.value}>{option.label}</SelectItem>
+          ))}
+        </Select>
+      );
     }
 
     return <div className={readOnlyCellClass}>Select field first</div>;
@@ -531,21 +520,21 @@ const CustomFilterModal = ({
     return (
       <div
         key={condition.id}
-        className="flex w-full items-stretch overflow-hidden rounded-[5px] border border-black/10 "
+        className="flex min-w-[720px] items-stretch overflow-hidden rounded-[5px] border border-black/10"
       >
-        <div className="flex shrink-0 items-center justify-center border-r border-black/10 bg-black/[0.02] p-[10px]">
+        <div className="flex w-[80px] items-center justify-center border-r border-black/10 bg-black/[0.02] p-[10px]">
           {renderConnectorCell(condition, index)}
         </div>
-        <div className="flex w-[140px]  flex-1 items-center border-r border-black/10">
+        <div className="flex w-[180px]  items-center border-r border-black/10">
           {renderFieldSelector(condition)}
         </div>
-        <div className="flex w-[110px] items-center border-r border-black/10">
+        <div className="flex w-[100px] items-center border-r border-black/10">
           {renderOperatorSelector(condition)}
         </div>
-        <div className="flex flex-1 items-center border-r border-black/10">
+        <div className="flex w-[180px] flex-1 items-center border-r border-black/10">
           {renderValueSelector(condition)}
         </div>
-        <div className="flex w-[40px] items-center justify-center px-[4px]">
+        <div className="flex w-[40px]  items-center justify-center px-[4px]">
           <Button
             isIconOnly
             onPress={() => handleRemoveCondition(condition.id)}
@@ -568,10 +557,10 @@ const CustomFilterModal = ({
       isOpen={isOpen}
       onClose={onClose}
       classNames={{
-        base: 'w-[720px] max-w-[720px] mobile:w-[calc(100vw-40px)] bg-white',
+        base: 'w-[720px] max-w-[720px] mobile:w-[calc(90vw)] tablet:w-[calc(80vw)] bg-white mobile:p-[10px]',
         header: 'mb-[20px]',
         body: 'p-0',
-        footer: 'mt-0',
+        footer: '',
       }}
     >
       <ModalContent>
@@ -594,12 +583,13 @@ const CustomFilterModal = ({
         </ModalHeader>
 
         <ModalBody className="flex flex-col gap-[10px]">
-          <div className="flex flex-col gap-[10px]">
-            {draft.conditions.map((condition, index) =>
-              renderConditionRow(condition, index),
-            )}
-          </div>
-
+          <ScrollShadow orientation="horizontal" className="w-full max-w-full">
+            <div className="flex min-w-[720px] flex-col gap-[10px] pr-[6px]">
+              {draft.conditions.map((condition, index) =>
+                renderConditionRow(condition, index),
+              )}
+            </div>
+          </ScrollShadow>
           <div className="flex justify-start">
             <Button
               size="sm"
@@ -613,19 +603,6 @@ const CustomFilterModal = ({
         </ModalBody>
 
         <ModalFooter className="flex flex-col gap-[16px]">
-          <div className="flex items-center justify-between">
-            {state?.mode === 'edit' && onDelete ? (
-              <Button
-                onPress={handleDeleteFilter}
-                size="sm"
-                className="!h-auto !w-auto !min-w-0 !rounded-none !border-none !bg-transparent !p-0 text-[14px] font-semibold text-[#D14343] hover:underline"
-              >
-                Delete Filter
-              </Button>
-            ) : (
-              <div />
-            )}
-          </div>
           <Button
             color="primary"
             radius="sm"
