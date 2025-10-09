@@ -31,9 +31,88 @@ import {
 
 const PRE_STAGE_VALUES = ['Pre-Seed'];
 
-const FALLBACK_FIELD_TYPES: AdvancedFilterFieldType[] = ['special', 'select'];
-const FALLBACK_OPERATORS: AdvancedFilterOperator[] = ['is', 'is_not'];
-const FALLBACK_CONNECTORS: AdvancedFilterConnector[] = ['AND', 'OR'];
+const FALLBACK_FIELD_TYPES: readonly AdvancedFilterFieldType[] = [
+  'special',
+  'select',
+];
+const FALLBACK_OPERATORS: readonly AdvancedFilterOperator[] = ['is', 'is_not'];
+const FALLBACK_CONNECTORS: readonly AdvancedFilterConnector[] = ['AND', 'OR'];
+
+const isFieldTypeToken = (
+  value: unknown,
+): value is keyof (typeof ADVANCED_FILTER_URL_DECODER)['fieldType'] =>
+  typeof value === 'string' &&
+  Object.prototype.hasOwnProperty.call(
+    ADVANCED_FILTER_URL_DECODER.fieldType,
+    value,
+  );
+
+const isOperatorToken = (
+  value: unknown,
+): value is keyof (typeof ADVANCED_FILTER_URL_DECODER)['operator'] =>
+  typeof value === 'string' &&
+  Object.prototype.hasOwnProperty.call(
+    ADVANCED_FILTER_URL_DECODER.operator,
+    value,
+  );
+
+const isConnectorToken = (
+  value: unknown,
+): value is keyof (typeof ADVANCED_FILTER_URL_DECODER)['connector'] =>
+  typeof value === 'string' &&
+  Object.prototype.hasOwnProperty.call(
+    ADVANCED_FILTER_URL_DECODER.connector,
+    value,
+  );
+
+const decodeFieldType = (
+  token: unknown,
+): AdvancedFilterFieldType | undefined => {
+  if (isFieldTypeToken(token)) {
+    return ADVANCED_FILTER_URL_DECODER.fieldType[token];
+  }
+
+  if (
+    typeof token === 'string' &&
+    FALLBACK_FIELD_TYPES.includes(token as AdvancedFilterFieldType)
+  ) {
+    return token as AdvancedFilterFieldType;
+  }
+
+  return undefined;
+};
+
+const decodeOperator = (token: unknown): AdvancedFilterOperator | undefined => {
+  if (isOperatorToken(token)) {
+    return ADVANCED_FILTER_URL_DECODER.operator[token];
+  }
+
+  if (
+    typeof token === 'string' &&
+    FALLBACK_OPERATORS.includes(token as AdvancedFilterOperator)
+  ) {
+    return token as AdvancedFilterOperator;
+  }
+
+  return undefined;
+};
+
+const decodeConnector = (
+  token: unknown,
+): AdvancedFilterConnector | undefined => {
+  if (isConnectorToken(token)) {
+    return ADVANCED_FILTER_URL_DECODER.connector[token];
+  }
+
+  if (
+    typeof token === 'string' &&
+    FALLBACK_CONNECTORS.includes(token as AdvancedFilterConnector)
+  ) {
+    return token as AdvancedFilterConnector;
+  }
+
+  return undefined;
+};
 
 const normalizeSelectComparableValue = (value: unknown): string | null => {
   if (value === null || value === undefined) {
@@ -177,13 +256,18 @@ const SELECT_FIELD_DEFINITION_MAP = new Map(
 );
 
 const FINANCIAL_DISCLOSURE_KEYS: string[] = Object.values(AllItemConfig)
-  .filter(
-    (config): config is NonNullable<typeof config> =>
-      Boolean(config?.extraTransparencyPoints?.length) &&
-      config.extraTransparencyPoints?.includes(
-        ALL_METRICS.FINANCIAL_DISCLOSURE,
-      ),
-  )
+  .filter((config): config is NonNullable<typeof config> => {
+    if (!config) {
+      return false;
+    }
+
+    const points = config.extraTransparencyPoints;
+    return (
+      Array.isArray(points) &&
+      points.length > 0 &&
+      points.includes(ALL_METRICS.FINANCIAL_DISCLOSURE)
+    );
+  })
   .map((config) => config.key);
 
 const OPERATOR_LABEL_MAP: Record<AdvancedFilterOperator, string> = {
@@ -641,7 +725,7 @@ const migrateLegacySpecialCondition = (
 
 const sanitizeCondition = (
   condition: AdvancedFilterCondition,
-): AdvancedFilterCondition | null => {
+): SerializedAdvancedFilterCondition | null => {
   const normalized = migrateLegacySpecialCondition(condition);
 
   if (!normalized.fieldType || !normalized.fieldKey || !normalized.operator) {
@@ -672,7 +756,7 @@ const sanitizeCondition = (
     }
   }
 
-  return {
+  const sanitized: SerializedAdvancedFilterCondition = {
     id: normalized.id ?? generateConditionId(),
     connector: normalized.connector,
     fieldType: normalized.fieldType,
@@ -680,6 +764,8 @@ const sanitizeCondition = (
     operator: normalized.operator,
     value: normalized.value,
   };
+
+  return sanitized;
 };
 
 const encodePayloadToUrlTokens = (
@@ -788,33 +874,9 @@ const decodePayloadFromUrlTokens = (
         continue;
       }
 
-      const fieldType =
-        typeof fieldTypeToken === 'string'
-          ? (ADVANCED_FILTER_URL_DECODER.fieldType[fieldTypeToken] ??
-            (FALLBACK_FIELD_TYPES.includes(
-              fieldTypeToken as AdvancedFilterFieldType,
-            )
-              ? (fieldTypeToken as AdvancedFilterFieldType)
-              : undefined))
-          : undefined;
-      const operator =
-        typeof operatorToken === 'string'
-          ? (ADVANCED_FILTER_URL_DECODER.operator[operatorToken] ??
-            (FALLBACK_OPERATORS.includes(
-              operatorToken as AdvancedFilterOperator,
-            )
-              ? (operatorToken as AdvancedFilterOperator)
-              : undefined))
-          : undefined;
-      const connector =
-        typeof connectorToken === 'string'
-          ? (ADVANCED_FILTER_URL_DECODER.connector[connectorToken] ??
-            (FALLBACK_CONNECTORS.includes(
-              connectorToken as AdvancedFilterConnector,
-            )
-              ? (connectorToken as AdvancedFilterConnector)
-              : undefined))
-          : undefined;
+      const fieldType = decodeFieldType(fieldTypeToken);
+      const operator = decodeOperator(operatorToken);
+      const connector = decodeConnector(connectorToken);
 
       if (!fieldType || !operator) {
         continue;
@@ -927,8 +989,9 @@ export const serializeAdvancedFilters = (
     .map((filter) => {
       const sanitizedConditions = filter.conditions
         .map(sanitizeCondition)
-        .filter((condition): condition is AdvancedFilterCondition =>
-          Boolean(condition),
+        .filter(
+          (condition): condition is SerializedAdvancedFilterCondition =>
+            condition !== null,
         );
 
       if (sanitizedConditions.length === 0) {
@@ -943,8 +1006,10 @@ export const serializeAdvancedFilters = (
     .filter(
       (
         filter,
-      ): filter is { id: string; conditions: AdvancedFilterCondition[] } =>
-        Boolean(filter),
+      ): filter is {
+        id: string;
+        conditions: SerializedAdvancedFilterCondition[];
+      } => filter !== null,
     );
 
   if (sanitizedFilters.length === 0) {
@@ -1005,8 +1070,9 @@ export const parseAdvancedFilters = (
               value: condition.value,
             }),
           )
-          .filter((condition): condition is AdvancedFilterCondition =>
-            Boolean(condition),
+          .filter(
+            (condition): condition is SerializedAdvancedFilterCondition =>
+              condition !== null,
           );
 
         return {
