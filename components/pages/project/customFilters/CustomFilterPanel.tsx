@@ -1,7 +1,11 @@
-import { Fragment, memo } from 'react';
-import { PlusCircle } from '@phosphor-icons/react';
+'use client';
 
-import { Button } from '@/components/base/button';
+import { PlusCircle, ShareFat } from '@phosphor-icons/react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Fragment, memo, useCallback, useEffect, useState } from 'react';
+import CopyToClipboard from 'react-copy-to-clipboard';
+
+import { addToast, Button } from '@/components/base';
 import { GearSixIcon } from '@/components/icons';
 
 import CustomFilterCard from './CustomFilterCard';
@@ -30,6 +34,34 @@ const CustomFilterPanel = ({
   disabledReason,
 }: CustomFilterPanelProps) => {
   const summaries = filters.map((filter) => buildFilterSummary(filter));
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? '';
+  const [shareUrl, setShareUrl] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const nextUrl = `${window.location.origin}${pathname ?? ''}${searchParamsString ? `?${searchParamsString}` : ''}`;
+    setShareUrl(nextUrl);
+  }, [pathname, searchParamsString]);
+
+  const handleShareCustomFilter = useCallback((_: string, result: boolean) => {
+    if (result) {
+      addToast({
+        title: 'Link copied to clipboard',
+        color: 'success',
+      });
+    } else {
+      console.error('Failed to copy custom filter link');
+      addToast({
+        title: 'Failed to copy link',
+        color: 'danger',
+      });
+    }
+  }, []);
 
   return (
     <div className="flex flex-col gap-[10px]">
@@ -101,7 +133,7 @@ const CustomFilterPanel = ({
             </Button>
           </div>
 
-          <div className="flex items-center justify-center text-[11px] text-black/45">
+          {/* <div className="flex items-center justify-center text-[11px] text-black/45">
             {onClearAll && (
               <Button
                 size="sm"
@@ -111,7 +143,26 @@ const CustomFilterPanel = ({
                 Clear All Custom Filters
               </Button>
             )}
+          </div> */}
+
+          <div>
+            <CopyToClipboard
+              text={shareUrl}
+              onCopy={handleShareCustomFilter}
+              options={{ format: 'text/plain' }}
+            >
+              <Button
+                size="sm"
+                aria-label="Share custom filter"
+                isDisabled={!shareUrl}
+                className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
+              >
+                <ShareFat />
+                Share Filters
+              </Button>
+            </CopyToClipboard>
           </div>
+
           {isDisabled && disabledReason && (
             <p className="text-[11px] text-[#D14343]">{disabledReason}</p>
           )}
