@@ -13,6 +13,7 @@ import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRendere
 import { TableIcon } from '@/components/icons';
 import { getChainDisplayInfo } from '@/constants/chains';
 import { EMBED_TABLE_WITH_PROJECT_SELECTOR_TYPES } from '@/constants/embedTable';
+import { NA_VALUE } from '@/constants/naSelection';
 import { useProjectNamesByIds } from '@/hooks/useProjectsByIds';
 import dayjs from '@/lib/dayjs';
 import {
@@ -37,7 +38,6 @@ import {
 } from '@/utils/item';
 import { getRegionLabel } from '@/utils/region';
 import { normalizeUrl } from '@/utils/url';
-import { NA_VALUE } from '@/constants/naSelection';
 
 import {
   BOOL_TYPE_OPTIONS,

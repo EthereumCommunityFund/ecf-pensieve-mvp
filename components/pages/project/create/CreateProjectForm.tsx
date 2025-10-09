@@ -18,6 +18,7 @@ import {
   transformProjectData,
   transformProposalData,
 } from '@/components/pages/project/create/utils/form';
+import { NA_VALUE } from '@/constants/naSelection';
 import { useAuth } from '@/context/AuthContext';
 import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import dayjs from '@/lib/dayjs';
@@ -25,7 +26,6 @@ import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { IItemCategoryEnum } from '@/types/item';
 import { devLog } from '@/utils/devLog';
-import { NA_VALUE } from '@/constants/naSelection';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
