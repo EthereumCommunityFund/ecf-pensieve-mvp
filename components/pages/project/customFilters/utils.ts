@@ -221,6 +221,14 @@ const getProjectValue = (project: IProject, key: string): unknown => {
     return undefined;
   }
 
+  const snapItems = project.projectSnap?.items;
+  if (snapItems && snapItems.length > 0) {
+    const matched = snapItems.find((item: IProposalItem) => item.key === key);
+    if (matched && matched.value !== undefined && matched.value !== null) {
+      return matched.value;
+    }
+  }
+
   const direct = (project as Record<string, unknown>)[key];
   if (direct !== undefined && direct !== null) {
     return direct;
@@ -230,14 +238,6 @@ const getProjectValue = (project: IProject, key: string): unknown => {
   const camelValue = (project as Record<string, unknown>)[camelKey];
   if (camelValue !== undefined && camelValue !== null) {
     return camelValue;
-  }
-
-  const snapItems = project.projectSnap?.items;
-  if (snapItems && snapItems.length > 0) {
-    const matched = snapItems.find((item: IProposalItem) => item.key === key);
-    if (matched) {
-      return matched.value;
-    }
   }
 
   return undefined;
