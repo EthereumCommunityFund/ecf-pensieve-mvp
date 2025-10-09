@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type Key } from 'react';
 
-import { Button, ECFButton } from '@/components/base/button';
+import { Button } from '@/components/base/button';
 import {
   Modal,
   ModalBody,
@@ -9,11 +9,7 @@ import {
   ModalHeader,
 } from '@/components/base/modal';
 import { Select, SelectItem } from '@/components/base/select';
-import {
-  CircleXIcon,
-  GearSixIcon,
-  PlusSquareOutlineIcon,
-} from '@/components/icons';
+import { GearSixIcon, PlusIcon, XCircleIcon, XIcon } from '@/components/icons';
 
 import {
   type AdvancedFilterCard,
@@ -337,13 +333,34 @@ const CustomFilterModal = ({
     onDelete(draft.id);
   };
 
+  const baseSelectClassNames = {
+    base: 'w-full',
+    value: 'text-[14px] text-black',
+    placeholder: 'text-[14px] text-black/40',
+    selectorIcon: 'text-black/30',
+    trigger:
+      'w-full h-auto bg-transparent border-none shadow-none rounded-[8px] px-[10px] flex justify-between',
+    inputWrapper: 'flex-1 w-full',
+    listboxWrapper: 'rounded-[4px] bg-white',
+    listbox: 'border border-[rgba(0,0,0,0.1)] rounded-[4px] p-[4px]',
+    popoverContent: 'p-0 min-w-max w-auto',
+  };
+
+  const connectorSelectClassNames = {
+    ...baseSelectClassNames,
+    trigger: `${baseSelectClassNames.trigger} min-w-[60px] min-h-[14px] gap-0 px-0`,
+  };
+
+  const readOnlyCellClass =
+    'flex w-full items-center px-[4px] text-[12px] text-black/50';
+
   const renderConnectorCell = (
     condition: AdvancedFilterCondition,
     index: number,
   ) => {
     if (index === 0) {
       return (
-        <span className="rounded-[4px] bg-black/80 px-[10px] py-[6px] text-[12px] font-semibold uppercase tracking-[0.04em] text-white">
+        <span className="w-[60px] text-[14px] font-semibold tracking-[0.04em] text-black/60">
           Where
         </span>
       );
@@ -362,13 +379,7 @@ const CustomFilterModal = ({
           handleConnectorChange(condition.id, selected);
         }}
         aria-label="Condition connector"
-        classNames={{
-          base: 'text-[13px]',
-          trigger:
-            'h-[38px] rounded-[6px] border border-black/10 bg-white px-[8px]',
-          value: 'text-[13px] font-semibold text-black/70',
-          listboxWrapper: 'rounded-[8px] border border-black/10 bg-white',
-        }}
+        classNames={connectorSelectClassNames}
       >
         <SelectItem key="AND">AND</SelectItem>
         <SelectItem key="OR">OR</SelectItem>
@@ -399,13 +410,7 @@ const CustomFilterModal = ({
         }}
         placeholder="Select field"
         aria-label="Filter field"
-        classNames={{
-          base: 'text-[13px]',
-          trigger:
-            'h-[38px] rounded-[6px] border border-black/10 bg-white px-[8px]',
-          value: 'text-[13px] font-semibold text-black/70',
-          listboxWrapper: 'rounded-[8px] border border-black/10 bg-white',
-        }}
+        classNames={baseSelectClassNames}
       >
         {fieldOptions.map((item) => (
           <SelectItem
@@ -427,11 +432,7 @@ const CustomFilterModal = ({
 
   const renderOperatorSelector = (condition: AdvancedFilterCondition) => {
     if (!condition.fieldType || !condition.fieldKey) {
-      return (
-        <div className="flex h-[38px] items-center rounded-[6px] border border-dashed border-black/10 px-[8px] text-[13px] text-black/40">
-          Select field first
-        </div>
-      );
+      return <div className={readOnlyCellClass}>Select field first</div>;
     }
 
     if (condition.fieldType === 'special') {
@@ -454,13 +455,7 @@ const CustomFilterModal = ({
             handleOperatorChange(condition.id, selected);
           }}
           aria-label="Condition operator"
-          classNames={{
-            base: 'text-[13px]',
-            trigger:
-              'h-[38px] rounded-[6px] border border-black/10 bg-white px-[8px]',
-            value: 'text-[13px] font-semibold text-black/70',
-            listboxWrapper: 'rounded-[8px] border border-black/10 bg-white',
-          }}
+          classNames={baseSelectClassNames}
         >
           {options.map((option) => (
             <SelectItem key={option.value}>{option.label}</SelectItem>
@@ -482,13 +477,7 @@ const CustomFilterModal = ({
           handleOperatorChange(condition.id, selected);
         }}
         aria-label="Select operator"
-        classNames={{
-          base: 'text-[13px]',
-          trigger:
-            'h-[38px] rounded-[6px] border border-black/10 bg-white px-[8px]',
-          value: 'text-[13px] font-semibold text-black/70',
-          listboxWrapper: 'rounded-[8px] border border-black/10 bg-white',
-        }}
+        classNames={baseSelectClassNames}
       >
         <SelectItem key="is">is</SelectItem>
         <SelectItem key="is_not">is not</SelectItem>
@@ -516,13 +505,7 @@ const CustomFilterModal = ({
           }}
           aria-label="Condition value"
           placeholder="Select value"
-          classNames={{
-            base: 'text-[13px]',
-            trigger:
-              'h-[38px] rounded-[6px] border border-black/10 bg-white px-[8px]',
-            value: 'text-[13px] font-semibold text-black/70',
-            listboxWrapper: 'rounded-[8px] border border-black/10 bg-white',
-          }}
+          classNames={baseSelectClassNames}
         >
           {options.map((option) => (
             <SelectItem key={option.value}>{option.label}</SelectItem>
@@ -535,18 +518,10 @@ const CustomFilterModal = ({
       const operatorLabel = condition.operator
         ? getOperatorLabel(condition.operator)
         : 'Select operator';
-      return (
-        <div className="flex h-[38px] items-center rounded-[6px] border border-dashed border-black/10 px-[8px] text-[13px] text-black/50">
-          {operatorLabel}
-        </div>
-      );
+      return <div className={readOnlyCellClass}>{operatorLabel}</div>;
     }
 
-    return (
-      <div className="flex h-[38px] items-center rounded-[6px] border border-dashed border-black/10 px-[8px] text-[13px] text-black/40">
-        Select field first
-      </div>
-    );
+    return <div className={readOnlyCellClass}>Select field first</div>;
   };
 
   const renderConditionRow = (
@@ -556,23 +531,28 @@ const CustomFilterModal = ({
     return (
       <div
         key={condition.id}
-        className="grid w-full grid-cols-[110px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_40px] items-center gap-[10px] rounded-[8px] border border-black/10 bg-white px-[10px] py-[8px]"
+        className="flex w-full items-stretch overflow-hidden rounded-[5px] border border-black/10 "
       >
-        <div className="flex items-center justify-start">
+        <div className="flex shrink-0 items-center justify-center border-r border-black/10 bg-black/[0.02] p-[10px]">
           {renderConnectorCell(condition, index)}
         </div>
-        <div>{renderFieldSelector(condition)}</div>
-        <div>{renderOperatorSelector(condition)}</div>
-        <div>{renderValueSelector(condition)}</div>
-        <div className="flex items-center justify-center">
+        <div className="flex w-[140px]  flex-1 items-center border-r border-black/10">
+          {renderFieldSelector(condition)}
+        </div>
+        <div className="flex w-[110px] items-center border-r border-black/10">
+          {renderOperatorSelector(condition)}
+        </div>
+        <div className="flex flex-1 items-center border-r border-black/10">
+          {renderValueSelector(condition)}
+        </div>
+        <div className="flex w-[40px] items-center justify-center px-[4px]">
           <Button
             isIconOnly
-            size="sm"
             onPress={() => handleRemoveCondition(condition.id)}
             aria-label="Remove condition"
-            className="min-w-0 rounded-full border border-black/10 bg-white text-black/40 hover:bg-[#F5F5F5] hover:text-black"
+            className="size-[30px] min-w-[24px] p-[3px]"
           >
-            <CircleXIcon width={16} height={16} />
+            <XCircleIcon size={24} />
           </Button>
         </div>
       </div>
@@ -588,70 +568,73 @@ const CustomFilterModal = ({
       isOpen={isOpen}
       onClose={onClose}
       classNames={{
-        base: 'w-[720px] max-w-[720px] mobile:w-[calc(100vw-40px)]',
+        base: 'w-[720px] max-w-[720px] mobile:w-[calc(100vw-40px)] bg-white',
+        header: 'mb-[20px]',
         body: 'p-0',
-        header: 'px-[20px] pb-[10px]',
-        footer: 'px-[20px] pt-[20px] pb-[10px]',
+        footer: 'mt-0',
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex items-center justify-between border-b border-black/10 pb-[12px]">
-          <div className="flex items-center gap-[8px]">
-            <GearSixIcon width={20} height={20} className="text-black" />
-            <h2 className="text-[18px] font-semibold text-black">
+        <ModalHeader className="flex items-center justify-between">
+          <div className="flex items-center gap-[10px]">
+            <GearSixIcon width={20} height={20} className="opacity-80" />
+            <h2 className="text-[14px] font-semibold text-black/60">
               Custom Filter
             </h2>
           </div>
           <Button
-            size="sm"
+            isIconOnly
             onPress={onClose}
-            className="h-auto border-none bg-transparent p-0 text-[13px] font-semibold text-black/60 hover:text-black"
+            aria-label="Close"
+            size="sm"
+            radius="sm"
           >
-            Close
+            <XIcon width={18} height={18} className="opacity-60" />
           </Button>
         </ModalHeader>
 
-        <ModalBody className="flex flex-col gap-[12px] p-[20px]">
+        <ModalBody className="flex flex-col gap-[10px]">
           <div className="flex flex-col gap-[10px]">
             {draft.conditions.map((condition, index) =>
               renderConditionRow(condition, index),
             )}
           </div>
 
-          <Button
-            size="sm"
-            onPress={handleAddCondition}
-            className="mt-[10px] flex h-[36px] items-center justify-center gap-[8px] rounded-[8px] border border-dashed border-black/20 bg-white text-[13px] font-semibold text-black/60 hover:bg-[#F8F8F8]"
-          >
-            <PlusSquareOutlineIcon size={18} className="text-black/50" />
-            Add Condition
-          </Button>
+          <div className="flex justify-start">
+            <Button
+              size="sm"
+              onPress={handleAddCondition}
+              className="flex  items-center justify-center gap-[8px] border-none bg-transparent text-[14px] font-semibold text-black/60"
+            >
+              <PlusIcon className="opacity-50" size={18} />
+              Add Condition
+            </Button>
+          </div>
         </ModalBody>
 
-        <ModalFooter className="flex items-center justify-between gap-[10px] border-t border-black/10 pt-[16px]">
-          {state?.mode === 'edit' && onDelete ? (
-            <Button
-              size="sm"
-              onPress={handleDeleteFilter}
-              className="h-auto border-none bg-transparent p-0 text-[13px] font-semibold text-[#D14343] hover:underline"
-            >
-              Delete Filter
-            </Button>
-          ) : (
-            <div />
-          )}
-          <div className="flex items-center gap-[10px]">
-            <Button
-              size="sm"
-              onPress={onClose}
-              className="h-[36px] rounded-[6px] border border-black/10 bg-white px-[14px] text-[13px] font-semibold text-black/60 hover:bg-[#F5F5F5]"
-            >
-              Cancel
-            </Button>
-            <ECFButton isDisabled={!isValid} onPress={handleSave} $size="small">
-              {state?.mode === 'edit' ? 'Save Changes' : 'Create Filter'}
-            </ECFButton>
+        <ModalFooter className="flex flex-col gap-[16px]">
+          <div className="flex items-center justify-between">
+            {state?.mode === 'edit' && onDelete ? (
+              <Button
+                onPress={handleDeleteFilter}
+                size="sm"
+                className="!h-auto !w-auto !min-w-0 !rounded-none !border-none !bg-transparent !p-0 text-[14px] font-semibold text-[#D14343] hover:underline"
+              >
+                Delete Filter
+              </Button>
+            ) : (
+              <div />
+            )}
           </div>
+          <Button
+            color="primary"
+            radius="sm"
+            className="h-[44px] w-full rounded-[6px] text-[15px] font-semibold"
+            isDisabled={!isValid}
+            onPress={handleSave}
+          >
+            {state?.mode === 'edit' ? 'Save Changes' : 'Save Filter'}
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
