@@ -35,6 +35,64 @@ const FALLBACK_FIELD_TYPES: AdvancedFilterFieldType[] = ['special', 'select'];
 const FALLBACK_OPERATORS: AdvancedFilterOperator[] = ['is', 'is_not'];
 const FALLBACK_CONNECTORS: AdvancedFilterConnector[] = ['AND', 'OR'];
 
+const normalizeSelectComparableValue = (value: unknown): string | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 'yes' : 'no';
+  }
+
+  if (typeof value === 'number') {
+    return String(value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    const lower = trimmed.toLowerCase();
+    if (lower === 'true') {
+      return 'yes';
+    }
+    if (lower === 'false') {
+      return 'no';
+    }
+    return lower;
+  }
+
+  return String(value).toLowerCase();
+};
+
+const getCanonicalSelectOptionValue = (
+  fieldKey: string,
+  rawValue: unknown,
+): string | null => {
+  const normalized = normalizeSelectComparableValue(rawValue);
+  if (normalized === null) {
+    return null;
+  }
+
+  const field = getSelectFieldByKey(fieldKey);
+  if (!field) {
+    return normalized;
+  }
+
+  const option = field.options.find((item) => {
+    const optionNormalized = normalizeSelectComparableValue(item.value);
+    return optionNormalized !== null && optionNormalized === normalized;
+  });
+
+  if (option) {
+    return option.value;
+  }
+
+  return null;
+};
+
 type SpecialConditionBooleanValue = 'true' | 'false';
 
 const SPECIAL_BOOLEAN_OPTIONS: SelectFieldOption[] = [
@@ -314,8 +372,22 @@ const evaluateSelectCondition = (
     if (values.length === 0) {
       return false;
     }
+    const canonicalExpected = getCanonicalSelectOptionValue(
+      fieldKey,
+      expectedValue,
+    );
+    if (canonicalExpected === null) {
+      return false;
+    }
 
-    return values.some((item) => String(item) === expectedValue);
+    const canonicalValues = values.map((item) =>
+      getCanonicalSelectOptionValue(fieldKey, item),
+    );
+    const matched = canonicalValues.some(
+      (valueKey) => valueKey !== null && valueKey === canonicalExpected,
+    );
+
+    return matched;
   }
 
   if (operator === 'is_not') {
@@ -326,8 +398,22 @@ const evaluateSelectCondition = (
     if (values.length === 0) {
       return true;
     }
+    const canonicalExpected = getCanonicalSelectOptionValue(
+      fieldKey,
+      expectedValue,
+    );
+    if (canonicalExpected === null) {
+      return true;
+    }
 
-    return values.every((item) => String(item) !== expectedValue);
+    const canonicalValues = values.map((item) =>
+      getCanonicalSelectOptionValue(fieldKey, item),
+    );
+    const result = canonicalValues.every(
+      (valueKey) => valueKey === null || valueKey !== canonicalExpected,
+    );
+
+    return result;
   }
 
   return false;
