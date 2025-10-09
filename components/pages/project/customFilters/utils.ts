@@ -30,6 +30,10 @@ import {
 
 const PRE_STAGE_VALUES = ['Pre-Seed'];
 
+const FALLBACK_FIELD_TYPES: AdvancedFilterFieldType[] = ['special', 'select'];
+const FALLBACK_OPERATORS: AdvancedFilterOperator[] = ['is', 'is_not'];
+const FALLBACK_CONNECTORS: AdvancedFilterConnector[] = ['AND', 'OR'];
+
 type SpecialConditionBooleanValue = 'true' | 'false';
 
 const SPECIAL_BOOLEAN_OPTIONS: SelectFieldOption[] = [
@@ -554,19 +558,19 @@ const encodePayloadToUrlTokens = (
         [conditionKeys.fieldType]:
           ADVANCED_FILTER_URL_TOKENS.enums.fieldType[
             condition.fieldType as keyof typeof ADVANCED_FILTER_URL_TOKENS.enums.fieldType
-          ],
+          ] ?? condition.fieldType,
         [conditionKeys.fieldKey]: condition.fieldKey,
         [conditionKeys.operator]:
           ADVANCED_FILTER_URL_TOKENS.enums.operator[
             condition.operator as keyof typeof ADVANCED_FILTER_URL_TOKENS.enums.operator
-          ],
+          ] ?? condition.operator,
       };
 
       if (condition.connector) {
         encodedCondition[conditionKeys.connector] =
           ADVANCED_FILTER_URL_TOKENS.enums.connector[
             condition.connector as keyof typeof ADVANCED_FILTER_URL_TOKENS.enums.connector
-          ];
+          ] ?? condition.connector;
       }
 
       if (condition.value !== undefined) {
@@ -648,15 +652,30 @@ const decodePayloadFromUrlTokens = (
 
       const fieldType =
         typeof fieldTypeToken === 'string'
-          ? ADVANCED_FILTER_URL_DECODER.fieldType[fieldTypeToken]
+          ? (ADVANCED_FILTER_URL_DECODER.fieldType[fieldTypeToken] ??
+            (FALLBACK_FIELD_TYPES.includes(
+              fieldTypeToken as AdvancedFilterFieldType,
+            )
+              ? (fieldTypeToken as AdvancedFilterFieldType)
+              : undefined))
           : undefined;
       const operator =
         typeof operatorToken === 'string'
-          ? ADVANCED_FILTER_URL_DECODER.operator[operatorToken]
+          ? (ADVANCED_FILTER_URL_DECODER.operator[operatorToken] ??
+            (FALLBACK_OPERATORS.includes(
+              operatorToken as AdvancedFilterOperator,
+            )
+              ? (operatorToken as AdvancedFilterOperator)
+              : undefined))
           : undefined;
       const connector =
         typeof connectorToken === 'string'
-          ? ADVANCED_FILTER_URL_DECODER.connector[connectorToken]
+          ? (ADVANCED_FILTER_URL_DECODER.connector[connectorToken] ??
+            (FALLBACK_CONNECTORS.includes(
+              connectorToken as AdvancedFilterConnector,
+            )
+              ? (connectorToken as AdvancedFilterConnector)
+              : undefined))
           : undefined;
 
       if (!fieldType || !operator) {

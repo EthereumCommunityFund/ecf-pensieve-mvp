@@ -73,6 +73,11 @@ const ProjectsContent = () => {
   const [advancedFilterSourceData, setAdvancedFilterSourceData] = useState<
     IProject[]
   >([]);
+  const [advancedFilterOffset, setAdvancedFilterOffset] = useState(0);
+  const [isAdvancedFilterLoadingMore, setIsAdvancedFilterLoadingMore] =
+    useState(false);
+  const [hasAdvancedFilterNextPage, setHasAdvancedFilterNextPage] =
+    useState(false);
 
   useEffect(() => {
     if (advancedFilterParam === advancedFilterSerializedRef.current) {
@@ -222,7 +227,9 @@ const ProjectsContent = () => {
   const effectiveLimit = shouldUseAdvancedFilter
     ? ADVANCED_FILTER_FETCH_LIMIT
     : PAGE_SIZE;
-  const effectiveOffset = shouldUseAdvancedFilter ? 0 : offset;
+  const effectiveOffset = shouldUseAdvancedFilter
+    ? advancedFilterOffset
+    : offset;
 
   const {
     data,
@@ -266,6 +273,22 @@ const ProjectsContent = () => {
       enabled: isAccountableSort,
     },
   );
+
+  useEffect(() => {
+    if (!shouldUseAdvancedFilter) {
+      setAdvancedFilterOffset(0);
+      setAdvancedFilterSourceData([]);
+      setIsAdvancedFilterLoadingMore(false);
+      setHasAdvancedFilterNextPage(false);
+      return;
+    }
+
+    setAdvancedFilterOffset(0);
+    setAdvancedFilterSourceData([]);
+    setIsAdvancedFilterLoadingMore(false);
+    setHasAdvancedFilterNextPage(false);
+    void refetchProjects();
+  }, [advancedFilterSignature, shouldUseAdvancedFilter, refetchProjects]);
 
   const accountableProjectList = useMemo(() => {
     if (!accountableData?.pages) {
@@ -321,13 +344,13 @@ const ProjectsContent = () => {
   const isListFetchingNext = isAccountableSort
     ? isFetchingNextAccountable
     : shouldUseAdvancedFilter
-      ? false
+      ? isAdvancedFilterLoadingMore
       : isLoadingMore;
 
   const hasListNextPage = isAccountableSort
     ? hasNextAccountable
     : shouldUseAdvancedFilter
-      ? false
+      ? hasAdvancedFilterNextPage
       : data?.hasNextPage;
 
   const handleLoadMoreAction = useCallback(() => {
@@ -337,6 +360,12 @@ const ProjectsContent = () => {
     }
 
     if (shouldUseAdvancedFilter) {
+      if (isAdvancedFilterLoadingMore || !hasAdvancedFilterNextPage) {
+        return;
+      }
+
+      setIsAdvancedFilterLoadingMore(true);
+      setAdvancedFilterOffset((prev) => prev + ADVANCED_FILTER_FETCH_LIMIT);
       return;
     }
 
@@ -345,6 +374,9 @@ const ProjectsContent = () => {
     isAccountableSort,
     fetchNextAccountable,
     handleLoadMore,
+    hasAdvancedFilterNextPage,
+    isAdvancedFilterLoadingMore,
+    setAdvancedFilterOffset,
     shouldUseAdvancedFilter,
   ]);
 
@@ -440,7 +472,35 @@ const ProjectsContent = () => {
     }
 
     if (shouldUseAdvancedFilter) {
-      setAdvancedFilterSourceData(data.items as IProject[]);
+      if (
+        typeof data.offset === 'number' &&
+        data.offset !== advancedFilterOffset
+      ) {
+        return;
+      }
+
+      const incomingItems = data.items as IProject[];
+      setAdvancedFilterSourceData((prev) => {
+        if (advancedFilterOffset === 0 || prev.length === 0) {
+          return incomingItems;
+        }
+
+        const existingIds = new Set(prev.map((item) => item.id));
+        const merged = [...prev];
+
+        for (const item of incomingItems) {
+          if (!existingIds.has(item.id)) {
+            merged.push(item);
+          }
+        }
+
+        return merged;
+      });
+
+      setHasAdvancedFilterNextPage(
+        Boolean((data as { hasNextPage?: boolean }).hasNextPage),
+      );
+      setIsAdvancedFilterLoadingMore(false);
       return;
     }
 
@@ -449,15 +509,39 @@ const ProjectsContent = () => {
     }
 
     setAdvancedFilterSourceData([]);
+    setHasAdvancedFilterNextPage(false);
+    setIsAdvancedFilterLoadingMore(false);
     setPageData(data.items as IProject[], data.offset ?? offset);
-  }, [data, offset, setPageData, shouldUseAdvancedFilter]);
+  }, [
+    data,
+    offset,
+    setPageData,
+    shouldUseAdvancedFilter,
+    advancedFilterOffset,
+  ]);
 
   // Reset when filters (cats) or sort change. Also trigger a refetch to avoid stale UI
   const catsKey = cats?.join(',') || '';
 
   useEffect(() => {
     reset();
-  }, [sort, catsKey, advancedFilterSignature, reset]);
+    if (shouldUseAdvancedFilter) {
+      setAdvancedFilterOffset(0);
+      setAdvancedFilterSourceData([]);
+      setIsAdvancedFilterLoadingMore(false);
+      setHasAdvancedFilterNextPage(false);
+    }
+  }, [sort, catsKey, advancedFilterSignature, reset, shouldUseAdvancedFilter]);
+
+  useEffect(() => {
+    if (!shouldUseAdvancedFilter) {
+      return;
+    }
+
+    if (!isFetching) {
+      setIsAdvancedFilterLoadingMore(false);
+    }
+  }, [isFetching, shouldUseAdvancedFilter]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -523,7 +607,7 @@ const ProjectsContent = () => {
             : 'Filtered'
           : null;
 
-      pageTitle = categoryDisplay ? `${categoryDisplay} Projects` : 'Projects';
+      pageTitle = categoryDisplay ? `${categoryDisplay} Projects` : 'List';
       pageDescription = categoryDisplay
         ? `Page Completion Rate (Transparency) * User Supported Votes`
         : '';
@@ -531,7 +615,7 @@ const ProjectsContent = () => {
         ? cats && cats.length === 1
           ? `No ${cats[0]} projects found`
           : 'No projects found matching the selected categories'
-        : 'No Published Project Yet';
+        : 'No projects found matching the conditions';
     }
 
     return {
