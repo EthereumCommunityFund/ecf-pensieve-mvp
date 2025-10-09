@@ -8,6 +8,7 @@ import {
   ADVANCED_FILTER_QUERY_KEY,
   ADVANCED_FILTER_SERIALIZATION_VERSION,
 } from '@/constants/projectFilters';
+import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { IProject } from '@/types';
 import { IProposalItem } from '@/types/item';
 
@@ -47,6 +48,37 @@ const SPECIAL_BOOLEAN_OPTIONS: SelectFieldOption[] = [
   },
 ];
 
+const buildProjectTableFieldOrder = () => {
+  const order: string[] = [];
+
+  ProjectTableFieldCategory.forEach((category) => {
+    category.subCategories.forEach((subCategory) => {
+      if (Array.isArray(subCategory.items)) {
+        order.push(...subCategory.items);
+      }
+
+      if (Array.isArray(subCategory.itemsNotEssential)) {
+        order.push(...subCategory.itemsNotEssential);
+      }
+
+      if (Array.isArray(subCategory.groups)) {
+        subCategory.groups.forEach((group) => {
+          if (Array.isArray(group.items)) {
+            order.push(...group.items);
+          }
+        });
+      }
+    });
+  });
+
+  return order;
+};
+
+const TABLE_FIELD_ORDER = buildProjectTableFieldOrder();
+const TABLE_FIELD_ORDER_MAP = new Map<string, number>(
+  TABLE_FIELD_ORDER.map((key, index) => [key, index]),
+);
+
 const SELECT_FIELD_DEFINITIONS: SelectFieldDefinition[] = Object.values(
   AllItemConfig,
 )
@@ -60,7 +92,27 @@ const SELECT_FIELD_DEFINITIONS: SelectFieldDefinition[] = Object.values(
     options: (config.options ?? []) as SelectFieldOption[],
   }))
   .filter((config) => config.options.length > 0)
-  .sort((a, b) => a.label.localeCompare(b.label));
+  .sort((a, b) => {
+    const indexA = TABLE_FIELD_ORDER_MAP.get(a.key);
+    const indexB = TABLE_FIELD_ORDER_MAP.get(b.key);
+
+    const hasOrderA = indexA !== undefined;
+    const hasOrderB = indexB !== undefined;
+
+    if (hasOrderA && hasOrderB && indexA !== indexB) {
+      return (indexA as number) - (indexB as number);
+    }
+
+    if (hasOrderA && !hasOrderB) {
+      return -1;
+    }
+
+    if (!hasOrderA && hasOrderB) {
+      return 1;
+    }
+
+    return a.label.localeCompare(b.label);
+  });
 
 const SELECT_FIELD_DEFINITION_MAP = new Map(
   SELECT_FIELD_DEFINITIONS.map((item) => [item.key, item]),
