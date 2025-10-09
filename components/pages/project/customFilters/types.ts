@@ -2,7 +2,11 @@ export type AdvancedFilterConnector = 'AND' | 'OR';
 
 export type AdvancedFilterFieldType = 'special' | 'select';
 
-export type AdvancedSpecialFieldKey = 'presetCondition';
+export type AdvancedSpecialFieldKey =
+  | 'tokenLess'
+  | 'preInvestmentStage'
+  | 'financialDisclosureCompleted'
+  | 'hasContactPoint';
 
 export type AdvancedFilterOperator = 'is' | 'is_not';
 
@@ -30,6 +34,7 @@ export interface SpecialFieldDefinition {
   label: string;
   description?: string;
   options: SelectFieldOption[];
+  defaultValue?: string;
 }
 
 export interface SelectFieldDefinition {

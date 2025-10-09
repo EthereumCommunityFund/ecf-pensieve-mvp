@@ -22,32 +22,16 @@ import {
 
 const PRE_STAGE_VALUES = ['Pre-Seed'];
 
-type PresetConditionValue =
-  | 'token_less'
-  | 'pre_investment_stage'
-  | 'financial_disclosure_filled'
-  | 'contact_point_available';
+type SpecialConditionBooleanValue = 'true' | 'false';
 
-type PresetConditionOption = SelectFieldOption & {
-  value: PresetConditionValue;
-};
-
-const PRESET_CONDITION_OPTIONS: PresetConditionOption[] = [
+const SPECIAL_BOOLEAN_OPTIONS: SelectFieldOption[] = [
   {
-    value: 'token_less',
-    label: 'Token-less (non-traded) projects',
+    value: 'true',
+    label: 'True',
   },
   {
-    value: 'pre_investment_stage',
-    label: 'Pre-investment stage projects',
-  },
-  {
-    value: 'financial_disclosure_filled',
-    label: 'Financial disclosure item filled',
-  },
-  {
-    value: 'contact_point_available',
-    label: 'Must have contact point in “Links & Contacts”',
+    value: 'false',
+    label: 'False',
   },
 ];
 
@@ -87,9 +71,28 @@ const OPERATOR_LABEL_MAP: Record<AdvancedFilterOperator, string> = {
 
 const SPECIAL_FIELD_DEFINITIONS: SpecialFieldDefinition[] = [
   {
-    key: 'presetCondition',
-    label: 'Preset Condition',
-    options: PRESET_CONDITION_OPTIONS,
+    key: 'tokenLess',
+    label: 'Token-less (non-traded)',
+    options: SPECIAL_BOOLEAN_OPTIONS,
+    defaultValue: 'true',
+  },
+  {
+    key: 'preInvestmentStage',
+    label: 'Pre-investment stage',
+    options: SPECIAL_BOOLEAN_OPTIONS,
+    defaultValue: 'true',
+  },
+  {
+    key: 'financialDisclosureCompleted',
+    label: 'Financial disclosure all item filled',
+    options: SPECIAL_BOOLEAN_OPTIONS,
+    defaultValue: 'true',
+  },
+  {
+    key: 'hasContactPoint',
+    label: 'Have contact point',
+    options: SPECIAL_BOOLEAN_OPTIONS,
+    defaultValue: 'true',
   },
 ];
 
@@ -266,41 +269,35 @@ const evaluateSelectCondition = (
   return false;
 };
 
+const parseSpecialBooleanValue = (
+  value: string | undefined,
+): SpecialConditionBooleanValue | null => {
+  if (value === 'true' || value === 'false') {
+    return value;
+  }
+  return null;
+};
+
 const evaluateSpecialCondition = (
   project: IProject,
   key: AdvancedSpecialFieldKey,
   operator: AdvancedFilterOperator,
   expectedValue?: string,
 ): boolean => {
-  if (key !== 'presetCondition') {
-    return false;
-  }
-
-  if (!expectedValue) {
-    return false;
-  }
-
-  const specialField = SPECIAL_FIELD_MAP.get(key);
-  if (!specialField) {
-    return false;
-  }
-
-  const options = specialField.options as PresetConditionOption[];
-  const option = options.find((item) => item.value === expectedValue);
-
-  if (!option) {
+  const expected = parseSpecialBooleanValue(expectedValue);
+  if (!expected) {
     return false;
   }
 
   let matched = false;
 
-  switch (option.value) {
-    case 'token_less': {
+  switch (key) {
+    case 'tokenLess': {
       const value = getProjectValue(project, 'tokenContract');
       matched = !hasNonEmptyValue(value);
       break;
     }
-    case 'pre_investment_stage': {
+    case 'preInvestmentStage': {
       const value = getProjectValue(project, 'investment_stage');
       if (value && typeof value === 'string') {
         matched = PRE_STAGE_VALUES.some(
@@ -309,7 +306,7 @@ const evaluateSpecialCondition = (
       }
       break;
     }
-    case 'financial_disclosure_filled': {
+    case 'financialDisclosureCompleted': {
       if (FINANCIAL_DISCLOSURE_KEYS.length === 0) {
         matched = false;
       } else {
@@ -319,7 +316,7 @@ const evaluateSpecialCondition = (
       }
       break;
     }
-    case 'contact_point_available': {
+    case 'hasContactPoint': {
       const websites = normalizeWebsites(getProjectValue(project, 'websites'));
       matched = websites.some((entry) => {
         const url = typeof entry.url === 'string' ? entry.url.trim() : '';
@@ -333,12 +330,14 @@ const evaluateSpecialCondition = (
       break;
   }
 
+  const expectedBool = expected === 'true';
+
   if (operator === 'is') {
-    return matched;
+    return matched === expectedBool;
   }
 
   if (operator === 'is_not') {
-    return !matched;
+    return matched !== expectedBool;
   }
 
   return false;
@@ -402,6 +401,22 @@ export const filterProjectsByAdvancedFilters = (
   );
 };
 
+type LegacyPresetConditionValue =
+  | 'token_less'
+  | 'pre_investment_stage'
+  | 'financial_disclosure_filled'
+  | 'contact_point_available';
+
+const LEGACY_PRESET_TO_SPECIAL_KEY: Record<
+  LegacyPresetConditionValue,
+  AdvancedSpecialFieldKey
+> = {
+  token_less: 'tokenLess',
+  pre_investment_stage: 'preInvestmentStage',
+  financial_disclosure_filled: 'financialDisclosureCompleted',
+  contact_point_available: 'hasContactPoint',
+};
+
 const migrateLegacySpecialCondition = (
   condition: AdvancedFilterCondition,
 ): AdvancedFilterCondition => {
@@ -410,46 +425,64 @@ const migrateLegacySpecialCondition = (
   }
 
   if (condition.fieldKey === 'presetCondition') {
-    return condition;
+    const nextKey = condition.value
+      ? LEGACY_PRESET_TO_SPECIAL_KEY[
+          condition.value as LegacyPresetConditionValue
+        ]
+      : undefined;
+
+    if (!nextKey) {
+      return condition;
+    }
+
+    return {
+      ...condition,
+      fieldKey: nextKey,
+      value: 'true',
+    };
   }
 
   if (condition.fieldKey === 'hotCondition') {
     return {
       ...condition,
-      fieldKey: 'presetCondition',
+      fieldKey: 'tokenLess',
+      operator: 'is',
+      value: 'true',
     };
   }
 
   const operator = condition.operator as string | undefined;
 
   switch (condition.fieldKey) {
-    case 'tokenContract':
+    case 'tokenContract': {
+      const isNotEmpty = operator === 'is_not_empty';
       return {
         ...condition,
-        fieldKey: 'presetCondition',
-        operator: operator === 'is_not_empty' ? 'is_not' : 'is',
-        value: 'token_less',
+        fieldKey: 'tokenLess',
+        operator: 'is',
+        value: isNotEmpty ? 'false' : 'true',
       };
+    }
     case 'preInvestmentStage':
       return {
         ...condition,
-        fieldKey: 'presetCondition',
+        fieldKey: 'preInvestmentStage',
         operator: 'is',
-        value: 'pre_investment_stage',
+        value: 'true',
       };
     case 'financialDisclosure':
       return {
         ...condition,
-        fieldKey: 'presetCondition',
+        fieldKey: 'financialDisclosureCompleted',
         operator: 'is',
-        value: 'financial_disclosure_filled',
+        value: 'true',
       };
     case 'contactPoint':
       return {
         ...condition,
-        fieldKey: 'presetCondition',
+        fieldKey: 'hasContactPoint',
         operator: 'is',
-        value: 'contact_point_available',
+        value: 'true',
       };
     default:
       return condition;
@@ -469,11 +502,13 @@ const sanitizeCondition = (
     const specialField = SPECIAL_FIELD_MAP.get(
       normalized.fieldKey as AdvancedSpecialFieldKey,
     );
-    if (!specialField || !normalized.value) {
+    if (!specialField || normalized.value === undefined) {
       return null;
     }
-    const options = specialField.options as PresetConditionOption[];
-    if (!options.some((option) => option.value === normalized.value)) {
+    const isValidValue = specialField.options.some(
+      (option) => option.value === normalized.value,
+    );
+    if (!isValidValue) {
       return null;
     }
   }
@@ -619,7 +654,7 @@ export const buildFilterSummary = (
         operatorLabel = condition.operator
           ? getOperatorLabel(condition.operator)
           : undefined;
-        const options = (special?.options ?? []) as PresetConditionOption[];
+        const options = special?.options ?? [];
         const optionLabel = options.find(
           (option) => option.value === condition.value,
         )?.label;

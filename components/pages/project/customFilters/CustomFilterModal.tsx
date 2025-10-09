@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type Key } from 'react';
 import { ScrollShadow } from '@heroui/react';
+import { useEffect, useMemo, useState, type Key } from 'react';
 
 import { Button } from '@/components/base/button';
 import {
@@ -200,13 +200,13 @@ const CustomFilterModal = ({
               key as AdvancedSpecialFieldKey,
             );
             const defaultOperator: AdvancedFilterOperator = 'is';
-            const defaultOption = definition?.options?.[0];
+            const defaultValue = definition?.defaultValue ?? 'true';
             return {
               ...condition,
               fieldType: 'special',
               fieldKey: key,
               operator: defaultOperator,
-              value: defaultOption?.value,
+              value: defaultValue,
             };
           }
 
