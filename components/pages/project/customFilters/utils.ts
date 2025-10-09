@@ -1,3 +1,7 @@
+import {
+  ADVANCED_FILTER_URL_DECODER,
+  ADVANCED_FILTER_URL_TOKENS,
+} from '@/constants/advancedFilterTokens';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_METRICS } from '@/constants/metrics';
 import {
@@ -10,12 +14,16 @@ import { IProposalItem } from '@/types/item';
 import {
   type AdvancedFilterCard,
   type AdvancedFilterCondition,
+  type AdvancedFilterConnector,
+  type AdvancedFilterFieldType,
   type AdvancedFilterOperator,
   type AdvancedFilterSummary,
   type AdvancedFilterSummaryItem,
   type AdvancedSpecialFieldKey,
   type SelectFieldDefinition,
   type SelectFieldOption,
+  type SerializedAdvancedFilterCard,
+  type SerializedAdvancedFilterCondition,
   type SerializedAdvancedFilterPayload,
   type SpecialFieldDefinition,
 } from './types';
@@ -532,6 +540,225 @@ const sanitizeCondition = (
   };
 };
 
+const encodePayloadToUrlTokens = (
+  payload: SerializedAdvancedFilterPayload,
+): Record<string, unknown> => {
+  const payloadKeys = ADVANCED_FILTER_URL_TOKENS.keys.payload;
+  const filterKeys = ADVANCED_FILTER_URL_TOKENS.keys.filter;
+  const conditionKeys = ADVANCED_FILTER_URL_TOKENS.keys.condition;
+
+  const encodedFilters = payload.filters.map((filter) => {
+    const encodedConditions = filter.conditions.map((condition) => {
+      const encodedCondition: Record<string, unknown> = {
+        [conditionKeys.id]: condition.id,
+        [conditionKeys.fieldType]:
+          ADVANCED_FILTER_URL_TOKENS.enums.fieldType[
+            condition.fieldType as keyof typeof ADVANCED_FILTER_URL_TOKENS.enums.fieldType
+          ],
+        [conditionKeys.fieldKey]: condition.fieldKey,
+        [conditionKeys.operator]:
+          ADVANCED_FILTER_URL_TOKENS.enums.operator[
+            condition.operator as keyof typeof ADVANCED_FILTER_URL_TOKENS.enums.operator
+          ],
+      };
+
+      if (condition.connector) {
+        encodedCondition[conditionKeys.connector] =
+          ADVANCED_FILTER_URL_TOKENS.enums.connector[
+            condition.connector as keyof typeof ADVANCED_FILTER_URL_TOKENS.enums.connector
+          ];
+      }
+
+      if (condition.value !== undefined) {
+        encodedCondition[conditionKeys.value] = condition.value;
+      }
+
+      return encodedCondition;
+    });
+
+    return {
+      [filterKeys.id]: filter.id,
+      [filterKeys.conditions]: encodedConditions,
+    };
+  });
+
+  return {
+    [ADVANCED_FILTER_URL_TOKENS.version]: payload.version,
+    [payloadKeys.filters]: encodedFilters,
+  };
+};
+
+const decodePayloadFromUrlTokens = (
+  raw: unknown,
+): SerializedAdvancedFilterPayload | null => {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  const record = raw as Record<string, unknown>;
+  const versionKey = ADVANCED_FILTER_URL_TOKENS.version;
+  const payloadKeys = ADVANCED_FILTER_URL_TOKENS.keys.payload;
+  const filterKeys = ADVANCED_FILTER_URL_TOKENS.keys.filter;
+  const conditionKeys = ADVANCED_FILTER_URL_TOKENS.keys.condition;
+
+  const versionValue = record[versionKey];
+  if (typeof versionValue !== 'number') {
+    return null;
+  }
+
+  const filtersRaw = record[payloadKeys.filters];
+  if (!Array.isArray(filtersRaw)) {
+    return null;
+  }
+
+  const filters: SerializedAdvancedFilterCard[] = [];
+
+  for (const filterRaw of filtersRaw) {
+    if (!filterRaw || typeof filterRaw !== 'object') {
+      continue;
+    }
+
+    const filterRecord = filterRaw as Record<string, unknown>;
+    const idValue = filterRecord[filterKeys.id];
+    const conditionsRaw = filterRecord[filterKeys.conditions];
+
+    if (typeof idValue !== 'string' || !Array.isArray(conditionsRaw)) {
+      continue;
+    }
+
+    const decodedConditions: SerializedAdvancedFilterCondition[] = [];
+
+    for (const conditionRaw of conditionsRaw) {
+      if (!conditionRaw || typeof conditionRaw !== 'object') {
+        continue;
+      }
+
+      const conditionRecord = conditionRaw as Record<string, unknown>;
+
+      const conditionId = conditionRecord[conditionKeys.id];
+      const fieldKey = conditionRecord[conditionKeys.fieldKey];
+      const fieldTypeToken = conditionRecord[conditionKeys.fieldType];
+      const operatorToken = conditionRecord[conditionKeys.operator];
+      const valueToken = conditionRecord[conditionKeys.value];
+      const connectorToken = conditionRecord[conditionKeys.connector];
+
+      if (typeof conditionId !== 'string' || typeof fieldKey !== 'string') {
+        continue;
+      }
+
+      const fieldType =
+        typeof fieldTypeToken === 'string'
+          ? ADVANCED_FILTER_URL_DECODER.fieldType[fieldTypeToken]
+          : undefined;
+      const operator =
+        typeof operatorToken === 'string'
+          ? ADVANCED_FILTER_URL_DECODER.operator[operatorToken]
+          : undefined;
+      const connector =
+        typeof connectorToken === 'string'
+          ? ADVANCED_FILTER_URL_DECODER.connector[connectorToken]
+          : undefined;
+
+      if (!fieldType || !operator) {
+        continue;
+      }
+
+      decodedConditions.push({
+        id: conditionId,
+        connector,
+        fieldType,
+        fieldKey,
+        operator,
+        value: typeof valueToken === 'string' ? valueToken : undefined,
+      });
+    }
+
+    filters.push({
+      id: idValue,
+      conditions: decodedConditions,
+    });
+  }
+
+  return {
+    version: versionValue,
+    filters,
+  };
+};
+
+const decodeLegacyPayload = (
+  raw: unknown,
+): SerializedAdvancedFilterPayload | null => {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  const record = raw as Record<string, unknown>;
+  if (typeof record.version !== 'number' || !Array.isArray(record.filters)) {
+    return null;
+  }
+
+  const filters = (record.filters as unknown[]).flatMap((filterRaw) => {
+    if (!filterRaw || typeof filterRaw !== 'object') {
+      return [];
+    }
+
+    const filterRecord = filterRaw as Record<string, unknown>;
+    if (
+      typeof filterRecord.id !== 'string' ||
+      !Array.isArray(filterRecord.conditions)
+    ) {
+      return [];
+    }
+
+    const conditions = (filterRecord.conditions as unknown[]).flatMap(
+      (conditionRaw) => {
+        if (!conditionRaw || typeof conditionRaw !== 'object') {
+          return [];
+        }
+
+        const conditionRecord = conditionRaw as Record<string, unknown>;
+        if (
+          typeof conditionRecord.id !== 'string' ||
+          typeof conditionRecord.fieldType !== 'string' ||
+          typeof conditionRecord.fieldKey !== 'string' ||
+          typeof conditionRecord.operator !== 'string'
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            id: conditionRecord.id,
+            connector:
+              typeof conditionRecord.connector === 'string'
+                ? (conditionRecord.connector as AdvancedFilterConnector)
+                : undefined,
+            fieldType: conditionRecord.fieldType as AdvancedFilterFieldType,
+            fieldKey: conditionRecord.fieldKey,
+            operator: conditionRecord.operator as AdvancedFilterOperator,
+            value:
+              typeof conditionRecord.value === 'string'
+                ? conditionRecord.value
+                : undefined,
+          },
+        ];
+      },
+    );
+
+    return [
+      {
+        id: filterRecord.id,
+        conditions,
+      },
+    ];
+  });
+
+  return {
+    version: record.version as number,
+    filters,
+  };
+};
+
 export const serializeAdvancedFilters = (
   filters: AdvancedFilterCard[],
 ): string | null => {
@@ -582,8 +809,10 @@ export const serializeAdvancedFilters = (
     })),
   };
 
+  const encodedPayload = encodePayloadToUrlTokens(payload);
+
   try {
-    return encodeURIComponent(JSON.stringify(payload));
+    return encodeURIComponent(JSON.stringify(encodedPayload));
   } catch (error) {
     console.error('Failed to serialize advanced filters', error);
     return null;
@@ -598,15 +827,15 @@ export const parseAdvancedFilters = (
   }
 
   try {
-    const decoded = JSON.parse(decodeURIComponent(encoded)) as
-      | SerializedAdvancedFilterPayload
-      | undefined;
+    const decodedRaw = JSON.parse(decodeURIComponent(encoded));
+    const payload =
+      decodePayloadFromUrlTokens(decodedRaw) ?? decodeLegacyPayload(decodedRaw);
 
-    if (!decoded || !Array.isArray(decoded.filters)) {
+    if (!payload || !Array.isArray(payload.filters)) {
       return [];
     }
 
-    return decoded.filters
+    return payload.filters
       .map((filter) => {
         const normalizedConditions = (filter.conditions ?? [])
           .map((condition) =>
