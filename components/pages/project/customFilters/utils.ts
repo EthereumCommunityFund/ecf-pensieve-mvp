@@ -697,27 +697,69 @@ const migrateLegacySpecialCondition = (
         value: isNotEmpty ? 'false' : 'true',
       };
     }
-    case 'preInvestmentStage':
+    case 'preInvestmentStage': {
+      const booleanValue = parseSpecialBooleanValue(
+        typeof condition.value === 'string' ? condition.value : undefined,
+      );
+
+      if (booleanValue) {
+        return {
+          ...condition,
+          fieldKey: 'preInvestmentStage',
+          operator: condition.operator ?? 'is',
+          value: booleanValue,
+        };
+      }
+
       return {
         ...condition,
         fieldKey: 'preInvestmentStage',
         operator: 'is',
         value: 'true',
       };
-    case 'financialDisclosure':
+    }
+    case 'financialDisclosure': {
+      const booleanValue = parseSpecialBooleanValue(
+        typeof condition.value === 'string' ? condition.value : undefined,
+      );
+
+      if (booleanValue) {
+        return {
+          ...condition,
+          fieldKey: 'financialDisclosureCompleted',
+          operator: condition.operator ?? 'is',
+          value: booleanValue,
+        };
+      }
+
       return {
         ...condition,
         fieldKey: 'financialDisclosureCompleted',
         operator: 'is',
         value: 'true',
       };
-    case 'contactPoint':
+    }
+    case 'contactPoint': {
+      const booleanValue = parseSpecialBooleanValue(
+        typeof condition.value === 'string' ? condition.value : undefined,
+      );
+
+      if (booleanValue) {
+        return {
+          ...condition,
+          fieldKey: 'hasContactPoint',
+          operator: condition.operator ?? 'is',
+          value: booleanValue,
+        };
+      }
+
       return {
         ...condition,
         fieldKey: 'hasContactPoint',
         operator: 'is',
         value: 'true',
       };
+    }
     default:
       return condition;
   }

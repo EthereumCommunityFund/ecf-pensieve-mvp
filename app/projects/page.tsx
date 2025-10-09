@@ -233,6 +233,7 @@ const ProjectsContent = () => {
 
   const {
     data,
+    dataUpdatedAt,
     isLoading,
     isFetching,
     refetch: refetchProjects,
@@ -283,11 +284,34 @@ const ProjectsContent = () => {
       return;
     }
 
+    let cancelled = false;
+
     setAdvancedFilterOffset(0);
     setAdvancedFilterSourceData([]);
     setIsAdvancedFilterLoadingMore(false);
     setHasAdvancedFilterNextPage(false);
-    void refetchProjects();
+
+    void refetchProjects({ throwOnError: false }).then((result) => {
+      if (cancelled) {
+        return;
+      }
+
+      const payload = result?.data;
+      const items = payload?.items as IProject[] | undefined;
+
+      if (items && items.length > 0) {
+        setAdvancedFilterSourceData(items);
+        setHasAdvancedFilterNextPage(
+          Boolean((payload as { hasNextPage?: boolean })?.hasNextPage),
+        );
+      }
+
+      setIsAdvancedFilterLoadingMore(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [advancedFilterSignature, shouldUseAdvancedFilter, refetchProjects]);
 
   const accountableProjectList = useMemo(() => {
@@ -514,6 +538,7 @@ const ProjectsContent = () => {
     setPageData(data.items as IProject[], data.offset ?? offset);
   }, [
     data,
+    dataUpdatedAt,
     offset,
     setPageData,
     shouldUseAdvancedFilter,
