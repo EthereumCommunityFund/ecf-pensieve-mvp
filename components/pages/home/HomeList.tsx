@@ -10,6 +10,7 @@ import {
   getSortTabs,
   SortType,
 } from '@/constants/sortConfig';
+import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { SortBy, SortOrder } from '@/types/sort';
@@ -213,7 +214,7 @@ const HomeList = () => {
       <div className="mobile:p-0 flex-1 rounded-[10px] p-[10px]">
         <SectionHeader
           title="Top Transparent Projects"
-          description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
+          description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects,  current: ${TotalGenesisWeightSum})`}
           buttonText="View All Top"
           onClick={handleViewTopTransparentProjects}
           updateAt={displayUpdatedAtOfTransparent}
