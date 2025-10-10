@@ -20,6 +20,7 @@ import {
   type AdvancedFilterModalState,
 } from '@/components/pages/project/customFilters/types';
 import {
+  collectFilterFieldKeys,
   createEmptyFilter,
   filterProjectsByAdvancedFilters,
   getAdvancedFilterQueryKey,
@@ -66,6 +67,9 @@ const ProjectsContent = () => {
   const advancedFilterSerializedRef = useRef<string | null>(
     advancedFilterParam ?? null,
   );
+  const shouldLogInitialUrlFilterRef = useRef<boolean>(
+    Boolean(advancedFilterParam),
+  );
   const [modalState, setModalState] = useState<AdvancedFilterModalState | null>(
     null,
   );
@@ -78,6 +82,7 @@ const ProjectsContent = () => {
     useState(false);
   const [hasAdvancedFilterNextPage, setHasAdvancedFilterNextPage] =
     useState(false);
+  const trackUserAction = trpc.userActionLog.track.useMutation();
 
   useEffect(() => {
     if (advancedFilterParam === advancedFilterSerializedRef.current) {
@@ -114,8 +119,39 @@ const ProjectsContent = () => {
       const paramsString = params.toString();
       router.replace(`/projects${paramsString ? `?${paramsString}` : ''}`);
       advancedFilterSerializedRef.current = serialized ?? null;
+      shouldLogInitialUrlFilterRef.current = false;
     },
     [router, searchParams],
+  );
+
+  const trackAdvancedFilterUsage = useCallback(
+    (
+      type: 'add filter' | 'url filter',
+      filters: AdvancedFilterCard | AdvancedFilterCard[],
+    ) => {
+      if (!profile) {
+        return;
+      }
+
+      const action = collectFilterFieldKeys(filters);
+      if (!action) {
+        return;
+      }
+
+      trackUserAction.mutate(
+        { type, action },
+        {
+          onError: (error) => {
+            console.error('[UserActionLog] Failed to track advanced filter', {
+              type,
+              action,
+              error,
+            });
+          },
+        },
+      );
+    },
+    [profile, trackUserAction],
   );
 
   const clearAdvancedFilters = useCallback(() => {
@@ -169,8 +205,14 @@ const ProjectsContent = () => {
 
       setIsModalOpen(false);
       setModalState(null);
+      trackAdvancedFilterUsage('add filter', filter);
     },
-    [advancedFilters, modalState, updateAdvancedFilters],
+    [
+      advancedFilters,
+      modalState,
+      trackAdvancedFilterUsage,
+      updateAdvancedFilters,
+    ],
   );
 
   const handleRemoveFilter = useCallback(
@@ -182,6 +224,27 @@ const ProjectsContent = () => {
     },
     [advancedFilters, updateAdvancedFilters],
   );
+  useEffect(() => {
+    if (!shouldLogInitialUrlFilterRef.current) {
+      return;
+    }
+
+    if (!profile) {
+      return;
+    }
+
+    if (!advancedFilterParam) {
+      shouldLogInitialUrlFilterRef.current = false;
+      return;
+    }
+
+    if (advancedFilters.length === 0) {
+      return;
+    }
+
+    trackAdvancedFilterUsage('url filter', advancedFilters);
+    shouldLogInitialUrlFilterRef.current = false;
+  }, [advancedFilterParam, advancedFilters, profile, trackAdvancedFilterUsage]);
 
   // Parse sort parameter into sortBy and sortOrder
   const parseSortParam = (sortParam: string) => {

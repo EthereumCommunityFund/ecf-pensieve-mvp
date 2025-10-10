@@ -355,6 +355,30 @@ export const getSpecialFieldByKey = (
 export const getOperatorLabel = (operator: AdvancedFilterOperator): string =>
   OPERATOR_LABEL_MAP[operator] ?? operator;
 
+export const collectFilterFieldKeys = (
+  filters: AdvancedFilterCard | AdvancedFilterCard[] | null | undefined,
+): string => {
+  if (!filters) {
+    return '';
+  }
+
+  const filterArray = Array.isArray(filters) ? filters : [filters];
+  const keys = new Set<string>();
+
+  filterArray.forEach((filter) => {
+    filter.conditions.forEach((condition) => {
+      if (condition.fieldKey) {
+        keys.add(condition.fieldKey);
+      }
+    });
+  });
+
+  return Array.from(keys)
+    .filter((key) => key.trim().length > 0)
+    .sort((a, b) => a.localeCompare(b))
+    .join(',');
+};
+
 export const createEmptyCondition = (
   connector?: AdvancedFilterCondition['connector'],
 ): AdvancedFilterCondition => ({
