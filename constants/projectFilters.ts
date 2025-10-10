@@ -1,0 +1,5 @@
+export const ADVANCED_FILTER_FETCH_LIMIT = 50;
+
+export const ADVANCED_FILTER_QUERY_KEY = 'advancedFilter';
+
+export const ADVANCED_FILTER_SERIALIZATION_VERSION = 1;

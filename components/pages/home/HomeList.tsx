@@ -10,12 +10,12 @@ import {
   getSortTabs,
   SortType,
 } from '@/constants/sortConfig';
+import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { SortBy, SortOrder } from '@/types/sort';
 import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
-import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
 

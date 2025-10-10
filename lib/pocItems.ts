@@ -545,6 +545,10 @@ export const POC_ITEMS = {
     isEssential: false,
     accountability_metric: 0,
   },
+  investment_stage: {
+    isEssential: false,
+    accountability_metric: 6,
+  },
   fundraising_price: {
     isEssential: false,
     accountability_metric: 0,
