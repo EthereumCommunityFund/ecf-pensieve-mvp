@@ -13,6 +13,7 @@ import ProjectSortMobile from '@/components/pages/project/filterAndSort/SortMobi
 import { ProjectCardSkeleton } from '@/components/pages/project/ProjectCard';
 import { ProjectListWrapper } from '@/components/pages/project/ProjectListWrapper';
 import RewardCard from '@/components/pages/project/RewardCardEntry';
+import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
 import { useOffsetPagination } from '@/hooks/useOffsetPagination';
 import { UpvoteActionResult } from '@/hooks/useUpvote';
@@ -288,7 +289,7 @@ const ProjectsContent = () => {
 
     if (sort === 'top-transparent') {
       pageTitle = 'Top Transparent Projects';
-      pageDescription = `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`;
+      pageDescription = `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`;
       pageEmptyMessage = 'No transparent projects found';
     } else if (sort === 'top-community-trusted') {
       pageTitle = 'Top Community-trusted';
