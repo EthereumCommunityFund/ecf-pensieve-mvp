@@ -724,7 +724,7 @@ const migrateLegacySpecialCondition = (
   if (condition.fieldKey === 'hotCondition') {
     return {
       ...condition,
-      fieldKey: 'HAVE_VALUE_OPTIONS',
+      fieldKey: 'tokenLess',
       operator: 'is',
       value: 'true',
     };
