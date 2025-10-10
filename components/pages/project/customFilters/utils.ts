@@ -184,6 +184,16 @@ const SPECIAL_BOOLEAN_OPTIONS: SelectFieldOption[] = [
     label: 'False',
   },
 ];
+const HAVE_VALUE_OPTIONS: SelectFieldOption[] = [
+  {
+    value: 'true',
+    label: 'Filled',
+  },
+  {
+    value: 'false',
+    label: 'Empty',
+  },
+];
 
 const buildProjectTableFieldOrder = () => {
   const order: string[] = [];
@@ -277,29 +287,35 @@ const OPERATOR_LABEL_MAP: Record<AdvancedFilterOperator, string> = {
 
 const SPECIAL_FIELD_DEFINITIONS: SpecialFieldDefinition[] = [
   {
-    key: 'tokenLess',
-    label: 'Token-less (non-traded)',
-    options: SPECIAL_BOOLEAN_OPTIONS,
+    key: 'hasToken',
+    label: 'Token Contract',
+    options: HAVE_VALUE_OPTIONS,
     defaultValue: 'true',
   },
-  {
-    key: 'preInvestmentStage',
-    label: 'Pre-investment stage',
-    options: SPECIAL_BOOLEAN_OPTIONS,
-    defaultValue: 'true',
-  },
-  {
-    key: 'financialDisclosureCompleted',
-    label: 'Financial disclosure all item filled',
-    options: SPECIAL_BOOLEAN_OPTIONS,
-    defaultValue: 'true',
-  },
-  {
-    key: 'hasContactPoint',
-    label: 'Have contact point',
-    options: SPECIAL_BOOLEAN_OPTIONS,
-    defaultValue: 'true',
-  },
+  // {
+  //   key: 'tokenLess',
+  //   label: 'Token-less (non-traded)',
+  //   options: SPECIAL_BOOLEAN_OPTIONS,
+  //   defaultValue: 'true',
+  // },
+  // {
+  //   key: 'preInvestmentStage',
+  //   label: 'Pre-investment stage',
+  //   options: SPECIAL_BOOLEAN_OPTIONS,
+  //   defaultValue: 'true',
+  // },
+  // {
+  //   key: 'financialDisclosureCompleted',
+  //   label: 'Financial disclosure all item filled',
+  //   options: SPECIAL_BOOLEAN_OPTIONS,
+  //   defaultValue: 'true',
+  // },
+  // {
+  //   key: 'hasContactPoint',
+  //   label: 'Have contact point',
+  //   options: SPECIAL_BOOLEAN_OPTIONS,
+  //   defaultValue: 'true',
+  // },
 ];
 
 const SPECIAL_FIELD_MAP = new Map<
@@ -531,6 +547,11 @@ const evaluateSpecialCondition = (
       matched = !hasNonEmptyValue(value);
       break;
     }
+    case 'hasToken': {
+      const value = getProjectValue(project, 'tokenContract');
+      matched = hasNonEmptyValue(value);
+      break;
+    }
     case 'preInvestmentStage': {
       const value = getProjectValue(project, 'investment_stage');
       if (value && typeof value === 'string') {
@@ -679,7 +700,7 @@ const migrateLegacySpecialCondition = (
   if (condition.fieldKey === 'hotCondition') {
     return {
       ...condition,
-      fieldKey: 'tokenLess',
+      fieldKey: 'HAVE_VALUE_OPTIONS',
       operator: 'is',
       value: 'true',
     };

@@ -4,6 +4,7 @@ export type AdvancedFilterFieldType = 'special' | 'select';
 
 export type AdvancedSpecialFieldKey =
   | 'tokenLess'
+  | 'hasToken'
   | 'preInvestmentStage'
   | 'financialDisclosureCompleted'
   | 'hasContactPoint';

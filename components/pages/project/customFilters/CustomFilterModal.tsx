@@ -114,20 +114,24 @@ const CustomFilterModal = ({
 
   const fieldOptions = useMemo<FieldOption[]>(() => {
     const options: FieldOption[] = [
+      // {
+      //   key: 'label:special',
+      //   label: 'Preset Conditions',
+      //   isLabel: true,
+      // },
+      // ...specialFields.map((field) => ({
+      //   key: `special:${field.key}`,
+      //   label: field.label,
+      // })),
       {
-        key: 'label:special',
-        label: 'Preset Conditions',
+        key: 'label:select',
+        label: 'Select Fields',
         isLabel: true,
       },
       ...specialFields.map((field) => ({
         key: `special:${field.key}`,
         label: field.label,
       })),
-      {
-        key: 'label:select',
-        label: 'Select Fields',
-        isLabel: true,
-      },
       ...selectFields.map((field) => ({
         key: `select:${field.key}`,
         label: field.label,
