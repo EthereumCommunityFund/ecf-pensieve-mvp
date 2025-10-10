@@ -16,6 +16,7 @@ import { rankRouter } from './rank';
 import { shareRouter } from './share';
 import { smartContractsRouter } from './smartContracts';
 import { userRouter } from './user';
+import { userActionLogRouter } from './userActionLog';
 import { voteRouter } from './vote';
 
 export const appRouter = router({
@@ -36,6 +37,7 @@ export const appRouter = router({
   rank: rankRouter,
   smartContracts: smartContractsRouter,
   share: shareRouter,
+  userActionLog: userActionLogRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -20,6 +20,11 @@ export const SORT_OPTIONS: SortOption[] = [
     label: 'Top Community Trusted',
     category: 'By Rank',
   },
+  {
+    value: 'top-accountable',
+    label: 'Top Accountable',
+    category: 'By Rank',
+  },
   // By Time
   { value: 'newest', label: 'Newest Projects', category: 'By Time' },
   { value: 'oldest', label: 'Oldest Projects', category: 'By Time' },
