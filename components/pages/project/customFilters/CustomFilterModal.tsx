@@ -391,6 +391,16 @@ const CustomFilterModal = ({
     const currentValue = condition.fieldType
       ? `${condition.fieldType}:${condition.fieldKey}`
       : '';
+    const usedFieldKeys = new Set(
+      (draft?.conditions ?? [])
+        .filter(
+          (item) =>
+            item.id !== condition.id &&
+            Boolean(item.fieldType) &&
+            Boolean(item.fieldKey),
+        )
+        .map((item) => `${item.fieldType}:${item.fieldKey}`),
+    );
 
     return (
       <Select
@@ -412,20 +422,22 @@ const CustomFilterModal = ({
         aria-label="Filter field"
         classNames={baseSelectClassNames}
       >
-        {fieldOptions.map((item) => (
-          <SelectItem
-            key={item.key}
-            isDisabled={Boolean(item.isLabel)}
-            className={
-              item.isLabel
-                ? 'cursor-default px-[8px] py-[6px] text-[11px] font-semibold tracking-[0.08em] text-black/40'
-                : undefined
-            }
-            textValue={item.label}
-          >
-            {item.label}
-          </SelectItem>
-        ))}
+        {fieldOptions
+          .filter((item) => item.isLabel || !usedFieldKeys.has(item.key))
+          .map((item) => (
+            <SelectItem
+              key={item.key}
+              isDisabled={Boolean(item.isLabel)}
+              className={
+                item.isLabel
+                  ? 'cursor-default px-[8px] py-[6px] text-[11px] font-semibold tracking-[0.08em] text-black/40'
+                  : undefined
+              }
+              textValue={item.label}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
       </Select>
     );
   };
