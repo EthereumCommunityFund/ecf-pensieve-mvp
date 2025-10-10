@@ -341,7 +341,7 @@ const CustomFilterModal = ({
     trigger:
       'w-full h-auto bg-transparent border-none shadow-none rounded-[8px] px-[10px] flex justify-between',
     inputWrapper: 'flex-1 w-full',
-    listboxWrapper: 'rounded-[4px] bg-white !max-h-[500px]',
+    listboxWrapper: 'rounded-[4px] bg-white !max-h-[250px]',
     listbox: 'border border-[rgba(0,0,0,0.1)] rounded-[4px] p-[4px]',
     popoverContent: 'p-0 min-w-max w-auto',
   };
