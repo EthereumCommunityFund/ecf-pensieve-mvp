@@ -677,7 +677,7 @@ const ProjectsContent = () => {
 
     if (sort === 'top-transparent') {
       pageTitle = 'Top Transparent Projects';
-      pageDescription = `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`;
+      pageDescription = `Transparency score = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`;
       pageEmptyMessage = 'No transparent projects found';
     } else if (sort === 'top-community-trusted') {
       pageTitle = 'Top Community-trusted';
@@ -685,7 +685,7 @@ const ProjectsContent = () => {
       pageEmptyMessage = 'No community-trusted projects found';
     } else if (sort === 'top-accountable') {
       pageTitle = 'Top Accountable Projects';
-      pageDescription = `This rank combines signals from transparency and community trust. Accountable score = completion rate × sqrt(vote weight).`;
+      pageDescription = `Accountability score = Transparency score × √∑CommunityVoting(CP)`;
       pageEmptyMessage = 'No accountable projects found';
     } else {
       // For multiple categories, show a generic title

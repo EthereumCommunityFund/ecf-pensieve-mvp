@@ -214,7 +214,7 @@ const HomeList = () => {
       <div className="mobile:p-0 flex-1 rounded-[10px] p-[10px]">
         <SectionHeader
           title="Top Transparent Projects"
-          description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects,  current: ${TotalGenesisWeightSum})`}
+          description={`Transparency score = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`}
           buttonText="View All Top"
           onClick={handleViewTopTransparentProjects}
           updateAt={displayUpdatedAtOfTransparent}
@@ -250,7 +250,7 @@ const HomeList = () => {
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
             title="Top Accountable"
-            description="Projects ranked by accountability score"
+            description="Accountability score = Transparency score × √∑CommunityVoting(CP)"
             onClick={handleViewTopAccountableProjects}
             icon={<CommunityTrustedIcon />}
           />
