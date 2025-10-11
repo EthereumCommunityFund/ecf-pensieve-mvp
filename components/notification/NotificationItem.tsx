@@ -39,12 +39,16 @@ export interface NotificationItemData {
   projectName?: string;
   userName?: string;
   voter?: IVoterOfNotification;
+  actor?: IVoterOfNotification;
+  owner?: IVoterOfNotification;
   timeAgo: string;
   buttonText: string;
   isRead?: boolean;
   hasMultipleActions?: boolean;
   secondaryButtonText?: string;
   hideButton?: boolean;
+  actorIsSelf?: boolean;
+  ownerIsSelf?: boolean;
 }
 
 export interface NotificationItemProps {
@@ -83,8 +87,16 @@ const getIconForType = (type: FrontendNotificationType) => {
   }
 };
 
-const VoterAvatar = ({ voter }: { voter?: IVoterOfNotification }) => {
-  return voter ? (
+const VoterAvatar = ({
+  voter,
+  actorIsSelf,
+}: {
+  voter?: IVoterOfNotification;
+  actorIsSelf?: boolean;
+}) => {
+  return actorIsSelf ? (
+    'You'
+  ) : voter ? (
     <div className="inline-flex h-[28px] items-center justify-center gap-[5px] rounded-[10px] bg-[#F5F5F5] p-[4px]">
       <Image
         src={voter.avatarUrl || '/images/user/avatar_p.png'}
@@ -103,32 +115,161 @@ const VoterAvatar = ({ voter }: { voter?: IVoterOfNotification }) => {
 };
 
 const formatNotificationText = (itemData: NotificationItemData) => {
-  const { type, title, itemName, projectName, voter } = itemData;
+  const {
+    type,
+    title,
+    itemName,
+    projectName,
+    actor,
+    actorIsSelf,
+    owner,
+    ownerIsSelf,
+  } = itemData;
+
+  const itemChip = itemName && (
+    <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+      <span className="text-[13px] leading-[18px] text-black">{itemName}</span>
+    </div>
+  );
+
+  const projectChip = projectName && (
+    <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+      <span className="text-[13px] leading-[18px] text-black">
+        {projectName}
+      </span>
+    </div>
+  );
+
+  const renderOwnerDescriptor = (noun: string) => {
+    if (ownerIsSelf) {
+      return (
+        <span className="text-[14px] leading-[20px] text-black">
+          {`Your ${noun}`}
+        </span>
+      );
+    }
+
+    if (owner) {
+      return (
+        <>
+          <span className="text-[14px] leading-[20px] text-black">
+            {`The ${noun} from`}
+          </span>
+          <VoterAvatar voter={owner} actorIsSelf={false} />
+        </>
+      );
+    }
+
+    return (
+      <span className="text-[14px] leading-[20px] text-black">
+        {`The ${noun}`}
+      </span>
+    );
+  };
+
+  const renderActorStatement = (selfText: string, otherText: string) => {
+    if (actor && actorIsSelf) {
+      return (
+        <span className="text-[14px] leading-[20px] text-black">
+          {selfText}
+        </span>
+      );
+    }
+
+    if (actor) {
+      return (
+        <>
+          <VoterAvatar voter={actor} actorIsSelf={actorIsSelf} />
+          <span className="text-[14px] leading-[20px] text-black">
+            {otherText}
+          </span>
+        </>
+      );
+    }
+
+    return (
+      <span className="text-[14px] leading-[20px] text-black">{otherText}</span>
+    );
+  };
+
+  const renderSupportOwnerPhrase = () => {
+    if (ownerIsSelf) {
+      return (
+        <span className="text-[14px] leading-[20px] text-black">
+          {actorIsSelf ? 'supported your input' : 'has supported your input'}
+        </span>
+      );
+    }
+
+    if (owner) {
+      return (
+        <>
+          <span className="text-[14px] leading-[20px] text-black">
+            {actorIsSelf
+              ? 'supported the input from'
+              : 'has supported the input from'}
+          </span>
+          <VoterAvatar voter={owner} actorIsSelf={false} />
+        </>
+      );
+    }
+
+    return (
+      <span className="text-[14px] leading-[20px] text-black">
+        {actorIsSelf ? 'supported the input' : 'has supported the input'}
+      </span>
+    );
+  };
+
+  const renderProposalSupportPhrase = () => {
+    if (ownerIsSelf) {
+      return (
+        <span className="text-[14px] leading-[20px] text-black">
+          {actorIsSelf
+            ? 'have supported your proposal for'
+            : 'has supported your proposal for'}
+        </span>
+      );
+    }
+
+    if (owner) {
+      return (
+        <>
+          <span className="text-[14px] leading-[20px] text-black">
+            {actorIsSelf
+              ? 'have supported the proposal from'
+              : 'has supported the proposal from'}
+          </span>
+          <VoterAvatar voter={owner} actorIsSelf={false} />
+          <span className="text-[14px] leading-[20px] text-black">for</span>
+        </>
+      );
+    }
+
+    return (
+      <span className="text-[14px] leading-[20px] text-black">
+        {actorIsSelf
+          ? 'have supported the proposal for'
+          : 'has supported the proposal for'}
+      </span>
+    );
+  };
 
   switch (type) {
     case 'itemProposalLostLeading':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            Your input for
-          </span>
-          {itemName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {itemName}
-              </span>
-            </div>
+          {renderOwnerDescriptor('input')}
+          {itemChip && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+              {itemChip}
+            </>
           )}
           <span className="text-[14px] leading-[20px] text-black opacity-50">
             in
           </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
-          )}
+          {projectChip}
           <span className="text-[14px] leading-[20px] text-black">
             has lost sufficient support
           </span>
@@ -137,26 +278,17 @@ const formatNotificationText = (itemData: NotificationItemData) => {
     case 'itemProposalBecameLeading':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            Your input for
-          </span>
-          {itemName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {itemName}
-              </span>
-            </div>
+          {renderOwnerDescriptor('input')}
+          {itemChip && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+              {itemChip}
+            </>
           )}
           <span className="text-[14px] leading-[20px] text-black opacity-50">
             in
           </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
-          )}
+          {projectChip}
           <span className="text-[14px] leading-[20px] text-black">
             is now leading
           </span>
@@ -165,41 +297,40 @@ const formatNotificationText = (itemData: NotificationItemData) => {
     case 'itemProposalSupported':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <VoterAvatar voter={voter} />
-          <span className="text-[14px] leading-[20px] text-black">
-            has supported your input for
-          </span>
-          {itemName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {itemName}
+          {actor ? (
+            <>
+              <VoterAvatar voter={actor} actorIsSelf={actorIsSelf} />
+              {renderSupportOwnerPhrase()}
+            </>
+          ) : (
+            <>
+              {renderOwnerDescriptor('input')}
+              <span className="text-[14px] leading-[20px] text-black">
+                has been supported
               </span>
-            </div>
+            </>
+          )}
+          {itemChip && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+              {itemChip}
+            </>
           )}
           <span className="text-[14px] leading-[20px] text-black opacity-50">
             in
           </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
-          )}
+          {projectChip}
         </div>
       );
     case 'proposalPassed':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            Your proposal for
-          </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
+          {renderOwnerDescriptor('proposal')}
+          {projectChip && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+              {projectChip}
+            </>
           )}
           <span className="text-[14px] leading-[20px] text-black">
             has passed!
@@ -224,12 +355,11 @@ const formatNotificationText = (itemData: NotificationItemData) => {
           </span>
         </div>
       );
+    case 'proposalPass':
     case 'contributionPoints':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            You have gained
-          </span>
+          {renderActorStatement('You have gained', 'has gained')}
           {itemName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
               <span className="text-[13px] leading-[18px] text-black">
@@ -259,10 +389,31 @@ const formatNotificationText = (itemData: NotificationItemData) => {
         </div>
       );
     case 'createProposal':
+      if (itemData.actorIsSelf) {
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[14px] leading-[20px] text-black">
+              Your proposal for
+            </span>
+            {projectName && (
+              <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+                <span className="text-[13px] leading-[18px] text-black">
+                  {projectName}
+                </span>
+              </div>
+            )}
+            <span className="text-[14px] leading-[20px] text-black">
+              has been created
+            </span>
+          </div>
+        );
+      }
+
       return (
         <div className="flex flex-wrap items-center gap-1">
+          <VoterAvatar voter={itemData.actor} />
           <span className="text-[14px] leading-[20px] text-black">
-            Your proposal for
+            created a proposal for
           </span>
           {projectName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
@@ -276,29 +427,42 @@ const formatNotificationText = (itemData: NotificationItemData) => {
           </span>
         </div>
       );
-    case 'proposalPass':
-      return (
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            Your proposal for
-          </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
-          )}
-          <span className="text-[14px] leading-[20px] text-black">
-            has passed!
-          </span>
-        </div>
-      );
     case 'createItemProposal':
+      if (itemData.actorIsSelf) {
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[14px] leading-[20px] text-black">
+              Your input for
+            </span>
+            {itemName && (
+              <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+                <span className="text-[13px] leading-[18px] text-black">
+                  {itemName}
+                </span>
+              </div>
+            )}
+            <span className="text-[14px] leading-[20px] text-black opacity-50">
+              in
+            </span>
+            {projectName && (
+              <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
+                <span className="text-[13px] leading-[18px] text-black">
+                  {projectName}
+                </span>
+              </div>
+            )}
+            <span className="text-[14px] leading-[20px] text-black">
+              has been created
+            </span>
+          </div>
+        );
+      }
+
       return (
         <div className="flex flex-wrap items-center gap-1">
+          <VoterAvatar voter={itemData.actor} />
           <span className="text-[14px] leading-[20px] text-black">
-            Your input for
+            created an input for
           </span>
           {itemName && (
             <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
@@ -317,34 +481,22 @@ const formatNotificationText = (itemData: NotificationItemData) => {
               </span>
             </div>
           )}
-          <span className="text-[14px] leading-[20px] text-black">
-            has been created
-          </span>
         </div>
       );
     case 'itemProposalPass':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            Your input for
-          </span>
-          {itemName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {itemName}
-              </span>
-            </div>
+          {renderOwnerDescriptor('input')}
+          {itemChip && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+              {itemChip}
+            </>
           )}
           <span className="text-[14px] leading-[20px] text-black opacity-50">
             in
           </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
-          )}
+          {projectChip}
           <span className="text-[14px] leading-[20px] text-black">
             has passed!
           </span>
@@ -353,42 +505,37 @@ const formatNotificationText = (itemData: NotificationItemData) => {
     case 'proposalSupported':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <VoterAvatar voter={voter} />
-          <span className="text-[14px] leading-[20px] text-black">
-            has supported your proposal for
-          </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
+          {actor ? (
+            <>
+              <VoterAvatar voter={actor} actorIsSelf={actorIsSelf} />
+              {renderProposalSupportPhrase()}
+            </>
+          ) : (
+            <>
+              {renderOwnerDescriptor('proposal')}
+              <span className="text-[14px] leading-[20px] text-black">
+                has been supported
               </span>
-            </div>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+            </>
           )}
+          {projectChip}
         </div>
       );
     case 'itemProposalPassed':
       return (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            Your input for
-          </span>
-          {itemName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {itemName}
-              </span>
-            </div>
+          {renderOwnerDescriptor('input')}
+          {itemChip && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black">for</span>
+              {itemChip}
+            </>
           )}
           <span className="text-[14px] leading-[20px] text-black opacity-50">
             in
           </span>
-          {projectName && (
-            <div className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-transparent px-2 py-0.5">
-              <span className="text-[13px] leading-[18px] text-black">
-                {projectName}
-              </span>
-            </div>
-          )}
+          {projectChip}
           <span className="text-[14px] leading-[20px] text-black">
             has been passed!
           </span>
@@ -413,7 +560,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     buttonText,
     isRead = false,
     hasMultipleActions = false,
-    voter,
     secondaryButtonText,
     hideButton = false,
   } = itemData;

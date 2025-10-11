@@ -58,6 +58,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     handleMarkAllAsRead,
     handleArchiveAll,
     handleSettings,
+    handleManualRefresh,
   } = useNotifications();
 
   const getFilteredNotifications = () => {
@@ -261,6 +262,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               onSettings={handleSettingsWithClose}
               onArchiveAll={onArchiveAll}
               isArchivingAll={isArchivingAll}
+              onRefreshNotifications={handleManualRefresh}
             />
           </div>
         </DropdownItem>

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import ShareButton from '@/components/biz/share/ShareButton';
 import BackHeader from '@/components/pages/project/BackHeader';
+import NotificationConfigDropdown from '@/components/pages/project/detail/notification/NotificationConfigDropdown';
 import PublishingTip from '@/components/pages/project/proposal/common/PublishingTip';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
@@ -267,7 +268,8 @@ const ProjectCard = ({
         </div>
       </div>
 
-      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <NotificationConfigDropdown projectId={project.id} />
         <ShareButton
           shareUrl={shareUrl}
           shareImageUrl={shareImageUrl}
@@ -320,8 +322,9 @@ const ProjectCardSkeleton = () => {
       </div>
 
       {/* ShareButton skeleton */}
-      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px]">
-        <Skeleton className="size-[32px] rounded-[6px]" />
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
       </div>
     </div>
   );
