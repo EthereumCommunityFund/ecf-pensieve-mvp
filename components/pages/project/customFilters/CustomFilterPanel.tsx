@@ -162,10 +162,6 @@ const CustomFilterPanel = ({
               </Button>
             </CopyToClipboard>
           </div>
-
-          {isDisabled && disabledReason && (
-            <p className="text-[11px] text-[#D14343]">{disabledReason}</p>
-          )}
         </div>
       )}
     </div>
