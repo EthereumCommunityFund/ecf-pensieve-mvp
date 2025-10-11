@@ -2,7 +2,7 @@ import { IPocItem, IPocItemKey } from '@/types/item';
 
 import { POC_ITEMS } from './pocItems';
 
-export const REWARD_PERCENT = 0.2;
+export const REWARD_PERCENT = 0.1;
 export const WEIGHT = 10;
 export const ESSENTIAL_ITEM_WEIGHT_AMOUNT =
   Object.values(POC_ITEMS)

@@ -14,12 +14,19 @@ import { LEGACY_ITEM_WEIGHTS } from '@/lib/pocLegacyWeights';
 import type { NotificationType } from '@/lib/services/notification';
 
 const changedKeys = [
-  'launch_plan',
-  'audit_status',
-  'core_team',
+  'ownership_of_project',
   'token_sales',
   'budget_plans',
-  'treasury_vault_address',
+  'token_sales',
+  'budget_plans',
+  'audit_report',
+  'vault_address_step2',
+  'previous_funding_rounds',
+  'milestone',
+  'on_chain_treasury_step1',
+  'decentralized_governance',
+  'locking_period_team',
+  'token_utility',
 ];
 
 const TARGET_NOTIFICATION_TYPES: Array<
