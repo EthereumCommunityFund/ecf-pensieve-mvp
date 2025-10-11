@@ -17,7 +17,7 @@ import { formatTimeAgo } from '@/lib/utils';
 
 const useRealNotifications = () => {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
 
   const {
@@ -118,15 +118,6 @@ const useRealNotifications = () => {
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
     (notification: any): NotificationItemData | null => {
-      if (
-        notification.type === 'itemProposalSupported' &&
-        user?.id === notification.voter?.userId &&
-        notification.itemProposal?.creator?.userId ===
-          notification.voter?.userId
-      ) {
-        return null;
-      }
-
       const projectName = (() => {
         const snapItems = notification.projectSnaps?.items;
         const proposalItems = notification.proposal?.items;
@@ -160,22 +151,61 @@ const useRealNotifications = () => {
         return config?.label ?? key;
       };
 
-      const creatorProfile =
+      const normalizeProfile = (
+        profile: any,
+      ): IVoterOfNotification | undefined => {
+        if (!profile) {
+          return undefined;
+        }
+
+        return {
+          name: profile.name || profile.address || 'someone',
+          address: profile.address || '',
+          avatarUrl: profile.avatarUrl,
+          userId: profile.userId,
+        };
+      };
+
+      const rawCreatorProfile =
         notification.itemProposal?.creator || notification.proposal?.creator;
 
-      const creatorDisplayName =
-        creatorProfile?.name || creatorProfile?.address || 'someone';
-      const isCreatedByCurrentUser =
-        creatorProfile?.userId === notification.userId;
+      const creatorProfile = normalizeProfile(rawCreatorProfile);
+      const voterProfile = normalizeProfile(notification.voter);
 
-      const actorProfile = creatorProfile
-        ? {
-            name: creatorProfile.name,
-            address: creatorProfile.address,
-            userId: creatorProfile.userId,
-            avatarUrl: creatorProfile.avatarUrl,
-          }
-        : undefined;
+      const ownerProfile = creatorProfile;
+      const ownerDisplayName = ownerProfile?.name || 'someone';
+      const ownerIsSelf = ownerProfile?.userId === notification.userId;
+
+      const actorRole: 'creator' | 'voter' | null = (() => {
+        const type = notification.type as NotificationType;
+        switch (type) {
+          case 'proposalSupported':
+          case 'itemProposalSupported':
+            return 'voter';
+          case 'itemProposalBecameLeading':
+          case 'itemProposalLostLeading':
+          case 'itemProposalPassed':
+          case 'itemProposalPass':
+          case 'createItemProposal':
+          case 'createProposal':
+          case 'proposalPassed':
+          case 'proposalPass':
+            return 'creator';
+          default:
+            return null;
+        }
+      })();
+
+      const actorProfile =
+        actorRole === 'creator'
+          ? ownerProfile
+          : actorRole === 'voter'
+            ? voterProfile
+            : undefined;
+
+      const actorIsSelf =
+        actorProfile?.userId !== undefined &&
+        actorProfile.userId === notification.userId;
 
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
@@ -187,6 +217,8 @@ const useRealNotifications = () => {
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           case 'itemProposalBecameLeading':
             return {
@@ -195,6 +227,8 @@ const useRealNotifications = () => {
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           case 'itemProposalSupported':
             return {
@@ -202,11 +236,10 @@ const useRealNotifications = () => {
               title: 'Your input has been supported',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
-              userName:
-                notification.voter?.name ||
-                notification.voter?.address ||
-                'someone',
+              userName: voterProfile?.name || 'someone',
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           // For item votes on pending projects
           // TODO: Currently there's a notification for each vote, resulting in too many notifications for pending projects. This feature needs optimization
@@ -216,11 +249,11 @@ const useRealNotifications = () => {
               title: 'Your proposal has been supported',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
-              userName:
-                notification.voter?.name ||
-                notification.voter?.address ||
-                'someone',
+              userName: voterProfile?.name || 'someone',
               buttonText: 'View Proposal',
+              actor: voterProfile,
+              actorIsSelf,
+              voter: voterProfile,
             };
           // For item votes on published projects
           case 'itemProposalPassed':
@@ -229,11 +262,10 @@ const useRealNotifications = () => {
               title: 'Your item proposal has passed',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
-              userName:
-                notification.voter?.name ||
-                notification.voter?.address ||
-                'someone',
+              userName: voterProfile?.name || 'someone',
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           // Project proposal published successfully, but without reward points, showing "View Published Project" entry
           case 'proposalPassed':
@@ -243,6 +275,8 @@ const useRealNotifications = () => {
               projectName,
               buttonText: 'View Published Project',
               hasMultipleActions: false,
+              actor: actorProfile,
+              actorIsSelf,
             };
           // Project published successfully, same as proposalPassed type, showing "View Published Project" entry, but with different text
           case 'projectPublished':
@@ -257,38 +291,50 @@ const useRealNotifications = () => {
           case 'createProposal':
             return {
               type: 'createProposal' as FrontendNotificationType,
-              title: isCreatedByCurrentUser
+              title: ownerIsSelf
                 ? 'You created a proposal'
-                : `${creatorDisplayName} created a proposal`,
+                : `${ownerDisplayName} created a proposal`,
               projectName,
               buttonText: '',
               hideButton: true,
               actor: actorProfile,
-              actorIsSelf: isCreatedByCurrentUser,
+              actorIsSelf,
             };
           // Project published successfully, with reward points, showing `contributionPoints` type
           case 'proposalPass':
+            return {
+              type,
+              title: 'Your proposal has passed!',
+              projectName,
+              buttonText: 'View Published Project',
+              itemName: String(notification.reward),
+              hasMultipleActions: false,
+              actor: actorProfile,
+              actorIsSelf,
+            };
           // Only create not essential item will be notified -> contributionPoints
           case 'createItemProposal':
             return {
               type: 'createItemProposal' as FrontendNotificationType,
-              title: isCreatedByCurrentUser
+              title: ownerIsSelf
                 ? 'You created a new input'
-                : `${creatorDisplayName} created a new input`,
+                : `${ownerDisplayName} created a new input`,
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: '',
               hideButton: true,
               actor: actorProfile,
-              actorIsSelf: isCreatedByCurrentUser,
+              actorIsSelf,
             };
           case 'itemProposalPass':
             return {
               type: 'contributionPoints' as FrontendNotificationType,
               title: 'You have gained contribution points',
-              itemName: resolveItemLabel(notification.itemProposal?.key),
+              itemName: String(notification.reward),
               buttonText: '',
               hideButton: true,
+              actor: actorProfile,
+              actorIsSelf,
             };
           default:
             return {
@@ -310,11 +356,15 @@ const useRealNotifications = () => {
         timeAgo,
         isRead,
         projectName,
-        voter: notification.voter as IVoterOfNotification,
+        voter: voterProfile,
+        actor: actorProfile,
+        actorIsSelf,
+        owner: ownerProfile,
+        ownerIsSelf,
         ...content,
       } as NotificationItemData;
     },
-    [user],
+    [],
   );
 
   // Transform notifications data
