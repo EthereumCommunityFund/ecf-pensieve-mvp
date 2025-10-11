@@ -8,9 +8,12 @@ import {
   IVoterOfNotification,
   NotificationItemData,
 } from '@/components/notification/NotificationItem';
+import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationType } from '@/lib/services/notification';
+import { getItemValueFromSnap } from '@/lib/services/share/shareUtils';
 import { trpc } from '@/lib/trpc/client';
+import { formatTimeAgo } from '@/lib/utils';
 
 const useRealNotifications = () => {
   const router = useRouter();
@@ -114,21 +117,95 @@ const useRealNotifications = () => {
 
   // Transform backend notification data to frontend format
   const transformNotification = useCallback(
-    (notification: any): NotificationItemData => {
-      const getTimeAgo = (date: Date): string => {
-        const now = new Date();
-        const diffInMs = now.getTime() - date.getTime();
-        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-
-        if (diffInHours < 1) {
-          return '0h ago';
-        } else if (diffInHours < 24) {
-          return `${diffInHours}h ago`;
-        } else {
-          const diffInDays = Math.floor(diffInHours / 24);
-          return `${diffInDays}d ago`;
+    (notification: any): NotificationItemData | null => {
+      const projectName = (() => {
+        const snapItems = notification.projectSnaps?.items;
+        const proposalItems = notification.proposal?.items;
+        if (Array.isArray(snapItems)) {
+          const name = getItemValueFromSnap(snapItems, 'name');
+          if (name) {
+            return name;
+          }
         }
+
+        if (typeof notification.project?.name === 'string') {
+          return notification.project.name;
+        }
+
+        if (Array.isArray(proposalItems)) {
+          const name = getItemValueFromSnap(proposalItems, 'name');
+          if (name) {
+            return name;
+          }
+        }
+
+        return 'project';
+      })();
+
+      const resolveItemLabel = (key?: string | null): string => {
+        if (!key) {
+          return 'item';
+        }
+
+        const config = AllItemConfig[key as keyof typeof AllItemConfig];
+        return config?.label ?? key;
       };
+
+      const normalizeProfile = (
+        profile: any,
+      ): IVoterOfNotification | undefined => {
+        if (!profile) {
+          return undefined;
+        }
+
+        return {
+          name: profile.name || profile.address || 'someone',
+          address: profile.address || '',
+          avatarUrl: profile.avatarUrl,
+          userId: profile.userId,
+        };
+      };
+
+      const rawCreatorProfile =
+        notification.itemProposal?.creator || notification.proposal?.creator;
+
+      const creatorProfile = normalizeProfile(rawCreatorProfile);
+      const voterProfile = normalizeProfile(notification.voter);
+
+      const ownerProfile = creatorProfile;
+      const ownerDisplayName = ownerProfile?.name || 'someone';
+      const ownerIsSelf = ownerProfile?.userId === notification.userId;
+
+      const actorRole: 'creator' | 'voter' | null = (() => {
+        const type = notification.type as NotificationType;
+        switch (type) {
+          case 'proposalSupported':
+          case 'itemProposalSupported':
+            return 'voter';
+          case 'itemProposalBecameLeading':
+          case 'itemProposalLostLeading':
+          case 'itemProposalPassed':
+          case 'itemProposalPass':
+          case 'createItemProposal':
+          case 'createProposal':
+          case 'proposalPassed':
+          case 'proposalPass':
+            return 'creator';
+          default:
+            return null;
+        }
+      })();
+
+      const actorProfile =
+        actorRole === 'creator'
+          ? ownerProfile
+          : actorRole === 'voter'
+            ? voterProfile
+            : undefined;
+
+      const actorIsSelf =
+        actorProfile?.userId !== undefined &&
+        actorProfile.userId === notification.userId;
 
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
@@ -137,29 +214,32 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input has lost sufficient support',
-              itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           case 'itemProposalBecameLeading':
             return {
               type,
               title: 'Your input is now leading',
-              itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           case 'itemProposalSupported':
             return {
               type,
               title: 'Your input has been supported',
-              itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
-              userName:
-                notification.voter?.name ||
-                notification.voter?.address ||
-                'someone',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
+              userName: voterProfile?.name || 'someone',
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           // For item votes on pending projects
           // TODO: Currently there's a notification for each vote, resulting in too many notifications for pending projects. This feature needs optimization
@@ -167,59 +247,94 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your proposal has been supported',
-              itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
-              userName:
-                notification.voter?.name ||
-                notification.voter?.address ||
-                'someone',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
+              userName: voterProfile?.name || 'someone',
               buttonText: 'View Proposal',
+              actor: voterProfile,
+              actorIsSelf,
+              voter: voterProfile,
             };
           // For item votes on published projects
           case 'itemProposalPassed':
             return {
               type,
               title: 'Your item proposal has passed',
-              itemName: notification.itemProposal?.key || 'item',
-              projectName: notification.project?.name || 'project',
-              userName:
-                notification.voter?.name ||
-                notification.voter?.address ||
-                'someone',
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
+              userName: voterProfile?.name || 'someone',
               buttonText: 'View Submission',
+              actor: actorProfile,
+              actorIsSelf,
             };
           // Project proposal published successfully, but without reward points, showing "View Published Project" entry
           case 'proposalPassed':
             return {
               type,
               title: 'Your proposal has passed!',
-              projectName: notification.project?.name || 'project',
+              projectName,
               buttonText: 'View Published Project',
               hasMultipleActions: false,
+              actor: actorProfile,
+              actorIsSelf,
             };
           // Project published successfully, same as proposalPassed type, showing "View Published Project" entry, but with different text
           case 'projectPublished':
             return {
               type,
               title: 'Project has been published',
-              projectName: notification.project?.name || 'project',
+              projectName,
               buttonText: 'View Published Project',
             };
           // Create project -> contributionPoints
           // TODO: UI can add createProposal type, redirecting to project/pending/[projectId]/proposal/[proposal] page
           case 'createProposal':
+            return {
+              type: 'createProposal' as FrontendNotificationType,
+              title: ownerIsSelf
+                ? 'You created a proposal'
+                : `${ownerDisplayName} created a proposal`,
+              projectName,
+              buttonText: '',
+              hideButton: true,
+              actor: actorProfile,
+              actorIsSelf,
+            };
           // Project published successfully, with reward points, showing `contributionPoints` type
           case 'proposalPass':
+            return {
+              type,
+              title: 'Your proposal has passed!',
+              projectName,
+              buttonText: 'View Published Project',
+              itemName: String(notification.reward),
+              hasMultipleActions: false,
+              actor: actorProfile,
+              actorIsSelf,
+            };
           // Only create not essential item will be notified -> contributionPoints
-          // TODO: UI can add createItemProposal type
           case 'createItemProposal':
+            return {
+              type: 'createItemProposal' as FrontendNotificationType,
+              title: ownerIsSelf
+                ? 'You created a new input'
+                : `${ownerDisplayName} created a new input`,
+              itemName: resolveItemLabel(notification.itemProposal?.key),
+              projectName,
+              buttonText: '',
+              hideButton: true,
+              actor: actorProfile,
+              actorIsSelf,
+            };
           case 'itemProposalPass':
             return {
               type: 'contributionPoints' as FrontendNotificationType,
               title: 'You have gained contribution points',
-              itemName: notification.reward?.toString() || '0',
+              itemName: String(notification.reward),
               buttonText: '',
               hideButton: true,
+              actor: actorProfile,
+              actorIsSelf,
             };
           default:
             return {
@@ -232,12 +347,20 @@ const useRealNotifications = () => {
 
       const content = getTransformedContent(notification);
       const isRead = !!notification.readAt;
+      const timeAgo = formatTimeAgo(notification.createdAt, {
+        fallback: 'Just now',
+      });
 
       return {
         id: notification.id.toString(),
-        timeAgo: getTimeAgo(notification.createdAt),
+        timeAgo,
         isRead,
-        voter: notification.voter as IVoterOfNotification,
+        projectName,
+        voter: voterProfile,
+        actor: actorProfile,
+        actorIsSelf,
+        owner: ownerProfile,
+        ownerIsSelf,
         ...content,
       } as NotificationItemData;
     },
@@ -249,21 +372,30 @@ const useRealNotifications = () => {
     if (!allNotificationsData?.pages) return [];
     return allNotificationsData.pages
       .flatMap((page) => page.notifications)
-      .map(transformNotification);
+      .map(transformNotification)
+      .filter((notification): notification is NotificationItemData =>
+        Boolean(notification),
+      );
   }, [allNotificationsData, transformNotification]);
 
   const unreadNotifications = useMemo(() => {
     if (!unreadNotificationsData?.pages) return [];
     return unreadNotificationsData.pages
       .flatMap((page) => page.notifications)
-      .map(transformNotification);
+      .map(transformNotification)
+      .filter((notification): notification is NotificationItemData =>
+        Boolean(notification),
+      );
   }, [unreadNotificationsData, transformNotification]);
 
   const archivedNotifications = useMemo(() => {
     if (!archivedNotificationsData?.pages) return [];
     return archivedNotificationsData.pages
       .flatMap((page) => page.notifications)
-      .map(transformNotification);
+      .map(transformNotification)
+      .filter((notification): notification is NotificationItemData =>
+        Boolean(notification),
+      );
   }, [archivedNotificationsData, transformNotification]);
 
   // Action handlers
@@ -426,6 +558,12 @@ const useRealNotifications = () => {
     refetchArchived,
   ]);
 
+  const handleManualRefresh = useCallback(() => {
+    Promise.all([refetchAll(), refetchUnread(), refetchArchived()]).catch(
+      (error) => console.error('Error during manual refresh:', error),
+    );
+  }, [refetchAll, refetchUnread, refetchArchived]);
+
   const handleSettings = useCallback(() => {
     router.push('/settings/notifications');
   }, [router]);
@@ -471,6 +609,7 @@ const useRealNotifications = () => {
     handleMarkAllAsRead,
     handleArchiveAll,
     handleSettings,
+    handleManualRefresh,
 
     // Auth state
     isAuthenticated,

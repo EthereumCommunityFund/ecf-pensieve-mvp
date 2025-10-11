@@ -28,23 +28,68 @@ export function formatNumber(num: number): string {
   return formatNumberUtil(num);
 }
 
-export function formatTimeAgo(timestamp: number): string {
+export function formatTimeAgo(
+  input: number | string | Date,
+  options?: { fallback?: string },
+): string {
+  const fallback = options?.fallback ?? '0h ago';
+
+  const timestamp =
+    input instanceof Date
+      ? input.getTime()
+      : typeof input === 'string'
+        ? new Date(input).getTime()
+        : input;
+
+  if (!Number.isFinite(timestamp)) {
+    return fallback;
+  }
+
+  const targetTime = dayjs(timestamp);
+
+  if (!targetTime.isValid()) {
+    return fallback;
+  }
+
   const now = dayjs();
-  const inputTime = dayjs(timestamp);
-  const diffInDays = now.diff(inputTime, 'day');
-  const diffInHours = now.diff(inputTime, 'hour');
+
+  if (targetTime.isAfter(now)) {
+    return fallback;
+  }
+
+  const diffInMinutes = now.diff(targetTime, 'minute');
+
+  if (diffInMinutes < 60) {
+    if (diffInMinutes <= 0) {
+      return 'Just now';
+    }
+    return `${diffInMinutes}min ago`;
+  }
+
+  const diffInHours = now.diff(targetTime, 'hour');
 
   if (diffInHours < 24) {
     return `${diffInHours}h ago`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays}d ago`;
-  } else if (diffInDays < 30) {
-    return `${Math.floor(diffInDays / 7)}w ago`;
-  } else if (now.diff(inputTime, 'month') < 12) {
-    return `${now.diff(inputTime, 'month')}m ago`;
-  } else {
-    return `${now.diff(inputTime, 'year')}y ago`;
   }
+
+  const diffInDays = now.diff(targetTime, 'day');
+
+  if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  }
+
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInWeeks < 4) {
+    return `${diffInWeeks}w ago`;
+  }
+
+  const diffInMonths = now.diff(targetTime, 'month');
+  if (diffInMonths < 12) {
+    return `${diffInMonths}m ago`;
+  }
+
+  const diffInYears = now.diff(targetTime, 'year');
+  return `${diffInYears}y ago`;
 }
 
 export function getShortenAddress(address: string): string {
