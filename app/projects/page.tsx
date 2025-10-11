@@ -83,6 +83,8 @@ const ProjectsContent = () => {
     useState(false);
   const [hasAdvancedFilterNextPage, setHasAdvancedFilterNextPage] =
     useState(false);
+  const [isAccountableFilterRefreshing, setIsAccountableFilterRefreshing] =
+    useState(false);
   const trackUserAction = trpc.userActionLog.track.useMutation();
 
   useEffect(() => {
@@ -94,12 +96,9 @@ const ProjectsContent = () => {
     advancedFilterSerializedRef.current = advancedFilterParam ?? null;
   }, [advancedFilterParam]);
 
-  const canUseAdvancedFilters = !isAccountableSort;
-  const shouldUseAdvancedFilter =
-    canUseAdvancedFilters && advancedFilters.length > 0;
-  const advancedFilterDisabledReason = canUseAdvancedFilters
-    ? undefined
-    : 'The advanced filter is not available for the current sort mode';
+  const canUseAdvancedFilters = true;
+  const shouldUseAdvancedFilter = advancedFilters.length > 0;
+  const advancedFilterDisabledReason: string | undefined = undefined;
   const advancedFilterSignature = useMemo(
     () => JSON.stringify(advancedFilters),
     [advancedFilters],
@@ -318,6 +317,16 @@ const ProjectsContent = () => {
     },
   );
 
+  const accountableQueryLimit = useMemo(
+    () => (shouldUseAdvancedFilter ? ADVANCED_FILTER_FETCH_LIMIT : PAGE_SIZE),
+    [shouldUseAdvancedFilter],
+  );
+
+  const accountableQueryInput = useMemo(
+    () => ({ limit: accountableQueryLimit }),
+    [accountableQueryLimit],
+  );
+
   const {
     data: accountableData,
     isLoading: isLoadingAccountable,
@@ -326,9 +335,7 @@ const ProjectsContent = () => {
     fetchNextPage: fetchNextAccountable,
     refetch: refetchAccountable,
   } = trpc.rank.getTopRanksByGenesisSupportPaginated.useInfiniteQuery(
-    {
-      limit: PAGE_SIZE,
-    },
+    accountableQueryInput,
     {
       getNextPageParam: (lastPage) =>
         lastPage.hasNextPage ? lastPage.nextCursor : undefined,
@@ -341,6 +348,14 @@ const ProjectsContent = () => {
 
   useEffect(() => {
     if (!shouldUseAdvancedFilter) {
+      setAdvancedFilterOffset(0);
+      setAdvancedFilterSourceData([]);
+      setIsAdvancedFilterLoadingMore(false);
+      setHasAdvancedFilterNextPage(false);
+      return;
+    }
+
+    if (isAccountableSort) {
       setAdvancedFilterOffset(0);
       setAdvancedFilterSourceData([]);
       setIsAdvancedFilterLoadingMore(false);
@@ -376,7 +391,12 @@ const ProjectsContent = () => {
     return () => {
       cancelled = true;
     };
-  }, [advancedFilterSignature, shouldUseAdvancedFilter, refetchProjects]);
+  }, [
+    advancedFilterSignature,
+    shouldUseAdvancedFilter,
+    isAccountableSort,
+    refetchProjects,
+  ]);
 
   const accountableProjectList = useMemo(() => {
     if (!accountableData?.pages) {
@@ -387,6 +407,67 @@ const ProjectsContent = () => {
       page.items.map((item) => item.project),
     ) as unknown as IProject[];
   }, [accountableData]);
+
+  useEffect(() => {
+    if (!isAccountableSort || !shouldUseAdvancedFilter) {
+      return;
+    }
+
+    setAdvancedFilterSourceData([]);
+    setHasAdvancedFilterNextPage(false);
+    setIsAdvancedFilterLoadingMore(true);
+    setIsAccountableFilterRefreshing(true);
+    let cancelled = false;
+
+    void refetchAccountable({ throwOnError: false }).finally(() => {
+      if (cancelled) {
+        return;
+      }
+      setIsAccountableFilterRefreshing(false);
+      setIsAdvancedFilterLoadingMore(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    advancedFilterSignature,
+    isAccountableSort,
+    shouldUseAdvancedFilter,
+    refetchAccountable,
+  ]);
+
+  useEffect(() => {
+    if (!isAccountableSort) {
+      return;
+    }
+
+    if (!shouldUseAdvancedFilter) {
+      setAdvancedFilterSourceData([]);
+      setHasAdvancedFilterNextPage(Boolean(hasNextAccountable));
+      if (!isFetchingNextAccountable) {
+        setIsAdvancedFilterLoadingMore(false);
+      }
+      return;
+    }
+
+    if (isAccountableFilterRefreshing) {
+      return;
+    }
+
+    setAdvancedFilterSourceData(accountableProjectList);
+    setHasAdvancedFilterNextPage(Boolean(hasNextAccountable));
+    if (!isFetchingNextAccountable) {
+      setIsAdvancedFilterLoadingMore(false);
+    }
+  }, [
+    isAccountableSort,
+    shouldUseAdvancedFilter,
+    accountableProjectList,
+    hasNextAccountable,
+    isFetchingNextAccountable,
+    isAccountableFilterRefreshing,
+  ]);
 
   const filteredProjects = useMemo(() => {
     if (!shouldUseAdvancedFilter) {
@@ -406,6 +487,9 @@ const ProjectsContent = () => {
 
   const displayedProjects = useMemo(() => {
     if (isAccountableSort) {
+      if (shouldUseAdvancedFilter) {
+        return filteredProjects;
+      }
       return accountableProjectList;
     }
 
@@ -422,15 +506,20 @@ const ProjectsContent = () => {
     projectList,
   ]);
 
+  const isAccountableLoadingState =
+    isLoadingAccountable || isAccountableFilterRefreshing;
+
   const isListLoading = isAccountableSort
-    ? isLoadingAccountable && displayedProjects.length === 0
+    ? displayedProjects.length === 0 && isAccountableLoadingState
     : shouldUseAdvancedFilter
       ? (isLoading || (isFetching && advancedFilterSourceData.length === 0)) &&
         displayedProjects.length === 0
       : (isLoading || (isFetching && offset === 0)) && projectList.length === 0;
 
   const isListFetchingNext = isAccountableSort
-    ? isFetchingNextAccountable
+    ? shouldUseAdvancedFilter
+      ? isAdvancedFilterLoadingMore || isFetchingNextAccountable
+      : isFetchingNextAccountable
     : shouldUseAdvancedFilter
       ? isAdvancedFilterLoadingMore
       : isLoadingMore;
@@ -443,6 +532,14 @@ const ProjectsContent = () => {
 
   const handleLoadMoreAction = useCallback(() => {
     if (isAccountableSort) {
+      if (!hasNextAccountable || isFetchingNextAccountable) {
+        return;
+      }
+
+      if (shouldUseAdvancedFilter) {
+        setIsAdvancedFilterLoadingMore(true);
+      }
+
       void fetchNextAccountable();
       return;
     }
@@ -460,12 +557,14 @@ const ProjectsContent = () => {
     handleLoadMore();
   }, [
     isAccountableSort,
-    fetchNextAccountable,
-    handleLoadMore,
-    hasAdvancedFilterNextPage,
-    isAdvancedFilterLoadingMore,
-    setAdvancedFilterOffset,
     shouldUseAdvancedFilter,
+    hasNextAccountable,
+    isFetchingNextAccountable,
+    fetchNextAccountable,
+    isAdvancedFilterLoadingMore,
+    hasAdvancedFilterNextPage,
+    setAdvancedFilterOffset,
+    handleLoadMore,
   ]);
 
   const handleProposeProject = useCallback(() => {
@@ -627,10 +726,22 @@ const ProjectsContent = () => {
       return;
     }
 
+    if (isAccountableSort) {
+      if (!isFetchingNextAccountable) {
+        setIsAdvancedFilterLoadingMore(false);
+      }
+      return;
+    }
+
     if (!isFetching) {
       setIsAdvancedFilterLoadingMore(false);
     }
-  }, [isFetching, shouldUseAdvancedFilter]);
+  }, [
+    shouldUseAdvancedFilter,
+    isAccountableSort,
+    isFetching,
+    isFetchingNextAccountable,
+  ]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -677,7 +788,7 @@ const ProjectsContent = () => {
 
     if (sort === 'top-transparent') {
       pageTitle = 'Top Transparent Projects';
-      pageDescription = `Transparency score = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`;
+      pageDescription = `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`;
       pageEmptyMessage = 'No transparent projects found';
     } else if (sort === 'top-community-trusted') {
       pageTitle = 'Top Community-trusted';
@@ -685,7 +796,7 @@ const ProjectsContent = () => {
       pageEmptyMessage = 'No community-trusted projects found';
     } else if (sort === 'top-accountable') {
       pageTitle = 'Top Accountable Projects';
-      pageDescription = `Accountability score = Transparency score × √∑CommunityVoting(CP)`;
+      pageDescription = `This rank combines signals from transparency and community trust. Accountable score = completion rate × sqrt(vote weight).`;
       pageEmptyMessage = 'No accountable projects found';
     } else {
       // For multiple categories, show a generic title
