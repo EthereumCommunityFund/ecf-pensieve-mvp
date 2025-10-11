@@ -99,7 +99,7 @@ const ProjectsContent = () => {
     canUseAdvancedFilters && advancedFilters.length > 0;
   const advancedFilterDisabledReason = canUseAdvancedFilters
     ? undefined
-    : '高级筛选不可用于当前排序模式';
+    : 'The advanced filter is not available for the current sort mode';
   const advancedFilterSignature = useMemo(
     () => JSON.stringify(advancedFilters),
     [advancedFilters],
