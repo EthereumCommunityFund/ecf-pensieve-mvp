@@ -1,3 +1,4 @@
+import { ALL_POC_ITEM_MAP, WEIGHT } from '@/lib/constants';
 import {
   ICategoryConfig,
   IItemCategoryEnum,
@@ -237,6 +238,7 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'A look at the project’s financial setup, including capital flows and long-term sustainability',
         items: ['fundingStatus'],
         itemsNotEssential: [
+          'investment_stage',
           'funding_received_grants',
           'private_funding_rounds',
           'previous_funding_rounds',
@@ -312,7 +314,22 @@ export const AllItemKeysInPage: IPocItemKey[] =
         return subAcc.concat(
           subCategory.items || [],
           subCategory.itemsNotEssential || [],
+          (subCategory.groups || []).reduce((pre, cur) => {
+            const groupItems = (cur.items || []).filter(
+              (item): item is IPocItemKey => item in ALL_POC_ITEM_MAP,
+            );
+            return pre.concat(groupItems);
+          }, [] as IPocItemKey[]),
         );
       }, [] as IPocItemKey[]),
     );
   }, [] as IPocItemKey[]);
+
+export const TotalGenesisWeightSum = AllItemKeysInPage.reduce((sum, key) => {
+  const item = ALL_POC_ITEM_MAP[key];
+  if (item) {
+    const genesisWeight = item.accountability_metric * WEIGHT;
+    return sum + genesisWeight;
+  }
+  return sum;
+}, 0);
