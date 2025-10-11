@@ -121,7 +121,7 @@ export const POC_ITEMS = {
   },
   ownership_of_project: {
     isEssential: false,
-    accountability_metric: 2,
+    accountability_metric: 4,
   },
 
   project_funded_date: {
@@ -138,11 +138,11 @@ export const POC_ITEMS = {
   },
   token_sales: {
     isEssential: false,
-    accountability_metric: 3,
+    accountability_metric: 4,
   },
   budget_plans: {
     isEssential: false,
-    accountability_metric: 3,
+    accountability_metric: 4,
   },
   token_type: {
     isEssential: false,
@@ -311,19 +311,19 @@ export const POC_ITEMS = {
   },
   audit_report: {
     isEssential: false,
-    accountability_metric: 3,
+    accountability_metric: 4,
   },
   vault_address_step2: {
     isEssential: false,
-    accountability_metric: 4,
+    accountability_metric: 6,
   },
   previous_funding_rounds: {
     isEssential: false,
-    accountability_metric: 3,
+    accountability_metric: 4,
   },
   milestone: {
     isEssential: false,
-    accountability_metric: 4,
+    accountability_metric: 6,
   },
   vault_multi_sig_holder_addresses_step2: {
     isEssential: false,
@@ -331,7 +331,7 @@ export const POC_ITEMS = {
   },
   on_chain_treasury_step1: {
     isEssential: false,
-    accountability_metric: 6,
+    accountability_metric: 10,
   },
   private_funding_rounds: {
     isEssential: false,
@@ -339,15 +339,15 @@ export const POC_ITEMS = {
   },
   decentralized_governance: {
     isEssential: false,
-    accountability_metric: 5,
+    accountability_metric: 8,
   },
   locking_period_team: {
     isEssential: false,
-    accountability_metric: 3,
+    accountability_metric: 4,
   },
   token_utility: {
     isEssential: false,
-    accountability_metric: 3,
+    accountability_metric: 4,
   },
   board_incentive: {
     isEssential: false,
@@ -544,6 +544,10 @@ export const POC_ITEMS = {
   investments: {
     isEssential: false,
     accountability_metric: 0,
+  },
+  investment_stage: {
+    isEssential: false,
+    accountability_metric: 6,
   },
   fundraising_price: {
     isEssential: false,

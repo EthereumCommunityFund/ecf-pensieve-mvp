@@ -7,6 +7,6 @@ export const addToast = (
 ) => {
   return heroAddToast({
     ...options,
-    timeout: options.timeout ?? 1500,
+    timeout: options.timeout ?? 3000,
   });
 };

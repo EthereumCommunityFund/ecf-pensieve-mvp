@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { projectNotificationSettings } from '@/lib/db/schema';
+import { notificationCache } from '@/lib/services/notification/cache';
 import { protectedProcedure, router } from '@/lib/trpc/server';
 
 export const projectNotificationSettingsRouter = router({
@@ -20,7 +21,8 @@ export const projectNotificationSettingsRouter = router({
         ),
       });
 
-      return setting;
+      // Return undefined when no setting exists so callers can apply defaults
+      return setting ?? undefined;
     }),
 
   updateProjectNotificationSetting: protectedProcedure
@@ -62,6 +64,12 @@ export const projectNotificationSettingsRouter = router({
           },
         })
         .returning();
+
+      notificationCache.setUserSetting(
+        ctx.user.id,
+        projectId,
+        notificationMode,
+      );
 
       return result;
     }),

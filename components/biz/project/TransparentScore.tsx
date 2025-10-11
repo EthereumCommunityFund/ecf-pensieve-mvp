@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { ShieldStarIcon } from '@/components/icons';
-import { AllItemKeysInPage, TotalItemCount } from '@/constants/tableConfig';
+import { TotalGenesisWeightSum, TotalItemCount } from '@/constants/tableConfig';
 import { ALL_POC_ITEM_MAP, WEIGHT } from '@/lib/constants';
 import { IPocItemKey } from '@/types/item';
 
@@ -12,15 +12,6 @@ interface IProps {
 export function calcTransparentScore(
   itemsTopWeight: Partial<Record<IPocItemKey, number>>,
 ) {
-  const totalGenesisWeightSum = AllItemKeysInPage.reduce((sum, key) => {
-    const item = ALL_POC_ITEM_MAP[key];
-    if (item) {
-      const genesisWeight = item.accountability_metric * WEIGHT;
-      return sum + genesisWeight;
-    }
-    return sum;
-  }, 0);
-
   const leadingGenesisWeightSum = Object.keys(itemsTopWeight || {}).reduce(
     (sum, key) => {
       const typedKey = key as IPocItemKey;
@@ -34,8 +25,8 @@ export function calcTransparentScore(
     0,
   );
 
-  if (totalGenesisWeightSum === 0) return 0;
-  return Math.round((leadingGenesisWeightSum / totalGenesisWeightSum) * 100);
+  if (TotalGenesisWeightSum === 0) return 0;
+  return Math.round((leadingGenesisWeightSum / TotalGenesisWeightSum) * 100);
 }
 
 const TransparentScore: FC<IProps> = ({ itemsTopWeight }) => {

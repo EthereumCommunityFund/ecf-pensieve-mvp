@@ -4,7 +4,11 @@ export interface FilterState {
   tags: string[]; // Reserved for future
 }
 
-export type FilterSection = 'categories' | 'locations' | 'tags';
+export type FilterSection =
+  | 'categories'
+  | 'locations'
+  | 'tags'
+  | 'customFilters';
 
 export interface SortOption {
   value: string;
@@ -18,6 +22,11 @@ export const SORT_OPTIONS: SortOption[] = [
   {
     value: 'top-community-trusted',
     label: 'Top Community Trusted',
+    category: 'By Rank',
+  },
+  {
+    value: 'top-accountable',
+    label: 'Top Accountable',
     category: 'By Rank',
   },
   // By Time

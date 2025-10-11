@@ -10,6 +10,7 @@ import {
   getSortTabs,
   SortType,
 } from '@/constants/sortConfig';
+import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { SortBy, SortOrder } from '@/types/sort';
@@ -109,6 +110,12 @@ const HomeList = () => {
     return ranksData?.bySupport?.slice(0, limit) || [];
   }, [ranksData?.bySupport, limit]);
 
+  const byAccountableProjects = useMemo(() => {
+    const items =
+      ranksData?.byGenesisSupport?.map((rank) => rank.project) || [];
+    return items.slice(0, limit);
+  }, [ranksData?.byGenesisSupport, limit]);
+
   useEffect(() => {
     if (genesisData) {
       devLog('genesisData', genesisData);
@@ -116,7 +123,10 @@ const HomeList = () => {
     if (bySupportProjects.length > 0) {
       devLog('bySupportProjects', bySupportProjects);
     }
-  }, [genesisData, bySupportProjects]);
+    if (byAccountableProjects.length > 0) {
+      devLog('byAccountableProjects', byAccountableProjects);
+    }
+  }, [genesisData, bySupportProjects, byAccountableProjects]);
 
   // Get the latest updatedAt time from all ranks for transparent projects
   const transparentProjectsUpdatedAt = ranksData?.byGenesisWeight?.reduce(
@@ -145,6 +155,9 @@ const HomeList = () => {
 
   const handleViewTopCommunityTrustedProjects = useCallback(() => {
     router.push('/projects?sort=top-community-trusted');
+  }, [router]);
+  const handleViewTopAccountableProjects = useCallback(() => {
+    router.push('/projects?sort=top-accountable');
   }, [router]);
 
   // Refetch all method to refresh all data
@@ -201,7 +214,7 @@ const HomeList = () => {
       <div className="mobile:p-0 flex-1 rounded-[10px] p-[10px]">
         <SectionHeader
           title="Top Transparent Projects"
-          description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
+          description={`Transparency score = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`}
           buttonText="View All Top"
           onClick={handleViewTopTransparentProjects}
           updateAt={displayUpdatedAtOfTransparent}
@@ -232,6 +245,29 @@ const HomeList = () => {
       {/* Right side: 4 columns */}
       <div className="tablet:w-[325px] mobile:hidden flex w-[390px] flex-col gap-[10px]">
         <ProjectIntroCard />
+
+        {/* Column 0: Top Accountable */}
+        <div className="rounded-[10px] border border-black/10 p-[14px]">
+          <SectionHeaderSmall
+            title="Top Accountable"
+            description="Accountability score = Transparency score × √∑CommunityVoting(CP)"
+            onClick={handleViewTopAccountableProjects}
+            icon={<CommunityTrustedIcon />}
+          />
+          <ProjectListWrapper
+            isLoading={isLoadingSupport}
+            projectList={byAccountableProjects as unknown as IProject[]}
+            onLoadMore={() => {}}
+            isFetchingNextPage={false}
+            emptyMessage="No projects found"
+            onSuccess={(_result) => refetchAll()}
+            showCreator={false}
+            showUpvote={true}
+            showTransparentScore={false}
+            size="sm"
+            viewAllUrl="/projects?sort=top-accountable"
+          />
+        </div>
 
         {/* Column 1: Top Community-trusted */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">

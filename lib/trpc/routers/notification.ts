@@ -38,20 +38,38 @@ export const notificationRouter = router({
         orderBy: [desc(notifications.id)],
         limit: limit + 1,
         with: {
-          project: {
+          projectSnaps: {
             columns: {
-              id: true,
-              name: true,
+              items: true,
             },
           },
           proposal: {
             columns: {
               items: true,
             },
+            with: {
+              creator: {
+                columns: {
+                  userId: true,
+                  name: true,
+                  address: true,
+                },
+              },
+            },
           },
           itemProposal: {
             columns: {
               key: true,
+            },
+            with: {
+              creator: {
+                columns: {
+                  userId: true,
+                  name: true,
+                  address: true,
+                  avatarUrl: true,
+                },
+              },
             },
           },
           voter: {

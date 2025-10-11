@@ -371,6 +371,49 @@ describe('LikeProject Integration Tests', () => {
       expect(updatedProject?.likeCount).toBe(0);
     });
 
+    it('should handle concurrent withdrawal attempts safely', async () => {
+      const caller = likeProjectRouter.createCaller(
+        createContext(testUsers[2].userId),
+      );
+
+      await caller.likeProject({
+        projectId: projectForWithdraw.id,
+        weight: 5,
+      });
+
+      const [firstResult, secondResult] = await Promise.allSettled([
+        caller.withdrawLike({
+          projectId: projectForWithdraw.id,
+        }),
+        caller.withdrawLike({
+          projectId: projectForWithdraw.id,
+        }),
+      ]);
+
+      expect([firstResult.status, secondResult.status].sort()).toStrictEqual([
+        'fulfilled',
+        'rejected',
+      ]);
+
+      const fulfilledResult =
+        firstResult.status === 'fulfilled' ? firstResult.value : null;
+      const rejectedReason =
+        firstResult.status === 'rejected'
+          ? firstResult.reason
+          : secondResult.status === 'rejected'
+            ? secondResult.reason
+            : null;
+
+      expect(fulfilledResult).not.toBeNull();
+      expect(fulfilledResult?.success).toBe(true);
+      expect(fulfilledResult?.withdrawnWeight).toBe(5);
+
+      const errorMessage = rejectedReason?.message ?? `${rejectedReason}`;
+      expect(errorMessage).toMatch(
+        /Like already withdrawn|You have not liked this project yet|Insufficient weight\. Available to withdraw/,
+      );
+    });
+
     it('should throw NOT_FOUND error when project does not exist', async () => {
       const caller = likeProjectRouter.createCaller(
         createContext(testUsers[1].userId),

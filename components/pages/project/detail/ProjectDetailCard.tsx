@@ -12,6 +12,7 @@ import { IProject } from '@/types';
 import { useProjectDetailContext } from '../context/projectDetailContext';
 
 import BookmarkButton from './list/BookmarkButton';
+import NotificationConfigDropdown from './notification/NotificationConfigDropdown';
 import UpvoteButton from './UpvoteButton';
 
 interface ProjectDetailCardProps {
@@ -164,6 +165,7 @@ const ProjectDetailCard: FC<ProjectDetailCardProps> = ({
           onVoteSuccess={handleVoteSuccess}
         />
         <BookmarkButton projectId={project.id} />
+        <NotificationConfigDropdown projectId={project.id} />
         <ShareButton
           shareUrl={shareUrl}
           shareImageUrl={shareImageUrl}
@@ -212,6 +214,7 @@ const ProjectDetailCardSkeleton = () => {
       {/* BookmarkButton and ShareButton skeleton */}
       <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
         <Skeleton className="mobile:size-[32px] h-[40px] w-[100px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
         <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
         <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
       </div>
