@@ -30,7 +30,7 @@ const Banner = () => {
       </div>
       <p
         className={cn(
-          'mt-[10px] font-mona text-[11px] mobile:text-[10px] uppercase leading-[1.2] text-black/30',
+          'mt-[10px] font-roboto text-[11px] mobile:text-[10px] uppercase leading-[1.2] text-black/30',
         )}
       >
         {`Pensieve.ecf (v0.5.0) — a decentralized, immutable, community-powered knowledge base for Web3 projects.`}

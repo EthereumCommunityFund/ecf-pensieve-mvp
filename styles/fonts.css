@@ -159,6 +159,35 @@
   font-display: fallback;
 }
 
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/RobotoMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: fallback;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/RobotoMono-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: fallback;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/RobotoMono-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: fallback;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/RobotoMono-Bold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: fallback;
+}
+
 /* Font utility classes */
 .font-saria {
   font-family: var(--font-saira), Arial, sans-serif;
@@ -174,6 +203,10 @@
 
 .font-inter {
   font-family: var(--font-inter), Arial, sans-serif;
+}
+
+.font-roboto {
+  font-family: var(--font-roboto), Arial, sans-serif;
 }
 
 .font-normal {
