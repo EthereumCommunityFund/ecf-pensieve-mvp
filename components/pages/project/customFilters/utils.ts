@@ -29,7 +29,7 @@ import {
   type SpecialFieldDefinition,
 } from './types';
 
-const PRE_STAGE_VALUES = ['Pre-Seed'];
+const PRE_STAGE_VALUES = ['No Investment'];
 
 const FALLBACK_FIELD_TYPES: readonly AdvancedFilterFieldType[] = [
   'special',
@@ -191,7 +191,7 @@ const HAVE_VALUE_OPTIONS: SelectFieldOption[] = [
   },
   {
     value: 'false',
-    label: 'Empty',
+    label: 'N/A',
   },
 ];
 

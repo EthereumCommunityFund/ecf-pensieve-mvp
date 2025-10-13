@@ -787,17 +787,17 @@ const ProjectsContent = () => {
     let pageEmptyMessage: string;
 
     if (sort === 'top-transparent') {
-      pageTitle = 'Top Transparent Projects';
+      pageTitle = 'Transparency Rank';
       pageDescription = `Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`;
-      pageEmptyMessage = 'No transparent projects found';
+      pageEmptyMessage = 'No projects found, check filter setting';
     } else if (sort === 'top-community-trusted') {
-      pageTitle = 'Top Community-trusted';
+      pageTitle = 'Community-trusted Rank';
       pageDescription = `Projects are ranked based on the total amount of staked upvotes received from users. This reflects community recognition and perceived value`;
-      pageEmptyMessage = 'No community-trusted projects found';
+      pageEmptyMessage = 'No projects found, check filter setting';
     } else if (sort === 'top-accountable') {
-      pageTitle = 'Top Accountable Projects';
+      pageTitle = 'Accountability Rank';
       pageDescription = `This rank combines signals from transparency and community trust. Accountable score = completion rate × sqrt(vote weight).`;
-      pageEmptyMessage = 'No accountable projects found';
+      pageEmptyMessage = 'No projects found, check filter setting';
     } else {
       // For multiple categories, show a generic title
       const categoryDisplay =
@@ -813,9 +813,9 @@ const ProjectsContent = () => {
         : '';
       pageEmptyMessage = categoryDisplay
         ? cats && cats.length === 1
-          ? `No ${cats[0]} projects found`
-          : 'No projects found matching the selected categories'
-        : 'No projects found matching the conditions';
+          ? `No projects found, check filter setting`
+          : 'No projects found matching the selected categories, check filter setting'
+        : 'No projects found matching the conditions, check filter setting';
     }
 
     return {
