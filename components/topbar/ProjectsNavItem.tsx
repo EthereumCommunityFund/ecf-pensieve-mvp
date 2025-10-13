@@ -117,7 +117,7 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
         onMouseLeave={handleClose}
       >
         <Categories
-          categorySort="top-accountable"
+          categorySort="top-transparent"
           viewAllSort="top-transparent"
         />
       </PopoverContent>

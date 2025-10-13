@@ -14,7 +14,11 @@ export default function Page() {
         <ProjectIntroCard />
       </div>
 
-      <Categories className="mt-[20px]" />
+      <Categories
+        className="mt-[20px]"
+        viewAllSort="top-transparent"
+        categorySort="top-transparent"
+      />
 
       <HomeList />
     </div>
