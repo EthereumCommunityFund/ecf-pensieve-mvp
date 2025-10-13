@@ -224,7 +224,7 @@ const HomeList = () => {
           projectList={byGenesisProjects as IProject[]}
           onLoadMore={() => {}}
           isFetchingNextPage={isFetchingNextGenesis}
-          emptyMessage="No transparent projects found"
+          emptyMessage="No projects found"
           onSuccess={(_result) => refetchAll()}
           showCreator={false}
           showUpvote={false}
@@ -249,7 +249,7 @@ const HomeList = () => {
         {/* Column 0: Top Accountable */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title="Top Accountable"
+            title="Top Accountable Projects"
             description="Accountability score = Transparency score × √∑CommunityVoting(CP)"
             onClick={handleViewTopAccountableProjects}
             icon={<CommunityTrustedIcon />}
@@ -272,7 +272,7 @@ const HomeList = () => {
         {/* Column 1: Top Community-trusted */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title={`Top Community-trusted`}
+            title={`Top Community-trusted Projects`}
             description={`Projects ranked by staked upvotes`}
             onClick={handleViewTopCommunityTrustedProjects}
             icon={<CommunityTrustedIcon />}

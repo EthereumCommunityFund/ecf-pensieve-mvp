@@ -2,6 +2,7 @@
 
 import { Avatar, cn } from '@heroui/react';
 import { ReactNode, memo, useCallback, useEffect, useState } from 'react';
+import { isAddress } from 'viem';
 
 import { Button } from '@/components/base';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
@@ -710,8 +711,12 @@ const SubmitterCell = memo(
   }: SubmitterColCellProps) => {
     const isNonEssential = !itemConfig?.isEssential;
     const isValueEmpty = isInputValueEmpty(item?.input);
+    const submitterAddress =
+      typeof submitter?.address === 'string' ? submitter.address.trim() : '';
+    const hasSubmitterAddress =
+      submitterAddress.length > 0 && isAddress(submitterAddress);
 
-    if (isNonEssential && isValueEmpty) {
+    if (isNonEssential && isValueEmpty && !hasSubmitterAddress) {
       return (
         <div className="font-mona flex-1 text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
           empty

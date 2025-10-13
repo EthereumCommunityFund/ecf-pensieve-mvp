@@ -8,10 +8,38 @@ import { AllCategories } from '@/constants/category';
 
 interface IProps {
   className?: string;
+  categorySort?: string;
+  viewAllSort?: string;
 }
 
-export default function Categories({ className = '' }: IProps) {
+const buildProjectsUrl = ({
+  category,
+  sort,
+}: {
+  category?: string;
+  sort?: string;
+}) => {
+  const params = new URLSearchParams();
+
+  if (category) {
+    params.set('cats', category);
+  }
+
+  if (sort) {
+    params.set('sort', sort);
+  }
+
+  const query = params.toString();
+  return `/projects${query ? `?${query}` : ''}`;
+};
+
+export default function Categories({
+  className = '',
+  categorySort,
+  viewAllSort,
+}: IProps) {
   const router = useRouter();
+  const viewAllHref = buildProjectsUrl({ sort: viewAllSort });
 
   return (
     <div className={className}>
@@ -20,7 +48,7 @@ export default function Categories({ className = '' }: IProps) {
           View Project Categories
         </h3>
         <Link
-          href="/projects"
+          href={viewAllHref}
           className="text-[13px] font-[600] leading-[18px] text-black/50 hover:text-black/80 hover:underline"
         >
           View All Projects
@@ -35,7 +63,10 @@ export default function Categories({ className = '' }: IProps) {
             className="rounded-full border border-black/10 bg-[#EBEBEB] px-[12px] py-[4px] text-[14px] leading-[18px] text-black/60"
             onPress={() =>
               router.push(
-                `/projects?cats=${encodeURIComponent(category.value)}`,
+                buildProjectsUrl({
+                  category: category.value,
+                  sort: categorySort,
+                }),
               )
             }
           >

@@ -828,6 +828,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         ALL_METRICS.LEGITIMACY_BY_PROCESS,
       ],
       options: [
+        { value: 'No Investment', label: 'No Investment' },
         { value: 'Pre-Seed', label: 'Pre-Seed' },
         { value: 'Seed', label: 'Seed' },
         { value: 'Series A', label: 'Series A' },

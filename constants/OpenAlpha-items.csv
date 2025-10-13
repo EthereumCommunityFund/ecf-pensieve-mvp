@@ -104,7 +104,7 @@ Income/Revenue (Statements) +,false,,"OpenAlpha (v0.3),Research","Reports the pr
 Investments,false,,"OpenAlpha (v0.3),Research","Table: User(if/a)/Address, Rep, Rounds, Eval, Amount.",Financials,??,"Community acceptance - sentiment,by process - participation",Transparency,,Project Page,N/A,Financial Disclosure (Trans)(Security),"Financial Disclosure (Trans)(Security),Fundraising",,
 Fundraising Price,false,,"OpenAlpha (v0.3),Research","the discounted Price at which the project shares / tokens have been sold to initial investors
 ",Financials,,N/A,Transparency,,Project Page,N/A,Financial Disclosure (Trans)(Security),"Financial Disclosure (Trans)(Security),Fundraising",,
-Investment Stage,false,,OpenAlpha (v0.3),"Current Investment Stage and Type e.g. seed, VC",Financials,option list [Pre-Seed、Seed、 Series A、 Series B、 Series C+、 Token Listed、 Grant Funded、 Acquired/Merged],"Community acceptance - sentiment,by process - participation",Transparency,60,,,Financial Disclosure (Trans)(Security),,,
+Investment Stage,false,,OpenAlpha (v0.3),"Current Investment Stage and Type e.g. seed, VC",Financials,option list [No Investment、Pre-Seed、Seed、 Series A、 Series B、 Series C+、 Token Listed、 Grant Funded、 Acquired/Merged],"Community acceptance - sentiment,by process - participation",Transparency,60,,,Financial Disclosure (Trans)(Security),,,
 ,false,,,,,,,,,,,,,,
 ,false,,,,,,,,,,,,,,
 ,false,,,,,,,,,,,,,,

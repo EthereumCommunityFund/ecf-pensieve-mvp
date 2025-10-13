@@ -1827,6 +1827,7 @@ The technical dependencies, integrations, and building blocks that form the foun
     showReference: true,
     showExpand: false,
     options: [
+      { value: 'No Investment', label: 'No Investment' },
       { value: 'Pre-Seed', label: 'Pre-Seed' },
       { value: 'Seed', label: 'Seed' },
       { value: 'Series A', label: 'Series A' },
