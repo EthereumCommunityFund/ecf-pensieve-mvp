@@ -116,7 +116,10 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
         onMouseEnter={handleOpen}
         onMouseLeave={handleClose}
       >
-        <Categories />
+        <Categories
+          categorySort="top-accountable"
+          viewAllSort="top-transparent"
+        />
       </PopoverContent>
     </Popover>
   );

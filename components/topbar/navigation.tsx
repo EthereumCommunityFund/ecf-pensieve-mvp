@@ -31,7 +31,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     name: 'Projects',
-    href: '/projects',
+    href: '/projects?sort=top-transparent',
     icon: '/images/home/Cube-Light.png',
     activeIcon: '/images/home/Cube-Dark.png',
     matchPath: '/projects',
@@ -56,7 +56,7 @@ export function Navigation() {
     <nav className="mobile:hidden mr-5 flex shrink-0 items-center gap-2.5">
       {navigationItems.map((item) => {
         // Use special ProjectsNavItem for Projects menu
-        if (item.name === 'Projects' && item.href === '/projects') {
+        if (item.name === 'Projects' && item.matchPath === '/projects') {
           return <ProjectsNavItem key={item.name} item={item} />;
         }
 
