@@ -213,7 +213,7 @@ const HomeList = () => {
       {/* Left side: Top Transparent Projects with infinite scroll */}
       <div className="mobile:p-0 flex-1 rounded-[10px] p-[10px]">
         <SectionHeader
-          title="Transparency Rank"
+          title="Top Transparent Projects"
           description={`Transparency score = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`}
           buttonText="View All Top"
           onClick={handleViewTopTransparentProjects}
@@ -249,7 +249,7 @@ const HomeList = () => {
         {/* Column 0: Top Accountable */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title="Accountability Rank"
+            title="Top Accountable Projects"
             description="Accountability score = Transparency score × √∑CommunityVoting(CP)"
             onClick={handleViewTopAccountableProjects}
             icon={<CommunityTrustedIcon />}
@@ -272,7 +272,7 @@ const HomeList = () => {
         {/* Column 1: Top Community-trusted */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title={`Community-trusted Rank`}
+            title={`Top Community-trusted Projects`}
             description={`Projects ranked by staked upvotes`}
             onClick={handleViewTopCommunityTrustedProjects}
             icon={<CommunityTrustedIcon />}
