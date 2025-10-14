@@ -5,8 +5,8 @@ const Banner = () => {
     <div>
       <div
         className={cn(
-          'w-full rounded-[10px] border border-black/10 bg-[#222222] p-[20px] text-white',
-          'tablet:p-[14px] mobile: p-[10px]',
+          'w-full rounded-[10px] border border-black/10 bg-[#222222] p-[30px] text-white',
+          'tablet:p-[14px] mobile:p-[10px]',
           'flex flex-col gap-[10px]',
         )}
       >
