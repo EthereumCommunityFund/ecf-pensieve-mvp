@@ -109,7 +109,7 @@ const HomeList = () => {
   } = trpc.project.getProjects.useQuery(
     {
       limit,
-      categories: ['Network State'],
+      categories: ['Network States'],
       isPublished: true,
       ...resolveSortParams(networkStateSort),
     },
@@ -125,7 +125,7 @@ const HomeList = () => {
   } = trpc.project.getProjects.useQuery(
     {
       limit,
-      categories: ['ZuVillage'],
+      categories: ['Zu-Villages'],
       isPublished: true,
       ...resolveSortParams(zuVillageSort),
     },
@@ -421,8 +421,8 @@ const HomeList = () => {
             {/* Column 5: Network State */}
             <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
               <SectionHeaderSmall
-                title="Network State"
-                description="Discover network state related projects"
+                title="Network States"
+                description="Discover network states related projects"
                 icon={<TagIcon />}
               />
               <SortTabs<SortType>
@@ -441,15 +441,15 @@ const HomeList = () => {
                 showUpvote={false}
                 showTransparentScore={false}
                 size="sm"
-                viewAllUrl={`/projects?cats=${encodeURIComponent('Network State')}&sort=${networkStateSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
+                viewAllUrl={`/projects?cats=${encodeURIComponent('Network States')}&sort=${networkStateSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
               />
             </div>
 
             {/* Column 6: ZuVillage */}
             <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
               <SectionHeaderSmall
-                title="ZuVillage"
-                description="Explore ZuVillage initiatives and updates"
+                title="Zu-Villages"
+                description="Explore Zu-Villages initiatives and updates"
                 icon={<TagIcon />}
               />
               <SortTabs<SortType>
@@ -468,7 +468,7 @@ const HomeList = () => {
                 showUpvote={false}
                 showTransparentScore={false}
                 size="sm"
-                viewAllUrl={`/projects?cats=${encodeURIComponent('ZuVillage')}&sort=${zuVillageSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
+                viewAllUrl={`/projects?cats=${encodeURIComponent('Zu-Villages')}&sort=${zuVillageSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
               />
             </div>
           </>
