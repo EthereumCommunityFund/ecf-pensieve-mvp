@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import type { SharePayload } from '@/lib/services/share';
 import ShareService from '@/lib/services/share';
@@ -110,6 +110,10 @@ export async function generateMetadata({
     notFound();
   }
 
+  if (payload.entityType === 'customFilter') {
+    return {} as Metadata;
+  }
+
   const origin = getAppOrigin();
   return buildMetadataFromPayload(payload, origin, snapshotTimestamp);
 }
@@ -125,6 +129,10 @@ export default async function SharePage({ params, searchParams }: PageProps) {
 
   const origin = getAppOrigin();
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
+
+  if (payload.entityType === 'customFilter') {
+    redirect(targetUrl);
+  }
 
   return (
     <main className="opacity-0">
