@@ -2,15 +2,52 @@
 
 import { PlusCircle, ShareFat } from '@phosphor-icons/react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Fragment, memo, useCallback, useEffect, useState } from 'react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { addToast, Button } from '@/components/base';
 import { GearSixIcon } from '@/components/icons';
+import { trpc } from '@/lib/trpc/client';
 
 import CustomFilterCard from './CustomFilterCard';
 import { type AdvancedFilterCard } from './types';
 import { buildFilterSummary } from './utils';
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      console.error('navigator.clipboard.writeText failed', error);
+    }
+  }
+
+  try {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const result = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return result;
+  } catch (error) {
+    console.error('Fallback clipboard copy failed', error);
+    return false;
+  }
+}
 
 interface CustomFilterPanelProps {
   filters: AdvancedFilterCard[];
@@ -37,31 +74,68 @@ const CustomFilterPanel = ({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams?.toString() ?? '';
-  const [shareUrl, setShareUrl] = useState('');
+  const targetPath = useMemo(() => {
+    if (!pathname) {
+      return '';
+    }
+    return `${pathname}${searchParamsString ? `?${searchParamsString}` : ''}`;
+  }, [pathname, searchParamsString]);
+
+  const longShareUrl = useMemo(() => {
+    if (!targetPath) {
+      return '';
+    }
+    if (typeof window === 'undefined') {
+      return targetPath;
+    }
+    return `${window.location.origin}${targetPath}`;
+  }, [targetPath]);
+
+  const [shortShareUrl, setShortShareUrl] = useState('');
+  const shareMutation = trpc.share.ensureCustomFilter.useMutation();
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    setShortShareUrl('');
+  }, [targetPath]);
+
+  const isShareDisabled = !targetPath || shareMutation.isPending;
+
+  const handleShareCustomFilter = useCallback(async () => {
+    if (!targetPath) {
       return;
     }
 
-    const nextUrl = `${window.location.origin}${pathname ?? ''}${searchParamsString ? `?${searchParamsString}` : ''}`;
-    setShareUrl(nextUrl);
-  }, [pathname, searchParamsString]);
+    let urlToCopy = shortShareUrl || longShareUrl;
+    let usedShortLink = Boolean(shortShareUrl);
 
-  const handleShareCustomFilter = useCallback((_: string, result: boolean) => {
-    if (result) {
+    if (!shortShareUrl) {
+      try {
+        const result = await shareMutation.mutateAsync({ targetPath });
+        if (result?.shareUrl) {
+          urlToCopy = result.shareUrl;
+          setShortShareUrl(result.shareUrl);
+          usedShortLink = true;
+        }
+      } catch (error) {
+        console.error('Failed to ensure custom filter short link:', error);
+      }
+    }
+
+    const copied = await copyTextToClipboard(urlToCopy);
+    if (copied) {
       addToast({
-        title: 'Link copied to clipboard',
+        title: usedShortLink
+          ? 'Short link copied to clipboard'
+          : 'Link copied to clipboard',
         color: 'success',
       });
     } else {
-      console.error('Failed to copy custom filter link');
       addToast({
         title: 'Failed to copy link',
         color: 'danger',
       });
     }
-  }, []);
+  }, [targetPath, shortShareUrl, longShareUrl, shareMutation]);
 
   return (
     <div className="flex flex-col gap-[10px]">
@@ -146,21 +220,17 @@ const CustomFilterPanel = ({
           </div> */}
 
           <div>
-            <CopyToClipboard
-              text={shareUrl}
-              onCopy={handleShareCustomFilter}
-              options={{ format: 'text/plain' }}
+            <Button
+              size="sm"
+              aria-label="Share custom filter"
+              onPress={handleShareCustomFilter}
+              isLoading={shareMutation.isPending}
+              isDisabled={isShareDisabled}
+              className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
             >
-              <Button
-                size="sm"
-                aria-label="Share custom filter"
-                isDisabled={!shareUrl}
-                className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
-              >
-                <ShareFat />
-                Share Filters
-              </Button>
-            </CopyToClipboard>
+              <ShareFat />
+              Share Filters
+            </Button>
           </div>
         </div>
       )}

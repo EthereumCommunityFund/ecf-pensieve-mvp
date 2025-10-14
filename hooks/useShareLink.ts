@@ -6,7 +6,11 @@ import { buildShareOgImageUrl } from '@/lib/services/share/url';
 import { trpc, type RouterOutputs } from '@/lib/trpc/client';
 import { buildAbsoluteUrl } from '@/lib/utils/url';
 
-export type ShareEntityType = 'proposal' | 'itemProposal' | 'project';
+export type ShareEntityType =
+  | 'proposal'
+  | 'itemProposal'
+  | 'project'
+  | 'customFilter';
 
 export interface UseShareLinkOptions {
   entityType: ShareEntityType;
