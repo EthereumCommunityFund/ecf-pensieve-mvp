@@ -5,13 +5,13 @@ import UsersFourIcon from '@/components/icons/UsersFour';
 
 export const AllCategories = [
   {
-    value: 'Network State',
-    label: 'Network State',
+    value: 'Network States',
+    label: 'Network States',
     icon: <BuildingsIcon size={24} />,
   },
   {
-    value: 'ZuVillage',
-    label: 'ZuVillage',
+    value: 'Zu-Villages',
+    label: 'Zu-Villages',
     icon: <BuildingsIcon size={24} />,
   },
   {
