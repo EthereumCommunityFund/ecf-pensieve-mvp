@@ -248,11 +248,12 @@ export const updateAdminWhitelistEntry = async (
     updatePayload.isDisabled = payload.isDisabled;
   }
 
-  const [updated] = await dbToUse
+  const updated = await dbToUse
     .update(adminWhitelist)
     .set(updatePayload)
     .where(eq(adminWhitelist.id, id))
-    .returning();
+    .returning()
+    .then((rows) => rows[0] ?? null);
 
   if (!updated) {
     throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
@@ -286,10 +287,15 @@ export const deleteAdminWhitelistEntry = async (
     );
   }
 
-  const [deleted] = await dbToUse
+  const deleted = await dbToUse
     .delete(adminWhitelist)
     .where(eq(adminWhitelist.id, id))
-    .returning();
+    .returning()
+    .then((rows) => rows[0] ?? null);
+
+  if (!deleted) {
+    throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
+  }
 
   return deleted;
 };
