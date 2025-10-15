@@ -5,6 +5,16 @@ import UsersFourIcon from '@/components/icons/UsersFour';
 
 export const AllCategories = [
   {
+    value: 'Network States',
+    label: 'Network States',
+    icon: <BuildingsIcon size={24} />,
+  },
+  {
+    value: 'Zu-Villages',
+    label: 'Zu-Villages',
+    icon: <BuildingsIcon size={24} />,
+  },
+  {
     value: 'Applications/dApps',
     label: 'Applications/dApps',
     icon: <AppWindowIcon />,

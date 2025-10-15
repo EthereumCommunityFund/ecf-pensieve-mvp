@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 
+import { ChatwootWidget } from '@/components/layout/ChatwootWidget';
 import { MainLayout } from '@/components/layout/mainLayout';
 import { Providers } from '@/components/layout/providers';
 
@@ -14,6 +15,7 @@ export default function RootLayout({
         <Providers>
           <MainLayout>{children}</MainLayout>
         </Providers>
+        <ChatwootWidget position="right" />
       </body>
     </html>
   );

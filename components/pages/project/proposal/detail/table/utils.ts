@@ -2,6 +2,7 @@
 
 import { IRef } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { NA_VALUE } from '@/constants/naSelection';
 import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { IProposal } from '@/types';
 import {
@@ -11,7 +12,6 @@ import {
   IProposalItem,
 } from '@/types/item';
 import { devLog } from '@/utils/devLog';
-import { NA_VALUE } from '@/constants/naSelection';
 
 import { ITableProposalItem } from '../ProposalDetails';
 

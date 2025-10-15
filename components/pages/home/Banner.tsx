@@ -2,38 +2,39 @@ import { cn } from '@heroui/react';
 
 const Banner = () => {
   return (
-    <div
-      className={cn(
-        'w-full min-h-[152px] mobile:h-[auto] overflow-hidden bg-white rounded-[10px] border border-[rgba(0,0,0,0.1)] p-5 relative',
-        'bg-[url(/images/home/BannerBg.png)] bg-no-repeat bg-right bg-[length:auto_100%]',
-        'tablet:bg-[length:50%_100%] mobile:bg-[length:30%_100%]',
-        // 'mobile:bg-none',
-      )}
-    >
-      <div className="z-10 flex size-full flex-col gap-[10px]">
-        <div className="flex h-[25px]">
-          <p className="flex h-[25px] items-center justify-end rounded-[6px] border border-[rgba(0,0,0,0.2)] px-2.5 py-1">
-            <span className="text-[14px] font-semibold leading-[17px] tracking-[1.4]">
-              ALPHA 0.1.0
-            </span>
-          </p>
-        </div>
-
-        <p
+    <div>
+      <div
+        className={cn(
+          'w-full rounded-[10px] border border-black/10 bg-[#222222] p-[30px] text-white',
+          'tablet:p-[14px] mobile:p-[10px]',
+          'flex flex-col gap-[10px]',
+        )}
+      >
+        <h1
           className={cn(
-            'flex justify-start items-center gap-[10px] mobile:flex-col mobile:items-start mobile:gap-[5px] ',
-            'font-mona text-[38px] font-[600] leading-[1]',
-            'tablet:text-[34px] mobile:text-[28px]',
+            'font-mona text-[34px] font-[600] leading-[1] tracking-[-0.75px]',
+            'tablet:text-[30px] mobile:text-[26px]',
           )}
         >
-          <span>Welcome to</span>
-          <span className="font-[800] text-[#64C0A5]">Pensieve.ecf</span>{' '}
-        </p>
-
-        <p className="font-mona mobile:text-[14px] text-[18px] font-[500] leading-[1.6]">
-          A decentralized, community-powered knowledge base for Web3 projects.
+          Transparency is the new coordination.
+        </h1>
+        <p
+          className={cn(
+            'font-mona text-[18px] font-[500] leading-[1.6] text-white/60',
+            'tablet:text-[16px] mobile:text-[14px]',
+          )}
+        >
+          For projects that grow with honesty, accountability, and purpose — in
+          full view of the community.
         </p>
       </div>
+      <p
+        className={cn(
+          'mt-[10px] font-roboto text-[11px] mobile:text-[10px] uppercase leading-[1.2] text-black/30',
+        )}
+      >
+        {`Pensieve.ecf (v0.5.0) — a decentralized, immutable, community-powered knowledge base for Web3 projects.`}
+      </p>
     </div>
   );
 };

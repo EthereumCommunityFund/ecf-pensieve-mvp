@@ -58,6 +58,8 @@ async function processMultiUserNotification(
     proposalId: payload.proposalId,
     itemProposalId: payload.itemProposalId,
     type: payload.type,
+    reward: payload.reward,
+    voter_id: payload.voter_id,
   };
 
   const context = {

@@ -31,6 +31,7 @@ const config: Config = {
         saira: ['var(--font-saira)', 'Arial', 'sans-serif'],
         mona: ['var(--font-mona-sans)', 'Arial', 'sans-serif'],
         inter: ['var(--font-inter)', 'Arial', 'sans-serif'],
+        roboto: ['var(--font-roboto)', 'Arial', 'sans-serif'],
       },
       scale: {
         '120': '1.2',

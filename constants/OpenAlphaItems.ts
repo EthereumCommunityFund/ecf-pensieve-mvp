@@ -553,6 +553,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     vault_address_step2: {
@@ -574,6 +575,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     previous_funding_rounds: {
@@ -598,6 +600,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         ALL_METRICS.LEGITIMACY_BY_CONTINUITY,
         ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
       ],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     milestone: {
@@ -622,6 +625,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
         ALL_METRICS.WEB3_RESILIENCE,
       ],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     vault_multi_sig_holder_addresses_step2: {
@@ -641,6 +645,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     on_chain_treasury_step1: {
@@ -662,6 +667,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.PARTICIPATION, ALL_METRICS.TRANSPARENCY],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     // TODO: Potential duplicate with existing AllItemConfig
@@ -683,6 +689,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       validationSchema: itemValidationSchemas.budget_plans,
     },
     private_funding_rounds: {
@@ -703,6 +710,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       validationSchema: itemValidationSchemas.private_funding_rounds,
     },
     // TODO: Potential duplicate with existing AllItemConfig
@@ -726,6 +734,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       validationSchema: itemValidationSchemas.token_sales,
     },
     decentralized_governance: {
@@ -746,6 +755,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: true,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     locking_period_team: {
@@ -766,6 +776,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     token_utility: {
@@ -794,6 +805,40 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         { value: 'Identity & Reputation', label: 'Identity & Reputation' },
         { value: 'None/Not yet)', label: 'None/Not yet)' },
       ],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
+      // TODO: add validation schema
+    },
+    investment_stage: {
+      key: 'investment_stage',
+      category: IItemCategoryEnum.Financial,
+      subCategory: IItemSubCategoryEnum.Finances,
+      isEssential: false,
+      label: 'Investment Stage',
+      description: 'Current investment stage and type e.g. seed, VC',
+      shortDescription: 'Current investment stage and type e.g. seed, VC',
+      longDescription: 'Provide detailed context for Investment Stage.',
+      weight: ALL_POC_ITEM_MAP['investment_stage'].weight,
+      formDisplayType: 'select',
+      placeholder: 'Select an option',
+      showReference: true,
+      showExpand: false,
+      accountability: [ALL_METRICS.TRANSPARENCY],
+      legitimacy: [
+        ALL_METRICS.COMMUNITY_ACCEPTANCE,
+        ALL_METRICS.LEGITIMACY_BY_PROCESS,
+      ],
+      options: [
+        { value: 'No Investment', label: 'No Investment' },
+        { value: 'Pre-Seed', label: 'Pre-Seed' },
+        { value: 'Seed', label: 'Seed' },
+        { value: 'Series A', label: 'Series A' },
+        { value: 'Series B', label: 'Series B' },
+        { value: 'Series C+', label: 'Series C+' },
+        { value: 'Token Listed', label: 'Token Listed' },
+        { value: 'Grant Funded', label: 'Grant Funded' },
+        { value: 'Acquired/Merged', label: 'Acquired/Merged' },
+      ],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     board_incentive: {
@@ -1231,6 +1276,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     capital_endorsers: {
@@ -1249,6 +1295,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     token_roi_token: {
@@ -1269,6 +1316,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     distribution_graph: {
@@ -1289,6 +1337,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     token_burn_rate: {
@@ -1307,6 +1356,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     // TODO: Potential duplicate with existing AllItemConfig
@@ -1328,6 +1378,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PERFORMANCE],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       validationSchema: itemValidationSchemas.runway,
     },
     exchanges_list: {
@@ -1346,6 +1397,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     distribution: {
@@ -1366,6 +1418,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     market_cap: {
@@ -1384,6 +1437,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     token_distribution: {
@@ -1405,6 +1459,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     funding_status: {
@@ -1439,6 +1494,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         { value: 'No Funding Required', label: 'No Funding Required' },
         { value: 'Not Disclosed', label: 'Not Disclosed' },
       ],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     asset_statements: {
@@ -1459,6 +1515,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     supplied_circulation: {
@@ -1480,6 +1537,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     complaints_redress_rating: {
@@ -1536,6 +1594,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PERFORMANCE],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     total_investment_amount: {
@@ -1554,6 +1613,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     '3rd_party_participation_services': {
@@ -1613,6 +1673,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     protocol_blockchain: {
@@ -1808,6 +1869,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PERFORMANCE_EVAL],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PERFORMANCE],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     investments: {
@@ -1829,6 +1891,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         ALL_METRICS.COMMUNITY_ACCEPTANCE,
         ALL_METRICS.LEGITIMACY_BY_PROCESS,
       ],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
     fundraising_price: {
@@ -1849,6 +1912,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY],
       legitimacy: [],
+      extraTransparencyPoints: [ALL_METRICS.FINANCIAL_DISCLOSURE],
       // TODO: add validation schema
     },
   };

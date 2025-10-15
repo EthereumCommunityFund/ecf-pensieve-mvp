@@ -10,6 +10,7 @@ import {
   getSortTabs,
   SortType,
 } from '@/constants/sortConfig';
+import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { SortBy, SortOrder } from '@/types/sort';
@@ -25,12 +26,17 @@ import SectionHeaderSmall from './SectionHeaderSmall';
 const HomeList = () => {
   const router = useRouter();
   const limit = 5;
+  const additionalCategoriesVisible = false;
 
   // Right side section sort states
   const [communitySort, setCommunitySort] =
     useState<SortType>(DEFAULT_SORT_TYPE);
   const [eventsSort, setEventsSort] = useState<SortType>(DEFAULT_SORT_TYPE);
   const [hubsSort, setHubsSort] = useState<SortType>(DEFAULT_SORT_TYPE);
+  const [networkStateSort, setNetworkStateSort] =
+    useState<SortType>(DEFAULT_SORT_TYPE);
+  const [zuVillageSort, setZuVillageSort] =
+    useState<SortType>(DEFAULT_SORT_TYPE);
 
   const resolveSortParams = useCallback((sortType: SortType) => {
     return { sortBy: sortType, sortOrder: SortOrder.DESC } as const;
@@ -95,6 +101,38 @@ const HomeList = () => {
     isPublished: true,
     ...resolveSortParams(hubsSort),
   });
+
+  const {
+    data: networkStateProjects,
+    isLoading: isLoadingNetworkState,
+    refetch: refetchNetworkState,
+  } = trpc.project.getProjects.useQuery(
+    {
+      limit,
+      categories: ['Network States'],
+      isPublished: true,
+      ...resolveSortParams(networkStateSort),
+    },
+    {
+      enabled: additionalCategoriesVisible,
+    },
+  );
+
+  const {
+    data: zuVillageProjects,
+    isLoading: isLoadingZuVillage,
+    refetch: refetchZuVillage,
+  } = trpc.project.getProjects.useQuery(
+    {
+      limit,
+      categories: ['Zu-Villages'],
+      isPublished: true,
+      ...resolveSortParams(zuVillageSort),
+    },
+    {
+      enabled: additionalCategoriesVisible,
+    },
+  );
 
   // Flatten paginated genesis projects
   const byGenesisProjects = useMemo(() => {
@@ -167,6 +205,9 @@ const HomeList = () => {
       refetchCommunity(),
       refetchEvents(),
       refetchHubs(),
+      ...(additionalCategoriesVisible
+        ? [refetchNetworkState(), refetchZuVillage()]
+        : []),
     ]);
   }, [
     refetchGenesis,
@@ -174,6 +215,9 @@ const HomeList = () => {
     refetchCommunity,
     refetchEvents,
     refetchHubs,
+    additionalCategoriesVisible,
+    refetchNetworkState,
+    refetchZuVillage,
   ]);
 
   // Infinite scroll implementation with IntersectionObserver
@@ -213,7 +257,7 @@ const HomeList = () => {
       <div className="mobile:p-0 flex-1 rounded-[10px] p-[10px]">
         <SectionHeader
           title="Top Transparent Projects"
-          description={`Completion rate = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects)`}
+          description={`Transparency score = sum of published items' genesis itemweight / sum of items' itemweight (fixed across projects, current: ${TotalGenesisWeightSum})`}
           buttonText="View All Top"
           onClick={handleViewTopTransparentProjects}
           updateAt={displayUpdatedAtOfTransparent}
@@ -223,7 +267,7 @@ const HomeList = () => {
           projectList={byGenesisProjects as IProject[]}
           onLoadMore={() => {}}
           isFetchingNextPage={isFetchingNextGenesis}
-          emptyMessage="No transparent projects found"
+          emptyMessage="No projects found"
           onSuccess={(_result) => refetchAll()}
           showCreator={false}
           showUpvote={false}
@@ -248,8 +292,8 @@ const HomeList = () => {
         {/* Column 0: Top Accountable */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title="Top Accountable"
-            description="Projects ranked by accountability score"
+            title="Top Accountable Projects"
+            description="Accountability score = Transparency score × √∑CommunityVoting(CP)"
             onClick={handleViewTopAccountableProjects}
             icon={<CommunityTrustedIcon />}
           />
@@ -271,7 +315,7 @@ const HomeList = () => {
         {/* Column 1: Top Community-trusted */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
           <SectionHeaderSmall
-            title={`Top Community-trusted`}
+            title={`Top Community-trusted Projects`}
             description={`Projects ranked by staked upvotes`}
             onClick={handleViewTopCommunityTrustedProjects}
             icon={<CommunityTrustedIcon />}
@@ -371,6 +415,64 @@ const HomeList = () => {
             viewAllUrl={`/projects?cats=Hubs&sort=${hubsSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
           />
         </div>
+
+        {additionalCategoriesVisible && (
+          <>
+            {/* Column 5: Network State */}
+            <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
+              <SectionHeaderSmall
+                title="Network States"
+                description="Discover network states related projects"
+                icon={<TagIcon />}
+              />
+              <SortTabs<SortType>
+                tabs={getSortTabs()}
+                activeKey={networkStateSort}
+                onChange={setNetworkStateSort}
+              />
+              <ProjectListWrapper
+                isLoading={isLoadingNetworkState}
+                projectList={(networkStateProjects?.items || []) as IProject[]}
+                onLoadMore={() => {}}
+                isFetchingNextPage={false}
+                emptyMessage="No projects found"
+                onSuccess={(_result) => refetchAll()}
+                showCreator={false}
+                showUpvote={false}
+                showTransparentScore={false}
+                size="sm"
+                viewAllUrl={`/projects?cats=${encodeURIComponent('Network States')}&sort=${networkStateSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
+              />
+            </div>
+
+            {/* Column 6: ZuVillage */}
+            <div className="flex flex-col gap-[10px] rounded-[10px] border border-black/10 p-[14px]">
+              <SectionHeaderSmall
+                title="Zu-Villages"
+                description="Explore Zu-Villages initiatives and updates"
+                icon={<TagIcon />}
+              />
+              <SortTabs<SortType>
+                tabs={getSortTabs()}
+                activeKey={zuVillageSort}
+                onChange={setZuVillageSort}
+              />
+              <ProjectListWrapper
+                isLoading={isLoadingZuVillage}
+                projectList={(zuVillageProjects?.items || []) as IProject[]}
+                onLoadMore={() => {}}
+                isFetchingNextPage={false}
+                emptyMessage="No projects found"
+                onSuccess={(_result) => refetchAll()}
+                showCreator={false}
+                showUpvote={false}
+                showTransparentScore={false}
+                size="sm"
+                viewAllUrl={`/projects?cats=${encodeURIComponent('Zu-Villages')}&sort=${zuVillageSort === SortBy.TRANSPARENT ? 'top-transparent' : 'top-community-trusted'}`}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

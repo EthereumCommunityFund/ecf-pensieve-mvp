@@ -116,7 +116,7 @@ export async function filterUsersBySettings(
   const settingsMap = await getUserNotificationSettings(users, projectId);
 
   return users.filter((userId) => {
-    const mode = settingsMap.get(userId) || 'my_contributions';
+    const mode = settingsMap.get(userId) || 'all_events';
     const context = contextMap?.get(userId) || {};
 
     return shouldSendNotification(mode, notificationType, context);

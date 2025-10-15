@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   bigserial,
@@ -9,7 +10,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
 
 import { itemProposals } from './itemProposals';
 import { profiles } from './profiles';

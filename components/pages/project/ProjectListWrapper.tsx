@@ -73,7 +73,7 @@ export const ProjectListWrapper = ({
 
   if (projectList.length === 0) {
     return (
-      <div className="flex flex-1 justify-center py-[80px]">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 py-[80px]">
         <p className="text-[16px] text-black/40">{emptyMessage}</p>
       </div>
     );
