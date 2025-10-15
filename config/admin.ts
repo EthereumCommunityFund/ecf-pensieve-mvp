@@ -18,7 +18,8 @@ export const normalizeAdminWalletAddress = (
 const parseWhitelist = (value?: string | null): string[] => {
   if (!value) return [];
 
-  return AddressValidator.parseAddressString(value)
+  return value
+    .split(',')
     .map((entry) => normalizeAdminWalletAddress(entry))
     .filter((entry): entry is string => Boolean(entry));
 };

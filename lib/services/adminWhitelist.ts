@@ -148,9 +148,10 @@ export const checkAdminWhitelist = async (
   const dbToUse = resolveDb(database);
   await syncDefaultAdminWhitelist(dbToUse);
 
-  const entry = await dbToUse.query.adminWhitelist.findFirst({
-    where: eq(adminWhitelist.address, normalizedAddress),
-  });
+  const entry =
+    (await dbToUse.query.adminWhitelist.findFirst({
+      where: eq(adminWhitelist.address, normalizedAddress),
+    })) ?? null;
 
   if (entry) {
     if (entry.isDisabled) {
@@ -212,7 +213,7 @@ export const createAdminWhitelistEntry = async (
     );
   }
 
-  const [created] = await dbToUse
+  const created = await dbToUse
     .insert(adminWhitelist)
     .values({
       address: normalized,
@@ -220,7 +221,12 @@ export const createAdminWhitelistEntry = async (
       role: payload.role ?? 'admin',
       isDisabled: payload.isDisabled ?? false,
     })
-    .returning();
+    .returning()
+    .then((rows) => rows[0] ?? null);
+
+  if (!created) {
+    throw new Error('Failed to create admin whitelist entry');
+  }
 
   return created;
 };
@@ -268,9 +274,10 @@ export const deleteAdminWhitelistEntry = async (
 ) => {
   const dbToUse = resolveDb(database);
 
-  const entry = await dbToUse.query.adminWhitelist.findFirst({
-    where: eq(adminWhitelist.id, id),
-  });
+  const entry =
+    (await dbToUse.query.adminWhitelist.findFirst({
+      where: eq(adminWhitelist.id, id),
+    })) ?? null;
 
   if (!entry) {
     throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
