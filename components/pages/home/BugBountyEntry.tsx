@@ -27,6 +27,29 @@ const BugBountyCard = ({
   return (
     <div className={className} style={style}>
       <div className="relative z-[1] flex flex-col gap-[10px]">
+        <div className="mobile:flex absolute right-[-8px] top-[-8px] hidden items-center justify-end gap-[10px]">
+          {onDismiss && (
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="font-mona rounded-[6px] border border-black/10 bg-white/60 px-[10px] py-[6px] text-[12px] font-[600] leading-[1.2] text-black/70 transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black/30"
+              title="Don't show again"
+            >
+              Don’t show again
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-[36px] items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-black transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black/30"
+            title="Close"
+            aria-label="Close announcement"
+          >
+            <X size={18} weight="bold" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
+
         <div className="flex flex-wrap items-start justify-between gap-[10px]">
           <div className="flex items-center gap-[10px]">
             <div className="relative flex size-[36px] items-center justify-center">
@@ -37,7 +60,7 @@ const BugBountyCard = ({
                 aria-hidden="true"
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col ">
               <div>
                 <span className="font-mona h-[22px] rounded-[4px] bg-[#AAE1C9] px-[6px] py-[2px]  text-[11px] font-[700] leading-[1.6] text-black/80">
                   Epoch 1
@@ -48,7 +71,7 @@ const BugBountyCard = ({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-[10px]">
+          <div className="mobile:hidden flex items-center justify-end gap-[10px]">
             {onDismiss && (
               <button
                 type="button"
@@ -207,11 +230,11 @@ const BugBountyEntry = () => {
         </div>
       )}
 
-      <div className="mobile:right-[12px] fixed bottom-[24px]  right-[24px] z-[60]">
-        <div className="mobile:w-full relative w-[360px]">
+      <div className="mobile:right-[12px] fixed bottom-[24px] right-[24px] z-[60]">
+        <div className="mobile:w-[calc(100vw-24px)] relative w-[360px]">
           {showDockCard ? (
             <BugBountyCard
-              className="mobile:w-full relative z-[5] w-full overflow-hidden rounded-[12px] border border-black/10 bg-white/70 p-[16px] text-black shadow-[0_24px_48px_rgba(22,19,1,0.12)] backdrop-blur-md"
+              className="mobile:w-[calc(100vw-24px)] relative z-[5] w-full overflow-hidden rounded-[12px] border border-black/10 bg-white/70 p-[16px] text-black shadow-[0_24px_48px_rgba(22,19,1,0.12)] backdrop-blur-md"
               style={{
                 backgroundImage:
                   'linear-gradient(90deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%), linear-gradient(90deg, rgba(236, 250, 213, 0.4) 0%, rgba(132, 255, 205, 0.4) 100%)',
