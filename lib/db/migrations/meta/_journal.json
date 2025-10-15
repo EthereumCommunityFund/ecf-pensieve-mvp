@@ -428,6 +428,13 @@
       "when": 1760540240136,
       "tag": "20251015145720_condemned_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1760542807566,
+      "tag": "20251015154007_faithful_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

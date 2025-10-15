@@ -125,9 +125,11 @@ export const findAdminWhitelistByAddress = async (
 
   await syncDefaultAdminWhitelist(dbToUse);
 
-  return dbToUse.query.adminWhitelist.findFirst({
-    where: eq(adminWhitelist.address, normalized),
-  });
+  return (
+    (await dbToUse.query.adminWhitelist.findFirst({
+      where: eq(adminWhitelist.address, normalized),
+    })) ?? null
+  );
 };
 
 export const checkAdminWhitelist = async (
