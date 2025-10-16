@@ -10,6 +10,13 @@ import {
 } from '@/components/notification/NotificationItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
+import {
+  parseNotificationMetadata,
+  resolveMetadataBody,
+  resolveMetadataCta,
+  resolveMetadataNavigationUrl,
+  resolveMetadataTitle,
+} from '@/lib/notifications/metadata';
 import { NotificationType } from '@/lib/services/notification';
 import { getItemValueFromSnap } from '@/lib/services/share/shareUtils';
 import { trpc } from '@/lib/trpc/client';
@@ -336,6 +343,57 @@ const useRealNotifications = () => {
               actor: actorProfile,
               actorIsSelf,
             };
+          case 'systemUpdate':
+          case 'newItemsAvailable': {
+            const parsedMetadata = parseNotificationMetadata(
+              notification.metadata ?? null,
+            );
+            const fallbackTitle =
+              type === 'systemUpdate'
+                ? 'System update available'
+                : 'New items available';
+            const fallbackDescription =
+              type === 'systemUpdate'
+                ? "We've made some updates to the platform"
+                : 'New items are available for proposals';
+
+            const { label: metadataCtaLabel, url: metadataCtaUrl } =
+              resolveMetadataCta(parsedMetadata, {
+                label: 'View Details',
+              });
+
+            const resolvedTargetUrl =
+              resolveMetadataNavigationUrl(parsedMetadata) ??
+              metadataCtaUrl ??
+              '/';
+
+            const hideButton =
+              !metadataCtaLabel &&
+              !metadataCtaUrl &&
+              !parsedMetadata.hasNavigation;
+
+            const buttonText = hideButton
+              ? ''
+              : (metadataCtaLabel ?? 'View Details');
+
+            return {
+              type,
+              title: resolveMetadataTitle(parsedMetadata, fallbackTitle),
+              description: resolveMetadataBody(
+                parsedMetadata,
+                fallbackDescription,
+              ),
+              buttonText,
+              hideButton,
+              metadata: parsedMetadata.raw,
+              metadataTitle: parsedMetadata.title,
+              metadataBody: parsedMetadata.body,
+              metadataExtra: parsedMetadata.extra ?? undefined,
+              ctaLabel: metadataCtaLabel ?? undefined,
+              ctaUrl: metadataCtaUrl ?? undefined,
+              targetUrl: resolvedTargetUrl,
+            };
+          }
           default:
             return {
               type: 'default' as FrontendNotificationType,
@@ -431,6 +489,20 @@ const useRealNotifications = () => {
 
       // Navigation logic
       const handleNavigation = () => {
+        if (
+          notification.type === 'systemUpdate' ||
+          notification.type === 'newItemsAvailable'
+        ) {
+          if (notification.targetUrl) {
+            router.push(notification.targetUrl);
+          } else if (notification.ctaUrl) {
+            router.push(notification.ctaUrl);
+          } else {
+            router.push('/');
+          }
+          return;
+        }
+
         const projectId = backendNotification?.projectId;
         const proposalId = backendNotification?.proposalId;
 
