@@ -2,13 +2,13 @@
 
 import { Spinner } from '@heroui/react';
 import { useRouter } from 'next/navigation';
-import { ReactNode, useMemo } from 'react';
+import { ReactNode } from 'react';
 
-import { AdminAccessDenied } from '@/components/admin/AdminAccessDenied';
 import {
   AdminAccessContextValue,
   AdminAccessProvider,
 } from '@/components/admin/AdminAccessContext';
+import { AdminAccessDenied } from '@/components/admin/AdminAccessDenied';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
@@ -24,9 +24,7 @@ const LoadingState = () => {
   );
 };
 
-export const AdminAccessBoundary = ({
-  children,
-}: AdminAccessBoundaryProps) => {
+export const AdminAccessBoundary = ({ children }: AdminAccessBoundaryProps) => {
   const router = useRouter();
   const {
     isAuthenticated,
@@ -38,16 +36,11 @@ export const AdminAccessBoundary = ({
 
   const hasWalletAddress = Boolean(profile?.address);
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  } = trpc.adminWhitelist.checkAccess.useQuery(undefined, {
-    enabled: isAuthenticated && hasWalletAddress,
-    retry: false,
-  });
+  const { data, isLoading, isFetching, error, refetch } =
+    trpc.adminWhitelist.checkAccess.useQuery(undefined, {
+      enabled: isAuthenticated && hasWalletAddress,
+      retry: false,
+    });
 
   if (isCheckingInitialAuth) {
     return <LoadingState />;
@@ -56,9 +49,9 @@ export const AdminAccessBoundary = ({
   if (!isAuthenticated) {
     return (
       <AdminAccessDenied
-        title="管理员访问受限"
-        description="请连接已授权的钱包以访问运营管理页面。"
-        primaryActionLabel={isAuthPromptVisible ? undefined : '连接钱包'}
+        title="Admin Access Required"
+        description="Connect an authorized wallet to continue to the admin tools."
+        primaryActionLabel={isAuthPromptVisible ? undefined : 'Connect Wallet'}
         onPrimaryAction={() => {
           if (!isAuthPromptVisible) {
             showAuthPrompt('invalidAction');
@@ -71,9 +64,9 @@ export const AdminAccessBoundary = ({
   if (!hasWalletAddress) {
     return (
       <AdminAccessDenied
-        title="需要绑定钱包地址"
-        description="当前账号尚未绑定钱包地址，请在个人设置中完成钱包绑定后再尝试访问。"
-        primaryActionLabel="前往个人设置"
+        title="Wallet Address Required"
+        description="Bind a wallet address in your profile settings before accessing the admin console."
+        primaryActionLabel="Go to Settings"
         onPrimaryAction={() => {
           if (profile?.address) {
             router.push(`/profile/${profile.address}?tab=settings`);
@@ -92,9 +85,9 @@ export const AdminAccessBoundary = ({
   if (error) {
     return (
       <AdminAccessDenied
-        title="管理员访问校验失败"
-        description="暂时无法验证白名单权限，请稍后重试。"
-        primaryActionLabel="重新尝试"
+        title="Verification Failed"
+        description="We were unable to validate your admin permissions. Please try again shortly."
+        primaryActionLabel="Retry"
         onPrimaryAction={() => {
           refetch().catch(() => {});
         }}
@@ -105,14 +98,14 @@ export const AdminAccessBoundary = ({
   if (!data?.isWhitelisted) {
     const description =
       data?.reason === 'disabled'
-        ? '该钱包已被禁用，请联系运营团队重新授权。'
-        : '当前钱包不在管理员白名单中，如需访问请联系运营团队开通权限。';
+        ? 'This wallet has been disabled. Contact the operations team to restore access.'
+        : 'This wallet is not on the admin whitelist. Contact the operations team if you need access.';
 
     return (
       <AdminAccessDenied
-        title="暂无管理员权限"
+        title="Admin Access Denied"
         description={description}
-        secondaryActionLabel="返回首页"
+        secondaryActionLabel="Back to Home"
         onSecondaryAction={() => {
           router.push('/');
         }}
@@ -120,15 +113,12 @@ export const AdminAccessBoundary = ({
     );
   }
 
-  const contextValue: AdminAccessContextValue = useMemo(
-    () => ({
-      walletAddress: profile?.address ?? null,
-      normalizedAddress: data.normalizedAddress,
-      role: data.role,
-      source: data.source,
-    }),
-    [data.normalizedAddress, data.role, data.source, profile?.address],
-  );
+  const contextValue: AdminAccessContextValue = {
+    walletAddress: profile?.address ?? null,
+    normalizedAddress: data.normalizedAddress,
+    role: data.role,
+    source: data.source,
+  };
 
   return (
     <AdminAccessProvider value={contextValue}>{children}</AdminAccessProvider>
