@@ -230,7 +230,7 @@ const BugBountyEntry = () => {
         </div>
       )}
 
-      <div className="mobile:right-[12px] fixed bottom-[24px] right-[24px] z-[60]">
+      <div className="mobile:right-[12px] fixed bottom-[100px] right-[24px] z-[60]">
         <div className="mobile:w-[calc(100vw-24px)] relative w-[360px]">
           {showDockCard ? (
             <BugBountyCard
