@@ -1,15 +1,19 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
+import { eq } from 'drizzle-orm';
+
 import {
   ADMIN_WHITELIST_ROLES,
   AdminWhitelistError,
+  checkAdminWhitelist,
   createAdminWhitelistEntry,
   deleteAdminWhitelistEntry,
   listAdminWhitelist,
   updateAdminWhitelistEntry,
 } from '@/lib/services/adminWhitelist';
-import { adminProcedure, router } from '@/lib/trpc/server';
+import { profiles } from '@/lib/db/schema';
+import { adminProcedure, protectedProcedure, router } from '@/lib/trpc/server';
 
 const roleEnum = z.enum(ADMIN_WHITELIST_ROLES);
 
@@ -49,6 +53,46 @@ const handleAdminWhitelistError = (error: unknown): never => {
 };
 
 export const adminWhitelistRouter = router({
+  checkAccess: protectedProcedure.query(async ({ ctx }) => {
+    const profile = await ctx.db.query.profiles.findFirst({
+      columns: {
+        address: true,
+      },
+      where: eq(profiles.userId, ctx.user.id),
+    });
+
+    if (!profile?.address) {
+      return {
+        isWhitelisted: false,
+        normalizedAddress: null,
+        role: null,
+        source: null,
+        isDisabled: false,
+        reason: 'missing_address' as const,
+      };
+    }
+
+    const result = await checkAdminWhitelist(profile.address, ctx.db);
+    const isDisabled = Boolean(result.entry?.isDisabled);
+    const isWhitelisted =
+      result.isWhitelisted &&
+      Boolean(result.normalizedAddress) &&
+      !isDisabled;
+
+    return {
+      isWhitelisted,
+      normalizedAddress: result.normalizedAddress,
+      role: result.role ?? null,
+      source: result.source ?? null,
+      isDisabled,
+      reason: isWhitelisted
+        ? null
+        : isDisabled
+          ? ('disabled' as const)
+          : ('not_whitelisted' as const),
+    };
+  }),
+
   list: adminProcedure.query(async ({ ctx }) => {
     return listAdminWhitelist(ctx.db);
   }),
