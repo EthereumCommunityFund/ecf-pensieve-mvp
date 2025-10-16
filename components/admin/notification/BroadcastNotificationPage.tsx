@@ -1,5 +1,7 @@
 'use client';
 
+import type { Selection } from '@heroui/react';
+import type { Key } from '@react-types/shared';
 import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -70,6 +72,19 @@ const sanitizeOptionalNumber = (value: string) => {
     return null;
   }
   return parsed;
+};
+
+const toSelection = (value?: string | null): Selection => {
+  if (!value) {
+    return new Set<Key>() as Selection;
+  }
+  return new Set<Key>([value as Key]) as Selection;
+};
+
+const getFirstKey = (selection: Selection): Key | null => {
+  if (selection === 'all') return null;
+  const iterator = selection.values().next();
+  return iterator.done ? null : iterator.value;
 };
 
 export const BroadcastNotificationPage = () => {
@@ -237,17 +252,10 @@ export const BroadcastNotificationPage = () => {
               name="type"
               render={({ field }) => (
                 <Select
-                  selectedKeys={
-                    field.value ? new Set<React.Key>([field.value]) : new Set()
-                  }
+                  selectedKeys={toSelection(field.value ?? 'systemUpdate')}
                   selectionMode="single"
                   onSelectionChange={(selected) => {
-                    if (selected === 'all') {
-                      field.onChange('systemUpdate');
-                      return;
-                    }
-
-                    const firstKey = Array.from(selected)[0];
+                    const firstKey = getFirstKey(selected);
                     field.onChange(
                       (firstKey as BroadcastNotificationType) ?? 'systemUpdate',
                     );

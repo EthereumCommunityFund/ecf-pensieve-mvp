@@ -1,6 +1,7 @@
 'use client';
 
-import { Spinner } from '@heroui/react';
+import { Spinner, type Selection } from '@heroui/react';
+import type { Key } from '@react-types/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -65,6 +66,19 @@ const defaultEditValues: EditFormValues = {
   nickname: '',
   role: 'admin',
   status: 'active',
+};
+
+const toSelection = (value?: string | null): Selection => {
+  if (!value) {
+    return new Set<Key>() as Selection;
+  }
+  return new Set<Key>([value as Key]) as Selection;
+};
+
+const getFirstKey = (selection: Selection): Key | null => {
+  if (selection === 'all') return null;
+  const iterator = selection.values().next();
+  return iterator.done ? null : iterator.value;
 };
 
 export const AdminRolePage = () => {
@@ -439,17 +453,9 @@ export const AdminRolePage = () => {
                 name="role"
                 render={({ field }) => (
                   <Select
-                    selectedKeys={
-                      field.value
-                        ? new Set<React.Key>([field.value])
-                        : new Set(['admin'])
-                    }
+                    selectedKeys={toSelection(field.value ?? 'admin')}
                     onSelectionChange={(selected) => {
-                      if (selected === 'all') {
-                        field.onChange('admin');
-                        return;
-                      }
-                      const firstKey = Array.from(selected)[0];
+                      const firstKey = getFirstKey(selected);
                       field.onChange(
                         (firstKey as AdminWhitelistRole) ?? 'admin',
                       );
@@ -472,17 +478,9 @@ export const AdminRolePage = () => {
                 name="status"
                 render={({ field }) => (
                   <Select
-                    selectedKeys={
-                      field.value
-                        ? new Set<React.Key>([field.value])
-                        : new Set(['active'])
-                    }
+                    selectedKeys={toSelection(field.value ?? 'active')}
                     onSelectionChange={(selected) => {
-                      if (selected === 'all') {
-                        field.onChange('active');
-                        return;
-                      }
-                      const firstKey = Array.from(selected)[0];
+                      const firstKey = getFirstKey(selected);
                       field.onChange(
                         (firstKey as 'active' | 'disabled') ?? 'active',
                       );
@@ -558,17 +556,9 @@ export const AdminRolePage = () => {
                 name="role"
                 render={({ field }) => (
                   <Select
-                    selectedKeys={
-                      field.value
-                        ? new Set<React.Key>([field.value])
-                        : new Set(['admin'])
-                    }
+                    selectedKeys={toSelection(field.value ?? 'admin')}
                     onSelectionChange={(selected) => {
-                      if (selected === 'all') {
-                        field.onChange('admin');
-                        return;
-                      }
-                      const firstKey = Array.from(selected)[0];
+                      const firstKey = getFirstKey(selected);
                       field.onChange(
                         (firstKey as AdminWhitelistRole) ?? 'admin',
                       );
@@ -591,17 +581,9 @@ export const AdminRolePage = () => {
                 name="status"
                 render={({ field }) => (
                   <Select
-                    selectedKeys={
-                      field.value
-                        ? new Set<React.Key>([field.value])
-                        : new Set(['active'])
-                    }
+                    selectedKeys={toSelection(field.value ?? 'active')}
                     onSelectionChange={(selected) => {
-                      if (selected === 'all') {
-                        field.onChange('active');
-                        return;
-                      }
-                      const firstKey = Array.from(selected)[0];
+                      const firstKey = getFirstKey(selected);
                       field.onChange(
                         (firstKey as 'active' | 'disabled') ?? 'active',
                       );
