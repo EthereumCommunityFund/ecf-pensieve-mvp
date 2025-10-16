@@ -708,6 +708,30 @@ const ProjectsContent = () => {
     advancedFilterOffset,
   ]);
 
+  useEffect(() => {
+    if (
+      !shouldUseAdvancedFilter ||
+      isAccountableSort ||
+      !hasAdvancedFilterNextPage ||
+      isAdvancedFilterLoadingMore ||
+      isFetching ||
+      isLoading
+    ) {
+      return;
+    }
+
+    setIsAdvancedFilterLoadingMore(true);
+    setAdvancedFilterOffset((prev) => prev + ADVANCED_FILTER_FETCH_LIMIT);
+  }, [
+    shouldUseAdvancedFilter,
+    isAccountableSort,
+    hasAdvancedFilterNextPage,
+    isAdvancedFilterLoadingMore,
+    isFetching,
+    isLoading,
+    setAdvancedFilterOffset,
+  ]);
+
   // Reset when filters (cats) or sort change. Also trigger a refetch to avoid stale UI
   const catsKey = cats?.join(',') || '';
 
@@ -741,6 +765,30 @@ const ProjectsContent = () => {
     isAccountableSort,
     isFetching,
     isFetchingNextAccountable,
+  ]);
+
+  useEffect(() => {
+    if (
+      !shouldUseAdvancedFilter ||
+      !isAccountableSort ||
+      !hasNextAccountable ||
+      isFetchingNextAccountable ||
+      isAdvancedFilterLoadingMore ||
+      isAccountableFilterRefreshing
+    ) {
+      return;
+    }
+
+    setIsAdvancedFilterLoadingMore(true);
+    void fetchNextAccountable();
+  }, [
+    shouldUseAdvancedFilter,
+    isAccountableSort,
+    hasNextAccountable,
+    isFetchingNextAccountable,
+    isAdvancedFilterLoadingMore,
+    isAccountableFilterRefreshing,
+    fetchNextAccountable,
   ]);
 
   useEffect(() => {
