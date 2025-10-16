@@ -9,6 +9,10 @@ export const normalizeAdminWalletAddress = (
   const trimmed = address.trim();
   if (!trimmed) return null;
 
+  if (!AddressValidator.isValidFormat(trimmed)) {
+    return null;
+  }
+
   const normalized = AddressValidator.normalizeAddress(trimmed);
   if (!normalized) return null;
 

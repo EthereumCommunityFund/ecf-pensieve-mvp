@@ -26,6 +26,14 @@ describe('config/admin', () => {
     );
   });
 
+  it('returns null for invalid wallet address formats', async () => {
+    const { normalizeAdminWalletAddress } = await loadConfig();
+
+    expect(normalizeAdminWalletAddress('not-a-wallet')).toBeNull();
+    expect(normalizeAdminWalletAddress('')).toBeNull();
+    expect(normalizeAdminWalletAddress(null)).toBeNull();
+  });
+
   it('derives whitelist entries from ADMIN_WALLET_WHITELIST env', async () => {
     const configModule = await loadConfig(
       '0x8A293A85FCc865107f4F6c09170C4A6FaB7E65F6, 0xBbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBB',

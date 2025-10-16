@@ -144,19 +144,25 @@ export const checkAdminWhitelist = async (
   const dbToUse = resolveDb(database);
   await syncDefaultAdminWhitelist(dbToUse);
 
+  const isDefaultAddress = DEFAULT_ADMIN_WHITELIST_SET.has(normalizedAddress);
+
   const entry =
     (await dbToUse.query.adminWhitelist.findFirst({
       where: eq(adminWhitelist.address, normalizedAddress),
     })) ?? null;
 
   if (entry) {
+    const source: AdminWhitelistSource = isDefaultAddress
+      ? 'environment'
+      : 'database';
+
     if (entry.isDisabled) {
       return {
         isWhitelisted: false,
         normalizedAddress,
         entry,
         role: entry.role,
-        source: 'database',
+        source,
       };
     }
     return {
@@ -164,11 +170,11 @@ export const checkAdminWhitelist = async (
       normalizedAddress,
       entry,
       role: entry.role,
-      source: 'database',
+      source,
     };
   }
 
-  if (DEFAULT_ADMIN_WHITELIST_SET.has(normalizedAddress)) {
+  if (isDefaultAddress) {
     return {
       isWhitelisted: true,
       normalizedAddress,
