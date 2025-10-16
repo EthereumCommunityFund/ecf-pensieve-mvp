@@ -21,8 +21,6 @@ import {
 export type FrontendNotificationType =
   | NotificationType
   | 'default'
-  | 'systemUpdate'
-  | 'newItemsAvailable'
   | 'contributionPoints';
 
 export interface IVoterOfNotification {

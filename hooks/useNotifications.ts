@@ -362,19 +362,16 @@ const useRealNotifications = () => {
                 label: 'View Details',
               });
 
-            const resolvedTargetUrl =
-              resolveMetadataNavigationUrl(parsedMetadata) ??
-              metadataCtaUrl ??
-              '/';
+            const hasCta = Boolean(metadataCtaLabel && metadataCtaUrl);
 
-            const hideButton =
-              !metadataCtaLabel &&
-              !metadataCtaUrl &&
-              !parsedMetadata.hasNavigation;
+            const resolvedTargetUrl = hasCta
+              ? resolveMetadataNavigationUrl(parsedMetadata, metadataCtaUrl)
+              : resolveMetadataNavigationUrl(parsedMetadata);
 
-            const buttonText = hideButton
-              ? ''
-              : (metadataCtaLabel ?? 'View Details');
+            const hideButton = !hasCta;
+            const buttonText = hasCta
+              ? (metadataCtaLabel ?? 'View Details')
+              : '';
 
             return {
               type,
@@ -389,8 +386,8 @@ const useRealNotifications = () => {
               metadataTitle: parsedMetadata.title,
               metadataBody: parsedMetadata.body,
               metadataExtra: parsedMetadata.extra ?? undefined,
-              ctaLabel: metadataCtaLabel ?? undefined,
-              ctaUrl: metadataCtaUrl ?? undefined,
+              ctaLabel: hasCta ? (metadataCtaLabel ?? undefined) : undefined,
+              ctaUrl: hasCta ? (metadataCtaUrl ?? undefined) : undefined,
               targetUrl: resolvedTargetUrl,
             };
           }
@@ -535,9 +532,6 @@ const useRealNotifications = () => {
           case 'contributionPoints':
             router.push('/projects');
             break;
-
-          case 'systemUpdate':
-          case 'newItemsAvailable':
           case 'default':
             router.push('/');
             break;

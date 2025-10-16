@@ -22,9 +22,6 @@ type FormValues = {
   body: string;
   callToActionLabel: string;
   callToActionUrl: string;
-  targetUrl: string;
-  targetProjectId: string;
-  targetItemId: string;
   extra: string;
 };
 
@@ -34,9 +31,6 @@ const defaultValues: FormValues = {
   body: '',
   callToActionLabel: '',
   callToActionUrl: '',
-  targetUrl: '',
-  targetProjectId: '',
-  targetItemId: '',
   extra: '',
 };
 
@@ -99,27 +93,15 @@ export const BroadcastNotificationPage = () => {
   const watchBody = watch('body');
   const watchCtaLabel = watch('callToActionLabel');
   const watchCtaUrl = watch('callToActionUrl');
-  const watchTargetUrl = watch('targetUrl');
-  const watchTargetProjectId = watch('targetProjectId');
-  const watchTargetItemId = watch('targetItemId');
   const watchExtra = watch('extra');
 
   const extraParseResult = useMemo(() => parseExtra(watchExtra), [watchExtra]);
 
-  const previewButtonLabel =
-    watchCtaLabel || (watchCtaUrl || watchTargetUrl ? 'View Details' : '');
-
-  const previewTargetUrl = watchTargetUrl || watchCtaUrl || undefined;
-
-  const sanitizedProjectIdForPreview = useMemo(() => {
-    const value = sanitizeOptionalNumber(watchTargetProjectId);
-    return typeof value === 'number' ? value : undefined;
-  }, [watchTargetProjectId]);
-
-  const sanitizedItemIdForPreview = useMemo(() => {
-    const value = sanitizeOptionalNumber(watchTargetItemId);
-    return typeof value === 'number' ? value : undefined;
-  }, [watchTargetItemId]);
+  const trimmedPreviewLabel = watchCtaLabel.trim();
+  const trimmedPreviewUrl = watchCtaUrl.trim();
+  const hasPreviewCta = Boolean(trimmedPreviewLabel && trimmedPreviewUrl);
+  const previewButtonLabel = hasPreviewCta ? trimmedPreviewLabel : '';
+  const previewTargetUrl = hasPreviewCta ? trimmedPreviewUrl : undefined;
 
   const previewData = useMemo(
     () => ({
@@ -128,19 +110,14 @@ export const BroadcastNotificationPage = () => {
       description: watchBody || undefined,
       buttonText: previewButtonLabel,
       hideButton: !previewButtonLabel,
-      ctaLabel: watchCtaLabel || undefined,
-      ctaUrl: watchCtaUrl || undefined,
+      ctaLabel: hasPreviewCta ? (watchCtaLabel ?? undefined) : undefined,
+      ctaUrl: hasPreviewCta ? (watchCtaUrl ?? undefined) : undefined,
       targetUrl: previewTargetUrl,
-      targetProjectId: sanitizedProjectIdForPreview,
-      targetItemId: sanitizedItemIdForPreview,
       metadata: {
         title: watchTitle || undefined,
         body: watchBody || undefined,
-        ctaLabel: watchCtaLabel || undefined,
-        ctaUrl: watchCtaUrl || undefined,
-        targetUrl: watchTargetUrl || undefined,
-        targetProjectId: sanitizedProjectIdForPreview,
-        targetItemId: sanitizedItemIdForPreview,
+        ctaLabel: hasPreviewCta ? (watchCtaLabel ?? undefined) : undefined,
+        ctaUrl: hasPreviewCta ? (watchCtaUrl ?? undefined) : undefined,
         extra: extraParseResult.data,
       },
       metadataTitle: watchTitle || undefined,
@@ -154,11 +131,8 @@ export const BroadcastNotificationPage = () => {
       watchBody,
       watchCtaLabel,
       watchCtaUrl,
-      watchTargetUrl,
       watchTitle,
       watchType,
-      sanitizedItemIdForPreview,
-      sanitizedProjectIdForPreview,
     ],
   );
 
@@ -195,41 +169,21 @@ export const BroadcastNotificationPage = () => {
 
     clearErrors('extra');
 
-    const parsedProjectId = sanitizeOptionalNumber(values.targetProjectId);
-    const parsedItemId = sanitizeOptionalNumber(values.targetItemId);
-
-    if (parsedProjectId === null) {
-      setError('targetProjectId', {
-        type: 'manual',
-        message: 'Enter a valid numeric project ID.',
-      });
-      return;
-    }
-
-    if (parsedItemId === null) {
-      setError('targetItemId', {
-        type: 'manual',
-        message: 'Enter a valid numeric item ID.',
-      });
-      return;
-    }
-
+    const trimmedLabel = values.callToActionLabel.trim();
+    const trimmedUrl = values.callToActionUrl.trim();
     const payload: BroadcastNotificationInput = {
       type: values.type,
       title: values.title.trim(),
       body: values.body.trim(),
-      callToActionLabel: values.callToActionLabel.trim() || undefined,
-      callToActionUrl: values.callToActionUrl.trim() || undefined,
-      targetUrl: values.targetUrl.trim() || undefined,
-      targetProjectId: parsedProjectId,
-      targetItemId: parsedItemId,
+      callToActionLabel: trimmedLabel && trimmedUrl ? trimmedLabel : undefined,
+      callToActionUrl: trimmedUrl || undefined,
       extra: extraParseResult.data,
     };
 
     try {
       await broadcastMutation.mutateAsync(payload);
     } catch {
-      // 错误已在 mutation onError 中处理
+      // Mutation handles its own errors
     }
   };
 
@@ -244,7 +198,7 @@ export const BroadcastNotificationPage = () => {
               Broadcast a notification
             </h1>
             <p className="text-[14px] leading-[22px] text-black/70">
-              Configure the title, body, and navigation targets below. Submitted
+              Configure the title, body, and optional CTA below. Submitted
               notifications are enqueued and delivered by the background worker.
             </p>
           </div>
@@ -275,7 +229,7 @@ export const BroadcastNotificationPage = () => {
         >
           <section className="space-y-4">
             <h2 className="text-[18px] font-semibold leading-[24px] text-black">
-              Notification content
+              Notification content (required)
             </h2>
 
             <Controller
@@ -352,7 +306,7 @@ export const BroadcastNotificationPage = () => {
 
           <section className="space-y-4">
             <h2 className="text-[18px] font-semibold leading-[24px] text-black">
-              CTA & navigation
+              CTA (optional)
             </h2>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -368,7 +322,7 @@ export const BroadcastNotificationPage = () => {
                 render={({ field }) => (
                   <Input
                     {...field}
-                    placeholder="Button Label: e.g. View Update"
+                    placeholder="Button label"
                     errorMessage={errors.callToActionLabel?.message}
                   />
                 )}
@@ -393,72 +347,17 @@ export const BroadcastNotificationPage = () => {
                 render={({ field }) => (
                   <Input
                     {...field}
-                    placeholder="Button URL: https://example.com or /path"
+                    placeholder="Button URL"
                     errorMessage={errors.callToActionUrl?.message}
                   />
                 )}
               />
             </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Controller
-                control={control}
-                name="targetUrl"
-                rules={{
-                  validate: (value) => {
-                    const trimmed = value.trim();
-                    if (!trimmed) return true;
-                    if (
-                      /^https?:\/\//i.test(trimmed) ||
-                      trimmed.startsWith('/')
-                    ) {
-                      return true;
-                    }
-                    return 'URL must start with http(s):// or /.';
-                  },
-                }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    placeholder="Optional default navigation"
-                    errorMessage={errors.targetUrl?.message}
-                  />
-                )}
-              />
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Controller
-                  control={control}
-                  name="targetProjectId"
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      type="number"
-                      placeholder="Project ID"
-                      errorMessage={errors.targetProjectId?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="targetItemId"
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      type="number"
-                      placeholder="Item ID"
-                      errorMessage={errors.targetItemId?.message}
-                    />
-                  )}
-                />
-              </div>
-            </div>
           </section>
 
-          <section className="space-y-4">
+          {/* <section className="space-y-4">
             <h2 className="text-[18px] font-semibold leading-[24px] text-black">
-              Extra payload
+              Extra payload (optional)
             </h2>
             <Controller
               control={control}
@@ -466,7 +365,7 @@ export const BroadcastNotificationPage = () => {
               render={({ field }) => (
                 <Textarea
                   {...field}
-                  placeholder='Extra (JSON optional): {"icon":"megaphone","lang":"en"}'
+                  placeholder='{"icon":"megaphone","lang":"en"}'
                   errorMessage={
                     errors.extra?.message ?? extraParseResult.error ?? undefined
                   }
@@ -477,7 +376,7 @@ export const BroadcastNotificationPage = () => {
               Use this to pass additional metadata such as icons or
               localization. The value must be valid JSON.
             </p>
-          </section>
+          </section> */}
 
           <div className="flex flex-wrap items-center gap-4">
             <Button
