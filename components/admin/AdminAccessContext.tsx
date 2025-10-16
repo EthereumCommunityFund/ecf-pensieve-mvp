@@ -5,7 +5,7 @@ import { createContext, ReactNode, useContext } from 'react';
 import type {
   AdminWhitelistRole,
   AdminWhitelistSource,
-} from '@/lib/services/adminWhitelist';
+} from '@/lib/services/adminWhitelist.shared';
 
 export type AdminAccessContextValue = {
   walletAddress: string | null;

@@ -13,11 +13,16 @@ import {
   type AdminWhitelistInsert,
 } from '@/lib/db/schema';
 
-export const ADMIN_WHITELIST_ROLES = ['super_admin', 'admin', 'extra'] as const;
+import {
+  type AdminWhitelistRole,
+  type AdminWhitelistSource,
+} from './adminWhitelist.shared';
 
-export type AdminWhitelistRole = (typeof ADMIN_WHITELIST_ROLES)[number];
-
-export type AdminWhitelistSource = 'database' | 'environment';
+export {
+  ADMIN_WHITELIST_ROLES,
+  type AdminWhitelistRole,
+  type AdminWhitelistSource,
+} from './adminWhitelist.shared';
 
 export type AdminWhitelistSeed = {
   address: string;
@@ -89,18 +94,7 @@ export const syncDefaultAdminWhitelist = async (
       isDisabled: seed.isDisabled ?? false,
     };
 
-    await dbToUse
-      .insert(adminWhitelist)
-      .values(payload)
-      .onConflictDoUpdate({
-        target: adminWhitelist.address,
-        set: {
-          nickname: payload.nickname,
-          role: payload.role,
-          updatedAt: new Date(),
-          // Preserve is_disabled flag to respect manual overrides
-        },
-      });
+    await dbToUse.insert(adminWhitelist).values(payload).onConflictDoNothing();
   }
 };
 
