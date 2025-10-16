@@ -4,6 +4,7 @@ import { Image } from '@heroui/react';
 import React from 'react';
 
 import { NotificationType } from '@/lib/services/notification';
+import type { NotificationMetadata } from '@/types/notification';
 
 import { Button } from '../base/button';
 import {
@@ -35,6 +36,7 @@ export interface NotificationItemData {
   id: string;
   type: FrontendNotificationType;
   title: string;
+  description?: string;
   itemName?: string;
   projectName?: string;
   userName?: string;
@@ -49,6 +51,15 @@ export interface NotificationItemData {
   hideButton?: boolean;
   actorIsSelf?: boolean;
   ownerIsSelf?: boolean;
+  metadata?: NotificationMetadata | null;
+  metadataTitle?: string;
+  metadataBody?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  targetUrl?: string;
+  targetProjectId?: number;
+  targetItemId?: number;
+  metadataExtra?: Record<string, unknown>;
 }
 
 export interface NotificationItemProps {
