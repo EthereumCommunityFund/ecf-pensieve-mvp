@@ -416,7 +416,16 @@ const hasNonEmptyValue = (value: unknown): boolean => {
   }
 
   if (typeof value === 'string') {
-    return value.trim().length > 0;
+    const normalized = value.trim();
+    if (normalized.length === 0) {
+      return false;
+    }
+
+    if (normalized.toLowerCase() === 'n/a') {
+      return false;
+    }
+
+    return true;
   }
 
   if (Array.isArray(value)) {
