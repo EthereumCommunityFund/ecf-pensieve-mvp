@@ -92,7 +92,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   projectData,
 }) => {
   const router = useRouter();
-  const { profile, fetchUserProfile } = useAuth();
+  const { profile, fetchUserProfile, showAuthPrompt } = useAuth();
   const createProjectMutation = trpc.project.createProject.useMutation();
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
@@ -198,11 +198,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const onSubmit = useCallback(
     async (formData: IProjectFormData) => {
       if (!profile?.userId) {
-        addToast({
-          title: 'Error',
-          description: 'User not authenticated',
-          color: 'danger',
-        });
+        showAuthPrompt();
         return;
       }
 
@@ -294,6 +290,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     },
     [
       profile?.userId,
+      showAuthPrompt,
       references,
       fieldApplicability,
       formType,
@@ -376,6 +373,11 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
       transformProjectData(getValues(), references, fieldApplicability),
     );
 
+    if (!profile?.userId) {
+      showAuthPrompt();
+      return;
+    }
+
     const isStepValid = await validateCurrentStep();
     if (!isStepValid) return;
 
@@ -429,6 +431,8 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     clearErrors,
     references,
     getApplicableFields,
+    profile?.userId,
+    showAuthPrompt,
   ]);
 
   const handleBack = useCallback(async () => {

@@ -3,6 +3,8 @@ import { Leaf, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 
+import { useAuth } from '@/context/AuthContext';
+
 const DISMISS_STORAGE_KEY = 'bugBountyModalDismissed';
 
 type BugBountyCardProps = {
@@ -156,6 +158,8 @@ const BugBountyEntry = () => {
   const [showDockCard, setShowDockCard] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const { profile, showAuthPrompt } = useAuth();
+
   const closeDockCard = useCallback(() => {
     setShowDockCard(false);
   }, []);
@@ -199,10 +203,15 @@ const BugBountyEntry = () => {
   }, [closeDockCard, closeModal]);
 
   const handleNavigateToCreateProject = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+
     closeDockCard();
     closeModal();
     router.push('/project/create');
-  }, [closeDockCard, closeModal, router]);
+  }, [closeDockCard, closeModal, profile, router, showAuthPrompt]);
 
   const handleOpenPensieveOverview = useCallback(() => {
     closeDockCard();
@@ -230,7 +239,7 @@ const BugBountyEntry = () => {
         </div>
       )}
 
-      <div className="mobile:right-[12px] fixed bottom-[24px] right-[24px] z-[60]">
+      <div className="mobile:right-[12px] fixed bottom-[100px] right-[24px] z-[60]">
         <div className="mobile:w-[calc(100vw-24px)] relative w-[360px]">
           {showDockCard ? (
             <BugBountyCard
