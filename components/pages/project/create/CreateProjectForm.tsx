@@ -431,6 +431,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     clearErrors,
     references,
     getApplicableFields,
+    profile?.userId,
     showAuthPrompt,
   ]);
 

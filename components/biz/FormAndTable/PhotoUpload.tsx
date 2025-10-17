@@ -2,6 +2,7 @@ import { PhotoIcon } from '@heroicons/react/24/outline';
 import { cn, Spinner } from '@heroui/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
 import { ImageCropper } from './ImageCropper';
@@ -27,6 +28,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   maxSizeMB = 10,
   enableCrop = true,
 }) => {
+  const { profile, showAuthPrompt } = useAuth();
   const [isHovering, setIsHovering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUrl, setLocalUrl] = useState<string | undefined>(initialUrl);
@@ -53,20 +55,40 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
     }
   }, [initialUrl, uploadMutation.isPending, localUrl]);
 
-  const handleClick = useCallback(() => {
-    if (!isDisabled && !uploadMutation.isPending) {
-      fileInputRef.current?.click();
-    }
-  }, [isDisabled, uploadMutation.isPending]);
-
   const resetInput = useCallback(() => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   }, []);
 
+  const handleClick = useCallback(() => {
+    if (isDisabled || uploadMutation.isPending) {
+      return;
+    }
+
+    if (!profile?.userId) {
+      showAuthPrompt();
+      resetInput();
+      return;
+    }
+
+    fileInputRef.current?.click();
+  }, [
+    isDisabled,
+    uploadMutation.isPending,
+    profile?.userId,
+    showAuthPrompt,
+    resetInput,
+  ]);
+
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!profile?.userId) {
+        showAuthPrompt();
+        resetInput();
+        return;
+      }
+
       setErrorMessage(null);
       const file = e.target.files?.[0];
 
@@ -112,7 +134,15 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
         }
       }
     },
-    [accept, maxSizeMB, resetInput, enableCrop, uploadMutation],
+    [
+      accept,
+      maxSizeMB,
+      resetInput,
+      enableCrop,
+      uploadMutation,
+      profile,
+      showAuthPrompt,
+    ],
   );
 
   const handleCropComplete = useCallback(
