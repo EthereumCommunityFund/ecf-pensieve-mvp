@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { db } from '@/lib/db';
-import { notifications } from '@/lib/db/schema';
+import { notifications, profiles } from '@/lib/db/schema';
 import { type NotificationQueueItem } from '@/lib/db/schema/notificationQueue';
 import type { NotificationData } from '@/lib/services/notification';
 import { filterUsersBySettings } from '@/lib/services/notification/filter';
@@ -60,7 +60,41 @@ async function processMultiUserNotification(
     type: payload.type,
     reward: payload.reward,
     voter_id: payload.voter_id,
+    metadata: payload.metadata,
+    broadcast: payload.broadcast,
   };
+
+  if (baseData.broadcast) {
+    const allUsers = await db
+      .select({ userId: profiles.userId })
+      .from(profiles);
+
+    if (allUsers.length > 0) {
+      const notificationValues = allUsers.map(({ userId }) => ({
+        userId,
+        projectId: baseData.projectId ?? null,
+        proposalId: baseData.proposalId,
+        itemProposalId: baseData.itemProposalId,
+        type: baseData.type,
+        reward: baseData.reward,
+        voter_id: baseData.voter_id,
+        metadata: baseData.metadata ?? null,
+      }));
+
+      await db.insert(notifications).values(notificationValues);
+    }
+
+    await notificationQueue.markCompleted(item.id);
+    return;
+  }
+
+  if (!baseData.userId) {
+    throw new Error('Notification payload missing userId');
+  }
+
+  if (baseData.projectId === undefined || baseData.projectId === null) {
+    throw new Error('Notification payload missing projectId');
+  }
 
   const context = {
     projectId: baseData.projectId,
@@ -95,8 +129,14 @@ async function processMultiUserNotification(
 
   if (filteredUsers.length > 0) {
     const notificationValues = filteredUsers.map((userId) => ({
-      ...baseData,
       userId,
+      projectId: baseData.projectId,
+      proposalId: baseData.proposalId,
+      itemProposalId: baseData.itemProposalId,
+      type: baseData.type,
+      reward: baseData.reward,
+      voter_id: baseData.voter_id,
+      metadata: baseData.metadata ?? null,
     }));
 
     await db.insert(notifications).values(notificationValues);

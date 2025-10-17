@@ -1,6 +1,7 @@
 import { router } from '../server';
 
 import { activeRouter } from './active';
+import { adminWhitelistRouter } from './adminWhitelist';
 import { authRouter } from './auth';
 import { fileRouter } from './file';
 import { itemProposalRouter } from './itemProposal';
@@ -23,6 +24,7 @@ export const appRouter = router({
   user: userRouter,
   auth: authRouter,
   file: fileRouter,
+  adminWhitelist: adminWhitelistRouter,
   project: projectRouter,
   proposal: proposalRouter,
   itemProposal: itemProposalRouter,
