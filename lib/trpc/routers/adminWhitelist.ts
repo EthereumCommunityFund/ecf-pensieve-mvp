@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { eq } from 'drizzle-orm';
-
+import { profiles } from '@/lib/db/schema';
 import {
   ADMIN_WHITELIST_ROLES,
   AdminWhitelistError,
@@ -12,7 +12,6 @@ import {
   listAdminWhitelist,
   updateAdminWhitelistEntry,
 } from '@/lib/services/adminWhitelist';
-import { profiles } from '@/lib/db/schema';
 import { adminProcedure, protectedProcedure, router } from '@/lib/trpc/server';
 
 const roleEnum = z.enum(ADMIN_WHITELIST_ROLES);
@@ -75,9 +74,7 @@ export const adminWhitelistRouter = router({
     const result = await checkAdminWhitelist(profile.address, ctx.db);
     const isDisabled = Boolean(result.entry?.isDisabled);
     const isWhitelisted =
-      result.isWhitelisted &&
-      Boolean(result.normalizedAddress) &&
-      !isDisabled;
+      result.isWhitelisted && Boolean(result.normalizedAddress) && !isDisabled;
 
     return {
       isWhitelisted,

@@ -1,7 +1,7 @@
 'use client';
 
 import { Spinner, type Selection } from '@heroui/react';
-import type { Key } from '@react-types/shared';
+import type { Key } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
