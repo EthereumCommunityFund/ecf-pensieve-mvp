@@ -115,6 +115,7 @@ export const AdminRolePage = () => {
   );
   const [deletingEntry, setDeletingEntry] =
     useState<AdminWhitelistEntry | null>(null);
+  const isEditingImmutable = editingEntry?.isImmutable ?? false;
 
   useEffect(() => {
     if (!editingEntry) {
@@ -238,6 +239,9 @@ export const AdminRolePage = () => {
   };
 
   const handleOpenDeleteModal = (entry: AdminWhitelistEntry) => {
+    if (entry.isImmutable) {
+      return;
+    }
     setDeletingEntry(entry);
     setIsDeleteModalOpen(true);
   };
@@ -269,7 +273,7 @@ export const AdminRolePage = () => {
   });
 
   const handleDeleteConfirm = async () => {
-    if (!deletingEntry) return;
+    if (!deletingEntry || deletingEntry.isImmutable) return;
     await deleteMutation.mutateAsync({ id: deletingEntry.id });
   };
 
@@ -338,6 +342,8 @@ export const AdminRolePage = () => {
               <tbody className="text-[14px] text-black">
                 {(entries ?? []).map((entry) => {
                   const statusLabel = entry.isDisabled ? 'Disabled' : 'Active';
+                  const isEnvironmentEntry = entry.source === 'environment';
+                  const isImmutableEntry = entry.isImmutable;
                   const createdLabel = entry.createdAt
                     ? new Date(entry.createdAt).toLocaleString()
                     : '—';
@@ -353,9 +359,23 @@ export const AdminRolePage = () => {
                         {entry.nickname?.trim() || '—'}
                       </td>
                       <td className="px-6 py-4 text-[14px]">
-                        {roleDisplayName[entry.role]}
+                        <div className="flex items-center gap-2">
+                          <span>{roleDisplayName[entry.role]}</span>
+                          {isEnvironmentEntry && (
+                            <span className="rounded-[8px] bg-black/[0.05] px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-black/60">
+                              Env config
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-[14px]">{statusLabel}</td>
+                      <td className="px-6 py-4 text-[14px]">
+                        {statusLabel}
+                        {isImmutableEntry && !entry.isDisabled && (
+                          <span className="ml-2 text-[12px] text-black/50">
+                            Locked
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-[13px] text-black/60">
                         {createdLabel}
                       </td>
@@ -366,13 +386,15 @@ export const AdminRolePage = () => {
                             onPress={() => handleOpenEditModal(entry)}
                             isDisabled={updateMutation.isPending}
                           >
-                            Edit
+                            {isImmutableEntry ? 'Edit nickname' : 'Edit'}
                           </Button>
                           <Button
                             size="sm"
                             color="primary"
                             onPress={() => handleOpenDeleteModal(entry)}
-                            isDisabled={deleteMutation.isPending}
+                            isDisabled={
+                              deleteMutation.isPending || isImmutableEntry
+                            }
                           >
                             Remove
                           </Button>
@@ -566,6 +588,7 @@ export const AdminRolePage = () => {
                     classNames={{
                       trigger: 'h-[42px]',
                     }}
+                    isDisabled={isEditingImmutable}
                   >
                     {selectableRoles.map((role) => (
                       <SelectItem key={role}>
@@ -591,6 +614,7 @@ export const AdminRolePage = () => {
                     classNames={{
                       trigger: 'h-[42px]',
                     }}
+                    isDisabled={isEditingImmutable}
                   >
                     {statusOptions.map((option) => (
                       <SelectItem key={option.value}>{option.label}</SelectItem>
@@ -598,6 +622,12 @@ export const AdminRolePage = () => {
                   </Select>
                 )}
               />
+              {isEditingImmutable && (
+                <p className="text-[12px] leading-[18px] text-black/50">
+                  Environment-provisioned wallets have a fixed role and status.
+                  You can update the nickname for display purposes only.
+                </p>
+              )}
             </ModalBody>
             <ModalFooter>
               <Button

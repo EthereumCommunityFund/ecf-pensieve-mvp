@@ -31,6 +31,11 @@ export type AdminWhitelistSeed = {
   isDisabled?: boolean;
 };
 
+export type AdminWhitelistWithSource = AdminWhitelist & {
+  source: AdminWhitelistSource;
+  isImmutable: boolean;
+};
+
 export type AdminWhitelistCheckResult = {
   isWhitelisted: boolean;
   normalizedAddress: string | null;
@@ -43,7 +48,8 @@ export type AdminWhitelistErrorCode =
   | 'invalid_address'
   | 'duplicate_address'
   | 'not_found'
-  | 'last_entry';
+  | 'last_entry'
+  | 'immutable_entry';
 
 export class AdminWhitelistError extends Error {
   readonly code: AdminWhitelistErrorCode;
@@ -56,6 +62,21 @@ export class AdminWhitelistError extends Error {
 }
 
 const DEFAULT_ADMIN_WHITELIST_SET = new Set<string>(ADMIN_WALLET_WHITELIST);
+
+const isDefaultAdminAddress = (address: string | null | undefined): boolean => {
+  if (!address) return false;
+  return DEFAULT_ADMIN_WHITELIST_SET.has(address);
+};
+
+const resolveAdminWhitelistSource = (address: string): AdminWhitelistSource => {
+  return isDefaultAdminAddress(address) ? 'environment' : 'database';
+};
+
+const withSource = (entry: AdminWhitelist): AdminWhitelistWithSource => ({
+  ...entry,
+  source: resolveAdminWhitelistSource(entry.address),
+  isImmutable: isDefaultAdminAddress(entry.address),
+});
 
 export const DEFAULT_ADMIN_WHITELIST = ADMIN_WALLET_WHITELIST;
 
@@ -98,13 +119,17 @@ export const syncDefaultAdminWhitelist = async (
   }
 };
 
-export const listAdminWhitelist = async (database?: Database) => {
+export const listAdminWhitelist = async (
+  database?: Database,
+): Promise<AdminWhitelistWithSource[]> => {
   const dbToUse = resolveDb(database);
   await syncDefaultAdminWhitelist(dbToUse);
 
-  return dbToUse.query.adminWhitelist.findMany({
+  const entries = await dbToUse.query.adminWhitelist.findMany({
     orderBy: (fields, operators) => [operators.asc(fields.createdAt)],
   });
+
+  return entries.map(withSource);
 };
 
 export const findAdminWhitelistByAddress = async (
@@ -196,7 +221,7 @@ export const checkAdminWhitelist = async (
 export const createAdminWhitelistEntry = async (
   payload: AdminWhitelistSeed,
   database?: Database,
-) => {
+): Promise<AdminWhitelistWithSource> => {
   const dbToUse = resolveDb(database);
   const normalized = normalizeWalletAddress(payload.address);
 
@@ -230,15 +255,45 @@ export const createAdminWhitelistEntry = async (
     throw new Error('Failed to create admin whitelist entry');
   }
 
-  return created;
+  return withSource(created);
 };
 
 export const updateAdminWhitelistEntry = async (
   id: number,
   payload: Pick<AdminWhitelistSeed, 'nickname' | 'role' | 'isDisabled'>,
   database?: Database,
-) => {
+): Promise<AdminWhitelistWithSource> => {
   const dbToUse = resolveDb(database);
+
+  const existingEntry =
+    (await dbToUse.query.adminWhitelist.findFirst({
+      where: eq(adminWhitelist.id, id),
+    })) ?? null;
+
+  if (!existingEntry) {
+    throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
+  }
+
+  const isDefaultEntry = isDefaultAdminAddress(existingEntry.address);
+
+  if (isDefaultEntry) {
+    if (payload.role !== undefined && payload.role !== existingEntry.role) {
+      throw new AdminWhitelistError(
+        'immutable_entry',
+        'Cannot change role for environment whitelist entry',
+      );
+    }
+
+    if (
+      payload.isDisabled !== undefined &&
+      payload.isDisabled !== existingEntry.isDisabled
+    ) {
+      throw new AdminWhitelistError(
+        'immutable_entry',
+        'Cannot disable environment whitelist entry',
+      );
+    }
+  }
 
   const updatePayload: Partial<AdminWhitelistInsert> & {
     updatedAt: Date;
@@ -267,13 +322,13 @@ export const updateAdminWhitelistEntry = async (
     throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
   }
 
-  return updated;
+  return withSource(updated);
 };
 
 export const deleteAdminWhitelistEntry = async (
   id: number,
   database?: Database,
-) => {
+): Promise<AdminWhitelistWithSource> => {
   const dbToUse = resolveDb(database);
 
   const entry =
@@ -283,6 +338,13 @@ export const deleteAdminWhitelistEntry = async (
 
   if (!entry) {
     throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
+  }
+
+  if (isDefaultAdminAddress(entry.address)) {
+    throw new AdminWhitelistError(
+      'immutable_entry',
+      'Cannot delete environment whitelist entry',
+    );
   }
 
   const [{ count }] = await dbToUse
@@ -306,5 +368,5 @@ export const deleteAdminWhitelistEntry = async (
     throw new AdminWhitelistError('not_found', 'Whitelist entry not found');
   }
 
-  return deleted;
+  return withSource(deleted);
 };

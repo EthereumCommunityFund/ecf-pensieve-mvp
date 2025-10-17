@@ -34,6 +34,11 @@ const handleAdminWhitelistError = (error: unknown): never => {
           code: 'NOT_FOUND',
           message: error.message,
         });
+      case 'immutable_entry':
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: error.message,
+        });
       case 'last_entry':
         throw new TRPCError({
           code: 'BAD_REQUEST',
