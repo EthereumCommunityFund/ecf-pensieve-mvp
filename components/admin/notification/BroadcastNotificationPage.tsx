@@ -286,7 +286,7 @@ export const BroadcastNotificationPage = () => {
               render={({ field }) => (
                 <Input
                   {...field}
-                  placeholder="Enter notification title"
+                  placeholder="Notification title"
                   errorMessage={errors.title?.message}
                 />
               )}
@@ -305,7 +305,7 @@ export const BroadcastNotificationPage = () => {
               render={({ field }) => (
                 <Textarea
                   {...field}
-                  placeholder="Enter notification body"
+                  placeholder="Notification body"
                   errorMessage={errors.body?.message}
                 />
               )}
@@ -426,18 +426,7 @@ export const BroadcastNotificationPage = () => {
             Tips
           </h3>
           <ul className="mt-3 list-disc space-y-2 pl-4 text-[13px] leading-[18px] text-black/70">
-            <li>
-              Title and body are required. CTA and navigation fields are
-              optional.
-            </li>
-            <li>
-              If you only provide links, the button text defaults to “View
-              Details”.
-            </li>
-            <li>
-              Extra must be a JSON object for custom metadata such as icons or
-              localization.
-            </li>
+            <li>Title and body are required. CTAs are optional.</li>
             <li>
               Notifications are delivered after the cron worker runs. Allow time
               for propagation.
