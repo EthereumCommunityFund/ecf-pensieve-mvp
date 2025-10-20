@@ -125,6 +125,8 @@ export function renderTagPills(tags: string[]): JSX.Element | null {
         display: 'flex',
         flexWrap: 'wrap',
         gap: '8px',
+        maxHeight: '56px',
+        overflow: 'hidden',
       }}
     >
       {tags.map((tag) => (
@@ -134,12 +136,14 @@ export function renderTagPills(tags: string[]): JSX.Element | null {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            height: '24px',
             padding: '5px 10px',
             borderRadius: '4px',
             background: 'rgba(0,0,0,0.05)',
             fontSize: '13px',
             fontWeight: 500,
             color: 'rgba(0,0,0,0.7)',
+            whiteSpace: 'nowrap',
           }}
         >
           {tag}

@@ -84,18 +84,22 @@ interface NavigationProps {
 const MobileNavigation = ({ onClose }: NavigationProps) => {
   const pathname = usePathname();
 
-  const isActiveRoute = (path: string) => {
+  const isActiveRoute = (path?: string) => {
     return pathname === path;
   };
 
   return (
     <nav className="mt-2.5 flex flex-col gap-2.5">
-      {navigationItems.map((item) => (
-        <Link
-          key={item.name}
-          href={item.href}
-          onClick={onClose}
-          className={`
+      {navigationItems
+        .filter((item) => !item.isDesktopOnly)
+        .map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            target={item.isExternal ? '_blank' : undefined}
+            rel={item.isExternal ? 'noopener noreferrer' : undefined}
+            onClick={onClose}
+            className={`
                     flex h-10
                     w-full shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[10px]
                     px-[10px] py-2 transition-all duration-200
@@ -105,21 +109,21 @@ const MobileNavigation = ({ onClose }: NavigationProps) => {
                         : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]' // Default & Hover states
                     }
                 `}
-        >
-          {typeof (isActiveRoute(item.matchPath)
-            ? item.activeIcon
-            : item.icon) === 'string' ? (
-            <Image
-              src={
-                isActiveRoute(item.matchPath)
-                  ? (item.activeIcon as string)
-                  : (item.icon as string)
-              }
-              as={NextImage}
-              alt={item.name}
-              width={24}
-              height={24}
-              className={`
+          >
+            {typeof (isActiveRoute(item.matchPath)
+              ? item.activeIcon
+              : item.icon) === 'string' ? (
+              <Image
+                src={
+                  isActiveRoute(item.matchPath)
+                    ? (item.activeIcon as string)
+                    : (item.icon as string)
+                }
+                as={NextImage}
+                alt={item.name}
+                width={24}
+                height={24}
+                className={`
                 size-6 shrink-0
                 ${
                   isActiveRoute(item.matchPath)
@@ -128,15 +132,15 @@ const MobileNavigation = ({ onClose }: NavigationProps) => {
                 }
                 transition-all duration-200
               `}
-            />
-          ) : (
-            <div className="size-6 shrink-0">
-              {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
-            </div>
-          )}
-          <span className="font-medium">{item.name}</span>
-        </Link>
-      ))}
+              />
+            ) : (
+              <div className="size-6 shrink-0">
+                {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
+              </div>
+            )}
+            <span className="font-medium">{item.name}</span>
+          </Link>
+        ))}
     </nav>
   );
 };

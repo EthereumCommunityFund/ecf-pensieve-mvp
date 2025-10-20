@@ -416,6 +416,12 @@ function renderPublishedProjectCard(
                   fontWeight: 500,
                   color: 'rgba(0,0,0,0.65)',
                   lineHeight: '18px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxHeight: '36px',
                 }}
               >
                 {payload.metadata.subtitle}
@@ -639,6 +645,14 @@ function renderPendingProjectCard(
               style={{
                 fontSize: '16px',
                 color: 'rgba(0,0,0,0.65)',
+                fontWeight: 500,
+                lineHeight: '18px',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxHeight: '36px',
               }}
             >
               {payload.metadata.subtitle}

@@ -1,5 +1,15 @@
+import type {
+  BroadcastNotificationType,
+  NotificationMetadata,
+} from '@/types/notification';
+
 import { db } from '../db';
 import { notifications } from '../db/schema';
+
+export type {
+  BroadcastNotificationType,
+  NotificationMetadata,
+} from '@/types/notification';
 
 import type { QueueOptions } from './notification/queue';
 import { notificationQueue } from './notification/queue';
@@ -15,31 +25,48 @@ export type NotificationType =
   | 'itemProposalSupported'
   | 'itemProposalPassed'
   | 'itemProposalBecameLeading'
-  | 'itemProposalLostLeading';
+  | 'itemProposalLostLeading'
+  | 'systemUpdate'
+  | 'newItemsAvailable';
 
 export interface NotificationData {
-  userId: string;
-  projectId: number;
+  userId?: string;
+  projectId?: number | null;
   proposalId?: number;
   itemProposalId?: number;
   reward?: number;
   voter_id?: string;
   type: NotificationType;
+  metadata?: NotificationMetadata;
+  broadcast?: boolean;
+  operatorId?: string;
 }
 
 export interface RewardNotificationData extends NotificationData {
+  userId: string;
+  projectId: number;
   reward: number;
 }
 
 export interface MultiUserNotificationData
   extends Omit<NotificationData, 'userId'> {
   userId?: string;
-  metadata?: {
-    key?: string;
-    itemProposalId?: number;
-    proposalId?: number;
-  };
 }
+
+type NotificationInsert = typeof notifications.$inferInsert;
+
+const buildNotificationInsert = (
+  notification: NotificationData & { userId: string },
+): NotificationInsert => ({
+  userId: notification.userId,
+  projectId: notification.projectId ?? null,
+  proposalId: notification.proposalId,
+  itemProposalId: notification.itemProposalId,
+  reward: notification.reward,
+  voter_id: notification.voter_id,
+  type: notification.type,
+  metadata: notification.metadata ?? null,
+});
 
 export const addNotificationDirect = async (
   notification: NotificationData,
@@ -48,9 +75,17 @@ export const addNotificationDirect = async (
   try {
     const currentDb = tx ?? db;
 
+    if (!notification.userId) {
+      throw new Error('Direct notification requires userId');
+    }
+
     const [newNotification] = await currentDb
       .insert(notifications)
-      .values(notification)
+      .values(
+        buildNotificationInsert(
+          notification as NotificationData & { userId: string },
+        ),
+      )
       .returning();
 
     if (!newNotification) {
@@ -89,6 +124,33 @@ export const addRewardNotification = async (
   tx?: any,
 ): Promise<typeof notifications.$inferSelect | null> => {
   return addNotification(notification, tx);
+};
+
+export const enqueueBroadcastNotification = async (
+  input: {
+    type: BroadcastNotificationType;
+    metadata: NotificationMetadata;
+    projectId?: number | null;
+    operatorId?: string;
+    operatorWallet?: string;
+  },
+  options?: QueueOptions,
+): Promise<void> => {
+  const metadata: NotificationMetadata = {
+    ...input.metadata,
+    operatorUserId: input.operatorId,
+    operatorWallet: input.metadata.operatorWallet ?? input.operatorWallet,
+  };
+
+  const payload: NotificationData = {
+    projectId: input.projectId ?? null,
+    type: input.type,
+    metadata,
+    broadcast: true,
+    operatorId: input.operatorId,
+  };
+
+  await addNotificationToQueue(payload, options);
 };
 
 export const createRewardNotification = {

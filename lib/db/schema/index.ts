@@ -1,4 +1,5 @@
 export * from './activeLogs';
+export * from './adminWhitelist';
 export * from './invitations';
 export * from './itemProposals';
 export * from './likeRecord';
