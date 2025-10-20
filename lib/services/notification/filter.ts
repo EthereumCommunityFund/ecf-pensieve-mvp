@@ -67,6 +67,13 @@ export function shouldSendNotification(
     isProjectOwner?: boolean;
   },
 ): boolean {
+  if (
+    notificationType === 'systemUpdate' ||
+    notificationType === 'newItemsAvailable'
+  ) {
+    return true;
+  }
+
   if (notificationMode === 'muted') {
     return false;
   }

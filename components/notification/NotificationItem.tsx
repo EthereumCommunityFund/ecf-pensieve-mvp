@@ -4,6 +4,7 @@ import { Image } from '@heroui/react';
 import React from 'react';
 
 import { NotificationType } from '@/lib/services/notification';
+import type { NotificationMetadata } from '@/types/notification';
 
 import { Button } from '../base/button';
 import {
@@ -20,8 +21,6 @@ import {
 export type FrontendNotificationType =
   | NotificationType
   | 'default'
-  | 'systemUpdate'
-  | 'newItemsAvailable'
   | 'contributionPoints';
 
 export interface IVoterOfNotification {
@@ -35,6 +34,7 @@ export interface NotificationItemData {
   id: string;
   type: FrontendNotificationType;
   title: string;
+  description?: string;
   itemName?: string;
   projectName?: string;
   userName?: string;
@@ -49,6 +49,15 @@ export interface NotificationItemData {
   hideButton?: boolean;
   actorIsSelf?: boolean;
   ownerIsSelf?: boolean;
+  metadata?: NotificationMetadata | null;
+  metadataTitle?: string;
+  metadataBody?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  targetUrl?: string;
+  targetProjectId?: number;
+  targetItemId?: number;
+  metadataExtra?: Record<string, unknown>;
 }
 
 export interface NotificationItemProps {
@@ -118,6 +127,7 @@ const formatNotificationText = (itemData: NotificationItemData) => {
   const {
     type,
     title,
+    description,
     itemName,
     projectName,
     actor,
@@ -373,19 +383,15 @@ const formatNotificationText = (itemData: NotificationItemData) => {
         </div>
       );
     case 'systemUpdate':
-      return (
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            We've made some updates to the platform
-          </span>
-        </div>
-      );
     case 'newItemsAvailable':
       return (
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[14px] leading-[20px] text-black">
-            New items are available for proposals
-          </span>
+        <div className="flex flex-col gap-1">
+          <span className="text-[14px] leading-[20px] text-black">{title}</span>
+          {description && (
+            <span className="text-[13px] leading-[18px] text-black/70">
+              {description}
+            </span>
+          )}
         </div>
       );
     case 'createProposal':
@@ -597,6 +603,13 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             <div className="flex w-full items-start justify-between gap-5">
               {formatNotificationText(itemData)}
             </div>
+            {itemData.description &&
+              type !== 'systemUpdate' &&
+              type !== 'newItemsAvailable' && (
+                <span className="text-[13px] leading-[18px] text-black/70">
+                  {itemData.description}
+                </span>
+              )}
 
             {/* Time */}
             <span className="text-[12px] font-semibold leading-[12px] text-black opacity-50">
@@ -604,7 +617,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             </span>
 
             {/* Action Buttons */}
-            {!hideButton && (
+            {!hideButton && buttonText && (
               <div
                 className="flex gap-2.5"
                 onClick={(e) => e.stopPropagation()}

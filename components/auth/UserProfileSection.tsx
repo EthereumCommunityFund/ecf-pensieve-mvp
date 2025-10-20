@@ -21,12 +21,12 @@ import UserProfileIcon from '@/components/icons/UserProfile';
 import { useAuth } from '@/context/AuthContext';
 import { formatWeight } from '@/utils/weight';
 
-const formatAddress = (address?: string | null, chars = 6): string => {
+export const formatAddress = (address?: string | null, chars = 6): string => {
   if (!address) return '';
   return `${address.substring(0, chars)}...${address.substring(address.length - chars)}`;
 };
 
-const formatUserName = (name?: string) => {
+export const formatUserName = (name?: string) => {
   if (!name) return '';
   if (name.length > 20) {
     return `${name.slice(0, 6)}...${name.slice(-6)}`;
