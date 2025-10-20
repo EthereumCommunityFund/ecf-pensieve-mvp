@@ -416,6 +416,12 @@ function renderPublishedProjectCard(
                   fontWeight: 500,
                   color: 'rgba(0,0,0,0.65)',
                   lineHeight: '18px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxHeight: '36px',
                 }}
               >
                 {payload.metadata.subtitle}
