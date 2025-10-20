@@ -17,7 +17,9 @@ export type NavigationItem = {
   href: string;
   icon: string | React.ReactNode;
   activeIcon: string | React.ReactNode;
-  matchPath: string;
+  matchPath?: string;
+  isExternal?: boolean;
+  isDesktopOnly?: boolean;
 };
 
 // TODO replace png -> svg icon
@@ -43,46 +45,58 @@ export const navigationItems: NavigationItem[] = [
     activeIcon: <GitPullLightIcon />,
     matchPath: '/projects/pending',
   },
+  {
+    name: 'Documentation',
+    href: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
+    icon: '/images/docs/FileText.svg',
+    activeIcon: '/images/docs/FileText.svg',
+    isExternal: true,
+    isDesktopOnly: true,
+  },
 ] as const;
 
 export function Navigation() {
   const pathname = usePathname();
 
-  const isActiveRoute = (path: string) => {
+  const isActiveRoute = (path?: string) => {
     return pathname === path;
   };
 
   return (
     <nav className="mobile:hidden mr-5 flex shrink-0 items-center gap-2.5">
       {navigationItems.map((item) => {
-        // Use special ProjectsNavItem for Projects menu
         if (item.name === 'Projects' && item.matchPath === '/projects') {
-          return <ProjectsNavItem key={item.name} item={item} />;
+          return (
+            <ProjectsNavItem
+              key={item.name}
+              item={item as NavigationItem & { matchPath: string }}
+            />
+          );
         }
 
-        // Regular navigation items
+        const isActive = isActiveRoute(item.matchPath);
+
         return (
           <Link
             key={item.name}
             href={item.href}
+            target={item.isExternal ? '_blank' : undefined}
+            rel={item.isExternal ? 'noopener noreferrer' : undefined}
             className={`
                           flex h-8 shrink-0 items-center gap-2 whitespace-nowrap
                           rounded-[10px] px-2.5 transition-all duration-200
+                          ${item.isDesktopOnly ? 'tablet:hidden mobile:hidden' : ''}
                           ${
-                            isActiveRoute(item.matchPath)
-                              ? 'bg-black text-white' // Active state
-                              : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]' // Default & Hover states
+                            isActive
+                              ? 'bg-black text-white'
+                              : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]'
                           }
                       `}
           >
-            {typeof (isActiveRoute(item.matchPath)
-              ? item.activeIcon
-              : item.icon) === 'string' ? (
+            {typeof (isActive ? item.activeIcon : item.icon) === 'string' ? (
               <Image
                 src={
-                  isActiveRoute(item.matchPath)
-                    ? (item.activeIcon as string)
-                    : (item.icon as string)
+                  isActive ? (item.activeIcon as string) : (item.icon as string)
                 }
                 as={NextImage}
                 alt={item.name}
@@ -90,17 +104,13 @@ export function Navigation() {
                 height={24}
                 className={`
                                 size-6 shrink-0
-                                ${
-                                  isActiveRoute(item.matchPath)
-                                    ? 'brightness-0 invert' // Active state (white icon)
-                                    : 'brightness-0' // Default state (black icon)
-                                }
+                                ${isActive ? 'brightness-0 invert' : 'brightness-0'}
                                 transition-all duration-200
                             `}
               />
             ) : (
               <div className="size-6 shrink-0">
-                {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
+                {isActive ? item.activeIcon : item.icon}
               </div>
             )}
             <ECFTypography
@@ -114,7 +124,6 @@ export function Navigation() {
       })}
 
       <DropDownMenu />
-
       <FeedbackButton className="tablet:hidden mobile:hidden" />
     </nav>
   );

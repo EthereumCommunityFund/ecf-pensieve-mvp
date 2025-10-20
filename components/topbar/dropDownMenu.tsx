@@ -7,16 +7,25 @@ import {
 } from '@heroui/react';
 import NextImage from 'next/image';
 
-export const DropDownMenuData = {
+type CommonLink = {
+  name: string;
+  link: string;
+  isMobileOnly?: boolean;
+};
+
+export const DropDownMenuData: {
+  common: CommonLink[];
+  social: {
+    name: string;
+    icon: string;
+    link: string;
+  }[];
+} = {
   common: [
     {
-      name: 'Whitepaper',
-      link: 'https://ecf.wiki/s/ae77a12f-106c-429e-a7ed-8cca218bf20b',
+      name: 'Irys Storage (Arweave)',
+      link: 'https://gateway.irys.xyz/mutable/Cyq1oxWJFfMBvH7pJ83WACcJ7idnwnzUrm5LGzEqP4Xm',
     },
-    /*{
-      name: 'Docs',
-      link: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
-    },*/
     {
       name: 'Changelog',
       link: 'https://ecf.wiki/s/8dc736c1-3f92-4488-b3a9-1ec82bccb1d9',
@@ -79,17 +88,19 @@ const DropDownMenu = () => {
       </DropdownTrigger>
       <DropdownMenu>
         <>
-          {DropDownMenuData.common.map((item) => (
-            <DropdownItem
-              key={item.name}
-              textValue={item.name}
-              onPress={() => window.open(item.link, '_blank')}
-            >
-              <span className="cursor-pointer text-sm font-semibold text-black">
-                {item.name}
-              </span>
-            </DropdownItem>
-          ))}
+          {DropDownMenuData.common
+            .filter((item) => !item.isMobileOnly)
+            .map((item) => (
+              <DropdownItem
+                key={item.name}
+                textValue={item.name}
+                onPress={() => window.open(item.link, '_blank')}
+              >
+                <span className="cursor-pointer text-sm font-semibold text-black">
+                  {item.name}
+                </span>
+              </DropdownItem>
+            ))}
 
           <DropdownItem
             key="social"
