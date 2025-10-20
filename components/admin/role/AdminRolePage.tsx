@@ -5,6 +5,7 @@ import type { Key } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
+import { formatAddress } from '@/components/auth/UserProfileSection';
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
 import {
@@ -16,6 +17,7 @@ import {
 } from '@/components/base/modal';
 import { Select, SelectItem } from '@/components/base/select';
 import { addToast } from '@/components/base/toast';
+import Copy from '@/components/biz/common/Copy';
 import {
   ADMIN_WHITELIST_ROLES,
   type AdminWhitelistRole,
@@ -347,13 +349,22 @@ export const AdminRolePage = () => {
                   const createdLabel = entry.createdAt
                     ? new Date(entry.createdAt).toLocaleString()
                     : '—';
+                  const displayAddress = formatAddress(entry.address);
                   return (
                     <tr
                       key={entry.id}
                       className="border-b border-black/[0.08] last:border-b-0"
                     >
                       <td className="px-6 py-4 font-mono text-[13px]">
-                        {entry.address}
+                        <Copy
+                          text={entry.address}
+                          message={'Wallet address copied'}
+                          useCustomChildren={true}
+                        >
+                          <div className="cursor-pointer hover:text-black/60">
+                            {displayAddress}
+                          </div>
+                        </Copy>
                       </td>
                       <td className="px-6 py-4 text-[14px]">
                         {entry.nickname?.trim() || '—'}
@@ -386,7 +397,7 @@ export const AdminRolePage = () => {
                             onPress={() => handleOpenEditModal(entry)}
                             isDisabled={updateMutation.isPending}
                           >
-                            {isImmutableEntry ? 'Edit nickname' : 'Edit'}
+                            {isImmutableEntry ? 'Edit Nickname' : 'Edit'}
                           </Button>
                           <Button
                             size="sm"
