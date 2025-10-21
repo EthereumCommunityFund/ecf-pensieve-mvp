@@ -32,13 +32,13 @@ const BugBountyCard = ({
 }: BugBountyCardProps) => {
   const filteredTransparentLabel =
     ctaVariant === 'modal'
-      ? 'Filtered Transparent Rankings (Perennial Experiment)'
-      : 'Filtered Transparent Rankings';
+      ? 'Transparent Rank for Perennial Grant'
+      : 'Transparent Rank for Perennial Grant';
 
   const filteredAccountableLabel =
     ctaVariant === 'modal'
-      ? 'Filtered Accountable Rankings (Perennial Experiment)'
-      : 'Filtered Accountable Rankings';
+      ? 'Accountable Rank for Perennial Grant'
+      : 'Accountable Rank for Perennial Grant';
 
   return (
     <div className={className} style={style}>
