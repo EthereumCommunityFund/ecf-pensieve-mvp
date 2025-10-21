@@ -46,12 +46,12 @@ export const navigationItems: NavigationItem[] = [
     matchPath: '/projects/pending',
   },
   {
-    name: 'Documentation',
+    name: 'Whitepaper',
     href: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
     icon: '/images/docs/FileText.svg',
     activeIcon: '/images/docs/FileText.svg',
     isExternal: true,
-    isDesktopOnly: true,
+    isDesktopOnly: false,
   },
 ] as const;
 

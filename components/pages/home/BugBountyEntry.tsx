@@ -13,8 +13,10 @@ type BugBountyCardProps = {
   onClose: () => void;
   onRead: () => void;
   onPropose: () => void;
-  onOverview: () => void;
+  onFilteredTransparent: () => void;
+  onFilteredAccountable: () => void;
   onDismiss?: () => void;
+  ctaVariant?: 'modal' | 'dock';
 };
 
 const BugBountyCard = ({
@@ -23,9 +25,21 @@ const BugBountyCard = ({
   onClose,
   onRead,
   onPropose,
-  onOverview,
+  onFilteredTransparent,
+  onFilteredAccountable,
   onDismiss,
+  ctaVariant = 'modal',
 }: BugBountyCardProps) => {
+  const filteredTransparentLabel =
+    ctaVariant === 'modal'
+      ? 'Filtered Transparent Rankings (Perennial Experiment)'
+      : 'Filtered Transparent Rankings';
+
+  const filteredAccountableLabel =
+    ctaVariant === 'modal'
+      ? 'Filtered Accountable Rankings (Perennial Experiment)'
+      : 'Filtered Accountable Rankings';
+
   return (
     <div className={className} style={style}>
       <div className="relative z-[1] flex flex-col gap-[10px]">
@@ -118,7 +132,7 @@ const BugBountyCard = ({
         </div>
 
         <p className="font-mona text-[10px] font-[500] leading-normal tracking-[0.14em] text-black/35">
-          Weekly 1 Awards-{' '}
+          Weekly 2 Awards-{' '}
           <span className="font-bold">Top Transparent Projects</span>: $400
           <br />
           <span className="font-bold">Top Accountable Projects</span>: $400
@@ -141,10 +155,17 @@ const BugBountyCard = ({
           </button>
           <button
             type="button"
-            onClick={onOverview}
+            onClick={onFilteredTransparent}
             className="font-mona flex h-[44px] w-full items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-[14px] font-[600] leading-[1.6] text-black transition-colors hover:bg-[rgba(170,225,201,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            What is Pensieve?
+            {filteredTransparentLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onFilteredAccountable}
+            className="font-mona flex h-[44px] w-full items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-[14px] font-[600] leading-[1.6] text-black transition-colors hover:bg-[rgba(170,225,201,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {filteredAccountableLabel}
           </button>
         </div>
       </div>
@@ -213,12 +234,21 @@ const BugBountyEntry = () => {
     router.push('/project/create');
   }, [closeDockCard, closeModal, profile, router, showAuthPrompt]);
 
-  const handleOpenPensieveOverview = useCallback(() => {
+  const handleViewFilteredTransparentProjects = useCallback(() => {
     closeDockCard();
     closeModal();
-    const url = `https://ecf.wiki/s/ae77a12f-106c-429e-a7ed-8cca218bf20b`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }, [closeDockCard, closeModal]);
+    router.push(
+      '/projects?sort=top-transparent&advancedFilter=%257B%2522v%2522%253A1%252C%2522flt%2522%253A%255B%257B%2522id%2522%253A%25223b7e2a08-cdee-464b-9711-9792a76b74ce%2522%252C%2522cond%2522%253A%255B%257B%2522id%2522%253A%25227fb99c8f-36b4-485f-8ba1-49e5564f0c10%2522%252C%2522type%2522%253A%2522sp%2522%252C%2522field%2522%253A%2522hasToken%2522%252C%2522op%2522%253A%2522eq%2522%252C%2522val%2522%253A%2522false%2522%257D%252C%257B%2522id%2522%253A%2522b70ab5b8-cfde-4345-bf55-01b3c7063bf1%2522%252C%2522type%2522%253A%2522sel%2522%252C%2522field%2522%253A%2522investment_stage%2522%252C%2522op%2522%253A%2522eq%2522%252C%2522join%2522%253A%2522and%2522%252C%2522val%2522%253A%2522No%2520Investment%2522%257D%252C%257B%2522id%2522%253A%25222a344678-2cc6-4568-b940-bca69bbdc67d%2522%252C%2522type%2522%253A%2522sel%2522%252C%2522field%2522%253A%2522publicGoods%2522%252C%2522op%2522%253A%2522eq%2522%252C%2522join%2522%253A%2522and%2522%252C%2522val%2522%253A%2522Yes%2522%257D%255D%257D%255D%257D',
+    );
+  }, [closeDockCard, closeModal, router]);
+
+  const handleViewFilteredAccountableProjects = useCallback(() => {
+    closeDockCard();
+    closeModal();
+    router.push(
+      '/projects?sort=top-accountable&advancedFilter=%257B%2522v%2522%253A1%252C%2522flt%2522%253A%255B%257B%2522id%2522%253A%25223b7e2a08-cdee-464b-9711-9792a76b74ce%2522%252C%2522cond%2522%253A%255B%257B%2522id%2522%253A%25227fb99c8f-36b4-485f-8ba1-49e5564f0c10%2522%252C%2522type%2522%253A%2522sp%2522%252C%2522field%2522%253A%2522hasToken%2522%252C%2522op%2522%253A%2522eq%2522%252C%2522val%2522%253A%2522false%2522%257D%252C%257B%2522id%2522%253A%2522b70ab5b8-cfde-4345-bf55-01b3c7063bf1%2522%252C%2522type%2522%253A%2522sel%2522%252C%2522field%2522%253A%2522investment_stage%2522%252C%2522op%2522%253A%2522eq%2522%252C%2522join%2522%253A%2522and%2522%252C%2522val%2522%253A%2522No%2520Investment%2522%257D%252C%257B%2522id%2522%253A%25222a344678-2cc6-4568-b940-bca69bbdc67d%2522%252C%2522type%2522%253A%2522sel%2522%252C%2522field%2522%253A%2522publicGoods%2522%252C%2522op%2522%253A%2522eq%2522%252C%2522join%2522%253A%2522and%2522%252C%2522val%2522%253A%2522Yes%2522%257D%255D%257D%255D%257D',
+    );
+  }, [closeDockCard, closeModal, router]);
 
   return (
     <>
@@ -233,8 +263,10 @@ const BugBountyEntry = () => {
             onClose={closeModal}
             onRead={handleOpenGrantAnnouncement}
             onPropose={handleNavigateToCreateProject}
-            onOverview={handleOpenPensieveOverview}
+            onFilteredTransparent={handleViewFilteredTransparentProjects}
+            onFilteredAccountable={handleViewFilteredAccountableProjects}
             onDismiss={dismissModal}
+            ctaVariant="modal"
           />
         </div>
       )}
@@ -251,7 +283,9 @@ const BugBountyEntry = () => {
               onClose={closeDockCard}
               onRead={handleOpenGrantAnnouncement}
               onPropose={handleNavigateToCreateProject}
-              onOverview={handleOpenPensieveOverview}
+              onFilteredTransparent={handleViewFilteredTransparentProjects}
+              onFilteredAccountable={handleViewFilteredAccountableProjects}
+              ctaVariant="dock"
             />
           ) : (
             <button
