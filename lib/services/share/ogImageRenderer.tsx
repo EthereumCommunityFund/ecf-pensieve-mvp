@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import type { Font } from 'satori';
 
+import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import type { SharePayload } from '@/lib/services/share';
 import { renderShareCard } from '@/lib/services/share/shareCardElements';
 import { getAppOrigin } from '@/lib/utils/url';
@@ -63,8 +64,8 @@ export function renderShareOgImage(
   return (
     <div
       style={{
-        width: '540px',
-        height: '300px',
+        width: `${SHARE_CARD_WIDTH}px`,
+        height: `${SHARE_CARD_HEIGHT}px`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

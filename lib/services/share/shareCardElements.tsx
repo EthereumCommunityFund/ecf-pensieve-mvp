@@ -1,6 +1,7 @@
 import type { CSSProperties, JSX } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
+import { SHARE_CARD_WIDTH } from '@/constants/share';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import { ALL_POC_ITEM_MAP, QUORUM_AMOUNT } from '@/lib/constants';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
@@ -38,7 +39,6 @@ interface ShareCardOptions {
   mode?: 'og' | 'preview';
 }
 
-const CARD_WIDTH = 540;
 const FONT_FAMILY = 'Mona Sans, Inter, sans-serif';
 
 export const STAT_LAYOUT = [
@@ -107,7 +107,7 @@ function renderProposalCard(
     )?.label ?? null;
 
   const containerStyle: CSSProperties = {
-    width: `${CARD_WIDTH}px`,
+    width: `${SHARE_CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '8px',
     border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
@@ -297,7 +297,7 @@ function renderFallbackCard(
   );
   const isOgMode = options.mode === 'og';
   const containerStyle: CSSProperties = {
-    width: `${CARD_WIDTH}px`,
+    width: `${SHARE_CARD_WIDTH}px`,
     padding: '28px',
     borderRadius: '16px',
     border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
@@ -356,7 +356,7 @@ function renderPublishedProjectCard(
   return (
     <div
       style={{
-        width: `${CARD_WIDTH}px`,
+        width: `${SHARE_CARD_WIDTH}px`,
         padding: '24px',
         borderRadius: '12px',
         border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
@@ -462,7 +462,7 @@ function renderItemProposalCard(
   const categoryName = truncate(payload.metadata.item?.category, 36);
 
   const containerStyle: CSSProperties = {
-    width: `${CARD_WIDTH}px`,
+    width: `${SHARE_CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '12px',
     border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
@@ -576,7 +576,7 @@ function renderPendingProjectCard(
   const tags = resolveProjectTags(payload);
 
   const containerStyle: CSSProperties = {
-    width: `${CARD_WIDTH}px`,
+    width: `${SHARE_CARD_WIDTH}px`,
     padding: '20px',
     borderRadius: '12px',
     border: isOgMode ? 'none' : `1px solid rgba(0,0,0,0.1)`,
