@@ -156,7 +156,9 @@ const ProjectPage = () => {
       const itemKey = itemName as IPocItemKey;
 
       if (itemKey in AllItemConfig) {
-        handleOpenModal(itemKey, 'viewItemProposal');
+        setTimeout(() => {
+          handleOpenModal(itemKey, 'viewItemProposal');
+        }, 0);
 
         //  clear url params to avoid duplicate trigger
         const newParams = new URLSearchParams(searchParams.toString());

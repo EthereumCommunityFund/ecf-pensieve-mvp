@@ -4,6 +4,7 @@ import { Image } from '@heroui/react';
 import React from 'react';
 
 import { NotificationType } from '@/lib/services/notification';
+import { IPocItemKey } from '@/types/item';
 import type { NotificationMetadata } from '@/types/notification';
 
 import { Button } from '../base/button';
@@ -35,6 +36,7 @@ export interface NotificationItemData {
   type: FrontendNotificationType;
   title: string;
   description?: string;
+  itemKey?: IPocItemKey;
   itemName?: string;
   projectName?: string;
   userName?: string;
