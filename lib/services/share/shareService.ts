@@ -1555,7 +1555,7 @@ async function resolveItemProposalContext(
     metadata.tags = (metadata.project.categories ?? []).slice(0, 6);
 
     const visibility = itemProposal.project.isPublished ? 'public' : 'unlisted';
-    const targetUrl = `/project/${itemProposal.project.id}?tab=project-data&notificationType=viewSubmission&itemName=${itemNameParam}`;
+    const targetUrl = `/project/${itemProposal.project.id}?tab=profile&notificationType=viewSubmission&itemName=${itemNameParam}`;
 
     return {
       layout: 'itemProposal',
@@ -1693,7 +1693,7 @@ async function resolveEmptyItemContext({
   metadata.tags = (metadata.project.categories ?? []).slice(0, 6);
 
   const visibility = project.isPublished ? 'public' : 'unlisted';
-  const targetUrl = `/project/${project.id}?tab=project-data&notificationType=viewSubmission&itemName=${encodedKey}`;
+  const targetUrl = `/project/${project.id}?tab=profile&notificationType=viewSubmission&itemName=${encodedKey}`;
   const imageMeta = resolveImageMeta([
     project.updatedAt,
     project.id,

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
+import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import type { SharePayload } from '@/lib/services/share';
 import ShareService from '@/lib/services/share';
 import { buildShareOgImageUrl } from '@/lib/services/share/url';
@@ -49,7 +50,7 @@ function buildMetadataFromPayload(
     timestamp: snapshotTimestamp,
     origin,
   });
-  const ogImageSize = { width: 540, height: 300 };
+  const ogImageSize = { width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT };
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
 
   const robots = {

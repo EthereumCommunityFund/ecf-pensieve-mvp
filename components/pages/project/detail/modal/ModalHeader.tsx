@@ -63,7 +63,7 @@ const ModalHeader: FC<ModalHeaderProps> = ({
   const fallbackUrl = useMemo(() => {
     if (projectId && itemKey) {
       const encodedKey = encodeURIComponent(itemKey);
-      return `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${encodedKey}`;
+      return `/project/${projectId}?tab=profile&notificationType=viewSubmission&itemName=${encodedKey}`;
     }
     if (typeof window !== 'undefined') {
       return window.location.href;

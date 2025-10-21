@@ -221,6 +221,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input has lost sufficient support',
+              itemKey: notification.itemProposal?.key ?? '',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: 'View Submission',
@@ -231,6 +232,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input is now leading',
+              itemKey: notification.itemProposal?.key ?? '',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: 'View Submission',
@@ -241,6 +243,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your input has been supported',
+              itemKey: notification.itemProposal?.key ?? '',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               userName: voterProfile?.name || 'someone',
@@ -254,6 +257,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your proposal has been supported',
+              itemKey: notification.itemProposal?.key ?? '',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               userName: voterProfile?.name || 'someone',
@@ -267,6 +271,7 @@ const useRealNotifications = () => {
             return {
               type,
               title: 'Your item proposal has passed',
+              itemKey: notification.itemProposal?.key ?? '',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               userName: voterProfile?.name || 'someone',
@@ -326,6 +331,7 @@ const useRealNotifications = () => {
               title: ownerIsSelf
                 ? 'You created a new input'
                 : `${ownerDisplayName} created a new input`,
+              itemKey: notification.itemProposal?.key ?? '',
               itemName: resolveItemLabel(notification.itemProposal?.key),
               projectName,
               buttonText: '',
@@ -510,7 +516,7 @@ const useRealNotifications = () => {
           case 'itemProposalPassed':
             if (projectId) {
               router.push(
-                `/project/${projectId}?tab=project-data&notificationType=viewSubmission&itemName=${notification.itemName}`,
+                `/project/${projectId}?tab=profile&notificationType=viewSubmission&itemName=${notification.itemKey}`,
               );
             } else {
               router.push('/projects');

@@ -2,6 +2,7 @@ import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
 
 import { isProduction } from '@/constants/env';
+import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import ShareService from '@/lib/services/share';
 import {
   getOgFonts,
@@ -54,8 +55,8 @@ export async function GET(
     const element = renderShareOgImage(payload, origin);
 
     const response = new ImageResponse(element, {
-      width: 540,
-      height: 300,
+      width: SHARE_CARD_WIDTH,
+      height: SHARE_CARD_HEIGHT,
       fonts,
     });
 

@@ -67,7 +67,7 @@ const ShareModal: FC<ShareModalProps> = ({
       isOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
       classNames={{
-        base: 'bg-white p-0 min-w-[540px] mobile:min-w-[400px]',
+        base: 'bg-white p-0 min-w-[600px] mobile:min-w-[400px]',
         header: 'py-[10px] px-[20px]',
         body: 'border-t border-black/10 p-[20px] flex flex-col gap-[14px]',
       }}
