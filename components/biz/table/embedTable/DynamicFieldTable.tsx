@@ -16,6 +16,7 @@ interface DynamicFieldTableProps {
   onRemove: (index: number) => void;
   itemKey: string;
   errorMessage?: React.ReactNode;
+  isDisabled?: boolean;
 }
 
 /**
@@ -29,8 +30,10 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
   onRemove,
   itemKey,
   errorMessage,
+  isDisabled = false,
 }) => {
   const TableItemComponent = TABLE_ITEM_COMPONENTS[config.tableComponent];
+  const isTableDisabled = Boolean(isDisabled);
 
   if (!TableItemComponent) {
     console.error(`Table component ${config.tableComponent} not found`);
@@ -42,73 +45,88 @@ const DynamicFieldTable: React.FC<DynamicFieldTableProps> = ({
       className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full max-w-[760px] overflow-x-scroll"
       orientation="horizontal"
     >
-      <div className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white">
-        {/* Table header */}
-        <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
-          {config.columns.map((column, colIndex) => {
-            const isLast = colIndex === config.columns.length - 1;
-            const hasActions = fields.length > 1;
-            const shouldShowDivider = !isLast && config.columns.length > 1;
+      <div className="relative w-fit">
+        <div
+          className="w-fit overflow-hidden rounded-[10px] border border-black/10 bg-white"
+          aria-disabled={isTableDisabled}
+        >
+          {/* Table header */}
+          <div className="flex h-[40px] items-center border-b border-black/5 bg-[#F5F5F5]">
+            {config.columns.map((column, colIndex) => {
+              const isLast = colIndex === config.columns.length - 1;
+              const hasActions = fields.length > 1;
+              const shouldShowDivider = !isLast && config.columns.length > 1;
 
-            return (
-              <div
-                key={column.key}
-                className={cn(
-                  'flex h-full shrink-0 items-center px-[10px]',
-                  shouldShowDivider ? 'border-r border-black/10' : '',
-                )}
-                style={{ width: column.width, minWidth: column.width }}
-              >
-                <div className="flex items-center gap-[5px]">
-                  <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
-                    {column.label}
-                  </span>
-                  {column.tooltip && (
-                    <TooltipWithQuestionIcon content={column.tooltip} />
+              return (
+                <div
+                  key={column.key}
+                  className={cn(
+                    'flex h-full shrink-0 items-center px-[10px]',
+                    shouldShowDivider ? 'border-r border-black/10' : '',
                   )}
+                  style={{ width: column.width, minWidth: column.width }}
+                >
+                  <div className="flex items-center gap-[5px]">
+                    <span className="text-[14px] font-[600] text-[rgb(51,51,51)] opacity-60">
+                      {column.label}
+                    </span>
+                    {column.tooltip && (
+                      <TooltipWithQuestionIcon content={column.tooltip} />
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-          {fields.length > 1 && (
-            <div className="flex h-full w-[60px] items-center justify-center" />
-          )}
-        </div>
+              );
+            })}
+            {fields.length > 1 && (
+              <div className="flex h-full w-[60px] items-center justify-center" />
+            )}
+          </div>
 
-        {/* Table rows */}
-        {fields.map((field, index) => (
-          <TableItemComponent
-            key={field.fieldId}
-            field={field}
-            index={index}
-            remove={() => onRemove(index)}
-            itemKey={itemKey}
-            canRemove={fields.length > 1}
+          {/* Table rows */}
+          {fields.map((field, index) => (
+            <TableItemComponent
+              key={field.fieldId}
+              field={field}
+              index={index}
+              remove={() => onRemove(index)}
+              itemKey={itemKey}
+              canRemove={fields.length > 1}
+            />
+          ))}
+
+          {/* Add button */}
+          <div className="bg-[#F5F5F5] p-[10px]">
+            <button
+              type="button"
+              className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+              disabled={isTableDisabled}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isTableDisabled) {
+                  return;
+                }
+                onAdd();
+              }}
+              style={{
+                outline: 'none',
+                boxShadow: 'none',
+                fontFamily: 'Open Sans, sans-serif',
+              }}
+            >
+              <PlusIcon size={16} />
+              <span className="text-[14px] font-[400] leading-[19px]">
+                {config.addButtonText || 'Add an Entry'}
+              </span>
+            </button>
+          </div>
+        </div>
+        {isTableDisabled && (
+          <div
+            className="pointer-events-auto absolute inset-0 z-[2] cursor-not-allowed bg-[rgba(255,255,255,0.4)]"
+            aria-hidden="true"
           />
-        ))}
-
-        {/* Add button */}
-        <div className="bg-[#F5F5F5] p-[10px]">
-          <button
-            type="button"
-            className="mobile:w-full flex h-auto min-h-0 cursor-pointer items-center gap-[5px] rounded-[4px] border-none px-[8px] py-[4px] text-black opacity-60 transition-opacity duration-200 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onAdd();
-            }}
-            style={{
-              outline: 'none',
-              boxShadow: 'none',
-              fontFamily: 'Open Sans, sans-serif',
-            }}
-          >
-            <PlusIcon size={16} />
-            <span className="text-[14px] font-[400] leading-[19px]">
-              {config.addButtonText || 'Add an Entry'}
-            </span>
-          </button>
-        </div>
+        )}
       </div>
       {errorMessage}
     </ScrollShadow>

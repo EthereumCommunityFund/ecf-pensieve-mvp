@@ -140,6 +140,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         onRemove={dynamicHandlers.handleRemoveField}
         itemKey={field.name}
         errorMessage={errorMessageElement}
+        isDisabled={isDisabled}
       />
     );
   }
