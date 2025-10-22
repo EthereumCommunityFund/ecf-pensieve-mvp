@@ -139,6 +139,7 @@ export interface ActiveSlotCardProps {
   mediaAlt?: string;
   stats: StatBlock[];
   takeoverCta: string;
+  onTakeover?: () => void;
 }
 
 export function ActiveSlotCard({
@@ -150,6 +151,7 @@ export function ActiveSlotCard({
   mediaAlt,
   stats,
   takeoverCta,
+  onTakeover,
 }: ActiveSlotCardProps) {
   return (
     <Card
@@ -212,6 +214,7 @@ export function ActiveSlotCard({
           size="md"
           className="mt-[4px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
           startContent={<CoinVerticalIcon className="size-[20px]" />}
+          onPress={onTakeover}
         >
           {takeoverCta}
         </Button>

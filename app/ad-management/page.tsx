@@ -14,12 +14,15 @@ import ClaimSlotModal from '@/components/pages/ad-management/ClaimSlotModal';
 import StatsSummary, {
   type StatsSummaryItem,
 } from '@/components/pages/ad-management/StatsSummary';
+import TakeoverSlotModal from '@/components/pages/ad-management/TakeoverSlotModal';
 import YourSlotsCard, {
   type SlotAction,
   type SlotStatus,
 } from '@/components/pages/ad-management/YourSlotsCard';
 
 type TabKey = 'yourSlots' | 'templateProposals' | 'availableSlots';
+
+type ContextTone = 'default' | 'danger';
 
 interface YourSlotMock {
   id: string;
@@ -74,11 +77,46 @@ interface VacantSlotMock {
   coverageDescription: string;
 }
 
+interface TakeoverModalMock {
+  contextLabel: string;
+  contextTone?: ContextTone;
+  minBidHelper?: string;
+  minBidValue: string;
+  valuation: {
+    placeholder?: string;
+    helper: string;
+    value?: string;
+    errorMessage?: string;
+    isDisabled?: boolean;
+  };
+  coverage: {
+    label: string;
+    description: string;
+    sliderPosition: number;
+    rangeStart: string;
+    rangeEnd: string;
+  };
+  breakdown: {
+    bondRateLabel: string;
+    bondRateValue: string;
+    taxLabel: string;
+    taxValue: string;
+    coverageLabel: string;
+    coverageValue: string;
+    totalLabel: string;
+    totalValue: string;
+  };
+  harbergerInfo: string;
+  ctaLabel: string;
+  isCtaDisabled?: boolean;
+}
+
 interface ActiveSlotMock {
   id: string;
   slotName: string;
   statusLabel?: string;
   owner: string;
+  taxRate: string;
   mediaUrl?: string;
   mediaAlt?: string;
   valuation: string;
@@ -86,6 +124,7 @@ interface ActiveSlotMock {
   remainingUnits: string;
   minTakeoverBid: string;
   takeoverCta: string;
+  takeover: TakeoverModalMock;
 }
 
 const STATS_SUMMARY: StatsSummaryItem[] = [
@@ -278,6 +317,7 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
     slotName: 'Homescreen / Footer Banner',
     statusLabel: 'Owned',
     owner: '0x000',
+    taxRate: '5%',
     mediaUrl:
       'https://images.unsplash.com/photo-1526312426976-f4d754fa9bd6?auto=format&fit=crop&w=1200&q=80',
     mediaAlt: 'Burger campaign creative',
@@ -285,13 +325,45 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
     lockedBond: '0.00 ETH',
     remainingUnits: '7 days',
     minTakeoverBid: '0.000 ETH',
-    takeoverCta: 'Takeover for 0.00 ETH',
+    takeoverCta: 'Takeover for 0.402 ETH',
+    takeover: {
+      contextLabel: 'Owned Slot · Takeover',
+      minBidValue: '0.000 ETH',
+      valuation: {
+        placeholder: 'Min: 2.00 ETH',
+        helper:
+          'Must be at least 2.20 ETH (10.0% higher than current valuation).',
+        isDisabled: false,
+      },
+      coverage: {
+        label: '(7 Days)',
+        description:
+          'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
+        sliderPosition: 0.2,
+        rangeStart: '1 day',
+        rangeEnd: '365 days',
+      },
+      breakdown: {
+        bondRateLabel: 'Bond Rate (20%)',
+        bondRateValue: '0.400 ETH',
+        taxLabel: 'Tax',
+        taxValue: '0.002 ETH',
+        coverageLabel: 'Coverage',
+        coverageValue: '7 Days',
+        totalLabel: 'Total Cost',
+        totalValue: '0.402 ETH',
+      },
+      harbergerInfo:
+        "You pay the current owner's declared price to the community treasury. Set your own valuation carefully – you'll pay continuous taxes on it, and others can buy you out at that price.",
+      ctaLabel: 'Takeover for 0.402 ETH',
+    },
   },
   {
     id: 'active-2',
     slotName: 'Homescreen / List Inline',
     statusLabel: 'Owned',
     owner: '0x000',
+    taxRate: '5%',
     mediaUrl:
       'https://images.unsplash.com/photo-1559058737-7b8da6e5abf4?auto=format&fit=crop&w=1200&q=80',
     mediaAlt: 'Burger combo promotion',
@@ -299,13 +371,48 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
     lockedBond: '0.00 ETH',
     remainingUnits: '7 days',
     minTakeoverBid: '0.000 ETH',
-    takeoverCta: 'Takeover for 0.00 ETH',
+    takeoverCta: 'Takeover for 0.402 ETH',
+    takeover: {
+      contextLabel: 'Bid Too Low Error',
+      contextTone: 'danger',
+      minBidValue: '0.000 ETH',
+      valuation: {
+        value: '1.20',
+        helper:
+          'Minimum bid is 2.20 ETH (10.0% higher than current valuation).',
+        errorMessage:
+          'Bid Too Low: Minimum bid is 2.20 ETH (10.0% higher than current valuation).',
+      },
+      coverage: {
+        label: '(7 Days)',
+        description:
+          'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
+        sliderPosition: 0.2,
+        rangeStart: '1 day',
+        rangeEnd: '365 days',
+      },
+      breakdown: {
+        bondRateLabel: 'Bond Rate (20%)',
+        bondRateValue: '0.400 ETH',
+        taxLabel: 'Tax',
+        taxValue: '0.002 ETH',
+        coverageLabel: 'Coverage',
+        coverageValue: '7 Days',
+        totalLabel: 'Total Cost',
+        totalValue: '0.402 ETH',
+      },
+      harbergerInfo:
+        "You pay the current owner's declared price to the community treasury. Set your own valuation carefully – you'll pay continuous taxes on it, and others can buy you out at that price.",
+      ctaLabel: 'Takeover for 0.402 ETH',
+      isCtaDisabled: true,
+    },
   },
   {
     id: 'active-3',
     slotName: 'Marketplace / Featured Banner',
     statusLabel: 'Owned',
     owner: '0xC0FFEE',
+    taxRate: '6%',
     mediaUrl:
       'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
     mediaAlt: 'Dynamic pricing teaser',
@@ -313,21 +420,85 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
     lockedBond: '0.10 ETH',
     remainingUnits: '3 days',
     minTakeoverBid: '0.880 ETH',
-    takeoverCta: 'Takeover for 0.88 ETH',
+    takeoverCta: 'Takeover for 0.248 ETH',
+    takeover: {
+      contextLabel: 'Owned Slot · Takeover',
+      minBidValue: '0.880 ETH',
+      valuation: {
+        placeholder: 'Min: 0.88 ETH',
+        helper:
+          'Must be at least 0.968 ETH (10.0% higher than current valuation).',
+      },
+      coverage: {
+        label: '(14 Days)',
+        description:
+          'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
+        sliderPosition: 0.4,
+        rangeStart: '1 day',
+        rangeEnd: '365 days',
+      },
+      breakdown: {
+        bondRateLabel: 'Bond Rate (25%)',
+        bondRateValue: '0.200 ETH',
+        taxLabel: 'Tax',
+        taxValue: '0.048 ETH',
+        coverageLabel: 'Coverage',
+        coverageValue: '14 Days',
+        totalLabel: 'Total Cost',
+        totalValue: '0.248 ETH',
+      },
+      harbergerInfo:
+        "You pay the current owner's declared price to the community treasury. Set your own valuation carefully – you'll pay continuous taxes on it, and others can buy you out at that price.",
+      ctaLabel: 'Takeover for 0.248 ETH',
+    },
   },
 ];
+
+const DEFAULT_TAKEOVER_DATA: TakeoverModalMock = {
+  contextLabel: '',
+  minBidValue: '0.000 ETH',
+  valuation: {
+    helper: '',
+  },
+  coverage: {
+    label: '',
+    description: '',
+    sliderPosition: 0,
+    rangeStart: '',
+    rangeEnd: '',
+  },
+  breakdown: {
+    bondRateLabel: '',
+    bondRateValue: '',
+    taxLabel: '',
+    taxValue: '',
+    coverageLabel: '',
+    coverageValue: '',
+    totalLabel: '',
+    totalValue: '',
+  },
+  harbergerInfo: '',
+  ctaLabel: '',
+};
 
 export default function AdManagementPage() {
   const [selectedTab, setSelectedTab] = useState<TabKey>('yourSlots');
   const [selectedVacantSlot, setSelectedVacantSlot] =
     useState<VacantSlotMock | null>(null);
+  const [selectedTakeoverSlot, setSelectedTakeoverSlot] =
+    useState<ActiveSlotMock | null>(null);
 
   const yourSlots = useMemo(() => YOUR_SLOTS_DATA, []);
   const vacantSlots = useMemo(() => AVAILABLE_VACANT_SLOTS, []);
   const activeSlots = useMemo(() => AVAILABLE_ACTIVE_SLOTS, []);
+  const takeoverData = selectedTakeoverSlot?.takeover ?? DEFAULT_TAKEOVER_DATA;
 
   const handleCloseClaimModal = useCallback(() => {
     setSelectedVacantSlot(null);
+  }, []);
+
+  const handleCloseTakeoverModal = useCallback(() => {
+    setSelectedTakeoverSlot(null);
   }, []);
 
   return (
@@ -412,6 +583,7 @@ export default function AdManagementPage() {
                           slot.minTakeoverBid,
                         )}
                         takeoverCta={slot.takeoverCta}
+                        onTakeover={() => setSelectedTakeoverSlot(slot)}
                       />
                     ))}
                   </div>
@@ -443,6 +615,26 @@ export default function AdManagementPage() {
           selectedVacantSlot?.coverageDescription ??
           'Select how many tax periods to prepay.'
         }
+      />
+
+      <TakeoverSlotModal
+        isOpen={!!selectedTakeoverSlot}
+        onClose={handleCloseTakeoverModal}
+        contextLabel={takeoverData.contextLabel}
+        contextTone={takeoverData.contextTone}
+        slotName={selectedTakeoverSlot?.slotName ?? ''}
+        statusLabel={selectedTakeoverSlot?.statusLabel ?? 'Owned'}
+        owner={selectedTakeoverSlot?.owner ?? ''}
+        taxRate={selectedTakeoverSlot?.taxRate ?? ''}
+        minBidLabel="Minimum Bid Required"
+        minBidValue={takeoverData.minBidValue}
+        minBidHelper={takeoverData.minBidHelper}
+        valuation={takeoverData.valuation}
+        coverage={takeoverData.coverage}
+        breakdown={takeoverData.breakdown}
+        harbergerInfo={takeoverData.harbergerInfo}
+        ctaLabel={takeoverData.ctaLabel}
+        isCtaDisabled={takeoverData.isCtaDisabled}
       />
     </div>
   );
