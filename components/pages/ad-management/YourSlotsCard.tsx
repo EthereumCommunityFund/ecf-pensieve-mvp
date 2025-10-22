@@ -1,0 +1,239 @@
+'use client';
+
+import { Card, CardBody, cn } from '@heroui/react';
+import { Notebook, NotePencil } from '@phosphor-icons/react';
+import Image from 'next/image';
+
+import { Button } from '@/components/base/button';
+import { ClockClockwiseIcon, CoinVerticalIcon } from '@/components/icons';
+
+export type SlotStatus = 'owned' | 'overdue' | 'vacant' | 'closed';
+
+export interface SlotAction {
+  id: string;
+  label: string;
+  variant?: 'primary' | 'secondary';
+  isDisabled?: boolean;
+}
+
+export interface YourSlotCardProps {
+  id: string;
+  title: string;
+  location?: string;
+  valuation: string;
+  taxDue: string;
+  periodEnding: string;
+  minTakeoverBid: string;
+  contentSummary?: string;
+  status: SlotStatus;
+  slotLabel?: string;
+  slotValueLabel?: string;
+  currentAdBadge?: string;
+  currentAdBadgeTone?: 'default' | 'danger';
+  taxOwed?: string;
+  taxDueCountdown?: string;
+  takeoverBid?: string;
+  contentUpdates?: {
+    used: number;
+    total: number;
+  };
+  adImageUrl?: string;
+  primaryAction?: SlotAction;
+  secondaryAction?: SlotAction;
+  tertiaryAction?: SlotAction;
+  avatarUrl?: string;
+}
+
+export default function YourSlotsCard({
+  title,
+  valuation,
+  taxDue,
+  periodEnding,
+  minTakeoverBid,
+  status,
+  location,
+  contentSummary,
+  primaryAction,
+  secondaryAction,
+  tertiaryAction,
+  slotLabel,
+  slotValueLabel,
+  currentAdBadge,
+  currentAdBadgeTone,
+  taxOwed,
+  taxDueCountdown,
+  takeoverBid,
+  contentUpdates,
+  adImageUrl,
+  avatarUrl,
+}: YourSlotCardProps) {
+  const slotName = slotLabel ?? title;
+  const slotValue = slotValueLabel ?? valuation;
+  const currentAdNotice = currentAdBadge ?? periodEnding;
+  const currentAdTone: 'default' | 'danger' =
+    currentAdBadgeTone ?? (status === 'overdue' ? 'danger' : 'default');
+  const taxOwedValue = taxOwed ?? taxDue;
+  const taxDueValue = taxDueCountdown ?? taxDue;
+  const takeoverValue = takeoverBid ?? minTakeoverBid;
+  const isCritical = currentAdTone === 'danger';
+  const creativeUpdatesUsed =
+    contentUpdates && contentUpdates.total
+      ? `${contentUpdates.used} / ${contentUpdates.total}`
+      : undefined;
+  const mediaPreview = adImageUrl ?? avatarUrl;
+  const isPrimarySecondary = primaryAction?.variant === 'secondary';
+
+  const isSlotClosed = status === 'closed';
+
+  return (
+    <Card
+      shadow="none"
+      className={cn(
+        'rounded-[10px] border border-black/10 bg-white transition-[transform,opacity]',
+        'flex h-full flex-col justify-between',
+        isSlotClosed ? 'opacity-70 grayscale-[35%]' : '',
+      )}
+    >
+      <CardBody className="flex h-full flex-col gap-[20px] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-[6px]">
+              <span className="text-[13px] font-semibold text-black/50">
+                Slot:
+              </span>
+              <span className="text-[13px] font-semibold text-black">
+                {slotName}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-[5px] border-none bg-[#F4F5F7] px-[6px] py-[2px] text-[14px] font-semibold text-black/80">
+            {slotValue}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-[10px]">
+          <div className="flex flex-wrap items-center justify-between gap-[10px]">
+            <span className="text-[13px] font-semibold text-black/45">
+              Current Ad:
+            </span>
+            <span
+              className={cn(
+                'inline-flex items-center rounded-[5px] px-[6px] py-[2px] text-[13px] font-semibold',
+                currentAdTone === 'danger'
+                  ? ' bg-[#FEE4E2] text-[#C71818]'
+                  : ' bg-black/[0.04] text-black/70',
+              )}
+            >
+              {currentAdNotice}
+            </span>
+          </div>
+
+          <div className="relative aspect-[360/179] overflow-hidden rounded-[10px]">
+            {adImageUrl ? (
+              <Image
+                src={adImageUrl}
+                alt={title}
+                fill
+                sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
+                className="border border-black/10 object-cover"
+              />
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-[8px]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[14px] font-medium text-black/70">
+              Tax Owed:
+            </span>
+            <div className="rounded-[6px] border border-black/10 bg-white px-[6px] py-[2px] text-[14px] font-semibold text-black">
+              {taxOwedValue}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[14px] font-medium text-black/70">
+              Tax Due:
+            </span>
+            <div
+              className={cn(
+                'inline-flex items-center gap-[6px] rounded-[6px] px-[6px] py-[2px] text-[14px] font-semibold',
+                isCritical
+                  ? ' bg-[#FEE4E2] text-[#C71818]'
+                  : ' bg-[#F5F5F5] text-black',
+              )}
+            >
+              <ClockClockwiseIcon
+                size={18}
+                className={isCritical ? 'text-[#C71818]' : 'text-black/50'}
+              />
+              {taxDueValue}
+            </div>
+          </div>
+
+          {primaryAction ? (
+            <Button
+              key={primaryAction.id}
+              color={isPrimarySecondary ? 'secondary' : 'primary'}
+              radius="md"
+              size="md"
+              className={cn(
+                'w-full h-[32px] rounded-[6px] text-[14px] font-semibold',
+                isPrimarySecondary
+                  ? 'border border-black/15 bg-white text-black hover:bg-black/[0.05]'
+                  : 'bg-black text-white hover:bg-black/90',
+              )}
+              isDisabled={primaryAction.isDisabled}
+            >
+              {!isPrimarySecondary ? (
+                <CoinVerticalIcon className="size-[20px]" />
+              ) : null}
+              {primaryAction.label}
+            </Button>
+          ) : null}
+        </div>
+
+        <div>
+          <div className="flex flex-wrap gap-3 border-t border-black/10 pt-[10px]">
+            {secondaryAction ? (
+              <Button
+                key={secondaryAction.id}
+                color="secondary"
+                size="sm"
+                className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+                isDisabled={secondaryAction.isDisabled}
+                startContent={
+                  // <PencilSimpleIcon size={20} className="text-black/70" />
+                  <NotePencil size={20} className="opacity-50" />
+                }
+              >
+                {secondaryAction.label}
+              </Button>
+            ) : null}
+
+            {tertiaryAction ? (
+              <Button
+                key={tertiaryAction.id}
+                color="secondary"
+                size="sm"
+                className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+                isDisabled={tertiaryAction.isDisabled}
+                startContent={<Notebook size={20} className="text-black/50" />}
+              >
+                {tertiaryAction.label}
+              </Button>
+            ) : null}
+          </div>
+
+          <div className="mt-[5px] flex flex-wrap items-center justify-between gap-[6px] text-[13px] text-black/50">
+            <span>Content Updates Used:</span>
+            <span className="font-semibold text-black/70">
+              {creativeUpdatesUsed ?? '—'}
+            </span>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
