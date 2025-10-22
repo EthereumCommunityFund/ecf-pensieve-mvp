@@ -1,7 +1,7 @@
 'use client';
 
 import { Tab, Tabs } from '@heroui/react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -10,6 +10,7 @@ import {
   VacantSlotCard,
   buildActiveStats,
 } from '@/components/pages/ad-management/AvailableSlotCard';
+import ClaimSlotModal from '@/components/pages/ad-management/ClaimSlotModal';
 import StatsSummary, {
   type StatsSummaryItem,
 } from '@/components/pages/ad-management/StatsSummary';
@@ -64,6 +65,13 @@ interface VacantSlotMock {
   taxRate: string;
   taxRateHelper: string;
   actionLabel: string;
+  bondRateValue: string;
+  taxCostValue: string;
+  coverageDuration: string;
+  totalCostValue: string;
+  valuationDefault: string;
+  valuationMinimum: string;
+  coverageDescription: string;
 }
 
 interface ActiveSlotMock {
@@ -213,6 +221,14 @@ const AVAILABLE_VACANT_SLOTS: VacantSlotMock[] = [
     taxRate: '5%',
     taxRateHelper: 'Annual tax rate applied to slot valuations.',
     actionLabel: 'Make Claim',
+    bondRateValue: '0.400 ETH',
+    taxCostValue: '0.002 ETH',
+    coverageDuration: '7 days',
+    totalCostValue: '0.402 ETH',
+    valuationDefault: '2.00',
+    valuationMinimum: '0.05 ETH',
+    coverageDescription:
+      'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
   },
   {
     id: 'vacant-2',
@@ -225,6 +241,14 @@ const AVAILABLE_VACANT_SLOTS: VacantSlotMock[] = [
     taxRate: '5%',
     taxRateHelper: 'Annual tax rate applied to slot valuations.',
     actionLabel: 'Make Claim',
+    bondRateValue: '0.400 ETH',
+    taxCostValue: '0.002 ETH',
+    coverageDuration: '7 days',
+    totalCostValue: '0.402 ETH',
+    valuationDefault: '2.00',
+    valuationMinimum: '0.05 ETH',
+    coverageDescription:
+      'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
   },
   {
     id: 'vacant-3',
@@ -237,6 +261,14 @@ const AVAILABLE_VACANT_SLOTS: VacantSlotMock[] = [
     taxRate: '8%',
     taxRateHelper: 'Applies to premium city inventory annually.',
     actionLabel: 'Make Claim',
+    bondRateValue: '0.375 ETH',
+    taxCostValue: '0.012 ETH',
+    coverageDuration: '14 days',
+    totalCostValue: '0.387 ETH',
+    valuationDefault: '2.50',
+    valuationMinimum: '1.50 ETH',
+    coverageDescription:
+      'Premium slots support extended prepayment windows for global campaigns. (1 tax period = 24 hours / 620000 seconds)',
   },
 ];
 
@@ -287,10 +319,16 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
 
 export default function AdManagementPage() {
   const [selectedTab, setSelectedTab] = useState<TabKey>('yourSlots');
+  const [selectedVacantSlot, setSelectedVacantSlot] =
+    useState<VacantSlotMock | null>(null);
 
   const yourSlots = useMemo(() => YOUR_SLOTS_DATA, []);
   const vacantSlots = useMemo(() => AVAILABLE_VACANT_SLOTS, []);
   const activeSlots = useMemo(() => AVAILABLE_ACTIVE_SLOTS, []);
+
+  const handleCloseClaimModal = useCallback(() => {
+    setSelectedVacantSlot(null);
+  }, []);
 
   return (
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
@@ -341,7 +379,11 @@ export default function AdManagementPage() {
 
                   <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
                     {vacantSlots.map((slot) => (
-                      <VacantSlotCard key={slot.id} {...slot} />
+                      <VacantSlotCard
+                        key={slot.id}
+                        {...slot}
+                        onClaim={() => setSelectedVacantSlot(slot)}
+                      />
                     ))}
                   </div>
                 </section>
@@ -379,6 +421,29 @@ export default function AdManagementPage() {
           </Tabs>
         </section>
       </div>
+
+      <ClaimSlotModal
+        isOpen={!!selectedVacantSlot}
+        onClose={handleCloseClaimModal}
+        slotName={selectedVacantSlot?.slotName ?? ''}
+        statusLabel={selectedVacantSlot?.statusLabel}
+        breakdown={{
+          bondRateLabel: `Bond Rate (${selectedVacantSlot?.bondRate ?? '—'})`,
+          bondRateValue: selectedVacantSlot?.bondRateValue ?? '—',
+          taxLabel: 'Tax',
+          taxValue: selectedVacantSlot?.taxCostValue ?? '—',
+          coverageLabel: 'Coverage',
+          coverageValue: selectedVacantSlot?.coverageDuration ?? '—',
+          totalLabel: 'Total Cost',
+          totalValue: selectedVacantSlot?.totalCostValue ?? '—',
+        }}
+        valuationDefault={selectedVacantSlot?.valuationDefault ?? '0.00'}
+        valuationMinimum={selectedVacantSlot?.valuationMinimum ?? '0 ETH'}
+        coverageDescription={
+          selectedVacantSlot?.coverageDescription ??
+          'Select how many tax periods to prepay.'
+        }
+      />
     </div>
   );
 }

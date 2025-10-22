@@ -2,7 +2,7 @@ import React from 'react';
 
 import { IconProps } from '@/types/common';
 
-const InfoIcon: React.FC<IconProps> = ({ size = 32 }) => {
+const InfoIcon: React.FC<IconProps> = ({ size = 32, ...rest }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -10,6 +10,7 @@ const InfoIcon: React.FC<IconProps> = ({ size = 32 }) => {
       height={size}
       viewBox="0 0 20 20"
       fill="none"
+      {...rest}
     >
       <g opacity="0.5" clipPath="url(#clip0_585_2197)">
         <path

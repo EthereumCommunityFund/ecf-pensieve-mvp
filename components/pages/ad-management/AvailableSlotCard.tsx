@@ -47,6 +47,7 @@ export interface VacantSlotCardProps {
   taxRate: string;
   taxRateHelper: string;
   actionLabel: string;
+  onClaim?: () => void;
 }
 
 export function VacantSlotCard({
@@ -59,6 +60,7 @@ export function VacantSlotCard({
   taxRate,
   taxRateHelper,
   actionLabel,
+  onClaim,
 }: VacantSlotCardProps) {
   return (
     <Card
@@ -113,6 +115,7 @@ export function VacantSlotCard({
           radius="md"
           size="md"
           className="mt-[8px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
+          onPress={onClaim}
         >
           {actionLabel}
         </Button>
