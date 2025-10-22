@@ -5,6 +5,11 @@ import { useMemo, useState } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
+import {
+  ActiveSlotCard,
+  VacantSlotCard,
+  buildActiveStats,
+} from '@/components/pages/ad-management/AvailableSlotCard';
 import StatsSummary, {
   type StatsSummaryItem,
 } from '@/components/pages/ad-management/StatsSummary';
@@ -46,6 +51,33 @@ interface YourSlotMock {
   contentUpdates?: { used: number; total: number };
   adImageUrl?: string;
   tertiaryAction?: SlotAction;
+}
+
+interface VacantSlotMock {
+  id: string;
+  slotName: string;
+  statusLabel?: string;
+  valuation: string;
+  valuationHelper: string;
+  bondRate: string;
+  bondRateHelper: string;
+  taxRate: string;
+  taxRateHelper: string;
+  actionLabel: string;
+}
+
+interface ActiveSlotMock {
+  id: string;
+  slotName: string;
+  statusLabel?: string;
+  owner: string;
+  mediaUrl?: string;
+  mediaAlt?: string;
+  valuation: string;
+  lockedBond: string;
+  remainingUnits: string;
+  minTakeoverBid: string;
+  takeoverCta: string;
 }
 
 const STATS_SUMMARY: StatsSummaryItem[] = [
@@ -169,10 +201,96 @@ const YOUR_SLOTS_DATA: YourSlotMock[] = [
   },
 ];
 
+const AVAILABLE_VACANT_SLOTS: VacantSlotMock[] = [
+  {
+    id: 'vacant-1',
+    slotName: 'Homescreen / Top Banner',
+    statusLabel: 'Open',
+    valuation: '0.05 ETH',
+    valuationHelper: 'The minimum default valuation for this slot.',
+    bondRate: '20%',
+    bondRateHelper: 'Percentage of valuation locked as collateral.',
+    taxRate: '5%',
+    taxRateHelper: 'Annual tax rate applied to slot valuations.',
+    actionLabel: 'Make Claim',
+  },
+  {
+    id: 'vacant-2',
+    slotName: 'Homescreen / Sidebar',
+    statusLabel: 'Open',
+    valuation: '0.05 ETH',
+    valuationHelper: 'The minimum default valuation for this slot.',
+    bondRate: '20%',
+    bondRateHelper: 'Percentage of valuation locked as collateral.',
+    taxRate: '5%',
+    taxRateHelper: 'Annual tax rate applied to slot valuations.',
+    actionLabel: 'Make Claim',
+  },
+  {
+    id: 'vacant-3',
+    slotName: 'Times Square / Skyline Board',
+    statusLabel: 'Open',
+    valuation: '1.50 ETH',
+    valuationHelper: 'High-visibility placement updated nightly.',
+    bondRate: '25%',
+    bondRateHelper: 'Collateral requirement based on appraisal risk band.',
+    taxRate: '8%',
+    taxRateHelper: 'Applies to premium city inventory annually.',
+    actionLabel: 'Make Claim',
+  },
+];
+
+const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
+  {
+    id: 'active-1',
+    slotName: 'Homescreen / Footer Banner',
+    statusLabel: 'Owned',
+    owner: '0x000',
+    mediaUrl:
+      'https://images.unsplash.com/photo-1526312426976-f4d754fa9bd6?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Burger campaign creative',
+    valuation: '0.05 ETH',
+    lockedBond: '0.00 ETH',
+    remainingUnits: '7 days',
+    minTakeoverBid: '0.000 ETH',
+    takeoverCta: 'Takeover for 0.00 ETH',
+  },
+  {
+    id: 'active-2',
+    slotName: 'Homescreen / List Inline',
+    statusLabel: 'Owned',
+    owner: '0x000',
+    mediaUrl:
+      'https://images.unsplash.com/photo-1559058737-7b8da6e5abf4?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Burger combo promotion',
+    valuation: '0.05 ETH',
+    lockedBond: '0.00 ETH',
+    remainingUnits: '7 days',
+    minTakeoverBid: '0.000 ETH',
+    takeoverCta: 'Takeover for 0.00 ETH',
+  },
+  {
+    id: 'active-3',
+    slotName: 'Marketplace / Featured Banner',
+    statusLabel: 'Owned',
+    owner: '0xC0FFEE',
+    mediaUrl:
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+    mediaAlt: 'Dynamic pricing teaser',
+    valuation: '0.80 ETH',
+    lockedBond: '0.10 ETH',
+    remainingUnits: '3 days',
+    minTakeoverBid: '0.880 ETH',
+    takeoverCta: 'Takeover for 0.88 ETH',
+  },
+];
+
 export default function AdManagementPage() {
   const [selectedTab, setSelectedTab] = useState<TabKey>('yourSlots');
 
   const yourSlots = useMemo(() => YOUR_SLOTS_DATA, []);
+  const vacantSlots = useMemo(() => AVAILABLE_VACANT_SLOTS, []);
+  const activeSlots = useMemo(() => AVAILABLE_ACTIVE_SLOTS, []);
 
   return (
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
@@ -212,11 +330,51 @@ export default function AdManagementPage() {
             </Tab>
 
             <Tab key="availableSlots" title="Available Ad Slots">
-              <TabPlaceholder
-                title="Marketplace integration pending"
-                description="Browse active bids and vacant inventory once the marketplace endpoint is connected."
-                actionLabel="View Market Overview"
-              />
+              <div className="flex flex-col gap-[32px]">
+                <section className="flex flex-col gap-[16px]">
+                  <ECFTypography
+                    type="subtitle2"
+                    className="text-[16px] font-semibold text-black"
+                  >
+                    Vacant Slots
+                  </ECFTypography>
+
+                  <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                    {vacantSlots.map((slot) => (
+                      <VacantSlotCard key={slot.id} {...slot} />
+                    ))}
+                  </div>
+                </section>
+
+                <section className="flex flex-col gap-[16px]">
+                  <ECFTypography
+                    type="subtitle2"
+                    className="text-[16px] font-semibold text-black"
+                  >
+                    Active Slots
+                  </ECFTypography>
+
+                  <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                    {activeSlots.map((slot) => (
+                      <ActiveSlotCard
+                        key={slot.id}
+                        slotName={slot.slotName}
+                        statusLabel={slot.statusLabel}
+                        owner={slot.owner}
+                        mediaUrl={slot.mediaUrl}
+                        mediaAlt={slot.mediaAlt}
+                        stats={buildActiveStats(
+                          slot.valuation,
+                          slot.lockedBond,
+                          slot.remainingUnits,
+                          slot.minTakeoverBid,
+                        )}
+                        takeoverCta={slot.takeoverCta}
+                      />
+                    ))}
+                  </div>
+                </section>
+              </div>
             </Tab>
           </Tabs>
         </section>
