@@ -14,19 +14,6 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 
 const SYSTEM_TOKEN_HEADER = 'x-ai-system-token';
 
-const parseSystemTokenEnv = (envValue: string | undefined) => {
-  if (!envValue) {
-    return [];
-  }
-
-  return envValue
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-};
-
-const AI_SYSTEM_TOKEN_MAP = parseSystemTokenEnv(process.env.AI_SYSTEM_TOKENS);
-
 export type AdminGuardContext = {
   wallet: string;
   role: AdminWhitelistRole;

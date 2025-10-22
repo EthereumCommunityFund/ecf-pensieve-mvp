@@ -306,7 +306,7 @@ export const projectRouter = router({
     .input(baseProjectInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.id;
-      if (!userId || process.env.AI_SYSTEM_USER_ID_SET === userId) {
+      if (!userId || process.env.NEXT_PUBLIC_AI_SYSTEM_TOKENS === userId) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Current user is not authorized for AI project creation',
