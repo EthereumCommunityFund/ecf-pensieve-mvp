@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardBody } from '@heroui/react';
+import { Card, CardBody, Skeleton } from '@heroui/react';
 import Image from 'next/image';
 
 import { Button } from '@/components/base/button';
@@ -218,6 +218,73 @@ export function ActiveSlotCard({
         >
           {takeoverCta}
         </Button>
+      </CardBody>
+    </Card>
+  );
+}
+
+export function VacantSlotCardSkeleton() {
+  return (
+    <Card
+      shadow="none"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
+    >
+      <CardBody className="flex h-full flex-col gap-[16px] p-5">
+        <div className="flex items-start justify-between gap-3">
+          <Skeleton className="h-[18px] w-[120px] rounded-[4px]" />
+          <Skeleton className="h-[20px] w-[80px] rounded-[6px]" />
+        </div>
+
+        <Skeleton className="h-[140px] w-full rounded-[12px]" />
+
+        <div className="flex flex-col gap-[14px]">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="flex flex-col gap-[8px]">
+              <div className="flex items-center justify-between gap-[12px]">
+                <Skeleton className="h-[16px] w-[140px] rounded-[4px]" />
+                <Skeleton className="h-[22px] w-[70px] rounded-[6px]" />
+              </div>
+              <Skeleton className="h-[14px] w-[180px] rounded-[4px]" />
+            </div>
+          ))}
+        </div>
+
+        <Skeleton className="mt-[8px] h-[36px] w-full rounded-[6px]" />
+      </CardBody>
+    </Card>
+  );
+}
+
+export function ActiveSlotCardSkeleton() {
+  return (
+    <Card
+      shadow="none"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
+    >
+      <CardBody className="flex h-full flex-col gap-[16px] p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-[6px]">
+            <Skeleton className="h-[18px] w-[140px] rounded-[4px]" />
+            <Skeleton className="h-[16px] w-[160px] rounded-[4px]" />
+          </div>
+          <Skeleton className="h-[20px] w-[80px] rounded-[6px]" />
+        </div>
+
+        <Skeleton className="h-[180px] w-full rounded-[10px]" />
+
+        <div className="flex flex-col gap-[12px]">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-[12px]"
+            >
+              <Skeleton className="h-[16px] w-[150px] rounded-[4px]" />
+              <Skeleton className="h-[18px] w-[100px] rounded-[4px]" />
+            </div>
+          ))}
+        </div>
+
+        <Skeleton className="h-[36px] w-full rounded-[6px]" />
       </CardBody>
     </Card>
   );

@@ -7,7 +7,9 @@ import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import {
   ActiveSlotCard,
+  ActiveSlotCardSkeleton,
   VacantSlotCard,
+  VacantSlotCardSkeleton,
   buildActiveStats,
 } from '@/components/pages/ad-management/AvailableSlotCard';
 import ClaimSlotModal from '@/components/pages/ad-management/ClaimSlotModal';
@@ -27,6 +29,7 @@ import {
   type ActiveSlotData,
   type VacantSlotData,
 } from '@/hooks/useHarbergerSlots';
+import { AddressValidator } from '@/lib/utils/addressValidation';
 import {
   ONE_BIGINT,
   calculateBond,
@@ -227,8 +230,16 @@ export default function AdManagementPage() {
     useState<ActiveSlotData | null>(null);
 
   const yourSlots = useMemo(() => YOUR_SLOTS_DATA, []);
-  const { metrics, vacantSlots, activeSlots, isLoading, error } =
-    useHarbergerSlots();
+  const {
+    metrics,
+    vacantSlots,
+    activeSlots,
+    slotIdCounter,
+    treasuryAddress,
+    governanceAddress,
+    isLoading,
+    error,
+  } = useHarbergerSlots();
 
   const statsItems = useMemo<StatsSummaryItem[]>(() => {
     const items: StatsSummaryItem[] = [
@@ -336,6 +347,11 @@ export default function AdManagementPage() {
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
         <StatsSummary items={statsItems} />
+        {/* <FactoryOverview
+          slotIdCounter={slotIdCounter}
+          treasury={treasuryAddress}
+          governance={governanceAddress}
+        /> */}
 
         <section className="flex flex-col">
           <Tabs
@@ -368,7 +384,13 @@ export default function AdManagementPage() {
                       message={`Unable to load slot inventory: ${error.message}`}
                     />
                   ) : isLoading && vacantSlots.length === 0 ? (
-                    <DataFallback message="Loading slot inventory from Sepolia…" />
+                    <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                      {Array.from({ length: 2 }).map((_, index) => (
+                        <VacantSlotCardSkeleton
+                          key={`vacant-skeleton-${index}`}
+                        />
+                      ))}
+                    </div>
                   ) : vacantSlots.length === 0 ? (
                     <DataFallback message="No vacant slots published by the factory yet." />
                   ) : (
@@ -398,7 +420,13 @@ export default function AdManagementPage() {
                       message={`Unable to load active slots: ${error.message}`}
                     />
                   ) : isLoading && activeSlots.length === 0 ? (
-                    <DataFallback message="Loading active slot data from Sepolia…" />
+                    <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                      {Array.from({ length: 2 }).map((_, index) => (
+                        <ActiveSlotCardSkeleton
+                          key={`active-skeleton-${index}`}
+                        />
+                      ))}
+                    </div>
                   ) : activeSlots.length === 0 ? (
                     <DataFallback message="No active slots claimed yet." />
                   ) : (
@@ -538,6 +566,49 @@ function DataFallback({
       className={`flex min-h-[120px] items-center justify-center rounded-[12px] border px-6 py-8 text-center text-[14px] font-medium ${borderClasses} ${backgroundClasses}`}
     >
       {message}
+    </div>
+  );
+}
+
+function FactoryOverview({
+  slotIdCounter,
+  treasury,
+  governance,
+}: {
+  slotIdCounter: bigint;
+  treasury: `0x${string}`;
+  governance: `0x${string}`;
+}) {
+  const formattedSlotCounter = slotIdCounter.toString();
+  const displayTreasury = AddressValidator.shortenAddress(treasury);
+  const displayGovernance = AddressValidator.shortenAddress(governance);
+
+  return (
+    <div className="grid grid-cols-1 gap-3 rounded-[12px] border border-black/10 bg-white px-5 py-4 text-[13px] text-black/70 md:grid-cols-3">
+      <div className="flex flex-col gap-[4px]">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/50">
+          Slot Counter
+        </span>
+        <span className="font-semibold text-black/80">
+          {formattedSlotCounter}
+        </span>
+      </div>
+      <div className="flex flex-col gap-[4px]">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/50">
+          Treasury
+        </span>
+        <span className="font-mono text-[13px] text-black/80">
+          {displayTreasury}
+        </span>
+      </div>
+      <div className="flex flex-col gap-[4px]">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/50">
+          Governance
+        </span>
+        <span className="font-mono text-[13px] text-black/80">
+          {displayGovernance}
+        </span>
+      </div>
     </div>
   );
 }
