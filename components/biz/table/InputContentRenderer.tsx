@@ -8,6 +8,7 @@ import TooltipWithQuestionIcon from '@/components/biz/FormAndTable/TooltipWithQu
 import { AFFILIATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/AffiliatedProjectsTableItem';
 import { CONTRIBUTION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributingTeamsTableItem';
 import { CONTRIBUTOR_ROLE_OPTIONS } from '@/components/biz/table/embedTable/item/ContributorsTableItem';
+import { ROADMAP_STATUS_OPTIONS } from '@/components/biz/table/embedTable/item/RoadmapTimelineTableItem';
 import { STACK_INTEGRATION_TYPE_OPTIONS } from '@/components/biz/table/embedTable/item/StackIntegrationsTableItem';
 import { ProjectFieldRenderer } from '@/components/biz/table/ProjectFieldRenderer';
 import { TableIcon } from '@/components/icons';
@@ -27,6 +28,7 @@ import {
   IPhysicalEntity,
   IPocItemKey,
   IPreviousFundingRound,
+  IRoadmapTimelineEntry,
 } from '@/types/item';
 import { formatAmount } from '@/utils/formatters';
 import {
@@ -1368,6 +1370,182 @@ const InputContentRenderer: React.FC<IProps> = ({
                 return referenceLabel
                   ? `${dateLabel} - ${amountLabel} - ${referenceLabel}`
                   : `${dateLabel} - ${amountLabel}`;
+              })
+              .join(', ')}
+          </>
+        );
+      }
+
+      case 'roadmap_timeline': {
+        const parsed = parseValue(value);
+
+        if (!Array.isArray(parsed)) {
+          return <>{parsed}</>;
+        }
+
+        if (parsed.length === 0) {
+          return <span className="text-gray-400">No roadmap milestones</span>;
+        }
+
+        if (isInExpandableRow) {
+          return (
+            <div className="w-full ">
+              <TableContainer bordered rounded background="white">
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-[#F5F5F5]">
+                      {[
+                        'milestone',
+                        'description',
+                        'date',
+                        'status',
+                        'reference',
+                      ].map((columnKey, index) => (
+                        <TableHeader
+                          key={columnKey}
+                          width={
+                            getColumnConfig('roadmap_timeline', columnKey)
+                              ?.width
+                          }
+                          isLast={index === 4}
+                          isContainerBordered
+                        >
+                          <div className="flex items-center gap-[5px]">
+                            <span>
+                              {
+                                getColumnConfig('roadmap_timeline', columnKey)
+                                  ?.label
+                              }
+                            </span>
+                            <TooltipWithQuestionIcon
+                              content={getColumnTooltip(
+                                'roadmap_timeline',
+                                columnKey,
+                              )}
+                            />
+                          </div>
+                        </TableHeader>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.map(
+                      (item: IRoadmapTimelineEntry, index: number) => (
+                        <TableRow
+                          key={index}
+                          isLastRow={index === parsed.length - 1}
+                        >
+                          <TableCell
+                            width={
+                              getColumnConfig('roadmap_timeline', 'milestone')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.milestone || '-'}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig('roadmap_timeline', 'description')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.description || '-'}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig('roadmap_timeline', 'date')?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.date
+                              ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            width={
+                              getColumnConfig('roadmap_timeline', 'status')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.status
+                              ? getOptionLabel(
+                                  item.status,
+                                  ROADMAP_STATUS_OPTIONS,
+                                )
+                              : '-'}
+                          </TableCell>
+                          <TableCell
+                            isLast
+                            width={
+                              getColumnConfig('roadmap_timeline', 'reference')
+                                ?.width
+                            }
+                            isContainerBordered
+                            isLastRow={index === parsed.length - 1}
+                          >
+                            {item?.reference ? (
+                              <Link
+                                href={normalizeUrl(item.reference)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                {normalizeUrl(item.reference)}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </div>
+          );
+        }
+
+        if (isExpandable) {
+          return (
+            <div className="w-full">
+              <button
+                onClick={(e) => {
+                  if (isTableCell) {
+                    e.stopPropagation();
+                  }
+                  onToggleExpanded?.();
+                }}
+                className={`group flex h-auto items-center gap-[5px] rounded border-none bg-transparent p-0 transition-colors ${isTableCell ? '' : 'hover:opacity-80'}`}
+              >
+                <TableIcon size={20} color="black" className="opacity-70" />
+                <span className="font-sans text-[13px] font-semibold leading-[20px] text-black">
+                  {isExpanded ? 'Close Table' : 'View Table'}
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            {parsed
+              .map((item: IRoadmapTimelineEntry) => {
+                const milestoneLabel = item?.milestone || NA_VALUE;
+                const statusLabel = item?.status
+                  ? getOptionLabel(item.status, ROADMAP_STATUS_OPTIONS)
+                  : NA_VALUE;
+                const dateLabel = item?.date
+                  ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                  : NA_VALUE;
+                return `${milestoneLabel} (${statusLabel} · ${dateLabel})`;
               })
               .join(', ')}
           </>

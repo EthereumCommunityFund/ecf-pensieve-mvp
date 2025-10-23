@@ -11,6 +11,7 @@ import EndorsersTableItem from './item/EndorsersTableItem';
 import FundingReceivedGrantsTableItem from './item/FundingReceivedGrantsTableItem';
 import PreviousFundingRoundsTableItem from './item/PreviousFundingRoundsTableItem';
 import PrivateFundingRoundsTableItem from './item/PrivateFundingRoundsTableItem';
+import RoadmapTimelineTableItem from './item/RoadmapTimelineTableItem';
 import StackIntegrationsTableItem from './item/StackIntegrationsTableItem';
 
 export interface DynamicFieldColumn {
@@ -342,6 +343,43 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
     ],
     tableComponent: 'PreviousFundingRoundsTableItem',
   },
+  roadmap_timeline: {
+    displayType: 'roadmap_timeline',
+    addButtonText: 'Add Milestone',
+    columns: [
+      {
+        key: 'milestone',
+        label: 'Milestone',
+        width: 220,
+        tooltip: 'Name of the roadmap milestone or deliverable',
+      },
+      {
+        key: 'description',
+        label: 'Description',
+        width: 260,
+        tooltip: 'Short summary of what the milestone delivers',
+      },
+      {
+        key: 'date',
+        label: 'Target Date',
+        width: 160,
+        tooltip: 'Planned completion date for this milestone',
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        width: 160,
+        tooltip: 'Current progress status of the milestone',
+      },
+      {
+        key: 'reference',
+        label: 'Reference',
+        width: 240,
+        tooltip: 'Public URL or document that validates the milestone',
+      },
+    ],
+    tableComponent: 'RoadmapTimelineTableItem',
+  },
   decentralized_governance: {
     displayType: 'decentralized_governance',
     addButtonText: 'Add an Address',
@@ -391,4 +429,5 @@ export const TABLE_ITEM_COMPONENTS: Record<string, React.ComponentType<any>> = {
   DecentralizedGovernanceTableItem: DecentralizedGovernanceTableItem,
   PreviousFundingRoundsTableItem: PreviousFundingRoundsTableItem,
   AuditReportTableItem: AuditReportTableItem,
+  RoadmapTimelineTableItem: RoadmapTimelineTableItem,
 };
