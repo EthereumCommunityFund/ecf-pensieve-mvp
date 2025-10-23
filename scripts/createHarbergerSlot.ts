@@ -29,7 +29,7 @@
  *   TAX_PERIOD_SECONDS=86400
  *   ANNUAL_TAX_RATE_BPS=500
  *   MIN_BID_INCREMENT_BPS=1000
- *   MIN_VALUATION_ETH=2                     Minimum valuation in ETH
+ *   MIN_VALUATION_ETH=0.5                   Minimum valuation in ETH
  *   DUST_RATE_BPS=100                       Only used for enabled slots
  */
 
@@ -150,7 +150,7 @@ async function createSlot(
     DEFAULT_MIN_BID_INCREMENT_BPS,
   );
 
-  const minValuationEth = process.env.MIN_VALUATION_ETH ?? '2';
+  const minValuationEth = process.env.MIN_VALUATION_ETH ?? '0.5';
   const minValuationWei = parseEther(minValuationEth);
 
   if (slotType === 'enabled') {
@@ -257,7 +257,11 @@ async function main() {
   const privateKey = requireEnv('PRIVATE_KEY');
   const rpcUrl = requireEnv('RPC_URL');
 
-  const account = privateKeyToAccount(privateKey as `0x${string}`);
+  const account = privateKeyToAccount(
+    (privateKey.startsWith('0x')
+      ? privateKey
+      : `0x${privateKey}`) as `0x${string}`,
+  );
   const transport = http(rpcUrl);
 
   const walletClient = createWalletClient({
