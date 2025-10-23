@@ -176,6 +176,8 @@ export interface UseHarbergerSlotsResult {
   vacantSlots: VacantSlotData[];
   activeSlots: ActiveSlotData[];
   slotIdCounter: bigint;
+  treasuryAddress: `0x${string}`;
+  governanceAddress: `0x${string}`;
   isLoading: boolean;
   isRefetching: boolean;
   error?: Error;
@@ -219,6 +221,28 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     },
   });
 
+  const treasuryQuery = useReadContract({
+    address: HARBERGER_FACTORY_ADDRESS,
+    abi: HARBERGER_FACTORY_ABI,
+    functionName: 'treasury',
+    chainId: sepolia.id,
+    query: {
+      staleTime: 30_000,
+      refetchInterval: 30_000,
+    },
+  });
+
+  const governanceQuery = useReadContract({
+    address: HARBERGER_FACTORY_ADDRESS,
+    abi: HARBERGER_FACTORY_ABI,
+    functionName: 'governance',
+    chainId: sepolia.id,
+    query: {
+      staleTime: 30_000,
+      refetchInterval: 30_000,
+    },
+  });
+
   const enabledAddresses = useMemo<Address[]>(() => {
     const raw = enabledAddressesQuery.data ?? [];
     return Array.isArray(raw) ? (raw as Address[]) : [];
@@ -231,12 +255,26 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
 
   const slotIdCounter =
     (slotIdCounterQuery.data as bigint | undefined) ?? ZERO_BIGINT;
+  const treasuryAddress =
+    (treasuryQuery.data as `0x${string}` | undefined) ??
+    '0x0000000000000000000000000000000000000000';
+  const governanceAddress =
+    (governanceQuery.data as `0x${string}` | undefined) ??
+    '0x0000000000000000000000000000000000000000';
 
   useEffect(() => {
     devLog('enabledAddresses', enabledAddresses);
     devLog('shieldedAddresses', shieldedAddresses);
+    devLog('treasury', treasuryAddress);
+    devLog('governance', governanceAddress);
     devLog('slotIdCounter', slotIdCounter);
-  }, [enabledAddresses, shieldedAddresses, slotIdCounter]);
+  }, [
+    enabledAddresses,
+    shieldedAddresses,
+    treasuryAddress,
+    governanceAddress,
+    slotIdCounter,
+  ]);
 
   const enabledContracts = useMemo(
     () =>
@@ -410,6 +448,8 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     (enabledAddressesQuery.error as Error | undefined) ??
     (shieldedAddressesQuery.error as Error | undefined) ??
     (slotIdCounterQuery.error as Error | undefined) ??
+    (treasuryQuery.error as Error | undefined) ??
+    (governanceQuery.error as Error | undefined) ??
     (enabledDetailsQuery.error as Error | undefined) ??
     (shieldedDetailsQuery.error as Error | undefined);
 
@@ -417,11 +457,15 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     enabledAddressesQuery.isLoading ||
       shieldedAddressesQuery.isLoading ||
       slotIdCounterQuery.isLoading ||
+      treasuryQuery.isLoading ||
+      governanceQuery.isLoading ||
       enabledDetailsQuery.isLoading ||
       shieldedDetailsQuery.isLoading ||
       enabledAddressesQuery.isPending ||
       shieldedAddressesQuery.isPending ||
       slotIdCounterQuery.isPending ||
+      treasuryQuery.isPending ||
+      governanceQuery.isPending ||
       enabledDetailsQuery.isPending ||
       shieldedDetailsQuery.isPending,
   );
@@ -430,6 +474,8 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     enabledAddressesQuery.isRefetching ||
       shieldedAddressesQuery.isRefetching ||
       slotIdCounterQuery.isRefetching ||
+      treasuryQuery.isRefetching ||
+      governanceQuery.isRefetching ||
       enabledDetailsQuery.isRefetching ||
       shieldedDetailsQuery.isRefetching,
   );
@@ -439,6 +485,8 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     vacantSlots,
     activeSlots,
     slotIdCounter,
+    treasuryAddress,
+    governanceAddress,
     isLoading,
     isRefetching,
     error: error ?? undefined,
