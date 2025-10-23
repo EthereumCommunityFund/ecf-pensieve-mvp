@@ -289,26 +289,6 @@ const AVAILABLE_VACANT_SLOTS: VacantSlotMock[] = [
     coverageDescription:
       'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
   },
-  {
-    id: 'vacant-3',
-    slotName: 'Times Square / Skyline Board',
-    statusLabel: 'Open',
-    valuation: '1.50 ETH',
-    valuationHelper: 'High-visibility placement updated nightly.',
-    bondRate: '25%',
-    bondRateHelper: 'Collateral requirement based on appraisal risk band.',
-    taxRate: '8%',
-    taxRateHelper: 'Applies to premium city inventory annually.',
-    actionLabel: 'Make Claim',
-    bondRateValue: '0.375 ETH',
-    taxCostValue: '0.012 ETH',
-    coverageDuration: '14 days',
-    totalCostValue: '0.387 ETH',
-    valuationDefault: '2.50',
-    valuationMinimum: '1.50 ETH',
-    coverageDescription:
-      'Premium slots support extended prepayment windows for global campaigns. (1 tax period = 24 hours / 620000 seconds)',
-  },
 ];
 
 const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
@@ -407,51 +387,6 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
       isCtaDisabled: true,
     },
   },
-  {
-    id: 'active-3',
-    slotName: 'Marketplace / Featured Banner',
-    statusLabel: 'Owned',
-    owner: '0xC0FFEE',
-    taxRate: '6%',
-    mediaUrl:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-    mediaAlt: 'Dynamic pricing teaser',
-    valuation: '0.80 ETH',
-    lockedBond: '0.10 ETH',
-    remainingUnits: '3 days',
-    minTakeoverBid: '0.880 ETH',
-    takeoverCta: 'Takeover for 0.248 ETH',
-    takeover: {
-      contextLabel: 'Owned Slot · Takeover',
-      minBidValue: '0.880 ETH',
-      valuation: {
-        placeholder: 'Min: 0.88 ETH',
-        helper:
-          'Must be at least 0.968 ETH (10.0% higher than current valuation).',
-      },
-      coverage: {
-        label: '(14 Days)',
-        description:
-          'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
-        sliderPosition: 0.4,
-        rangeStart: '1 day',
-        rangeEnd: '365 days',
-      },
-      breakdown: {
-        bondRateLabel: 'Bond Rate (25%)',
-        bondRateValue: '0.200 ETH',
-        taxLabel: 'Tax',
-        taxValue: '0.048 ETH',
-        coverageLabel: 'Coverage',
-        coverageValue: '14 Days',
-        totalLabel: 'Total Cost',
-        totalValue: '0.248 ETH',
-      },
-      harbergerInfo:
-        "You pay the current owner's declared price to the community treasury. Set your own valuation carefully – you'll pay continuous taxes on it, and others can buy you out at that price.",
-      ctaLabel: 'Takeover for 0.248 ETH',
-    },
-  },
 ];
 
 const DEFAULT_TAKEOVER_DATA: TakeoverModalMock = {
@@ -482,7 +417,7 @@ const DEFAULT_TAKEOVER_DATA: TakeoverModalMock = {
 };
 
 export default function AdManagementPage() {
-  const [selectedTab, setSelectedTab] = useState<TabKey>('yourSlots');
+  const [selectedTab, setSelectedTab] = useState<TabKey>('availableSlots');
   const [selectedVacantSlot, setSelectedVacantSlot] =
     useState<VacantSlotMock | null>(null);
   const [selectedTakeoverSlot, setSelectedTakeoverSlot] =
@@ -521,23 +456,6 @@ export default function AdManagementPage() {
               panel: 'pt-[20px]',
             }}
           >
-            <Tab key="yourSlots" title="Your Slots">
-              {/* TODO  */}
-              <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
-                {yourSlots.map((slot) => (
-                  <YourSlotsCard key={slot.id} {...slot} />
-                ))}
-              </div>
-            </Tab>
-
-            <Tab key="templateProposals" title="Template Proposals">
-              <TabPlaceholder
-                title="Template library coming soon"
-                description="Save and reuse campaigns for recurring Harberger slots. Upload templates and share with collaborators."
-                actionLabel="Explore Beta Program"
-              />
-            </Tab>
-
             <Tab key="availableSlots" title="Available Ad Slots">
               <div className="flex flex-col gap-[32px]">
                 <section className="flex flex-col gap-[16px]">
@@ -589,6 +507,22 @@ export default function AdManagementPage() {
                   </div>
                 </section>
               </div>
+            </Tab>
+            <Tab key="yourSlots" title="Your Slots">
+              {/* TODO  */}
+              <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                {yourSlots.map((slot) => (
+                  <YourSlotsCard key={slot.id} {...slot} />
+                ))}
+              </div>
+            </Tab>
+
+            <Tab key="templateProposals" title="Template Proposals">
+              <TabPlaceholder
+                title="Template library coming soon"
+                description="Save and reuse campaigns for recurring Harberger slots. Upload templates and share with collaborators."
+                actionLabel="Explore Beta Program"
+              />
             </Tab>
           </Tabs>
         </section>

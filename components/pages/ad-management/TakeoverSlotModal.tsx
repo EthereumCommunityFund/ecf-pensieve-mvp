@@ -100,7 +100,8 @@ export default function TakeoverSlotModal({
       onClose={onClose}
       placement="center"
       classNames={{
-        base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]',
+        base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px] h-[calc(100vh-200px)]',
+        body: 'overflow-y-scroll',
       }}
     >
       <ModalContent>
@@ -127,7 +128,7 @@ export default function TakeoverSlotModal({
               </div>
             </div>
 
-            <ModalBody className="flex flex-col gap-[20px] px-5 pb-0 pt-4">
+            <ModalBody className="flex flex-col gap-[20px] px-5 pb-0 pt-4 ">
               <div className="flex flex-col gap-[10px]">
                 <span className="text-[13px] font-semibold text-black/50">
                   Slot:
