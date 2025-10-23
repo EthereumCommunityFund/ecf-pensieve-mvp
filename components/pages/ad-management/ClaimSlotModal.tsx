@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { parseEther } from 'viem';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
@@ -13,27 +14,25 @@ import {
 import { Select, SelectItem } from '@/components/base/select';
 import ECFTypography from '@/components/base/typography';
 import { InfoIcon, ShowMetricsIcon, XIcon } from '@/components/icons';
+import type { VacantSlotData } from '@/hooks/useHarbergerSlots';
+import {
+  ZERO_BIGINT,
+  calculateBond,
+  calculateTaxForPeriods,
+  formatDuration,
+  formatEth,
+} from '@/utils/harberger';
 
-interface BreakdownProps {
-  bondRateLabel: string;
-  bondRateValue: string;
-  taxLabel: string;
-  taxValue: string;
-  coverageLabel: string;
-  coverageValue: string;
-  totalLabel: string;
-  totalValue: string;
-}
-
-export interface ClaimSlotModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  slotName: string;
-  statusLabel?: string;
-  breakdown: BreakdownProps;
-  valuationDefault: string;
-  valuationMinimum: string;
-  coverageDescription: string;
+interface ClaimPayload {
+  valuationWei: bigint;
+  taxPeriods: bigint;
+  creativeUri: string;
+  metadata: {
+    contentType: string;
+    title: string;
+    linkUrl: string;
+    mediaUrl: string;
+  };
 }
 
 type ClaimStep = 1 | 2;
@@ -44,53 +43,252 @@ const CONTENT_TYPE_OPTIONS = [
   { key: 'video', label: 'Video' },
 ];
 
-const COVERAGE_OPTIONS = [
-  { key: '1d', label: '1 day' },
-  { key: '7d', label: '7 days' },
-  { key: '14d', label: '14 days' },
-];
+interface ClaimSlotModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  slot: VacantSlotData | null;
+  statusLabel?: string;
+  valuationDefault: string;
+  valuationMinimumLabel: string;
+  coverageHint: string;
+  onSubmit: (payload: ClaimPayload) => Promise<void>;
+  isSubmitting?: boolean;
+  errorMessage?: string;
+}
 
 export default function ClaimSlotModal({
   isOpen,
   onClose,
-  slotName,
+  slot,
   statusLabel = 'Open',
-  breakdown,
   valuationDefault,
-  valuationMinimum,
-  coverageDescription,
+  valuationMinimumLabel,
+  coverageHint,
+  onSubmit,
+  isSubmitting = false,
+  errorMessage,
 }: ClaimSlotModalProps) {
   const [step, setStep] = useState<ClaimStep>(1);
+  const [valuationInput, setValuationInput] = useState(valuationDefault);
+  const [selectedCoverageKey, setSelectedCoverageKey] = useState<string>('1');
+  const [contentType, setContentType] = useState<string>(
+    CONTENT_TYPE_OPTIONS[0].key,
+  );
+  const [title, setTitle] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
       setStep(1);
+      setValuationInput(valuationDefault);
+      setSelectedCoverageKey('1');
+      setContentType(CONTENT_TYPE_OPTIONS[0].key);
+      setTitle('');
+      setLinkUrl('');
+      setMediaUrl('');
+      setLocalError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, valuationDefault]);
 
-  const stepTitle = useMemo(() => {
-    return step === 1 ? 'Make Claim Step 1' : 'Make Claim Step 2';
-  }, [step]);
+  const coverageOptions = useMemo(() => {
+    if (!slot) {
+      return [] as Array<{
+        key: string;
+        label: string;
+        helper: string;
+        periods: bigint;
+      }>;
+    }
+
+    const presets = [1, 3, 6, 12];
+    return presets.map((count) => {
+      const periods = BigInt(count);
+      const helper = formatDuration(slot.taxPeriodInSeconds * periods, {
+        fallback: '—',
+      });
+      return {
+        key: count.toString(),
+        label: count === 1 ? '1 period' : `${count} periods`,
+        helper,
+        periods,
+      };
+    });
+  }, [slot]);
+
+  const selectedCoverage = useMemo(() => {
+    return (
+      coverageOptions.find((option) => option.key === selectedCoverageKey) ??
+      coverageOptions[0]
+    );
+  }, [coverageOptions, selectedCoverageKey]);
+
+  const parsedValuationWei = useMemo(() => {
+    try {
+      if (!valuationInput || valuationInput.trim().length === 0) {
+        return null;
+      }
+      const value = parseEther(valuationInput.trim());
+      return value;
+    } catch (error) {
+      return null;
+    }
+  }, [valuationInput]);
+
+  const bondRequired = useMemo(() => {
+    if (!slot || !parsedValuationWei) {
+      return ZERO_BIGINT;
+    }
+    return calculateBond(parsedValuationWei, slot.bondRateBps);
+  }, [parsedValuationWei, slot]);
+
+  const taxRequired = useMemo(() => {
+    if (!slot || !parsedValuationWei || !selectedCoverage) {
+      return ZERO_BIGINT;
+    }
+    return calculateTaxForPeriods(
+      parsedValuationWei,
+      slot.annualTaxRateBps,
+      slot.taxPeriodInSeconds,
+      selectedCoverage.periods,
+    );
+  }, [parsedValuationWei, selectedCoverage, slot]);
+
+  const coverageLabel = useMemo(() => {
+    if (!slot || !selectedCoverage) {
+      return '—';
+    }
+    return formatDuration(slot.taxPeriodInSeconds * selectedCoverage.periods, {
+      fallback: '—',
+    });
+  }, [selectedCoverage, slot]);
+
+  const totalValue = useMemo(
+    () => bondRequired + taxRequired,
+    [bondRequired, taxRequired],
+  );
+
+  const isStepOneValid = Boolean(
+    slot &&
+      parsedValuationWei &&
+      parsedValuationWei >= slot.minValuationWei &&
+      selectedCoverage,
+  );
 
   const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
     setStep(1);
     onClose();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!slot) {
+      return;
+    }
+
     if (step === 1) {
+      if (!isStepOneValid || !parsedValuationWei || !selectedCoverage) {
+        setLocalError(
+          'Enter a valuation above the minimum and select coverage.',
+        );
+        return;
+      }
+      setLocalError(null);
       setStep(2);
       return;
     }
 
-    handleClose();
+    if (!parsedValuationWei || !selectedCoverage) {
+      setLocalError('Unable to resolve valuation or coverage.');
+      return;
+    }
+
+    const trimmedLink = linkUrl.trim();
+    const trimmedMedia = mediaUrl.trim();
+    const trimmedTitle = title.trim();
+
+    let creativeUri = '';
+    if (trimmedMedia) {
+      creativeUri = trimmedMedia;
+    } else if (trimmedLink) {
+      creativeUri = trimmedLink;
+    } else {
+      const payload = {
+        contentType,
+        title: trimmedTitle,
+        linkUrl: trimmedLink,
+        mediaUrl: trimmedMedia,
+      };
+      creativeUri = `data:application/json,${encodeURIComponent(
+        JSON.stringify(payload),
+      )}`;
+    }
+
+    try {
+      await onSubmit({
+        valuationWei: parsedValuationWei,
+        taxPeriods: selectedCoverage.periods,
+        creativeUri,
+        metadata: {
+          contentType,
+          title: trimmedTitle,
+          linkUrl: trimmedLink,
+          mediaUrl: trimmedMedia,
+        },
+      });
+      setLocalError(null);
+      handleClose();
+    } catch (error) {
+      setLocalError(
+        error instanceof Error ? error.message : 'Failed to submit claim.',
+      );
+    }
   };
 
   const handleBack = () => {
     if (step === 2) {
       setStep(1);
+      setLocalError(null);
     }
   };
+
+  const breakdownRows = useMemo(() => {
+    if (!slot) {
+      return {
+        bondRateLabel: 'Bond Rate',
+        bondRateValue: '—',
+        taxLabel: 'Tax',
+        taxValue: '—',
+        coverageLabel: 'Coverage',
+        coverageValue: coverageLabel,
+        totalLabel: 'Total Cost',
+        totalValue: '—',
+      };
+    }
+
+    return {
+      bondRateLabel: `Bond Rate (${slot.bondRate})`,
+      bondRateValue: formatEth(bondRequired),
+      taxLabel: `Tax (${selectedCoverage?.label ?? '—'})`,
+      taxValue: formatEth(taxRequired),
+      coverageLabel: 'Coverage',
+      coverageValue: coverageLabel,
+      totalLabel: 'Total Cost',
+      totalValue: formatEth(totalValue),
+    };
+  }, [
+    bondRequired,
+    coverageLabel,
+    selectedCoverage,
+    slot,
+    taxRequired,
+    totalValue,
+  ]);
+
+  const combinedError = localError ?? errorMessage ?? null;
 
   return (
     <Modal
@@ -120,6 +318,7 @@ export default function ClaimSlotModal({
                   radius="sm"
                   className="size-[32px] rounded-[8px] bg-black/5 p-0 text-black/50 hover:bg-black/10"
                   onPress={handleClose}
+                  isDisabled={isSubmitting}
                 >
                   <XIcon size={16} />
                 </Button>
@@ -132,20 +331,149 @@ export default function ClaimSlotModal({
                   Slot:
                 </span>
                 <span className="text-[14px] font-semibold text-black">
-                  {slotName}
+                  {slot?.slotName ?? '—'}
                 </span>
               </div>
 
               {step === 1 ? (
-                <StepOneContent
-                  breakdown={breakdown}
-                  valuationDefault={valuationDefault}
-                  valuationMinimum={valuationMinimum}
-                  coverageDescription={coverageDescription}
-                />
+                <div className="flex flex-col gap-[20px]">
+                  <div className="flex flex-col gap-[12px] rounded-[12px] border border-black/10 bg-[#FCFCFC] p-[16px]">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
+                        <ShowMetricsIcon className="size-[18px] text-black/40" />
+                        <span>Bonding Cost Breakdown:</span>
+                      </div>
+                      <InfoIcon size={18} />
+                    </div>
+
+                    <BreakdownRow
+                      label={breakdownRows.bondRateLabel}
+                      value={breakdownRows.bondRateValue}
+                    />
+                    <BreakdownRow
+                      label={breakdownRows.taxLabel}
+                      value={breakdownRows.taxValue}
+                    />
+                    <BreakdownRow
+                      label={breakdownRows.coverageLabel}
+                      value={breakdownRows.coverageValue}
+                    />
+
+                    <div className="flex items-center justify-between rounded-[8px] bg-black/[0.03] px-[12px] py-[10px]">
+                      <div className="flex items-center gap-[6px] text-[13px] font-semibold text-black/80">
+                        <span>{breakdownRows.totalLabel}</span>
+                        <InfoIcon size={16} />
+                      </div>
+                      <span className="text-[14px] font-semibold text-[#0C7A32]">
+                        {breakdownRows.totalValue}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Set Valuation (ETH)" />
+                    <Input
+                      value={valuationInput}
+                      aria-label="Set valuation"
+                      className="text-[16px] font-semibold"
+                      onValueChange={setValuationInput}
+                      isInvalid={Boolean(valuationInput) && !parsedValuationWei}
+                      isDisabled={!slot}
+                    />
+                    <span className="text-[12px] text-black/50">
+                      Min: {valuationMinimumLabel}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Tax Coverage" />
+                    <span className="text-[12px] leading-[18px] text-black/60">
+                      {coverageHint}
+                    </span>
+                    <Select
+                      selectedKeys={
+                        selectedCoverage ? [selectedCoverage.key] : []
+                      }
+                      onSelectionChange={(keys) => {
+                        const key = Array.from(keys)[0] as string | undefined;
+                        if (key) {
+                          setSelectedCoverageKey(key);
+                        }
+                      }}
+                      className="w-full"
+                      aria-label="Select tax coverage"
+                      isDisabled={!slot}
+                    >
+                      {coverageOptions.map((option) => (
+                        <SelectItem
+                          key={option.key}
+                        >{`${option.label} · ${option.helper}`}</SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
               ) : (
-                <StepTwoContent />
+                <div className="flex flex-col gap-[20px]">
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Content Type" />
+                    <Select
+                      selectedKeys={[contentType]}
+                      onSelectionChange={(keys) => {
+                        const key = Array.from(keys)[0] as string | undefined;
+                        if (key) {
+                          setContentType(key);
+                        }
+                      }}
+                      className="w-full"
+                      aria-label="Select content type"
+                    >
+                      {CONTENT_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.key}>{option.label}</SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Title" />
+                    <Input
+                      placeholder="type here"
+                      aria-label="Slot title"
+                      value={title}
+                      onValueChange={setTitle}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Link URL" />
+                    <Input
+                      placeholder="https://"
+                      aria-label="Link URL"
+                      value={linkUrl}
+                      onValueChange={setLinkUrl}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Media / Image URI" />
+                    <Input
+                      placeholder="https:// or ipfs://"
+                      aria-label="Image reference"
+                      value={mediaUrl}
+                      onValueChange={setMediaUrl}
+                    />
+                    <span className="text-[12px] text-black/50">
+                      Provide a direct asset link when available. If omitted,
+                      metadata is embedded on-chain.
+                    </span>
+                  </div>
+                </div>
               )}
+
+              {combinedError ? (
+                <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
+                  {combinedError}
+                </div>
+              ) : null}
             </ModalBody>
 
             <ModalFooter className="flex items-center gap-[12px] p-5">
@@ -153,6 +481,7 @@ export default function ClaimSlotModal({
                 color="secondary"
                 className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
                 onPress={step === 1 ? handleClose : handleBack}
+                isDisabled={isSubmitting}
               >
                 {step === 1 ? 'Close' : 'Back'}
               </Button>
@@ -160,122 +489,18 @@ export default function ClaimSlotModal({
                 color="primary"
                 className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90"
                 onPress={handleNext}
+                isDisabled={
+                  step === 1 ? !isStepOneValid || !slot : isSubmitting
+                }
+                isLoading={isSubmitting}
               >
-                {step === 1 ? 'Next (1)' : 'Next (2)'}
+                {step === 1 ? 'Next' : 'Submit Claim'}
               </Button>
             </ModalFooter>
           </>
         )}
       </ModalContent>
     </Modal>
-  );
-}
-
-function StepOneContent({
-  breakdown,
-  valuationDefault,
-  valuationMinimum,
-  coverageDescription,
-}: {
-  breakdown: BreakdownProps;
-  valuationDefault: string;
-  valuationMinimum: string;
-  coverageDescription: string;
-}) {
-  return (
-    <div className="flex flex-col gap-[20px]">
-      <div className="flex flex-col gap-[12px] rounded-[12px] border border-black/10 bg-[#FCFCFC] p-[16px]">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
-            <ShowMetricsIcon className="size-[18px] text-black/40" />
-            <span>Bonding Cost Breakdown:</span>
-          </div>
-          <InfoIcon size={18} />
-        </div>
-
-        <BreakdownRow
-          label={breakdown.bondRateLabel}
-          value={breakdown.bondRateValue}
-        />
-        <BreakdownRow label={breakdown.taxLabel} value={breakdown.taxValue} />
-        <BreakdownRow
-          label={breakdown.coverageLabel}
-          value={breakdown.coverageValue}
-        />
-
-        <div className="flex items-center justify-between rounded-[8px] bg-black/[0.03] px-[12px] py-[10px]">
-          <div className="flex items-center gap-[6px] text-[13px] font-semibold text-black/80">
-            <span>{breakdown.totalLabel}</span>
-            <InfoIcon size={16} />
-          </div>
-          <span className="text-[14px] font-semibold text-[#0C7A32]">
-            {breakdown.totalValue}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-[12px]">
-        <LabelWithInfo label="Set Valuation (ETH)" />
-        <Input
-          defaultValue={valuationDefault}
-          aria-label="Set valuation"
-          className="text-[16px] font-semibold"
-        />
-        <span className="text-[12px] text-black/50">
-          Min: {valuationMinimum}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-[12px]">
-        <LabelWithInfo label="Tax Coverage" />
-        <span className="text-[12px] leading-[18px] text-black/60">
-          {coverageDescription}
-        </span>
-        <Select
-          defaultSelectedKeys={[COVERAGE_OPTIONS[1].key]}
-          className="w-full"
-          aria-label="Select tax coverage"
-        >
-          {COVERAGE_OPTIONS.map((option) => (
-            <SelectItem key={option.key}>{option.label}</SelectItem>
-          ))}
-        </Select>
-      </div>
-    </div>
-  );
-}
-
-function StepTwoContent() {
-  return (
-    <div className="flex flex-col gap-[20px]">
-      <div className="flex flex-col gap-[12px]">
-        <LabelWithInfo label="Content Type" />
-        <Select
-          defaultSelectedKeys={[CONTENT_TYPE_OPTIONS[0].key]}
-          className="w-full"
-          aria-label="Select content type"
-        >
-          {CONTENT_TYPE_OPTIONS.map((option) => (
-            <SelectItem key={option.key}>{option.label}</SelectItem>
-          ))}
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-[12px]">
-        <LabelWithInfo label="Title" />
-        <Input placeholder="type here" aria-label="Slot title" />
-      </div>
-
-      <div className="flex flex-col gap-[12px]">
-        <LabelWithInfo label="Link URL" />
-        <Input placeholder="https://" aria-label="Link URL" />
-      </div>
-
-      <div className="flex flex-col gap-[12px]">
-        <LabelWithInfo label="Image" />
-        <Input placeholder="type here" aria-label="Image reference" />
-      </div>
-    </div>
   );
 }
 

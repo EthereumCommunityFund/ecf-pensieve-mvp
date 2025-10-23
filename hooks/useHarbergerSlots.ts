@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { Address } from 'viem';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
@@ -187,6 +187,7 @@ export interface UseHarbergerSlotsResult {
   isLoading: boolean;
   isRefetching: boolean;
   error?: Error;
+  refetch: () => Promise<void>;
 }
 
 export function useHarbergerSlots(): UseHarbergerSlotsResult {
@@ -488,6 +489,28 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
       shieldedDetailsQuery.isRefetching,
   );
 
+  const refetch = useCallback(async () => {
+    await Promise.all(
+      [
+        enabledAddressesQuery.refetch?.(),
+        shieldedAddressesQuery.refetch?.(),
+        slotIdCounterQuery.refetch?.(),
+        treasuryQuery.refetch?.(),
+        governanceQuery.refetch?.(),
+        enabledDetailsQuery.refetch?.(),
+        shieldedDetailsQuery.refetch?.(),
+      ].filter(Boolean),
+    );
+  }, [
+    enabledAddressesQuery.refetch,
+    shieldedAddressesQuery.refetch,
+    slotIdCounterQuery.refetch,
+    treasuryQuery.refetch,
+    governanceQuery.refetch,
+    enabledDetailsQuery.refetch,
+    shieldedDetailsQuery.refetch,
+  ]);
+
   return {
     metrics,
     vacantSlots,
@@ -498,6 +521,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     isLoading,
     isRefetching,
     error: error ?? undefined,
+    refetch,
   };
 }
 

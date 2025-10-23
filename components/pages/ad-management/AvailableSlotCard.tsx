@@ -140,6 +140,8 @@ export interface ActiveSlotCardProps {
   stats: StatBlock[];
   takeoverCta: string;
   onTakeover?: () => void;
+  ctaDisabled?: boolean;
+  ctaLoading?: boolean;
 }
 
 export function ActiveSlotCard({
@@ -152,6 +154,8 @@ export function ActiveSlotCard({
   stats,
   takeoverCta,
   onTakeover,
+  ctaDisabled,
+  ctaLoading,
 }: ActiveSlotCardProps) {
   return (
     <Card
@@ -215,6 +219,8 @@ export function ActiveSlotCard({
           className="mt-[4px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
           startContent={<CoinVerticalIcon className="size-[20px]" />}
           onPress={onTakeover}
+          isDisabled={ctaDisabled}
+          isLoading={ctaLoading}
         >
           {takeoverCta}
         </Button>

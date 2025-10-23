@@ -26,6 +26,7 @@ import YourSlotsCard, {
   type SlotStatus,
   type YourSlotCardProps,
 } from '@/components/pages/ad-management/YourSlotsCard';
+import { useHarbergerSlotActions } from '@/hooks/useHarbergerSlotActions';
 import {
   useHarbergerSlots,
   type ActiveSlotData,
@@ -57,6 +58,8 @@ type TakeoverModalConfig = Pick<
   | 'harbergerInfo'
   | 'ctaLabel'
   | 'isCtaDisabled'
+  | 'creativeUriValue'
+  | 'errorMessage'
 >;
 
 const DEFAULT_TAKEOVER_DATA: TakeoverModalConfig = {
@@ -89,6 +92,8 @@ const DEFAULT_TAKEOVER_DATA: TakeoverModalConfig = {
   },
   harbergerInfo: '',
   ctaLabel: '',
+  creativeUriValue: '',
+  errorMessage: undefined,
 };
 
 export default function AdManagementPage() {
@@ -97,12 +102,23 @@ export default function AdManagementPage() {
     useState<VacantSlotData | null>(null);
   const [selectedTakeoverSlot, setSelectedTakeoverSlot] =
     useState<ActiveSlotData | null>(null);
-  const [takeoverCoverageDays, setTakeoverCoverageDays] = useState<number>(0);
+  const [takeoverCoveragePeriods, setTakeoverCoveragePeriods] =
+    useState<number>(1);
   const [takeoverValuationWei, setTakeoverValuationWei] = useState<
     bigint | null
   >(null);
   const [takeoverValuationInput, setTakeoverValuationInput] =
     useState<string>('');
+  const [takeoverCreativeInput, setTakeoverCreativeInput] =
+    useState<string>('');
+  const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [isTakeoverSubmitting, setIsTakeoverSubmitting] = useState(false);
+  const [takeoverError, setTakeoverError] = useState<string | null>(null);
+  const [pendingSlotAction, setPendingSlotAction] = useState<{
+    slotId: string;
+    action: 'renew' | 'forfeit' | 'poke';
+  } | null>(null);
   const { address: connectedAddress } = useAccount();
 
   const {
@@ -114,28 +130,44 @@ export default function AdManagementPage() {
     governanceAddress,
     isLoading,
     error,
+    refetch,
   } = useHarbergerSlots();
+  const {
+    claim: claimSlot,
+    takeover: takeoverSlot,
+    renew: renewSlot,
+    forfeit: forfeitSlot,
+    poke: pokeSlot,
+  } = useHarbergerSlotActions();
 
   useEffect(() => {
     if (!selectedTakeoverSlot) {
-      setTakeoverCoverageDays(0);
+      setTakeoverCoveragePeriods(1);
       setTakeoverValuationWei(null);
       setTakeoverValuationInput('');
+      setTakeoverCreativeInput('');
+      setTakeoverError(null);
       return;
     }
 
-    const periodSeconds = Number(selectedTakeoverSlot.taxPeriodInSeconds);
-    const periodDays = periodSeconds > 0 ? periodSeconds / 86_400 : 1;
     const fallbackValuation =
       selectedTakeoverSlot.minTakeoverBidWei > ZERO_BIGINT
         ? selectedTakeoverSlot.minTakeoverBidWei
         : selectedTakeoverSlot.minValuationWei;
     const fallbackInput = formatNumberInputFromWei(fallbackValuation, 4);
 
-    setTakeoverCoverageDays(periodDays);
+    setTakeoverCoveragePeriods(1);
     setTakeoverValuationWei(fallbackValuation);
     setTakeoverValuationInput(fallbackInput);
+    setTakeoverCreativeInput(selectedTakeoverSlot.currentAdURI ?? '');
+    setTakeoverError(null);
   }, [selectedTakeoverSlot]);
+
+  useEffect(() => {
+    if (selectedVacantSlot) {
+      setClaimError(null);
+    }
+  }, [selectedVacantSlot]);
 
   const normalizedAccount = useMemo(
     () => connectedAddress?.toLowerCase() ?? null,
@@ -197,8 +229,133 @@ export default function AdManagementPage() {
     if (Number.isNaN(value)) {
       return;
     }
-    setTakeoverCoverageDays(value);
+    setTakeoverCoveragePeriods(Math.max(1, Math.round(value)));
   }, []);
+
+  const handleRenewSlot = useCallback(
+    async (slot: ActiveSlotData) => {
+      setPendingSlotAction({ slotId: slot.id, action: 'renew' });
+      try {
+        await renewSlot({ slot, taxPeriods: ONE_BIGINT });
+        await refetch();
+      } finally {
+        setPendingSlotAction(null);
+      }
+    },
+    [refetch, renewSlot],
+  );
+
+  const handleForfeitSlot = useCallback(
+    async (slot: ActiveSlotData) => {
+      setPendingSlotAction({ slotId: slot.id, action: 'forfeit' });
+      try {
+        await forfeitSlot({ slot });
+        await refetch();
+      } finally {
+        setPendingSlotAction(null);
+      }
+    },
+    [forfeitSlot, refetch],
+  );
+
+  const handlePokeSlot = useCallback(
+    async (slot: ActiveSlotData) => {
+      setPendingSlotAction({ slotId: slot.id, action: 'poke' });
+      try {
+        await pokeSlot({ slot });
+        await refetch();
+      } finally {
+        setPendingSlotAction(null);
+      }
+    },
+    [pokeSlot, refetch],
+  );
+
+  const handleClaimSubmit = useCallback(
+    async ({
+      valuationWei,
+      taxPeriods,
+      creativeUri,
+    }: {
+      valuationWei: bigint;
+      taxPeriods: bigint;
+      creativeUri: string;
+    }) => {
+      if (!selectedVacantSlot) {
+        throw new Error('No slot selected.');
+      }
+
+      setClaimError(null);
+      setIsClaimSubmitting(true);
+
+      try {
+        await claimSlot({
+          slot: selectedVacantSlot,
+          valuationWei,
+          taxPeriods,
+          creativeUri,
+        });
+        await refetch();
+        setSelectedVacantSlot(null);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to submit claim.';
+        setClaimError(message);
+        throw error;
+      } finally {
+        setIsClaimSubmitting(false);
+      }
+    },
+    [claimSlot, refetch, selectedVacantSlot],
+  );
+
+  const handleTakeoverSubmit = useCallback(async () => {
+    if (!selectedTakeoverSlot) {
+      return;
+    }
+
+    if (
+      !takeoverValuationWei ||
+      takeoverValuationWei < selectedTakeoverSlot.minTakeoverBidWei
+    ) {
+      setTakeoverError('Bid must meet the minimum increment.');
+      return;
+    }
+
+    const valuationWei = takeoverValuationWei;
+    const taxPeriods = BigInt(Math.max(takeoverCoveragePeriods, 1));
+    const creativeUri =
+      takeoverCreativeInput.trim().length > 0
+        ? takeoverCreativeInput.trim()
+        : (selectedTakeoverSlot.currentAdURI ?? '');
+
+    setTakeoverError(null);
+    setIsTakeoverSubmitting(true);
+
+    try {
+      await takeoverSlot({
+        slot: selectedTakeoverSlot,
+        valuationWei,
+        taxPeriods,
+        creativeUri,
+      });
+      await refetch();
+      setSelectedTakeoverSlot(null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to submit takeover.';
+      setTakeoverError(message);
+    } finally {
+      setIsTakeoverSubmitting(false);
+    }
+  }, [
+    refetch,
+    selectedTakeoverSlot,
+    takeoverCoveragePeriods,
+    takeoverCreativeInput,
+    takeoverSlot,
+    takeoverValuationWei,
+  ]);
 
   const formatUtcTimestamp = useCallback((timestamp: bigint) => {
     if (timestamp <= ZERO_BIGINT) {
@@ -267,20 +424,24 @@ export default function AdManagementPage() {
       const currentAdBadgeTone: 'default' | 'danger' =
         status === 'closed' || status === 'overdue' ? 'danger' : 'default';
 
+      const isRenewPending =
+        pendingSlotAction?.slotId === slot.id &&
+        pendingSlotAction.action === 'renew';
+      const isForfeitPending =
+        pendingSlotAction?.slotId === slot.id &&
+        pendingSlotAction.action === 'forfeit';
+
       const primaryAction: SlotAction | undefined =
         status === 'closed'
           ? undefined
-          : slot.isOverdue
-            ? {
-                id: `pay-tax-${slot.id}`,
-                label: 'Pay Due Tax',
-                variant: 'primary',
-              }
-            : {
-                id: `renew-${slot.id}`,
-                label: 'Renew Coverage',
-                variant: 'primary',
-              };
+          : {
+              id: slot.isOverdue ? `pay-tax-${slot.id}` : `renew-${slot.id}`,
+              label: slot.isOverdue ? 'Pay Due Tax' : 'Renew Coverage',
+              variant: 'primary',
+              onPress: () => handleRenewSlot(slot),
+              isDisabled: isRenewPending || isForfeitPending,
+              isLoading: isRenewPending,
+            };
 
       const secondaryAction: SlotAction | undefined =
         status === 'closed'
@@ -290,9 +451,12 @@ export default function AdManagementPage() {
               variant: 'secondary',
             }
           : {
-              id: `edit-${slot.id}`,
-              label: 'Edit Creative',
+              id: `forfeit-${slot.id}`,
+              label: 'Forfeit Slot',
               variant: 'secondary',
+              onPress: () => handleForfeitSlot(slot),
+              isDisabled: isRenewPending || isForfeitPending,
+              isLoading: isForfeitPending,
             };
 
       const tertiaryAction: SlotAction | undefined = {
@@ -343,7 +507,14 @@ export default function AdManagementPage() {
         tertiaryAction,
       } satisfies YourSlotCardProps;
     });
-  }, [computeTaxPerPeriodWei, formatUtcTimestamp, ownedSlots]);
+  }, [
+    computeTaxPerPeriodWei,
+    formatUtcTimestamp,
+    handleForfeitSlot,
+    handleRenewSlot,
+    ownedSlots,
+    pendingSlotAction,
+  ]);
 
   const ownedSlotsTotalTaxDueWei = useMemo(() => {
     if (ownedSlots.length === 0) {
@@ -392,14 +563,7 @@ export default function AdManagementPage() {
       return DEFAULT_TAKEOVER_DATA;
     }
 
-    const periodSeconds = Number(selectedTakeoverSlot.taxPeriodInSeconds);
-    const basePeriodDays = periodSeconds > 0 ? periodSeconds / 86_400 : 1;
-    const effectiveCoverageDays =
-      takeoverCoverageDays > 0 ? takeoverCoverageDays : basePeriodDays;
-    const coveragePeriods = Math.max(
-      Math.round(effectiveCoverageDays / basePeriodDays),
-      1,
-    );
+    const coveragePeriods = Math.max(takeoverCoveragePeriods, 1);
     const coveragePeriodsBigInt = BigInt(coveragePeriods);
 
     const fallbackValuationWei =
@@ -459,17 +623,12 @@ export default function AdManagementPage() {
         label: `(${coverageDuration})`,
         description: selectedTakeoverSlot.coverageDescription,
         sliderPosition: 0,
-        rangeStart: formatDuration(selectedTakeoverSlot.taxPeriodInSeconds, {
-          fallback: 'One period',
-        }),
-        rangeEnd: formatDuration(
-          selectedTakeoverSlot.taxPeriodInSeconds * BigInt(12),
-          { fallback: 'Twelve periods' },
-        ),
-        minDays: basePeriodDays,
-        maxDays: basePeriodDays * 12,
-        stepDays: basePeriodDays,
-        defaultDays: effectiveCoverageDays,
+        rangeStart: '1 period',
+        rangeEnd: '12 periods',
+        minDays: 1,
+        maxDays: 12,
+        stepDays: 1,
+        defaultDays: coveragePeriods,
         onChange: handleTakeoverCoverageChange,
         onChangeEnd: handleTakeoverCoverageChange,
       },
@@ -489,23 +648,35 @@ export default function AdManagementPage() {
         'Takeover pays the declared valuation to the treasury and restarts the tax period at your price.',
       ctaLabel: selectedTakeoverSlot.takeoverCta,
       isCtaDisabled: !isValuationValid || coveragePeriods <= 0,
+      creativeUriValue: takeoverCreativeInput,
+      errorMessage: takeoverError ?? undefined,
     };
   }, [
     handleTakeoverCoverageChange,
     handleTakeoverValuationChange,
     selectedTakeoverSlot,
-    takeoverCoverageDays,
+    takeoverCoveragePeriods,
+    takeoverCreativeInput,
+    takeoverError,
     takeoverValuationInput,
     takeoverValuationWei,
   ]);
 
   const handleCloseClaimModal = useCallback(() => {
+    if (isClaimSubmitting) {
+      return;
+    }
+    setClaimError(null);
     setSelectedVacantSlot(null);
-  }, []);
+  }, [isClaimSubmitting]);
 
   const handleCloseTakeoverModal = useCallback(() => {
+    if (isTakeoverSubmitting) {
+      return;
+    }
+    setTakeoverError(null);
     setSelectedTakeoverSlot(null);
-  }, []);
+  }, [isTakeoverSubmitting]);
 
   return (
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
@@ -610,7 +781,25 @@ export default function AdManagementPage() {
                             slot.minTakeoverBid,
                           )}
                           takeoverCta={slot.takeoverCta}
-                          onTakeover={() => setSelectedTakeoverSlot(slot)}
+                          onTakeover={() =>
+                            slot.isExpired
+                              ? handlePokeSlot(slot)
+                              : setSelectedTakeoverSlot(slot)
+                          }
+                          ctaDisabled={
+                            slot.isExpired
+                              ? (pendingSlotAction?.slotId === slot.id &&
+                                  pendingSlotAction.action === 'poke') ||
+                                isTakeoverSubmitting
+                              : isTakeoverSubmitting
+                          }
+                          ctaLoading={
+                            slot.isExpired
+                              ? pendingSlotAction?.slotId === slot.id &&
+                                pendingSlotAction.action === 'poke'
+                              : isTakeoverSubmitting &&
+                                selectedTakeoverSlot?.id === slot.id
+                          }
                         />
                       ))}
                     </div>
@@ -646,24 +835,17 @@ export default function AdManagementPage() {
       <ClaimSlotModal
         isOpen={!!selectedVacantSlot}
         onClose={handleCloseClaimModal}
-        slotName={selectedVacantSlot?.slotName ?? ''}
+        slot={selectedVacantSlot}
         statusLabel={selectedVacantSlot?.statusLabel}
-        breakdown={{
-          bondRateLabel: `Bond Rate (${selectedVacantSlot?.bondRate ?? '—'})`,
-          bondRateValue: selectedVacantSlot?.bondRateValue ?? '—',
-          taxLabel: 'Tax',
-          taxValue: selectedVacantSlot?.taxCostValue ?? '—',
-          coverageLabel: 'Coverage',
-          coverageValue: selectedVacantSlot?.coverageDuration ?? '—',
-          totalLabel: 'Total Cost',
-          totalValue: selectedVacantSlot?.totalCostValue ?? '—',
-        }}
         valuationDefault={selectedVacantSlot?.valuationDefault ?? '0.00'}
-        valuationMinimum={selectedVacantSlot?.valuationMinimum ?? '0 ETH'}
-        coverageDescription={
+        valuationMinimumLabel={selectedVacantSlot?.valuationMinimum ?? '0 ETH'}
+        coverageHint={
           selectedVacantSlot?.coverageDescription ??
           'Select how many tax periods to prepay.'
         }
+        onSubmit={handleClaimSubmit}
+        isSubmitting={isClaimSubmitting}
+        errorMessage={claimError ?? undefined}
       />
 
       <TakeoverSlotModal
@@ -684,6 +866,11 @@ export default function AdManagementPage() {
         harbergerInfo={takeoverData.harbergerInfo}
         ctaLabel={takeoverData.ctaLabel}
         isCtaDisabled={takeoverData.isCtaDisabled}
+        onSubmit={handleTakeoverSubmit}
+        isSubmitting={isTakeoverSubmitting}
+        creativeUriValue={takeoverData.creativeUriValue}
+        onCreativeUriChange={setTakeoverCreativeInput}
+        errorMessage={takeoverData.errorMessage}
       />
     </div>
   );

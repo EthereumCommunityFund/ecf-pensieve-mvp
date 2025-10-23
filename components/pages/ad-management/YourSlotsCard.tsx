@@ -14,6 +14,8 @@ export interface SlotAction {
   label: string;
   variant?: 'primary' | 'secondary';
   isDisabled?: boolean;
+  isLoading?: boolean;
+  onPress?: () => void;
 }
 
 export interface YourSlotCardProps {
@@ -185,6 +187,8 @@ export default function YourSlotsCard({
                   : 'bg-black text-white hover:bg-black/90',
               )}
               isDisabled={primaryAction.isDisabled}
+              isLoading={primaryAction.isLoading}
+              onPress={primaryAction.onPress}
             >
               {!isPrimarySecondary ? (
                 <CoinVerticalIcon className="size-[20px]" />
@@ -203,6 +207,8 @@ export default function YourSlotsCard({
                 size="sm"
                 className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
                 isDisabled={secondaryAction.isDisabled}
+                isLoading={secondaryAction.isLoading}
+                onPress={secondaryAction.onPress}
                 startContent={
                   // <PencilSimpleIcon size={20} className="text-black/70" />
                   <NotePencil size={20} className="opacity-50" />
@@ -219,6 +225,8 @@ export default function YourSlotsCard({
                 size="sm"
                 className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
                 isDisabled={tertiaryAction.isDisabled}
+                isLoading={tertiaryAction.isLoading}
+                onPress={tertiaryAction.onPress}
                 startContent={<Notebook size={20} className="text-black/50" />}
               >
                 {tertiaryAction.label}

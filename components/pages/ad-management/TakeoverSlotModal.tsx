@@ -70,6 +70,11 @@ export interface TakeoverSlotModalProps {
   harbergerInfo: string;
   ctaLabel: string;
   isCtaDisabled?: boolean;
+  onSubmit?: () => void;
+  isSubmitting?: boolean;
+  creativeUriValue?: string;
+  onCreativeUriChange?: (value: string) => void;
+  errorMessage?: string;
 }
 
 export default function TakeoverSlotModal({
@@ -92,6 +97,11 @@ export default function TakeoverSlotModal({
   harbergerInfo,
   ctaLabel,
   isCtaDisabled,
+  onSubmit,
+  isSubmitting = false,
+  creativeUriValue,
+  onCreativeUriChange,
+  errorMessage,
 }: TakeoverSlotModalProps) {
   const contextClassName = useMemo(() => {
     if (contextTone === 'danger') {
@@ -137,10 +147,15 @@ export default function TakeoverSlotModal({
   const [selectedCoverageDays, setSelectedCoverageDays] = useState(
     derivedInitialCoverageDays,
   );
+  const [creativeUri, setCreativeUri] = useState(creativeUriValue ?? '');
 
   useEffect(() => {
     setSelectedCoverageDays(derivedInitialCoverageDays);
   }, [derivedInitialCoverageDays]);
+
+  useEffect(() => {
+    setCreativeUri(creativeUriValue ?? '');
+  }, [creativeUriValue]);
 
   const formattedCoverageLabel = `(${formatDaysLabel(selectedCoverageDays)})`;
   const coverageRangeStartLabel =
@@ -203,6 +218,7 @@ export default function TakeoverSlotModal({
                   radius="sm"
                   className="size-[32px] rounded-[8px] bg-black/5 p-0 text-black/50 hover:bg-black/10"
                   onPress={onClose}
+                  isDisabled={isSubmitting}
                 >
                   <XIcon size={16} />
                 </Button>
@@ -271,6 +287,24 @@ export default function TakeoverSlotModal({
                 />
               </div>
 
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo label="Creative URI" />
+                <Input
+                  placeholder="https:// or data:..."
+                  aria-label="Creative URI"
+                  value={creativeUri}
+                  onValueChange={(value) => {
+                    setCreativeUri(value);
+                    onCreativeUriChange?.(value);
+                  }}
+                  isDisabled={valuation.isDisabled}
+                />
+                <span className="text-[12px] text-black/50">
+                  Provide a direct asset link for the new creative. Leave blank
+                  to reuse the existing creative and update later.
+                </span>
+              </div>
+
               <div className="flex flex-col gap-[16px] rounded-[12px] border border-black/10 bg-[#FCFCFC] p-[16px]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
@@ -312,6 +346,12 @@ export default function TakeoverSlotModal({
                   {harbergerInfo}
                 </span>
               </div>
+
+              {errorMessage ? (
+                <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
+                  {errorMessage}
+                </div>
+              ) : null}
             </ModalBody>
 
             <ModalFooter className="flex items-center gap-[12px] p-5">
@@ -319,13 +359,16 @@ export default function TakeoverSlotModal({
                 color="secondary"
                 className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
                 onPress={onClose}
+                isDisabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 color="primary"
                 className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
-                isDisabled={isCtaDisabled}
+                isDisabled={isCtaDisabled || isSubmitting}
+                isLoading={Boolean(isSubmitting)}
+                onPress={onSubmit}
               >
                 {ctaLabel}
               </Button>
