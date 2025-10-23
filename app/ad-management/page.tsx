@@ -14,15 +14,28 @@ import ClaimSlotModal from '@/components/pages/ad-management/ClaimSlotModal';
 import StatsSummary, {
   type StatsSummaryItem,
 } from '@/components/pages/ad-management/StatsSummary';
-import TakeoverSlotModal from '@/components/pages/ad-management/TakeoverSlotModal';
+import TakeoverSlotModal, {
+  type TakeoverSlotModalProps,
+} from '@/components/pages/ad-management/TakeoverSlotModal';
 import YourSlotsCard, {
   type SlotAction,
   type SlotStatus,
 } from '@/components/pages/ad-management/YourSlotsCard';
+import {
+  aggregatePrepaidTax,
+  useHarbergerSlots,
+  type ActiveSlotData,
+  type VacantSlotData,
+} from '@/hooks/useHarbergerSlots';
+import {
+  ONE_BIGINT,
+  calculateBond,
+  calculateTaxForPeriods,
+  formatDuration,
+  formatEth,
+} from '@/utils/harberger';
 
 type TabKey = 'yourSlots' | 'templateProposals' | 'availableSlots';
-
-type ContextTone = 'default' | 'danger';
 
 interface YourSlotMock {
   id: string;
@@ -57,97 +70,51 @@ interface YourSlotMock {
   tertiaryAction?: SlotAction;
 }
 
-interface VacantSlotMock {
-  id: string;
-  slotName: string;
-  statusLabel?: string;
-  valuation: string;
-  valuationHelper: string;
-  bondRate: string;
-  bondRateHelper: string;
-  taxRate: string;
-  taxRateHelper: string;
-  actionLabel: string;
-  bondRateValue: string;
-  taxCostValue: string;
-  coverageDuration: string;
-  totalCostValue: string;
-  valuationDefault: string;
-  valuationMinimum: string;
-  coverageDescription: string;
-}
+type TakeoverModalConfig = Pick<
+  TakeoverSlotModalProps,
+  | 'contextLabel'
+  | 'contextTone'
+  | 'minBidValue'
+  | 'minBidHelper'
+  | 'valuation'
+  | 'coverage'
+  | 'breakdown'
+  | 'harbergerInfo'
+  | 'ctaLabel'
+  | 'isCtaDisabled'
+>;
 
-interface TakeoverModalMock {
-  contextLabel: string;
-  contextTone?: ContextTone;
-  minBidHelper?: string;
-  minBidValue: string;
+const DEFAULT_TAKEOVER_DATA: TakeoverModalConfig = {
+  contextLabel: '',
+  contextTone: 'default',
+  minBidValue: '0 ETH',
   valuation: {
-    placeholder?: string;
-    helper: string;
-    value?: string;
-    errorMessage?: string;
-    isDisabled?: boolean;
-  };
+    helper: '',
+  },
   coverage: {
-    label: string;
-    description: string;
-    sliderPosition: number;
-    rangeStart: string;
-    rangeEnd: string;
-    minDays?: number;
-    maxDays?: number;
-    stepDays?: number;
-    defaultDays?: number;
-  };
+    label: '',
+    description: '',
+    sliderPosition: 0,
+    rangeStart: '',
+    rangeEnd: '',
+    minDays: 1,
+    maxDays: 12,
+    stepDays: 1,
+    defaultDays: 1,
+  },
   breakdown: {
-    bondRateLabel: string;
-    bondRateValue: string;
-    taxLabel: string;
-    taxValue: string;
-    coverageLabel: string;
-    coverageValue: string;
-    totalLabel: string;
-    totalValue: string;
-  };
-  harbergerInfo: string;
-  ctaLabel: string;
-  isCtaDisabled?: boolean;
-}
-
-interface ActiveSlotMock {
-  id: string;
-  slotName: string;
-  statusLabel?: string;
-  owner: string;
-  taxRate: string;
-  mediaUrl?: string;
-  mediaAlt?: string;
-  valuation: string;
-  lockedBond: string;
-  remainingUnits: string;
-  minTakeoverBid: string;
-  takeoverCta: string;
-  takeover: TakeoverModalMock;
-}
-
-const STATS_SUMMARY: StatsSummaryItem[] = [
-  {
-    id: 'owned',
-    label: 'Owned Slots',
-    value: '4',
+    bondRateLabel: '',
+    bondRateValue: '',
+    taxLabel: '',
+    taxValue: '',
+    coverageLabel: '',
+    coverageValue: '',
+    totalLabel: '',
+    totalValue: '',
   },
-  {
-    id: 'tax',
-    label: 'Total Tax Owed',
-    value: '2.48 ETH',
-  },
-  {
-    id: 'overdue',
-    label: 'Overdue',
-    value: '1',
-  },
-];
+  harbergerInfo: '',
+  ctaLabel: '',
+};
 
 const YOUR_SLOTS_DATA: YourSlotMock[] = [
   {
@@ -252,197 +219,110 @@ const YOUR_SLOTS_DATA: YourSlotMock[] = [
   },
 ];
 
-const AVAILABLE_VACANT_SLOTS: VacantSlotMock[] = [
-  {
-    id: 'vacant-1',
-    slotName: 'Homescreen / Top Banner',
-    statusLabel: 'Open',
-    valuation: '0.05 ETH',
-    valuationHelper: 'The minimum default valuation for this slot.',
-    bondRate: '20%',
-    bondRateHelper: 'Percentage of valuation locked as collateral.',
-    taxRate: '5%',
-    taxRateHelper: 'Annual tax rate applied to slot valuations.',
-    actionLabel: 'Make Claim',
-    bondRateValue: '0.400 ETH',
-    taxCostValue: '0.002 ETH',
-    coverageDuration: '7 days',
-    totalCostValue: '0.402 ETH',
-    valuationDefault: '2.00',
-    valuationMinimum: '0.05 ETH',
-    coverageDescription:
-      'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
-  },
-  {
-    id: 'vacant-2',
-    slotName: 'Homescreen / Sidebar',
-    statusLabel: 'Open',
-    valuation: '0.05 ETH',
-    valuationHelper: 'The minimum default valuation for this slot.',
-    bondRate: '20%',
-    bondRateHelper: 'Percentage of valuation locked as collateral.',
-    taxRate: '5%',
-    taxRateHelper: 'Annual tax rate applied to slot valuations.',
-    actionLabel: 'Make Claim',
-    bondRateValue: '0.400 ETH',
-    taxCostValue: '0.002 ETH',
-    coverageDuration: '7 days',
-    totalCostValue: '0.402 ETH',
-    valuationDefault: '2.00',
-    valuationMinimum: '0.05 ETH',
-    coverageDescription:
-      'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
-  },
-];
-
-const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
-  {
-    id: 'active-1',
-    slotName: 'Homescreen / Footer Banner',
-    statusLabel: 'Owned',
-    owner: '0x000',
-    taxRate: '5%',
-    mediaUrl:
-      'https://images.unsplash.com/photo-1526312426976-f4d754fa9bd6?auto=format&fit=crop&w=1200&q=80',
-    mediaAlt: 'Burger campaign creative',
-    valuation: '0.05 ETH',
-    lockedBond: '0.00 ETH',
-    remainingUnits: '7 days',
-    minTakeoverBid: '0.000 ETH',
-    takeoverCta: 'Takeover for 0.402 ETH',
-    takeover: {
-      contextLabel: 'Owned Slot · Takeover',
-      minBidValue: '0.000 ETH',
-      valuation: {
-        placeholder: 'Min: 2.00 ETH',
-        helper:
-          'Must be at least 2.20 ETH (10.0% higher than current valuation).',
-        isDisabled: false,
-      },
-      coverage: {
-        label: '(7 Days)',
-        description:
-          'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
-        sliderPosition: 0.2,
-        rangeStart: '1 day',
-        rangeEnd: '365 days',
-        minDays: 1,
-        maxDays: 365,
-        stepDays: 1,
-        defaultDays: 7,
-      },
-      breakdown: {
-        bondRateLabel: 'Bond Rate (20%)',
-        bondRateValue: '0.400 ETH',
-        taxLabel: 'Tax',
-        taxValue: '0.002 ETH',
-        coverageLabel: 'Coverage',
-        coverageValue: '7 Days',
-        totalLabel: 'Total Cost',
-        totalValue: '0.402 ETH',
-      },
-      harbergerInfo:
-        "You pay the current owner's declared price to the community treasury. Set your own valuation carefully – you'll pay continuous taxes on it, and others can buy you out at that price.",
-      ctaLabel: 'Takeover for 0.402 ETH',
-    },
-  },
-  {
-    id: 'active-2',
-    slotName: 'Homescreen / List Inline',
-    statusLabel: 'Owned',
-    owner: '0x000',
-    taxRate: '5%',
-    mediaUrl:
-      'https://images.unsplash.com/photo-1559058737-7b8da6e5abf4?auto=format&fit=crop&w=1200&q=80',
-    mediaAlt: 'Burger combo promotion',
-    valuation: '0.05 ETH',
-    lockedBond: '0.00 ETH',
-    remainingUnits: '7 days',
-    minTakeoverBid: '0.000 ETH',
-    takeoverCta: 'Takeover for 0.402 ETH',
-    takeover: {
-      contextLabel: 'Bid Too Low Error',
-      contextTone: 'danger',
-      minBidValue: '0.000 ETH',
-      valuation: {
-        value: '1.20',
-        helper:
-          'Minimum bid is 2.20 ETH (10.0% higher than current valuation).',
-        errorMessage:
-          'Bid Too Low: Minimum bid is 2.20 ETH (10.0% higher than current valuation).',
-      },
-      coverage: {
-        label: '(7 Days)',
-        description:
-          'Choose how many tax periods to prepay. Longer coverage means higher upfront cost but no need to pay taxes frequently. (1 tax period = 24 hours / 620000 seconds)',
-        sliderPosition: 0.2,
-        rangeStart: '1 day',
-        rangeEnd: '365 days',
-        minDays: 1,
-        maxDays: 365,
-        stepDays: 1,
-        defaultDays: 7,
-      },
-      breakdown: {
-        bondRateLabel: 'Bond Rate (20%)',
-        bondRateValue: '0.400 ETH',
-        taxLabel: 'Tax',
-        taxValue: '0.002 ETH',
-        coverageLabel: 'Coverage',
-        coverageValue: '7 Days',
-        totalLabel: 'Total Cost',
-        totalValue: '0.402 ETH',
-      },
-      harbergerInfo:
-        "You pay the current owner's declared price to the community treasury. Set your own valuation carefully – you'll pay continuous taxes on it, and others can buy you out at that price.",
-      ctaLabel: 'Takeover for 0.402 ETH',
-      isCtaDisabled: true,
-    },
-  },
-];
-
-const DEFAULT_TAKEOVER_DATA: TakeoverModalMock = {
-  contextLabel: '',
-  minBidValue: '0.000 ETH',
-  valuation: {
-    helper: '',
-  },
-  coverage: {
-    label: '',
-    description: '',
-    sliderPosition: 0,
-    rangeStart: '',
-    rangeEnd: '',
-    minDays: 1,
-    maxDays: 365,
-    stepDays: 1,
-    defaultDays: 1,
-  },
-  breakdown: {
-    bondRateLabel: '',
-    bondRateValue: '',
-    taxLabel: '',
-    taxValue: '',
-    coverageLabel: '',
-    coverageValue: '',
-    totalLabel: '',
-    totalValue: '',
-  },
-  harbergerInfo: '',
-  ctaLabel: '',
-};
-
 export default function AdManagementPage() {
   const [selectedTab, setSelectedTab] = useState<TabKey>('availableSlots');
   const [selectedVacantSlot, setSelectedVacantSlot] =
-    useState<VacantSlotMock | null>(null);
+    useState<VacantSlotData | null>(null);
   const [selectedTakeoverSlot, setSelectedTakeoverSlot] =
-    useState<ActiveSlotMock | null>(null);
+    useState<ActiveSlotData | null>(null);
 
   const yourSlots = useMemo(() => YOUR_SLOTS_DATA, []);
-  const vacantSlots = useMemo(() => AVAILABLE_VACANT_SLOTS, []);
-  const activeSlots = useMemo(() => AVAILABLE_ACTIVE_SLOTS, []);
-  const takeoverData = selectedTakeoverSlot?.takeover ?? DEFAULT_TAKEOVER_DATA;
+  const { metrics, vacantSlots, activeSlots, isLoading, error } =
+    useHarbergerSlots();
+
+  const statsItems = useMemo<StatsSummaryItem[]>(() => {
+    const items: StatsSummaryItem[] = [
+      {
+        id: 'owned',
+        label: 'Owned Slots',
+        value: metrics.activeCount.toString(),
+      },
+      {
+        id: 'vacant',
+        label: 'Vacant Slots',
+        value: metrics.vacantCount.toString(),
+      },
+      {
+        id: 'overdue',
+        label: 'Overdue / Expired',
+        value: metrics.overdueCount.toString(),
+      },
+    ];
+
+    if (activeSlots.length > 0) {
+      items.splice(1, 0, {
+        id: 'prepaidTax',
+        label: 'Total Prepaid Tax',
+        value: aggregatePrepaidTax(activeSlots),
+      });
+    }
+
+    return items;
+  }, [metrics, activeSlots]);
+
+  const takeoverData = useMemo<TakeoverModalConfig>(() => {
+    if (!selectedTakeoverSlot) {
+      return DEFAULT_TAKEOVER_DATA;
+    }
+
+    const bondRequired = calculateBond(
+      selectedTakeoverSlot.minTakeoverBidWei,
+      selectedTakeoverSlot.bondRateBps,
+    );
+    const taxRequired = calculateTaxForPeriods(
+      selectedTakeoverSlot.minTakeoverBidWei,
+      selectedTakeoverSlot.taxRateBps,
+      selectedTakeoverSlot.taxPeriodInSeconds,
+      ONE_BIGINT,
+    );
+    const coverageLabel = formatDuration(
+      selectedTakeoverSlot.taxPeriodInSeconds,
+      { fallback: '0s' },
+    );
+    const minBidPlaceholder = formatEth(
+      selectedTakeoverSlot.minTakeoverBidWei,
+      { withUnit: false, maximumFractionDigits: 4 },
+    );
+
+    return {
+      contextLabel: `${selectedTakeoverSlot.slotTypeLabel} · Takeover`,
+      contextTone:
+        selectedTakeoverSlot.isOverdue || selectedTakeoverSlot.isExpired
+          ? 'danger'
+          : 'default',
+      minBidValue: selectedTakeoverSlot.minTakeoverBid,
+      minBidHelper: selectedTakeoverSlot.takeoverHelper,
+      valuation: {
+        placeholder: `≥ ${minBidPlaceholder}`,
+        helper: selectedTakeoverSlot.takeoverHelper,
+      },
+      coverage: {
+        label: `(${coverageLabel})`,
+        description: selectedTakeoverSlot.coverageDescription,
+        sliderPosition: 0,
+        rangeStart: '1 period',
+        rangeEnd: '12 periods',
+        minDays: 1,
+        maxDays: 12,
+        stepDays: 1,
+        defaultDays: 1,
+      },
+      breakdown: {
+        bondRateLabel: `Bond Rate (${selectedTakeoverSlot.bondRate})`,
+        bondRateValue: formatEth(bondRequired),
+        taxLabel: 'Tax (1 period)',
+        taxValue: formatEth(taxRequired),
+        coverageLabel: 'Coverage',
+        coverageValue: coverageLabel,
+        totalLabel: 'Total',
+        totalValue: formatEth(bondRequired + taxRequired),
+      },
+      harbergerInfo:
+        'Takeover pays the declared valuation to the treasury and restarts the tax period at your price.',
+      ctaLabel: selectedTakeoverSlot.takeoverCta,
+      isCtaDisabled: false,
+    };
+  }, [selectedTakeoverSlot]);
 
   const handleCloseClaimModal = useCallback(() => {
     setSelectedVacantSlot(null);
@@ -455,7 +335,7 @@ export default function AdManagementPage() {
   return (
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
-        <StatsSummary items={STATS_SUMMARY} />
+        <StatsSummary items={statsItems} />
 
         <section className="flex flex-col">
           <Tabs
@@ -482,15 +362,26 @@ export default function AdManagementPage() {
                     Vacant Slots
                   </ECFTypography>
 
-                  <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
-                    {vacantSlots.map((slot) => (
-                      <VacantSlotCard
-                        key={slot.id}
-                        {...slot}
-                        onClaim={() => setSelectedVacantSlot(slot)}
-                      />
-                    ))}
-                  </div>
+                  {error ? (
+                    <DataFallback
+                      tone="danger"
+                      message={`Unable to load slot inventory: ${error.message}`}
+                    />
+                  ) : isLoading && vacantSlots.length === 0 ? (
+                    <DataFallback message="Loading slot inventory from Sepolia…" />
+                  ) : vacantSlots.length === 0 ? (
+                    <DataFallback message="No vacant slots published by the factory yet." />
+                  ) : (
+                    <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                      {vacantSlots.map((slot) => (
+                        <VacantSlotCard
+                          key={slot.id}
+                          {...slot}
+                          onClaim={() => setSelectedVacantSlot(slot)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </section>
 
                 <section className="flex flex-col gap-[16px]">
@@ -501,26 +392,37 @@ export default function AdManagementPage() {
                     Active Slots
                   </ECFTypography>
 
-                  <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
-                    {activeSlots.map((slot) => (
-                      <ActiveSlotCard
-                        key={slot.id}
-                        slotName={slot.slotName}
-                        statusLabel={slot.statusLabel}
-                        owner={slot.owner}
-                        mediaUrl={slot.mediaUrl}
-                        mediaAlt={slot.mediaAlt}
-                        stats={buildActiveStats(
-                          slot.valuation,
-                          slot.lockedBond,
-                          slot.remainingUnits,
-                          slot.minTakeoverBid,
-                        )}
-                        takeoverCta={slot.takeoverCta}
-                        onTakeover={() => setSelectedTakeoverSlot(slot)}
-                      />
-                    ))}
-                  </div>
+                  {error ? (
+                    <DataFallback
+                      tone="danger"
+                      message={`Unable to load active slots: ${error.message}`}
+                    />
+                  ) : isLoading && activeSlots.length === 0 ? (
+                    <DataFallback message="Loading active slot data from Sepolia…" />
+                  ) : activeSlots.length === 0 ? (
+                    <DataFallback message="No active slots claimed yet." />
+                  ) : (
+                    <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                      {activeSlots.map((slot) => (
+                        <ActiveSlotCard
+                          key={slot.id}
+                          slotName={slot.slotName}
+                          statusLabel={slot.statusLabel}
+                          owner={slot.owner}
+                          mediaUrl={slot.currentAdURI || undefined}
+                          mediaAlt={slot.slotName}
+                          stats={buildActiveStats(
+                            slot.valuation,
+                            slot.lockedBond,
+                            slot.remainingUnits,
+                            slot.minTakeoverBid,
+                          )}
+                          takeoverCta={slot.takeoverCta}
+                          onTakeover={() => setSelectedTakeoverSlot(slot)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </section>
               </div>
             </Tab>
@@ -614,6 +516,28 @@ function TabPlaceholder({
           {actionLabel}
         </ECFButton>
       ) : null}
+    </div>
+  );
+}
+
+function DataFallback({
+  message,
+  tone = 'default',
+}: {
+  message: string;
+  tone?: 'default' | 'danger';
+}) {
+  const borderClasses =
+    tone === 'danger'
+      ? 'border-[#F87171] text-[#B91C1C]'
+      : 'border-black/15 text-black/60';
+  const backgroundClasses = tone === 'danger' ? 'bg-[#FEF2F2]' : 'bg-white';
+
+  return (
+    <div
+      className={`flex min-h-[120px] items-center justify-center rounded-[12px] border px-6 py-8 text-center text-[14px] font-medium ${borderClasses} ${backgroundClasses}`}
+    >
+      {message}
     </div>
   );
 }
