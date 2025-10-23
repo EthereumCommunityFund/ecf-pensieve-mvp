@@ -1,7 +1,9 @@
 'use client';
 
 import { Tab, Tabs } from '@heroui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { parseEther } from 'viem';
+import { useAccount } from 'wagmi';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -22,9 +24,9 @@ import TakeoverSlotModal, {
 import YourSlotsCard, {
   type SlotAction,
   type SlotStatus,
+  type YourSlotCardProps,
 } from '@/components/pages/ad-management/YourSlotsCard';
 import {
-  aggregatePrepaidTax,
   useHarbergerSlots,
   type ActiveSlotData,
   type VacantSlotData,
@@ -32,46 +34,16 @@ import {
 import { AddressValidator } from '@/lib/utils/addressValidation';
 import {
   ONE_BIGINT,
+  ZERO_BIGINT,
   calculateBond,
   calculateTaxForPeriods,
   formatDuration,
   formatEth,
+  formatNumberInputFromWei,
+  sumBigints,
 } from '@/utils/harberger';
 
 type TabKey = 'yourSlots' | 'templateProposals' | 'availableSlots';
-
-interface YourSlotMock {
-  id: string;
-  title: string;
-  location?: string;
-  status: SlotStatus;
-  valuation: string;
-  taxDue: string;
-  periodEnding: string;
-  minTakeoverBid: string;
-  contentSummary?: string;
-  primaryAction?: {
-    id: string;
-    label: string;
-    variant?: 'primary' | 'secondary';
-  };
-  secondaryAction?: {
-    id: string;
-    label: string;
-    variant?: 'primary' | 'secondary';
-  };
-  avatarUrl?: string;
-  slotLabel?: string;
-  slotValueLabel?: string;
-  currentAdBadge?: string;
-  currentAdBadgeTone?: 'default' | 'danger';
-  taxOwed?: string;
-  taxDueCountdown?: string;
-  takeoverBid?: string;
-  contentUpdates?: { used: number; total: number };
-  adImageUrl?: string;
-  tertiaryAction?: SlotAction;
-}
 
 type TakeoverModalConfig = Pick<
   TakeoverSlotModalProps,
@@ -119,117 +91,20 @@ const DEFAULT_TAKEOVER_DATA: TakeoverModalConfig = {
   ctaLabel: '',
 };
 
-const YOUR_SLOTS_DATA: YourSlotMock[] = [
-  {
-    id: 'slot-1',
-    title: 'Times Square · North Facade',
-    location: 'Digital Billboard · NYC',
-    status: 'owned',
-    valuation: '12.00 ETH',
-    taxDue: '0.64 ETH',
-    periodEnding: 'Apr 18, 2025 · 03:00 UTC',
-    minTakeoverBid: '≥ 12.80 ETH',
-    contentSummary:
-      'Launching the Q2 product reveal. Runtime creative with dynamic pricing banner.',
-    primaryAction: {
-      id: 'manage-slot-1',
-      label: 'Manage Slot',
-      variant: 'primary',
-    },
-    secondaryAction: { id: 'edit-creative-slot-1', label: 'Edit Creative' },
-    tertiaryAction: { id: 'slot-details-1', label: 'Slot Details' },
-    currentAdBadge: 'Period Ending (4d 6h left)',
-    taxOwed: '0.64 ETH',
-    taxDueCountdown: 'Due in 4d 6h',
-    takeoverBid: '≥ 12.80 ETH',
-    contentUpdates: { used: 2, total: 5 },
-    adImageUrl:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'slot-2',
-    title: 'Crypto Weekly · Homepage Masthead',
-    location: 'Web · Global',
-    status: 'overdue',
-    valuation: '5.20 ETH',
-    taxDue: '0.42 ETH',
-    periodEnding: 'Apr 03, 2025 · 11:30 UTC',
-    minTakeoverBid: '≥ 5.72 ETH',
-    contentSummary:
-      'Weekly awareness push for Harberger Starter Kit. Refresh creative after payment.',
-    primaryAction: {
-      id: 'pay-tax-slot-2',
-      label: 'Pay Due Tax',
-      variant: 'primary',
-    },
-    secondaryAction: { id: 'forfeit-slot-2', label: 'Forfeit Slot' },
-    tertiaryAction: { id: 'slot-details-2', label: 'Slot Details' },
-    currentAdBadge: 'Tax overdue · Settled in under 6h',
-    currentAdBadgeTone: 'danger',
-    taxOwed: '0.42 ETH',
-    taxDueCountdown: 'Due in 6h 20m',
-    takeoverBid: '≥ 5.72 ETH',
-    contentUpdates: { used: 1, total: 5 },
-    adImageUrl:
-      'https://images.unsplash.com/photo-1468971050039-be99497410af?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'slot-3',
-    title: 'Protocol Podcast · Mid-roll',
-    location: 'Audio · Season 6',
-    status: 'vacant',
-    valuation: '1.10 ETH',
-    taxDue: '0.08 ETH',
-    periodEnding: 'Apr 27, 2025 · 18:00 UTC',
-    minTakeoverBid: '≥ 1.21 ETH',
-    contentSummary:
-      'Audience overlap with DeFi builders. Prepare refreshed script with CTA link tracking.',
-    primaryAction: {
-      id: 'renew-slot-3',
-      label: 'Renew Coverage',
-      variant: 'primary',
-    },
-    secondaryAction: { id: 'view-bid-slot-3', label: 'View Market Bid' },
-    tertiaryAction: { id: 'slot-details-3', label: 'Slot Details' },
-    currentAdBadge: 'Period Ending (9d left)',
-    taxOwed: '0.08 ETH',
-    taxDueCountdown: 'Due in 9d 4h',
-    takeoverBid: '≥ 1.21 ETH',
-    contentUpdates: { used: 0, total: 3 },
-    adImageUrl:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'slot-4',
-    title: 'Harberger Expo · LED Column',
-    location: 'On-site · Singapore',
-    status: 'closed',
-    valuation: '—',
-    taxDue: '—',
-    periodEnding: 'Closed on Feb 20, 2025',
-    minTakeoverBid: 'N/A',
-    contentSummary:
-      'This slot is shielded by governance. Re-open will be announced.',
-    secondaryAction: { id: 'view-audit-slot-4', label: 'View Audit Trail' },
-    tertiaryAction: { id: 'slot-details-4', label: 'Slot Details' },
-    currentAdBadge: 'Closed · Governance hold',
-    taxOwed: '—',
-    taxDueCountdown: 'Unavailable',
-    takeoverBid: 'N/A',
-    contentUpdates: { used: 0, total: 0 },
-    adImageUrl:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-  },
-];
-
 export default function AdManagementPage() {
   const [selectedTab, setSelectedTab] = useState<TabKey>('availableSlots');
   const [selectedVacantSlot, setSelectedVacantSlot] =
     useState<VacantSlotData | null>(null);
   const [selectedTakeoverSlot, setSelectedTakeoverSlot] =
     useState<ActiveSlotData | null>(null);
+  const [takeoverCoverageDays, setTakeoverCoverageDays] = useState<number>(0);
+  const [takeoverValuationWei, setTakeoverValuationWei] = useState<
+    bigint | null
+  >(null);
+  const [takeoverValuationInput, setTakeoverValuationInput] =
+    useState<string>('');
+  const { address: connectedAddress } = useAccount();
 
-  const yourSlots = useMemo(() => YOUR_SLOTS_DATA, []);
   const {
     metrics,
     vacantSlots,
@@ -241,12 +116,258 @@ export default function AdManagementPage() {
     error,
   } = useHarbergerSlots();
 
+  useEffect(() => {
+    if (!selectedTakeoverSlot) {
+      setTakeoverCoverageDays(0);
+      setTakeoverValuationWei(null);
+      setTakeoverValuationInput('');
+      return;
+    }
+
+    const periodSeconds = Number(selectedTakeoverSlot.taxPeriodInSeconds);
+    const periodDays = periodSeconds > 0 ? periodSeconds / 86_400 : 1;
+    const fallbackValuation =
+      selectedTakeoverSlot.minTakeoverBidWei > ZERO_BIGINT
+        ? selectedTakeoverSlot.minTakeoverBidWei
+        : selectedTakeoverSlot.minValuationWei;
+    const fallbackInput = formatNumberInputFromWei(fallbackValuation, 4);
+
+    setTakeoverCoverageDays(periodDays);
+    setTakeoverValuationWei(fallbackValuation);
+    setTakeoverValuationInput(fallbackInput);
+  }, [selectedTakeoverSlot]);
+
+  const normalizedAccount = useMemo(
+    () => connectedAddress?.toLowerCase() ?? null,
+    [connectedAddress],
+  );
+
+  const ownedSlots = useMemo<ActiveSlotData[]>(() => {
+    if (!normalizedAccount) {
+      return [];
+    }
+
+    return activeSlots.filter((slot) => {
+      if (!slot.ownerAddress) {
+        return false;
+      }
+      return slot.ownerAddress.toLowerCase() === normalizedAccount;
+    });
+  }, [activeSlots, normalizedAccount]);
+
+  const computeTaxPerPeriodWei = useCallback((slot: ActiveSlotData) => {
+    const valuationBasis =
+      slot.valuationWei > ZERO_BIGINT
+        ? slot.valuationWei
+        : slot.minValuationWei;
+
+    return calculateTaxForPeriods(
+      valuationBasis,
+      slot.taxRateBps,
+      slot.taxPeriodInSeconds,
+      ONE_BIGINT,
+    );
+  }, []);
+
+  const handleTakeoverValuationChange = useCallback(
+    (input: string) => {
+      setTakeoverValuationInput(input);
+
+      if (!selectedTakeoverSlot) {
+        return;
+      }
+
+      const normalizedInput = input.trim();
+      if (normalizedInput.length === 0) {
+        setTakeoverValuationWei(null);
+        return;
+      }
+
+      try {
+        const parsed = parseEther(normalizedInput);
+        setTakeoverValuationWei(parsed);
+      } catch (error) {
+        setTakeoverValuationWei(null);
+      }
+    },
+    [selectedTakeoverSlot],
+  );
+
+  const handleTakeoverCoverageChange = useCallback((value: number) => {
+    if (Number.isNaN(value)) {
+      return;
+    }
+    setTakeoverCoverageDays(value);
+  }, []);
+
+  const formatUtcTimestamp = useCallback((timestamp: bigint) => {
+    if (timestamp <= ZERO_BIGINT) {
+      return '—';
+    }
+
+    const numeric = Number(timestamp);
+    if (!Number.isFinite(numeric)) {
+      return '—';
+    }
+
+    const date = new Date(numeric * 1000);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'UTC',
+    });
+
+    const parts = formatter.formatToParts(date);
+    const lookup = (type: string) =>
+      parts.find((part) => part.type === type)?.value ?? '';
+
+    const month = lookup('month');
+    const day = lookup('day');
+    const year = lookup('year');
+    const hour = lookup('hour');
+    const minute = lookup('minute');
+
+    if (!month || !day || !year || !hour || !minute) {
+      return formatter.format(date);
+    }
+
+    return `${month} ${day}, ${year} · ${hour}:${minute} UTC`;
+  }, []);
+
+  const ownedSlotCards = useMemo(() => {
+    return ownedSlots.map((slot) => {
+      const status: SlotStatus = slot.isExpired
+        ? 'closed'
+        : slot.isOverdue
+          ? 'overdue'
+          : 'owned';
+
+      const taxPerPeriodWei = computeTaxPerPeriodWei(slot);
+      const taxOwedWei = slot.isOverdue ? taxPerPeriodWei : ZERO_BIGINT;
+
+      const periodEnding = formatUtcTimestamp(slot.taxPaidUntilTimestamp);
+      const countdownLabel =
+        status === 'closed'
+          ? 'Expired'
+          : slot.isOverdue
+            ? 'Due now'
+            : `Due in ${formatDuration(slot.timeRemainingInSeconds, { fallback: '0s' })}`;
+
+      const activityBadge =
+        status === 'closed'
+          ? 'Expired slot'
+          : slot.isOverdue
+            ? 'Tax overdue'
+            : `Period Ending (${formatDuration(slot.timeRemainingInSeconds, { fallback: '0s' })})`;
+
+      const currentAdBadgeTone: 'default' | 'danger' =
+        status === 'closed' || status === 'overdue' ? 'danger' : 'default';
+
+      const primaryAction: SlotAction | undefined =
+        status === 'closed'
+          ? undefined
+          : slot.isOverdue
+            ? {
+                id: `pay-tax-${slot.id}`,
+                label: 'Pay Due Tax',
+                variant: 'primary',
+              }
+            : {
+                id: `renew-${slot.id}`,
+                label: 'Renew Coverage',
+                variant: 'primary',
+              };
+
+      const secondaryAction: SlotAction | undefined =
+        status === 'closed'
+          ? {
+              id: `view-audit-${slot.id}`,
+              label: 'View Audit Trail',
+              variant: 'secondary',
+            }
+          : {
+              id: `edit-${slot.id}`,
+              label: 'Edit Creative',
+              variant: 'secondary',
+            };
+
+      const tertiaryAction: SlotAction | undefined = {
+        id: `slot-details-${slot.id}`,
+        label: 'Slot Details',
+        variant: status === 'closed' ? 'secondary' : undefined,
+      };
+
+      const valuationDisplay =
+        slot.valuationWei > ZERO_BIGINT
+          ? slot.valuation
+          : formatEth(slot.minValuationWei);
+
+      const contentUpdatesTotal = Number(
+        slot.contentUpdateLimit ?? ZERO_BIGINT,
+      );
+      const contentUpdatesUsed = Number(slot.contentUpdateCount ?? ZERO_BIGINT);
+
+      const hasCreativeUrl =
+        slot.currentAdURI && slot.currentAdURI.startsWith('http');
+
+      return {
+        id: slot.id,
+        title: slot.slotName,
+        valuation: valuationDisplay,
+        taxDue: formatEth(taxPerPeriodWei),
+        periodEnding,
+        minTakeoverBid: slot.minTakeoverBid,
+        status,
+        location: slot.slotTypeLabel,
+        slotLabel: slot.slotName,
+        slotValueLabel: slot.slotTypeLabel,
+        currentAdBadge: activityBadge,
+        currentAdBadgeTone,
+        taxOwed: formatEth(taxOwedWei),
+        taxDueCountdown: countdownLabel,
+        takeoverBid: slot.minTakeoverBid,
+        contentUpdates:
+          contentUpdatesTotal > 0
+            ? {
+                used: contentUpdatesUsed,
+                total: contentUpdatesTotal,
+              }
+            : undefined,
+        adImageUrl: hasCreativeUrl ? slot.currentAdURI : undefined,
+        primaryAction,
+        secondaryAction,
+        tertiaryAction,
+      } satisfies YourSlotCardProps;
+    });
+  }, [computeTaxPerPeriodWei, formatUtcTimestamp, ownedSlots]);
+
+  const ownedSlotsTotalTaxDueWei = useMemo(() => {
+    if (ownedSlots.length === 0) {
+      return ZERO_BIGINT;
+    }
+
+    const taxes = ownedSlots.map((slot) => computeTaxPerPeriodWei(slot));
+    return sumBigints(taxes);
+  }, [computeTaxPerPeriodWei, ownedSlots]);
+
   const statsItems = useMemo<StatsSummaryItem[]>(() => {
-    const items: StatsSummaryItem[] = [
+    const ownedCount = ownedSlots.length;
+    const taxOwedDisplay = formatEth(ownedSlotsTotalTaxDueWei);
+
+    return [
       {
         id: 'owned',
         label: 'Owned Slots',
-        value: metrics.activeCount.toString(),
+        value: ownedCount.toString(),
+      },
+      {
+        id: 'taxOwed',
+        label: 'Total Tax Owed',
+        value: taxOwedDisplay,
       },
       {
         id: 'vacant',
@@ -259,35 +380,57 @@ export default function AdManagementPage() {
         value: metrics.overdueCount.toString(),
       },
     ];
-
-    if (activeSlots.length > 0) {
-      items.splice(1, 0, {
-        id: 'prepaidTax',
-        label: 'Total Prepaid Tax',
-        value: aggregatePrepaidTax(activeSlots),
-      });
-    }
-
-    return items;
-  }, [metrics, activeSlots]);
+  }, [
+    metrics.overdueCount,
+    metrics.vacantCount,
+    ownedSlots.length,
+    ownedSlotsTotalTaxDueWei,
+  ]);
 
   const takeoverData = useMemo<TakeoverModalConfig>(() => {
     if (!selectedTakeoverSlot) {
       return DEFAULT_TAKEOVER_DATA;
     }
 
+    const periodSeconds = Number(selectedTakeoverSlot.taxPeriodInSeconds);
+    const basePeriodDays = periodSeconds > 0 ? periodSeconds / 86_400 : 1;
+    const effectiveCoverageDays =
+      takeoverCoverageDays > 0 ? takeoverCoverageDays : basePeriodDays;
+    const coveragePeriods = Math.max(
+      Math.round(effectiveCoverageDays / basePeriodDays),
+      1,
+    );
+    const coveragePeriodsBigInt = BigInt(coveragePeriods);
+
+    const fallbackValuationWei =
+      selectedTakeoverSlot.minTakeoverBidWei > ZERO_BIGINT
+        ? selectedTakeoverSlot.minTakeoverBidWei
+        : selectedTakeoverSlot.minValuationWei;
+
+    const isValuationValid = Boolean(
+      takeoverValuationWei &&
+        takeoverValuationWei >= selectedTakeoverSlot.minTakeoverBidWei,
+    );
+
+    const valuationWeiForPricing =
+      isValuationValid && takeoverValuationWei
+        ? takeoverValuationWei
+        : fallbackValuationWei;
+
     const bondRequired = calculateBond(
-      selectedTakeoverSlot.minTakeoverBidWei,
+      valuationWeiForPricing,
       selectedTakeoverSlot.bondRateBps,
     );
     const taxRequired = calculateTaxForPeriods(
-      selectedTakeoverSlot.minTakeoverBidWei,
+      valuationWeiForPricing,
       selectedTakeoverSlot.taxRateBps,
       selectedTakeoverSlot.taxPeriodInSeconds,
-      ONE_BIGINT,
+      coveragePeriodsBigInt,
     );
-    const coverageLabel = formatDuration(
-      selectedTakeoverSlot.taxPeriodInSeconds,
+    const totalValue = bondRequired + taxRequired;
+
+    const coverageDuration = formatDuration(
+      selectedTakeoverSlot.taxPeriodInSeconds * coveragePeriodsBigInt,
       { fallback: '0s' },
     );
     const minBidPlaceholder = formatEth(
@@ -306,34 +449,55 @@ export default function AdManagementPage() {
       valuation: {
         placeholder: `≥ ${minBidPlaceholder}`,
         helper: selectedTakeoverSlot.takeoverHelper,
+        value: takeoverValuationInput,
+        errorMessage: isValuationValid
+          ? undefined
+          : 'Bid must meet the minimum increment.',
+        onChange: handleTakeoverValuationChange,
       },
       coverage: {
-        label: `(${coverageLabel})`,
+        label: `(${coverageDuration})`,
         description: selectedTakeoverSlot.coverageDescription,
         sliderPosition: 0,
-        rangeStart: '1 period',
-        rangeEnd: '12 periods',
-        minDays: 1,
-        maxDays: 12,
-        stepDays: 1,
-        defaultDays: 1,
+        rangeStart: formatDuration(selectedTakeoverSlot.taxPeriodInSeconds, {
+          fallback: 'One period',
+        }),
+        rangeEnd: formatDuration(
+          selectedTakeoverSlot.taxPeriodInSeconds * BigInt(12),
+          { fallback: 'Twelve periods' },
+        ),
+        minDays: basePeriodDays,
+        maxDays: basePeriodDays * 12,
+        stepDays: basePeriodDays,
+        defaultDays: effectiveCoverageDays,
+        onChange: handleTakeoverCoverageChange,
+        onChangeEnd: handleTakeoverCoverageChange,
       },
       breakdown: {
         bondRateLabel: `Bond Rate (${selectedTakeoverSlot.bondRate})`,
         bondRateValue: formatEth(bondRequired),
-        taxLabel: 'Tax (1 period)',
+        taxLabel: `Tax (${coveragePeriods} period${
+          coveragePeriods > 1 ? 's' : ''
+        })`,
         taxValue: formatEth(taxRequired),
         coverageLabel: 'Coverage',
-        coverageValue: coverageLabel,
+        coverageValue: coverageDuration,
         totalLabel: 'Total',
-        totalValue: formatEth(bondRequired + taxRequired),
+        totalValue: formatEth(totalValue),
       },
       harbergerInfo:
         'Takeover pays the declared valuation to the treasury and restarts the tax period at your price.',
       ctaLabel: selectedTakeoverSlot.takeoverCta,
-      isCtaDisabled: false,
+      isCtaDisabled: !isValuationValid || coveragePeriods <= 0,
     };
-  }, [selectedTakeoverSlot]);
+  }, [
+    handleTakeoverCoverageChange,
+    handleTakeoverValuationChange,
+    selectedTakeoverSlot,
+    takeoverCoverageDays,
+    takeoverValuationInput,
+    takeoverValuationWei,
+  ]);
 
   const handleCloseClaimModal = useCallback(() => {
     setSelectedVacantSlot(null);
@@ -347,11 +511,11 @@ export default function AdManagementPage() {
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
         <StatsSummary items={statsItems} />
-        {/* <FactoryOverview
+        <FactoryOverview
           slotIdCounter={slotIdCounter}
           treasury={treasuryAddress}
           governance={governanceAddress}
-        /> */}
+        />
 
         <section className="flex flex-col">
           <Tabs
@@ -455,12 +619,17 @@ export default function AdManagementPage() {
               </div>
             </Tab>
             <Tab key="yourSlots" title="Your Slots">
-              {/* TODO  */}
-              <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
-                {yourSlots.map((slot) => (
-                  <YourSlotsCard key={slot.id} {...slot} />
-                ))}
-              </div>
+              {!connectedAddress ? (
+                <DataFallback message="Connect your wallet to manage your slots." />
+              ) : ownedSlotCards.length === 0 ? (
+                <DataFallback message="You do not own any slots yet." />
+              ) : (
+                <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
+                  {ownedSlotCards.map((slot) => (
+                    <YourSlotsCard key={slot.id} {...slot} />
+                  ))}
+                </div>
+              )}
             </Tab>
 
             <Tab key="templateProposals" title="Template Proposals">

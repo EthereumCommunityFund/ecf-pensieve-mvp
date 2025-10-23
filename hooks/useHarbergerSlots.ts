@@ -97,6 +97,7 @@ interface NormalizedSlot {
   taxPeriodInSeconds: bigint;
   timeRemainingInSeconds: bigint;
   prepaidTaxBalanceWei: bigint;
+  taxPaidUntilTimestamp: bigint;
   currentAdURI: string;
   contentUpdateCount: bigint;
   contentUpdateLimit: bigint;
@@ -151,6 +152,7 @@ export interface ActiveSlotData {
   lockedBondWei: bigint;
   remainingUnits: string;
   timeRemainingInSeconds: bigint;
+  taxPaidUntilTimestamp: bigint;
   minTakeoverBid: string;
   minTakeoverBidWei: bigint;
   takeoverCta: string;
@@ -160,9 +162,13 @@ export interface ActiveSlotData {
   taxPeriodInSeconds: bigint;
   prepaidTaxBalanceWei: bigint;
   currentAdURI: string;
+  contentUpdateCount: bigint;
+  contentUpdateLimit: bigint;
   isExpired: boolean;
   isOverdue: boolean;
   minValuationWei: bigint;
+  baseValuationWei?: bigint;
+  dustRateBps?: bigint;
 }
 
 export interface SlotMetrics {
@@ -352,6 +358,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
           taxPeriodInSeconds: result.taxPeriodInSeconds ?? ZERO_BIGINT,
           timeRemainingInSeconds: result.timeRemainingInSeconds ?? ZERO_BIGINT,
           prepaidTaxBalanceWei: result.prepaidTaxBalance ?? ZERO_BIGINT,
+          taxPaidUntilTimestamp: result.taxPaidUntil ?? ZERO_BIGINT,
           currentAdURI: result.currentAdURI ?? '',
           contentUpdateCount: result.contentUpdateCount ?? ZERO_BIGINT,
           contentUpdateLimit: result.contentUpdateLimit ?? ZERO_BIGINT,
@@ -397,6 +404,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
           taxPeriodInSeconds: result.taxPeriodInSeconds ?? ZERO_BIGINT,
           timeRemainingInSeconds: result.timeRemainingInSeconds ?? ZERO_BIGINT,
           prepaidTaxBalanceWei: result.prepaidTaxBalance ?? ZERO_BIGINT,
+          taxPaidUntilTimestamp: result.taxPaidUntil ?? ZERO_BIGINT,
           currentAdURI: result.currentAdURI ?? '',
           contentUpdateCount: result.contentUpdateCount ?? ZERO_BIGINT,
           contentUpdateLimit: result.contentUpdateLimit ?? ZERO_BIGINT,
@@ -596,6 +604,7 @@ function createActiveSlotViewModel(
     lockedBondWei: slot.lockedValueWei,
     remainingUnits,
     timeRemainingInSeconds: slot.timeRemainingInSeconds,
+    taxPaidUntilTimestamp: slot.taxPaidUntilTimestamp,
     minTakeoverBid: `≥ ${formatEth(minTakeoverBidWei)}`,
     minTakeoverBidWei,
     takeoverCta: slot.isExpired ? 'Reclaim Slot' : 'Takeover Slot',
@@ -605,9 +614,13 @@ function createActiveSlotViewModel(
     taxPeriodInSeconds: slot.taxPeriodInSeconds,
     prepaidTaxBalanceWei: slot.prepaidTaxBalanceWei,
     currentAdURI: slot.currentAdURI,
+    contentUpdateCount: slot.contentUpdateCount,
+    contentUpdateLimit: slot.contentUpdateLimit,
     isExpired: slot.isExpired,
     isOverdue,
     minValuationWei: slot.minValuationWei,
+    baseValuationWei: slot.baseValuationWei,
+    dustRateBps: slot.dustRateBps,
   };
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Slider } from '@heroui/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
@@ -33,6 +33,7 @@ interface ValuationConfig {
   value?: string;
   errorMessage?: string;
   isDisabled?: boolean;
+  onChange?: (value: string) => void;
 }
 
 interface CoverageConfig {
@@ -158,7 +159,7 @@ export default function TakeoverSlotModal({
       setSelectedCoverageDays(normalizedValue);
       coverage.onChange?.(normalizedValue);
     },
-    [coverage.onChange, minCoverageDays, maxCoverageDays, stepCoverageDays],
+    [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
 
   const handleCoverageSliderChangeEnd = useCallback(
@@ -171,7 +172,7 @@ export default function TakeoverSlotModal({
       );
       coverage.onChangeEnd?.(normalizedValue);
     },
-    [coverage.onChangeEnd, minCoverageDays, maxCoverageDays, stepCoverageDays],
+    [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
 
   return (
@@ -233,7 +234,8 @@ export default function TakeoverSlotModal({
                 <LabelWithInfo label="Set New Valuation (ETH)" />
                 <Input
                   placeholder={valuation.placeholder}
-                  defaultValue={valuation.value}
+                  value={valuation.value ?? ''}
+                  onValueChange={valuation.onChange}
                   isInvalid={!!valuation.errorMessage}
                   isDisabled={valuation.isDisabled}
                   aria-label="Set new valuation"
@@ -288,7 +290,7 @@ export default function TakeoverSlotModal({
                 />
                 <BreakdownRow
                   label={breakdown.coverageLabel}
-                  value={formatDaysLabel(selectedCoverageDays)}
+                  value={breakdown.coverageValue}
                 />
 
                 <div className="flex items-center justify-between rounded-[8px] bg-black/[0.03] px-[12px] py-[10px]">
