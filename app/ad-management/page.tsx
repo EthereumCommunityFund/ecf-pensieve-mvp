@@ -95,6 +95,10 @@ interface TakeoverModalMock {
     sliderPosition: number;
     rangeStart: string;
     rangeEnd: string;
+    minDays?: number;
+    maxDays?: number;
+    stepDays?: number;
+    defaultDays?: number;
   };
   breakdown: {
     bondRateLabel: string;
@@ -322,6 +326,10 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
         sliderPosition: 0.2,
         rangeStart: '1 day',
         rangeEnd: '365 days',
+        minDays: 1,
+        maxDays: 365,
+        stepDays: 1,
+        defaultDays: 7,
       },
       breakdown: {
         bondRateLabel: 'Bond Rate (20%)',
@@ -370,6 +378,10 @@ const AVAILABLE_ACTIVE_SLOTS: ActiveSlotMock[] = [
         sliderPosition: 0.2,
         rangeStart: '1 day',
         rangeEnd: '365 days',
+        minDays: 1,
+        maxDays: 365,
+        stepDays: 1,
+        defaultDays: 7,
       },
       breakdown: {
         bondRateLabel: 'Bond Rate (20%)',
@@ -401,6 +413,10 @@ const DEFAULT_TAKEOVER_DATA: TakeoverModalMock = {
     sliderPosition: 0,
     rangeStart: '',
     rangeEnd: '',
+    minDays: 1,
+    maxDays: 365,
+    stepDays: 1,
+    defaultDays: 1,
   },
   breakdown: {
     bondRateLabel: '',

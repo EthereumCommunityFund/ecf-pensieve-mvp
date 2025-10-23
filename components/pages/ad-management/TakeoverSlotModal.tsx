@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Slider } from '@heroui/react';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
@@ -40,6 +41,12 @@ interface CoverageConfig {
   sliderPosition: number;
   rangeStart: string;
   rangeEnd: string;
+  minDays?: number;
+  maxDays?: number;
+  stepDays?: number;
+  defaultDays?: number;
+  onChange?: (value: number) => void;
+  onChangeEnd?: (value: number) => void;
 }
 
 export interface TakeoverSlotModalProps {
@@ -92,7 +99,80 @@ export default function TakeoverSlotModal({
     return 'text-[#2F6FED]';
   }, [contextTone]);
 
-  const sliderProgress = Math.min(Math.max(coverage.sliderPosition, 0), 1);
+  const minCoverageDays = Math.max(coverage.minDays ?? 1, 0);
+  const rawMaxCoverageDays = coverage.maxDays ?? 365;
+  const maxCoverageDays =
+    rawMaxCoverageDays > minCoverageDays ? rawMaxCoverageDays : minCoverageDays;
+  const stepCoverageDays =
+    coverage.stepDays && coverage.stepDays > 0 ? coverage.stepDays : 1;
+
+  const derivedInitialCoverageDays = useMemo(() => {
+    const progressDays = computeDaysFromProgress(
+      coverage.sliderPosition,
+      minCoverageDays,
+      maxCoverageDays,
+    );
+    const candidateValue =
+      coverage.defaultDays ??
+      extractDaysFromString(coverage.label) ??
+      extractDaysFromString(breakdown.coverageValue) ??
+      progressDays;
+    return snapToStep(
+      candidateValue ?? minCoverageDays,
+      minCoverageDays,
+      maxCoverageDays,
+      stepCoverageDays,
+    );
+  }, [
+    coverage.defaultDays,
+    coverage.label,
+    coverage.sliderPosition,
+    breakdown.coverageValue,
+    minCoverageDays,
+    maxCoverageDays,
+    stepCoverageDays,
+  ]);
+
+  const [selectedCoverageDays, setSelectedCoverageDays] = useState(
+    derivedInitialCoverageDays,
+  );
+
+  useEffect(() => {
+    setSelectedCoverageDays(derivedInitialCoverageDays);
+  }, [derivedInitialCoverageDays]);
+
+  const formattedCoverageLabel = `(${formatDaysLabel(selectedCoverageDays)})`;
+  const coverageRangeStartLabel =
+    coverage.rangeStart ?? formatRangeBoundary(minCoverageDays);
+  const coverageRangeEndLabel =
+    coverage.rangeEnd ?? formatRangeBoundary(maxCoverageDays);
+
+  const handleCoverageSliderChange = useCallback(
+    (value: number) => {
+      const normalizedValue = snapToStep(
+        value,
+        minCoverageDays,
+        maxCoverageDays,
+        stepCoverageDays,
+      );
+      setSelectedCoverageDays(normalizedValue);
+      coverage.onChange?.(normalizedValue);
+    },
+    [coverage.onChange, minCoverageDays, maxCoverageDays, stepCoverageDays],
+  );
+
+  const handleCoverageSliderChangeEnd = useCallback(
+    (value: number) => {
+      const normalizedValue = snapToStep(
+        value,
+        minCoverageDays,
+        maxCoverageDays,
+        stepCoverageDays,
+      );
+      coverage.onChangeEnd?.(normalizedValue);
+    },
+    [coverage.onChangeEnd, minCoverageDays, maxCoverageDays, stepCoverageDays],
+  );
 
   return (
     <Modal
@@ -171,14 +251,21 @@ export default function TakeoverSlotModal({
               </div>
 
               <div className="flex flex-col gap-[12px]">
-                <LabelWithInfo label={`Tax Coverage ${coverage.label}`} />
+                <LabelWithInfo
+                  label={`Tax Coverage ${formattedCoverageLabel}`}
+                />
                 <span className="text-[12px] leading-[18px] text-black/60">
                   {coverage.description}
                 </span>
                 <CoverageSlider
-                  progress={sliderProgress}
-                  rangeStart={coverage.rangeStart}
-                  rangeEnd={coverage.rangeEnd}
+                  value={selectedCoverageDays}
+                  min={minCoverageDays}
+                  max={maxCoverageDays}
+                  step={stepCoverageDays}
+                  rangeStart={coverageRangeStartLabel}
+                  rangeEnd={coverageRangeEndLabel}
+                  onChange={handleCoverageSliderChange}
+                  onChangeEnd={handleCoverageSliderChangeEnd}
                 />
               </div>
 
@@ -201,7 +288,7 @@ export default function TakeoverSlotModal({
                 />
                 <BreakdownRow
                   label={breakdown.coverageLabel}
-                  value={breakdown.coverageValue}
+                  value={formatDaysLabel(selectedCoverageDays)}
                 />
 
                 <div className="flex items-center justify-between rounded-[8px] bg-black/[0.03] px-[12px] py-[10px]">
@@ -297,31 +384,151 @@ function BreakdownRow({ label, value }: { label: string; value: string }) {
 }
 
 function CoverageSlider({
-  progress,
+  value,
+  min,
+  max,
+  step = 1,
   rangeStart,
   rangeEnd,
+  onChange,
+  onChangeEnd,
 }: {
-  progress: number;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
   rangeStart: string;
   rangeEnd: string;
+  onChange?: (value: number) => void;
+  onChangeEnd?: (value: number) => void;
 }) {
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
+  const [sliderValue, setSliderValue] = useState(value);
+
+  useEffect(() => {
+    setSliderValue(value);
+  }, [value]);
+
+  const normalizeValue = useCallback(
+    (input: number | number[]) => {
+      const numericValue = Array.isArray(input) ? input[0] : input;
+      const clampedValue = clampValue(numericValue, min, max);
+      return snapToStep(clampedValue, min, max, step);
+    },
+    [min, max, step],
+  );
+
+  const handleChange = useCallback(
+    (next: number | number[]) => {
+      const normalizedValue = normalizeValue(next);
+      setSliderValue(normalizedValue);
+      onChange?.(normalizedValue);
+    },
+    [normalizeValue, onChange],
+  );
+
+  const handleChangeEnd = useCallback(
+    (next: number | number[]) => {
+      const normalizedValue = normalizeValue(next);
+      setSliderValue(normalizedValue);
+      onChangeEnd?.(normalizedValue);
+    },
+    [normalizeValue, onChangeEnd],
+  );
+
   return (
     <div className="flex flex-col gap-[10px]">
-      <div className="relative h-[6px] w-full rounded-full bg-black/10">
-        <div
-          className="absolute left-0 top-0 h-full rounded-full bg-black"
-          style={{ width: `${clampedProgress * 100}%` }}
-        />
-        <div
-          className="absolute top-1/2 size-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-black shadow-[0_0_0_2px_rgba(0,0,0,0.1)]"
-          style={{ left: `${clampedProgress * 100}%` }}
-        />
-      </div>
+      <Slider
+        aria-label="Tax coverage slider"
+        value={sliderValue}
+        minValue={min}
+        maxValue={max}
+        step={step}
+        onChange={handleChange}
+        onChangeEnd={handleChangeEnd}
+        classNames={{
+          base: 'w-full gap-0',
+          trackWrapper: 'flex items-center gap-0 py-0',
+          track:
+            'relative flex h-[6px] w-full rounded-full bg-black/10 border-0 !border-0 !border-l-0 !border-r-0',
+          filler:
+            'absolute inset-y-0 left-0 h-full rounded-full bg-black transition-none motion-reduce:transition-none',
+          thumb:
+            'z-10 size-[18px] rounded-full border border-black/60 bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] before:hidden after:hidden',
+        }}
+      />
       <div className="flex items-center justify-between text-[12px] text-black/50">
         <span>{rangeStart}</span>
         <span>{rangeEnd}</span>
       </div>
     </div>
   );
+}
+
+function clampValue(value: number, min: number, max: number) {
+  if (Number.isNaN(value)) {
+    return min;
+  }
+
+  if (max <= min) {
+    return min;
+  }
+
+  return Math.min(Math.max(value, min), max);
+}
+
+function snapToStep(value: number, min: number, max: number, step: number) {
+  if (max <= min) {
+    return min;
+  }
+
+  const safeStep = step > 0 ? step : 1;
+  const clampedValue = clampValue(value, min, max);
+  const steps = Math.round((clampedValue - min) / safeStep);
+  const snappedValue = min + steps * safeStep;
+
+  return clampValue(snappedValue, min, max);
+}
+
+function computeDaysFromProgress(
+  progress: number | undefined,
+  min: number,
+  max: number,
+) {
+  if (max <= min) {
+    return min;
+  }
+
+  if (typeof progress !== 'number' || Number.isNaN(progress)) {
+    return min;
+  }
+
+  const boundedProgress = clampValue(progress, 0, 1);
+  return min + boundedProgress * (max - min);
+}
+
+function extractDaysFromString(text?: string) {
+  if (!text) {
+    return undefined;
+  }
+
+  const match = text.match(/(\d+(?:\.\d+)?)/);
+  if (!match) {
+    return undefined;
+  }
+
+  const value = Number(match[1]);
+  return Number.isNaN(value) ? undefined : value;
+}
+
+function formatDaysLabel(value: number) {
+  const roundedValue = Number.isInteger(value)
+    ? value
+    : Number(value.toFixed(2));
+  const unit = roundedValue === 1 ? 'Day' : 'Days';
+  return `${roundedValue} ${unit}`;
+}
+
+function formatRangeBoundary(value: number) {
+  const roundedValue = Math.round(value);
+  return roundedValue === 1 ? '1 day' : `${roundedValue} days`;
 }
