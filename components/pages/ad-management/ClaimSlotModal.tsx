@@ -2,18 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { parseEther } from 'viem';
+import { cn } from '@heroui/react';
+import { TrendUp } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-} from '@/components/base/modal';
+import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import { Select, SelectItem } from '@/components/base/select';
 import ECFTypography from '@/components/base/typography';
-import { InfoIcon, ShowMetricsIcon, XIcon } from '@/components/icons';
+import { InfoIcon, XIcon } from '@/components/icons';
 import type { VacantSlotData } from '@/hooks/useHarbergerSlots';
 import {
   ZERO_BIGINT,
@@ -21,6 +18,8 @@ import {
   calculateTaxForPeriods,
   formatEth,
 } from '@/utils/harberger';
+
+import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface ClaimPayload {
   valuationWei: bigint;
@@ -38,8 +37,8 @@ type ClaimStep = 1 | 2;
 
 const CONTENT_TYPE_OPTIONS = [
   { key: 'image', label: 'Image' },
-  { key: 'html', label: 'HTML Embed' },
-  { key: 'video', label: 'Video' },
+  // { key: 'html', label: 'HTML Embed' },
+  // { key: 'video', label: 'Video' },
 ];
 
 interface ClaimSlotModalProps {
@@ -295,93 +294,104 @@ export default function ClaimSlotModal({
       <ModalContent>
         {() => (
           <>
-            <div className="flex flex-col gap-[6px] px-5 pt-5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <ECFTypography type="subtitle2" className="text-[18px]">
-                    Claim Slot
-                  </ECFTypography>
-                  <span className="rounded-[6px] border border-black/10 bg-[#F4F5F7] px-[8px] py-[2px] text-[12px] font-semibold uppercase tracking-[0.04em] text-black/70">
-                    {statusLabel}
-                  </span>
-                </div>
-
-                <Button
-                  isIconOnly
-                  radius="sm"
-                  className="size-[32px] rounded-[8px] bg-black/5 p-0 text-black/50 hover:bg-black/10"
-                  onPress={handleClose}
-                  isDisabled={isSubmitting}
-                >
-                  <XIcon size={16} />
-                </Button>
+            {/* header */}
+            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
+              <div className="flex items-center gap-3 ">
+                <ECFTypography type="subtitle2" className="text-[18px]">
+                  Claim Slot
+                </ECFTypography>
+                {/* <span className="rounded-[6px] border border-black/10 bg-[#F4F5F7] px-[8px] py-[2px] text-[12px] font-semibold uppercase tracking-[0.04em] text-black/70">
+                  {statusLabel}
+                </span> */}
               </div>
+
+              <Button
+                isIconOnly
+                radius="sm"
+                className="size-[32px] rounded-[8px] bg-transparent  p-0 text-black/50 hover:bg-black/10"
+                onPress={handleClose}
+                isDisabled={isSubmitting}
+              >
+                <XIcon size={16} />
+              </Button>
             </div>
 
-            <ModalBody className="flex flex-col gap-[20px] px-5 pb-0 pt-4">
-              <div className="flex flex-col gap-[8px]">
-                <span className="text-[13px] font-semibold text-black/50">
-                  Slot:
-                </span>
-                <span className="text-[14px] font-semibold text-black">
-                  {slot?.slotName ?? '—'}
+            <ModalBody className="mobile:p-[10px] flex flex-col gap-[20px] p-[20px]">
+              <div className="flex justify-between gap-[8px]">
+                <p className="flex gap-[10px]">
+                  <span className="text-[13px] font-semibold text-black/50">
+                    Slot:
+                  </span>
+                  <span className="text-[14px] font-semibold text-black">
+                    {slot?.slotName ?? '—'}
+                  </span>
+                </p>
+
+                <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/80">
+                  Open
                 </span>
               </div>
 
               {step === 1 ? (
-                <div className="flex flex-col gap-[20px]">
-                  <div className="flex flex-col gap-[12px] rounded-[12px] border border-black/10 bg-[#FCFCFC] p-[16px]">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
-                        <ShowMetricsIcon className="size-[18px] text-black/40" />
-                        <span>Bonding Cost Breakdown:</span>
-                      </div>
-                      <InfoIcon size={18} />
+                <div className="space-y-[20px]">
+                  <div className="space-y-[8px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[10px]">
+                    <div className="flex items-center justify-center gap-[8px] text-[14px] leading-[20px] text-black">
+                      <TrendUp size={20} weight="bold" />
+                      <span>Bonding Cost Breakdown:</span>
                     </div>
 
                     <BreakdownRow
                       label={breakdownRows.bondRateLabel}
                       value={breakdownRows.bondRateValue}
+                      valueLabelType="light"
                     />
                     <BreakdownRow
                       label={breakdownRows.taxLabel}
                       value={breakdownRows.taxValue}
+                      valueLabelType="light"
                     />
                     <BreakdownRow
                       label={breakdownRows.coverageLabel}
                       value={breakdownRows.coverageValue}
+                      valueLabelType="pureText"
+                      className="opacity-50"
                     />
 
-                    <div className="flex items-center justify-between rounded-[8px] bg-black/[0.03] px-[12px] py-[10px]">
-                      <div className="flex items-center gap-[6px] text-[13px] font-semibold text-black/80">
+                    <div className="flex items-center justify-between rounded-[8px] border-t border-black/10 pt-[8px]">
+                      <div className="flex items-center gap-[6px] text-[14px] text-black/80">
                         <span>{breakdownRows.totalLabel}</span>
                         <InfoIcon size={16} />
                       </div>
-                      <span className="text-[14px] font-semibold text-[#0C7A32]">
+                      <span className="text-[16px] font-semibold text-[#3CBF91]">
                         {breakdownRows.totalValue}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-[12px]">
+                  <div className="flex flex-col">
                     <LabelWithInfo label="Set Valuation (ETH)" />
                     <Input
                       value={valuationInput}
                       aria-label="Set valuation"
-                      className="text-[16px] font-semibold"
+                      className="mb-[5px] mt-[10px] bg-[#F5F5F5] text-[16px] font-semibold"
                       onValueChange={setValuationInput}
                       isInvalid={Boolean(valuationInput) && !parsedValuationWei}
                       isDisabled={!slot}
                     />
-                    <span className="text-[12px] text-black/50">
+                    <span className="text-[13px] text-black/80">
                       Min: {valuationMinimumLabel}
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-[12px]">
+                  <div className="flex flex-col">
                     <LabelWithInfo label="Tax Coverage" />
-                    <span className="text-[12px] leading-[18px] text-black/60">
-                      {coverageHint}
+                    <span className="mt-[5px] text-[13px] leading-[18px] text-black/80">
+                      Choose how many tax periods to prepay. Longer coverage
+                      means higher upfront cost but no need to pay taxes
+                      frequently.{' '}
+                      <strong>
+                        (1 tax period = 24 hours / 620000 seconds)
+                      </strong>
                     </span>
                     <Select
                       selectedKeys={
@@ -393,7 +403,7 @@ export default function ClaimSlotModal({
                           setSelectedCoverageKey(key);
                         }
                       }}
-                      className="w-full"
+                      className="mb-[5px] mt-[10px] w-full bg-[#F5F5F5]"
                       aria-label="Select tax coverage"
                       isDisabled={!slot}
                     >
@@ -415,7 +425,7 @@ export default function ClaimSlotModal({
                           setContentType(key);
                         }
                       }}
-                      className="w-full"
+                      className="w-full bg-[#F5F5F5]"
                       aria-label="Select content type"
                     >
                       {CONTENT_TYPE_OPTIONS.map((option) => (
@@ -431,6 +441,7 @@ export default function ClaimSlotModal({
                       aria-label="Slot title"
                       value={title}
                       onValueChange={setTitle}
+                      className="bg-[#F5F5F5]"
                     />
                   </div>
 
@@ -441,21 +452,19 @@ export default function ClaimSlotModal({
                       aria-label="Link URL"
                       value={linkUrl}
                       onValueChange={setLinkUrl}
+                      className="bg-[#F5F5F5]"
                     />
                   </div>
 
                   <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo label="Media / Image URI" />
+                    <LabelWithInfo label="Image URI" />
                     <Input
                       placeholder="https:// or ipfs://"
                       aria-label="Image reference"
                       value={mediaUrl}
                       onValueChange={setMediaUrl}
+                      className="bg-[#F5F5F5]"
                     />
-                    <span className="text-[12px] text-black/50">
-                      Provide a direct asset link when available. If omitted,
-                      metadata is embedded on-chain.
-                    </span>
                   </div>
                 </div>
               )}
@@ -465,29 +474,30 @@ export default function ClaimSlotModal({
                   {combinedError}
                 </div>
               ) : null}
-            </ModalBody>
 
-            <ModalFooter className="flex items-center gap-[12px] p-5">
-              <Button
-                color="secondary"
-                className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-                onPress={step === 1 ? handleClose : handleBack}
-                isDisabled={isSubmitting}
-              >
-                {step === 1 ? 'Close' : 'Back'}
-              </Button>
-              <Button
-                color="primary"
-                className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90"
-                onPress={handleNext}
-                isDisabled={
-                  step === 1 ? !isStepOneValid || !slot : isSubmitting
-                }
-                isLoading={isSubmitting}
-              >
-                {step === 1 ? 'Next' : 'Submit Claim'}
-              </Button>
-            </ModalFooter>
+              {/* footer */}
+              <div className="flex items-center gap-[12px]">
+                <Button
+                  color="secondary"
+                  className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+                  onPress={step === 1 ? handleClose : handleBack}
+                  isDisabled={isSubmitting}
+                >
+                  {step === 1 ? 'Close' : 'Back'}
+                </Button>
+                <Button
+                  color="primary"
+                  className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90"
+                  onPress={handleNext}
+                  isDisabled={
+                    step === 1 ? !isStepOneValid || !slot : isSubmitting
+                  }
+                  isLoading={isSubmitting}
+                >
+                  {step === 1 ? 'Next(1)' : 'Submit Claim'}
+                </Button>
+              </div>
+            </ModalBody>
           </>
         )}
       </ModalContent>
@@ -497,21 +507,38 @@ export default function ClaimSlotModal({
 
 function LabelWithInfo({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
-      <span>{label}</span>
-      <InfoIcon size={16} />
+    <div className="flex items-center gap-[8px]">
+      <span className="text-[16px] font-semibold leading-[1.6] text-black">
+        {label}
+      </span>
+      <InfoIcon size={20} />
     </div>
   );
 }
 
-function BreakdownRow({ label, value }: { label: string; value: string }) {
+function BreakdownRow({
+  label,
+  value,
+  valueLabelType,
+  className = '',
+}: {
+  label: string;
+  value: string;
+  valueLabelType: IValueLabelType;
+  className?: string;
+}) {
   return (
-    <div className="flex items-center justify-between border-b border-dashed border-black/10 pb-[10px] text-[13px] text-black/70 last:border-b-0 last:pb-0">
+    <div
+      className={cn(
+        'flex items-center justify-between text-[13px] text-black/70 last:border-b-0 last:pb-0',
+        className,
+      )}
+    >
       <div className="flex items-center gap-[6px]">
         <span>{label}</span>
         <InfoIcon size={16} />
       </div>
-      <span className="font-semibold text-black">{value}</span>
+      <ValueLabel valueLabelType={valueLabelType} value={value} />
     </div>
   );
 }

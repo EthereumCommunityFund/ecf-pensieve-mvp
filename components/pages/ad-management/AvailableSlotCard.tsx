@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { Button } from '@/components/base/button';
 import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
 
+import { IValueLabelType } from './ValueLabel';
+
 interface InfoStatProps {
   label: string;
   helperText?: string;
@@ -129,7 +131,7 @@ interface StatBlock {
   id: string;
   label: string;
   value: string;
-  valueLabelType: 'light' | 'bordered' | 'dark';
+  valueLabelType: IValueLabelType;
   withBorderTop?: boolean;
 }
 
