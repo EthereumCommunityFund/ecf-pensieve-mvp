@@ -19,7 +19,6 @@ import {
   ZERO_BIGINT,
   calculateBond,
   calculateTaxForPeriods,
-  formatDuration,
   formatEth,
 } from '@/utils/harberger';
 
@@ -97,21 +96,17 @@ export default function ClaimSlotModal({
       return [] as Array<{
         key: string;
         label: string;
-        helper: string;
         periods: bigint;
       }>;
     }
 
-    const presets = [1, 3, 6, 12];
-    return presets.map((count) => {
-      const periods = BigInt(count);
-      const helper = formatDuration(slot.taxPeriodInSeconds * periods, {
-        fallback: '—',
-      });
+    const presets = [1, 7, 14, 30, 90, 182, 365];
+    return presets.map((days) => {
+      const periods = BigInt(days);
+      const label = days === 1 ? '1day' : `${days}days`;
       return {
-        key: count.toString(),
-        label: count === 1 ? '1 period' : `${count} periods`,
-        helper,
+        key: days.toString(),
+        label,
         periods,
       };
     });
@@ -159,9 +154,7 @@ export default function ClaimSlotModal({
     if (!slot || !selectedCoverage) {
       return '—';
     }
-    return formatDuration(slot.taxPeriodInSeconds * selectedCoverage.periods, {
-      fallback: '—',
-    });
+    return selectedCoverage.label;
   }, [selectedCoverage, slot]);
 
   const totalValue = useMemo(
@@ -405,9 +398,7 @@ export default function ClaimSlotModal({
                       isDisabled={!slot}
                     >
                       {coverageOptions.map((option) => (
-                        <SelectItem
-                          key={option.key}
-                        >{`${option.label} · ${option.helper}`}</SelectItem>
+                        <SelectItem key={option.key}>{option.label}</SelectItem>
                       ))}
                     </Select>
                   </div>
