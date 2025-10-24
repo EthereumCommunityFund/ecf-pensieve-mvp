@@ -15,6 +15,8 @@ import {
   buildActiveStats,
 } from '@/components/pages/ad-management/AvailableSlotCard';
 import ClaimSlotModal from '@/components/pages/ad-management/ClaimSlotModal';
+import EditSlotModal from '@/components/pages/ad-management/EditSlotModal';
+import SlotDetailsModal from '@/components/pages/ad-management/SlotDetailsModal';
 import StatsSummary, {
   type StatsSummaryItem,
 } from '@/components/pages/ad-management/StatsSummary';
@@ -102,6 +104,10 @@ export default function AdManagementPage() {
     useState<VacantSlotData | null>(null);
   const [selectedTakeoverSlot, setSelectedTakeoverSlot] =
     useState<ActiveSlotData | null>(null);
+  const [selectedEditSlot, setSelectedEditSlot] =
+    useState<ActiveSlotData | null>(null);
+  const [selectedDetailsSlot, setSelectedDetailsSlot] =
+    useState<ActiveSlotData | null>(null);
   const [takeoverCoveragePeriods, setTakeoverCoveragePeriods] =
     useState<number>(1);
   const [takeoverValuationWei, setTakeoverValuationWei] = useState<
@@ -115,6 +121,8 @@ export default function AdManagementPage() {
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isTakeoverSubmitting, setIsTakeoverSubmitting] = useState(false);
   const [takeoverError, setTakeoverError] = useState<string | null>(null);
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [pendingSlotAction, setPendingSlotAction] = useState<{
     slotId: string;
     action: 'renew' | 'forfeit' | 'poke';
@@ -138,6 +146,7 @@ export default function AdManagementPage() {
     renew: renewSlot,
     forfeit: forfeitSlot,
     poke: pokeSlot,
+    updateCreative,
   } = useHarbergerSlotActions();
 
   useEffect(() => {
@@ -168,6 +177,12 @@ export default function AdManagementPage() {
       setClaimError(null);
     }
   }, [selectedVacantSlot]);
+
+  useEffect(() => {
+    if (!selectedEditSlot) {
+      setEditError(null);
+    }
+  }, [selectedEditSlot]);
 
   const normalizedAccount = useMemo(
     () => connectedAddress?.toLowerCase() ?? null,
@@ -251,6 +266,12 @@ export default function AdManagementPage() {
       try {
         await forfeitSlot({ slot });
         await refetch();
+        setSelectedDetailsSlot((current) =>
+          current && current.id === slot.id ? null : current,
+        );
+        setSelectedEditSlot((current) =>
+          current && current.id === slot.id ? null : current,
+        );
       } finally {
         setPendingSlotAction(null);
       }
@@ -357,6 +378,29 @@ export default function AdManagementPage() {
     takeoverValuationWei,
   ]);
 
+  const handleEditSubmit = useCallback(
+    async ({ creativeUri }: { creativeUri: string }) => {
+      if (!selectedEditSlot) {
+        return;
+      }
+
+      setEditError(null);
+      setIsEditSubmitting(true);
+      try {
+        await updateCreative({ slot: selectedEditSlot, creativeUri });
+        await refetch();
+        setSelectedEditSlot(null);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to update creative.';
+        setEditError(message);
+      } finally {
+        setIsEditSubmitting(false);
+      }
+    },
+    [refetch, selectedEditSlot, updateCreative],
+  );
+
   const formatUtcTimestamp = useCallback((timestamp: bigint) => {
     if (timestamp <= ZERO_BIGINT) {
       return '—';
@@ -431,6 +475,9 @@ export default function AdManagementPage() {
         pendingSlotAction?.slotId === slot.id &&
         pendingSlotAction.action === 'forfeit';
 
+      const isEditPending =
+        isEditSubmitting && selectedEditSlot?.id === slot.id;
+
       const primaryAction: SlotAction | undefined =
         status === 'closed'
           ? undefined
@@ -439,30 +486,27 @@ export default function AdManagementPage() {
               label: slot.isOverdue ? 'Pay Due Tax' : 'Renew Coverage',
               variant: 'primary',
               onPress: () => handleRenewSlot(slot),
-              isDisabled: isRenewPending || isForfeitPending,
+              isDisabled: isRenewPending,
               isLoading: isRenewPending,
             };
 
       const secondaryAction: SlotAction | undefined =
         status === 'closed'
-          ? {
-              id: `view-audit-${slot.id}`,
-              label: 'View Audit Trail',
-              variant: 'secondary',
-            }
+          ? undefined
           : {
-              id: `forfeit-${slot.id}`,
-              label: 'Forfeit Slot',
+              id: `edit-${slot.id}`,
+              label: 'Edit',
               variant: 'secondary',
-              onPress: () => handleForfeitSlot(slot),
-              isDisabled: isRenewPending || isForfeitPending,
-              isLoading: isForfeitPending,
+              onPress: () => setSelectedEditSlot(slot),
+              isDisabled: isRenewPending,
+              isLoading: isEditPending,
             };
 
       const tertiaryAction: SlotAction | undefined = {
         id: `slot-details-${slot.id}`,
         label: 'Slot Details',
         variant: status === 'closed' ? 'secondary' : undefined,
+        onPress: () => setSelectedDetailsSlot(slot),
       };
 
       const valuationDisplay =
@@ -510,10 +554,11 @@ export default function AdManagementPage() {
   }, [
     computeTaxPerPeriodWei,
     formatUtcTimestamp,
-    handleForfeitSlot,
     handleRenewSlot,
+    isEditSubmitting,
     ownedSlots,
     pendingSlotAction,
+    selectedEditSlot,
   ]);
 
   const ownedSlotsTotalTaxDueWei = useMemo(() => {
@@ -677,6 +722,18 @@ export default function AdManagementPage() {
     setTakeoverError(null);
     setSelectedTakeoverSlot(null);
   }, [isTakeoverSubmitting]);
+
+  const handleCloseEditModal = useCallback(() => {
+    if (isEditSubmitting) {
+      return;
+    }
+    setEditError(null);
+    setSelectedEditSlot(null);
+  }, [isEditSubmitting]);
+
+  const handleCloseDetailsModal = useCallback(() => {
+    setSelectedDetailsSlot(null);
+  }, []);
 
   return (
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
@@ -846,6 +903,30 @@ export default function AdManagementPage() {
         onSubmit={handleClaimSubmit}
         isSubmitting={isClaimSubmitting}
         errorMessage={claimError ?? undefined}
+      />
+
+      <EditSlotModal
+        isOpen={!!selectedEditSlot}
+        onClose={handleCloseEditModal}
+        slot={selectedEditSlot}
+        onSubmit={handleEditSubmit}
+        isSubmitting={isEditSubmitting}
+        errorMessage={editError ?? undefined}
+      />
+
+      <SlotDetailsModal
+        isOpen={!!selectedDetailsSlot}
+        onClose={handleCloseDetailsModal}
+        slot={selectedDetailsSlot}
+        onForfeit={
+          selectedDetailsSlot && !selectedDetailsSlot.isExpired
+            ? () => handleForfeitSlot(selectedDetailsSlot)
+            : undefined
+        }
+        isForfeitLoading={
+          pendingSlotAction?.slotId === selectedDetailsSlot?.id &&
+          pendingSlotAction?.action === 'forfeit'
+        }
       />
 
       <TakeoverSlotModal

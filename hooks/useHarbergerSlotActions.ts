@@ -19,7 +19,13 @@ import {
 
 import type { ActiveSlotData, VacantSlotData } from './useHarbergerSlots';
 
-type ActionKind = 'claim' | 'takeover' | 'renew' | 'forfeit' | 'poke';
+type ActionKind =
+  | 'claim'
+  | 'takeover'
+  | 'renew'
+  | 'forfeit'
+  | 'poke'
+  | 'updateCreative';
 
 interface ClaimParams {
   slot: VacantSlotData;
@@ -48,11 +54,23 @@ interface PokeParams {
   slot: ActiveSlotData;
 }
 
-type ContractFunctionName = 'claim' | 'takeOver' | 'renew' | 'forfeit' | 'poke';
+interface UpdateCreativeParams {
+  slot: ActiveSlotData;
+  creativeUri: string;
+}
+
+type ContractFunctionName =
+  | 'claim'
+  | 'takeOver'
+  | 'renew'
+  | 'forfeit'
+  | 'poke'
+  | 'updateAdCreative';
 
 type ExecuteArgs =
   | readonly [bigint, bigint, string]
   | readonly [bigint]
+  | readonly [string]
   | readonly [];
 
 interface ExecuteConfig {
@@ -351,12 +369,39 @@ export function useHarbergerSlotActions() {
     [execute],
   );
 
+  const updateCreative = useCallback(
+    async ({ slot, creativeUri }: UpdateCreativeParams) => {
+      if (!address || !slot.ownerAddress) {
+        throw new Error('Only the current slot owner can update creative.');
+      }
+
+      if (slot.ownerAddress.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('Only the current slot owner can update creative.');
+      }
+
+      const normalizedUri = ensureHttpUri(creativeUri);
+
+      return execute(
+        {
+          slotType: slot.slotType,
+          slotAddress: slot.slotAddress,
+          functionName: 'updateAdCreative',
+          args: [normalizedUri] as const,
+          successMessage: 'Creative updated successfully.',
+        },
+        'updateCreative',
+      );
+    },
+    [address, execute],
+  );
+
   return {
     claim,
     takeover,
     renew,
     forfeit,
     poke,
+    updateCreative,
     pendingAction,
     isPending: {
       claim: pendingAction === 'claim',
@@ -364,6 +409,7 @@ export function useHarbergerSlotActions() {
       renew: pendingAction === 'renew',
       forfeit: pendingAction === 'forfeit',
       poke: pendingAction === 'poke',
+      updateCreative: pendingAction === 'updateCreative',
     },
   };
 }
