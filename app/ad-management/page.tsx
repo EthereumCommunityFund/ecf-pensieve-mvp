@@ -744,19 +744,11 @@ export default function AdManagementPage() {
             <Tab key="availableSlots" title="Available Ad Slots">
               <div className="flex flex-col gap-[32px]">
                 <section className="flex flex-col gap-[16px]">
-                  <ECFTypography
-                    type="subtitle2"
-                    className="text-[16px] font-semibold text-black"
-                  >
-                    Vacant Slots
-                  </ECFTypography>
+                  <p className="font-mona text-[18px] font-[500] text-black/50">
+                    Vacant Slots:
+                  </p>
 
-                  {error ? (
-                    <DataFallback
-                      tone="danger"
-                      message={`Unable to load slot inventory: ${error.message}`}
-                    />
-                  ) : isLoading && vacantSlots.length === 0 ? (
+                  {isLoading && vacantSlots.length === 0 ? (
                     <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
                       {Array.from({ length: 2 }).map((_, index) => (
                         <VacantSlotCardSkeleton
@@ -764,7 +756,7 @@ export default function AdManagementPage() {
                         />
                       ))}
                     </div>
-                  ) : vacantSlots.length === 0 ? (
+                  ) : vacantSlots.length === 0 || error ? (
                     <DataFallback message="No vacant slots published by the factory yet." />
                   ) : (
                     <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
@@ -780,19 +772,11 @@ export default function AdManagementPage() {
                 </section>
 
                 <section className="flex flex-col gap-[16px]">
-                  <ECFTypography
-                    type="subtitle2"
-                    className="text-[16px] font-semibold text-black"
-                  >
-                    Active Slots
-                  </ECFTypography>
+                  <p className="font-mona text-[18px] font-[500] text-black/50">
+                    Active Slots:
+                  </p>
 
-                  {error ? (
-                    <DataFallback
-                      tone="danger"
-                      message={`Unable to load active slots: ${error.message}`}
-                    />
-                  ) : isLoading && activeSlots.length === 0 ? (
+                  {isLoading && activeSlots.length === 0 ? (
                     <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">
                       {Array.from({ length: 2 }).map((_, index) => (
                         <ActiveSlotCardSkeleton
@@ -800,7 +784,7 @@ export default function AdManagementPage() {
                         />
                       ))}
                     </div>
-                  ) : activeSlots.length === 0 ? (
+                  ) : activeSlots.length === 0 || error ? (
                     <DataFallback message="No active slots claimed yet." />
                   ) : (
                     <div className="mobile:grid-cols-1 grid grid-cols-2 gap-[20px]">

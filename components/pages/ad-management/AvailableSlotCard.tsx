@@ -1,8 +1,8 @@
 'use client';
 
 import { Card, CardBody, cn, Skeleton, Tooltip } from '@heroui/react';
-import Image from 'next/image';
 import { CoinVertical } from '@phosphor-icons/react';
+import Image from 'next/image';
 
 import { Button } from '@/components/base/button';
 import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
@@ -252,22 +252,22 @@ export function VacantSlotCardSkeleton() {
       shadow="none"
       className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
     >
-      <CardBody className="flex h-full flex-col gap-[16px] p-5">
+      <CardBody className="mobile:p-[10px] flex h-full flex-col gap-[20px] p-[20px]">
         <div className="flex items-start justify-between gap-3">
-          <Skeleton className="h-[18px] w-[120px] rounded-[4px]" />
-          <Skeleton className="h-[20px] w-[80px] rounded-[6px]" />
+          <Skeleton className="h-[18px] w-[120px] rounded-[5px]" />
+          <Skeleton className="h-[20px] w-[70px] rounded-[5px]" />
         </div>
 
-        <Skeleton className="h-[140px] w-full rounded-[12px]" />
+        <Skeleton className="h-[98px] w-full rounded-[12px]" />
 
-        <div className="flex flex-col gap-[14px]">
+        <div className="flex flex-col gap-[8px]">
           {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="flex flex-col gap-[8px]">
+            <div key={index} className="flex flex-col gap-[6px]">
               <div className="flex items-center justify-between gap-[12px]">
-                <Skeleton className="h-[16px] w-[140px] rounded-[4px]" />
-                <Skeleton className="h-[22px] w-[70px] rounded-[6px]" />
+                <Skeleton className="h-[16px] w-[150px] rounded-[4px]" />
+                <Skeleton className="h-[24px] w-[80px] rounded-[5px]" />
               </div>
-              <Skeleton className="h-[14px] w-[180px] rounded-[4px]" />
+              <Skeleton className="h-[12px] w-[190px] rounded-[4px]" />
             </div>
           ))}
         </div>
@@ -284,25 +284,30 @@ export function ActiveSlotCardSkeleton() {
       shadow="none"
       className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
     >
-      <CardBody className="flex h-full flex-col gap-[16px] p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-[6px]">
-            <Skeleton className="h-[18px] w-[140px] rounded-[4px]" />
-            <Skeleton className="h-[16px] w-[160px] rounded-[4px]" />
-          </div>
-          <Skeleton className="h-[20px] w-[80px] rounded-[6px]" />
+      <CardBody className="flex h-full flex-col gap-[20px] p-5">
+        <div className="flex justify-between gap-[6px]">
+          <Skeleton className="h-[18px] w-[160px] rounded-[5px]" />
+          <Skeleton className="h-[20px] w-[80px] rounded-[5px]" />
         </div>
 
-        <Skeleton className="h-[180px] w-full rounded-[10px]" />
+        <div className="flex w-full items-center justify-between gap-[6px]">
+          <Skeleton className="h-[16px] w-[80px] rounded-[4px]" />
+          <Skeleton className="h-[20px] w-[120px] rounded-[5px]" />
+        </div>
 
-        <div className="flex flex-col gap-[12px]">
-          {Array.from({ length: 3 }).map((_, index) => (
+        <Skeleton className="h-[97px] w-full rounded-[6px]" />
+
+        <div className="flex flex-col gap-[10px]">
+          {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="flex items-center justify-between gap-[12px]"
+              className={cn(
+                'flex items-center justify-between gap-[12px]',
+                index === 3 && 'border-t border-black/10 pt-[8px]',
+              )}
             >
               <Skeleton className="h-[16px] w-[150px] rounded-[4px]" />
-              <Skeleton className="h-[18px] w-[100px] rounded-[4px]" />
+              <Skeleton className="h-[22px] w-[100px] rounded-[5px]" />
             </div>
           ))}
         </div>
