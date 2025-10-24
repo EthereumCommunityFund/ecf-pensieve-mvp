@@ -1,7 +1,8 @@
 'use client';
 
-import { Card, CardBody, Skeleton } from '@heroui/react';
+import { Card, CardBody, cn, Skeleton, Tooltip } from '@heroui/react';
 import Image from 'next/image';
+import { CoinVertical } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base/button';
 import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
@@ -14,22 +15,22 @@ interface InfoStatProps {
 
 function InfoStat({ label, helperText, value }: InfoStatProps) {
   return (
-    <div className="flex flex-col gap-[6px]">
+    <div className="flex flex-col gap-[8px]">
       <div className="flex items-center justify-between gap-[12px]">
         <div className="flex items-center gap-[6px]">
-          <span className="text-[13px] font-semibold text-black/70">
-            {label}
-          </span>
-          <span className="flex items-center opacity-60">
-            <InfoIcon size={20} />
-          </span>
+          <span className="text-[14px] text-black/80">{label}</span>
+          <Tooltip content={helperText}>
+            <span className="flex items-center opacity-60">
+              <InfoIcon size={20} />
+            </span>
+          </Tooltip>
         </div>
-        <span className="bg-[#F5F5F5] px-[6px] py-[2px] text-[13px] font-semibold text-black">
+        <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[14px] font-semibold text-black/80">
           {value}
         </span>
       </div>
       {helperText ? (
-        <span className="text-[12px] leading-[18px] text-black/45">
+        <span className="text-[12px] leading-[18px] text-black/50">
           {helperText}
         </span>
       ) : null}
@@ -67,7 +68,7 @@ export function VacantSlotCard({
       shadow="none"
       className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
     >
-      <CardBody className="flex h-full flex-col gap-[16px] p-5">
+      <CardBody className="mobile:p-[10px] flex h-full flex-col gap-[20px] p-[20px]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-[6px]">
             <span className="text-[13px] font-semibold text-black/50">
@@ -78,21 +79,18 @@ export function VacantSlotCard({
             </span>
           </div>
 
-          <span className="rounded-[6px] border border-black/10 bg-[#F7F7F7] px-[8px] py-[2px] text-[12px] font-semibold uppercase tracking-[0.04em] text-black/70">
+          <span className="rounded-[5px] bg-[#F7F7F7] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/70">
             {statusLabel}
           </span>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-[10px] rounded-[12px] border border-dashed border-black/15 bg-black/[0.02] px-[16px] py-[36px] text-center">
-          <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-black/30">
+        <div className="flex h-[98px] flex-col items-center justify-center gap-[10px] rounded-[12px] border-2 border-dashed border-black/10 bg-black/[0.02] px-[16px] py-[36px] text-center">
+          <span className="text-[13px] font-semibold tracking-[0.12em] text-black/50">
             Vacant Slot
-          </span>
-          <span className="text-[12px] text-black/45">
-            Waiting for a new placement
           </span>
         </div>
 
-        <div className="flex flex-col gap-[14px]">
+        <div className="flex flex-col gap-[8px]">
           <InfoStat
             label="Minimum Valuation"
             helperText={valuationHelper}
@@ -117,7 +115,10 @@ export function VacantSlotCard({
           className="mt-[8px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
           onPress={onClaim}
         >
-          {actionLabel}
+          <CoinVertical size={20} />
+          <span className="text-[14px] font-semibold text-white/80">
+            {actionLabel}
+          </span>
         </Button>
       </CardBody>
     </Card>
@@ -128,6 +129,8 @@ interface StatBlock {
   id: string;
   label: string;
   value: string;
+  valueLabelType: 'light' | 'bordered' | 'dark';
+  withBorderTop?: boolean;
 }
 
 export interface ActiveSlotCardProps {
@@ -162,54 +165,65 @@ export function ActiveSlotCard({
       shadow="none"
       className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
     >
-      <CardBody className="flex h-full flex-col gap-[16px] p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-[6px]">
-            <div className="flex flex-wrap items-center gap-[6px]">
-              <span className="text-[13px] font-semibold text-black/50">
-                Slot:
-              </span>
-              <span className="text-[13px] font-semibold text-black">
-                {slotName}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-[6px] text-[13px] text-black/60">
-              <span className="font-semibold">{ownerLabel}:</span>
-              <span className="font-semibold text-black/80">{owner}</span>
-            </div>
+      <CardBody className="flex h-full flex-col gap-[20px] p-5">
+        <div className="flex justify-between gap-[6px]">
+          <div className="flex flex-wrap items-center gap-[6px]">
+            <span className="text-[13px] font-semibold text-black/50">
+              Slot:
+            </span>
+            <span className="text-[13px] font-semibold text-black">
+              {slotName}
+            </span>
           </div>
-
-          <span className="rounded-[6px] border border-black/10 bg-[#F0F1F4] px-[8px] py-[2px] text-[12px] font-semibold uppercase tracking-[0.04em] text-black/70">
+          <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/80">
             {statusLabel}
           </span>
         </div>
 
-        <div className="relative aspect-[360/179] overflow-hidden rounded-[10px] border border-black/10">
+        <div className="flex w-full flex-wrap items-center justify-between gap-[6px] text-[13px] text-black/60">
+          <span className="font-semibold">{ownerLabel}:</span>
+          <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/80">
+            {owner}
+          </span>
+        </div>
+
+        <div className="relative overflow-hidden">
           {mediaUrl ? (
             <Image
               src={mediaUrl}
               alt={mediaAlt ?? slotName}
-              fill
-              sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
-              className="object-cover"
+              width={196}
+              height={97}
+              className="h-[97px] w-auto rounded-[5px] object-cover"
             />
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-[12px]">
-          {stats.map((stat) => (
-            <div
-              key={stat.id}
-              className="flex items-center justify-between gap-[12px]"
-            >
-              <span className="text-[14px] font-medium text-black/70">
-                {stat.label}
-              </span>
-              <span className="rounded-[6px] border border-black/10 bg-white px-[6px] py-[2px] text-[14px] font-semibold text-black">
-                {stat.value}
-              </span>
-            </div>
-          ))}
+        <div className="flex flex-col gap-[8px]">
+          {stats.map((stat) => {
+            const { id, label, value, valueLabelType, withBorderTop } = stat;
+            const valueLabelClassNames = cn(
+              'rounded-[5px] px-[6px] py-[2px] text-[14px] font-semibold text-black/80',
+              valueLabelType === 'light' && 'bg-[#F5F5F5]',
+              valueLabelType === 'bordered' &&
+                'bg-[#F5F5F5] border border-black/10 bg-transparent',
+              valueLabelType === 'dark' && 'bg-black text-white/80',
+            );
+            return (
+              <div
+                key={id}
+                className={cn(
+                  'flex items-center justify-between gap-[12px]',
+                  withBorderTop && 'border-t border-black/10 pt-[8px]',
+                )}
+              >
+                <span className="text-[14px] font-medium text-black/80">
+                  {label}
+                </span>
+                <span className={valueLabelClassNames}>{value}</span>
+              </div>
+            );
+          })}
         </div>
 
         <Button
@@ -222,7 +236,10 @@ export function ActiveSlotCard({
           isDisabled={ctaDisabled}
           isLoading={ctaLoading}
         >
-          {takeoverCta}
+          <CoinVertical size={20} />
+          <span className="text-[14px] font-semibold text-white/80">
+            {takeoverCta}
+          </span>
         </Button>
       </CardBody>
     </Card>
@@ -307,21 +324,26 @@ export function buildActiveStats(
       id: 'valuation',
       label: 'Current Valuation',
       value: valuation,
+      valueLabelType: 'light',
     },
     {
       id: 'bond',
       label: 'Locked Bond',
       value: lockedBond,
+      valueLabelType: 'bordered',
     },
     {
       id: 'units',
       label: 'Remaining Units',
       value: remainingUnits,
+      valueLabelType: 'light',
     },
     {
       id: 'takeover',
       label: 'Min Takeover Bid',
       value: minTakeoverBid,
+      valueLabelType: 'dark',
+      withBorderTop: true,
     },
   ];
 }

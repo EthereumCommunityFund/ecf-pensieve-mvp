@@ -34,7 +34,6 @@ import {
   type ActiveSlotData,
   type VacantSlotData,
 } from '@/hooks/useHarbergerSlots';
-import { AddressValidator } from '@/lib/utils/addressValidation';
 import {
   ONE_BIGINT,
   ZERO_BIGINT,
@@ -129,17 +128,9 @@ export default function AdManagementPage() {
   } | null>(null);
   const { address: connectedAddress } = useAccount();
 
-  const {
-    metrics,
-    vacantSlots,
-    activeSlots,
-    slotIdCounter,
-    treasuryAddress,
-    governanceAddress,
-    isLoading,
-    error,
-    refetch,
-  } = useHarbergerSlots();
+  const { metrics, vacantSlots, activeSlots, isLoading, error, refetch } =
+    useHarbergerSlots();
+
   const {
     claim: claimSlot,
     takeover: takeoverSlot,
@@ -586,13 +577,8 @@ export default function AdManagementPage() {
         value: taxOwedDisplay,
       },
       {
-        id: 'vacant',
-        label: 'Vacant Slots',
-        value: metrics.vacantCount.toString(),
-      },
-      {
         id: 'overdue',
-        label: 'Overdue / Expired',
+        label: 'Overdue',
         value: metrics.overdueCount.toString(),
       },
     ];
@@ -739,11 +725,6 @@ export default function AdManagementPage() {
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
         <StatsSummary items={statsItems} />
-        <FactoryOverview
-          slotIdCounter={slotIdCounter}
-          treasury={treasuryAddress}
-          governance={governanceAddress}
-        />
 
         <section className="flex flex-col">
           <Tabs
@@ -1003,49 +984,6 @@ function DataFallback({
       className={`flex min-h-[120px] items-center justify-center rounded-[12px] border px-6 py-8 text-center text-[14px] font-medium ${borderClasses} ${backgroundClasses}`}
     >
       {message}
-    </div>
-  );
-}
-
-function FactoryOverview({
-  slotIdCounter,
-  treasury,
-  governance,
-}: {
-  slotIdCounter: bigint;
-  treasury: `0x${string}`;
-  governance: `0x${string}`;
-}) {
-  const formattedSlotCounter = slotIdCounter.toString();
-  const displayTreasury = AddressValidator.shortenAddress(treasury);
-  const displayGovernance = AddressValidator.shortenAddress(governance);
-
-  return (
-    <div className="grid grid-cols-1 gap-3 rounded-[12px] border border-black/10 bg-white px-5 py-4 text-[13px] text-black/70 md:grid-cols-3">
-      <div className="flex flex-col gap-[4px]">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/50">
-          Slot Counter
-        </span>
-        <span className="font-semibold text-black/80">
-          {formattedSlotCounter}
-        </span>
-      </div>
-      <div className="flex flex-col gap-[4px]">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/50">
-          Treasury
-        </span>
-        <span className="font-mono text-[13px] text-black/80">
-          {displayTreasury}
-        </span>
-      </div>
-      <div className="flex flex-col gap-[4px]">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/50">
-          Governance
-        </span>
-        <span className="font-mono text-[13px] text-black/80">
-          {displayGovernance}
-        </span>
-      </div>
     </div>
   );
 }
