@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/base/button';
 import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
 
-import { IValueLabelType } from './ValueLabel';
+import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface InfoStatProps {
   label: string;
@@ -27,9 +27,7 @@ function InfoStat({ label, helperText, value }: InfoStatProps) {
             </span>
           </Tooltip>
         </div>
-        <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[14px] font-semibold text-black/80">
-          {value}
-        </span>
+        <ValueLabel>{value}</ValueLabel>
       </div>
       {helperText ? (
         <span className="text-[12px] leading-[18px] text-black/50">
@@ -81,9 +79,9 @@ export function VacantSlotCard({
             </span>
           </div>
 
-          <span className="rounded-[5px] bg-[#F7F7F7] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/70">
+          <ValueLabel className="text-[12px] text-black/70">
             {statusLabel}
-          </span>
+          </ValueLabel>
         </div>
 
         <div className="flex h-[98px] flex-col items-center justify-center gap-[10px] rounded-[12px] border-2 border-dashed border-black/10 bg-black/[0.02] px-[16px] py-[36px] text-center">
@@ -177,16 +175,12 @@ export function ActiveSlotCard({
               {slotName}
             </span>
           </div>
-          <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/80">
-            {statusLabel}
-          </span>
+          <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
         </div>
 
         <div className="flex w-full flex-wrap items-center justify-between gap-[6px] text-[13px] text-black/60">
           <span className="font-semibold">{ownerLabel}:</span>
-          <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/80">
-            {owner}
-          </span>
+          <ValueLabel className="text-[12px]">{owner}</ValueLabel>
         </div>
 
         <div className="relative overflow-hidden">
@@ -204,13 +198,6 @@ export function ActiveSlotCard({
         <div className="flex flex-col gap-[8px]">
           {stats.map((stat) => {
             const { id, label, value, valueLabelType, withBorderTop } = stat;
-            const valueLabelClassNames = cn(
-              'rounded-[5px] px-[6px] py-[2px] text-[14px] font-semibold text-black/80',
-              valueLabelType === 'light' && 'bg-[#F5F5F5]',
-              valueLabelType === 'bordered' &&
-                'bg-[#F5F5F5] border border-black/10 bg-transparent',
-              valueLabelType === 'dark' && 'bg-black text-white/80',
-            );
             return (
               <div
                 key={id}
@@ -222,7 +209,7 @@ export function ActiveSlotCard({
                 <span className="text-[14px] font-medium text-black/80">
                   {label}
                 </span>
-                <span className={valueLabelClassNames}>{value}</span>
+                <ValueLabel valueLabelType={valueLabelType}>{value}</ValueLabel>
               </div>
             );
           })}

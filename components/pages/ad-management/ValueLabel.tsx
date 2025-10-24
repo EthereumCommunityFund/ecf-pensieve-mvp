@@ -1,17 +1,16 @@
 import { cn } from '@heroui/react';
-import { FC } from 'react';
+import { FC, PropsWithChildren } from 'react';
 
 export type IValueLabelType = 'light' | 'bordered' | 'dark' | 'pureText';
 
 export interface IValueLabelProps {
-  value: string;
-  valueLabelType: IValueLabelType;
+  valueLabelType?: IValueLabelType;
   className?: string;
 }
 
-const ValueLabel: FC<IValueLabelProps> = ({
-  valueLabelType,
-  value,
+const ValueLabel: FC<PropsWithChildren<IValueLabelProps>> = ({
+  children,
+  valueLabelType = 'light',
   className = '',
 }) => {
   const valueLabelClassNames = cn(
@@ -22,7 +21,9 @@ const ValueLabel: FC<IValueLabelProps> = ({
     valueLabelType === 'dark' && 'bg-black text-white/80',
     valueLabelType === 'pureText' && 'bg-transparent',
   );
-  return <span className={cn(valueLabelClassNames, className)}>{value}</span>;
+  return (
+    <span className={cn(valueLabelClassNames, className)}>{children}</span>
+  );
 };
 
 export default ValueLabel;

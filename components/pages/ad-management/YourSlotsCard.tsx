@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { Button } from '@/components/base/button';
 import { ClockClockwiseIcon, CoinVerticalIcon } from '@/components/icons';
 
+import ValueLabel from './ValueLabel';
+
 export type SlotStatus = 'owned' | 'overdue' | 'vacant' | 'closed';
 
 export interface SlotAction {
@@ -109,9 +111,7 @@ export default function YourSlotsCard({
             </div>
           </div>
 
-          <div className="rounded-[5px] border-none bg-[#F4F5F7] px-[6px] py-[2px] text-[14px] font-semibold text-black/80">
-            {slotValue}
-          </div>
+          <ValueLabel>{slotValue}</ValueLabel>
         </div>
 
         <div className="flex flex-col gap-[10px]">
@@ -119,16 +119,16 @@ export default function YourSlotsCard({
             <span className="text-[13px] font-semibold text-black/45">
               Current Ad:
             </span>
-            <span
+            <ValueLabel
               className={cn(
-                'inline-flex items-center rounded-[5px] px-[6px] py-[2px] text-[13px] font-semibold',
+                'inline-flex items-center  text-[13px]',
                 currentAdTone === 'danger'
                   ? ' bg-[#FEE4E2] text-[#C71818]'
                   : ' bg-black/[0.04] text-black/70',
               )}
             >
               {currentAdNotice}
-            </span>
+            </ValueLabel>
           </div>
 
           <div className="relative aspect-[360/179] overflow-hidden rounded-[10px]">
@@ -149,9 +149,7 @@ export default function YourSlotsCard({
             <span className="text-[14px] font-medium text-black/70">
               Tax Owed:
             </span>
-            <div className="rounded-[6px] border border-black/10 bg-white px-[6px] py-[2px] text-[14px] font-semibold text-black">
-              {taxOwedValue}
-            </div>
+            <ValueLabel valueLabelType="bordered">{taxOwedValue}</ValueLabel>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">

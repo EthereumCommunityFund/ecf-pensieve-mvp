@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { parseEther } from 'viem';
 import { cn } from '@heroui/react';
 import { TrendUp } from '@phosphor-icons/react';
+import { useEffect, useMemo, useState } from 'react';
+import { parseEther } from 'viem';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
@@ -327,9 +327,7 @@ export default function ClaimSlotModal({
                   </span>
                 </p>
 
-                <span className="rounded-[5px] bg-[#F5F5F5] px-[6px] py-[2px] text-[12px] font-semibold tracking-[0.04em] text-black/80">
-                  Open
-                </span>
+                <ValueLabel className=" text-[12px]">Open</ValueLabel>
               </div>
 
               {step === 1 ? (
@@ -538,7 +536,7 @@ function BreakdownRow({
         <span>{label}</span>
         <InfoIcon size={16} />
       </div>
-      <ValueLabel valueLabelType={valueLabelType} value={value} />
+      <ValueLabel valueLabelType={valueLabelType}>{value}</ValueLabel>
     </div>
   );
 }
