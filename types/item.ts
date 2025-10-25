@@ -151,6 +151,7 @@ export type IEmbedTableFormDisplayType =
   | 'previous_funding_rounds'
   | 'decentralized_governance'
   | 'audit_report'
+  | 'roadmap_timeline'
   | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
 
 export type IFormDisplayType =
@@ -283,6 +284,17 @@ export interface IAdvisors {
   _id?: string;
 }
 
+export type RoadmapStatusOption = 'Reached' | 'In Progress' | 'Planned';
+
+export interface IRoadmapTimelineEntry {
+  milestone: string;
+  description: string;
+  date: Date | null;
+  status: RoadmapStatusOption | '';
+  reference?: string;
+  _id?: string;
+}
+
 // Private Funding Rounds table row type
 export interface IPrivateFundingRound {
   /** Round date */
@@ -322,6 +334,7 @@ export interface IItemDataTypeMap {
   audit_report: IAuditReport;
   previous_funding_rounds: IPreviousFundingRound;
   decentralized_governance: IDecentralizedGovernanceEntry;
+  roadmap_timeline: IRoadmapTimelineEntry;
   // Add more mappings as needed for other items that return arrays
   // For items not in this map, the function will return any[]
 }

@@ -235,7 +235,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         "This is a tool for visualizing the project's development strategy.",
       longDescription: 'Provide detailed context for Roadmap Timeline +.',
       weight: ALL_POC_ITEM_MAP['roadmap_timeline'].weight,
-      formDisplayType: 'embedTable',
+      formDisplayType: 'roadmap_timeline',
       placeholder: 'Use the embedded table to add entries',
       showReference: true,
       showExpand: true,
@@ -245,7 +245,7 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         ALL_METRICS.LEGITIMACY_BY_PERFORMANCE,
         ALL_METRICS.WEB3_RESILIENCE,
       ],
-      // TODO: add validation schema
+      validationSchema: itemValidationSchemas.roadmap_timeline,
     },
     // TODO: Potential duplicate with existing AllItemConfig
     core_team: {
