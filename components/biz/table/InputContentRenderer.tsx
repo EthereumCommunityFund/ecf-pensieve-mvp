@@ -1430,81 +1430,102 @@ const InputContentRenderer: React.FC<IProps> = ({
                   </thead>
                   <tbody>
                     {parsed.map(
-                      (item: IRoadmapTimelineEntry, index: number) => (
-                        <TableRow
-                          key={index}
-                          isLastRow={index === parsed.length - 1}
-                        >
-                          <TableCell
-                            width={
-                              getColumnConfig('roadmap_timeline', 'milestone')
-                                ?.width
-                            }
-                            isContainerBordered
+                      (item: IRoadmapTimelineEntry, index: number) => {
+                        const statusOption = item?.status
+                          ? ROADMAP_STATUS_OPTIONS.find(
+                              (option) => option.value === item.status,
+                            )
+                          : undefined;
+                        const statusLabel = item?.status
+                          ? getOptionLabel(item.status, ROADMAP_STATUS_OPTIONS)
+                          : '-';
+
+                        return (
+                          <TableRow
+                            key={index}
                             isLastRow={index === parsed.length - 1}
                           >
-                            {item?.milestone || '-'}
-                          </TableCell>
-                          <TableCell
-                            width={
-                              getColumnConfig('roadmap_timeline', 'description')
-                                ?.width
-                            }
-                            isContainerBordered
-                            isLastRow={index === parsed.length - 1}
-                          >
-                            {item?.description || '-'}
-                          </TableCell>
-                          <TableCell
-                            width={
-                              getColumnConfig('roadmap_timeline', 'date')?.width
-                            }
-                            isContainerBordered
-                            isLastRow={index === parsed.length - 1}
-                          >
-                            {item?.date
-                              ? dayjs.utc(item.date).format('YYYY-MM-DD')
-                              : '-'}
-                          </TableCell>
-                          <TableCell
-                            width={
-                              getColumnConfig('roadmap_timeline', 'status')
-                                ?.width
-                            }
-                            isContainerBordered
-                            isLastRow={index === parsed.length - 1}
-                          >
-                            {item?.status
-                              ? getOptionLabel(
-                                  item.status,
-                                  ROADMAP_STATUS_OPTIONS,
-                                )
-                              : '-'}
-                          </TableCell>
-                          <TableCell
-                            isLast
-                            width={
-                              getColumnConfig('roadmap_timeline', 'reference')
-                                ?.width
-                            }
-                            isContainerBordered
-                            isLastRow={index === parsed.length - 1}
-                          >
-                            {item?.reference ? (
-                              <Link
-                                href={normalizeUrl(item.reference)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="underline"
-                              >
-                                {normalizeUrl(item.reference)}
-                              </Link>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ),
+                            <TableCell
+                              width={
+                                getColumnConfig('roadmap_timeline', 'milestone')
+                                  ?.width
+                              }
+                              isContainerBordered
+                              isLastRow={index === parsed.length - 1}
+                            >
+                              {item?.milestone || '-'}
+                            </TableCell>
+                            <TableCell
+                              width={
+                                getColumnConfig(
+                                  'roadmap_timeline',
+                                  'description',
+                                )?.width
+                              }
+                              isContainerBordered
+                              isLastRow={index === parsed.length - 1}
+                            >
+                              {item?.description || '-'}
+                            </TableCell>
+                            <TableCell
+                              width={
+                                getColumnConfig('roadmap_timeline', 'date')
+                                  ?.width
+                              }
+                              isContainerBordered
+                              isLastRow={index === parsed.length - 1}
+                            >
+                              {item?.date
+                                ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                                : '-'}
+                            </TableCell>
+                            <TableCell
+                              width={
+                                getColumnConfig('roadmap_timeline', 'status')
+                                  ?.width
+                              }
+                              isContainerBordered
+                              isLastRow={index === parsed.length - 1}
+                            >
+                              {item?.status ? (
+                                <span
+                                  style={
+                                    statusOption?.color
+                                      ? { color: statusOption.color }
+                                      : undefined
+                                  }
+                                >
+                                  {statusLabel}
+                                </span>
+                              ) : (
+                                '-'
+                              )}
+                            </TableCell>
+                            <TableCell
+                              isLast
+                              width={
+                                getColumnConfig('roadmap_timeline', 'reference')
+                                  ?.width
+                              }
+                              isContainerBordered
+                              isLastRow={index === parsed.length - 1}
+                            >
+                              {item?.reference ? (
+                                <Link
+                                  href={normalizeUrl(item.reference)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="underline"
+                                >
+                                  {normalizeUrl(item.reference)}
+                                </Link>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      },
                     )}
                   </tbody>
                 </table>
@@ -1536,18 +1557,37 @@ const InputContentRenderer: React.FC<IProps> = ({
 
         return (
           <>
-            {parsed
-              .map((item: IRoadmapTimelineEntry) => {
-                const milestoneLabel = item?.milestone || NA_VALUE;
-                const statusLabel = item?.status
-                  ? getOptionLabel(item.status, ROADMAP_STATUS_OPTIONS)
-                  : NA_VALUE;
-                const dateLabel = item?.date
-                  ? dayjs.utc(item.date).format('YYYY-MM-DD')
-                  : NA_VALUE;
-                return `${milestoneLabel} (${statusLabel} · ${dateLabel})`;
-              })
-              .join(', ')}
+            {parsed.map((item: IRoadmapTimelineEntry, index: number) => {
+              const milestoneLabel = item?.milestone || NA_VALUE;
+              const statusLabel = item?.status
+                ? getOptionLabel(item.status, ROADMAP_STATUS_OPTIONS)
+                : NA_VALUE;
+              const statusOption = item?.status
+                ? ROADMAP_STATUS_OPTIONS.find(
+                    (option) => option.value === item.status,
+                  )
+                : undefined;
+              const dateLabel = item?.date
+                ? dayjs.utc(item.date).format('YYYY-MM-DD')
+                : NA_VALUE;
+
+              return (
+                <React.Fragment key={`${milestoneLabel}-${index}`}>
+                  {milestoneLabel} (
+                  <span
+                    style={
+                      statusOption?.color
+                        ? { color: statusOption.color }
+                        : undefined
+                    }
+                  >
+                    {statusLabel}
+                  </span>
+                  {` · ${dateLabel})`}
+                  {index < parsed.length - 1 ? ', ' : ''}
+                </React.Fragment>
+              );
+            })}
           </>
         );
       }
