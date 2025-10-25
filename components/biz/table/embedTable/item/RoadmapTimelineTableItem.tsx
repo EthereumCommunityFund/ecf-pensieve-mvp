@@ -15,9 +15,9 @@ import {
 } from '../commonCells';
 
 export const ROADMAP_STATUS_OPTIONS = [
-  { value: 'Reached', label: 'Reached' },
-  { value: 'In Progress', label: 'In Progress' },
-  { value: 'Planned', label: 'Planned' },
+  { value: 'Reached', label: 'Reached', color: '#43BD9B' },
+  { value: 'In Progress', label: 'In Progress', color: '#F7992D' },
+  { value: 'Planned', label: 'Planned', color: '#7EA9FF' },
 ];
 
 interface RoadmapTimelineTableItemProps {

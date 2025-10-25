@@ -361,7 +361,7 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       },
       {
         key: 'date',
-        label: 'Target Date',
+        label: 'Date',
         width: 160,
         tooltip: 'Planned completion date for this milestone',
       },

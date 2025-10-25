@@ -551,9 +551,8 @@ export const AllItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> = {
     category: IItemCategoryEnum.Basics,
     subCategory: IItemSubCategoryEnum.BasicProfile,
     isEssential: POC_ITEMS.roadmap_timeline.isEssential,
-    label: 'Roadmap Timeline',
-    description:
-      'Capture each roadmap milestone with its description, target date, status, and supporting link.',
+    label: 'Roadmap',
+    description: 'This is the project’s roadmap',
     shortDescription:
       'Timeline entries outlining milestone, timing, status, and reference.',
     longDescription: `Use this table to narrate the project roadmap in a structured way. Each row should describe a specific milestone, when it is planned to happen, whether it has already been reached, and a public reference that stakeholders can verify. Keeping this timeline updated gives contributors and reviewers a clear pulse on execution progress and upcoming deliverables.`,
