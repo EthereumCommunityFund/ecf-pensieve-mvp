@@ -61,6 +61,12 @@ export const notificationRouter = router({
         orderBy: [desc(notifications.id)],
         limit: limit + 1,
         with: {
+          project: {
+            columns: {
+              id: true,
+              name: true,
+            },
+          },
           projectSnaps: {
             columns: {
               items: true,

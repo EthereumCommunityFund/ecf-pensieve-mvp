@@ -291,7 +291,7 @@ export interface IRoadmapTimelineEntry {
   description: string;
   date: Date | null;
   status: RoadmapStatusOption | '';
-  reference: string;
+  reference?: string;
   _id?: string;
 }
 

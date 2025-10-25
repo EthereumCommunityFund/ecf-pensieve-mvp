@@ -116,7 +116,7 @@ export const dateLaunchConstraints: IDateConstraints = {
 };
 
 const createDateConstraintValidator = (constraints?: IDateConstraints) => {
-  return function (this: yup.TestContext, value: Date | undefined) {
+  return function (this: yup.TestContext, value: Date | null | undefined) {
     if (!value || !constraints) return true;
 
     const today = new Date();
