@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@heroui/react';
-import type { IconProps } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 import { Heart, ShieldCheck, SquaresFour } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,7 @@ interface IProps {
 type RankSortOption = {
   label: string;
   sort: string;
-  Icon: (props: IconProps) => JSX.Element;
+  Icon: Icon;
 };
 
 const RANK_SORT_OPTIONS: RankSortOption[] = [
