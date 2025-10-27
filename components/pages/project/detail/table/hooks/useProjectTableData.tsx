@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 
+import { AiSystemUserId } from '@/constants/env';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import {
@@ -10,7 +11,6 @@ import {
   IPocItemKey,
 } from '@/types/item';
 import { calculateItemStatusFields, isInputValueEmpty } from '@/utils/item';
-import { AiSystemUserId } from '@/constants/env';
 
 import { useProjectDetailContext } from '../../../context/projectDetailContext';
 import { IProposalCreator } from '../../types';

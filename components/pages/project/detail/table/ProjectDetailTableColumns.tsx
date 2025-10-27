@@ -59,7 +59,7 @@ export interface IKeyItemDataForTable {
   // Has proposal, but no validated leading proposal yet
   isPendingValidation: boolean;
   isEmptyItem?: boolean;
-  isAiCreator: boolean;
+  isAiCreator?: boolean;
 }
 
 interface IUseProjectTableColumnsProps {
