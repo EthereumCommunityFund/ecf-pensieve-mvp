@@ -729,6 +729,7 @@ const SubmitterCell = memo(
 
     const data = item?.createdAt;
     const avatarSrc = submitter.avatarUrl ?? '/images/user/avatar_p.png';
+    const isAiCreator = item?.isAiCreator;
 
     const handleSubmitterClick = () => {
       showSubmitterModal?.(submitter, data);
@@ -751,10 +752,20 @@ const SubmitterCell = memo(
           />
         </div>
         <div className="flex flex-col">
-          <span className="text-[14px] font-[400] leading-[20px] text-black">
+          <span
+            className={cn(
+              'text-[14px] font-[400] leading-[20px]',
+              isAiCreator ? 'text-[#68C6AC]' : 'text-black',
+            )}
+          >
             {submitter.name}
           </span>
-          <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
+          <span
+            className={cn(
+              'text-[12px] font-[600] leading-[12px] opacity-60',
+              isAiCreator ? 'text-[#68C6AC]' : 'text-black',
+            )}
+          >
             {formatDate(data, 'YYYY-MM-DD', '0000-00-00')}
           </span>
         </div>
