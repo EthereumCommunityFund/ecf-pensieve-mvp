@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import useEmblaCarousel from 'embla-carousel-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -17,7 +17,7 @@ const DATA_URI_PREFIX = 'data:application/json';
 interface AdSlide {
   id: string;
   imageUrl: string;
-  targetUrl: string;
+  targetUrl?: string | null;
   altText: string;
 }
 
@@ -83,7 +83,7 @@ const extractCreativeAssets = (
     const link = normalizeCreativeUrl(metadata?.linkUrl);
     return {
       imageUrl: media ?? link ?? null,
-      targetUrl: link ?? media ?? null,
+      targetUrl: link ?? null,
     };
   }
 
@@ -103,7 +103,7 @@ const mapSlotToSlide = (slot: ActiveSlotData): AdSlide | null => {
   return {
     id: slot.id,
     imageUrl,
-    targetUrl: targetUrl ?? imageUrl,
+    targetUrl,
     altText: `${slot.slotName} creative`,
   };
 };
@@ -123,99 +123,120 @@ const HtaxAdBanner = () => {
     [activeSlots],
   );
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: slides.length > 1 });
 
   useEffect(() => {
-    if (slides.length === 0) {
+    if (!emblaApi) {
       setCurrentIndex(0);
       return;
     }
-
-    setCurrentIndex((prev) => (prev >= slides.length ? 0 : prev));
-  }, [slides.length]);
+    emblaApi.reInit();
+  }, [emblaApi, slides.length]);
 
   useEffect(() => {
-    if (slides.length <= 1) {
+    if (!emblaApi) {
       return;
     }
 
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    const handleSelect = () => {
+      setCurrentIndex(emblaApi.selectedScrollSnap());
+    };
+
+    emblaApi.on('select', handleSelect);
+    handleSelect();
+
+    return () => {
+      emblaApi.off('select', handleSelect);
+    };
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi || slides.length <= 1) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      emblaApi.scrollNext();
     }, AUTO_PLAY_INTERVAL);
 
-    return () => clearInterval(timer);
-  }, [slides.length]);
+    return () => window.clearInterval(timer);
+  }, [emblaApi, slides.length]);
 
-  const handleSelect = useCallback(
-    (nextIndex: number) => {
-      if (slides.length === 0) {
-        return;
-      }
-      setCurrentIndex(nextIndex);
+  const handleSelectDot = useCallback(
+    (index: number) => {
+      emblaApi?.scrollTo(index);
     },
-    [slides.length],
+    [emblaApi],
   );
 
   const handlePrev = useCallback(() => {
-    if (slides.length <= 1) {
-      return;
-    }
-    setCurrentIndex((prev) =>
-      prev === 0
-        ? slides.length - 1
-        : (prev - 1 + slides.length) % slides.length,
-    );
-  }, [slides.length]);
+    emblaApi?.scrollPrev();
+  }, [emblaApi]);
 
   const handleNext = useCallback(() => {
-    if (slides.length <= 1) {
-      return;
-    }
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
-  }, [slides.length]);
+    emblaApi?.scrollNext();
+  }, [emblaApi]);
 
   const hasSlides = slides.length > 0;
 
   return (
     <section className="mobile:mt-[12px] mt-[16px]">
-      <div className="mt-[12px]">
+      <div>
         {isLoading ? (
           <div className="mobile:h-[190px] h-[230px] animate-pulse rounded-[16px] border border-black/5 bg-black/5" />
         ) : hasSlides ? (
-          <div className="relative overflow-hidden rounded-[16px] border border-black/10 bg-black/5">
+          <div className="relative">
             <div
-              className="flex transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              className="overflow-hidden rounded-[16px] border border-black/10 bg-black/5"
+              ref={emblaRef}
             >
-              {slides.map((slide) => (
-                <article key={slide.id} className="min-w-full">
-                  <Link
-                    href={slide.targetUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    prefetch={false}
-                    className="mobile:h-[200px] relative block h-[240px] w-full overflow-hidden rounded-[16px]"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={slide.imageUrl}
-                      alt={slide.altText}
-                      className="size-full object-cover transition duration-300 hover:scale-105"
-                      loading="lazy"
-                      onError={(event) => {
-                        event.currentTarget.style.opacity = '0';
-                      }}
-                    />
-                  </Link>
-                </article>
-              ))}
+              <div
+                className="flex touch-pan-y select-none"
+                data-embla-container
+              >
+                {slides.map((slide) => (
+                  <article key={slide.id} className="min-w-0 flex-[0_0_100%]">
+                    {slide.targetUrl ? (
+                      <Link
+                        href={slide.targetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        prefetch={false}
+                        className="mobile:h-[200px] relative block h-[240px] w-full overflow-hidden rounded-[16px]"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={slide.imageUrl}
+                          alt={slide.altText}
+                          className="size-full object-cover transition duration-300 hover:scale-105"
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.style.opacity = '0';
+                          }}
+                        />
+                      </Link>
+                    ) : (
+                      <div className="mobile:h-[200px] relative block h-[240px] w-full overflow-hidden rounded-[16px]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={slide.imageUrl}
+                          alt={slide.altText}
+                          className="size-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
             </div>
 
             {slides.length > 1 && (
-              <>
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-[12px]">
                 <button
                   type="button"
                   aria-label="Previous ad"
-                  className="absolute left-[12px] top-1/2 flex size-[32px] -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/60"
+                  className="pointer-events-auto inline-flex size-[34px] items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/60"
                   onClick={handlePrev}
                 >
                   ‹
@@ -223,12 +244,12 @@ const HtaxAdBanner = () => {
                 <button
                   type="button"
                   aria-label="Next ad"
-                  className="absolute right-[12px] top-1/2 flex size-[32px] -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/60"
+                  className="pointer-events-auto inline-flex size-[34px] items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/60"
                   onClick={handleNext}
                 >
                   ›
                 </button>
-              </>
+              </div>
             )}
 
             {isRefetching && (
@@ -255,27 +276,6 @@ const HtaxAdBanner = () => {
           </div>
         )}
       </div>
-
-      {hasSlides && (
-        <div className="mobile:flex-col mobile:items-start mt-[12px] flex items-center gap-[10px]">
-          <div className="flex items-center gap-[6px]">
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                aria-label={`Go to slide ${index + 1}`}
-                className={cn(
-                  'h-[8px] w-[26px] rounded-full border border-black/20 transition',
-                  index === currentIndex
-                    ? 'bg-black'
-                    : 'bg-transparent hover:bg-black/10',
-                )}
-                onClick={() => handleSelect(index)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   );
 };
