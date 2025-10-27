@@ -175,7 +175,7 @@ const PropertyCell = ({
           }
           genesisWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
           isEmptyItem={!!canBePropose}
-          isAiCreator={isAiCreator}
+          isAiCreator={!!isAiCreator}
         />
       )}
     </div>
