@@ -142,6 +142,7 @@ const PropertyCell = ({
     isPendingValidation,
     itemTopWeight,
     canBePropose,
+    isAiCreator,
   } = rowData;
 
   return (
@@ -172,7 +173,9 @@ const PropertyCell = ({
           itemWeight={
             itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
           }
+          genesisWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
           isEmptyItem={!!canBePropose}
+          isAiCreator={isAiCreator}
         />
       )}
     </div>
@@ -817,7 +820,7 @@ const ActionsHeader = ({
 };
 
 const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
-  const { canBePropose } = item;
+  const { canBePropose, isAiCreator } = item;
   const { profile, showAuthPrompt } = useAuth();
 
   const handleProposeAction = useCallback(() => {
@@ -849,10 +852,15 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
           </Button>
           <Button
             color="secondary"
-            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            className={cn(
+              'h-[30px] w-full rounded-[5px] border-none p-[10px] text-[13px] font-[400]',
+              isAiCreator
+                ? 'bg-[#64C0A5] hover:bg-[#64C0A5]/80 text-white'
+                : 'bg-[#F0F0F0]',
+            )}
             onPress={handleProposeAction}
           >
-            Propose Entry
+            {isAiCreator ? 'Propose to earn' : 'Propose Entry'}
           </Button>
         </>
       )}
