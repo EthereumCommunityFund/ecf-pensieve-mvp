@@ -377,12 +377,20 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: 'What are the benefits a token allows',
       longDescription: 'Provide detailed context for Token Benefits (Finance).',
       weight: ALL_POC_ITEM_MAP['token_benefits'].weight,
-      formDisplayType: 'select',
-      placeholder: 'Select an option',
+      formDisplayType: 'selectMultiple',
+      placeholder: 'Select applicable options',
       showReference: true,
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        { value: 'Utility access', label: 'Utility access' },
+        { value: 'Fee discount/ Rebates', label: 'Fee discount/ Rebates' },
+        { value: 'Revenue share', label: 'Revenue share' },
+        { value: 'Buyback', label: 'Buyback' },
+        { value: 'Staking yield', label: 'Staking yield' },
+        { value: 'Others (and specify)', label: 'Others (and specify)' },
+      ],
       // TODO: add validation schema
     },
     token_risks: {
@@ -395,12 +403,39 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: 'Risk analysis in web3 and meatspace',
       longDescription: 'Provide detailed context for Token Risks.',
       weight: ALL_POC_ITEM_MAP['token_risks'].weight,
-      formDisplayType: 'select',
-      placeholder: 'Select an option',
+      formDisplayType: 'selectMultiple',
+      placeholder: 'Select applicable options',
       showReference: true,
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        {
+          value: 'Centralization/ whale concentration risk',
+          label: 'Centralization/ whale concentration risk',
+        },
+        { value: 'High volatility', label: 'High volatility' },
+        {
+          value: 'Privileged roles (mint, upgrade, admins keys)',
+          label: 'Privileged roles (mint, upgrade, admins keys)',
+        },
+        {
+          value: 'Unclear/inflationary tokenomics',
+          label: 'Unclear/inflationary tokenomics',
+        },
+        { value: 'Compliance risk', label: 'Compliance risk' },
+        { value: 'Liquidity fragility', label: 'Liquidity fragility' },
+        {
+          value: 'Bridge dependency risk',
+          label: 'Bridge dependency risk',
+        },
+        { value: 'Lack of vesting', label: 'Lack of vesting' },
+        { value: 'Sybil attack risk', label: 'Sybil attack risk' },
+        {
+          value: 'Others (and specify) (edited)',
+          label: 'Others (and specify) (edited)',
+        },
+      ],
       // TODO: add validation schema
     },
     token_rights: {
@@ -414,12 +449,22 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       longDescription:
         'Provide detailed context for Token Rights (Governance).',
       weight: ALL_POC_ITEM_MAP['token_rights'].weight,
-      formDisplayType: 'select',
-      placeholder: 'Select an option',
+      formDisplayType: 'selectMultiple',
+      placeholder: 'Select applicable options',
       showReference: true,
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        { value: 'Signaling', label: 'Signaling' },
+        { value: 'Direct voting', label: 'Direct voting' },
+        { value: 'Delegated voting', label: 'Delegated voting' },
+        {
+          value: 'On-chain binding governance over treasury/protocol',
+          label: 'On-chain binding governance over treasury/protocol',
+        },
+        { value: 'Others (and specify)', label: 'Others (and specify)' },
+      ],
       // TODO: add validation schema
     },
     token_obligations: {
@@ -432,12 +477,30 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
       shortDescription: 'Obligations the participants have by owning the token',
       longDescription: 'Provide detailed context for Token Obligations.',
       weight: ALL_POC_ITEM_MAP['token_obligations'].weight,
-      formDisplayType: 'select',
-      placeholder: 'Select an option',
+      formDisplayType: 'selectMultiple',
+      placeholder: 'Select applicable options',
       showReference: true,
       showExpand: false,
       accountability: [ALL_METRICS.TRANSPARENCY, ALL_METRICS.PARTICIPATION],
       legitimacy: [ALL_METRICS.LEGITIMACY_BY_PROCESS],
+      options: [
+        { value: 'Staking', label: 'Staking' },
+        { value: 'Locking', label: 'Locking' },
+        {
+          value: 'Governance participation',
+          label: 'Governance participation',
+        },
+        {
+          value: 'Disclosure/verification (KYC)',
+          label: 'Disclosure/verification (KYC)',
+        },
+        { value: 'Fee contribution/Burn', label: 'Fee contribution/Burn' },
+        {
+          value: 'Public goods/social contribution',
+          label: 'Public goods/social contribution',
+        },
+        { value: 'Others (and specify)', label: 'Others (and specify)' },
+      ],
       // TODO: add validation schema
     },
     dapp_storage_stack: {
