@@ -582,12 +582,7 @@ export default function AdManagementPage() {
         value: metrics.overdueCount.toString(),
       },
     ];
-  }, [
-    metrics.overdueCount,
-    metrics.vacantCount,
-    ownedSlots.length,
-    ownedSlotsTotalTaxDueWei,
-  ]);
+  }, [metrics.overdueCount, ownedSlots.length, ownedSlotsTotalTaxDueWei]);
 
   const takeoverData = useMemo<TakeoverModalConfig>(() => {
     if (!selectedTakeoverSlot) {
@@ -654,10 +649,10 @@ export default function AdManagementPage() {
         label: `(${coverageDuration})`,
         description: selectedTakeoverSlot.coverageDescription,
         sliderPosition: 0,
-        rangeStart: '1 period',
-        rangeEnd: '12 periods',
+        rangeStart: '1 day',
+        rangeEnd: '365 days',
         minDays: 1,
-        maxDays: 12,
+        maxDays: 365,
         stepDays: 1,
         defaultDays: coveragePeriods,
         onChange: handleTakeoverCoverageChange,

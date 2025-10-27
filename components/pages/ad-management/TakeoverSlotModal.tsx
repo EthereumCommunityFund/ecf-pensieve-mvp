@@ -1,6 +1,6 @@
 'use client';
 
-import { Slider } from '@heroui/react';
+import { cn, Slider, Tooltip } from '@heroui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base/button';
@@ -13,6 +13,8 @@ import {
 } from '@/components/base/modal';
 import ECFTypography from '@/components/base/typography';
 import { InfoIcon, ShowMetricsIcon, XIcon } from '@/components/icons';
+
+import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 type ContextTone = 'default' | 'danger';
 
@@ -85,7 +87,7 @@ export default function TakeoverSlotModal({
   slotName,
   statusLabel = 'Owned',
   owner,
-  ownerLabel = 'Current Owner',
+  ownerLabel = 'Owner',
   taxRate,
   taxRateLabel = 'Tax Rate',
   minBidLabel,
@@ -203,78 +205,84 @@ export default function TakeoverSlotModal({
       <ModalContent>
         {() => (
           <>
-            <div className="flex flex-col gap-[6px] px-5 pt-5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <ECFTypography type="subtitle2" className="text-[18px]">
-                    Takeover Slot
-                  </ECFTypography>
-                  <span className="rounded-[6px] border border-black/10 bg-[#F4F5F7] px-[8px] py-[2px] text-[12px] font-semibold uppercase tracking-[0.04em] text-black/70">
-                    {statusLabel}
-                  </span>
-                </div>
-                <Button
-                  isIconOnly
-                  radius="sm"
-                  className="size-[32px] rounded-[8px] bg-black/5 p-0 text-black/50 hover:bg-black/10"
-                  onPress={onClose}
-                  isDisabled={isSubmitting}
-                >
-                  <XIcon size={16} />
-                </Button>
+            {/* header */}
+            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
+              <div className="flex items-center gap-3 ">
+                <ECFTypography type="subtitle2" className="text-[18px]">
+                  Takeover Slot
+                </ECFTypography>
               </div>
+
+              <Button
+                isIconOnly
+                radius="sm"
+                className="size-[32px] rounded-[8px]  p-0 text-black/50 hover:bg-black/10"
+                onPress={onClose}
+                isDisabled={isSubmitting}
+              >
+                <XIcon size={16} />
+              </Button>
             </div>
 
             <ModalBody className="flex flex-col gap-[20px] px-5 pb-0 pt-4 ">
-              <div className="flex flex-col gap-[10px]">
+              <div className="flex items-center gap-[10px]">
                 <span className="text-[13px] font-semibold text-black/50">
                   Slot:
                 </span>
-                <span className="text-[14px] font-semibold text-black">
+                <span className="text-[13px] font-semibold text-black">
                   {slotName}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-[12px] rounded-[12px] border border-black/10 bg-white p-[16px] md:grid-cols-3">
-                <InfoStat label={ownerLabel} value={owner} />
-                <InfoStat label={taxRateLabel} value={taxRate} />
-                <InfoStat label={minBidLabel} value={minBidValue} emphasized />
+              <div className="grid grid-cols-1 gap-[8px] rounded-[10px] border border-black/10 bg-white p-[10px] md:grid-cols-3">
+                <InfoStat
+                  label={ownerLabel}
+                  value={owner}
+                  labelType={'light'}
+                />
+                <InfoStat
+                  label={taxRateLabel}
+                  value={taxRate}
+                  labelType={'light'}
+                />
+                <InfoStat
+                  label={minBidLabel}
+                  value={minBidValue}
+                  labelType={'dark'}
+                  tooltip={'Minimum bid required to takeover this slot.'}
+                />
               </div>
-              {minBidHelper ? (
-                <span className="text-[12px] text-black/60">
-                  {minBidHelper}
-                </span>
-              ) : null}
 
-              <div className="flex flex-col gap-[12px]">
+              <div className="flex flex-col gap-[10px]">
                 <LabelWithInfo label="Set New Valuation (ETH)" />
-                <Input
-                  placeholder={valuation.placeholder}
-                  value={valuation.value ?? ''}
-                  onValueChange={valuation.onChange}
-                  isInvalid={!!valuation.errorMessage}
-                  isDisabled={valuation.isDisabled}
-                  aria-label="Set new valuation"
-                  readOnly={valuation.isDisabled}
-                />
-                {valuation.errorMessage ? (
-                  <span className="text-[12px] font-medium text-[#D92D20]">
-                    {valuation.errorMessage}
+                <div className="flex flex-col gap-[5px]">
+                  <Input
+                    placeholder={valuation.placeholder}
+                    value={valuation.value ?? ''}
+                    onValueChange={valuation.onChange}
+                    isInvalid={!!valuation.errorMessage}
+                    isDisabled={valuation.isDisabled}
+                    aria-label="Set new valuation"
+                    readOnly={valuation.isDisabled}
+                  />
+                  {/* TODO valuation.value * 1.1  */}
+                  <span className="font-inter text-[13px] font-[400] text-black/80">
+                    Must be at least 10.0% higher than current valuation
                   </span>
-                ) : (
-                  <span className="text-[12px] text-black/60">
-                    {valuation.helper}
-                  </span>
-                )}
+                </div>
               </div>
 
-              <div className="flex flex-col gap-[12px]">
-                <LabelWithInfo
-                  label={`Tax Coverage ${formattedCoverageLabel}`}
-                />
-                <span className="text-[12px] leading-[18px] text-black/60">
-                  {coverage.description}
-                </span>
+              <div className="flex flex-col gap-[10px]">
+                <div className="flex flex-col gap-[5px]">
+                  <LabelWithInfo
+                    label={`Tax Coverage ${formattedCoverageLabel}`}
+                  />
+                  <span className="text-[13px] text-black/80">
+                    Choose how many tax periods to prepay. Longer coverage means
+                    higher upfront cost but no need to pay taxes frequently. (1
+                    tax period = 24 hours / 86400 seconds)
+                  </span>
+                </div>
                 <CoverageSlider
                   value={selectedCoverageDays}
                   min={minCoverageDays}
@@ -332,6 +340,7 @@ export default function TakeoverSlotModal({
                     <span>{breakdown.totalLabel}</span>
                     <InfoIcon size={16} />
                   </div>
+
                   <span className="text-[14px] font-semibold text-[#0C7A32]">
                     {breakdown.totalValue}
                   </span>
@@ -384,34 +393,66 @@ function InfoStat({
   label,
   value,
   emphasized,
+  labelType = 'light',
+  tooltip,
 }: {
   label: string;
   value: string;
   emphasized?: boolean;
+  labelType: IValueLabelType;
+  tooltip?: string;
 }) {
   return (
-    <div className="flex flex-col gap-[6px]">
-      <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-black/45">
-        {label}
-      </span>
-      <span
-        className={`text-[14px] font-semibold ${
-          emphasized
-            ? 'rounded-[6px] border border-black/15 bg-black/[0.05] px-[10px] py-[4px] text-black'
-            : 'text-black'
-        }`}
-      >
-        {value}
-      </span>
+    <div className="flex items-center justify-between gap-[6px]">
+      <div className="flex items-center justify-start gap-[5px]">
+        <span className="font-sans text-[14px] text-black/80">{label}:</span>
+        {tooltip ? (
+          <Tooltip content={tooltip}>
+            <span className="flex items-center opacity-30">
+              <InfoIcon size={20} />
+            </span>
+          </Tooltip>
+        ) : null}
+      </div>
+
+      <ValueLabel valueLabelType={labelType}>{value}</ValueLabel>
     </div>
   );
 }
 
-function LabelWithInfo({ label }: { label: string }) {
+function LabelWithInfo({
+  label,
+  tooltip,
+  classNames = {},
+}: {
+  label: string;
+  tooltip?: string;
+  classNames?: Partial<
+    Record<'container' | 'label' | 'icon' | 'tooltip', string>
+  >;
+}) {
   return (
-    <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
-      <span>{label}</span>
-      <InfoIcon size={16} />
+    <div
+      className={cn('flex items-center gap-[6px]', classNames?.container ?? '')}
+    >
+      <span
+        className={cn(
+          'text-[16px] font-semibold font-inter leading-[1.6]',
+          classNames?.label ?? '',
+        )}
+      >
+        {label}
+      </span>
+      <Tooltip
+        content={tooltip ?? label}
+        className={cn(classNames?.tooltip ?? '')}
+      >
+        <span
+          className={cn('flex items-center opacity-50', classNames?.icon ?? '')}
+        >
+          <InfoIcon size={20} />
+        </span>
+      </Tooltip>
     </div>
   );
 }
