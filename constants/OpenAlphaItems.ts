@@ -432,8 +432,8 @@ export const alphaItemConfig: Partial<Record<IItemKey, IItemConfig<IItemKey>>> =
         { value: 'Lack of vesting', label: 'Lack of vesting' },
         { value: 'Sybil attack risk', label: 'Sybil attack risk' },
         {
-          value: 'Others (and specify) (edited)',
-          label: 'Others (and specify) (edited)',
+          value: 'Others (and specify)',
+          label: 'Others (and specify)',
         },
       ],
       // TODO: add validation schema
