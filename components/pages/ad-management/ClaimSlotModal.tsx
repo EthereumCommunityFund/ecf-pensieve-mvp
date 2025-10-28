@@ -2,7 +2,7 @@
 
 import { cn } from '@heroui/react';
 import { TrendUp } from '@phosphor-icons/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseEther } from 'viem';
 
 import { Button } from '@/components/base/button';
@@ -24,6 +24,7 @@ import {
   MOBILE_CREATIVE_CONFIG,
 } from './creativeConstants';
 import CreativePhotoUpload from './CreativePhotoUpload';
+import { CoverageSlider } from './TakeoverSlotModal';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface ClaimPayload {
@@ -42,6 +43,8 @@ interface ClaimPayload {
 }
 
 type ClaimStep = 1 | 2;
+
+const DEFAULT_CLAIM_COVERAGE_DAYS = 7;
 
 const CONTENT_TYPE_OPTIONS = [
   { key: 'image', label: 'Image' },
@@ -76,7 +79,9 @@ export default function ClaimSlotModal({
 }: ClaimSlotModalProps) {
   const [step, setStep] = useState<ClaimStep>(1);
   const [valuationInput, setValuationInput] = useState(valuationDefault);
-  const [selectedCoverageKey, setSelectedCoverageKey] = useState<string>('1');
+  const [coverageSliderValue, setCoverageSliderValue] = useState<number>(
+    DEFAULT_CLAIM_COVERAGE_DAYS,
+  );
   const [contentType, setContentType] = useState<string>(
     CONTENT_TYPE_OPTIONS[0].key,
   );
@@ -91,7 +96,7 @@ export default function ClaimSlotModal({
     if (isOpen) {
       setStep(1);
       setValuationInput(valuationDefault);
-      setSelectedCoverageKey('1');
+      setCoverageSliderValue(DEFAULT_CLAIM_COVERAGE_DAYS);
       setContentType(CONTENT_TYPE_OPTIONS[0].key);
       setTitle('');
       setLinkUrl('');
@@ -102,33 +107,29 @@ export default function ClaimSlotModal({
     }
   }, [isOpen, valuationDefault]);
 
-  const coverageOptions = useMemo(() => {
+  useEffect(() => {
     if (!slot) {
-      return [] as Array<{
-        key: string;
-        label: string;
-        periods: bigint;
-      }>;
+      setCoverageSliderValue(1);
     }
-
-    const presets = [1, 7, 14, 30, 90, 182, 365];
-    return presets.map((days) => {
-      const periods = BigInt(days);
-      const label = days === 1 ? '1day' : `${days}days`;
-      return {
-        key: days.toString(),
-        label,
-        periods,
-      };
-    });
   }, [slot]);
 
-  const selectedCoverage = useMemo(() => {
-    return (
-      coverageOptions.find((option) => option.key === selectedCoverageKey) ??
-      coverageOptions[0]
+  const coveragePeriods = useMemo(() => {
+    const normalized = Math.min(
+      365,
+      Math.max(1, Math.round(coverageSliderValue)),
     );
-  }, [coverageOptions, selectedCoverageKey]);
+    return BigInt(normalized);
+  }, [coverageSliderValue]);
+
+  const coverageLabel = useMemo(() => {
+    const days = Math.min(365, Math.max(1, Math.round(coverageSliderValue)));
+    return `${days} day${days === 1 ? '' : 's'}`;
+  }, [coverageSliderValue]);
+
+  const handleCoverageSliderChange = useCallback((value: number) => {
+    const normalized = Math.min(365, Math.max(1, Math.round(value)));
+    setCoverageSliderValue(normalized);
+  }, []);
 
   const parsedValuationWei = useMemo(() => {
     try {
@@ -150,23 +151,16 @@ export default function ClaimSlotModal({
   }, [parsedValuationWei, slot]);
 
   const taxRequired = useMemo(() => {
-    if (!slot || !parsedValuationWei || !selectedCoverage) {
+    if (!slot || !parsedValuationWei) {
       return ZERO_BIGINT;
     }
     return calculateTaxForPeriods(
       parsedValuationWei,
       slot.annualTaxRateBps,
       slot.taxPeriodInSeconds,
-      selectedCoverage.periods,
+      coveragePeriods,
     );
-  }, [parsedValuationWei, selectedCoverage, slot]);
-
-  const coverageLabel = useMemo(() => {
-    if (!slot || !selectedCoverage) {
-      return '—';
-    }
-    return selectedCoverage.label;
-  }, [selectedCoverage, slot]);
+  }, [coveragePeriods, parsedValuationWei, slot]);
 
   const totalValue = useMemo(
     () => bondRequired + taxRequired,
@@ -177,7 +171,7 @@ export default function ClaimSlotModal({
     slot &&
       parsedValuationWei &&
       parsedValuationWei >= slot.minValuationWei &&
-      selectedCoverage,
+      coveragePeriods >= BigInt(1),
   );
 
   const handleClose = () => {
@@ -194,10 +188,8 @@ export default function ClaimSlotModal({
     }
 
     if (step === 1) {
-      if (!isStepOneValid || !parsedValuationWei || !selectedCoverage) {
-        setLocalError(
-          'Enter a valuation above the minimum and select coverage.',
-        );
+      if (!isStepOneValid || !parsedValuationWei) {
+        setLocalError('Enter a valuation above the minimum.');
         return;
       }
       setLocalError(null);
@@ -205,8 +197,8 @@ export default function ClaimSlotModal({
       return;
     }
 
-    if (!parsedValuationWei || !selectedCoverage) {
-      setLocalError('Unable to resolve valuation or coverage.');
+    if (!parsedValuationWei) {
+      setLocalError('Unable to resolve valuation.');
       return;
     }
 
@@ -247,7 +239,7 @@ export default function ClaimSlotModal({
     try {
       await onSubmit({
         valuationWei: parsedValuationWei,
-        taxPeriods: selectedCoverage.periods,
+        taxPeriods: coveragePeriods,
         creativeUri,
         metadata: {
           contentType,
@@ -292,21 +284,14 @@ export default function ClaimSlotModal({
     return {
       bondRateLabel: `Bond Rate (${slot.bondRate})`,
       bondRateValue: formatEth(bondRequired),
-      taxLabel: `Tax (${selectedCoverage?.label ?? '—'})`,
+      taxLabel: `Tax (${coverageLabel})`,
       taxValue: formatEth(taxRequired),
       coverageLabel: 'Coverage',
       coverageValue: coverageLabel,
       totalLabel: 'Total Cost',
       totalValue: formatEth(totalValue),
     };
-  }, [
-    bondRequired,
-    coverageLabel,
-    selectedCoverage,
-    slot,
-    taxRequired,
-    totalValue,
-  ]);
+  }, [bondRequired, coverageLabel, slot, taxRequired, totalValue]);
 
   const combinedError = localError ?? errorMessage ?? null;
 
@@ -420,24 +405,21 @@ export default function ClaimSlotModal({
                         (1 tax period = 24 hours / 620000 seconds)
                       </strong>
                     </span>
-                    <Select
-                      selectedKeys={
-                        selectedCoverage ? [selectedCoverage.key] : []
-                      }
-                      onSelectionChange={(keys) => {
-                        const key = Array.from(keys)[0] as string | undefined;
-                        if (key) {
-                          setSelectedCoverageKey(key);
-                        }
-                      }}
-                      className="mb-[5px] mt-[10px] w-full bg-[#F5F5F5]"
-                      aria-label="Select tax coverage"
-                      isDisabled={!slot}
-                    >
-                      {coverageOptions.map((option) => (
-                        <SelectItem key={option.key}>{option.label}</SelectItem>
-                      ))}
-                    </Select>
+                    <div className="mt-[10px]">
+                      <CoverageSlider
+                        value={coverageSliderValue}
+                        min={1}
+                        max={365}
+                        step={1}
+                        rangeStart="1 day"
+                        rangeEnd="365 days"
+                        onChange={handleCoverageSliderChange}
+                        onChangeEnd={handleCoverageSliderChange}
+                      />
+                    </div>
+                    <span className="mt-[6px] text-[12px] text-black/60">
+                      Selected: {coverageLabel}
+                    </span>
                   </div>
                 </div>
               ) : (

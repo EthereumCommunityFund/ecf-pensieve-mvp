@@ -152,13 +152,31 @@ export default function AdManagementPage() {
       return;
     }
 
+    const computeInitialCoveragePeriods = () => {
+      const periodSeconds = Number(selectedTakeoverSlot.taxPeriodInSeconds);
+      const remainingSeconds = Number(
+        selectedTakeoverSlot.timeRemainingInSeconds,
+      );
+
+      if (periodSeconds <= 0) {
+        return 1;
+      }
+
+      if (remainingSeconds <= 0) {
+        return 1;
+      }
+
+      const estimatedPeriods = Math.ceil(remainingSeconds / periodSeconds);
+      return Math.min(365, Math.max(1, estimatedPeriods));
+    };
+
     const fallbackValuation =
       selectedTakeoverSlot.minTakeoverBidWei > ZERO_BIGINT
         ? selectedTakeoverSlot.minTakeoverBidWei
         : selectedTakeoverSlot.minValuationWei;
     const fallbackInput = formatNumberInputFromWei(fallbackValuation, 4);
 
-    setTakeoverCoveragePeriods(1);
+    setTakeoverCoveragePeriods(computeInitialCoveragePeriods());
     setTakeoverValuationWei(fallbackValuation);
     setTakeoverValuationInput(fallbackInput);
     setTakeoverCreativeInput(selectedTakeoverSlot.currentAdURI ?? '');

@@ -372,8 +372,8 @@ export default function TakeoverSlotModal({
     ? 'Click to upload mobile asset'
     : 'Mobile creative asset';
 
-  const creativeInputDisabled = isSubmitting || isViewMode;
-  const textInputDisabled = isSubmitting || isViewMode;
+  const creativeInputDisabled = !allowCreativeEditing || isSubmitting;
+  const textInputDisabled = !allowCreativeEditing || isSubmitting;
 
   const ctaDisabled =
     showCtaButton &&
@@ -796,7 +796,7 @@ function LabelWithInfo({
   );
 }
 
-function CoverageSlider({
+export function CoverageSlider({
   value,
   min,
   max,

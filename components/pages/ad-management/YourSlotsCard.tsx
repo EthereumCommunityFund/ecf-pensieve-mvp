@@ -88,7 +88,6 @@ export default function YourSlotsCard({
     currentAdBadgeTone ?? (status === 'overdue' ? 'danger' : 'default');
   const taxOwedValue = taxOwed ?? taxDue;
   const taxDueValue = taxDueCountdown ?? taxDue;
-  const takeoverValue = takeoverBid ?? minTakeoverBid;
   const isCritical = currentAdTone === 'danger';
   const creativeUpdatesUsed =
     contentUpdates && typeof contentUpdates.used === 'number'
