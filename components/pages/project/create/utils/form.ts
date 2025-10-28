@@ -27,14 +27,32 @@ const emptyToDateOrNull = (value: string): Date | null => {
   return value === '' ? null : dayjs.utc(value).toDate();
 };
 
+const normalizeDateToISOString = (date: Date | null): string => {
+  if (!date) {
+    return '';
+  }
+
+  const parsed = dayjs(date);
+  if (!parsed.isValid()) {
+    return '';
+  }
+
+  return dayjs.utc(parsed.format('YYYY-MM-DD')).toISOString();
+};
+
 /**
  * Helper function to convert Date to UTC Date for backend storage
  */
 const dateToUTC = (date: Date | null): Date => {
   if (!date) return new Date();
+
+  const parsed = dayjs(date);
+  if (!parsed.isValid()) {
+    return new Date();
+  }
   // Treat the input date as a local date but convert it to UTC
   // This ensures that a date like "2023-05-15" is stored as "2023-05-15" in UTC
-  return dayjs.utc(dayjs(date).format('YYYY-MM-DD')).toDate();
+  return dayjs.utc(parsed.format('YYYY-MM-DD')).toDate();
 };
 
 /**
@@ -113,11 +131,7 @@ export const transformProjectData = (
     dateLaunch: emptyToDateOrNull(
       transformFormValue(
         'dateLaunch',
-        formData.dateLaunch
-          ? dayjs
-              .utc(dayjs(formData.dateLaunch).format('YYYY-MM-DD'))
-              .toISOString()
-          : '',
+        normalizeDateToISOString(formData.dateLaunch),
         fieldApplicability,
       ),
     ),

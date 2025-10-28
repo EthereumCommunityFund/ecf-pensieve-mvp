@@ -1,8 +1,4 @@
-import {
-  extendVariants,
-  Select as HSelect,
-  SelectItem as HSelectItem,
-} from '@heroui/react';
+import { extendVariants, Select as HSelect, SelectItem } from '@heroui/react';
 
 const Select = extendVariants(HSelect, {
   variants: {
@@ -28,7 +24,5 @@ const Select = extendVariants(HSelect, {
     variant: 'bordered',
   },
 });
-
-const SelectItem = extendVariants(HSelectItem, {});
 
 export { Select, SelectItem };

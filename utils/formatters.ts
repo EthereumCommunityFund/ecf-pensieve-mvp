@@ -211,12 +211,22 @@ export function formatDateAsUTC(
  * without any timezone information, ensuring all users see the same date.
  */
 export const dateToDateValue = (
-  date: Date | null | undefined,
+  date: Date | string | null | undefined,
 ): DateValue | null => {
   if (!date) return null;
+
+  if (typeof date === 'string' && date.toLowerCase() === 'n/a') {
+    return null;
+  }
+
   try {
+    const parsed = dayjs(date);
+    if (!parsed.isValid()) {
+      return null;
+    }
+
     // Use UTC to ensure consistent date display across timezones
-    const dateString = dayjs(date).utc().format('YYYY-MM-DD');
+    const dateString = parsed.utc().format('YYYY-MM-DD');
     return parseDate(dateString);
   } catch (e) {
     console.error('Error parsing date for DatePicker:', date, e);
@@ -246,7 +256,11 @@ export const dateValueToDate = (dateValue: DateValue | null): Date | null => {
   try {
     // Use UTC to ensure consistent date handling across timezones
     // This creates a Date at UTC midnight (00:00:00Z)
-    return dayjs.utc(dateValue.toString()).toDate();
+    const parsed = dayjs(dateValue.toString());
+    if (!parsed.isValid()) {
+      return null;
+    }
+    return dayjs.utc(parsed.format('YYYY-MM-DD')).toDate();
   } catch (e) {
     console.error('Error converting DateValue to Date:', dateValue, e);
     return null;
