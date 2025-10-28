@@ -487,6 +487,16 @@ function extractProjectName(project: ProjectWithSnap): string {
     return 'Unnamed';
   }
 
+  const snapItems = project.projectSnap?.items;
+  if (Array.isArray(snapItems)) {
+    const snapValue = snapItems.find((item) => item?.key === 'name')?.value;
+    const normalizedSnapValue = normalizeStringValue(snapValue);
+
+    if (normalizedSnapValue && normalizedSnapValue.length > 0) {
+      return normalizedSnapValue;
+    }
+  }
+
   if (typeof project.name === 'string' && project.name.trim().length > 0) {
     return project.name.trim();
   }
@@ -536,7 +546,11 @@ function buildRankingSnapshotTweetContents(params: {
     params;
   const formattedDate = formatSnapshotDateValue(snapshotDate);
 
-  const createTweet = (title: string, names: string[]): string | undefined => {
+  const createTweet = (
+    title: string,
+    names: string[],
+    link?: string,
+  ): string | undefined => {
     if (!names.length) {
       return undefined;
     }
@@ -554,11 +568,19 @@ function buildRankingSnapshotTweetContents(params: {
 
       const section = [title, ...lines].join('\n');
 
-      return [
+      const baseLines = [
         `📊 Today’s ranking snapshot (${formattedDate}, 12:00 CET).`,
         '',
-        section,
-      ].join('\n');
+      ];
+
+      if (link) {
+        baseLines.push(`View complete ranking: ${link}`);
+        baseLines.push('');
+      }
+
+      baseLines.push(section);
+
+      return baseLines.join('\n');
     };
 
     let content = compose(maxNameLength);
@@ -580,8 +602,16 @@ function buildRankingSnapshotTweetContents(params: {
   };
 
   return {
-    transparent: createTweet('Top Transparent Projects:', transparentNames),
-    accountable: createTweet('Top Accountable Projects:', accountableNames),
+    transparent: createTweet(
+      'Top Transparent Projects:',
+      transparentNames,
+      'https://pensieve.ecf.network/s/Yy4QZL',
+    ),
+    accountable: createTweet(
+      'Top Accountable Projects:',
+      accountableNames,
+      'https://pensieve.ecf.network/s/CrksZz',
+    ),
   };
 }
 
