@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 
+import { AiSystemUserId } from '@/constants/env';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ProjectTableFieldCategory } from '@/constants/tableConfig';
 import {
@@ -117,6 +118,7 @@ export const useProjectTableData = (
 
         items.forEach((itemKey) => {
           const item = displayItemMap[itemKey as IPocItemKey];
+          const isAiCreator = item.submitter?.userId === AiSystemUserId;
           if (item) {
             const groupInfo = itemToGroupMap.get(itemKey);
             const itemConfig = AllItemConfig[itemKey as IPocItemKey];
@@ -139,6 +141,7 @@ export const useProjectTableData = (
               legitimacy: itemConfig?.legitimacy || [],
               accountabilityMetrics: itemConfig?.accountability || [],
               legitimacyMetrics: itemConfig?.legitimacy || [],
+              isAiCreator,
               ...statusFields,
             };
 
@@ -171,6 +174,8 @@ export const useProjectTableData = (
           const groupInfo = itemToGroupMap.get(itemKey);
           const itemConfig = AllItemConfig[itemKey as IPocItemKey];
           const hasProposal = hasProposalKeys.includes(itemKey as IPocItemKey);
+          const isAiCreator =
+            existingItem?.submitter?.userId === AiSystemUserId;
 
           if (existingItem) {
             const statusFields = calculateItemStatusFields(
@@ -189,6 +194,7 @@ export const useProjectTableData = (
               legitimacy: itemConfig?.legitimacy || [],
               accountabilityMetrics: itemConfig?.accountability || [],
               legitimacyMetrics: itemConfig?.legitimacy || [],
+              isAiCreator,
               ...statusFields,
             };
             // Apply filters
@@ -253,6 +259,7 @@ export const useProjectTableData = (
                   group: groupInfo.key,
                   groupTitle: groupInfo.title,
                 }),
+                isAiCreator: false,
                 ...statusFields,
               };
               // Apply filters

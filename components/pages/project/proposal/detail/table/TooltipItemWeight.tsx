@@ -7,12 +7,16 @@ interface IProps {
   itemWeight: string | number;
   isGenesis?: boolean;
   isEmptyItem?: boolean;
+  isAiCreator?: boolean;
+  genesisWeight: number;
 }
 
 const TooltipItemWeight: FC<IProps> = ({
   itemWeight,
   isGenesis,
   isEmptyItem,
+  isAiCreator,
+  genesisWeight,
 }) => {
   return (
     <Tooltip
@@ -22,7 +26,14 @@ const TooltipItemWeight: FC<IProps> = ({
       }}
       closeDelay={0}
     >
-      {isEmptyItem ? (
+      {isAiCreator ? (
+        <div className="flex items-center gap-[2px] opacity-50">
+          <CoinVerticalIcon />
+          <span className="text-[12px] font-[600] leading-[16px] text-black">
+            {genesisWeight}
+          </span>
+        </div>
+      ) : isEmptyItem ? (
         <div className="flex items-center gap-[2px] opacity-50">
           <CoinVerticalIcon />
           <span className="text-[12px] font-[600] leading-[16px] text-black">

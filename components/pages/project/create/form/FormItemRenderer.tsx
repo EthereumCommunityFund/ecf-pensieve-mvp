@@ -29,6 +29,7 @@ import SocialLinkFormItemTable from '@/components/biz/table/embedTable/item/Soci
 import WebsiteFormItemTable from '@/components/biz/table/embedTable/item/WebsiteFormItemTable';
 import { useAllDynamicFieldArrays } from '@/components/biz/table/embedTable/useAllDynamicFieldArrays';
 import { CalendarBlankIcon, PlusIcon } from '@/components/icons';
+import ProjectNameSuggestionsInput from '@/components/pages/project/create/ProjectNameSuggestionsInput';
 import { generateUUID } from '@/lib/utils/uuid';
 import { IItemConfig, IItemKey } from '@/types/item';
 import {
@@ -45,6 +46,7 @@ interface FormItemRendererProps {
   itemConfig: IItemConfig<IItemKey>;
   fieldApplicability: Record<string, boolean>;
   formType: IFormTypeEnum;
+  showNameSuggestions?: boolean;
 }
 
 const FormItemRenderer: React.FC<FormItemRendererProps> = ({
@@ -53,6 +55,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
   itemConfig,
   fieldApplicability,
   formType,
+  showNameSuggestions = false,
 }) => {
   const { error } = fieldState;
   const {
@@ -129,6 +132,24 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     <p className="mt-1 text-[12px] text-red-500">{error.message}</p>
   ) : null;
 
+  if (itemKey === 'name' && showNameSuggestions) {
+    return (
+      <div>
+        <ProjectNameSuggestionsInput
+          ref={field.ref as any}
+          name={field.name}
+          value={field.value || ''}
+          placeholder={placeholder}
+          isInvalid={!!error}
+          isDisabled={isDisabled || disableNameEdit}
+          onChange={(newValue) => field.onChange(newValue)}
+          onBlur={() => field.onBlur()}
+        />
+        {errorMessageElement}
+      </div>
+    );
+  }
+
   // Handle dynamic field types with unified approach
   if (isDynamicFieldType(formDisplayType) && dynamicHandlers) {
     const config = DYNAMIC_FIELDS_CONFIG[formDisplayType];
@@ -140,6 +161,7 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
         onRemove={dynamicHandlers.handleRemoveField}
         itemKey={field.name}
         errorMessage={errorMessageElement}
+        isDisabled={isDisabled}
       />
     );
   }

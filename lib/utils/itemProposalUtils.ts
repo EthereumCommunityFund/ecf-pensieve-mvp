@@ -134,11 +134,22 @@ export const checkNeedQuorum = async (
   const isEssentialItem = ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
   if (isEssentialItem) return false;
 
-  const hasLeadingProposal = await tx.query.projectLogs.findFirst({
+  const leadingProposal = await tx.query.projectLogs.findFirst({
     where: and(eq(projectLogs.projectId, projectId), eq(projectLogs.key, key)),
   });
 
-  return !hasLeadingProposal;
+  if (!leadingProposal) {
+    return true;
+  }
+
+  const aiCreatorId = process.env.NEXT_PUBLIC_AI_SYSTEM_TOKENS;
+  const leadingCreatorId = leadingProposal.itemProposal?.creator;
+
+  if (aiCreatorId && leadingCreatorId === aiCreatorId) {
+    return true;
+  }
+
+  return false;
 };
 
 export const processItemProposalVoteResult = async (

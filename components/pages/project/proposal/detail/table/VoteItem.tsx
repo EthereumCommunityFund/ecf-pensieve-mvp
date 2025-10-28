@@ -125,7 +125,7 @@ const VoteItem: FC<IProps> = ({
           color="secondary"
           size="sm"
           isIconOnly
-          isLoading={isLoading && !isValidated}
+          isLoading={isLoading}
           disabled={isLoading || isUserVoted}
           onPress={onAction}
           className={cn(

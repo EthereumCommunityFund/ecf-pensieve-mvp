@@ -142,6 +142,7 @@ const PropertyCell = ({
     isPendingValidation,
     itemTopWeight,
     canBePropose,
+    isAiCreator,
   } = rowData;
 
   return (
@@ -172,7 +173,9 @@ const PropertyCell = ({
           itemWeight={
             itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
           }
+          genesisWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
           isEmptyItem={!!canBePropose}
+          isAiCreator={!!isAiCreator}
         />
       )}
     </div>
@@ -726,6 +729,7 @@ const SubmitterCell = memo(
 
     const data = item?.createdAt;
     const avatarSrc = submitter.avatarUrl ?? '/images/user/avatar_p.png';
+    const isAiCreator = item?.isAiCreator;
 
     const handleSubmitterClick = () => {
       showSubmitterModal?.(submitter, data);
@@ -748,10 +752,20 @@ const SubmitterCell = memo(
           />
         </div>
         <div className="flex flex-col">
-          <span className="text-[14px] font-[400] leading-[20px] text-black">
+          <span
+            className={cn(
+              'text-[14px] font-[400] leading-[20px]',
+              isAiCreator ? 'text-[#68C6AC]' : 'text-black',
+            )}
+          >
             {submitter.name}
           </span>
-          <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
+          <span
+            className={cn(
+              'text-[12px] font-[600] leading-[12px] opacity-60',
+              isAiCreator ? 'text-[#68C6AC]' : 'text-black',
+            )}
+          >
             {formatDate(data, 'YYYY-MM-DD', '0000-00-00')}
           </span>
         </div>
@@ -817,7 +831,7 @@ const ActionsHeader = ({
 };
 
 const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
-  const { canBePropose } = item;
+  const { canBePropose, isAiCreator } = item;
   const { profile, showAuthPrompt } = useAuth();
 
   const handleProposeAction = useCallback(() => {
@@ -849,10 +863,15 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
           </Button>
           <Button
             color="secondary"
-            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            className={cn(
+              'h-[30px] w-full rounded-[5px] border-none p-[10px] text-[13px] font-[400]',
+              isAiCreator
+                ? 'bg-[#64C0A5] hover:bg-[#64C0A5]/80 text-white'
+                : 'bg-[#F0F0F0]',
+            )}
             onPress={handleProposeAction}
           >
-            Propose Entry
+            {isAiCreator ? 'Propose to earn' : 'Propose Entry'}
           </Button>
         </>
       )}
