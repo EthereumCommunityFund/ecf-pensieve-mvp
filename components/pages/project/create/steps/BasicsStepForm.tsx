@@ -7,15 +7,19 @@ import FormItemManager from '@/components/pages/project/create/form/FormItemMana
 
 import { IStepFormProps } from '../types';
 
-const BasicsStepForm: React.FC<
-  Omit<IStepFormProps, 'register' | 'hasFieldValue'>
-> = ({
+interface BasicsStepFormProps
+  extends Omit<IStepFormProps, 'register' | 'hasFieldValue'> {
+  enableNameSuggestions?: boolean;
+}
+
+const BasicsStepForm: React.FC<BasicsStepFormProps> = ({
   control,
   fieldApplicability,
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
   formType,
+  enableNameSuggestions = false,
 }) => {
   const fieldConfigArray = Object.values(basicsFieldsConfig);
 
@@ -31,6 +35,7 @@ const BasicsStepForm: React.FC<
           onAddReference={onAddReference}
           hasFieldReference={hasFieldReference}
           formType={formType}
+          showNameSuggestions={enableNameSuggestions}
         />
       ))}
     </div>

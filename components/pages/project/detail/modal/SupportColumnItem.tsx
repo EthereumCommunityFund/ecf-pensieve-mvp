@@ -2,7 +2,7 @@ import { CircularProgress, cn, Tooltip } from '@heroui/react';
 import { FC, memo, useCallback, useMemo } from 'react'; // Added useMemo
 
 import { Button } from '@/components/base';
-import { CheckedGreenIcon, UsersIcon, VoteIcon } from '@/components/icons';
+import { UsersIcon, VoteIcon } from '@/components/icons';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext'; // Added import
 import { useAuth } from '@/context/AuthContext';
 import { QUORUM_AMOUNT } from '@/lib/constants';
@@ -180,7 +180,7 @@ const SupportColumnItem: FC<IProps> = ({
           color="secondary"
           size="sm"
           isIconOnly
-          isLoading={internalIsLoading && !isValidated} // Use internalIsLoading
+          isLoading={internalIsLoading} // Use internalIsLoading
           disabled={internalIsLoading || isUserVotedCurrentItemProposal} // Use internalIsLoading
           onPress={handleAction}
           className={cn(
@@ -189,7 +189,15 @@ const SupportColumnItem: FC<IProps> = ({
             isUserVotedCurrentItemProposal ? 'cursor-not-allowed' : '', // Use internalIsLoading
           )}
         >
-          {isValidated ? (
+          <VoteIcon
+            color={isUserVotedCurrentItemProposal ? '#64C0A5' : 'black'}
+            className={cn(
+              isUserVotedCurrentItemProposal
+                ? 'opacity-100'
+                : 'opacity-20 hover:opacity-50',
+            )}
+          />
+          {/* {isValidated ? (
             <CheckedGreenIcon />
           ) : (
             <VoteIcon
@@ -200,7 +208,7 @@ const SupportColumnItem: FC<IProps> = ({
                   : 'opacity-20 hover:opacity-50',
               )}
             />
-          )}
+          )} */}
           {/* {isUserVotedCurrentItemProposal ? (
             <CheckedGreenIcon />
           ) : (
