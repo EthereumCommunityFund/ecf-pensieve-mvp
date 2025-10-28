@@ -136,8 +136,8 @@ const FormItemRenderer: React.FC<FormItemRendererProps> = ({
     return (
       <div>
         <ProjectNameSuggestionsInput
+          ref={field.ref as any}
           name={field.name}
-          inputRef={field.ref}
           value={field.value || ''}
           placeholder={placeholder}
           isInvalid={!!error}
