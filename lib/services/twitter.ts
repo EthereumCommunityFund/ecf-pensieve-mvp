@@ -563,7 +563,7 @@ function buildRankingSnapshotTweetContents(params: {
           name === RANKING_PLACEHOLDER
             ? name
             : truncateWithEllipsis(name, nameLength);
-        return `${index + 1}.${displayName}`;
+        return `${index + 1}. ${displayName}`;
       });
 
       const section = [title, ...lines].join('\n');
