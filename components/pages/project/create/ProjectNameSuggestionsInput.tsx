@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 
 import { Input } from '@/components/base';
@@ -68,6 +68,7 @@ const ProjectNameSuggestionsInput: React.FC<
   onBlur,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const inputElementRef = useRef<HTMLInputElement | null>(null);
 
   const sanitizedValue = typeof value === 'string' ? value : '';
   const trimmedQuery = sanitizedValue.trim();
@@ -117,16 +118,32 @@ const ProjectNameSuggestionsInput: React.FC<
     shouldSearch &&
     (isLoading || isFetching || suggestions.length > 0);
 
-  const handleSuggestionSelect = useCallback((project: SearchProjectItem) => {
-    const url = getProjectUrl(project);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }, []);
+  const handleSuggestionSelect = useCallback(
+    (project: SearchProjectItem) => {
+      const url = getProjectUrl(project);
+      setIsFocused(false);
+      if (inputElementRef.current) {
+        inputElementRef.current.blur();
+      }
+      onBlur?.();
+      window.open(url, '_blank', 'noopener,noreferrer');
+    },
+    [onBlur],
+  );
+
+  const handleRefAssignment = useCallback(
+    (node: HTMLInputElement | null) => {
+      inputElementRef.current = node;
+      inputRef?.(node);
+    },
+    [inputRef],
+  );
 
   return (
     <div className="relative">
       <Input
         name={name}
-        ref={inputRef}
+        ref={handleRefAssignment}
         value={sanitizedValue}
         placeholder={placeholder}
         isInvalid={isInvalid}
