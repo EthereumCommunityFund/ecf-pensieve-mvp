@@ -123,6 +123,15 @@ export const getDefaultEmbedTableFormItemValue = (
         amountShares: '',
         _id: crypto.randomUUID(),
       };
+    case 'roadmap_timeline':
+      return {
+        milestone: '',
+        description: '',
+        date: null,
+        status: '',
+        reference: '',
+        _id: crypto.randomUUID(),
+      };
     default:
       return '';
   }

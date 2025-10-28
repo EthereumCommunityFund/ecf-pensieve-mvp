@@ -16,6 +16,12 @@ const BASE_CELL_CLASS =
 const INPUT_CLASS =
   'h-[32px] w-full border-none bg-transparent px-[4px] rounded-[6px] text-[14px] font-[400] leading-[19px] text-black placeholder:text-black/60 focus:shadow-none focus:outline-none focus:ring-0';
 
+interface EmbedTableSelectOption {
+  value: string;
+  label: string;
+  color?: string;
+}
+
 export const EmbedTableRow: React.FC<
   PropsWithChildren<{ className?: string }>
 > = ({ children, className }) => (
@@ -136,7 +142,7 @@ interface EmbedTableSelectCellProps {
   columnKey: string;
   name: string;
   placeholder?: string;
-  options: Array<{ value: string; label: string }>;
+  options: EmbedTableSelectOption[];
   selectProps?: Partial<React.ComponentProps<typeof Select>>;
   errorMessageOverride?: (message?: string) => string | undefined;
   showRightBorder?: boolean;
@@ -153,7 +159,12 @@ export const EmbedTableSelectCell: React.FC<EmbedTableSelectCellProps> = ({
   showRightBorder,
 }) => {
   const { control } = useFormContext();
-  const { classNames, ...restSelectProps } = selectProps || {};
+  const {
+    classNames,
+    renderValue: customRenderValue,
+    ...restSelectProps
+  } = selectProps || {};
+  const hasColoredOptions = options.some((option) => option.color);
 
   const defaultClassNames = {
     trigger:
@@ -188,12 +199,52 @@ export const EmbedTableSelectCell: React.FC<EmbedTableSelectCellProps> = ({
               placeholder={placeholder}
               aria-label={placeholder || columnKey}
               radius="none"
+              renderValue={
+                customRenderValue ||
+                (hasColoredOptions
+                  ? () => {
+                      const selectedOption = options.find(
+                        (option) => option.value === field.value,
+                      );
+
+                      if (!selectedOption) {
+                        return placeholder ? (
+                          <span className="text-[14px] text-black/60">
+                            {placeholder}
+                          </span>
+                        ) : null;
+                      }
+
+                      return (
+                        <span
+                          className="text-[14px]"
+                          style={
+                            selectedOption.color
+                              ? { color: selectedOption.color }
+                              : undefined
+                          }
+                        >
+                          {selectedOption.label}
+                        </span>
+                      );
+                    }
+                  : undefined)
+              }
               {...restSelectProps}
               classNames={defaultClassNames}
             >
               {options.map((option) => (
-                <SelectItem key={option.value} textValue={option.label}>
-                  {option.label}
+                <SelectItem
+                  key={option.value}
+                  textValue={option.label}
+                  className="flex items-center"
+                >
+                  <span
+                    className="text-[14px]"
+                    style={option.color ? { color: option.color } : undefined}
+                  >
+                    {option.label}
+                  </span>
                 </SelectItem>
               ))}
             </Select>
