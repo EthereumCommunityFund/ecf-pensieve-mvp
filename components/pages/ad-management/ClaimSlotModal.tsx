@@ -514,7 +514,7 @@ function LabelWithInfo({ label }: { label: string }) {
   );
 }
 
-function BreakdownRow({
+export function BreakdownRow({
   label,
   value,
   valueLabelType,

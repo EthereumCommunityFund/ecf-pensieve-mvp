@@ -1,19 +1,16 @@
 'use client';
 
 import { cn, Slider, Tooltip } from '@heroui/react';
+import { CoinVertical, TrendUp } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-} from '@/components/base/modal';
+import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import ECFTypography from '@/components/base/typography';
-import { InfoIcon, ShowMetricsIcon, XIcon } from '@/components/icons';
+import { InfoIcon, XIcon } from '@/components/icons';
 
+import { BreakdownRow } from './ClaimSlotModal';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 type ContextTone = 'default' | 'danger';
@@ -198,7 +195,7 @@ export default function TakeoverSlotModal({
       onClose={onClose}
       placement="center"
       classNames={{
-        base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px] h-[calc(100vh-200px)]',
+        base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]]',
         body: 'overflow-y-scroll',
       }}
     >
@@ -224,7 +221,7 @@ export default function TakeoverSlotModal({
               </Button>
             </div>
 
-            <ModalBody className="flex flex-col gap-[20px] px-5 pb-0 pt-4 ">
+            <ModalBody className="mobile:p-[10px] flex flex-col gap-[20px] p-[20px]">
               <div className="flex items-center gap-[10px]">
                 <span className="text-[13px] font-semibold text-black/50">
                   Slot:
@@ -295,93 +292,70 @@ export default function TakeoverSlotModal({
                 />
               </div>
 
-              <div className="flex flex-col gap-[12px]">
-                <LabelWithInfo label="Creative URI" />
-                <Input
-                  placeholder="https:// or data:..."
-                  aria-label="Creative URI"
-                  value={creativeUri}
-                  onValueChange={(value) => {
-                    setCreativeUri(value);
-                    onCreativeUriChange?.(value);
-                  }}
-                  isDisabled={valuation.isDisabled}
-                />
-                <span className="text-[12px] text-black/50">
-                  Provide a direct asset link for the new creative. Leave blank
-                  to reuse the existing creative and update later.
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-[16px] rounded-[12px] border border-black/10 bg-[#FCFCFC] p-[16px]">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-[8px] text-[13px] font-semibold text-black/70">
-                    <ShowMetricsIcon className="size-[18px] text-black/40" />
-                    <span>Bonding Cost Breakdown:</span>
-                  </div>
-                  <InfoIcon size={18} />
+              <div className="space-y-[8px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[10px]">
+                <div className="flex items-center justify-center gap-[8px] text-[14px] leading-[20px] text-black">
+                  <TrendUp size={20} weight="bold" />
+                  <span>Bonding Cost Breakdown:</span>
                 </div>
 
                 <BreakdownRow
                   label={breakdown.bondRateLabel}
                   value={breakdown.bondRateValue}
+                  valueLabelType="light"
                 />
                 <BreakdownRow
                   label={breakdown.taxLabel}
                   value={breakdown.taxValue}
+                  valueLabelType="light"
                 />
                 <BreakdownRow
                   label={breakdown.coverageLabel}
                   value={breakdown.coverageValue}
+                  valueLabelType="pureText"
+                  className="opacity-50"
                 />
 
-                <div className="flex items-center justify-between rounded-[8px] bg-black/[0.03] px-[12px] py-[10px]">
-                  <div className="flex items-center gap-[6px] text-[13px] font-semibold text-black/80">
+                <div className="flex items-center justify-between border-t border-black/10 pt-[8px]">
+                  <div className="flex items-center gap-[6px] text-[14px] text-black/80">
                     <span>{breakdown.totalLabel}</span>
                     <InfoIcon size={16} />
                   </div>
-
-                  <span className="text-[14px] font-semibold text-[#0C7A32]">
+                  <span className="text-[16px] font-semibold text-[#3CBF91]">
                     {breakdown.totalValue}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-[10px] rounded-[12px]  p-[16px]">
-                <span className="text-[13px] font-semibold text-black/80">
+              <div className="flex flex-col gap-[10px]">
+                <span className="text-[14px] font-semibold text-black/80">
                   How Harberger Tax Works:
                 </span>
-                <span className="text-[12px] leading-[18px] text-black/60">
-                  {harbergerInfo}
+                <span className="text-[13px] leading-[18px] text-black/50">
+                  {`You pay the current owner's declared price to the community treasury. Set your own valuation carefully - you'll pay continuous taxes on it, and others can buy from you at that price.`}
                 </span>
               </div>
 
-              {errorMessage ? (
-                <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
-                  {errorMessage}
-                </div>
-              ) : null}
+              <div className="flex items-center gap-[10px]">
+                <Button
+                  color="secondary"
+                  className="h-[40px] w-[90px] rounded-[5px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+                  onPress={onClose}
+                  isDisabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
+                  isDisabled={isCtaDisabled || isSubmitting}
+                  isLoading={Boolean(isSubmitting)}
+                  onPress={onSubmit}
+                >
+                  <CoinVertical size={24} />
+                  {ctaLabel}
+                </Button>
+              </div>
             </ModalBody>
-
-            <ModalFooter className="flex items-center gap-[12px] p-5">
-              <Button
-                color="secondary"
-                className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-                onPress={onClose}
-                isDisabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                color="primary"
-                className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
-                isDisabled={isCtaDisabled || isSubmitting}
-                isLoading={Boolean(isSubmitting)}
-                onPress={onSubmit}
-              >
-                {ctaLabel}
-              </Button>
-            </ModalFooter>
           </>
         )}
       </ModalContent>
@@ -453,18 +427,6 @@ function LabelWithInfo({
           <InfoIcon size={20} />
         </span>
       </Tooltip>
-    </div>
-  );
-}
-
-function BreakdownRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-dashed border-black/10 pb-[10px] text-[13px] text-black/70 last:border-b-0 last:pb-0">
-      <div className="flex items-center gap-[6px]">
-        <span>{label}</span>
-        <InfoIcon size={16} />
-      </div>
-      <span className="font-semibold text-black">{value}</span>
     </div>
   );
 }
