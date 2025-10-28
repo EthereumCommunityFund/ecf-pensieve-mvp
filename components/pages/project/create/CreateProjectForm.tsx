@@ -636,7 +636,12 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                 stepId={IItemCategoryEnum.Basics}
                 currentStep={currentStep}
               >
-                <BasicsStepForm {...stepProps} />
+                <BasicsStepForm
+                  {...stepProps}
+                  enableNameSuggestions={
+                    formType === IFormTypeEnum.Project && !projectId
+                  }
+                />
               </StepWrapper>
               <StepWrapper
                 stepId={IItemCategoryEnum.Technicals}

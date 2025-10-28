@@ -18,6 +18,7 @@ interface IFormItemManagerProps<TFieldKey extends keyof IProjectFormData> {
   onAddReference: (key: string, label?: string | undefined) => void;
   hasFieldReference: (fieldKey: string) => boolean;
   formType: IFormTypeEnum;
+  showNameSuggestions?: boolean;
 }
 
 const FormItemManager = <TFieldKey extends keyof IProjectFormData>({
@@ -28,6 +29,7 @@ const FormItemManager = <TFieldKey extends keyof IProjectFormData>({
   onAddReference,
   hasFieldReference,
   formType,
+  showNameSuggestions = false,
 }: IFormItemManagerProps<TFieldKey>) => {
   const containerProps = useFormPropsWithValue({
     fieldConfig: itemConfig,
@@ -49,6 +51,7 @@ const FormItemManager = <TFieldKey extends keyof IProjectFormData>({
             itemConfig={itemConfig}
             fieldApplicability={fieldApplicability}
             formType={formType}
+            showNameSuggestions={showNameSuggestions}
           />
         )}
       />
