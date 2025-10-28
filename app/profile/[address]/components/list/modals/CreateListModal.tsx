@@ -248,7 +248,7 @@ const CreateListModal = ({ isOpen, onClose }: CreateListModalProps) => {
                   <SelectItem
                     key={option.value}
                     textValue={option.label}
-                    isDisabled={option.disabled}
+                    isDisabled={!!option.disabled}
                     className={`rounded-[5px] px-[10px] py-[4px] ${
                       option.disabled ? 'opacity-20' : ''
                     }`}

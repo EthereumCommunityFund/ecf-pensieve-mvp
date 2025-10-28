@@ -933,15 +933,28 @@ export const itemValidationSchemas = {
     .min(1, 'Select at least one team location')
     .required('Team location is required'),
 
-  token_benefits: yup.string().trim().required('Token benefits are required'),
+  token_benefits: yup
+    .array()
+    .of(yup.string().trim().required())
+    .min(1, 'Select at least one token benefit')
+    .required('Token benefits are required'),
 
-  token_risks: yup.string().trim().required('Token risks are required'),
+  token_risks: yup
+    .array()
+    .of(yup.string().trim().required())
+    .min(1, 'Select at least one token risk')
+    .required('Token risks are required'),
 
-  token_rights: yup.string().trim().required('Token rights are required'),
+  token_rights: yup
+    .array()
+    .of(yup.string().trim().required())
+    .min(1, 'Select at least one token right')
+    .required('Token rights are required'),
 
   token_obligations: yup
-    .string()
-    .trim()
+    .array()
+    .of(yup.string().trim().required())
+    .min(1, 'Select at least one token obligation')
     .required('Token obligations are required'),
 
   dapp_storage_stack: yup

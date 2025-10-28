@@ -19,11 +19,39 @@ Ownership of Projects +,true,,OpenAlpha (v0.3),"the individuals or groups who ha
 Smart Contract Audits,false,timeline table needs design,OpenAlpha (v0.3),"Were the project's smart contract audited?
 
 ","Techincals,Sub-Dapp Statistics","v1. Bool ; v2: timeline table, combined with audit report",N/A,Transparency,20.0,"Project Page,Campaign Tab",Security,,"Project Disclosure (Trans),Security (Eval)",Audit Status + [DUPLICATE?],
-Token Benefits (Finance),false,need options,OpenAlpha (v0.3),"What are the benefits a token allows
-","Sub-Token Data,Token ",Option list,by process - participation,"Transparency,Participation",30.0,Project Page,N/A,,,Token Holders:,
-Token Risks,false,need options,OpenAlpha (v0.3),Risk analysis in web3 and meatspace,"Sub-Token Data,Token ",Option list,"N/A,by process - participation","Transparency,Participation",40.0,Project Page,Security,,,Token Holders:,
-Token Rights (Governance),false,need options,OpenAlpha (v0.3),Voting rights the token allows,"Token ,Sub-Token Data",Option list,by process - participation,"Transparency,Participation",30.0,Project Page,N/A,,,"Token Holders:,Governance (Section name)",
-Token Obligations,false,need options,OpenAlpha (v0.3),Obligations the participants have by owning the token,"Token ,Sub-Token Data",Option list,by process - participation,"Transparency,Participation",30.0,Project Page,N/A,,,Token Holders:,
+Token Benefits (Finance),false,,OpenAlpha (v0.3),"What are the benefits a token allows
+","Sub-Token Data,Token ","option list (multi selection):
+Utility access
+Fee discount/ Rebates
+Revenue share
+Buyback
+Staking yield
+Others (and specify)",by process - participation,"Transparency,Participation",30.0,Project Page,N/A,,,Token Holders:,
+Token Risks,false,,OpenAlpha (v0.3),Risk analysis in web3 and meatspace,"Sub-Token Data,Token ","option list (multi selection):
+Centralization/ whale concentration risk
+High volatility
+Privileged roles (mint, upgrade, admins keys)
+Unclear/inflationary tokenomics
+Compliance risk
+Liquidity fragility
+Bridge dependency risk
+Lack of vesting
+Sybil attack risk
+Others (and specify)","N/A,by process - participation","Transparency,Participation",40.0,Project Page,Security,,,Token Holders:,
+Token Rights (Governance),false,,OpenAlpha (v0.3),Voting rights the token allows,"Token ,Sub-Token Data","Option list (multi selection):
+Signaling
+Direct voting
+Delegated voting
+On-chain binding governance over treasury/protocol
+Others (and specify)",by process - participation,"Transparency,Participation",30.0,Project Page,N/A,,,"Token Holders:,Governance (Section name)",
+Token Obligations,false,,OpenAlpha (v0.3),Obligations the participants have by owning the token,"Token ,Sub-Token Data","Option list (multi selection):
+Staking
+Locking
+Governance participation
+Disclosure/verification (KYC)
+Fee contribution/Burn
+Public goods/social contribution
+Others (and specify)",by process - participation,"Transparency,Participation",30.0,Project Page,N/A,,,Token Holders:,
 "D-app storage stack (Nov, 2022) ",true,,OpenAlpha (v0.3),Where is the project data stored?,,Text,N/A,Transparency,30.0,,"Resilience - Decentralisation,Security",,,,
 "D-app Account Management(i.e ID) stack (Nov, 2022)",true,,OpenAlpha (v0.3),"How is the User Index managed on the dapp?
 ",,Text,N/A,Transparency,30.0,,"Security,Resilience - Decentralisation",,,,
@@ -104,9 +132,19 @@ Income/Revenue (Statements) +,false,,"OpenAlpha (v0.3),Research","Reports the pr
 Investments,false,,"OpenAlpha (v0.3),Research","Table: User(if/a)/Address, Rep, Rounds, Eval, Amount.",Financials,??,"Community acceptance - sentiment,by process - participation",Transparency,,Project Page,N/A,Financial Disclosure (Trans)(Security),"Financial Disclosure (Trans)(Security),Fundraising",,
 Fundraising Price,false,,"OpenAlpha (v0.3),Research","the discounted Price at which the project shares / tokens have been sold to initial investors
 ",Financials,,N/A,Transparency,,Project Page,N/A,Financial Disclosure (Trans)(Security),"Financial Disclosure (Trans)(Security),Fundraising",,
-Investment Stage,false,,OpenAlpha (v0.3),"Current Investment Stage and Type e.g. seed, VC",Financials,option list [No Investment、Pre-Seed、Seed、 Series A、 Series B、 Series C+、 Token Listed、 Grant Funded、 Acquired/Merged],"Community acceptance - sentiment,by process - participation",Transparency,60,,,Financial Disclosure (Trans)(Security),,,
+Investment Stage,false,"**option list:**
+
+- Pre-Seed
+- Seed
+- Series A
+- Series B
+- Series C+
+- Token Listed
+- Grant Funded
+- Acquired/ Merged",OpenAlpha (v0.3),"Current Investment Stage and Type e.g. seed, VC",Financials,option list [Pre-Seed、Seed、 Series A、 Series B、 Series C+、 Token Listed、 Grant Funded、 Acquired/Merged],"Community acceptance - sentiment,by process - participation",Transparency,60,,,Financial Disclosure (Trans)(Security),,,
 ,false,,,,,,,,,,,,,,
 ,false,,,,,,,,,,,,,,
 ,false,,,,,,,,,,,,,,
 ,false,,,,,,,,,,,,,,
 ,false,,,,,,,,,,,,,,
+Token Transferability,false,,OpenAlpha (v0.3),Whether the token can be transferred or traded,,,,,,,,,,,

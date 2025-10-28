@@ -65,6 +65,8 @@ export const notificationRouter = router({
             columns: {
               id: true,
               name: true,
+              logoUrl: true,
+              shortCode: true,
             },
           },
           projectSnaps: {
