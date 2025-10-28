@@ -8,12 +8,9 @@ import {
   type ActiveSlotData,
   useHarbergerSlots,
 } from '@/hooks/useHarbergerSlots';
+import { extractCreativeAssets } from '@/utils/creative';
 
 const AUTO_PLAY_INTERVAL = 8000;
-const IPFS_PREFIX = 'ipfs://';
-const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
-const DATA_URI_PREFIX = 'data:application/json';
-
 interface AdSlide {
   id: string;
   imageUrl: string;
@@ -21,88 +18,17 @@ interface AdSlide {
   altText: string;
 }
 
-interface CreativeMetadata {
-  mediaUrl?: string;
-  linkUrl?: string;
-  title?: string;
-}
-
-const normalizeCreativeUrl = (value?: string | null): string | null => {
-  if (!value) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith(IPFS_PREFIX)) {
-    const ipfsPath = trimmed.slice(IPFS_PREFIX.length);
-    return `${IPFS_GATEWAY}${ipfsPath}`;
-  }
-
-  try {
-    const url = new URL(trimmed);
-    if (url.protocol === 'https:' || url.protocol === 'http:') {
-      return url.toString();
-    }
-  } catch (error) {
-    return null;
-  }
-
-  return null;
-};
-
-const parseCreativeMetadata = (uri: string): CreativeMetadata | null => {
-  try {
-    const [, payload = ''] = uri.split(',');
-    if (!payload) {
-      return null;
-    }
-    const decoded = decodeURIComponent(payload);
-    return JSON.parse(decoded) as CreativeMetadata;
-  } catch (error) {
-    return null;
-  }
-};
-
-const extractCreativeAssets = (
-  uri?: string | null,
-): {
-  imageUrl: string | null;
-  targetUrl: string | null;
-} => {
-  if (!uri) {
-    return { imageUrl: null, targetUrl: null };
-  }
-
-  if (uri.startsWith(DATA_URI_PREFIX)) {
-    const metadata = parseCreativeMetadata(uri);
-    const media = normalizeCreativeUrl(metadata?.mediaUrl);
-    const link = normalizeCreativeUrl(metadata?.linkUrl);
-    return {
-      imageUrl: media ?? link ?? null,
-      targetUrl: link ?? null,
-    };
-  }
-
-  const normalized = normalizeCreativeUrl(uri);
-  return {
-    imageUrl: normalized,
-    targetUrl: normalized,
-  };
-};
-
 const mapSlotToSlide = (slot: ActiveSlotData): AdSlide | null => {
-  const { imageUrl, targetUrl } = extractCreativeAssets(slot.currentAdURI);
-  if (!imageUrl) {
+  const { primaryImageUrl, targetUrl } = extractCreativeAssets(
+    slot.currentAdURI,
+  );
+  if (!primaryImageUrl) {
     return null;
   }
 
   return {
     id: slot.id,
-    imageUrl,
+    imageUrl: primaryImageUrl,
     targetUrl,
     altText: `${slot.slotName} creative`,
   };

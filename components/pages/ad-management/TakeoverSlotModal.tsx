@@ -11,7 +11,13 @@ import ECFTypography from '@/components/base/typography';
 import { InfoIcon, XIcon } from '@/components/icons';
 
 import { BreakdownRow } from './ClaimSlotModal';
+import CreativePhotoUpload from './CreativePhotoUpload';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
+import {
+  CREATIVE_GUIDANCE,
+  DESKTOP_CREATIVE_CONFIG,
+  MOBILE_CREATIVE_CONFIG,
+} from './creativeConstants';
 
 type ContextTone = 'default' | 'danger';
 
@@ -146,15 +152,133 @@ export default function TakeoverSlotModal({
   const [selectedCoverageDays, setSelectedCoverageDays] = useState(
     derivedInitialCoverageDays,
   );
+  const [creativeTitle, setCreativeTitle] = useState('');
+  const [creativeLink, setCreativeLink] = useState('');
+  const [fallbackImageUrl, setFallbackImageUrl] = useState('');
+  const [desktopImageUrl, setDesktopImageUrl] = useState('');
+  const [mobileImageUrl, setMobileImageUrl] = useState('');
   const [creativeUri, setCreativeUri] = useState(creativeUriValue ?? '');
+  const [localCreativeError, setLocalCreativeError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     setSelectedCoverageDays(derivedInitialCoverageDays);
   }, [derivedInitialCoverageDays]);
 
   useEffect(() => {
-    setCreativeUri(creativeUriValue ?? '');
+    if (!creativeUriValue) {
+      setCreativeUri('');
+      setCreativeTitle('');
+      setCreativeLink('');
+      setFallbackImageUrl('');
+      setDesktopImageUrl('');
+      setMobileImageUrl('');
+      setLocalCreativeError(null);
+      return;
+    }
+
+    const trimmedValue = creativeUriValue.trim();
+    setCreativeUri(trimmedValue);
+
+    if (trimmedValue.startsWith('data:application/json')) {
+      try {
+        const [, payload = ''] = trimmedValue.split(',', 2);
+        if (payload) {
+          const decoded = decodeURIComponent(payload);
+          const parsed = JSON.parse(decoded) as {
+            title?: string;
+            linkUrl?: string;
+            mediaUrl?: string;
+            assets?: Record<string, string>;
+          };
+          setCreativeTitle(parsed.title ?? '');
+          setCreativeLink(parsed.linkUrl ?? '');
+          const desktop = parsed.assets?.desktop ?? parsed.mediaUrl ?? '';
+          const mobile = parsed.assets?.mobile ?? '';
+          const fallback = parsed.assets?.fallback ?? '';
+          setDesktopImageUrl(desktop);
+          setMobileImageUrl(mobile);
+          setFallbackImageUrl(fallback);
+          setLocalCreativeError(null);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to parse creative metadata:', error);
+      }
+    } else {
+      setCreativeTitle('');
+      setCreativeLink('');
+      setFallbackImageUrl('');
+      setMobileImageUrl('');
+      setDesktopImageUrl(trimmedValue);
+      setLocalCreativeError(null);
+      return;
+    }
+
+    // Fallback if parsing failed
+    setCreativeTitle('');
+    setCreativeLink('');
+    setFallbackImageUrl('');
+    setDesktopImageUrl(trimmedValue);
+    setMobileImageUrl('');
+    setLocalCreativeError(null);
   }, [creativeUriValue]);
+
+  const isCreativeReady = useMemo(
+    () => desktopImageUrl.trim().length > 0 && mobileImageUrl.trim().length > 0,
+    [desktopImageUrl, mobileImageUrl],
+  );
+
+  useEffect(() => {
+    if (!isCreativeReady) {
+      return;
+    }
+
+    const desktop = desktopImageUrl.trim();
+    const mobile = mobileImageUrl.trim();
+    const title = creativeTitle.trim();
+    const link = creativeLink.trim();
+    const fallback = fallbackImageUrl.trim();
+
+    const assets: Record<string, string> = {
+      desktop,
+      mobile,
+    };
+
+    if (fallback) {
+      assets.fallback = fallback;
+    }
+
+    const payload = {
+      contentType: 'image',
+      title,
+      linkUrl: link,
+      mediaUrl: desktop,
+      assets,
+    };
+
+    const nextCreativeUri = `data:application/json,${encodeURIComponent(
+      JSON.stringify(payload),
+    )}`;
+
+    setCreativeUri(nextCreativeUri);
+    onCreativeUriChange?.(nextCreativeUri);
+  }, [
+    creativeLink,
+    creativeTitle,
+    desktopImageUrl,
+    fallbackImageUrl,
+    isCreativeReady,
+    mobileImageUrl,
+    onCreativeUriChange,
+  ]);
+
+  useEffect(() => {
+    if (isCreativeReady) {
+      setLocalCreativeError(null);
+    }
+  }, [isCreativeReady]);
 
   const formattedCoverageLabel = `(${formatDaysLabel(selectedCoverageDays)})`;
   const coverageRangeStartLabel =
@@ -189,6 +313,25 @@ export default function TakeoverSlotModal({
     [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
 
+  const combinedError = localCreativeError ?? errorMessage ?? null;
+
+  const handlePrimaryAction = useCallback(() => {
+    if (!isCreativeReady) {
+      setLocalCreativeError(
+        'Upload both desktop and mobile creatives before continuing.',
+      );
+      return;
+    }
+
+    setLocalCreativeError(null);
+
+    if (creativeUri) {
+      onCreativeUriChange?.(creativeUri);
+    }
+
+    onSubmit?.();
+  }, [creativeUri, isCreativeReady, onCreativeUriChange, onSubmit]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -196,7 +339,7 @@ export default function TakeoverSlotModal({
       placement="center"
       classNames={{
         base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]]',
-        body: 'overflow-y-scroll',
+        body: 'max-h-[calc(80vh)] overflow-y-scroll',
       }}
     >
       <ModalContent>
@@ -326,6 +469,150 @@ export default function TakeoverSlotModal({
                 </div>
               </div>
 
+              <div className="flex flex-col gap-[16px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[12px]">
+                <div className="flex flex-col gap-[4px]">
+                  <span className="text-[14px] font-semibold text-black/80">
+                    Creative Assets
+                  </span>
+                  <span className="text-[12px] leading-[18px] text-black/50">
+                    {CREATIVE_GUIDANCE.combinedDescription(
+                      MOBILE_CREATIVE_CONFIG.ratioLabel,
+                      DESKTOP_CREATIVE_CONFIG.labelSuffix,
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-[12px]">
+                  <span className="text-[13px] font-semibold text-black/70">
+                    {`Desktop Creative (${DESKTOP_CREATIVE_CONFIG.labelSuffix})`}
+                  </span>
+                  <CreativePhotoUpload
+                    initialUrl={desktopImageUrl || undefined}
+                    onUploadSuccess={(url) => {
+                      setDesktopImageUrl(url);
+                      setLocalCreativeError(null);
+                    }}
+                    isDisabled={isSubmitting}
+                    cropAspectRatio={DESKTOP_CREATIVE_CONFIG.aspectRatio}
+                    cropMaxWidth={DESKTOP_CREATIVE_CONFIG.maxWidth}
+                    cropMaxHeight={DESKTOP_CREATIVE_CONFIG.maxHeight}
+                    className={DESKTOP_CREATIVE_CONFIG.previewWidthClass}
+                  >
+                    <div
+                      className={`${DESKTOP_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+                    >
+                      {desktopImageUrl ? (
+                        <img
+                          src={desktopImageUrl}
+                          alt="Desktop creative preview"
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
+                          <span>Click to upload desktop asset</span>
+                          <span className="text-[11px] text-black/40">
+                            {DESKTOP_CREATIVE_CONFIG.helperText}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CreativePhotoUpload>
+                  <span className="text-[11px] text-black/50">
+                    Supports JPG, PNG, or GIF up to 10MB.
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-[12px]">
+                  <span className="text-[13px] font-semibold text-black/70">
+                    {`Mobile Creative (${MOBILE_CREATIVE_CONFIG.labelSuffix})`}
+                  </span>
+                  <CreativePhotoUpload
+                    initialUrl={mobileImageUrl || undefined}
+                    onUploadSuccess={(url) => {
+                      setMobileImageUrl(url);
+                      setLocalCreativeError(null);
+                    }}
+                    isDisabled={isSubmitting}
+                    cropAspectRatio={MOBILE_CREATIVE_CONFIG.aspectRatio}
+                    cropMaxWidth={MOBILE_CREATIVE_CONFIG.maxWidth}
+                    cropMaxHeight={MOBILE_CREATIVE_CONFIG.maxHeight}
+                    className={MOBILE_CREATIVE_CONFIG.previewWidthClass}
+                  >
+                    <div
+                      className={`${MOBILE_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+                    >
+                      {mobileImageUrl ? (
+                        <img
+                          src={mobileImageUrl}
+                          alt="Mobile creative preview"
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
+                          <span>Click to upload mobile asset</span>
+                          <span className="text-[11px] text-black/40">
+                            {MOBILE_CREATIVE_CONFIG.helperText}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CreativePhotoUpload>
+                  <span className="text-[11px] text-black/50">
+                    The mobile asset is cropped to a{' '}
+                    {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive
+                    layouts.
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-[8px]">
+                  <span className="text-[13px] font-semibold text-black/70">
+                    Target Link
+                  </span>
+                  <Input
+                    placeholder="https://"
+                    value={creativeLink}
+                    onValueChange={(value) => {
+                      setCreativeLink(value);
+                      setLocalCreativeError(null);
+                    }}
+                    isDisabled={isSubmitting}
+                    aria-label="Creative target link"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-[8px]">
+                  <span className="text-[13px] font-semibold text-black/70">
+                    Title (Optional)
+                  </span>
+                  <Input
+                    placeholder="Creative title"
+                    value={creativeTitle}
+                    onValueChange={(value) => {
+                      setCreativeTitle(value);
+                      setLocalCreativeError(null);
+                    }}
+                    isDisabled={isSubmitting}
+                    aria-label="Creative title"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-[8px]">
+                  <span className="text-[13px] font-semibold text-black/70">
+                    Fallback Image URL (Optional)
+                  </span>
+                  <Input
+                    placeholder="https:// or ipfs://"
+                    value={fallbackImageUrl}
+                    onValueChange={(value) => {
+                      setFallbackImageUrl(value);
+                      setLocalCreativeError(null);
+                    }}
+                    isDisabled={isSubmitting}
+                    aria-label="Fallback image URL"
+                  />
+                </div>
+              </div>
+
               <div className="flex flex-col gap-[10px]">
                 <span className="text-[14px] font-semibold text-black/80">
                   How Harberger Tax Works:
@@ -347,9 +634,9 @@ export default function TakeoverSlotModal({
                 <Button
                   color="primary"
                   className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
-                  isDisabled={isCtaDisabled || isSubmitting}
+                  isDisabled={isCtaDisabled || isSubmitting || !isCreativeReady}
                   isLoading={Boolean(isSubmitting)}
-                  onPress={onSubmit}
+                  onPress={handlePrimaryAction}
                 >
                   <CoinVertical size={24} />
                   {ctaLabel}

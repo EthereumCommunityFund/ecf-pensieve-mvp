@@ -19,6 +19,11 @@ import {
   formatEth,
 } from '@/utils/harberger';
 
+import {
+  DESKTOP_CREATIVE_CONFIG,
+  MOBILE_CREATIVE_CONFIG,
+} from './creativeConstants';
+import CreativePhotoUpload from './CreativePhotoUpload';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface ClaimPayload {
@@ -30,6 +35,9 @@ interface ClaimPayload {
     title: string;
     linkUrl: string;
     mediaUrl: string;
+    desktopImageUrl: string;
+    mobileImageUrl: string;
+    assets?: Record<string, string>;
   };
 }
 
@@ -75,6 +83,8 @@ export default function ClaimSlotModal({
   const [title, setTitle] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
+  const [desktopImageUrl, setDesktopImageUrl] = useState('');
+  const [mobileImageUrl, setMobileImageUrl] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,6 +96,8 @@ export default function ClaimSlotModal({
       setTitle('');
       setLinkUrl('');
       setMediaUrl('');
+      setDesktopImageUrl('');
+      setMobileImageUrl('');
       setLocalError(null);
     }
   }, [isOpen, valuationDefault]);
@@ -201,23 +213,36 @@ export default function ClaimSlotModal({
     const trimmedLink = linkUrl.trim();
     const trimmedMedia = mediaUrl.trim();
     const trimmedTitle = title.trim();
+    const desktopAsset = desktopImageUrl.trim();
+    const mobileAsset = mobileImageUrl.trim();
 
-    let creativeUri = '';
-    if (trimmedMedia) {
-      creativeUri = trimmedMedia;
-    } else if (trimmedLink) {
-      creativeUri = trimmedLink;
-    } else {
-      const payload = {
-        contentType,
-        title: trimmedTitle,
-        linkUrl: trimmedLink,
-        mediaUrl: trimmedMedia,
-      };
-      creativeUri = `data:application/json,${encodeURIComponent(
-        JSON.stringify(payload),
-      )}`;
+    if (!desktopAsset || !mobileAsset) {
+      setLocalError(
+        'Upload both desktop and mobile creatives before submitting.',
+      );
+      return;
     }
+
+    const metadataAssets: Record<string, string> = {
+      desktop: desktopAsset,
+      mobile: mobileAsset,
+    };
+
+    if (trimmedMedia) {
+      metadataAssets.fallback = trimmedMedia;
+    }
+
+    const metadataPayload = {
+      contentType,
+      title: trimmedTitle,
+      linkUrl: trimmedLink,
+      mediaUrl: desktopAsset,
+      assets: metadataAssets,
+    };
+
+    const creativeUri = `data:application/json,${encodeURIComponent(
+      JSON.stringify(metadataPayload),
+    )}`;
 
     try {
       await onSubmit({
@@ -228,7 +253,10 @@ export default function ClaimSlotModal({
           contentType,
           title: trimmedTitle,
           linkUrl: trimmedLink,
-          mediaUrl: trimmedMedia,
+          mediaUrl: desktopAsset,
+          desktopImageUrl: desktopAsset,
+          mobileImageUrl: mobileAsset,
+          assets: metadataAssets,
         },
       });
       setLocalError(null);
@@ -288,6 +316,7 @@ export default function ClaimSlotModal({
       onClose={handleClose}
       classNames={{
         base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]',
+        body: 'max-h-[calc(80vh)] overflow-y-scroll',
       }}
       placement="center"
     >
@@ -455,14 +484,102 @@ export default function ClaimSlotModal({
                   </div>
 
                   <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo label="Image URI" />
+                    <LabelWithInfo
+                      label={`Desktop Creative (${DESKTOP_CREATIVE_CONFIG.labelSuffix})`}
+                    />
+                    <CreativePhotoUpload
+                      initialUrl={desktopImageUrl || undefined}
+                      onUploadSuccess={(url) => {
+                        setDesktopImageUrl(url);
+                        setLocalError(null);
+                      }}
+                      isDisabled={isSubmitting}
+                      cropAspectRatio={DESKTOP_CREATIVE_CONFIG.aspectRatio}
+                      cropMaxWidth={DESKTOP_CREATIVE_CONFIG.maxWidth}
+                      cropMaxHeight={DESKTOP_CREATIVE_CONFIG.maxHeight}
+                      className={DESKTOP_CREATIVE_CONFIG.previewWidthClass}
+                    >
+                      <div
+                        className={`${DESKTOP_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[12px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+                      >
+                        {desktopImageUrl ? (
+                          <img
+                            src={desktopImageUrl}
+                            alt="Desktop creative preview"
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
+                            <span>Click to upload desktop asset</span>
+                            <span className="text-[12px] text-black/40">
+                              {DESKTOP_CREATIVE_CONFIG.helperText}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CreativePhotoUpload>
+                    <span className="text-[12px] text-black/50">
+                      The asset will be cropped to a{' '}
+                      {DESKTOP_CREATIVE_CONFIG.ratioLabel} ratio automatically;
+                      click again to replace it.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo
+                      label={`Mobile Creative (${MOBILE_CREATIVE_CONFIG.labelSuffix})`}
+                    />
+                    <CreativePhotoUpload
+                      initialUrl={mobileImageUrl || undefined}
+                      onUploadSuccess={(url) => {
+                        setMobileImageUrl(url);
+                        setLocalError(null);
+                      }}
+                      isDisabled={isSubmitting}
+                      cropAspectRatio={MOBILE_CREATIVE_CONFIG.aspectRatio}
+                      cropMaxWidth={MOBILE_CREATIVE_CONFIG.maxWidth}
+                      cropMaxHeight={MOBILE_CREATIVE_CONFIG.maxHeight}
+                      className={MOBILE_CREATIVE_CONFIG.previewWidthClass}
+                    >
+                      <div
+                        className={`${MOBILE_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[12px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+                      >
+                        {mobileImageUrl ? (
+                          <img
+                            src={mobileImageUrl}
+                            alt="Mobile creative preview"
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
+                            <span>Click to upload mobile asset</span>
+                            <span className="text-[12px] text-black/40">
+                              {MOBILE_CREATIVE_CONFIG.helperText}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CreativePhotoUpload>
+                    <span className="text-[12px] text-black/50">
+                      The mobile asset will be cropped to a{' '}
+                      {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive
+                      layouts.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-[12px]">
+                    <LabelWithInfo label="Fallback Image URL (Optional)" />
                     <Input
                       placeholder="https:// or ipfs://"
-                      aria-label="Image reference"
+                      aria-label="Fallback image reference"
                       value={mediaUrl}
                       onValueChange={setMediaUrl}
                       className="bg-[#F5F5F5]"
                     />
+                    <span className="text-[12px] text-black/50">
+                      Provide an optional external asset link if you host
+                      creatives elsewhere.
+                    </span>
                   </div>
                 </div>
               )}
@@ -488,7 +605,11 @@ export default function ClaimSlotModal({
                   className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90"
                   onPress={handleNext}
                   isDisabled={
-                    step === 1 ? !isStepOneValid || !slot : isSubmitting
+                    step === 1
+                      ? !isStepOneValid || !slot
+                      : isSubmitting ||
+                        desktopImageUrl.trim().length === 0 ||
+                        mobileImageUrl.trim().length === 0
                   }
                   isLoading={isSubmitting}
                 >

@@ -34,6 +34,7 @@ import {
   type ActiveSlotData,
   type VacantSlotData,
 } from '@/hooks/useHarbergerSlots';
+import { extractCreativeAssets } from '@/utils/creative';
 import {
   ONE_BIGINT,
   ZERO_BIGINT,
@@ -510,8 +511,7 @@ export default function AdManagementPage() {
       );
       const contentUpdatesUsed = Number(slot.contentUpdateCount ?? ZERO_BIGINT);
 
-      const hasCreativeUrl =
-        slot.currentAdURI && slot.currentAdURI.startsWith('http');
+      const creativeAssets = extractCreativeAssets(slot.currentAdURI);
 
       return {
         id: slot.id,
@@ -536,7 +536,7 @@ export default function AdManagementPage() {
                 total: contentUpdatesTotal,
               }
             : undefined,
-        adImageUrl: hasCreativeUrl ? slot.currentAdURI : undefined,
+        adImageUrl: creativeAssets.primaryImageUrl ?? undefined,
         primaryAction,
         secondaryAction,
         tertiaryAction,
