@@ -10,7 +10,10 @@ import {
   ModalBody,
   ModalContent,
 } from '@/components/base/modal';
-import { calcTransparentScore } from '@/components/biz/project/TransparentScore';
+import {
+  calcTransparentScore,
+  getValidTransparentItemKeys,
+} from '@/components/biz/project/TransparentScore';
 import { ShieldStarIcon } from '@/components/icons';
 import { TotalItemCount } from '@/constants/tableConfig';
 import { IPocItemKey } from '@/types/item';
@@ -25,7 +28,8 @@ const TransparentScore: React.FC<ITransparentScoreProps> = ({
   itemsTopWeight,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const displayedCount = Object.keys(itemsTopWeight || {}).length;
+  const validKeys = getValidTransparentItemKeys(itemsTopWeight);
+  const displayedCount = validKeys.length;
   const emptyCount = TotalItemCount - displayedCount;
   const score = calcTransparentScore(itemsTopWeight);
 
