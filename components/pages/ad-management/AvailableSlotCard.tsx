@@ -3,10 +3,13 @@
 import { Card, CardBody, cn, Skeleton, Tooltip } from '@heroui/react';
 import { CoinVertical } from '@phosphor-icons/react';
 import Image from 'next/image';
+import { useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
+import { extractCreativeAssets } from '@/utils/creative';
 
+import { DESKTOP_CREATIVE_CONFIG } from './creativeConstants';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface InfoStatProps {
@@ -138,7 +141,7 @@ export interface ActiveSlotCardProps {
   statusLabel?: string;
   owner: string;
   ownerLabel?: string;
-  mediaUrl?: string;
+  creativeUri?: string;
   mediaAlt?: string;
   stats: StatBlock[];
   takeoverCta: string;
@@ -152,7 +155,7 @@ export function ActiveSlotCard({
   statusLabel = 'Owned',
   owner,
   ownerLabel = 'Owner',
-  mediaUrl,
+  creativeUri,
   mediaAlt,
   stats,
   takeoverCta,
@@ -160,6 +163,12 @@ export function ActiveSlotCard({
   ctaDisabled,
   ctaLoading,
 }: ActiveSlotCardProps) {
+  const creativeAssets = useMemo(
+    () => extractCreativeAssets(creativeUri),
+    [creativeUri],
+  );
+  const primaryImageUrl = creativeAssets.primaryImageUrl;
+
   return (
     <Card
       shadow="none"
@@ -183,16 +192,26 @@ export function ActiveSlotCard({
           <ValueLabel className="text-[12px]">{owner}</ValueLabel>
         </div>
 
-        <div className="relative overflow-hidden">
-          {mediaUrl ? (
+        <div
+          className={cn(
+            'relative overflow-hidden rounded-[10px] border border-black/10 bg-black/5',
+            DESKTOP_CREATIVE_CONFIG.previewAspectClass,
+          )}
+        >
+          {primaryImageUrl ? (
             <Image
-              src={mediaUrl}
+              src={primaryImageUrl}
               alt={mediaAlt ?? slotName}
-              width={196}
-              height={97}
-              className="h-[97px] w-auto rounded-[5px] object-cover"
+              fill
+              sizes="(min-width: 1280px) 240px, (min-width: 768px) 40vw, 100vw"
+              className="object-cover"
+              priority={false}
             />
-          ) : null}
+          ) : (
+            <div className="flex size-full items-center justify-center text-[12px] text-black/40">
+              No creative uploaded
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-[8px]">
@@ -284,7 +303,12 @@ export function ActiveSlotCardSkeleton() {
           <Skeleton className="h-[20px] w-[120px] rounded-[5px]" />
         </div>
 
-        <Skeleton className="h-[97px] w-full rounded-[6px]" />
+        <Skeleton
+          className={cn(
+            'w-full rounded-[10px]',
+            DESKTOP_CREATIVE_CONFIG.previewAspectClass,
+          )}
+        />
 
         <div className="flex flex-col gap-[10px]">
           {Array.from({ length: 4 }).map((_, index) => (

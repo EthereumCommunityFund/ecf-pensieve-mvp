@@ -3,10 +3,13 @@
 import { Card, CardBody, cn } from '@heroui/react';
 import { Notebook, NotePencil } from '@phosphor-icons/react';
 import Image from 'next/image';
+import { useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { ClockClockwiseIcon, CoinVerticalIcon } from '@/components/icons';
+import { extractCreativeAssets } from '@/utils/creative';
 
+import { DESKTOP_CREATIVE_CONFIG } from './creativeConstants';
 import ValueLabel from './ValueLabel';
 
 export type SlotStatus = 'owned' | 'overdue' | 'vacant' | 'closed';
@@ -42,6 +45,7 @@ export interface YourSlotCardProps {
     total: number;
   };
   adImageUrl?: string;
+  creativeUri?: string;
   primaryAction?: SlotAction;
   secondaryAction?: SlotAction;
   tertiaryAction?: SlotAction;
@@ -69,8 +73,14 @@ export default function YourSlotsCard({
   takeoverBid,
   contentUpdates,
   adImageUrl,
+  creativeUri,
   avatarUrl,
 }: YourSlotCardProps) {
+  const creativeAssets = useMemo(
+    () => extractCreativeAssets(creativeUri),
+    [creativeUri],
+  );
+
   const slotName = slotLabel ?? title;
   const slotValue = slotValueLabel ?? valuation;
   const currentAdNotice = currentAdBadge ?? periodEnding;
@@ -84,7 +94,8 @@ export default function YourSlotsCard({
     contentUpdates && contentUpdates.total
       ? `${contentUpdates.used} / ${contentUpdates.total}`
       : undefined;
-  const mediaPreview = adImageUrl ?? avatarUrl;
+  const mediaPreview =
+    creativeAssets.primaryImageUrl ?? adImageUrl ?? avatarUrl ?? null;
   const isPrimarySecondary = primaryAction?.variant === 'secondary';
 
   const isSlotClosed = status === 'closed';
@@ -131,16 +142,25 @@ export default function YourSlotsCard({
             </ValueLabel>
           </div>
 
-          <div className="relative aspect-[360/179] overflow-hidden rounded-[10px]">
-            {adImageUrl ? (
+          <div
+            className={cn(
+              'relative overflow-hidden rounded-[10px] border border-black/10 bg-black/5',
+              DESKTOP_CREATIVE_CONFIG.previewAspectClass,
+            )}
+          >
+            {mediaPreview ? (
               <Image
-                src={adImageUrl}
+                src={mediaPreview}
                 alt={title}
                 fill
                 sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
-                className="border border-black/10 object-cover"
+                className="object-cover"
               />
-            ) : null}
+            ) : (
+              <div className="flex size-full items-center justify-center text-[12px] text-black/40">
+                No creative uploaded
+              </div>
+            )}
           </div>
         </div>
 

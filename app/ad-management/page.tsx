@@ -537,6 +537,7 @@ export default function AdManagementPage() {
               }
             : undefined,
         adImageUrl: creativeAssets.primaryImageUrl ?? undefined,
+        creativeUri: slot.currentAdURI ?? undefined,
         primaryAction,
         secondaryAction,
         tertiaryAction,
@@ -789,7 +790,7 @@ export default function AdManagementPage() {
                           slotName={slot.slotName}
                           statusLabel={slot.statusLabel}
                           owner={slot.owner}
-                          mediaUrl={slot.currentAdURI || undefined}
+                          creativeUri={slot.currentAdURI || undefined}
                           mediaAlt={slot.slotName}
                           stats={buildActiveStats(
                             slot.valuation,
