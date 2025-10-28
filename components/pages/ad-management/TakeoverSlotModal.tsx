@@ -20,6 +20,7 @@ import {
 } from './creativeConstants';
 
 type ContextTone = 'default' | 'danger';
+type SlotModalMode = 'takeover' | 'edit' | 'view';
 
 interface BreakdownConfig {
   bondRateLabel: string;
@@ -69,17 +70,18 @@ export interface TakeoverSlotModalProps {
   minBidLabel: string;
   minBidValue: string;
   minBidHelper?: string;
-  valuation: ValuationConfig;
-  coverage: CoverageConfig;
-  breakdown: BreakdownConfig;
-  harbergerInfo: string;
-  ctaLabel: string;
+  valuation?: ValuationConfig;
+  coverage?: CoverageConfig;
+  breakdown?: BreakdownConfig;
+  harbergerInfo?: string;
+  ctaLabel?: string;
   isCtaDisabled?: boolean;
   onSubmit?: () => void;
   isSubmitting?: boolean;
   creativeUriValue?: string;
   onCreativeUriChange?: (value: string) => void;
   errorMessage?: string;
+  mode?: SlotModalMode;
 }
 
 export default function TakeoverSlotModal({
@@ -107,31 +109,36 @@ export default function TakeoverSlotModal({
   creativeUriValue,
   onCreativeUriChange,
   errorMessage,
+  mode = 'takeover',
 }: TakeoverSlotModalProps) {
-  const contextClassName = useMemo(() => {
-    if (contextTone === 'danger') {
-      return 'text-[#D92D20]';
-    }
-    return 'text-[#2F6FED]';
-  }, [contextTone]);
+  const isTakeoverMode = mode === 'takeover';
+  const isEditMode = mode === 'edit';
+  const isViewMode = mode === 'view';
+  const allowCreativeEditing = isTakeoverMode || isEditMode;
+  const requireCreativeReady = allowCreativeEditing;
 
-  const minCoverageDays = Math.max(coverage.minDays ?? 1, 0);
-  const rawMaxCoverageDays = coverage.maxDays ?? 365;
+  const minCoverageDays = Math.max(coverage?.minDays ?? 1, 0);
+  const rawMaxCoverageDays = coverage?.maxDays ?? 365;
   const maxCoverageDays =
     rawMaxCoverageDays > minCoverageDays ? rawMaxCoverageDays : minCoverageDays;
   const stepCoverageDays =
-    coverage.stepDays && coverage.stepDays > 0 ? coverage.stepDays : 1;
+    coverage?.stepDays && coverage.stepDays > 0 ? coverage.stepDays : 1;
+
+  const coverageSliderPosition = coverage?.sliderPosition ?? 0;
+  const coverageDefaultDays = coverage?.defaultDays;
+  const coverageLabelText = coverage?.label;
+  const breakdownCoverageText = breakdown?.coverageValue;
 
   const derivedInitialCoverageDays = useMemo(() => {
     const progressDays = computeDaysFromProgress(
-      coverage.sliderPosition,
+      coverageSliderPosition,
       minCoverageDays,
       maxCoverageDays,
     );
     const candidateValue =
-      coverage.defaultDays ??
-      extractDaysFromString(coverage.label) ??
-      extractDaysFromString(breakdown.coverageValue) ??
+      coverageDefaultDays ??
+      extractDaysFromString(coverageLabelText) ??
+      extractDaysFromString(breakdownCoverageText) ??
       progressDays;
     return snapToStep(
       candidateValue ?? minCoverageDays,
@@ -140,10 +147,10 @@ export default function TakeoverSlotModal({
       stepCoverageDays,
     );
   }, [
-    coverage.defaultDays,
-    coverage.label,
-    coverage.sliderPosition,
-    breakdown.coverageValue,
+    coverageDefaultDays,
+    coverageLabelText,
+    coverageSliderPosition,
+    breakdownCoverageText,
     minCoverageDays,
     maxCoverageDays,
     stepCoverageDays,
@@ -216,7 +223,6 @@ export default function TakeoverSlotModal({
       return;
     }
 
-    // Fallback if parsing failed
     setCreativeTitle('');
     setCreativeLink('');
     setFallbackImageUrl('');
@@ -225,13 +231,17 @@ export default function TakeoverSlotModal({
     setLocalCreativeError(null);
   }, [creativeUriValue]);
 
-  const isCreativeReady = useMemo(
-    () => desktopImageUrl.trim().length > 0 && mobileImageUrl.trim().length > 0,
-    [desktopImageUrl, mobileImageUrl],
-  );
+  const isCreativeReady = useMemo(() => {
+    if (!requireCreativeReady) {
+      return true;
+    }
+    return (
+      desktopImageUrl.trim().length > 0 && mobileImageUrl.trim().length > 0
+    );
+  }, [requireCreativeReady, desktopImageUrl, mobileImageUrl]);
 
   useEffect(() => {
-    if (!isCreativeReady) {
+    if (!requireCreativeReady || !isCreativeReady) {
       return;
     }
 
@@ -272,19 +282,20 @@ export default function TakeoverSlotModal({
     isCreativeReady,
     mobileImageUrl,
     onCreativeUriChange,
+    requireCreativeReady,
   ]);
 
   useEffect(() => {
-    if (isCreativeReady) {
+    if (requireCreativeReady && isCreativeReady) {
       setLocalCreativeError(null);
     }
-  }, [isCreativeReady]);
+  }, [isCreativeReady, requireCreativeReady]);
 
   const formattedCoverageLabel = `(${formatDaysLabel(selectedCoverageDays)})`;
   const coverageRangeStartLabel =
-    coverage.rangeStart ?? formatRangeBoundary(minCoverageDays);
+    coverage?.rangeStart ?? formatRangeBoundary(minCoverageDays);
   const coverageRangeEndLabel =
-    coverage.rangeEnd ?? formatRangeBoundary(maxCoverageDays);
+    coverage?.rangeEnd ?? formatRangeBoundary(maxCoverageDays);
 
   const handleCoverageSliderChange = useCallback(
     (value: number) => {
@@ -295,7 +306,7 @@ export default function TakeoverSlotModal({
         stepCoverageDays,
       );
       setSelectedCoverageDays(normalizedValue);
-      coverage.onChange?.(normalizedValue);
+      coverage?.onChange?.(normalizedValue);
     },
     [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
@@ -308,15 +319,16 @@ export default function TakeoverSlotModal({
         maxCoverageDays,
         stepCoverageDays,
       );
-      coverage.onChangeEnd?.(normalizedValue);
+      coverage?.onChangeEnd?.(normalizedValue);
     },
     [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
 
-  const combinedError = localCreativeError ?? errorMessage ?? null;
+  const combinedError =
+    (allowCreativeEditing ? localCreativeError : null) ?? errorMessage ?? null;
 
   const handlePrimaryAction = useCallback(() => {
-    if (!isCreativeReady) {
+    if (requireCreativeReady && !isCreativeReady) {
       setLocalCreativeError(
         'Upload both desktop and mobile creatives before continuing.',
       );
@@ -325,12 +337,49 @@ export default function TakeoverSlotModal({
 
     setLocalCreativeError(null);
 
-    if (creativeUri) {
+    if (allowCreativeEditing && creativeUri) {
       onCreativeUriChange?.(creativeUri);
     }
 
     onSubmit?.();
-  }, [creativeUri, isCreativeReady, onCreativeUriChange, onSubmit]);
+  }, [
+    allowCreativeEditing,
+    creativeUri,
+    isCreativeReady,
+    onCreativeUriChange,
+    onSubmit,
+    requireCreativeReady,
+  ]);
+
+  const cancelLabel = isViewMode ? 'Close' : 'Cancel';
+  const showCoverageSection = isTakeoverMode && Boolean(coverage);
+  const showValuationSection = isTakeoverMode && Boolean(valuation);
+  const showBreakdownSection = isTakeoverMode && Boolean(breakdown);
+  const showHarbergerInfo = isTakeoverMode && Boolean(harbergerInfo);
+  const showCtaButton = Boolean(ctaLabel && onSubmit);
+
+  const creativeDescription = isViewMode
+    ? CREATIVE_GUIDANCE.viewDescription
+    : CREATIVE_GUIDANCE.combinedDescription(
+        MOBILE_CREATIVE_CONFIG.ratioLabel,
+        DESKTOP_CREATIVE_CONFIG.labelSuffix,
+      );
+
+  const desktopPlaceholderLabel = allowCreativeEditing
+    ? 'Click to upload desktop asset'
+    : 'Desktop creative asset';
+  const mobilePlaceholderLabel = allowCreativeEditing
+    ? 'Click to upload mobile asset'
+    : 'Mobile creative asset';
+
+  const creativeInputDisabled = isSubmitting || isViewMode;
+  const textInputDisabled = isSubmitting || isViewMode;
+
+  const ctaDisabled =
+    showCtaButton &&
+    (Boolean(isCtaDisabled) ||
+      isSubmitting ||
+      (requireCreativeReady && !isCreativeReady));
 
   return (
     <Modal
@@ -339,24 +388,33 @@ export default function TakeoverSlotModal({
       placement="center"
       classNames={{
         base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]]',
-        body: 'max-h-[calc(80vh)] overflow-y-scroll',
+        body: 'max-h-[80vh] overflow-y-scroll',
       }}
     >
       <ModalContent>
         {() => (
           <>
-            {/* header */}
             <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
-              <div className="flex items-center gap-3 ">
+              <div className="flex flex-col">
                 <ECFTypography type="subtitle2" className="text-[18px]">
-                  Takeover Slot
+                  {contextLabel}
                 </ECFTypography>
+                <span
+                  className={cn(
+                    'text-[12px]',
+                    contextTone === 'danger'
+                      ? 'text-[#D92D20]'
+                      : 'text-black/40',
+                  )}
+                >
+                  {statusLabel}
+                </span>
               </div>
 
               <Button
                 isIconOnly
                 radius="sm"
-                className="size-[32px] rounded-[8px]  p-0 text-black/50 hover:bg-black/10"
+                className="size-[32px] rounded-[8px] p-0 text-black/50 hover:bg-black/10"
                 onPress={onClose}
                 isDisabled={isSubmitting}
               >
@@ -389,85 +447,90 @@ export default function TakeoverSlotModal({
                   label={minBidLabel}
                   value={minBidValue}
                   labelType={'dark'}
-                  tooltip={'Minimum bid required to takeover this slot.'}
+                  tooltip={minBidHelper}
                 />
               </div>
 
-              <div className="flex flex-col gap-[10px]">
-                <LabelWithInfo label="Set New Valuation (ETH)" />
-                <div className="flex flex-col gap-[5px]">
-                  <Input
-                    placeholder={valuation.placeholder}
-                    value={valuation.value ?? ''}
-                    onValueChange={valuation.onChange}
-                    isInvalid={!!valuation.errorMessage}
-                    isDisabled={valuation.isDisabled}
-                    aria-label="Set new valuation"
-                    readOnly={valuation.isDisabled}
-                  />
-                  {/* TODO valuation.value * 1.1  */}
-                  <span className="font-inter text-[13px] font-[400] text-black/80">
-                    Must be at least 10.0% higher than current valuation
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-[10px]">
-                <div className="flex flex-col gap-[5px]">
-                  <LabelWithInfo
-                    label={`Tax Coverage ${formattedCoverageLabel}`}
-                  />
-                  <span className="text-[13px] text-black/80">
-                    Choose how many tax periods to prepay. Longer coverage means
-                    higher upfront cost but no need to pay taxes frequently. (1
-                    tax period = 24 hours / 86400 seconds)
-                  </span>
-                </div>
-                <CoverageSlider
-                  value={selectedCoverageDays}
-                  min={minCoverageDays}
-                  max={maxCoverageDays}
-                  step={stepCoverageDays}
-                  rangeStart={coverageRangeStartLabel}
-                  rangeEnd={coverageRangeEndLabel}
-                  onChange={handleCoverageSliderChange}
-                  onChangeEnd={handleCoverageSliderChangeEnd}
-                />
-              </div>
-
-              <div className="space-y-[8px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[10px]">
-                <div className="flex items-center justify-center gap-[8px] text-[14px] leading-[20px] text-black">
-                  <TrendUp size={20} weight="bold" />
-                  <span>Bonding Cost Breakdown:</span>
-                </div>
-
-                <BreakdownRow
-                  label={breakdown.bondRateLabel}
-                  value={breakdown.bondRateValue}
-                  valueLabelType="light"
-                />
-                <BreakdownRow
-                  label={breakdown.taxLabel}
-                  value={breakdown.taxValue}
-                  valueLabelType="light"
-                />
-                <BreakdownRow
-                  label={breakdown.coverageLabel}
-                  value={breakdown.coverageValue}
-                  valueLabelType="pureText"
-                  className="opacity-50"
-                />
-
-                <div className="flex items-center justify-between border-t border-black/10 pt-[8px]">
-                  <div className="flex items-center gap-[6px] text-[14px] text-black/80">
-                    <span>{breakdown.totalLabel}</span>
-                    <InfoIcon size={16} />
+              {showValuationSection && valuation ? (
+                <div className="flex flex-col gap-[10px]">
+                  <LabelWithInfo label="Set New Valuation (ETH)" />
+                  <div className="flex flex-col gap-[5px]">
+                    <Input
+                      placeholder={valuation.placeholder}
+                      value={valuation.value ?? ''}
+                      onValueChange={valuation.onChange}
+                      isInvalid={!!valuation.errorMessage}
+                      isDisabled={valuation.isDisabled}
+                      aria-label="Set new valuation"
+                      readOnly={valuation.isDisabled}
+                    />
+                    <span className="font-inter text-[13px] font-[400] text-black/80">
+                      Must be at least 10.0% higher than current valuation
+                    </span>
                   </div>
-                  <span className="text-[16px] font-semibold text-[#3CBF91]">
-                    {breakdown.totalValue}
-                  </span>
                 </div>
-              </div>
+              ) : null}
+
+              {showCoverageSection ? (
+                <div className="flex flex-col gap-[10px]">
+                  <div className="flex flex-col gap-[5px]">
+                    <LabelWithInfo
+                      label={`Tax Coverage ${formattedCoverageLabel}`}
+                    />
+                    <span className="text-[13px] text-black/80">
+                      Choose how many tax periods to prepay. Longer coverage
+                      means higher upfront cost but no need to pay taxes
+                      frequently. (1 tax period = 24 hours / 86400 seconds)
+                    </span>
+                  </div>
+                  <CoverageSlider
+                    value={selectedCoverageDays}
+                    min={minCoverageDays}
+                    max={maxCoverageDays}
+                    step={stepCoverageDays}
+                    rangeStart={coverageRangeStartLabel}
+                    rangeEnd={coverageRangeEndLabel}
+                    onChange={handleCoverageSliderChange}
+                    onChangeEnd={handleCoverageSliderChangeEnd}
+                  />
+                </div>
+              ) : null}
+
+              {showBreakdownSection && breakdown ? (
+                <div className="space-y-[8px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[10px]">
+                  <div className="flex items-center justify-center gap-[8px] text-[14px] leading-[20px] text-black">
+                    <TrendUp size={20} weight="bold" />
+                    <span>Bonding Cost Breakdown:</span>
+                  </div>
+
+                  <BreakdownRow
+                    label={breakdown.bondRateLabel}
+                    value={breakdown.bondRateValue}
+                    valueLabelType="light"
+                  />
+                  <BreakdownRow
+                    label={breakdown.taxLabel}
+                    value={breakdown.taxValue}
+                    valueLabelType="light"
+                  />
+                  <BreakdownRow
+                    label={breakdown.coverageLabel}
+                    value={breakdown.coverageValue}
+                    valueLabelType="pureText"
+                    className="opacity-50"
+                  />
+
+                  <div className="flex items-center justify-between border-t border-black/10 pt-[8px]">
+                    <div className="flex items-center gap-[6px] text-[14px] text-black/80">
+                      <span>{breakdown.totalLabel}</span>
+                      <InfoIcon size={16} />
+                    </div>
+                    <span className="text-[16px] font-semibold text-[#3CBF91]">
+                      {breakdown.totalValue}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="flex flex-col gap-[16px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[12px]">
                 <div className="flex flex-col gap-[4px]">
@@ -475,10 +538,7 @@ export default function TakeoverSlotModal({
                     Creative Assets
                   </span>
                   <span className="text-[12px] leading-[18px] text-black/50">
-                    {CREATIVE_GUIDANCE.combinedDescription(
-                      MOBILE_CREATIVE_CONFIG.ratioLabel,
-                      DESKTOP_CREATIVE_CONFIG.labelSuffix,
-                    )}
+                    {creativeDescription}
                   </span>
                 </div>
 
@@ -492,7 +552,7 @@ export default function TakeoverSlotModal({
                       setDesktopImageUrl(url);
                       setLocalCreativeError(null);
                     }}
-                    isDisabled={isSubmitting}
+                    isDisabled={creativeInputDisabled}
                     cropAspectRatio={DESKTOP_CREATIVE_CONFIG.aspectRatio}
                     cropMaxWidth={DESKTOP_CREATIVE_CONFIG.maxWidth}
                     cropMaxHeight={DESKTOP_CREATIVE_CONFIG.maxHeight}
@@ -509,17 +569,21 @@ export default function TakeoverSlotModal({
                         />
                       ) : (
                         <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
-                          <span>Click to upload desktop asset</span>
-                          <span className="text-[11px] text-black/40">
-                            {DESKTOP_CREATIVE_CONFIG.helperText}
-                          </span>
+                          <span>{desktopPlaceholderLabel}</span>
+                          {allowCreativeEditing ? (
+                            <span className="text-[11px] text-black/40">
+                              {DESKTOP_CREATIVE_CONFIG.helperText}
+                            </span>
+                          ) : null}
                         </div>
                       )}
                     </div>
                   </CreativePhotoUpload>
-                  <span className="text-[11px] text-black/50">
-                    Supports JPG, PNG, or GIF up to 10MB.
-                  </span>
+                  {allowCreativeEditing ? (
+                    <span className="text-[11px] text-black/50">
+                      Supports JPG, PNG, or GIF up to 10MB.
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-col gap-[12px]">
@@ -532,7 +596,7 @@ export default function TakeoverSlotModal({
                       setMobileImageUrl(url);
                       setLocalCreativeError(null);
                     }}
-                    isDisabled={isSubmitting}
+                    isDisabled={creativeInputDisabled}
                     cropAspectRatio={MOBILE_CREATIVE_CONFIG.aspectRatio}
                     cropMaxWidth={MOBILE_CREATIVE_CONFIG.maxWidth}
                     cropMaxHeight={MOBILE_CREATIVE_CONFIG.maxHeight}
@@ -549,19 +613,23 @@ export default function TakeoverSlotModal({
                         />
                       ) : (
                         <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
-                          <span>Click to upload mobile asset</span>
-                          <span className="text-[11px] text-black/40">
-                            {MOBILE_CREATIVE_CONFIG.helperText}
-                          </span>
+                          <span>{mobilePlaceholderLabel}</span>
+                          {allowCreativeEditing ? (
+                            <span className="text-[11px] text-black/40">
+                              {MOBILE_CREATIVE_CONFIG.helperText}
+                            </span>
+                          ) : null}
                         </div>
                       )}
                     </div>
                   </CreativePhotoUpload>
-                  <span className="text-[11px] text-black/50">
-                    The mobile asset is cropped to a{' '}
-                    {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive
-                    layouts.
-                  </span>
+                  {allowCreativeEditing ? (
+                    <span className="text-[11px] text-black/50">
+                      The mobile asset is cropped to a{' '}
+                      {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive
+                      layouts.
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-col gap-[8px]">
@@ -575,7 +643,7 @@ export default function TakeoverSlotModal({
                       setCreativeLink(value);
                       setLocalCreativeError(null);
                     }}
-                    isDisabled={isSubmitting}
+                    isDisabled={textInputDisabled}
                     aria-label="Creative target link"
                   />
                 </div>
@@ -591,7 +659,7 @@ export default function TakeoverSlotModal({
                       setCreativeTitle(value);
                       setLocalCreativeError(null);
                     }}
-                    isDisabled={isSubmitting}
+                    isDisabled={textInputDisabled}
                     aria-label="Creative title"
                   />
                 </div>
@@ -607,20 +675,28 @@ export default function TakeoverSlotModal({
                       setFallbackImageUrl(value);
                       setLocalCreativeError(null);
                     }}
-                    isDisabled={isSubmitting}
+                    isDisabled={textInputDisabled}
                     aria-label="Fallback image URL"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-[10px]">
-                <span className="text-[14px] font-semibold text-black/80">
-                  How Harberger Tax Works:
-                </span>
-                <span className="text-[13px] leading-[18px] text-black/50">
-                  {`You pay the current owner's declared price to the community treasury. Set your own valuation carefully - you'll pay continuous taxes on it, and others can buy from you at that price.`}
-                </span>
-              </div>
+              {showHarbergerInfo ? (
+                <div className="flex flex-col gap-[10px]">
+                  <span className="text-[14px] font-semibold text-black/80">
+                    How Harberger Tax Works:
+                  </span>
+                  <span className="text-[13px] leading-[18px] text-black/50">
+                    {harbergerInfo}
+                  </span>
+                </div>
+              ) : null}
+
+              {combinedError ? (
+                <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
+                  {combinedError}
+                </div>
+              ) : null}
 
               <div className="flex items-center gap-[10px]">
                 <Button
@@ -629,18 +705,20 @@ export default function TakeoverSlotModal({
                   onPress={onClose}
                   isDisabled={isSubmitting}
                 >
-                  Cancel
+                  {cancelLabel}
                 </Button>
-                <Button
-                  color="primary"
-                  className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
-                  isDisabled={isCtaDisabled || isSubmitting || !isCreativeReady}
-                  isLoading={Boolean(isSubmitting)}
-                  onPress={handlePrimaryAction}
-                >
-                  <CoinVertical size={24} />
-                  {ctaLabel}
-                </Button>
+                {showCtaButton ? (
+                  <Button
+                    color="primary"
+                    className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
+                    isDisabled={ctaDisabled}
+                    isLoading={Boolean(isSubmitting)}
+                    onPress={handlePrimaryAction}
+                  >
+                    {isTakeoverMode ? <CoinVertical size={24} /> : null}
+                    {ctaLabel}
+                  </Button>
+                ) : null}
               </div>
             </ModalBody>
           </>

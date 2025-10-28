@@ -15,8 +15,6 @@ import {
   buildActiveStats,
 } from '@/components/pages/ad-management/AvailableSlotCard';
 import ClaimSlotModal from '@/components/pages/ad-management/ClaimSlotModal';
-import EditSlotModal from '@/components/pages/ad-management/EditSlotModal';
-import SlotDetailsModal from '@/components/pages/ad-management/SlotDetailsModal';
 import StatsSummary, {
   type StatsSummaryItem,
 } from '@/components/pages/ad-management/StatsSummary';
@@ -117,6 +115,7 @@ export default function AdManagementPage() {
     useState<string>('');
   const [takeoverCreativeInput, setTakeoverCreativeInput] =
     useState<string>('');
+  const [editCreativeInput, setEditCreativeInput] = useState<string>('');
   const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isTakeoverSubmitting, setIsTakeoverSubmitting] = useState(false);
@@ -173,7 +172,10 @@ export default function AdManagementPage() {
   useEffect(() => {
     if (!selectedEditSlot) {
       setEditError(null);
+      setEditCreativeInput('');
+      return;
     }
+    setEditCreativeInput(selectedEditSlot.currentAdURI ?? '');
   }, [selectedEditSlot]);
 
   const normalizedAccount = useMemo(
@@ -370,28 +372,31 @@ export default function AdManagementPage() {
     takeoverValuationWei,
   ]);
 
-  const handleEditSubmit = useCallback(
-    async ({ creativeUri }: { creativeUri: string }) => {
-      if (!selectedEditSlot) {
-        return;
-      }
+  const handleEditSubmit = useCallback(async () => {
+    if (!selectedEditSlot) {
+      return;
+    }
 
-      setEditError(null);
-      setIsEditSubmitting(true);
-      try {
-        await updateCreative({ slot: selectedEditSlot, creativeUri });
-        await refetch();
-        setSelectedEditSlot(null);
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to update creative.';
-        setEditError(message);
-      } finally {
-        setIsEditSubmitting(false);
-      }
-    },
-    [refetch, selectedEditSlot, updateCreative],
-  );
+    const trimmedUri = editCreativeInput.trim();
+    if (!trimmedUri) {
+      setEditError('Upload creative assets before saving.');
+      return;
+    }
+
+    setEditError(null);
+    setIsEditSubmitting(true);
+    try {
+      await updateCreative({ slot: selectedEditSlot, creativeUri: trimmedUri });
+      await refetch();
+      setSelectedEditSlot(null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to update creative.';
+      setEditError(message);
+    } finally {
+      setIsEditSubmitting(false);
+    }
+  }, [editCreativeInput, refetch, selectedEditSlot, updateCreative]);
 
   const formatUtcTimestamp = useCallback((timestamp: bigint) => {
     if (timestamp <= ZERO_BIGINT) {
@@ -689,6 +694,64 @@ export default function AdManagementPage() {
     takeoverValuationWei,
   ]);
 
+  const editModalData = useMemo(() => {
+    if (!selectedEditSlot) {
+      return null;
+    }
+
+    const tone =
+      selectedEditSlot.isOverdue || selectedEditSlot.isExpired
+        ? ('danger' as const)
+        : ('default' as const);
+
+    return {
+      contextLabel: `${selectedEditSlot.slotTypeLabel} · Edit Creative`,
+      contextTone: tone,
+      slotName: selectedEditSlot.slotName,
+      statusLabel: selectedEditSlot.statusLabel,
+      owner: selectedEditSlot.owner,
+      taxRate: selectedEditSlot.taxRate,
+      minBidLabel: 'Locked Bond',
+      minBidValue: selectedEditSlot.lockedBond,
+      minBidHelper: 'Bond currently locked for this slot.',
+      ctaLabel: 'Save Changes',
+      isCtaDisabled: false,
+      creativeUriValue: editCreativeInput,
+      errorMessage: editError ?? undefined,
+    };
+  }, [editCreativeInput, editError, selectedEditSlot]);
+
+  const detailsModalData = useMemo(() => {
+    if (!selectedDetailsSlot) {
+      return null;
+    }
+
+    const tone =
+      selectedDetailsSlot.isOverdue || selectedDetailsSlot.isExpired
+        ? ('danger' as const)
+        : ('default' as const);
+
+    const canForfeit = !selectedDetailsSlot.isExpired;
+
+    return {
+      contextLabel: `${selectedDetailsSlot.slotTypeLabel} · Slot Details`,
+      contextTone: tone,
+      slotName: selectedDetailsSlot.slotName,
+      statusLabel: selectedDetailsSlot.statusLabel,
+      owner: selectedDetailsSlot.owner,
+      taxRate: selectedDetailsSlot.taxRate,
+      minBidLabel: 'Min Takeover Bid',
+      minBidValue: selectedDetailsSlot.minTakeoverBid,
+      minBidHelper: 'Minimum valuation required for a takeover attempt.',
+      ctaLabel: canForfeit ? 'Forfeit Slot' : undefined,
+      creativeUriValue: selectedDetailsSlot.currentAdURI ?? '',
+    };
+  }, [selectedDetailsSlot]);
+
+  const isDetailsForfeitLoading =
+    pendingSlotAction?.slotId === selectedDetailsSlot?.id &&
+    pendingSlotAction?.action === 'forfeit';
+
   const handleCloseClaimModal = useCallback(() => {
     if (isClaimSubmitting) {
       return;
@@ -710,6 +773,7 @@ export default function AdManagementPage() {
       return;
     }
     setEditError(null);
+    setEditCreativeInput('');
     setSelectedEditSlot(null);
   }, [isEditSubmitting]);
 
@@ -866,28 +930,66 @@ export default function AdManagementPage() {
         errorMessage={claimError ?? undefined}
       />
 
-      <EditSlotModal
+      <TakeoverSlotModal
         isOpen={!!selectedEditSlot}
         onClose={handleCloseEditModal}
-        slot={selectedEditSlot}
+        contextLabel={editModalData?.contextLabel ?? 'Edit Creative'}
+        contextTone={editModalData?.contextTone}
+        slotName={editModalData?.slotName ?? selectedEditSlot?.slotName ?? ''}
+        statusLabel={
+          editModalData?.statusLabel ?? selectedEditSlot?.statusLabel ?? 'Owned'
+        }
+        owner={editModalData?.owner ?? selectedEditSlot?.owner ?? ''}
+        taxRate={editModalData?.taxRate ?? selectedEditSlot?.taxRate ?? ''}
+        minBidLabel={editModalData?.minBidLabel ?? 'Locked Bond'}
+        minBidValue={
+          editModalData?.minBidValue ?? selectedEditSlot?.lockedBond ?? '—'
+        }
+        minBidHelper={editModalData?.minBidHelper}
+        ctaLabel={editModalData?.ctaLabel}
+        isCtaDisabled={isEditSubmitting || editModalData?.isCtaDisabled}
         onSubmit={handleEditSubmit}
         isSubmitting={isEditSubmitting}
-        errorMessage={editError ?? undefined}
+        creativeUriValue={editCreativeInput}
+        onCreativeUriChange={setEditCreativeInput}
+        errorMessage={editModalData?.errorMessage}
+        mode="edit"
       />
 
-      <SlotDetailsModal
+      <TakeoverSlotModal
         isOpen={!!selectedDetailsSlot}
         onClose={handleCloseDetailsModal}
-        slot={selectedDetailsSlot}
-        onForfeit={
-          selectedDetailsSlot && !selectedDetailsSlot.isExpired
+        contextLabel={detailsModalData?.contextLabel ?? 'Slot Details'}
+        contextTone={detailsModalData?.contextTone}
+        slotName={
+          detailsModalData?.slotName ?? selectedDetailsSlot?.slotName ?? ''
+        }
+        statusLabel={
+          detailsModalData?.statusLabel ??
+          selectedDetailsSlot?.statusLabel ??
+          'Owned'
+        }
+        owner={detailsModalData?.owner ?? selectedDetailsSlot?.owner ?? ''}
+        taxRate={
+          detailsModalData?.taxRate ?? selectedDetailsSlot?.taxRate ?? ''
+        }
+        minBidLabel={detailsModalData?.minBidLabel ?? 'Min Takeover Bid'}
+        minBidValue={
+          detailsModalData?.minBidValue ??
+          selectedDetailsSlot?.minTakeoverBid ??
+          '—'
+        }
+        minBidHelper={detailsModalData?.minBidHelper}
+        ctaLabel={detailsModalData?.ctaLabel}
+        isCtaDisabled={isDetailsForfeitLoading}
+        onSubmit={
+          detailsModalData?.ctaLabel && selectedDetailsSlot
             ? () => handleForfeitSlot(selectedDetailsSlot)
             : undefined
         }
-        isForfeitLoading={
-          pendingSlotAction?.slotId === selectedDetailsSlot?.id &&
-          pendingSlotAction?.action === 'forfeit'
-        }
+        isSubmitting={isDetailsForfeitLoading}
+        creativeUriValue={detailsModalData?.creativeUriValue}
+        mode="view"
       />
 
       <TakeoverSlotModal

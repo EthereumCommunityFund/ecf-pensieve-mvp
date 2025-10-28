@@ -13,10 +13,10 @@ export const MOBILE_CREATIVE_CONFIG = {
   aspectRatio: 4,
   maxWidth: 900,
   maxHeight: 225,
-  previewWidthClass: 'w-[400px]',
+  previewWidthClass: 'w-[200px]',
   previewAspectClass: 'aspect-[4/1]',
   ratioLabel: '4:1',
-  labelSuffix: '400:100',
+  labelSuffix: '4:1',
   helperText: 'Recommended ratio 4:1',
 };
 
@@ -27,4 +27,6 @@ export const CREATIVE_GUIDANCE = {
     'Upload a mobile creative sized for widescreen placements. The asset will be cropped automatically.',
   combinedDescription: (ratioLabel: string, recommendedLabel: string) =>
     `Upload two ${ratioLabel} creatives (recommended ${recommendedLabel}) for desktop and mobile placements. We will apply the required crop automatically. Click the card to replace the file.`,
+  viewDescription:
+    'Review the current desktop and mobile creatives associated with this slot.',
 };
