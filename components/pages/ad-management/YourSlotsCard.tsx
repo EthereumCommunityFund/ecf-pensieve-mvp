@@ -91,14 +91,20 @@ export default function YourSlotsCard({
   const takeoverValue = takeoverBid ?? minTakeoverBid;
   const isCritical = currentAdTone === 'danger';
   const creativeUpdatesUsed =
-    contentUpdates && contentUpdates.total
+    contentUpdates && typeof contentUpdates.used === 'number'
       ? `${contentUpdates.used} / ${contentUpdates.total}`
-      : undefined;
+      : '—';
   const mediaPreview =
     creativeAssets.primaryImageUrl ?? adImageUrl ?? avatarUrl ?? null;
   const isPrimarySecondary = primaryAction?.variant === 'secondary';
 
   const isSlotClosed = status === 'closed';
+  const isSlotOverdue = status === 'overdue';
+  const cardVisualClass = isSlotOverdue
+    ? 'opacity-60'
+    : isSlotClosed
+      ? 'opacity-70 grayscale-[35%]'
+      : '';
 
   return (
     <Card
@@ -106,7 +112,7 @@ export default function YourSlotsCard({
       className={cn(
         'rounded-[10px] border border-black/10 bg-white transition-[transform,opacity]',
         'flex h-full flex-col justify-between',
-        isSlotClosed ? 'opacity-70 grayscale-[35%]' : '',
+        cardVisualClass,
       )}
     >
       <CardBody className="flex h-full flex-col gap-[20px] p-5">
@@ -255,7 +261,7 @@ export default function YourSlotsCard({
           <div className="mt-[5px] flex flex-wrap items-center justify-between gap-[6px] text-[13px] text-black/50">
             <span>Content Updates Used:</span>
             <span className="font-semibold text-black/70">
-              {creativeUpdatesUsed ?? '—'}
+              {creativeUpdatesUsed}
             </span>
           </div>
         </div>

@@ -44,6 +44,8 @@ import {
   sumBigints,
 } from '@/utils/harberger';
 
+const THREE_DAYS_IN_SECONDS = BigInt(60 * 60 * 24 * 3);
+
 type TabKey = 'yourSlots' | 'templateProposals' | 'availableSlots';
 
 type TakeoverModalConfig = Pick<
@@ -462,8 +464,15 @@ export default function AdManagementPage() {
             ? 'Tax overdue'
             : `Period Ending (${formatDuration(slot.timeRemainingInSeconds, { fallback: '0s' })})`;
 
+      const isSoonExpiring =
+        !slot.isExpired &&
+        slot.timeRemainingInSeconds > ZERO_BIGINT &&
+        slot.timeRemainingInSeconds <= THREE_DAYS_IN_SECONDS;
+
       const currentAdBadgeTone: 'default' | 'danger' =
-        status === 'closed' || status === 'overdue' ? 'danger' : 'default';
+        status === 'closed' || status === 'overdue' || isSoonExpiring
+          ? 'danger'
+          : 'default';
 
       const isRenewPending =
         pendingSlotAction?.slotId === slot.id &&
@@ -475,15 +484,19 @@ export default function AdManagementPage() {
       const isEditPending =
         isEditSubmitting && selectedEditSlot?.id === slot.id;
 
+      const renewAmountLabel = formatEth(taxPerPeriodWei);
+      const isCardInactive = status === 'closed' || status === 'overdue';
+
       const primaryAction: SlotAction | undefined =
         status === 'closed'
           ? undefined
           : {
-              id: slot.isOverdue ? `pay-tax-${slot.id}` : `renew-${slot.id}`,
-              label: slot.isOverdue ? 'Pay Due Tax' : 'Renew Coverage',
+              id: `renew-${slot.id}`,
+              label: `Pay Due Tax ${renewAmountLabel}`,
               variant: 'primary',
               onPress: () => handleRenewSlot(slot),
-              isDisabled: isRenewPending,
+
+              isDisabled: isCardInactive || isRenewPending,
               isLoading: isRenewPending,
             };
 
@@ -495,7 +508,7 @@ export default function AdManagementPage() {
               label: 'Edit',
               variant: 'secondary',
               onPress: () => setSelectedEditSlot(slot),
-              isDisabled: isRenewPending,
+              isDisabled: isCardInactive || isRenewPending,
               isLoading: isEditPending,
             };
 
@@ -504,6 +517,7 @@ export default function AdManagementPage() {
         label: 'Slot Details',
         variant: status === 'closed' ? 'secondary' : undefined,
         onPress: () => setSelectedDetailsSlot(slot),
+        isDisabled: isCardInactive,
       };
 
       const valuationDisplay =
@@ -535,7 +549,7 @@ export default function AdManagementPage() {
         taxDueCountdown: countdownLabel,
         takeoverBid: slot.minTakeoverBid,
         contentUpdates:
-          contentUpdatesTotal > 0
+          contentUpdatesTotal >= 0
             ? {
                 used: contentUpdatesUsed,
                 total: contentUpdatesTotal,

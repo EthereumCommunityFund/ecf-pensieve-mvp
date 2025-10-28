@@ -13,7 +13,7 @@ export const MOBILE_CREATIVE_CONFIG = {
   aspectRatio: 4,
   maxWidth: 900,
   maxHeight: 225,
-  previewWidthClass: 'w-[200px]',
+  previewWidthClass: 'w-[400px]',
   previewAspectClass: 'aspect-[4/1]',
   ratioLabel: '4:1',
   labelSuffix: '4:1',
