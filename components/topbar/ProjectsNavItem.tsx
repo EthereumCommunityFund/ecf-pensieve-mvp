@@ -10,7 +10,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import ECFTypography from '@/components/base/typography';
 import { CaretDownIcon } from '@/components/icons';
 
-import Categories from '../pages/home/Categories';
+import Categories from './ProjectsCategories';
 
 interface ProjectsNavItemProps {
   item: {
