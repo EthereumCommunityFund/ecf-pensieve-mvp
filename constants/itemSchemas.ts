@@ -20,6 +20,7 @@ import {
   IPhysicalEntity,
   IPreviousFundingRound,
   IPrivateFundingRound,
+  IRoadmapTimelineEntry,
   IStackIntegration,
 } from '@/types/item';
 import { normalizeUrl } from '@/utils/url';
@@ -115,7 +116,7 @@ export const dateLaunchConstraints: IDateConstraints = {
 };
 
 const createDateConstraintValidator = (constraints?: IDateConstraints) => {
-  return function (this: yup.TestContext, value: Date | undefined) {
+  return function (this: yup.TestContext, value: Date | null | undefined) {
     if (!value || !constraints) return true;
 
     const today = new Date();
@@ -268,6 +269,36 @@ const previousFundingRoundSchema: yup.ObjectSchema<IPreviousFundingRound> = yup
       .nullable()
       .required('date is required'),
     amount: yup.string().trim().required('amount is required'),
+    reference: yup
+      .string()
+      .trim()
+      .transform(normalizeUrl)
+      .url('Please enter a valid URL')
+      .optional(),
+    _id: yup.string().trim().optional(),
+  });
+
+const roadmapTimelineSchema: yup.ObjectSchema<IRoadmapTimelineEntry> = yup
+  .object()
+  .shape({
+    milestone: yup.string().trim().required('Milestone is required'),
+    description: yup.string().trim().required('Description is required'),
+    date: yup
+      .date()
+      .nullable()
+      .test(
+        'date-constraints',
+        'Invalid date',
+        createDateConstraintValidator(dateFoundedConstraints),
+      )
+      .required('Target date is required'),
+    status: yup
+      .string()
+      .oneOf(
+        ['Reached', 'In Progress', 'Planned'],
+        'Select a valid status option',
+      )
+      .required('Status is required'),
     reference: yup
       .string()
       .trim()
@@ -749,6 +780,11 @@ export const itemValidationSchemas = {
     .of(previousFundingRoundSchema)
     .min(1, 'At least one previous funding round is required')
     .required('Previous funding rounds information is required'),
+  roadmap_timeline: yup
+    .array()
+    .of(roadmapTimelineSchema)
+    .min(1, 'At least one roadmap milestone is required')
+    .required('Roadmap timeline information is required'),
 
   decentralized_governance: yup
     .array()

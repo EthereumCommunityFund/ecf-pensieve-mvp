@@ -209,6 +209,16 @@ export const projectRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         return await ctx.db.transaction(async (tx) => {
+          const existingProject = await tx.query.projects.findFirst({
+            where: eq(projects.name, input.name),
+          });
+          if (existingProject) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Project already exists',
+            });
+          }
+
           const proposalItems = Object.entries(input)
             .filter(([key]) => key !== 'refs')
             .map(([key, value]) => {
@@ -322,6 +332,16 @@ export const projectRouter = router({
         };
 
         const result = await ctx.db.transaction(async (tx) => {
+          const existingProject = await tx.query.projects.findFirst({
+            where: eq(projects.name, input.name),
+          });
+          if (existingProject) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Project already exists',
+            });
+          }
+
           const proposalItems = Object.entries(normalizedInput)
             .filter(([key]) => key !== 'refs')
             .map(([key, value]) => ({ key, value }));
