@@ -15,6 +15,7 @@ interface FormActionsProps {
   onNext: () => void;
   onDiscard: () => void;
   formType?: IFormTypeEnum;
+  isNextBusy?: boolean;
 }
 
 const FormActions: React.FC<FormActionsProps> = ({
@@ -24,6 +25,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   onNext,
   onDiscard,
   formType = IFormTypeEnum.Project,
+  isNextBusy = false,
 }) => {
   const isFirstStep = currentStep === IItemCategoryEnum.Basics;
   const isLastStep = currentStep === IItemCategoryEnum.Financial;
@@ -54,8 +56,8 @@ const FormActions: React.FC<FormActionsProps> = ({
         size="md"
         className={cn(baseButtonClassnames)}
         onPress={onNext}
-        isDisabled={isSubmitting}
-        isLoading={isSubmitting && isLastStep}
+        isDisabled={isSubmitting || isNextBusy}
+        isLoading={(isSubmitting && isLastStep) || isNextBusy}
       >
         {isLastStep
           ? isSubmitting
