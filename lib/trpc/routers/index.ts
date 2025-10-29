@@ -15,6 +15,7 @@ import { projectRelationRouter } from './projectRelation';
 import { proposalRouter } from './proposal';
 import { rankRouter } from './rank';
 import { shareRouter } from './share';
+import { sieveRouter } from './sieve';
 import { smartContractsRouter } from './smartContracts';
 import { userRouter } from './user';
 import { userActionLogRouter } from './userActionLog';
@@ -39,6 +40,7 @@ export const appRouter = router({
   rank: rankRouter,
   smartContracts: smartContractsRouter,
   share: shareRouter,
+  sieve: sieveRouter,
   userActionLog: userActionLogRouter,
 });
 

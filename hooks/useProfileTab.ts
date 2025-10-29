@@ -20,9 +20,18 @@ const tabItems = [
     key: 'lists',
     label: 'My Lists',
   },
+  {
+    key: 'sieve',
+    label: 'My Sieve',
+  },
 ] as const;
 
-export type ITabKey = 'profile' | 'contributions' | 'upvotes' | 'lists';
+export type ITabKey =
+  | 'profile'
+  | 'contributions'
+  | 'upvotes'
+  | 'lists'
+  | 'sieve';
 
 export const useProfileTab = () => {
   const pathname = usePathname();
@@ -33,13 +42,12 @@ export const useProfileTab = () => {
     if (pathname.includes(`/list/`)) {
       return tabItems.find((item) => item.key === 'lists');
     }
-    if (initialTab === 'contributions')
-      return tabItems.find((item) => item.key === 'contributions');
-    if (initialTab === 'upvotes')
-      return tabItems.find((item) => item.key === 'upvotes');
-    if (initialTab === 'lists')
-      return tabItems.find((item) => item.key === 'lists');
-    return tabItems.find((item) => item.key === 'profile');
+    if (!initialTab) {
+      return tabItems.find((item) => item.key === 'profile');
+    }
+
+    const matched = tabItems.find((item) => item.key === initialTab);
+    return matched ?? tabItems.find((item) => item.key === 'profile');
   }, [pathname, initialTab]);
 
   return {

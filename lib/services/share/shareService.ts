@@ -2171,6 +2171,10 @@ export async function ensureShareLink(
       ? encodeCustomFilterEntityId(rawEntityId)
       : rawEntityId;
 
+  const requestedVisibility = input.visibility
+    ? normalizeVisibility(input.visibility)
+    : undefined;
+
   const existing = await db.query.shareLinks.findFirst({
     where: and(
       eq(shareLinks.entityType, entityType),
@@ -2233,7 +2237,35 @@ export async function ensureShareLink(
   }
 
   if (resolvedExisting) {
-    const payload = await buildPayloadFromRecord(resolvedExisting);
+    let targetRecord: ShareLinkRecord = resolvedExisting;
+    let bypassCache = false;
+
+    if (requestedVisibility) {
+      const existingVisibility = normalizeVisibility(
+        resolvedExisting.visibility,
+      );
+      const mergedVisibility = mergeVisibility(
+        existingVisibility,
+        requestedVisibility,
+      );
+
+      if (mergedVisibility !== existingVisibility) {
+        await db
+          .update(shareLinks)
+          .set({ visibility: mergedVisibility })
+          .where(eq(shareLinks.id, resolvedExisting.id));
+
+        targetRecord = {
+          ...resolvedExisting,
+          visibility: mergedVisibility,
+        } as ShareLinkRecord;
+        bypassCache = true;
+      }
+    }
+
+    const payload = await buildPayloadFromRecord(targetRecord, {
+      disableCache: bypassCache,
+    });
     if (!payload) {
       throw new ShareServiceError('Share payload unavailable', 404);
     }
@@ -2245,9 +2277,6 @@ export async function ensureShareLink(
     throw new ShareServiceError('Share entity not found or not shareable', 404);
   }
 
-  const requestedVisibility = input.visibility
-    ? normalizeVisibility(input.visibility)
-    : undefined;
   const visibility = requestedVisibility
     ? mergeVisibility(requestedVisibility, context.visibility)
     : context.visibility;
@@ -2362,11 +2391,13 @@ export function buildShareUrl(
 export async function ensureCustomFilterShareLink(params: {
   targetPath: string;
   createdBy?: string;
+  visibility?: ShareVisibility;
 }): Promise<SharePayload> {
   return ensureShareLink({
     entityType: 'customFilter',
     entityId: params.targetPath,
     createdBy: params.createdBy,
+    visibility: params.visibility,
   });
 }
 

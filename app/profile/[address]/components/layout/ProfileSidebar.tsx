@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import ECFTypography from '@/components/base/typography';
+import FunnelSimpleIcon from '@/components/icons/FunnelSimple';
 import ListsIcon from '@/components/icons/Lists';
 import { BREAKPOINTS, STICKY_OFFSETS } from '@/constants/layoutConstants';
 import { ITabKey, useProfileTab } from '@/hooks/useProfileTab';
@@ -31,6 +32,11 @@ const tabItemsWithIcons = [
     key: 'lists',
     label: 'My Lists',
     icon: <ListsIcon size={28} />,
+  },
+  {
+    key: 'sieve',
+    label: 'My Sieve',
+    icon: <FunnelSimpleIcon width={28} height={28} />,
   },
 ];
 
