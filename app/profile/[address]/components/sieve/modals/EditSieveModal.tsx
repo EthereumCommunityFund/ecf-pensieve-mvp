@@ -7,14 +7,17 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Radio,
-  RadioGroup,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Select,
+  SelectItem,
   Textarea,
 } from '@heroui/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button, addToast } from '@/components/base';
-import { LinkIcon } from '@/components/icons';
+import { CaretDownIcon } from '@/components/icons';
 import CustomFilterModal from '@/components/pages/project/customFilters/CustomFilterModal';
 import {
   type AdvancedFilterCard,
@@ -27,6 +30,11 @@ import {
   parseAdvancedFilters,
   serializeAdvancedFilters,
 } from '@/components/pages/project/customFilters/utils';
+import {
+  CATEGORY_MAP,
+  SORT_OPTIONS,
+  type SortOption,
+} from '@/components/pages/project/filterAndSort/types';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
 
@@ -67,6 +75,7 @@ const EditSieveModal = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const [sort, setSort] = useState<string | null>(null);
   const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
   const [filters, setFilters] = useState<AdvancedFilterCard[]>([]);
   const [filterModalState, setFilterModalState] =
@@ -74,6 +83,7 @@ const EditSieveModal = ({
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [basePath, setBasePath] = useState('/projects');
   const [rawParams, setRawParams] = useState('');
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
   const updateMutation = trpc.sieve.updateSieve.useMutation({
     onSuccess: (data) => {
@@ -107,7 +117,29 @@ const EditSieveModal = ({
     const params = new URLSearchParams(searchPart);
     const serialized = params.get(ADVANCED_FILTER_KEY);
     setFilters(parseAdvancedFilters(serialized));
+    const sortValue = params.get('sort');
+    setSort(sortValue && sortValue.trim() ? sortValue : null);
   }, [sieve, isOpen]);
+
+  const groupedSortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.reduce<Record<string, SortOption[]>>((acc, option) => {
+        if (!acc[option.category]) {
+          acc[option.category] = [];
+        }
+        acc[option.category]!.push(option);
+        return acc;
+      }, {}),
+    [],
+  );
+
+  const sortLabel = useMemo(() => {
+    if (!sort) {
+      return 'Default (Newest first)';
+    }
+    const option = SORT_OPTIONS.find((item) => item.value === sort);
+    return option?.label ?? 'Custom sort';
+  }, [sort]);
 
   if (!sieve) {
     return null;
@@ -132,6 +164,11 @@ const EditSieveModal = ({
       params.set(ADVANCED_FILTER_KEY, serialized);
     } else {
       params.delete(ADVANCED_FILTER_KEY);
+    }
+    if (sort && sort.trim()) {
+      params.set('sort', sort);
+    } else {
+      params.delete('sort');
     }
     const nextSearch = params.toString();
     const nextTargetPath = `${basePath}${nextSearch ? `?${nextSearch}` : ''}`;
@@ -194,6 +231,16 @@ const EditSieveModal = ({
     handleFilterModalClose();
   };
 
+  const handleSortToggle = (value: string) => {
+    setSort((prev) => (prev === value ? null : value));
+    setIsSortOpen(false);
+  };
+
+  const clearSort = () => {
+    setSort(null);
+    setIsSortOpen(false);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -208,14 +255,6 @@ const EditSieveModal = ({
           <span className="text-[16px] font-semibold text-black">
             Edit Feed
           </span>
-          <Button
-            size="sm"
-            variant="light"
-            onPress={handleOpenFeed}
-            className="text-[13px]"
-          >
-            <LinkIcon size={16} /> View in Projects
-          </Button>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-[16px] p-5">
           <div className="flex flex-col gap-[8px]">
@@ -256,6 +295,97 @@ const EditSieveModal = ({
           </div>
 
           <div className="flex flex-col gap-[8px]">
+            <div className="text-[14px] font-semibold text-black/80">
+              Sort Order
+            </div>
+            <Popover
+              isOpen={isSortOpen}
+              onOpenChange={setIsSortOpen}
+              placement="bottom-start"
+              showArrow={false}
+              offset={8}
+              classNames={{
+                trigger:
+                  'w-full transition-none data-[pressed=true]:scale-100 data-[open=true]:scale-100',
+                content:
+                  'p-0 border border-black/10 rounded-[10px] shadow-[0_8px_24px_rgba(15,23,42,0.12)]',
+              }}
+            >
+              <PopoverTrigger>
+                <button
+                  type="button"
+                  className="flex h-[40px] w-full items-center justify-between rounded-[8px] border border-black/10 bg-[rgba(0,0,0,0.05)] px-[12px]"
+                >
+                  <span
+                    className={`text-[13px] font-semibold ${
+                      sort ? 'text-black' : 'text-black/45'
+                    }`}
+                  >
+                    {sortLabel}
+                  </span>
+                  <CaretDownIcon
+                    size={16}
+                    className={`transition-transform ${
+                      isSortOpen ? 'rotate-180' : ''
+                    } text-black/45`}
+                  />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[260px] bg-white">
+                <div className="flex h-[300px] w-full flex-col gap-[16px] overflow-y-auto py-[12px]">
+                  {Object.entries(groupedSortOptions).map(
+                    ([category, options]) => (
+                      <div
+                        key={category}
+                        className="flex flex-col gap-[6px] px-[12px]"
+                      >
+                        <span className="text-[12px] font-semibold text-black/35">
+                          {CATEGORY_MAP[category] ?? `${category}:`}
+                        </span>
+                        <div className="flex flex-col gap-[4px]">
+                          {options.map((option) => {
+                            const isSelected = sort === option.value;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => handleSortToggle(option.value)}
+                                className={`flex h-[30px] items-center rounded-[6px] px-[8px] text-left text-[13px] transition-colors ${
+                                  isSelected
+                                    ? 'bg-black/10 font-semibold text-black'
+                                    : 'text-black/70 hover:bg-black/5'
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+                <div className="mt-[12px] flex items-center justify-between text-[11px] text-black/45">
+                  <span>
+                    {sort
+                      ? 'Applied sorting overrides default ordering.'
+                      : 'Default ordering (Newest first).'}
+                  </span>
+                  {sort && (
+                    <button
+                      type="button"
+                      onClick={clearSort}
+                      className="font-semibold text-black/60 underline underline-offset-2 hover:text-black"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex flex-col gap-[8px]">
             <span className="text-[14px] font-semibold text-black/80">
               Saved Conditions
             </span>
@@ -289,8 +419,8 @@ const EditSieveModal = ({
                           </Button>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-[6px]">
-                        {summary.items.map((item) => {
+                      <div className="flex flex-wrap items-center gap-[10px]">
+                        {summary.items.map((item, itemIndex) => {
                           const parts = [item.label];
                           if (item.operatorLabel) {
                             parts.push(item.operatorLabel.toLowerCase());
@@ -298,13 +428,22 @@ const EditSieveModal = ({
                           if (item.valueLabel) {
                             parts.push(item.valueLabel);
                           }
+                          const connectorLabel =
+                            item.connector?.toLowerCase() ?? 'and';
                           return (
-                            <span
+                            <div
                               key={item.id}
-                              className="inline-flex items-center rounded-[6px] bg-white px-[8px] py-[4px] text-[12px] text-black/70"
+                              className="flex items-center gap-[6px]"
                             >
-                              {parts.join(' ')}
-                            </span>
+                              {itemIndex > 0 && (
+                                <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-black/45">
+                                  {connectorLabel}
+                                </span>
+                              )}
+                              <span className="inline-flex items-center rounded-[6px] bg-white px-[8px] py-[4px] text-[12px] text-black/70">
+                                {parts.join(' ')}
+                              </span>
+                            </div>
                           );
                         })}
                       </div>
@@ -330,37 +469,41 @@ const EditSieveModal = ({
             <span className="text-[14px] font-semibold text-black/80">
               Visibility
             </span>
-            <RadioGroup
-              value={visibility}
-              onValueChange={(value) => {
+            <Select
+              selectedKeys={new Set([visibility])}
+              onSelectionChange={(keys) => {
+                const [value] = Array.from(keys);
                 if (value === 'public' || value === 'private') {
                   setVisibility(value);
                 }
               }}
+              disallowEmptySelection
               classNames={{
-                wrapper: 'flex flex-col gap-[10px]',
+                trigger:
+                  'h-[40px] border border-black/10 bg-[rgba(0,0,0,0.05)] px-[12px] rounded-[8px]',
+                value: 'text-[13px] font-semibold text-black',
+                listbox:
+                  'border border-black/10 rounded-[10px] bg-white p-[6px]',
+                popoverContent: 'p-0',
               }}
             >
               {visibilityOptions.map((option) => (
-                <Radio
+                <SelectItem
                   key={option.value}
-                  value={option.value}
-                  classNames={{
-                    base: 'flex items-start gap-[10px] rounded-[10px] border border-black/10 bg-[rgba(0,0,0,0.03)] px-4 py-3',
-                    label: 'text-left',
-                  }}
+                  textValue={option.label}
+                  className="rounded-[8px] px-[10px] py-[6px]"
                 >
                   <div className="flex flex-col gap-[4px]">
-                    <span className="text-[14px] font-semibold text-black">
+                    <span className="text-[13px] font-semibold text-black">
                       {option.label}
                     </span>
-                    <span className="text-[12px] text-black/60">
+                    <span className="text-[11px] text-black/60">
                       {option.description}
                     </span>
                   </div>
-                </Radio>
+                </SelectItem>
               ))}
-            </RadioGroup>
+            </Select>
             {visibility === 'private' ? (
               <span className="text-[11px] text-[#D14343]">
                 Private feeds cannot be shared until you switch them back to

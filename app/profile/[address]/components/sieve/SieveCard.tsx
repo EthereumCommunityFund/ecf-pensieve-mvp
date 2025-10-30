@@ -7,20 +7,28 @@ import {
   DropdownTrigger,
 } from '@heroui/react';
 
+import { Button } from '@/components/base';
 import VisibilityBadge from '@/components/common/VisibilityBadge';
 import {
   DotsThreeVerticalIcon,
   PencilSimpleIcon,
-  ShareIcon,
   TrashIcon,
 } from '@/components/icons';
-import dayjs from '@/lib/dayjs';
-import { RouterOutputs } from '@/types';
+import type { AdvancedFilterConnector } from '@/components/pages/project/customFilters/types';
 import {
   buildFilterSummary,
   getAdvancedFilterQueryKey,
   parseAdvancedFilters,
 } from '@/components/pages/project/customFilters/utils';
+import { SORT_OPTIONS } from '@/components/pages/project/filterAndSort/types';
+import dayjs from '@/lib/dayjs';
+import { RouterOutputs } from '@/types';
+
+type FilterSummaryDisplayItem = {
+  id: string;
+  connector?: AdvancedFilterConnector;
+  text: string;
+};
 
 type SieveRecord = RouterOutputs['sieve']['getUserSieves'][0];
 
@@ -33,12 +41,27 @@ interface SieveCardProps {
 
 const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
 
-const extractFilterSummaries = (targetPath: string): string[] => {
+const SORT_LABEL_MAP = SORT_OPTIONS.reduce<Record<string, string>>(
+  (acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  },
+  {},
+);
+
+const getSearchFromTargetPath = (targetPath: string): string => {
   if (!targetPath) {
-    return [];
+    return '';
   }
 
   const [_, search = ''] = targetPath.split('?');
+  return search;
+};
+
+const extractFilterSummaries = (
+  targetPath: string,
+): FilterSummaryDisplayItem[][] => {
+  const search = getSearchFromTargetPath(targetPath);
   if (!search) {
     return [];
   }
@@ -54,28 +77,75 @@ const extractFilterSummaries = (targetPath: string): string[] => {
     return [];
   }
 
-  const labels = filters.flatMap((filter) =>
-    buildFilterSummary(filter).items.map((item) => {
-      const parts = [item.label];
-      if (item.operatorLabel) {
-        parts.push(item.operatorLabel.toLowerCase());
-      }
-      if (item.valueLabel) {
-        parts.push(item.valueLabel);
-      }
-      return parts.join(' ');
-    }),
-  );
+  const summaries = filters
+    .map((filter) => buildFilterSummary(filter))
+    .map((summary) =>
+      summary.items
+        .map<FilterSummaryDisplayItem | null>((item) => {
+          const parts = [item.label];
+          if (item.operatorLabel) {
+            parts.push(item.operatorLabel.toLowerCase());
+          }
+          if (item.valueLabel) {
+            parts.push(item.valueLabel);
+          }
 
-  return Array.from(new Set(labels));
+          const text = parts.join(' ').trim();
+          if (!text) {
+            return null;
+          }
+
+          return {
+            id: item.id,
+            connector: item.connector,
+            text,
+          };
+        })
+        .filter(
+          (item): item is FilterSummaryDisplayItem => item !== null && !!item,
+        ),
+    )
+    .filter((items) => items.length > 0);
+
+  return summaries;
+};
+
+const extractSortLabel = (targetPath: string): string | null => {
+  const search = getSearchFromTargetPath(targetPath);
+  if (!search) {
+    return null;
+  }
+
+  const params = new URLSearchParams(search);
+  const sortValue = params.get('sort');
+  if (!sortValue) {
+    return null;
+  }
+
+  const mapped = SORT_LABEL_MAP[sortValue];
+  if (mapped) {
+    return mapped;
+  }
+
+  const normalized = sortValue
+    .split('-')
+    .filter(Boolean)
+    .map(
+      (segment) =>
+        segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase(),
+    )
+    .join(' ');
+
+  return normalized || sortValue;
 };
 
 const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
   const createdAt = dayjs(sieve.createdAt).format('MMM D, YYYY');
   const filterSummaries = extractFilterSummaries(sieve.targetPath);
+  const sortLabel = extractSortLabel(sieve.targetPath);
 
   return (
-    <div className="flex w-full flex-col gap-[12px] rounded-[12px] border border-black/[0.08] bg-white p-[16px] shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+    <div className="mobile:w-auto flex w-full max-w-[800px] flex-col gap-[12px] rounded-[12px] border border-black/[0.08] bg-white p-[16px] shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
       <div className="flex items-start justify-between gap-[12px]">
         <div className="flex flex-col gap-[8px]">
           <div className="flex flex-wrap items-center gap-[8px]">
@@ -119,14 +189,6 @@ const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
               Edit Feed
             </DropdownItem>
             <DropdownItem
-              key="share"
-              onPress={onShare}
-              isDisabled={sieve.share.visibility !== 'public'}
-              endContent={<ShareIcon size={18} />}
-            >
-              Share Feed
-            </DropdownItem>
-            <DropdownItem
               key="delete"
               onPress={onDelete}
               className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
@@ -138,28 +200,60 @@ const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
         </Dropdown>
       </div>
 
-      {filterSummaries.length > 0 ? (
-        <div className="flex flex-wrap gap-[8px]">
-          {filterSummaries.map((label) => (
-            <span
-              key={label}
-              className="inline-flex items-center rounded-[8px] bg-[#F5F5F5] px-[10px] py-[4px] text-[12px] text-black/70"
-            >
-              {label}
+      <div className="flex flex-col gap-[12px]">
+        {sortLabel && (
+          <div className="flex items-center gap-[8px] text-[12px] text-black/55">
+            <span className="text-[14px] font-semibold text-black/70">
+              Sort
             </span>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-[8px] bg-[#F8F8F8] px-[10px] py-[8px] text-[12px] text-black/50">
-          No advanced filters captured for this feed.
-        </div>
-      )}
+            <span className="inline-flex items-center rounded-[6px] bg-[#F1F1F1] px-[8px] py-[4px] text-[12px] font-medium text-black/70">
+              {sortLabel}
+            </span>
+          </div>
+        )}
 
-      <div className="flex flex-wrap items-center gap-[8px] text-[12px] text-black/50">
-        <span className="font-semibold text-black/60">Target:</span>
-        <code className="rounded-[6px] bg-[#F3F3F3] px-[8px] py-[4px] text-[11px] text-black/70">
-          {sieve.share.targetUrl ?? sieve.targetPath}
-        </code>
+        {filterSummaries.length > 0 ? (
+          <div className="flex flex-col gap-[12px]">
+            <span className="text-[14px] font-semibold text-black/70">
+              Saved Conditions
+            </span>
+            {filterSummaries.map((items, index) => (
+              <div
+                key={`filter-${sieve.id}-${index}`}
+                className="flex flex-wrap items-center gap-[14px]"
+              >
+                {items.map((item, itemIndex) => (
+                  <div key={item.id} className="flex items-center gap-[6px]">
+                    {itemIndex > 0 && (
+                      <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-black/50">
+                        {item.connector?.toLowerCase()}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center rounded-[8px] bg-[#F5F5F5] px-[10px] py-[4px] text-[12px] text-black/70">
+                      {item.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[8px] bg-[#F8F8F8] px-[10px] py-[8px] text-[12px] text-black/50">
+            No advanced filters captured for this feed.
+          </div>
+        )}
+      </div>
+
+      <div className="flex w-full justify-end">
+        <Button
+          color="primary"
+          size="sm"
+          onPress={onShare}
+          isDisabled={sieve.share.visibility !== 'public'}
+          className="min-w-[120px]"
+        >
+          Share Feed
+        </Button>
       </div>
     </div>
   );

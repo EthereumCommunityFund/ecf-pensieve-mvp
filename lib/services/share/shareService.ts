@@ -2244,10 +2244,10 @@ export async function ensureShareLink(
       const existingVisibility = normalizeVisibility(
         resolvedExisting.visibility,
       );
-      const mergedVisibility = mergeVisibility(
-        existingVisibility,
-        requestedVisibility,
-      );
+      const mergedVisibility =
+        entityType === 'customFilter'
+          ? requestedVisibility
+          : mergeVisibility(existingVisibility, requestedVisibility);
 
       if (mergedVisibility !== existingVisibility) {
         await db
