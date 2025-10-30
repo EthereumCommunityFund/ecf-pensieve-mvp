@@ -209,6 +209,16 @@ export const projectRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         return await ctx.db.transaction(async (tx) => {
+          const existingProject = await tx.query.projects.findFirst({
+            where: eq(sql`lower(${projects.name})`, input.name.toLowerCase()),
+          });
+          if (existingProject) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Project already exists',
+            });
+          }
+
           const proposalItems = Object.entries(input)
             .filter(([key]) => key !== 'refs')
             .map(([key, value]) => {
@@ -322,6 +332,16 @@ export const projectRouter = router({
         };
 
         const result = await ctx.db.transaction(async (tx) => {
+          const existingProject = await tx.query.projects.findFirst({
+            where: eq(sql`lower(${projects.name})`, input.name.toLowerCase()),
+          });
+          if (existingProject) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Project already exists',
+            });
+          }
+
           const proposalItems = Object.entries(normalizedInput)
             .filter(([key]) => key !== 'refs')
             .map(([key, value]) => ({ key, value }));
@@ -1205,4 +1225,25 @@ export const projectRouter = router({
 
     return getCachedCategories();
   }),
+
+  checkProjectName: publicProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(1, 'Project name cannot be empty'),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const normalizedName = input.name.toLowerCase();
+
+      const existingProject = await ctx.db.query.projects.findFirst({
+        where: eq(sql`lower(${projects.name})`, normalizedName),
+        columns: {
+          id: true,
+        },
+      });
+
+      return {
+        exists: Boolean(existingProject),
+      };
+    }),
 });
