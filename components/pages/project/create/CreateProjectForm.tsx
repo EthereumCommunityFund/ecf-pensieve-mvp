@@ -4,7 +4,8 @@ import { cn } from '@heroui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import utc from 'dayjs/plugin/utc';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { FieldErrors } from 'react-hook-form';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { addToast } from '@/components/base';
@@ -23,9 +24,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useFormScrollToError } from '@/hooks/useFormScrollToError';
 import dayjs from '@/lib/dayjs';
 import { trpc } from '@/lib/trpc/client';
-import { IProject } from '@/types';
+import { IProject, RouterOutputs } from '@/types';
 import { IItemCategoryEnum } from '@/types/item';
 import { devLog } from '@/utils/devLog';
+import { normalizeProjectName } from '@/utils/projectName';
 
 import AddReferenceModal from './AddReferenceModal';
 import DiscardConfirmModal from './DiscardConfirmModal';
@@ -81,6 +83,26 @@ interface CreateProjectFormProps {
 type ApiSubmissionStatus = 'idle' | 'pending' | 'success' | 'error';
 
 const DefaultProjectFormData = getDefaultProjectFormData();
+const DUPLICATE_NAME_ERROR_MESSAGE =
+  'A published project with this name already exists. Please choose another name.';
+
+type SearchProjectsOutput = RouterOutputs['project']['searchProjects'];
+type PublishedProjectItem = SearchProjectsOutput['published']['items'][number];
+
+const getLeadingPublishedProjectName = (
+  project: PublishedProjectItem,
+): string => {
+  const snapItems = project.projectSnap?.items;
+
+  if (Array.isArray(snapItems)) {
+    const nameItem = snapItems.find((item: any) => item?.key === 'name');
+    if (typeof nameItem?.value === 'string' && nameItem.value.trim()) {
+      return nameItem.value;
+    }
+  }
+
+  return project.name ?? '';
+};
 
 const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   formType = IFormTypeEnum.Project,
@@ -96,6 +118,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const createProjectMutation = trpc.project.createProject.useMutation();
   const createProposalMutation = trpc.proposal.createProposal.useMutation();
   const { scrollToError } = useFormScrollToError();
+  const utils = trpc.useUtils();
 
   const isProjectType = formType === IFormTypeEnum.Project;
 
@@ -127,6 +150,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
   const [createdProposalId, setCreatedProposalId] = useState<
     number | undefined
   >(undefined);
+  const [isVerifyingProjectName, setIsVerifyingProjectName] = useState(false);
 
   const methods = useForm<IProjectFormData>({
     resolver: yupResolver(projectSchema) as any,
@@ -156,6 +180,23 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     clearErrors,
   } = methods;
 
+  const watchedName = watch('name');
+  const previousNameRef = useRef<string>(watchedName ?? '');
+
+  useEffect(() => {
+    const previousNormalized = normalizeProjectName(previousNameRef.current);
+    const currentNormalized = normalizeProjectName(watchedName ?? '');
+
+    if (
+      errors.name?.type === 'duplicate' &&
+      previousNormalized !== currentNormalized
+    ) {
+      clearErrors('name');
+    }
+
+    previousNameRef.current = watchedName ?? '';
+  }, [watchedName, errors.name?.type, clearErrors]);
+
   const getApplicableFields = useCallback(
     (stepFields: readonly string[]) => {
       return stepFields.filter((field) => {
@@ -167,6 +208,83 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     },
     [fieldApplicability],
   );
+
+  const ensureUniqueProjectName = useCallback(async () => {
+    if (!isProjectType) {
+      return true;
+    }
+
+    if (fieldApplicability?.name === false) {
+      return true;
+    }
+
+    const projectName = getValues('name') ?? '';
+    const normalizedName = normalizeProjectName(projectName);
+
+    if (!projectName.trim() || normalizedName.length === 0) {
+      return true;
+    }
+
+    try {
+      setIsVerifyingProjectName(true);
+
+      const searchResults = await utils.project.searchProjects.fetch({
+        query: projectName,
+        limit: 50,
+      });
+
+      const publishedProjects = searchResults?.published?.items ?? [];
+
+      const duplicateProject = publishedProjects.find((project) => {
+        if (projectId && project.id === projectId) {
+          return false;
+        }
+
+        const candidateName = getLeadingPublishedProjectName(project);
+        const normalizedCandidateName = normalizeProjectName(candidateName);
+
+        return (
+          normalizedCandidateName.length > 0 &&
+          normalizedCandidateName === normalizedName
+        );
+      });
+
+      if (duplicateProject) {
+        const duplicateError = {
+          type: 'duplicate',
+          message: DUPLICATE_NAME_ERROR_MESSAGE,
+        } as const;
+
+        setError('name', duplicateError);
+        scrollToError({
+          name: duplicateError,
+        } as FieldErrors<IProjectFormData>);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      devLog('Failed to verify project name uniqueness', error);
+      addToast({
+        title: 'Validation Error',
+        description:
+          'Unable to verify project name uniqueness. Please try again.',
+        color: 'danger',
+      });
+      return false;
+    } finally {
+      setIsVerifyingProjectName(false);
+    }
+  }, [
+    isProjectType,
+    fieldApplicability,
+    getValues,
+    utils,
+    setError,
+    scrollToError,
+    projectId,
+    setIsVerifyingProjectName,
+  ]);
 
   const handleSubmissionError = useCallback(
     (error: any) => {
@@ -382,6 +500,14 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     if (!isStepValid) return;
 
     const currentIndex = STEPS_ORDER.indexOf(currentStep);
+    const isFinalStep = currentIndex === STEPS_ORDER.length - 1;
+
+    if (currentStep === IItemCategoryEnum.Basics || isFinalStep) {
+      const isNameUnique = await ensureUniqueProjectName();
+      if (!isNameUnique) {
+        return;
+      }
+    }
 
     if (currentIndex < STEPS_ORDER.length - 1) {
       const nextStep = STEPS_ORDER[currentIndex + 1];
@@ -433,6 +559,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
     getApplicableFields,
     profile?.userId,
     showAuthPrompt,
+    ensureUniqueProjectName,
   ]);
 
   const handleBack = useCallback(async () => {
@@ -669,6 +796,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
                     ? createProjectMutation.isPending
                     : createProposalMutation.isPending) || isSubmitting
                 }
+                isNextBusy={isVerifyingProjectName}
                 onBack={handleBack}
                 onNext={handleNext}
                 onDiscard={handleDiscard}
