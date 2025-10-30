@@ -210,7 +210,7 @@ export const projectRouter = router({
       try {
         return await ctx.db.transaction(async (tx) => {
           const existingProject = await tx.query.projects.findFirst({
-            where: eq(projects.name, input.name),
+            where: eq(sql`lower(${projects.name})`, input.name.toLowerCase()),
           });
           if (existingProject) {
             throw new TRPCError({
@@ -333,7 +333,7 @@ export const projectRouter = router({
 
         const result = await ctx.db.transaction(async (tx) => {
           const existingProject = await tx.query.projects.findFirst({
-            where: eq(projects.name, input.name),
+            where: eq(sql`lower(${projects.name})`, input.name.toLowerCase()),
           });
           if (existingProject) {
             throw new TRPCError({
@@ -1225,4 +1225,25 @@ export const projectRouter = router({
 
     return getCachedCategories();
   }),
+
+  checkProjectName: publicProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(1, 'Project name cannot be empty'),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const normalizedName = input.name.toLowerCase();
+
+      const existingProject = await ctx.db.query.projects.findFirst({
+        where: eq(sql`lower(${projects.name})`, normalizedName),
+        columns: {
+          id: true,
+        },
+      });
+
+      return {
+        exists: Boolean(existingProject),
+      };
+    }),
 });
