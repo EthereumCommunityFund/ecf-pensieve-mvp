@@ -14,7 +14,7 @@ import {
   SelectItem,
   Textarea,
 } from '@heroui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type Key } from 'react';
 
 import { Button, addToast } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
@@ -35,6 +35,7 @@ import {
   SORT_OPTIONS,
   type SortOption,
 } from '@/components/pages/project/filterAndSort/types';
+import { AllCategories } from '@/constants/category';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
 
@@ -84,6 +85,9 @@ const EditSieveModal = ({
   const [basePath, setBasePath] = useState('/projects');
   const [rawParams, setRawParams] = useState('');
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>(
+    [],
+  );
 
   const updateMutation = trpc.sieve.updateSieve.useMutation({
     onSuccess: (data) => {
@@ -119,6 +123,15 @@ const EditSieveModal = ({
     setFilters(parseAdvancedFilters(serialized));
     const sortValue = params.get('sort');
     setSort(sortValue && sortValue.trim() ? sortValue : null);
+    const categoriesValue = params.get('cats');
+    setSelectedSubCategories(
+      categoriesValue
+        ? categoriesValue
+            .split(',')
+            .map((value) => value.trim())
+            .filter((value) => value.length > 0)
+        : [],
+    );
   }, [sieve, isOpen]);
 
   const groupedSortOptions = useMemo(
@@ -140,6 +153,20 @@ const EditSieveModal = ({
     const option = SORT_OPTIONS.find((item) => item.value === sort);
     return option?.label ?? 'Custom sort';
   }, [sort]);
+
+  const handleSubCategorySelectionChange = (keys: 'all' | Set<Key>) => {
+    if (keys === 'all') {
+      setSelectedSubCategories(AllCategories.map((category) => category.value));
+      return;
+    }
+
+    const values = Array.from(keys)
+      .map((key) => (typeof key === 'string' ? key : String(key)))
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+
+    setSelectedSubCategories(values);
+  };
 
   if (!sieve) {
     return null;
@@ -169,6 +196,11 @@ const EditSieveModal = ({
       params.set('sort', sort);
     } else {
       params.delete('sort');
+    }
+    if (selectedSubCategories.length > 0) {
+      params.set('cats', selectedSubCategories.join(','));
+    } else {
+      params.delete('cats');
     }
     const nextSearch = params.toString();
     const nextTargetPath = `${basePath}${nextSearch ? `?${nextSearch}` : ''}`;
@@ -463,6 +495,50 @@ const EditSieveModal = ({
             >
               Add Filter
             </Button>
+          </div>
+
+          <div className="flex flex-col gap-[8px]">
+            <span className="text-[14px] font-semibold text-black/80">
+              Sub-category Filter
+            </span>
+            <Select
+              selectionMode="multiple"
+              selectedKeys={new Set(selectedSubCategories)}
+              onSelectionChange={handleSubCategorySelectionChange}
+              placeholder="Select sub-categories"
+              classNames={{
+                trigger:
+                  'min-h-[40px] border border-black/10 bg-[rgba(0,0,0,0.05)] px-[12px] rounded-[8px]',
+                value: 'text-[13px] font-semibold text-black',
+                listbox:
+                  'border border-black/10 rounded-[10px] bg-white p-[6px] max-h-[260px] overflow-auto',
+                popoverContent: 'p-0',
+              }}
+            >
+              {AllCategories.map((category) => (
+                <SelectItem
+                  key={category.value}
+                  textValue={category.label}
+                  className="rounded-[8px] px-[10px] py-[6px]"
+                >
+                  <span className="text-[13px] font-semibold text-black">
+                    {category.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </Select>
+            {selectedSubCategories.length > 0 ? (
+              <span className="text-[11px] text-black/50">
+                {selectedSubCategories.length}{' '}
+                {selectedSubCategories.length === 1
+                  ? 'sub-category selected.'
+                  : 'sub-categories selected.'}
+              </span>
+            ) : (
+              <span className="text-[11px] text-black/50">
+                Leave empty to include all sub-categories.
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-[8px]">
