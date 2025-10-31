@@ -14,7 +14,7 @@ import {
   SelectItem,
   Textarea,
 } from '@heroui/react';
-import { useEffect, useMemo, useState, type Key } from 'react';
+import { useCallback, useEffect, useMemo, useState, type Key } from 'react';
 
 import { Button, addToast } from '@/components/base';
 import { CaretDownIcon } from '@/components/icons';
@@ -46,6 +46,7 @@ const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
 interface EditSieveModalProps {
   isOpen: boolean;
   sieve: SieveRecord | null;
+  mode: 'edit' | 'create';
   onClose: () => void;
   onUpdated: () => void;
 }
@@ -70,6 +71,7 @@ const visibilityOptions: Array<{
 const EditSieveModal = ({
   isOpen,
   sieve,
+  mode,
   onClose,
   onUpdated,
 }: EditSieveModalProps) => {
@@ -89,6 +91,21 @@ const EditSieveModal = ({
     [],
   );
 
+  const resetForm = useCallback(() => {
+    setName('');
+    setDescription('');
+    setVisibility('public');
+    setSort(null);
+    setHasTriedSubmit(false);
+    setFilters([]);
+    setFilterModalState(null);
+    setIsFilterModalOpen(false);
+    setBasePath('/projects');
+    setRawParams('');
+    setSelectedSubCategories([]);
+    setIsSortOpen(false);
+  }, []);
+
   const updateMutation = trpc.sieve.updateSieve.useMutation({
     onSuccess: (data) => {
       addToast({
@@ -106,10 +123,38 @@ const EditSieveModal = ({
     },
   });
 
+  const createMutation = trpc.sieve.createSieve.useMutation({
+    onSuccess: () => {
+      addToast({
+        title: 'Feed created',
+        color: 'success',
+      });
+      onUpdated();
+      onClose();
+    },
+    onError: (error) => {
+      addToast({
+        title: error.message || 'Failed to create feed',
+        color: 'danger',
+      });
+    },
+  });
+
   useEffect(() => {
-    if (!sieve || !isOpen) {
+    if (!isOpen) {
       return;
     }
+
+    if (mode === 'create') {
+      resetForm();
+      return;
+    }
+
+    if (!sieve) {
+      return;
+    }
+
+    resetForm();
     setName(sieve.name ?? '');
     setDescription(sieve.description ?? '');
     setVisibility(sieve.visibility);
@@ -132,7 +177,7 @@ const EditSieveModal = ({
             .filter((value) => value.length > 0)
         : [],
     );
-  }, [sieve, isOpen]);
+  }, [sieve, isOpen, mode, resetForm]);
 
   const groupedSortOptions = useMemo(
     () =>
@@ -180,7 +225,7 @@ const EditSieveModal = ({
     setSelectedSubCategories(values);
   };
 
-  if (!sieve) {
+  if (mode === 'edit' && !sieve) {
     return null;
   }
 
@@ -216,6 +261,20 @@ const EditSieveModal = ({
     }
     const nextSearch = params.toString();
     const nextTargetPath = `${basePath}${nextSearch ? `?${nextSearch}` : ''}`;
+
+    if (mode === 'create') {
+      createMutation.mutate({
+        name: name.trim(),
+        description: description.trim() ? description.trim() : undefined,
+        visibility,
+        targetPath: nextTargetPath,
+      });
+      return;
+    }
+
+    if (!sieve) {
+      return;
+    }
 
     updateMutation.mutate({
       id: sieve.id,
@@ -297,7 +356,7 @@ const EditSieveModal = ({
       <ModalContent>
         <ModalHeader className="flex items-center justify-between border-b border-black/10 px-5 py-[12px]">
           <span className="text-[16px] font-semibold text-black">
-            Edit Feed
+            {mode === 'edit' ? 'Edit Feed' : 'Create Feed'}
           </span>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-[16px] p-5">
@@ -434,7 +493,7 @@ const EditSieveModal = ({
                   trigger:
                     'min-h-[40px] border border-black/10 bg-[rgba(0,0,0,0.05)] pl-[12px] pr-[36px] rounded-[8px]',
                   value: subCategoryValueClass,
-                  placeholder: 'text-[13px] font-normal text-black/45',
+                  // placeholder: 'text-[13px] font-normal text-black/45',
                   listbox:
                     'border border-black/10 rounded-[10px] bg-white p-[6px] max-h-[260px] overflow-auto',
                   popoverContent: 'p-0',
@@ -601,15 +660,26 @@ const EditSieveModal = ({
           </div>
         </ModalBody>
         <ModalFooter className="flex items-center justify-end gap-[10px] border-t border-black/10 px-5 py-[12px]">
-          <Button onPress={onClose} isDisabled={updateMutation.isPending}>
+          <Button
+            onPress={onClose}
+            isDisabled={
+              mode === 'edit'
+                ? updateMutation.isPending
+                : createMutation.isPending
+            }
+          >
             Cancel
           </Button>
           <Button
             color="primary"
             onPress={handleSave}
-            isLoading={updateMutation.isPending}
+            isLoading={
+              mode === 'edit'
+                ? updateMutation.isPending
+                : createMutation.isPending
+            }
           >
-            Save Changes
+            {mode === 'edit' ? 'Save Changes' : 'Create Feed'}
           </Button>
         </ModalFooter>
       </ModalContent>

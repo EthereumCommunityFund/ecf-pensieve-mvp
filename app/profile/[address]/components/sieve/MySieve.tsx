@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { Button, addToast } from '@/components/base';
 import { PlusIcon } from '@/components/icons';
-import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
 
@@ -23,43 +22,20 @@ interface MySieveProps {
 const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
   const [selected, setSelected] = useState<SieveRecord | null>(null);
   const [activeModal, setActiveModal] = useState<
-    'edit' | 'share' | 'delete' | null
+    'edit' | 'share' | 'delete' | 'create' | null
   >(null);
 
   const utils = trpc.useUtils();
-  const { profile: authProfile } = useAuth();
-
-  const normalizedProfileAddress = useMemo(
-    () => _profileAddress.toLowerCase(),
-    [_profileAddress],
-  );
-
-  const isOwner = useMemo(() => {
-    const authAddress = authProfile?.address?.toLowerCase();
-    if (!authAddress) {
-      return false;
-    }
-    return authAddress === normalizedProfileAddress;
-  }, [authProfile?.address, normalizedProfileAddress]);
-
   const ownerQuery = trpc.sieve.getUserSieves.useQuery(undefined, {
-    enabled: isOwner,
+    enabled: true,
     refetchOnWindowFocus: false,
   });
 
-  const publicQuery = trpc.sieve.getPublicSievesByAddress.useQuery(
-    { address: _profileAddress },
-    {
-      enabled: !isOwner,
-      refetchOnWindowFocus: false,
-    },
-  );
+  const sieves = ownerQuery.data ?? [];
+  const isLoading = ownerQuery.isLoading;
+  const isFetching = ownerQuery.isFetching;
 
-  const sieves = isOwner ? ownerQuery.data : publicQuery.data;
-  const isLoading = isOwner ? ownerQuery.isLoading : publicQuery.isLoading;
-  const isFetching = isOwner ? ownerQuery.isFetching : publicQuery.isFetching;
-
-  const hasSieve = useMemo(() => (sieves?.length ?? 0) > 0, [sieves]);
+  const hasSieve = sieves.length > 0;
 
   const closeModals = () => {
     setActiveModal(null);
@@ -87,18 +63,17 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
     modal: 'edit' | 'share' | 'delete',
     sieve: SieveRecord,
   ) => {
-    if (!isOwner) {
-      return;
-    }
     setSelected(sieve);
     setActiveModal(modal);
   };
 
+  const handleCreate = () => {
+    setSelected(null);
+    setActiveModal('create');
+  };
+
   const invalidate = () => {
     utils.sieve.getUserSieves.invalidate();
-    utils.sieve.getPublicSievesByAddress.invalidate({
-      address: _profileAddress,
-    });
   };
 
   return (
@@ -119,7 +94,7 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
             {sieves?.map((sieve) => (
               <SieveCard
                 key={sieve.id}
-                canManage={isOwner}
+                canManage
                 sieve={sieve}
                 onView={handleView}
                 onEdit={() => {
@@ -137,39 +112,50 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
         ) : (
           <div className="flex flex-col items-center gap-4 rounded-[10px] border border-dashed border-black/10 bg-white p-8 text-center">
             <p className="text-[16px] font-semibold text-black/70">
-              {isOwner
-                ? 'You haven&apos;t saved any feeds yet'
-                : 'No public feeds available'}
+              You haven&apos;t saved any feeds yet
             </p>
             <p className="text-[13px] text-black/50">
-              {isOwner
-                ? 'Head over to the Projects page, apply filters, and save them as a feed to see them listed here.'
-                : 'This contributor has not shared any feeds publicly yet.'}
+              Head over to the Projects page, apply filters, and save them as a
+              feed to see them listed here.
             </p>
-            {isOwner ? (
-              <Button
-                color="primary"
-                onPress={() => {
-                  window.open('/projects', '_blank');
-                }}
-                className="flex items-center gap-[6px]"
-              >
-                <PlusIcon size={16} />
-                Explore Projects
-              </Button>
-            ) : null}
+            <Button
+              color="primary"
+              onPress={() => {
+                window.open('/projects', '_blank');
+              }}
+              className="flex items-center gap-[6px]"
+            >
+              <PlusIcon size={16} />
+              Explore Projects
+            </Button>
           </div>
         )}
       </div>
 
-      {isOwner && selected && (
+      {!isLoading && !isFetching ? (
+        <div className="flex w-full justify-start">
+          <Button
+            color="primary"
+            onPress={handleCreate}
+            className="flex items-center gap-[6px]"
+          >
+            New Feed
+          </Button>
+        </div>
+      ) : null}
+
+      {(activeModal === 'edit' || activeModal === 'create') && (
+        <EditSieveModal
+          mode={activeModal === 'create' ? 'create' : 'edit'}
+          isOpen={activeModal === 'edit' || activeModal === 'create'}
+          sieve={activeModal === 'edit' ? selected : null}
+          onClose={closeModals}
+          onUpdated={invalidate}
+        />
+      )}
+
+      {selected ? (
         <>
-          <EditSieveModal
-            isOpen={activeModal === 'edit'}
-            sieve={selected}
-            onClose={closeModals}
-            onUpdated={invalidate}
-          />
           <ShareSieveModal
             isOpen={activeModal === 'share'}
             sieve={selected}
@@ -182,7 +168,7 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
             onDeleted={invalidate}
           />
         </>
-      )}
+      ) : null}
     </div>
   );
 };
