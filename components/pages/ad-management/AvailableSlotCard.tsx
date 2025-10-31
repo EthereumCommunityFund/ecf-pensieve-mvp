@@ -352,7 +352,14 @@ export function buildActiveStats(
   lockedBond: string,
   remainingUnits: string,
   minTakeoverBid: string,
+  options?: { isOverdue?: boolean; isExpired?: boolean },
 ): StatBlock[] {
+  const remainingValueLabelType: IValueLabelType = options?.isOverdue
+    ? 'danger'
+    : options?.isExpired
+      ? 'bordered'
+      : 'light';
+
   return [
     {
       id: 'valuation',
@@ -370,7 +377,7 @@ export function buildActiveStats(
       id: 'units',
       label: 'Remaining Units',
       value: remainingUnits,
-      valueLabelType: 'light',
+      valueLabelType: remainingValueLabelType,
     },
     {
       id: 'takeover',

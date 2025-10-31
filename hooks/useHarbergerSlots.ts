@@ -666,6 +666,7 @@ function createActiveSlotViewModel(
   slotTypeLabel: string,
   metadata?: HarbergerSlotMetadata,
 ): ActiveSlotData {
+  const nowSeconds = BigInt(Math.floor(Date.now() / 1000));
   const slotName = `${SLOT_NAME_PREFIX[slot.slotType]} #${index + 1}`;
   const slotDisplayName = metadata?.slotDisplayName ?? slotName;
   const page = metadata?.page ?? 'unknown';
@@ -682,13 +683,22 @@ function createActiveSlotViewModel(
     !slot.isExpired &&
     slot.timeRemainingInSeconds === ZERO_BIGINT;
 
+  const overdueSeconds =
+    slot.taxPaidUntilTimestamp > ZERO_BIGINT &&
+    nowSeconds > slot.taxPaidUntilTimestamp
+      ? nowSeconds - slot.taxPaidUntilTimestamp
+      : ZERO_BIGINT;
+
+  const overdueDurationLabel =
+    overdueSeconds > ZERO_BIGINT
+      ? formatDuration(overdueSeconds, { fallback: '0s' })
+      : '';
+
   const statusLabel = !slot.isOccupied
     ? 'Vacant'
     : slot.isExpired
       ? 'Expired'
-      : isOverdue
-        ? 'Overdue'
-        : 'Owned';
+      : 'Owned';
 
   const remainingUnits = !slot.isOccupied
     ? 'Vacant'

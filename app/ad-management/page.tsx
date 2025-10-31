@@ -858,6 +858,7 @@ export default function AdManagementPage() {
 
   return (
     <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
+      {/* TODO ad-management header */}
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
         <StatsSummary items={statsItems} />
 
@@ -940,6 +941,10 @@ export default function AdManagementPage() {
                             slot.lockedBond,
                             slot.remainingUnits,
                             slot.minTakeoverBid,
+                            {
+                              isOverdue: slot.isOverdue,
+                              isExpired: slot.isExpired,
+                            },
                           )}
                           takeoverCta={slot.takeoverCta}
                           onTakeover={() =>
