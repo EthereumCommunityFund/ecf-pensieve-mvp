@@ -399,7 +399,9 @@ export default function ClaimSlotModal({
                   </div>
 
                   <div className="flex flex-col">
-                    <LabelWithInfo label="Tax Coverage" />
+                    <LabelWithInfo
+                      label={`Tax Coverage (${coverageSliderValue} Days)`}
+                    />
                     <span className="mt-[5px] text-[13px] leading-[18px] text-black/80">
                       Choose how many tax periods to prepay. Longer coverage
                       means higher upfront cost but no need to pay taxes
@@ -420,9 +422,9 @@ export default function ClaimSlotModal({
                         onChangeEnd={handleCoverageSliderChange}
                       />
                     </div>
-                    <span className="mt-[6px] text-[12px] text-black/60">
+                    {/* <span className="mt-[6px] text-[12px] text-black/60">
                       Selected: {coverageLabel}
-                    </span>
+                    </span> */}
                   </div>
                 </div>
               ) : (
