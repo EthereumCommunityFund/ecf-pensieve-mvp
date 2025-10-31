@@ -2,7 +2,7 @@
   {
     "chainId": 11155111,
     "slotAddress": "0x325912d769C9D032eA4FaaC7e9329BC651b4b661",
-    "slotDisplayName": "Homescreen Sidebar",
+    "slotDisplayName": "Homescreen Sidebar(Enabled)",
     "page": "home",
     "position": "Sidebar",
     "imageSize": "390*214_390*214",
@@ -79,7 +79,7 @@
   {
     "chainId": 11155111,
     "slotAddress": "0xDFE8264F0BFcDe08DFac358e5246E59eb6AfC471",
-    "slotDisplayName": "Homescreen Banner",
+    "slotDisplayName": "Homescreen Banner(Enabled)",
     "page": "home",
     "position": "TopBanner",
     "imageSize": "900*225_400*100",
