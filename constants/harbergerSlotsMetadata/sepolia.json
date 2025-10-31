@@ -27,7 +27,7 @@
     "position": "TopBanner",
     "imageSize": "900*255_400*100",
     "extra": {},
-    "isActive": true,
+    "isActive": false,
     "contractMeta": {
       "slotType": "shielded",
       "bondRateBps": "1000",
@@ -46,7 +46,7 @@
     "position": "Sidebar",
     "imageSize": "390*214_390*214",
     "extra": {},
-    "isActive": true,
+    "isActive": false,
     "contractMeta": {
       "slotType": "shielded",
       "bondRateBps": "500",
@@ -65,7 +65,7 @@
     "position": "FooterBanner",
     "imageSize": "900*255_400*100",
     "extra": {},
-    "isActive": true,
+    "isActive": false,
     "contractMeta": {
       "slotType": "shielded",
       "bondRateBps": "500",
