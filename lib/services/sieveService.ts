@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
 import { db, type Database } from '@/lib/db';
 import { shareLinks, sieves } from '@/lib/db/schema';
@@ -209,6 +209,38 @@ export async function getUserSieves(
   return mapped;
 }
 
+export async function getPublicSievesByCreator(
+  creatorId: string,
+  currentDb: DatabaseClient = db,
+): Promise<SieveWithShareLink[]> {
+  const records = await currentDb.query.sieves.findMany({
+    where: and(eq(sieves.creator, creatorId), eq(sieves.visibility, 'public')),
+    orderBy: [desc(sieves.createdAt)],
+    with: {
+      shareLink: true,
+    },
+  });
+
+  const mapped: SieveWithShareLink[] = [];
+  for (const record of records) {
+    if (!record.shareLink) {
+      continue;
+    }
+    const payload = await ShareService.getSharePayload(record.shareLink.code);
+    if (!payload) {
+      continue;
+    }
+    mapped.push({
+      ...record,
+      shareLink: record.shareLink,
+      shareUrl: buildShareUrl(record.shareLink.code),
+      sharePayload: payload,
+    });
+  }
+
+  return mapped;
+}
+
 export async function updateSieve(
   input: UpdateSieveInput,
   currentDb: DatabaseClient = db,
@@ -358,6 +390,7 @@ export function checkSieveOwnership(
 const SieveService = {
   createSieve,
   getUserSieves,
+  getPublicSievesByCreator,
   updateSieve,
   deleteSieve,
   getSieveByCode,

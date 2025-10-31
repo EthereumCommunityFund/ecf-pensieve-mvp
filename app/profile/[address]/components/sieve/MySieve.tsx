@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from 'react';
 
-import { Button } from '@/components/base';
+import { Button, addToast } from '@/components/base';
 import { PlusIcon } from '@/components/icons';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { RouterOutputs } from '@/types';
 
 import SieveCard from './SieveCard';
+import SieveCardSkeleton from './SieveCardSkeleton';
 import DeleteSieveModal from './modals/DeleteSieveModal';
 import EditSieveModal from './modals/EditSieveModal';
 import ShareSieveModal from './modals/ShareSieveModal';
@@ -25,14 +27,37 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
   >(null);
 
   const utils = trpc.useUtils();
+  const { profile: authProfile } = useAuth();
 
-  const {
-    data: sieves,
-    isLoading,
-    isFetching,
-  } = trpc.sieve.getUserSieves.useQuery(undefined, {
+  const normalizedProfileAddress = useMemo(
+    () => _profileAddress.toLowerCase(),
+    [_profileAddress],
+  );
+
+  const isOwner = useMemo(() => {
+    const authAddress = authProfile?.address?.toLowerCase();
+    if (!authAddress) {
+      return false;
+    }
+    return authAddress === normalizedProfileAddress;
+  }, [authProfile?.address, normalizedProfileAddress]);
+
+  const ownerQuery = trpc.sieve.getUserSieves.useQuery(undefined, {
+    enabled: isOwner,
     refetchOnWindowFocus: false,
   });
+
+  const publicQuery = trpc.sieve.getPublicSievesByAddress.useQuery(
+    { address: _profileAddress },
+    {
+      enabled: !isOwner,
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  const sieves = isOwner ? ownerQuery.data : publicQuery.data;
+  const isLoading = isOwner ? ownerQuery.isLoading : publicQuery.isLoading;
+  const isFetching = isOwner ? ownerQuery.isFetching : publicQuery.isFetching;
 
   const hasSieve = useMemo(() => (sieves?.length ?? 0) > 0, [sieves]);
 
@@ -41,8 +66,39 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
     setSelected(null);
   };
 
+  const handleView = (sieve: SieveRecord) => {
+    const targetUrl =
+      sieve.share?.url ?? sieve.share?.targetUrl ?? sieve.targetPath;
+
+    if (!targetUrl) {
+      addToast({ title: 'Feed target unavailable', color: 'warning' });
+      return;
+    }
+
+    const isAbsolute = /^https?:\/\//i.test(targetUrl);
+    const resolvedUrl = isAbsolute
+      ? targetUrl
+      : `${window.location.origin}${targetUrl.startsWith('/') ? '' : '/'}${targetUrl}`;
+
+    window.open(resolvedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleManage = (
+    modal: 'edit' | 'share' | 'delete',
+    sieve: SieveRecord,
+  ) => {
+    if (!isOwner) {
+      return;
+    }
+    setSelected(sieve);
+    setActiveModal(modal);
+  };
+
   const invalidate = () => {
     utils.sieve.getUserSieves.invalidate();
+    utils.sieve.getPublicSievesByAddress.invalidate({
+      address: _profileAddress,
+    });
   };
 
   return (
@@ -55,17 +111,7 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
         {isLoading || isFetching ? (
           <div className="flex flex-col gap-[12px]">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex flex-col gap-[8px] rounded-[10px] border border-black/10 bg-white p-[14px] shadow-[0_2px_8px_rgba(15,23,42,0.04)]"
-              >
-                <div className="h-[14px] w-[140px] animate-pulse rounded bg-[#E4E4E4]" />
-                <div className="h-[12px] w-[220px] animate-pulse rounded bg-[#EEEEEE]" />
-                <div className="flex gap-[6px]">
-                  <div className="h-[20px] w-[80px] animate-pulse rounded-full bg-[#EDEDED]" />
-                  <div className="h-[20px] w-[70px] animate-pulse rounded-full bg-[#EDEDED]" />
-                </div>
-              </div>
+              <SieveCardSkeleton key={index} />
             ))}
           </div>
         ) : hasSieve ? (
@@ -73,18 +119,17 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
             {sieves?.map((sieve) => (
               <SieveCard
                 key={sieve.id}
+                canManage={isOwner}
                 sieve={sieve}
+                onView={handleView}
                 onEdit={() => {
-                  setSelected(sieve);
-                  setActiveModal('edit');
+                  handleManage('edit', sieve);
                 }}
                 onShare={() => {
-                  setSelected(sieve);
-                  setActiveModal('share');
+                  handleManage('share', sieve);
                 }}
                 onDelete={() => {
-                  setSelected(sieve);
-                  setActiveModal('delete');
+                  handleManage('delete', sieve);
                 }}
               />
             ))}
@@ -92,27 +137,32 @@ const MySieve = ({ profileAddress: _profileAddress }: MySieveProps) => {
         ) : (
           <div className="flex flex-col items-center gap-4 rounded-[10px] border border-dashed border-black/10 bg-white p-8 text-center">
             <p className="text-[16px] font-semibold text-black/70">
-              You haven&apos;t saved any feeds yet
+              {isOwner
+                ? 'You haven&apos;t saved any feeds yet'
+                : 'No public feeds available'}
             </p>
             <p className="text-[13px] text-black/50">
-              Head over to the Projects page, apply filters, and save them as a
-              feed to see them listed here.
+              {isOwner
+                ? 'Head over to the Projects page, apply filters, and save them as a feed to see them listed here.'
+                : 'This contributor has not shared any feeds publicly yet.'}
             </p>
-            <Button
-              color="primary"
-              onPress={() => {
-                window.open('/projects', '_blank');
-              }}
-              className="flex items-center gap-[6px]"
-            >
-              <PlusIcon size={16} />
-              Explore Projects
-            </Button>
+            {isOwner ? (
+              <Button
+                color="primary"
+                onPress={() => {
+                  window.open('/projects', '_blank');
+                }}
+                className="flex items-center gap-[6px]"
+              >
+                <PlusIcon size={16} />
+                Explore Projects
+              </Button>
+            ) : null}
           </div>
         )}
       </div>
 
-      {selected && (
+      {isOwner && selected && (
         <>
           <EditSieveModal
             isOpen={activeModal === 'edit'}

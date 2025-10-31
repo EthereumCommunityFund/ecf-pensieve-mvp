@@ -21,6 +21,7 @@ import {
   parseAdvancedFilters,
 } from '@/components/pages/project/customFilters/utils';
 import { SORT_OPTIONS } from '@/components/pages/project/filterAndSort/types';
+import { AllCategories } from '@/constants/category';
 import dayjs from '@/lib/dayjs';
 import { RouterOutputs } from '@/types';
 
@@ -34,9 +35,11 @@ type SieveRecord = RouterOutputs['sieve']['getUserSieves'][0];
 
 interface SieveCardProps {
   sieve: SieveRecord;
+  canManage: boolean;
   onEdit: () => void;
   onShare: () => void;
   onDelete: () => void;
+  onView?: (sieve: SieveRecord) => void;
 }
 
 const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
@@ -44,6 +47,14 @@ const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
 const SORT_LABEL_MAP = SORT_OPTIONS.reduce<Record<string, string>>(
   (acc, option) => {
     acc[option.value] = option.label;
+    return acc;
+  },
+  {},
+);
+
+const CATEGORY_LABEL_MAP = AllCategories.reduce<Record<string, string>>(
+  (acc, category) => {
+    acc[category.value] = category.label;
     return acc;
   },
   {},
@@ -110,6 +121,27 @@ const extractFilterSummaries = (
   return summaries;
 };
 
+const extractSelectedCategories = (targetPath: string): string[] => {
+  const search = getSearchFromTargetPath(targetPath);
+  if (!search) {
+    return [];
+  }
+
+  const params = new URLSearchParams(search);
+  const selected = params.get('cats');
+  if (!selected) {
+    return [];
+  }
+
+  const items = selected
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0)
+    .map((value) => CATEGORY_LABEL_MAP[value] ?? value);
+
+  return Array.from(new Set(items));
+};
+
 const extractSortLabel = (targetPath: string): string | null => {
   const search = getSearchFromTargetPath(targetPath);
   if (!search) {
@@ -139,10 +171,39 @@ const extractSortLabel = (targetPath: string): string | null => {
   return normalized || sortValue;
 };
 
-const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
+const SieveCard = ({
+  sieve,
+  canManage,
+  onEdit,
+  onShare,
+  onDelete,
+  onView,
+}: SieveCardProps) => {
   const createdAt = dayjs(sieve.createdAt).format('MMM D, YYYY');
   const filterSummaries = extractFilterSummaries(sieve.targetPath);
   const sortLabel = extractSortLabel(sieve.targetPath);
+  const selectedCategories = extractSelectedCategories(sieve.targetPath);
+
+  const handleViewFeed = () => {
+    if (onView) {
+      onView(sieve);
+      return;
+    }
+
+    const targetUrl =
+      sieve.share?.url ?? sieve.share?.targetUrl ?? sieve.targetPath;
+
+    if (!targetUrl) {
+      return;
+    }
+
+    const isAbsolute = /^https?:\/\//i.test(targetUrl);
+    const resolvedUrl = isAbsolute
+      ? targetUrl
+      : `${window.location.origin}${targetUrl.startsWith('/') ? '' : '/'}${targetUrl}`;
+
+    window.open(resolvedUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="mobile:w-auto flex w-full max-w-[800px] flex-col gap-[12px] rounded-[12px] border border-black/[0.08] bg-white p-[16px] shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
@@ -162,42 +223,44 @@ const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
           <p className="text-[12px] text-black/45">Saved on {createdAt}</p>
         </div>
 
-        <Dropdown
-          classNames={{
-            base: 'shadow-none',
-            content: 'p-0',
-          }}
-          placement="bottom-end"
-        >
-          <DropdownTrigger>
-            <button className="flex size-[38px] items-center justify-center rounded-[8px] transition-all hover:bg-[rgba(0,0,0,0.06)]">
-              <DotsThreeVerticalIcon size={28} />
-            </button>
-          </DropdownTrigger>
-          <DropdownMenu
-            aria-label="Feed actions"
-            className="min-w-[171px] rounded-[10px] p-[10px] shadow-lg"
-            itemClasses={{
-              base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
+        {canManage ? (
+          <Dropdown
+            classNames={{
+              base: 'shadow-none',
+              content: 'p-0',
             }}
+            placement="bottom-end"
           >
-            <DropdownItem
-              key="edit"
-              onPress={onEdit}
-              endContent={<PencilSimpleIcon size={18} />}
+            <DropdownTrigger>
+              <button className="flex size-[38px] items-center justify-center rounded-[8px] transition-all hover:bg-[rgba(0,0,0,0.06)]">
+                <DotsThreeVerticalIcon size={28} />
+              </button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Feed actions"
+              className="min-w-[171px] rounded-[10px] p-[10px] shadow-lg"
+              itemClasses={{
+                base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
+              }}
             >
-              Edit Feed
-            </DropdownItem>
-            <DropdownItem
-              key="delete"
-              onPress={onDelete}
-              className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
-              endContent={<TrashIcon size={18} />}
-            >
-              Delete Feed
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+              <DropdownItem
+                key="edit"
+                onPress={onEdit}
+                endContent={<PencilSimpleIcon size={18} />}
+              >
+                Edit Feed
+              </DropdownItem>
+              <DropdownItem
+                key="delete"
+                onPress={onDelete}
+                className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
+                endContent={<TrashIcon size={18} />}
+              >
+                Delete Feed
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-[12px]">
@@ -209,6 +272,24 @@ const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
             <span className="inline-flex items-center rounded-[6px] bg-[#F1F1F1] px-[8px] py-[4px] text-[12px] font-medium text-black/70">
               {sortLabel}
             </span>
+          </div>
+        )}
+
+        {selectedCategories.length > 0 && (
+          <div className="flex flex-col gap-[8px]">
+            <span className="text-[14px] font-semibold text-black/70">
+              Sub-categories
+            </span>
+            <div className="flex flex-wrap gap-[8px]">
+              {selectedCategories.map((category) => (
+                <span
+                  key={`${sieve.id}-sub-category-${category}`}
+                  className="inline-flex items-center rounded-[8px] bg-[#F5F5F5] px-[10px] py-[4px] text-[12px] text-black/70"
+                >
+                  {category}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -244,15 +325,25 @@ const SieveCard = ({ sieve, onEdit, onShare, onDelete }: SieveCardProps) => {
         )}
       </div>
 
-      <div className="flex w-full justify-end">
+      <div className="flex w-full justify-end gap-[8px]">
+        {canManage ? (
+          <Button
+            color="secondary"
+            size="sm"
+            onPress={onShare}
+            isDisabled={sieve.share.visibility !== 'public'}
+            className="min-w-[120px] border border-black/15 text-black"
+          >
+            Share Feed
+          </Button>
+        ) : null}
         <Button
           color="primary"
           size="sm"
-          onPress={onShare}
-          isDisabled={sieve.share.visibility !== 'public'}
+          onPress={handleViewFeed}
           className="min-w-[120px]"
         >
-          Share Feed
+          View Feed
         </Button>
       </div>
     </div>

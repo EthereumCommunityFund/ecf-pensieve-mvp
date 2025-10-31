@@ -1,13 +1,15 @@
 import { TRPCError } from '@trpc/server';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { profiles } from '@/lib/db/schema';
 import SieveService, {
   type SieveVisibility,
   type SieveWithShareLink,
   SieveServiceError,
 } from '@/lib/services/sieveService';
 
-import { protectedProcedure, router } from '../server';
+import { protectedProcedure, publicProcedure, router } from '../server';
 
 const visibilityEnum = z.enum(['public', 'private']);
 
@@ -32,6 +34,10 @@ const deleteInput = z.object({
 
 const getByCodeInput = z.object({
   code: z.string().min(1),
+});
+
+const getPublicByAddressInput = z.object({
+  address: z.string().min(1),
 });
 
 type SerializedSieve = ReturnType<typeof serializeSieve>;
@@ -109,6 +115,33 @@ export const sieveRouter = router({
       handleServiceError(error);
     }
   }),
+  getPublicSievesByAddress: publicProcedure
+    .input(getPublicByAddressInput)
+    .query(async ({ ctx, input }) => {
+      try {
+        const normalizedAddress = input.address.trim().toLowerCase();
+        const profile = await ctx.db.query.profiles.findFirst({
+          columns: {
+            userId: true,
+          },
+          where: eq(profiles.address, normalizedAddress),
+        });
+
+        if (!profile?.userId) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Profile not found',
+          });
+        }
+
+        const sieves = await SieveService.getPublicSievesByCreator(
+          profile.userId,
+        );
+        return sieves.map(serializeSieve);
+      } catch (error) {
+        handleServiceError(error);
+      }
+    }),
   updateSieve: protectedProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
