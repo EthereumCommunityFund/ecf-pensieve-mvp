@@ -86,7 +86,7 @@ const SaveFeedModal = ({
   onClose,
   onSaved,
 }: SaveFeedModalProps) => {
-  const { isAuthenticated, showAuthPrompt } = useAuth();
+  const { isAuthenticated, showAuthPrompt, profile } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
@@ -120,9 +120,11 @@ const SaveFeedModal = ({
       utils.sieve.getUserSieves.invalidate();
       onSaved?.(data);
       handleClose();
-      router.push(
-        '/profile/0xfcc16f2b47b9833b486426a48d5cce5007339343?tab=sieve',
-      );
+
+      const destinationAddress = profile?.address;
+      if (destinationAddress) {
+        router.push(`/profile/${destinationAddress}?tab=sieve`);
+      }
     },
     onError: (error) => {
       addToast({

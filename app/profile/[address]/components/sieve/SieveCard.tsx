@@ -322,6 +322,9 @@ const SieveCard = ({
       </div>
 
       <div className="flex w-full justify-end gap-[8px]">
+        <Button size="sm" onPress={handleViewFeed}>
+          View Feed
+        </Button>
         {canManage ? (
           <Button
             color="primary"

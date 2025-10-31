@@ -286,13 +286,13 @@ const EditSieveModal = ({
     });
   };
 
-  const handleOpenFeed = () => {
-    const target = sieve.share.targetUrl ?? sieve.targetPath;
-    const url = target.startsWith('http')
-      ? target
-      : `${window.location.origin}${target.startsWith('/') ? '' : '/'}${target}`;
-    window.open(url, '_blank');
-  };
+  // const handleOpenFeed = () => {
+  //   const target = sieve.share.targetUrl ?? sieve.targetPath;
+  //   const url = target.startsWith('http')
+  //     ? target
+  //     : `${window.location.origin}${target.startsWith('/') ? '' : '/'}${target}`;
+  //   window.open(url, '_blank');
+  // };
 
   const handleCreateFilter = () => {
     setFilterModalState({

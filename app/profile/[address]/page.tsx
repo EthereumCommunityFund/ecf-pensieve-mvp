@@ -3,9 +3,9 @@
 import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Funnel } from '@phosphor-icons/react';
 
 import BookmarksIcon from '@/components/icons/Bookmarks';
-import FunnelSimpleIcon from '@/components/icons/FunnelSimple';
 
 import Contributions from './components/contributions';
 import MyLists from './components/list/myLists';
@@ -37,7 +37,7 @@ const tabItems = [
   {
     key: 'sieve',
     label: 'My Sieve',
-    icon: <FunnelSimpleIcon width={28} height={28} />,
+    icon: <Funnel width={28} height={28} />,
   },
 ];
 
