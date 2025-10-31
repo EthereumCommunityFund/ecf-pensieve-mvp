@@ -10,7 +10,7 @@ import {
 } from '@heroui/react';
 
 import { Button, addToast } from '@/components/base';
-import { CopyIcon, LinkIcon } from '@/components/icons';
+import { CopyIcon } from '@/components/icons';
 import { RouterOutputs } from '@/types';
 
 type SieveRecord = RouterOutputs['sieve']['getUserSieves'][0];
@@ -27,7 +27,7 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
   }
 
   const shareUrl = sieve.share.url;
-  const targetUrl = sieve.share.targetUrl ?? sieve.targetPath;
+  // const targetUrl = sieve.share.targetUrl ?? sieve.targetPath;
   const isPublic = sieve.share.visibility === 'public';
 
   const handleCopy = async (value: string) => {
@@ -95,35 +95,10 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
               </span>
             )}
           </div>
-
-          <div className="flex flex-col gap-[6px]">
-            <span className="text-[12px] font-semibold text-black/70">
-              Target URL
-            </span>
-            <Input
-              value={targetUrl}
-              readOnly
-              classNames={{
-                inputWrapper:
-                  'border border-black/10 bg-[rgba(0,0,0,0.03)] h-[40px] rounded-[8px] px-[10px] text-[13px]',
-              }}
-              endContent={
-                <Button
-                  size="sm"
-                  isIconOnly
-                  onPress={() => handleCopy(targetUrl)}
-                  aria-label="Copy target url"
-                >
-                  <LinkIcon size={16} />
-                </Button>
-              }
-            />
-          </div>
         </ModalBody>
         <ModalFooter className="flex items-center justify-end gap-[10px] border-t border-black/10 px-5 py-[12px]">
-          <Button onPress={onClose}>Close</Button>
           <Button color="primary" onPress={onClose}>
-            Done
+            Close
           </Button>
         </ModalFooter>
       </ModalContent>

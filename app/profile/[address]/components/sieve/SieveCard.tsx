@@ -318,33 +318,21 @@ const SieveCard = ({
               </div>
             ))}
           </div>
-        ) : (
-          <div className="rounded-[8px] bg-[#F8F8F8] px-[10px] py-[8px] text-[12px] text-black/50">
-            No advanced filters captured for this feed.
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className="flex w-full justify-end gap-[8px]">
         {canManage ? (
           <Button
-            color="secondary"
+            color="primary"
             size="sm"
             onPress={onShare}
             isDisabled={sieve.share.visibility !== 'public'}
-            className="min-w-[120px] border border-black/15 text-black"
+            className="min-w-[120px]"
           >
             Share Feed
           </Button>
         ) : null}
-        <Button
-          color="primary"
-          size="sm"
-          onPress={handleViewFeed}
-          className="min-w-[120px]"
-        >
-          View Feed
-        </Button>
       </div>
     </div>
   );

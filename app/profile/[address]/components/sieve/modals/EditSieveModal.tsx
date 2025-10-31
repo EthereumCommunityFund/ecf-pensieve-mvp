@@ -148,11 +148,23 @@ const EditSieveModal = ({
 
   const sortLabel = useMemo(() => {
     if (!sort) {
-      return 'Default (Newest first)';
+      return 'none';
     }
     const option = SORT_OPTIONS.find((item) => item.value === sort);
     return option?.label ?? 'Custom sort';
   }, [sort]);
+
+  const sortTextClass = sort
+    ? 'text-[13px] font-semibold text-black'
+    : 'text-[13px] font-normal text-black/45';
+  const sortIconClass = sort ? 'text-black/45' : 'text-black/30';
+  const hasSubCategorySelection = selectedSubCategories.length > 0;
+  const subCategoryValueClass = hasSubCategorySelection
+    ? 'text-[13px] font-semibold text-black'
+    : 'text-[13px] font-normal text-black/45';
+  const subCategorySelectorClass = hasSubCategorySelection
+    ? 'text-black/45'
+    : 'text-black/30';
 
   const handleSubCategorySelectionChange = (keys: 'all' | Set<Key>) => {
     if (keys === 'all') {
@@ -343,26 +355,22 @@ const EditSieveModal = ({
                   'p-0 border border-black/10 rounded-[10px] shadow-[0_8px_24px_rgba(15,23,42,0.12)]',
               }}
             >
-              <PopoverTrigger>
-                <button
-                  type="button"
-                  className="flex h-[40px] w-full items-center justify-between rounded-[8px] border border-black/10 bg-[rgba(0,0,0,0.05)] px-[12px]"
-                >
-                  <span
-                    className={`text-[13px] font-semibold ${
-                      sort ? 'text-black' : 'text-black/45'
-                    }`}
+              <div className="relative">
+                <PopoverTrigger>
+                  <button
+                    type="button"
+                    className="relative flex h-[40px] w-full items-center rounded-[8px] border border-black/10 bg-[rgba(0,0,0,0.05)] pl-[12px] pr-[36px]"
                   >
-                    {sortLabel}
-                  </span>
-                  <CaretDownIcon
-                    size={16}
-                    className={`transition-transform ${
-                      isSortOpen ? 'rotate-180' : ''
-                    } text-black/45`}
-                  />
-                </button>
-              </PopoverTrigger>
+                    <span className={sortTextClass}>{sortLabel}</span>
+                    <CaretDownIcon
+                      size={16}
+                      className={`pointer-events-none absolute right-[12px] transition-transform ${
+                        isSortOpen ? 'rotate-180' : ''
+                      } ${sortIconClass}`}
+                    />
+                  </button>
+                </PopoverTrigger>
+              </div>
               <PopoverContent className="w-[260px] bg-white">
                 <div className="flex h-[300px] w-full flex-col gap-[16px] overflow-y-auto py-[12px]">
                   {Object.entries(groupedSortOptions).map(
@@ -398,16 +406,11 @@ const EditSieveModal = ({
                   )}
                 </div>
                 <div className="mt-[12px] flex items-center justify-between text-[11px] text-black/45">
-                  <span>
-                    {sort
-                      ? 'Applied sorting overrides default ordering.'
-                      : 'Default ordering (Newest first).'}
-                  </span>
                   {sort && (
                     <button
                       type="button"
                       onClick={clearSort}
-                      className="font-semibold text-black/60 underline underline-offset-2 hover:text-black"
+                      className="font-semibold text-black/60 hover:text-black"
                     >
                       Clear
                     </button>
@@ -415,6 +418,54 @@ const EditSieveModal = ({
                 </div>
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="flex flex-col gap-[8px]">
+            <span className="text-[14px] font-semibold text-black/80">
+              Sub-category Filter
+            </span>
+            <div className="relative">
+              <Select
+                selectionMode="multiple"
+                selectedKeys={new Set(selectedSubCategories)}
+                onSelectionChange={handleSubCategorySelectionChange}
+                placeholder="none"
+                classNames={{
+                  trigger:
+                    'min-h-[40px] border border-black/10 bg-[rgba(0,0,0,0.05)] pl-[12px] pr-[36px] rounded-[8px]',
+                  value: subCategoryValueClass,
+                  placeholder: 'text-[13px] font-normal text-black/45',
+                  listbox:
+                    'border border-black/10 rounded-[10px] bg-white p-[6px] max-h-[260px] overflow-auto',
+                  popoverContent: 'p-0',
+                  selectorIcon: `pointer-events-none right-[12px] ${subCategorySelectorClass}`,
+                }}
+              >
+                {AllCategories.map((category) => (
+                  <SelectItem
+                    key={category.value}
+                    textValue={category.label}
+                    className="rounded-[8px] px-[10px] py-[6px]"
+                  >
+                    <span className="text-[13px] font-semibold text-black">
+                      {category.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+            {selectedSubCategories.length > 0 ? (
+              <span className="text-[11px] text-black/50">
+                {selectedSubCategories.length}{' '}
+                {selectedSubCategories.length === 1
+                  ? 'sub-category selected.'
+                  : 'sub-categories selected.'}
+              </span>
+            ) : (
+              <span className="text-[11px] text-black/50">
+                Leave empty to include all sub-categories.
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-[8px]">
@@ -495,50 +546,6 @@ const EditSieveModal = ({
             >
               Add Filter
             </Button>
-          </div>
-
-          <div className="flex flex-col gap-[8px]">
-            <span className="text-[14px] font-semibold text-black/80">
-              Sub-category Filter
-            </span>
-            <Select
-              selectionMode="multiple"
-              selectedKeys={new Set(selectedSubCategories)}
-              onSelectionChange={handleSubCategorySelectionChange}
-              placeholder="Select sub-categories"
-              classNames={{
-                trigger:
-                  'min-h-[40px] border border-black/10 bg-[rgba(0,0,0,0.05)] px-[12px] rounded-[8px]',
-                value: 'text-[13px] font-semibold text-black',
-                listbox:
-                  'border border-black/10 rounded-[10px] bg-white p-[6px] max-h-[260px] overflow-auto',
-                popoverContent: 'p-0',
-              }}
-            >
-              {AllCategories.map((category) => (
-                <SelectItem
-                  key={category.value}
-                  textValue={category.label}
-                  className="rounded-[8px] px-[10px] py-[6px]"
-                >
-                  <span className="text-[13px] font-semibold text-black">
-                    {category.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </Select>
-            {selectedSubCategories.length > 0 ? (
-              <span className="text-[11px] text-black/50">
-                {selectedSubCategories.length}{' '}
-                {selectedSubCategories.length === 1
-                  ? 'sub-category selected.'
-                  : 'sub-categories selected.'}
-              </span>
-            ) : (
-              <span className="text-[11px] text-black/50">
-                Leave empty to include all sub-categories.
-              </span>
-            )}
           </div>
 
           <div className="flex flex-col gap-[8px]">

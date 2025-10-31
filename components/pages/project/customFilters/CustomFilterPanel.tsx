@@ -99,6 +99,12 @@ const CustomFilterPanel = ({
 
   const [shortShareUrl, setShortShareUrl] = useState('');
   const shareMutation = trpc.share.ensureCustomFilter.useMutation();
+  const sortParam = searchParams?.get('sort');
+  const hasSortSelection = Boolean(sortParam);
+  const hasSubCategoryFilter = Boolean(searchParams?.get('cats'));
+  const hasCustomFilters = summaries.length > 0;
+  const shouldShowActions =
+    hasSortSelection || hasSubCategoryFilter || hasCustomFilters;
 
   useEffect(() => {
     setShortShareUrl('');
@@ -226,33 +232,34 @@ const CustomFilterPanel = ({
               </Button>
             )}
           </div> */}
-
-          <div className="flex flex-col gap-[10px]">
-            <Button
-              size="sm"
-              aria-label="Save filters as feed"
-              onPress={onSaveAsFeed}
-              isDisabled={isSaveDisabled}
-              className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
-            >
-              <BookmarkSimple />
-              Save as Feed
-            </Button>
-            <Button
-              size="sm"
-              aria-label="Share custom filter"
-              onPress={handleShareCustomFilter}
-              isLoading={shareMutation.isPending}
-              isDisabled={isShareDisabled}
-              className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
-            >
-              <ShareFat />
-              Share Filters
-            </Button>
-            {isSaveDisabled && saveDisabledReason && (
-              <p className="text-[11px] text-[#D14343]">{saveDisabledReason}</p>
-            )}
-          </div>
+        </div>
+      )}
+      {shouldShowActions && (
+        <div className="flex flex-col gap-[10px]">
+          <Button
+            size="sm"
+            aria-label="Save filters as feed"
+            onPress={onSaveAsFeed}
+            isDisabled={isSaveDisabled}
+            className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
+          >
+            <BookmarkSimple />
+            Save as Feed
+          </Button>
+          <Button
+            size="sm"
+            aria-label="Share custom filter"
+            onPress={handleShareCustomFilter}
+            isLoading={shareMutation.isPending}
+            isDisabled={isShareDisabled}
+            className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
+          >
+            <ShareFat />
+            Share Filters
+          </Button>
+          {isSaveDisabled && saveDisabledReason && (
+            <p className="text-[11px] text-[#D14343]">{saveDisabledReason}</p>
+          )}
         </div>
       )}
     </div>

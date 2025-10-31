@@ -9,6 +9,7 @@ import {
   ModalHeader,
   Textarea,
 } from '@heroui/react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Button, addToast } from '@/components/base';
@@ -20,6 +21,37 @@ import { trpc } from '@/lib/trpc/client';
 import type { RouterOutputs } from '@/types';
 
 type SaveFeedResult = RouterOutputs['sieve']['createSieve'];
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      console.error('navigator.clipboard.writeText failed', error);
+    }
+  }
+
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const result = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return result;
+  } catch (error) {
+    console.error('Fallback clipboard copy failed', error);
+    return false;
+  }
+}
 
 interface SaveFeedModalProps {
   isOpen: boolean;
@@ -59,21 +91,38 @@ const SaveFeedModal = ({
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
+  const router = useRouter();
 
   const utils = trpc.useUtils();
 
   const createMutation = trpc.sieve.createSieve.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      const shareUrl =
+        data.share.visibility === 'public' ? data.share.url : undefined;
+      let toastTitle = 'Feed saved successfully';
+      let toastColor: 'success' | 'warning' = 'success';
+
+      if (shareUrl) {
+        const copied = await copyTextToClipboard(shareUrl);
+        if (copied) {
+          toastTitle = 'Link has been copied to clipboard';
+        } else {
+          toastTitle = 'Feed saved but failed to copy link';
+          toastColor = 'warning';
+        }
+      }
+
       addToast({
-        title:
-          data.share.visibility === 'private'
-            ? 'Private feed saved'
-            : 'Feed saved and ready to share',
-        color: 'success',
+        title: toastTitle,
+        color: toastColor,
       });
+
       utils.sieve.getUserSieves.invalidate();
       onSaved?.(data);
       handleClose();
+      router.push(
+        '/profile/0xfcc16f2b47b9833b486426a48d5cce5007339343?tab=sieve',
+      );
     },
     onError: (error) => {
       addToast({
