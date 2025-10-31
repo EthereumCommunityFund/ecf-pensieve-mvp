@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
+import AdManagementHeader from '@/components/pages/ad-management/AdManagementHeader';
 import {
   ActiveSlotCard,
   ActiveSlotCardSkeleton,
@@ -857,9 +858,10 @@ export default function AdManagementPage() {
   }, []);
 
   return (
-    <div className="mobile:px-[12px] px-[32px] pb-[72px] pt-[32px]">
-      {/* TODO ad-management header */}
+    <div className="mobile:px-[12px] px-[32px] pb-[72px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
+        <AdManagementHeader connectedAddress={connectedAddress} />
+
         <StatsSummary items={statsItems} />
 
         <section className="flex flex-col">
