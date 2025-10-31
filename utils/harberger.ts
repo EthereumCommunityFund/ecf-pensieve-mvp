@@ -14,7 +14,7 @@ export interface FormatEthOptions {
 
 export function formatEth(
   value: bigint,
-  { maximumFractionDigits = 4, withUnit = true }: FormatEthOptions = {},
+  { maximumFractionDigits = 6, withUnit = true }: FormatEthOptions = {},
 ): string {
   if (value === ZERO_BIGINT) {
     return withUnit ? '0 ETH' : '0';

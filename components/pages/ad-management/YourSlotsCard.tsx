@@ -1,12 +1,16 @@
 'use client';
 
 import { Card, CardBody, cn } from '@heroui/react';
-import { Notebook, NotePencil } from '@phosphor-icons/react';
+import {
+  Clock,
+  CoinVertical,
+  Notebook,
+  NotePencil,
+} from '@phosphor-icons/react';
 import Image from 'next/image';
 import { useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
-import { ClockClockwiseIcon, CoinVerticalIcon } from '@/components/icons';
 import { extractCreativeAssets } from '@/utils/creative';
 
 import { DESKTOP_CREATIVE_CONFIG } from './creativeConstants';
@@ -210,8 +214,9 @@ export default function YourSlotsCard({
                   : ' bg-[#F5F5F5] text-black',
               )}
             >
-              <ClockClockwiseIcon
-                size={18}
+              <Clock
+                size={14}
+                weight="fill"
                 className={isCritical ? 'text-[#C71818]' : 'text-black/50'}
               />
               {taxDueValue}
@@ -235,7 +240,7 @@ export default function YourSlotsCard({
               onPress={primaryAction.onPress}
             >
               {!isPrimarySecondary ? (
-                <CoinVerticalIcon className="size-[20px]" />
+                <CoinVertical className="size-[20px] opacity-50" />
               ) : null}
               {primaryAction.label}
             </Button>
