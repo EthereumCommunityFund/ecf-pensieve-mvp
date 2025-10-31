@@ -62,6 +62,10 @@ export interface TakeoverSlotModalProps {
   contextLabel: string;
   contextTone?: ContextTone;
   slotName: string;
+  slotDisplayName?: string;
+  page?: string;
+  position?: string;
+  imageSize?: string;
   statusLabel?: string;
   owner: string;
   ownerLabel?: string;
@@ -90,6 +94,10 @@ export default function TakeoverSlotModal({
   contextLabel,
   contextTone = 'default',
   slotName,
+  slotDisplayName,
+  page,
+  position,
+  imageSize,
   statusLabel = 'Owned',
   owner,
   ownerLabel = 'Owner',
@@ -116,6 +124,8 @@ export default function TakeoverSlotModal({
   const isViewMode = mode === 'view';
   const allowCreativeEditing = isTakeoverMode || isEditMode;
   const requireCreativeReady = allowCreativeEditing;
+
+  const displayName = slotDisplayName ?? slotName;
 
   const minCoverageDays = Math.max(coverage?.minDays ?? 1, 0);
   const rawMaxCoverageDays = coverage?.maxDays ?? 365;
@@ -423,13 +433,16 @@ export default function TakeoverSlotModal({
             </div>
 
             <ModalBody className="mobile:p-[10px] flex flex-col gap-[20px] p-[20px]">
-              <div className="flex items-center gap-[10px]">
-                <span className="text-[13px] font-semibold text-black/50">
-                  Slot:
-                </span>
-                <span className="text-[13px] font-semibold text-black">
-                  {slotName}
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-[10px]">
+                <div className="flex flex-wrap items-center gap-[10px]">
+                  <span className="text-[13px] font-semibold text-black/50">
+                    Slot:
+                  </span>
+                  <span className="text-[13px] font-semibold text-black">
+                    {displayName}
+                  </span>
+                </div>
+                <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
               </div>
 
               <div className="grid grid-cols-1 gap-[8px] rounded-[10px] border border-black/10 bg-white p-[10px] md:grid-cols-3">

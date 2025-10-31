@@ -552,7 +552,7 @@ export default function AdManagementPage() {
 
       return {
         id: slot.id,
-        title: slot.slotName,
+        title: slot.slotDisplayName,
         valuation: valuationDisplay,
         taxDue: formatEth(taxPerPeriodWei),
         periodEnding,
@@ -560,6 +560,10 @@ export default function AdManagementPage() {
         status,
         location: slot.slotTypeLabel,
         slotLabel: slot.slotName,
+        slotDisplayName: slot.slotDisplayName,
+        page: slot.page,
+        position: slot.position,
+        imageSize: slot.imageSize,
         slotValueLabel: slot.slotTypeLabel,
         currentAdBadge: activityBadge,
         currentAdBadgeTone,
@@ -740,6 +744,10 @@ export default function AdManagementPage() {
       contextLabel: `${selectedEditSlot.slotTypeLabel} · Edit Creative`,
       contextTone: tone,
       slotName: selectedEditSlot.slotName,
+      slotDisplayName: selectedEditSlot.slotDisplayName,
+      page: selectedEditSlot.page,
+      position: selectedEditSlot.position,
+      imageSize: selectedEditSlot.imageSize,
       statusLabel: selectedEditSlot.statusLabel,
       owner: selectedEditSlot.owner,
       taxRate: selectedEditSlot.taxRate,
@@ -769,6 +777,10 @@ export default function AdManagementPage() {
       contextLabel: `${selectedDetailsSlot.slotTypeLabel} · Slot Details`,
       contextTone: tone,
       slotName: selectedDetailsSlot.slotName,
+      slotDisplayName: selectedDetailsSlot.slotDisplayName,
+      page: selectedDetailsSlot.page,
+      position: selectedDetailsSlot.position,
+      imageSize: selectedDetailsSlot.imageSize,
       statusLabel: selectedDetailsSlot.statusLabel,
       owner: selectedDetailsSlot.owner,
       taxRate: selectedDetailsSlot.taxRate,
@@ -884,10 +896,14 @@ export default function AdManagementPage() {
                         <ActiveSlotCard
                           key={slot.id}
                           slotName={slot.slotName}
+                          slotDisplayName={slot.slotDisplayName}
+                          page={slot.page}
+                          position={slot.position}
+                          imageSize={slot.imageSize}
                           statusLabel={slot.statusLabel}
                           owner={slot.owner}
                           creativeUri={slot.currentAdURI || undefined}
-                          mediaAlt={slot.slotName}
+                          mediaAlt={slot.slotDisplayName}
                           stats={buildActiveStats(
                             slot.valuation,
                             slot.lockedBond,
@@ -968,6 +984,18 @@ export default function AdManagementPage() {
         contextLabel={editModalData?.contextLabel ?? 'Edit Creative'}
         contextTone={editModalData?.contextTone}
         slotName={editModalData?.slotName ?? selectedEditSlot?.slotName ?? ''}
+        slotDisplayName={
+          editModalData?.slotDisplayName ??
+          selectedEditSlot?.slotDisplayName ??
+          ''
+        }
+        page={editModalData?.page ?? selectedEditSlot?.page ?? 'unknown'}
+        position={
+          editModalData?.position ?? selectedEditSlot?.position ?? 'unknown'
+        }
+        imageSize={
+          editModalData?.imageSize ?? selectedEditSlot?.imageSize ?? 'unknown'
+        }
         statusLabel={
           editModalData?.statusLabel ?? selectedEditSlot?.statusLabel ?? 'Owned'
         }
@@ -995,6 +1023,22 @@ export default function AdManagementPage() {
         contextTone={detailsModalData?.contextTone}
         slotName={
           detailsModalData?.slotName ?? selectedDetailsSlot?.slotName ?? ''
+        }
+        slotDisplayName={
+          detailsModalData?.slotDisplayName ??
+          selectedDetailsSlot?.slotDisplayName ??
+          ''
+        }
+        page={detailsModalData?.page ?? selectedDetailsSlot?.page ?? 'unknown'}
+        position={
+          detailsModalData?.position ??
+          selectedDetailsSlot?.position ??
+          'unknown'
+        }
+        imageSize={
+          detailsModalData?.imageSize ??
+          selectedDetailsSlot?.imageSize ??
+          'unknown'
         }
         statusLabel={
           detailsModalData?.statusLabel ??
@@ -1030,6 +1074,10 @@ export default function AdManagementPage() {
         contextLabel={takeoverData.contextLabel}
         contextTone={takeoverData.contextTone}
         slotName={selectedTakeoverSlot?.slotName ?? ''}
+        slotDisplayName={selectedTakeoverSlot?.slotDisplayName ?? ''}
+        page={selectedTakeoverSlot?.page ?? 'unknown'}
+        position={selectedTakeoverSlot?.position ?? 'unknown'}
+        imageSize={selectedTakeoverSlot?.imageSize ?? 'unknown'}
         statusLabel={selectedTakeoverSlot?.statusLabel ?? 'Owned'}
         owner={selectedTakeoverSlot?.owner ?? ''}
         taxRate={selectedTakeoverSlot?.taxRate ?? ''}

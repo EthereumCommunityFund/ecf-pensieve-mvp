@@ -1,38 +1,3 @@
-/**
- * Script to create Harberger slots via HarbergerFactory.
- *
- * Required precautions:
- * 1. PRIVATE_KEY must be the current owner’s private key for HarbergerFactory (not just the address).
- * 2. Treasury and governance addresses must be configured before creating slots (Ignition deployments do this automatically).
- *    If either address is still zero, the script will abort; set SET_GLOBAL_ADDRESSES=true to update them.
- * 3. Keep sensitive values in environment variables (e.g., `.env.local`); the script never reads plaintext key files.
- * 4. Recommended flow: run once with defaults (no SET_GLOBAL_ADDRESSES) to inspect on-chain state, then adjust SLOT_TYPE
- *    or slot economics as needed.
- *
- * Required environment variables:
- *   PRIVATE_KEY                             Private key of the HarbergerFactory owner (0x-prefixed)
- *   RPC_URL                                 RPC endpoint for the target chain (Sepolia by default)
- *
- * Example command:
- *   PRIVATE_KEY=0x... RPC_URL=https://... pnpm tsx scripts/createHarbergerSlot.ts
- *
- * Optional environment variables:
- *   SET_GLOBAL_ADDRESSES=true               Invoke setGlobalAddresses (default false)
- *     ↳ When enabled, provide non-zero addresses via:
- *        · TREASURY_ADDRESS / GOVERNANCE_ADDRESS, or
- *        · rely on existing on-chain values (the script reuses them if non-zero)
- *   TREASURY_ADDRESS=0x...                  Override treasury for setGlobalAddresses
- *   GOVERNANCE_ADDRESS=0x...                Override governance for setGlobalAddresses
- *   SLOT_TYPE=enabled|shielded              Slot variant to create (default enabled)
- *   BOND_RATE_BPS=2000                      Bond rate in basis points (BigInt-compatible)
- *   CONTENT_UPDATE_LIMIT=5
- *   TAX_PERIOD_SECONDS=86400
- *   ANNUAL_TAX_RATE_BPS=500
- *   MIN_BID_INCREMENT_BPS=1000
- *   MIN_VALUATION_ETH=0.5                   Minimum valuation in ETH
- *   DUST_RATE_BPS=100                       Only used for enabled slots
- */
-
 import 'dotenv/config';
 
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
@@ -51,6 +16,8 @@ const DEFAULT_TAX_PERIOD_SECONDS = BigInt(86400);
 const DEFAULT_ANNUAL_TAX_RATE_BPS = BigInt(500);
 const DEFAULT_MIN_BID_INCREMENT_BPS = BigInt(1000);
 const DEFAULT_DUST_RATE_BPS = BigInt(100);
+
+type SlotVariant = 'enabled' | 'shielded';
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -125,10 +92,8 @@ async function maybeSetGlobalAddresses(
 async function createSlot(
   walletClient: ReturnType<typeof createWalletClient>,
   publicClient: ReturnType<typeof createPublicClient>,
+  slotType: SlotVariant,
 ) {
-  const slotType =
-    process.env.SLOT_TYPE === 'shielded' ? 'shielded' : 'enabled';
-
   const bondRateBps = normalizeBigIntEnv(
     process.env.BOND_RATE_BPS,
     DEFAULT_BOND_RATE_BPS,
@@ -253,6 +218,10 @@ function logFactoryState(label: string, state: FactoryState) {
   console.info('  shielded slots:', state.shieldedSlots);
 }
 
+function getSlotType(): SlotVariant {
+  return process.env.SLOT_TYPE === 'shielded' ? 'shielded' : 'enabled';
+}
+
 async function main() {
   const privateKey = requireEnv('PRIVATE_KEY');
   const rpcUrl = requireEnv('RPC_URL');
@@ -311,10 +280,32 @@ async function main() {
     );
   }
 
-  await createSlot(walletClient, publicClient);
+  const slotType = getSlotType();
+
+  const addressesBeforeCreation = new Set(
+    (slotType === 'enabled'
+      ? stateForCreation.enabledSlots
+      : stateForCreation.shieldedSlots
+    ).map((address) => address.toLowerCase()),
+  );
+
+  await createSlot(walletClient, publicClient, slotType);
 
   const finalState = await fetchFactoryState(publicClient);
   logFactoryState('Factory state after createSlot', finalState);
+
+  const slotAddressesAfter =
+    slotType === 'enabled' ? finalState.enabledSlots : finalState.shieldedSlots;
+
+  const newSlotAddresses = slotAddressesAfter.filter(
+    (address) => !addressesBeforeCreation.has(address.toLowerCase()),
+  );
+
+  if (newSlotAddresses.length === 0) {
+    console.warn('No new slot detected after creation.');
+  } else {
+    console.info('New slot addresses:', newSlotAddresses);
+  }
 }
 
 main().catch((error) => {

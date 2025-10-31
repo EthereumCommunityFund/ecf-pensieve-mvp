@@ -167,6 +167,9 @@ export default function ClaimSlotModal({
     [bondRequired, taxRequired],
   );
 
+  const slotMetadataDisplayName =
+    slot?.slotDisplayName ?? slot?.slotName ?? '—';
+
   const isStepOneValid = Boolean(
     slot &&
       parsedValuationWei &&
@@ -331,17 +334,17 @@ export default function ClaimSlotModal({
             </div>
 
             <ModalBody className="mobile:p-[10px] flex flex-col gap-[20px] p-[20px]">
-              <div className="flex justify-between gap-[8px]">
-                <p className="flex gap-[10px]">
+              <div className="flex flex-wrap items-center justify-between gap-[10px]">
+                <div className="flex items-center gap-[10px]">
                   <span className="text-[13px] font-semibold text-black/50">
                     Slot:
                   </span>
                   <span className="text-[14px] font-semibold text-black">
-                    {slot?.slotName ?? '—'}
+                    {slotMetadataDisplayName}
                   </span>
-                </p>
+                </div>
 
-                <ValueLabel className=" text-[12px]">Open</ValueLabel>
+                <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
               </div>
 
               {step === 1 ? (

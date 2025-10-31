@@ -43,6 +43,10 @@ function InfoStat({ label, helperText, value }: InfoStatProps) {
 
 export interface VacantSlotCardProps {
   slotName: string;
+  slotDisplayName: string;
+  page: string;
+  position: string;
+  imageSize: string;
   statusLabel?: string;
   valuation: string;
   valuationHelper: string;
@@ -56,6 +60,10 @@ export interface VacantSlotCardProps {
 
 export function VacantSlotCard({
   slotName,
+  slotDisplayName,
+  page,
+  position,
+  imageSize,
   statusLabel = 'Open',
   valuation,
   valuationHelper,
@@ -78,7 +86,7 @@ export function VacantSlotCard({
               Slot:
             </span>
             <span className="text-[13px] font-semibold text-black">
-              {slotName}
+              {slotDisplayName}
             </span>
           </div>
 
@@ -138,6 +146,10 @@ interface StatBlock {
 
 export interface ActiveSlotCardProps {
   slotName: string;
+  slotDisplayName: string;
+  page: string;
+  position: string;
+  imageSize: string;
   statusLabel?: string;
   owner: string;
   ownerLabel?: string;
@@ -152,6 +164,10 @@ export interface ActiveSlotCardProps {
 
 export function ActiveSlotCard({
   slotName,
+  slotDisplayName,
+  page,
+  position,
+  imageSize,
   statusLabel = 'Owned',
   owner,
   ownerLabel = 'Owner',
@@ -181,7 +197,7 @@ export function ActiveSlotCard({
               Slot:
             </span>
             <span className="text-[13px] font-semibold text-black">
-              {slotName}
+              {slotDisplayName}
             </span>
           </div>
           <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
@@ -201,7 +217,7 @@ export function ActiveSlotCard({
           {primaryImageUrl ? (
             <Image
               src={primaryImageUrl}
-              alt={mediaAlt ?? slotName}
+              alt={mediaAlt ?? slotDisplayName}
               fill
               sizes="(min-width: 1280px) 240px, (min-width: 768px) 40vw, 100vw"
               className="object-cover"

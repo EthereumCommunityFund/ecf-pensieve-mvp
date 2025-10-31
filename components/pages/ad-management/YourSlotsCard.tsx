@@ -34,6 +34,10 @@ export interface YourSlotCardProps {
   contentSummary?: string;
   status: SlotStatus;
   slotLabel?: string;
+  slotDisplayName?: string;
+  page?: string;
+  position?: string;
+  imageSize?: string;
   slotValueLabel?: string;
   currentAdBadge?: string;
   currentAdBadgeTone?: 'default' | 'danger';
@@ -65,6 +69,10 @@ export default function YourSlotsCard({
   secondaryAction,
   tertiaryAction,
   slotLabel,
+  slotDisplayName,
+  page,
+  position,
+  imageSize,
   slotValueLabel,
   currentAdBadge,
   currentAdBadgeTone,
@@ -81,7 +89,8 @@ export default function YourSlotsCard({
     [creativeUri],
   );
 
-  const slotName = slotLabel ?? title;
+  const canonicalSlotName = slotLabel ?? title;
+  const displayName = slotDisplayName ?? canonicalSlotName;
   const slotValue = slotValueLabel ?? valuation;
   const currentAdNotice = currentAdBadge ?? periodEnding;
   const currentAdTone: 'default' | 'danger' =
@@ -116,13 +125,13 @@ export default function YourSlotsCard({
     >
       <CardBody className="flex h-full flex-col gap-[20px] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-[8px]">
             <div className="flex flex-wrap items-center gap-[6px]">
               <span className="text-[13px] font-semibold text-black/50">
                 Slot:
               </span>
               <span className="text-[13px] font-semibold text-black">
-                {slotName}
+                {displayName}
               </span>
             </div>
           </div>
@@ -156,7 +165,7 @@ export default function YourSlotsCard({
             {mediaPreview ? (
               <Image
                 src={mediaPreview}
-                alt={title}
+                alt={displayName}
                 fill
                 sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
                 className="object-cover"

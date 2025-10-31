@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Address } from 'viem';
 import { useReadContract, useReadContracts } from 'wagmi';
-import { sepolia } from 'wagmi/chains';
+import { mainnet, sepolia } from 'wagmi/chains';
 
+import { isProduction } from '@/constants/env';
 import {
   HARBERGER_FACTORY_ABI,
   HARBERGER_FACTORY_ADDRESS,
@@ -13,7 +14,12 @@ import {
   ZERO_ADDRESS,
   type SlotTypeKey,
 } from '@/constants/harbergerFactory';
+import { getHarbergerSlotMetadataMap } from '@/constants/harbergerSlotsMetadata';
 import { AddressValidator } from '@/lib/utils/addressValidation';
+import type {
+  HarbergerSlotContractMeta,
+  HarbergerSlotMetadata,
+} from '@/types/harbergerSlotMetadata';
 import { devLog } from '@/utils/devLog';
 import {
   ONE_BIGINT,
@@ -28,6 +34,11 @@ import {
   sumBigints,
 } from '@/utils/harberger';
 
+const AD_SLOT_CHAIN = isProduction ? mainnet : sepolia;
+const AD_SLOT_CHAIN_ID = AD_SLOT_CHAIN.id;
+
+const SLOT_METADATA_MAP = getHarbergerSlotMetadataMap(AD_SLOT_CHAIN_ID);
+
 const SLOT_TYPE_LABEL: Record<SlotTypeKey, string> = {
   enabled: 'Valuation Tax Enabled Slot',
   shielded: 'Valuation Tax Shielded Slot',
@@ -37,6 +48,18 @@ const SLOT_NAME_PREFIX: Record<SlotTypeKey, string> = {
   enabled: 'Enabled Slot',
   shielded: 'Shielded Slot',
 };
+
+function getSlotMetadata(address: Address): HarbergerSlotMetadata | undefined {
+  const key = address.toLowerCase();
+  return SLOT_METADATA_MAP[key];
+}
+
+function isSlotActive(metadata?: HarbergerSlotMetadata): boolean {
+  if (!metadata) {
+    return true;
+  }
+  return !!metadata.isActive;
+}
 
 interface EnabledSlotContractResult {
   currentOwner: Address;
@@ -109,7 +132,14 @@ export interface VacantSlotData {
   id: string;
   slotAddress: Address;
   slotType: SlotTypeKey;
+  chainId: number;
   slotName: string;
+  slotDisplayName: string;
+  page: string;
+  position: string;
+  imageSize: string;
+  extra: Record<string, unknown>;
+  contractMeta?: HarbergerSlotContractMeta;
   statusLabel: string;
   valuation: string;
   valuationHelper: string;
@@ -137,7 +167,14 @@ export interface ActiveSlotData {
   slotAddress: Address;
   slotType: SlotTypeKey;
   slotTypeLabel: string;
+  chainId: number;
   slotName: string;
+  slotDisplayName: string;
+  page: string;
+  position: string;
+  imageSize: string;
+  extra: Record<string, unknown>;
+  contractMeta?: HarbergerSlotContractMeta;
   statusLabel: string;
   owner: string;
   ownerAddress: Address | null;
@@ -199,7 +236,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     address: HARBERGER_FACTORY_ADDRESS,
     abi: HARBERGER_FACTORY_ABI,
     functionName: 'getValuationTaxEnabledSlots',
-    chainId: sepolia.id,
+    chainId: AD_SLOT_CHAIN.id,
     query: {
       staleTime: 30_000,
       refetchInterval: 30_000,
@@ -210,7 +247,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     address: HARBERGER_FACTORY_ADDRESS,
     abi: HARBERGER_FACTORY_ABI,
     functionName: 'getValuationTaxShieldedSlots',
-    chainId: sepolia.id,
+    chainId: AD_SLOT_CHAIN.id,
     query: {
       staleTime: 30_000,
       refetchInterval: 30_000,
@@ -221,7 +258,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     address: HARBERGER_FACTORY_ADDRESS,
     abi: HARBERGER_FACTORY_ABI,
     functionName: 'slotIdCounter',
-    chainId: sepolia.id,
+    chainId: AD_SLOT_CHAIN.id,
     query: {
       staleTime: 30_000,
       refetchInterval: 30_000,
@@ -232,7 +269,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     address: HARBERGER_FACTORY_ADDRESS,
     abi: HARBERGER_FACTORY_ABI,
     functionName: 'treasury',
-    chainId: sepolia.id,
+    chainId: AD_SLOT_CHAIN.id,
     query: {
       staleTime: 30_000,
       refetchInterval: 30_000,
@@ -417,28 +454,68 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
   const vacantSlots = useMemo<VacantSlotData[]>(() => {
     const enabledVacant = normalizedEnabledSlots
       .filter((slot) => !slot.isOccupied)
-      .map((slot, index) =>
-        createVacantSlotViewModel(slot, index, SLOT_TYPE_LABEL.enabled),
-      );
+      .map((slot, index) => {
+        const metadata = getSlotMetadata(slot.slotAddress);
+        if (!isSlotActive(metadata)) {
+          return null;
+        }
+        return createVacantSlotViewModel(
+          slot,
+          index,
+          SLOT_TYPE_LABEL.enabled,
+          metadata,
+        );
+      })
+      .filter(Boolean) as VacantSlotData[];
     const shieldedVacant = normalizedShieldedSlots
       .filter((slot) => !slot.isOccupied)
-      .map((slot, index) =>
-        createVacantSlotViewModel(slot, index, SLOT_TYPE_LABEL.shielded),
-      );
+      .map((slot, index) => {
+        const metadata = getSlotMetadata(slot.slotAddress);
+        if (!isSlotActive(metadata)) {
+          return null;
+        }
+        return createVacantSlotViewModel(
+          slot,
+          index,
+          SLOT_TYPE_LABEL.shielded,
+          metadata,
+        );
+      })
+      .filter(Boolean) as VacantSlotData[];
     return [...enabledVacant, ...shieldedVacant];
   }, [normalizedEnabledSlots, normalizedShieldedSlots]);
 
   const activeSlots = useMemo<ActiveSlotData[]>(() => {
     const enabledActive = normalizedEnabledSlots
       .filter((slot) => slot.isOccupied)
-      .map((slot, index) =>
-        createActiveSlotViewModel(slot, index, SLOT_TYPE_LABEL.enabled),
-      );
+      .map((slot, index) => {
+        const metadata = getSlotMetadata(slot.slotAddress);
+        if (!isSlotActive(metadata)) {
+          return null;
+        }
+        return createActiveSlotViewModel(
+          slot,
+          index,
+          SLOT_TYPE_LABEL.enabled,
+          metadata,
+        );
+      })
+      .filter(Boolean) as ActiveSlotData[];
     const shieldedActive = normalizedShieldedSlots
       .filter((slot) => slot.isOccupied)
-      .map((slot, index) =>
-        createActiveSlotViewModel(slot, index, SLOT_TYPE_LABEL.shielded),
-      );
+      .map((slot, index) => {
+        const metadata = getSlotMetadata(slot.slotAddress);
+        if (!isSlotActive(metadata)) {
+          return null;
+        }
+        return createActiveSlotViewModel(
+          slot,
+          index,
+          SLOT_TYPE_LABEL.shielded,
+          metadata,
+        );
+      })
+      .filter(Boolean) as ActiveSlotData[];
     return [...enabledActive, ...shieldedActive];
   }, [normalizedEnabledSlots, normalizedShieldedSlots]);
 
@@ -529,8 +606,15 @@ function createVacantSlotViewModel(
   slot: NormalizedSlot,
   index: number,
   slotTypeLabel: string,
+  metadata?: HarbergerSlotMetadata,
 ): VacantSlotData {
   const slotName = `${SLOT_NAME_PREFIX[slot.slotType]} #${index + 1}`;
+  const slotDisplayName = metadata?.slotDisplayName ?? slotName;
+  const page = metadata?.page ?? 'unknown';
+  const position = metadata?.position ?? 'unknown';
+  const imageSize = metadata?.imageSize ?? 'unknown';
+  const extra = metadata?.extra ? { ...metadata.extra } : {};
+  const contractMeta = metadata?.contractMeta;
   const coverageLabel = formatDuration(slot.taxPeriodInSeconds);
   const bondRequired = calculateBond(slot.minValuationWei, slot.bondRateBps);
   const taxRequired = calculateTaxForPeriods(
@@ -545,7 +629,14 @@ function createVacantSlotViewModel(
     id: slot.slotAddress,
     slotAddress: slot.slotAddress,
     slotType: slot.slotType,
+    chainId: AD_SLOT_CHAIN_ID,
     slotName,
+    slotDisplayName,
+    page,
+    position,
+    imageSize,
+    extra,
+    contractMeta,
     statusLabel: 'Open',
     valuation: formatEth(slot.minValuationWei),
     valuationHelper: 'Minimum valuation required to claim this slot.',
@@ -573,8 +664,15 @@ function createActiveSlotViewModel(
   slot: NormalizedSlot,
   index: number,
   slotTypeLabel: string,
+  metadata?: HarbergerSlotMetadata,
 ): ActiveSlotData {
   const slotName = `${SLOT_NAME_PREFIX[slot.slotType]} #${index + 1}`;
+  const slotDisplayName = metadata?.slotDisplayName ?? slotName;
+  const page = metadata?.page ?? 'unknown';
+  const position = metadata?.position ?? 'unknown';
+  const imageSize = metadata?.imageSize ?? 'unknown';
+  const extra = metadata?.extra ? { ...metadata.extra } : {};
+  const contractMeta = metadata?.contractMeta;
   const owner =
     slot.ownerAddress !== null
       ? AddressValidator.shortenAddress(slot.ownerAddress)
@@ -613,7 +711,14 @@ function createActiveSlotViewModel(
     slotAddress: slot.slotAddress,
     slotType: slot.slotType,
     slotTypeLabel,
+    chainId: AD_SLOT_CHAIN_ID,
     slotName,
+    slotDisplayName,
+    page,
+    position,
+    imageSize,
+    extra,
+    contractMeta,
     statusLabel,
     owner,
     ownerAddress: slot.ownerAddress,

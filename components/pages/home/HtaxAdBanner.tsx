@@ -30,7 +30,7 @@ const mapSlotToSlide = (slot: ActiveSlotData): AdSlide | null => {
     id: slot.id,
     imageUrl: primaryImageUrl,
     targetUrl,
-    altText: `${slot.slotName} creative`,
+    altText: `${slot.slotDisplayName} creative`,
   };
 };
 
