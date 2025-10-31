@@ -2,8 +2,8 @@ export interface HarbergerSlotMetadata {
   chainId: number;
   slotAddress: `0x${string}`;
   slotDisplayName: string;
-  page: string;
-  position: string;
+  page: 'home' | 'project';
+  position: 'TopBanner' | 'Sidebar' | 'FooterBanner' | 'ListInLine';
   imageSize: string;
   extra: Record<string, unknown>;
   isActive: boolean;
