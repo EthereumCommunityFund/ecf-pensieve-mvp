@@ -457,6 +457,8 @@ export default function AdManagementPage() {
   }, []);
 
   const ownedSlotCards = useMemo(() => {
+    const nowSeconds = BigInt(Math.floor(Date.now() / 1000));
+
     return ownedSlots.map((slot) => {
       const status: SlotStatus = slot.isExpired
         ? 'closed'
@@ -468,19 +470,50 @@ export default function AdManagementPage() {
       const taxOwedWei = slot.isOverdue ? taxPerPeriodWei : ZERO_BIGINT;
 
       const periodEnding = formatUtcTimestamp(slot.taxPaidUntilTimestamp);
-      const countdownLabel =
-        status === 'closed'
-          ? 'Expired'
-          : slot.isOverdue
-            ? 'Due now'
-            : `Due in ${formatDuration(slot.timeRemainingInSeconds, { fallback: '0s' })}`;
+      const hasTimeRemaining = slot.timeRemainingInSeconds > ZERO_BIGINT;
+      const remainingDuration = formatDuration(slot.timeRemainingInSeconds, {
+        fallback: '0s',
+      });
 
-      const activityBadge =
-        status === 'closed'
-          ? 'Expired slot'
-          : slot.isOverdue
-            ? 'Tax overdue'
-            : `Period Ending (${formatDuration(slot.timeRemainingInSeconds, { fallback: '0s' })})`;
+      const overdueSeconds =
+        slot.taxPaidUntilTimestamp > ZERO_BIGINT &&
+        nowSeconds > slot.taxPaidUntilTimestamp
+          ? nowSeconds - slot.taxPaidUntilTimestamp
+          : ZERO_BIGINT;
+      const overdueDuration =
+        overdueSeconds > ZERO_BIGINT
+          ? formatDuration(overdueSeconds, { fallback: '0s' })
+          : '';
+
+      const taxDueCountdownDisplay = (() => {
+        if (status === 'closed') {
+          return '—';
+        }
+
+        if (hasTimeRemaining) {
+          return remainingDuration ? `${remainingDuration} left` : '—';
+        }
+
+        if (overdueDuration) {
+          return `Overdue ${overdueDuration}`;
+        }
+
+        return 'Overdue';
+      })();
+
+      const activityBadge = (() => {
+        if (status === 'closed') {
+          return periodEnding ? `Ended ${periodEnding}` : '';
+        }
+
+        if (hasTimeRemaining) {
+          return remainingDuration
+            ? `Period Ending (${remainingDuration} left)`
+            : '';
+        }
+
+        return '';
+      })();
 
       const isSoonExpiring =
         !slot.isExpired &&
@@ -488,9 +521,7 @@ export default function AdManagementPage() {
         slot.timeRemainingInSeconds <= THREE_DAYS_IN_SECONDS;
 
       const currentAdBadgeTone: 'default' | 'danger' =
-        status === 'closed' || status === 'overdue' || isSoonExpiring
-          ? 'danger'
-          : 'default';
+        slot.isOverdue || isSoonExpiring ? 'danger' : 'default';
 
       const isRenewPending =
         pendingSlotAction?.slotId === slot.id &&
@@ -564,11 +595,11 @@ export default function AdManagementPage() {
         page: slot.page,
         position: slot.position,
         imageSize: slot.imageSize,
-        slotValueLabel: slot.slotTypeLabel,
+        slotValueLabel: valuationDisplay,
         currentAdBadge: activityBadge,
         currentAdBadgeTone,
         taxOwed: formatEth(taxOwedWei),
-        taxDueCountdown: countdownLabel,
+        taxDueCountdown: taxDueCountdownDisplay,
         takeoverBid: slot.minTakeoverBid,
         contentUpdates:
           contentUpdatesTotal >= 0
@@ -955,7 +986,6 @@ export default function AdManagementPage() {
               <TabPlaceholder
                 title="Template library coming soon"
                 description="Save and reuse campaigns for recurring Harberger slots. Upload templates and share with collaborators."
-                actionLabel="Explore Beta Program"
               />
             </Tab>
           </Tabs>

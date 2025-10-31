@@ -92,12 +92,18 @@ export default function YourSlotsCard({
   const canonicalSlotName = slotLabel ?? title;
   const displayName = slotDisplayName ?? canonicalSlotName;
   const slotValue = slotValueLabel ?? valuation;
-  const currentAdNotice = currentAdBadge ?? periodEnding;
+  const currentAdNoticeRaw =
+    typeof currentAdBadge === 'string' ? currentAdBadge.trim() : '';
+  const hasCurrentAdNotice = currentAdNoticeRaw.length > 0;
+  const currentAdNotice = hasCurrentAdNotice ? currentAdNoticeRaw : '';
   const currentAdTone: 'default' | 'danger' =
     currentAdBadgeTone ?? (status === 'overdue' ? 'danger' : 'default');
   const taxOwedValue = taxOwed ?? taxDue;
-  const taxDueValue = taxDueCountdown ?? taxDue;
-  const isCritical = currentAdTone === 'danger';
+  const taxDueValueRaw =
+    typeof taxDueCountdown === 'string' ? taxDueCountdown.trim() : '';
+  const taxDueValue = taxDueValueRaw.length > 0 ? taxDueValueRaw : '—';
+  const taxDueIsOverdue = taxDueValueRaw.startsWith('Overdue');
+  const isCritical = taxDueIsOverdue || currentAdTone === 'danger';
   const creativeUpdatesUsed =
     contentUpdates && typeof contentUpdates.used === 'number'
       ? `${contentUpdates.used} / ${contentUpdates.total}`
@@ -113,6 +119,8 @@ export default function YourSlotsCard({
     : isSlotClosed
       ? 'opacity-70 grayscale-[35%]'
       : '';
+
+  const currentAdLabel = status === 'closed' ? 'Closed:' : 'Current Ad:';
 
   return (
     <Card
@@ -142,18 +150,22 @@ export default function YourSlotsCard({
         <div className="flex flex-col gap-[10px]">
           <div className="flex flex-wrap items-center justify-between gap-[10px]">
             <span className="text-[13px] font-semibold text-black/45">
-              Current Ad:
+              {currentAdLabel}
             </span>
-            <ValueLabel
-              className={cn(
-                'inline-flex items-center  text-[13px]',
-                currentAdTone === 'danger'
-                  ? ' bg-[#FEE4E2] text-[#C71818]'
-                  : ' bg-black/[0.04] text-black/70',
-              )}
-            >
-              {currentAdNotice}
-            </ValueLabel>
+            {hasCurrentAdNotice ? (
+              <ValueLabel
+                className={cn(
+                  'inline-flex items-center text-[13px]',
+                  currentAdTone === 'danger'
+                    ? ' bg-[rgba(199,24,24,0.20)] text-[#C71818]'
+                    : ' bg-black/[0.04] text-black/70',
+                )}
+              >
+                {currentAdNotice}
+              </ValueLabel>
+            ) : (
+              <span className="text-[13px] text-black/30">—</span>
+            )}
           </div>
 
           <div
