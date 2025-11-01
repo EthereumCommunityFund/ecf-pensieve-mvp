@@ -1,0 +1,1 @@
+ALTER TABLE "lists" DROP COLUMN "sort_order";

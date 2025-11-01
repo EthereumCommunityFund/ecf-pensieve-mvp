@@ -41,7 +41,7 @@ const getCachedSitemap = unstable_cache(
 
           return [
             {
-              url: `${siteUrl}/project/${project.id}?tab=project-data`,
+              url: `${siteUrl}/project/${project.id}?tab=profile`,
               lastModified,
               changeFrequency: 'daily',
               priority: 0.9,

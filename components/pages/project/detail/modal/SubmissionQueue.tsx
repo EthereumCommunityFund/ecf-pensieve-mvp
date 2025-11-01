@@ -251,17 +251,17 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
 
   return (
     <div className="flex flex-col gap-[20px]">
+      {/* Item Info */}
+      <div className="flex flex-col gap-[5px]">
+        <ItemWeight
+          itemKey={itemKey as IPocItemKey}
+          itemName={itemName}
+          itemWeight={displayedItemWeight}
+        />
+      </div>
       {/* Consensus in Progress Banner - Only show when isLeadingProposalNotLeading is true */}
       {isLeadingProposalNotLeading && (
         <>
-          {/* Item Info */}
-          <div className="flex flex-col gap-[5px]">
-            <ItemWeight
-              itemKey={itemKey as IPocItemKey}
-              itemName={itemName}
-              itemWeight={displayedItemWeight}
-            />
-          </div>
           <div
             className={cn(
               'rounded-[10px] border border-[rgba(196,125,84,0.40)] bg-[rgba(247,153,45,0.20)] p-[10px]',

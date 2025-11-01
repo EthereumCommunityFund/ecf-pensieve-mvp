@@ -4,10 +4,14 @@ import { cn, Image, Skeleton } from '@heroui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
+import ShareButton from '@/components/biz/share/ShareButton';
 import BackHeader from '@/components/pages/project/BackHeader';
+import NotificationConfigDropdown from '@/components/pages/project/detail/notification/NotificationConfigDropdown';
+import PublishingTip from '@/components/pages/project/proposal/common/PublishingTip';
 import SubmitProposalCard from '@/components/pages/project/proposal/common/SubmitProposalCard';
 import ProposalList from '@/components/pages/project/proposal/list/ProposalList';
 import { useAuth } from '@/context/AuthContext';
+import useShareLink from '@/hooks/useShareLink';
 import { trpc } from '@/lib/trpc/client';
 import { IProject, IProposal } from '@/types';
 import { devLog } from '@/utils/devLog';
@@ -124,6 +128,8 @@ const ProjectPage = () => {
         canBePublished={canBePublished}
       />
 
+      {canBePublished && <PublishingTip />}
+
       {/* Proposal list */}
       <div
         className={cn(
@@ -182,6 +188,29 @@ const ProjectCard = ({
   leadingProposal?: IProposal;
   canBePublished?: boolean;
 }) => {
+  const fallbackSharePath = useMemo(() => {
+    if (!project) {
+      return '';
+    }
+    return project.isPublished
+      ? `/project/${project.id}`
+      : `/project/pending/${project.id}`;
+  }, [project]);
+
+  const {
+    shareUrl,
+    shareImageUrl,
+    payload: sharePayload,
+    loading: shareLinkLoading,
+    error: shareLinkError,
+    ensure: ensureShareLink,
+  } = useShareLink({
+    entityType: 'project',
+    entityId: project?.id,
+    fallbackUrl: fallbackSharePath,
+    enabled: !!project?.id,
+  });
+
   if (!project) {
     return <ProjectCardSkeleton />;
   }
@@ -191,7 +220,7 @@ const ProjectCard = ({
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
         'p-[20px] mobile:p-[14px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'flex justify-start items-start gap-[20px]',
+        'flex justify-start items-start gap-[20px] relative',
       )}
     >
       <Image
@@ -220,20 +249,37 @@ const ProjectCard = ({
             );
           })}
         </div>
-        <div className="flex items-center gap-[10px] text-[14px] font-[600] text-black">
-          <span>Total Proposals: </span>
-          <span className="text-black/60">{proposals?.length || 0}</span>
+        <div className="mobile:flex-col  mobile:items-start flex items-center  gap-[10px] text-[14px] font-[600] text-black">
+          <div className="flex items-center justify-start">
+            <span>Total Proposals: </span>
+            <span className="text-black/60">{proposals?.length || 0}</span>
+          </div>
+
           {!!leadingProposal && (
-            <>
-              <span className="text-black/20">|</span>
+            <div className="flex items-center justify-start">
+              <span className="mobile:hidden text-black/20">|</span>
               {/* when reach 100%, use `winner` */}
               <span>{canBePublished ? 'Winner' : 'Leading'}:</span>
               <span className="text-black/60">
                 @{leadingProposal.creator.name}
               </span>
-            </>
+            </div>
           )}
         </div>
+      </div>
+
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <NotificationConfigDropdown projectId={project.id} />
+        <ShareButton
+          shareUrl={shareUrl}
+          shareImageUrl={shareImageUrl}
+          className="size-[40px]"
+          isLoading={shareLinkLoading}
+          error={shareLinkError}
+          onEnsure={ensureShareLink}
+          onRefresh={ensureShareLink}
+          payload={sharePayload}
+        />
       </div>
     </div>
   );
@@ -246,7 +292,7 @@ const ProjectCardSkeleton = () => {
         'mt-[10px] mx-[20px] mobile:mx-[10px]',
         'p-[20px] mobile:p-[14px]',
         'bg-white border border-black/10 rounded-[10px]',
-        'flex justify-start items-start gap-[20px]',
+        'flex justify-start items-start gap-[20px] relative',
       )}
     >
       <Skeleton className="size-[100px] shrink-0 overflow-hidden rounded-[10px] border border-black/10" />
@@ -266,13 +312,19 @@ const ProjectCardSkeleton = () => {
           })}
         </div>
 
-        <div className="mobile:flex-wrap mobile:gap-[8px] flex items-center justify-start gap-[10px]">
+        <div className="mobile:flex-col mobile:items-start mobile:gap-[8px] flex items-center justify-start gap-[10px]">
           <Skeleton className="mobile:w-[90px] h-[20px] w-[110px]" />
-          <Skeleton className="h-[20px] w-[16px]" />
-          <span className="text-black/20">|</span>
+          <Skeleton className="mobile:hidden h-[20px] w-[16px]" />
+          <span className="mobile:hidden text-black/20">|</span>
           <Skeleton className="mobile:w-[50px] h-[20px] w-[60px]" />
           <Skeleton className="mobile:w-[80px] h-[20px] w-[120px]" />
         </div>
+      </div>
+
+      {/* ShareButton skeleton */}
+      <div className="mobile:bottom-[14px] mobile:right-[14px] absolute bottom-[20px] right-[20px] flex gap-[8px]">
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
+        <Skeleton className="mobile:size-[32px] size-[40px] rounded-[6px] border border-black/10" />
       </div>
     </div>
   );

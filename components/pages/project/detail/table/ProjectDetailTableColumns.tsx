@@ -12,9 +12,16 @@ import {
   ReferenceCol,
   SubmitterCol,
 } from '@/components/biz/table';
+import {
+  isEmbedTableFormType,
+  normalizeEmbedTableValue,
+} from '@/components/biz/table/embedTable/embedTableUtils';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { IItemSubCategoryEnum, IPocItemKey } from '@/types/item';
+import { devLog } from '@/utils/devLog';
+import { isSablierDomain } from '@/utils/sablierDetector';
 
+import { useProjectDetailContext } from '../../context/projectDetailContext';
 import { IRef } from '../../create/types';
 import { IProposalCreator, ITableMetaOfProjectDetail } from '../types';
 
@@ -52,6 +59,7 @@ export interface IKeyItemDataForTable {
   // Has proposal, but no validated leading proposal yet
   isPendingValidation: boolean;
   isEmptyItem?: boolean;
+  isAiCreator?: boolean;
 }
 
 interface IUseProjectTableColumnsProps {
@@ -65,6 +73,9 @@ export const useProjectTableColumns = ({
   showMetrics = false,
   category,
 }: IUseProjectTableColumnsProps) => {
+  // Get setSubmitPrefill from context
+  const { setSubmitPrefill } = useProjectDetailContext();
+
   // Create column helper - use useMemo to avoid recreating on every render
   const columnHelper = useMemo(
     () => createColumnHelper<IKeyItemDataForTable>(),
@@ -126,6 +137,10 @@ export const useProjectTableColumns = ({
           !!AllItemConfig[item.key as IPocItemKey]?.showExpand;
         const isRowExpanded = expandedRows[item.key];
 
+        const itemKey = item.key as IPocItemKey;
+        const itemConfig = AllItemConfig[itemKey];
+        const formType = itemConfig?.formDisplayType;
+
         return (
           <InputCol.Cell
             value={info.getValue()}
@@ -137,7 +152,17 @@ export const useProjectTableColumns = ({
               rowIsExpandable ? () => toggleRowExpanded(item.key) : undefined
             }
             onPropose={() => {
-              onOpenModal?.(item.key as IPocItemKey, 'submitPropose');
+              if (formType && isEmbedTableFormType(formType)) {
+                // Normalize the current leading data for prefill
+                const normalizedRows = normalizeEmbedTableValue(
+                  formType,
+                  item.input,
+                );
+                devLog('onPropose prefill', { itemKey, normalizedRows });
+                setSubmitPrefill(itemKey, normalizedRows);
+              }
+
+              onOpenModal?.(itemKey, 'submitPropose');
             }}
             onViewProposals={() => {
               onOpenModal?.(item.key as IPocItemKey, 'viewItemProposal');
@@ -172,10 +197,12 @@ export const useProjectTableColumns = ({
         const key = info.row.original.key;
         const { showReferenceModal } = info.table.options
           .meta as ITableMetaOfProjectDetail;
+        const isMatchSablier = isSablierDomain(reference?.value || '');
 
         return (
           <ReferenceCol.Cell
             hasReference={!!info.getValue()}
+            isMatchSablier={isMatchSablier}
             onShowReference={() => {
               showReferenceModal?.(
                 reference?.value || '',
@@ -314,11 +341,25 @@ export const useProjectTableColumns = ({
         const item = info.row.original;
         const { onOpenModal } = info.table.options
           .meta as ITableMetaOfProjectDetail;
+        const itemKey = item.key as IPocItemKey;
+        const itemConfig = AllItemConfig[itemKey];
+        const formType = itemConfig?.formDisplayType;
 
         return (
           <ActionsCol.Cell
             item={item}
             onView={(contentType?: 'viewItemProposal' | 'submitPropose') => {
+              if (formType && isEmbedTableFormType(formType)) {
+                // Normalize the current leading data for prefill
+                const normalizedRows = normalizeEmbedTableValue(
+                  formType,
+                  item.input,
+                );
+                devLog('onPropose item', item);
+                devLog('onPropose normalizedRows', normalizedRows);
+                setSubmitPrefill(itemKey, normalizedRows);
+              }
+
               onOpenModal?.(
                 item.key as IPocItemKey,
                 contentType || 'viewItemProposal',
@@ -349,5 +390,5 @@ export const useProjectTableColumns = ({
 
     return finalColumns;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showMetrics, category]);
+  }, [showMetrics, category, setSubmitPrefill]);
 };

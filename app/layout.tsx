@@ -2,6 +2,7 @@ import '../styles/globals.css';
 
 import { Metadata } from 'next';
 
+import { ChatwootWidget } from '@/components/layout/ChatwootWidget';
 import { MainLayout } from '@/components/layout/mainLayout';
 import { Providers } from '@/components/layout/providers';
 import { getHomePageStats } from '@/lib/services/projectService';
@@ -47,6 +48,7 @@ export default function RootLayout({
         <Providers>
           <MainLayout>{children}</MainLayout>
         </Providers>
+        <ChatwootWidget position="right" />
       </body>
     </html>
   );

@@ -12,6 +12,12 @@ import {
 } from '@/lib/db/schema';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addMultiUserNotification,
+  addNotification,
+  createMultiUserNotification,
+  createNotification,
+} from '@/lib/services/notification';
+import {
   checkNeedQuorum,
   handleOriginalProposalUpdate,
   handleVoteRecord,
@@ -123,6 +129,18 @@ export const voteRouter = router({
             tx,
           );
 
+          if (ctx.user.id !== proposalWithProject.creator) {
+            await addNotification(
+              createNotification.proposalSupported(
+                proposalWithProject.creator,
+                projectId,
+                proposalId,
+                ctx.user.id,
+              ),
+              tx,
+            );
+          }
+
           return vote;
         });
       } catch (error) {
@@ -225,6 +243,13 @@ export const voteRouter = router({
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
 
+          if (!updatedVote) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Vote switch failed, please retry',
+            });
+          }
+
           logUserActivity.vote.update(
             {
               userId: ctx.user.id,
@@ -235,6 +260,18 @@ export const voteRouter = router({
             },
             tx,
           );
+
+          if (ctx.user.id !== targetProposal.creator) {
+            await addNotification(
+              createNotification.proposalSupported(
+                targetProposal.creator,
+                targetProposal.projectId,
+                proposalId,
+                ctx.user.id,
+              ),
+              tx,
+            );
+          }
 
           return updatedVote;
         });
@@ -348,6 +385,15 @@ export const voteRouter = router({
             key,
             weight: userProfile?.weight ?? 0,
           });
+
+          await addMultiUserNotification(
+            createMultiUserNotification.itemProposalSupported(
+              itemProposal.creator.userId,
+              itemProposal.projectId,
+              itemProposalId,
+              ctx.user.id,
+            ),
+          );
 
           const [votes, project, leadingProposal] = await Promise.all([
             tx.query.voteRecords.findMany({
@@ -496,6 +542,15 @@ export const voteRouter = router({
             })
             .where(eq(voteRecords.id, voteToSwitch.id))
             .returning();
+
+          await addMultiUserNotification(
+            createMultiUserNotification.itemProposalSupported(
+              targetItemProposal.creator.userId,
+              projectId,
+              itemProposalId,
+              ctx.user.id,
+            ),
+          );
 
           const votes = await tx.query.voteRecords.findMany({
             where: and(

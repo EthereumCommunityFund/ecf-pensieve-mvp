@@ -12,6 +12,8 @@
   --font-open-sans: 'Open Sans', sans-serif;
   --font-saira: 'Saira', sans-serif;
   --font-mona-sans: 'Mona Sans', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-roboto: 'Roboto', sans-serif;
 }
 
 body {
@@ -41,4 +43,19 @@ body {
       ry: 3px;
     }
   }
+}
+
+/* Custom scrollbar styles for filter components */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e1e1e1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d1d1;
 }

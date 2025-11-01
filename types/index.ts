@@ -15,8 +15,17 @@ export type IProposalWithVotes = IProposal & {
   voteRecords?: IVote[];
 };
 
-export type IProject = RouterOutputs['project']['getProjects']['items'][0] & {
+export type IProject = RouterOutputs['project']['getProjectById'] & {
+  creator: IProfileCreator;
   proposals: IProposalWithVotes[];
+  projectSnap?: IProjectSnap;
+};
+
+export type IProjectSnap = {
+  id: number;
+  projectId: number;
+  items: IProposalItem[];
+  createdAt: Date;
 };
 
 // Profile type for creator information
@@ -104,3 +113,15 @@ export type IProposalsByProjectIdAndKey =
   RouterOutputs['projectLog']['getProposalsByProjectIdAndKey'];
 export type ILeadingProposalHistory =
   RouterOutputs['projectLog']['getLeadingProposalHistoryByProjectIdAndKey'];
+
+// List-related types
+export type IListDetail = RouterOutputs['list']['getListBySlug'];
+export type IListProjectWithOrder =
+  RouterOutputs['list']['getListProjects']['items'][0];
+
+// Edit state for list management
+export interface IEditState {
+  editedItems: IListProjectWithOrder[];
+  deletedItemIds: number[];
+  originalItems: IListProjectWithOrder[];
+}

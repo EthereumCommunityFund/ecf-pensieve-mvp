@@ -13,18 +13,31 @@ import { transformFormValue } from '@/utils/item';
 import { normalizeUrl } from '@/utils/url';
 
 /**
- * Helper function to convert empty string to undefined for optional fields
+ * Helper function to convert empty string to null for optional fields
  */
-const emptyToUndefined = (value: string): string | undefined => {
-  return value === '' ? undefined : value;
+const emptyToNull = (value: string): string | null => {
+  return value === '' ? null : value;
 };
 
 /**
- * Helper function to convert empty string to Date or undefined
+ * Helper function to convert empty string to Date or null
  * Ensures dates are treated as UTC
  */
-const emptyToDateOrUndefined = (value: string): Date | undefined => {
-  return value === '' ? undefined : dayjs.utc(value).toDate();
+const emptyToDateOrNull = (value: string): Date | null => {
+  return value === '' ? null : dayjs.utc(value).toDate();
+};
+
+const normalizeDateToISOString = (date: Date | null): string => {
+  if (!date) {
+    return '';
+  }
+
+  const parsed = dayjs(date);
+  if (!parsed.isValid()) {
+    return '';
+  }
+
+  return dayjs.utc(parsed.format('YYYY-MM-DD')).toISOString();
 };
 
 /**
@@ -32,9 +45,14 @@ const emptyToDateOrUndefined = (value: string): Date | undefined => {
  */
 const dateToUTC = (date: Date | null): Date => {
   if (!date) return new Date();
+
+  const parsed = dayjs(date);
+  if (!parsed.isValid()) {
+    return new Date();
+  }
   // Treat the input date as a local date but convert it to UTC
   // This ensures that a date like "2023-05-15" is stored as "2023-05-15" in UTC
-  return dayjs.utc(dayjs(date).format('YYYY-MM-DD')).toDate();
+  return dayjs.utc(parsed.format('YYYY-MM-DD')).toDate();
 };
 
 /**
@@ -95,8 +113,9 @@ export const transformProjectData = (
     websites: formData.websites.map((website) => ({
       url: website.url,
       title: website.title,
+      _id: website._id,
     })),
-    appUrl: emptyToUndefined(
+    appUrl: emptyToNull(
       transformFormValue(
         'appUrl',
         normalizeUrl(formData.appUrl) || '',
@@ -104,21 +123,15 @@ export const transformProjectData = (
       ),
     ),
     tags: tagsValue as string[],
-    whitePaper: transformFormValue(
-      'whitePaper',
-      formData.whitePaper,
-      fieldApplicability,
+    whitePaper: emptyToNull(
+      transformFormValue('whitePaper', formData.whitePaper, fieldApplicability),
     ),
 
     dateFounded: dateToUTC(formData.dateFounded),
-    dateLaunch: emptyToDateOrUndefined(
+    dateLaunch: emptyToDateOrNull(
       transformFormValue(
         'dateLaunch',
-        formData.dateLaunch
-          ? dayjs
-              .utc(dayjs(formData.dateLaunch).format('YYYY-MM-DD'))
-              .toISOString()
-          : '',
+        normalizeDateToISOString(formData.dateLaunch),
         fieldApplicability,
       ),
     ),
@@ -127,7 +140,7 @@ export const transformProjectData = (
       formData.devStatus || 'In Development',
       fieldApplicability,
     ),
-    fundingStatus: emptyToUndefined(
+    fundingStatus: emptyToNull(
       transformFormValue(
         'fundingStatus',
         formData.fundingStatus || '',
@@ -135,25 +148,26 @@ export const transformProjectData = (
       ),
     ),
     openSource: formData.openSource === 'Yes',
-    codeRepo: emptyToUndefined(
+    codeRepo: emptyToNull(
       transformFormValue(
         'codeRepo',
         normalizeUrl(formData.codeRepo) || '',
         fieldApplicability,
       ),
     ),
-    tokenContract: emptyToUndefined(
+    tokenContract: emptyToNull(
       transformFormValue(
         'tokenContract',
         formData.tokenContract || '',
         fieldApplicability,
       ),
     ),
-    dappSmartContracts: transformFormValue(
-      'dappSmartContracts',
-      formData.dappSmartContracts || '',
-      fieldApplicability,
-    ),
+    dappSmartContracts:
+      fieldApplicability.dappSmartContracts === false
+        ? null
+        : formData.dappSmartContracts && formData.dappSmartContracts.length > 0
+          ? formData.dappSmartContracts
+          : null,
 
     orgStructure: transformFormValue(
       'orgStructure',
@@ -164,11 +178,12 @@ export const transformProjectData = (
     founders: formData.founders.map((founder) => ({
       name: founder.name,
       title: founder.title,
+      region: founder.region,
     })),
     refs:
       references.length > 0
         ? references.map((ref) => ({ key: ref.key, value: ref.value }))
-        : undefined,
+        : null,
   };
 };
 
@@ -227,6 +242,7 @@ export const transformProposalData = (
               formData.websites.map((website) => ({
                 url: website.url,
                 title: website.title,
+                _id: website._id,
               })),
             )
           : '',
@@ -325,7 +341,9 @@ export const transformProposalData = (
       key: 'dappSmartContracts',
       value: transformFormValue(
         'dappSmartContracts',
-        formData.dappSmartContracts || '',
+        formData.dappSmartContracts?.length > 0
+          ? JSON.stringify(formData.dappSmartContracts)
+          : '',
         fieldApplicability,
       ),
     },
@@ -354,6 +372,8 @@ export const transformProposalData = (
               formData.founders.map((founder) => ({
                 name: founder.name,
                 title: founder.title,
+                region: founder.region,
+                _id: founder._id,
               })),
             )
           : '',
@@ -375,6 +395,68 @@ export const transformProposalData = (
 export const convertProjectToFormData = (
   project: IProject,
 ): IProjectFormData => {
+  // Handle smart contracts data conversion to array format
+  let dappSmartContractsData: any[] = [];
+
+  if (
+    project.dappSmartContracts !== null &&
+    project.dappSmartContracts !== undefined
+  ) {
+    if (typeof project.dappSmartContracts === 'string') {
+      // Legacy string format - convert to array with single contract
+      const addresses = project.dappSmartContracts
+        .split(',')
+        .map((addr) => addr.trim())
+        .filter(Boolean)
+        .join(', ');
+
+      if (addresses) {
+        dappSmartContractsData = [
+          {
+            id: crypto.randomUUID(),
+            chain: 'ethereum',
+            addresses: addresses,
+          },
+        ];
+      }
+    } else if (typeof project.dappSmartContracts === 'object') {
+      // JSONB format from backend
+      const contractsObj = project.dappSmartContracts as any;
+      if (contractsObj.contracts && Array.isArray(contractsObj.contracts)) {
+        // New format with contracts array
+        dappSmartContractsData = contractsObj.contracts.map((c: any) => ({
+          id: c.id || crypto.randomUUID(),
+          chain: c.chain || '',
+          addresses: Array.isArray(c.addresses)
+            ? c.addresses.join(', ')
+            : c.addresses || '',
+        }));
+      } else if (Array.isArray(project.dappSmartContracts)) {
+        // Already in array format
+        dappSmartContractsData = (project.dappSmartContracts as any[]).map(
+          (c: any) => ({
+            id: c.id || crypto.randomUUID(),
+            chain: c.chain || '',
+            addresses: Array.isArray(c.addresses)
+              ? c.addresses.join(', ')
+              : c.addresses || '',
+          }),
+        );
+      }
+    }
+  }
+
+  // If no data, provide empty array with one empty contract
+  if (dappSmartContractsData.length === 0) {
+    dappSmartContractsData = [
+      {
+        id: crypto.randomUUID(),
+        chain: '',
+        addresses: '',
+      },
+    ];
+  }
+
   return {
     name: project.name,
     tagline: project.tagline,
@@ -384,11 +466,12 @@ export const convertProjectToFormData = (
     websites: project.websites.map((website: any) => ({
       url: website.url,
       title: website.title,
+      _id: website._id || crypto.randomUUID(),
     })),
     appUrl: project.appUrl || null,
     tags: project.tags,
     whitePaper: project.whitePaper || '',
-    dappSmartContracts: project.dappSmartContracts || '',
+    dappSmartContracts: dappSmartContractsData,
     dateFounded: project.dateFounded ? new Date(project.dateFounded) : null,
     dateLaunch: project.dateLaunch ? new Date(project.dateLaunch) : null,
     devStatus: project.devStatus,
@@ -401,6 +484,8 @@ export const convertProjectToFormData = (
     founders: project.founders.map((founder: any) => ({
       name: founder.name,
       title: founder.title,
+      region: founder.region,
+      _id: founder._id || crypto.randomUUID(),
     })),
   };
 };
@@ -444,5 +529,8 @@ export const updateFormWithProjectData = (
         setReferences(referenceData);
       }
     }
+  }
+  if (formType === IFormTypeEnum.Proposal && projectData) {
+    setValue('name', projectData.name || '');
   }
 };

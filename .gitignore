@@ -33,6 +33,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env
 .env.local
+.env.local.test
 
 # vercel
 .vercel
@@ -45,3 +46,9 @@ next-env.d.ts
 .cursor
 .docs
 *storybook.log
+
+# YoYo AI version control directory
+.yoyo/
+supabase/*
+.kiro/
+.vscode

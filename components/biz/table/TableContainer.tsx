@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, ScrollShadow } from '@heroui/react';
 import { ReactNode } from 'react';
 
 export interface TableContainerProps {
@@ -13,6 +13,8 @@ export interface TableContainerProps {
   rounded?: boolean;
   /** Background color variant */
   background?: 'white' | 'transparent';
+  /** Whether to hide the scrollbar */
+  hideScrollBar?: boolean;
 }
 
 /**
@@ -133,6 +135,7 @@ export const ModalTableContainer = ({
 export const PageTableContainer = ({
   children,
   className,
+  hideScrollBar,
   // Destructure and ignore allowInternalBorderRadius to prevent it from reaching the DOM
   allowInternalBorderRadius,
   ...props
@@ -140,8 +143,14 @@ export const PageTableContainer = ({
   allowInternalBorderRadius?: boolean;
 }) => {
   return (
-    <TableContainer className={className} {...props}>
-      {children}
-    </TableContainer>
+    <ScrollShadow
+      className="tablet:max-w-[9999px] mobile:max-w-[9999px] w-full overflow-x-scroll"
+      orientation="horizontal"
+      hideScrollBar={hideScrollBar}
+    >
+      <TableContainer className={className} {...props}>
+        {children}
+      </TableContainer>
+    </ScrollShadow>
   );
 };

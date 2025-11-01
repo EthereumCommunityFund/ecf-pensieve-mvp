@@ -10,17 +10,21 @@ import { navigationItems, type NavigationItem } from './navigation';
 export function MobileNavigation() {
   const pathname = usePathname();
 
-  const isActiveRoute = (path: string) => {
+  const isActiveRoute = (path?: string) => {
     return pathname === path;
   };
 
   return (
     <nav className="flex flex-col gap-2">
-      {navigationItems.map((item: NavigationItem) => (
-        <Link
-          key={item.name}
-          href={item.href}
-          className={`
+      {navigationItems
+        .filter((item) => !item.isDesktopOnly)
+        .map((item: NavigationItem) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            target={item.isExternal ? '_blank' : undefined}
+            rel={item.isExternal ? 'noopener noreferrer' : undefined}
+            className={`
                         flex h-10 items-center gap-2 rounded-lg px-3
                         ${
                           isActiveRoute(item.matchPath)
@@ -28,21 +32,21 @@ export function MobileNavigation() {
                             : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]'
                         }
                     `}
-        >
-          {typeof (isActiveRoute(item.matchPath)
-            ? item.activeIcon
-            : item.icon) === 'string' ? (
-            <Image
-              src={
-                isActiveRoute(item.matchPath)
-                  ? (item.activeIcon as string)
-                  : (item.icon as string)
-              }
-              as={NextImage}
-              alt={item.name}
-              width={24}
-              height={24}
-              className={`
+          >
+            {typeof (isActiveRoute(item.matchPath)
+              ? item.activeIcon
+              : item.icon) === 'string' ? (
+              <Image
+                src={
+                  isActiveRoute(item.matchPath)
+                    ? (item.activeIcon as string)
+                    : (item.icon as string)
+                }
+                as={NextImage}
+                alt={item.name}
+                width={24}
+                height={24}
+                className={`
                 size-6
                 ${
                   isActiveRoute(item.matchPath)
@@ -50,15 +54,15 @@ export function MobileNavigation() {
                     : 'brightness-0'
                 }
               `}
-            />
-          ) : (
-            <div className="size-6">
-              {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
-            </div>
-          )}
-          <span className="font-medium">{item.name}</span>
-        </Link>
-      ))}
+              />
+            ) : (
+              <div className="size-6">
+                {isActiveRoute(item.matchPath) ? item.activeIcon : item.icon}
+              </div>
+            )}
+            <span className="font-medium">{item.name}</span>
+          </Link>
+        ))}
     </nav>
   );
 }

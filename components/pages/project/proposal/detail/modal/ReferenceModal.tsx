@@ -11,8 +11,11 @@ import {
   ModalContent,
 } from '@/components/base';
 import { CopyIcon } from '@/components/icons';
+import SablierEntry from '@/components/sablier/SablierEntry';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { IEssentialItemKey } from '@/types/item';
+import { isSablierDomain } from '@/utils/sablierDetector';
 import { normalizeUrl } from '@/utils/url';
 
 import { IRef } from '../../../create/types';
@@ -30,6 +33,8 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
   fieldKey,
   refs,
 }) => {
+  const { openExternalLink } = useExternalLink();
+
   const refMap = useMemo(() => {
     return refs.reduce(
       (acc, ref) => {
@@ -46,6 +51,10 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
     return normalizeUrl(refMap[fieldKey]) || fieldKey;
   }, [refMap, fieldKey]);
 
+  const isMatchSablier = useMemo(() => {
+    return isSablierDomain(link);
+  }, [link]);
+
   const onCopySuccess = useCallback(() => {
     addToast({
       title: 'Success',
@@ -53,6 +62,10 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
       color: 'success',
     });
   }, []);
+
+  const handleLinkClick = useCallback(() => {
+    openExternalLink(link);
+  }, [link, openExternalLink]);
 
   return (
     <Modal
@@ -82,8 +95,11 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
           </p>
 
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10">
-            <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
-              <span className="truncate">{link}</span>
+            <div
+              className="flex h-[40px] flex-1 cursor-pointer items-center truncate px-[10px] text-black hover:bg-gray-50"
+              onClick={handleLinkClick}
+            >
+              <span className="truncate underline">{link}</span>
             </div>
             <CopyToClipboard text={link} onCopy={onCopySuccess}>
               <Button
@@ -94,6 +110,15 @@ const ReferenceModal: FC<IReferenceModalProps> = ({
               </Button>
             </CopyToClipboard>
           </div>
+
+          {isMatchSablier && (
+            <div className="flex flex-col items-center gap-[10px]">
+              <Button className="w-full" onClick={handleLinkClick}>
+                View on Sablier
+              </Button>
+              <SablierEntry />
+            </div>
+          )}
 
           <p className="text-[13px] leading-[1.2] text-black/80">
             References serve as documented sources that substantiate the

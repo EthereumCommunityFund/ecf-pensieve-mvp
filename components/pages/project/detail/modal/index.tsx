@@ -62,6 +62,7 @@ const ModalContentSection: FC<{
   onSubmitEntry?: () => void;
   setModalContentType: (type: 'viewItemProposal' | 'submitPropose') => void;
   onClose: () => void;
+  initialTab?: string;
 }> = memo(
   ({
     itemKey,
@@ -70,6 +71,7 @@ const ModalContentSection: FC<{
     onSubmitEntry,
     setModalContentType,
     onClose,
+    initialTab,
   }) => {
     const { profile } = useAuth();
     const { displayProposalDataOfKey, proposalsByProjectIdAndKey } =
@@ -132,7 +134,11 @@ const ModalContentSection: FC<{
                 contentType === 'viewItemProposal' ? 'block' : 'hidden',
               )}
             >
-              <LeftContent itemKey={itemKey} onSubmitEntry={onSubmitEntry} />
+              <LeftContent
+                itemKey={itemKey}
+                onSubmitEntry={onSubmitEntry}
+                initialTab={initialTab}
+              />
             </div>
 
             <div
@@ -178,6 +184,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
   currentWeight = 0,
   contentType = 'viewItemProposal',
   setModalContentType,
+  initialTab,
 }) => {
   const { setCurrentItemKey } = useProjectDetailContext();
 
@@ -204,6 +211,7 @@ const ProjectDetailMainModal: FC<IProjectDetailModalProps> = ({
           onSubmitEntry={onSubmitEntry}
           setModalContentType={setModalContentType}
           onClose={handleClose}
+          initialTab={initialTab}
         />
       ) : null}
     </StableModalBackdrop>

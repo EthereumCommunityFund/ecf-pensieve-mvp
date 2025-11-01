@@ -40,3 +40,4 @@ stories/
 docs/
 lib/db/migrations/
 .claude
+*.html

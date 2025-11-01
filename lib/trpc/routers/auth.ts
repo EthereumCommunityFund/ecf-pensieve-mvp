@@ -1,12 +1,13 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { ethers } from 'ethers';
 import { generateSiweNonce } from 'viem/siwe';
 import { z } from 'zod';
 
 import { loginNonces, profiles } from '@/lib/db/schema';
-import { invitationCodes } from '@/lib/db/schema/invitations';
+import { addDefaultListToUser } from '@/lib/services/listService';
+import { verifyTurnstileToken } from '@/lib/services/turnstile';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 const NONCE_EXPIRY_MS = 10 * 60 * 1000;
@@ -151,13 +152,38 @@ export const authRouter = router({
           .trim()
           .min(1, 'Username cannot be empty')
           .optional(),
-        inviteCode: z.string().optional(),
+        //inviteCode: z.string().optional(),
+        turnstileToken: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { address, signature, message, username, inviteCode } = input;
+      const {
+        address,
+        signature,
+        message,
+        username,
+        //inviteCode,
+        turnstileToken,
+      } = input;
+
       const normalizedAddress = address.toLowerCase();
       const email = getFakeEmail(normalizedAddress);
+
+      if (turnstileToken) {
+        const isValidToken = await verifyTurnstileToken(turnstileToken);
+        if (!isValidToken) {
+          console.error(
+            `[TRPC Verify] Turnstile verification failed for ${normalizedAddress}`,
+          );
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Human verification failed. Please try again.',
+          });
+        }
+        console.log(
+          `[TRPC Verify] Turnstile verification successful for ${normalizedAddress}`,
+        );
+      }
 
       verifySignature(message, signature, normalizedAddress);
 
@@ -196,17 +222,7 @@ export const authRouter = router({
         });
       }
 
-      if (nonceData) {
-        ctx.db
-          .delete(loginNonces)
-          .where(eq(loginNonces.address, normalizedAddress))
-          .catch((deleteError: any) => {
-            console.error(
-              `[TRPC Verify Cleanup] Error deleting used nonce for ${normalizedAddress}:`,
-              deleteError,
-            );
-          });
-      }
+      // Note: Nonce deletion moved to the end of successful flow to prevent issues with retries
 
       if (!nonceData) {
         throw new TRPCError({
@@ -237,6 +253,18 @@ export const authRouter = router({
             normalizedAddress,
             ctx.supabase,
           );
+
+          // Clean up nonce after successful token generation for existing user
+          ctx.db
+            .delete(loginNonces)
+            .where(eq(loginNonces.address, normalizedAddress))
+            .catch((deleteError: any) => {
+              console.error(
+                `[TRPC Verify Cleanup] Error deleting used nonce for existing user ${normalizedAddress}:`,
+                deleteError,
+              );
+            });
+
           return { isNewUser, token };
         } catch (tokenError) {
           console.error(
@@ -261,7 +289,7 @@ export const authRouter = router({
         });
       }
 
-      let invitationCodeId: number;
+      /*let invitationCodeId: number;
       if (isNewUser) {
         if (!inviteCode) {
           throw new TRPCError({
@@ -307,7 +335,7 @@ export const authRouter = router({
             cause: error,
           });
         }
-      }
+      }*/
 
       let userId: string;
       try {
@@ -349,48 +377,71 @@ export const authRouter = router({
       }
 
       try {
+        // Insert profile record
         await ctx.db.insert(profiles).values({
           userId: userId,
           address: normalizedAddress,
           name: username,
-          invitationCodeId: invitationCodeId!,
+          //invitationCodeId: invitationCodeId!,
         });
-      } catch (createProfileError: any) {
-        console.error(
-          `[TRPC Verify Flow] Failed to create profile for user ${userId} (${normalizedAddress}):`,
-          createProfileError,
-        );
-        try {
-          await ctx.supabase.auth.admin.deleteUser(userId);
-        } catch (deleteUserError) {
-          console.error(
-            `[TRPC Verify Flow Rollback] Failed to delete orphaned Auth user ${userId}:`,
-            deleteUserError,
+
+        // Verify profile was created successfully by querying it back
+        const profileCheck = await ctx.db.query.profiles.findFirst({
+          where: eq(profiles.userId, userId),
+        });
+
+        if (!profileCheck) {
+          throw new Error(
+            'Profile data is not immediately available for reading - this may be due to database replication delay or caching. Please try again in a moment.',
           );
         }
+
+        await addDefaultListToUser(userId, ctx.db);
+
+        // Generate token only after confirming profile exists and is queryable
+        const token = await generateAuthToken(normalizedAddress, ctx.supabase);
+
+        // Clean up nonce after successful profile creation and token generation
+        ctx.db
+          .delete(loginNonces)
+          .where(eq(loginNonces.address, normalizedAddress))
+          .catch((deleteError: any) => {
+            console.error(
+              `[TRPC Verify Cleanup] Error deleting used nonce for new user ${normalizedAddress}:`,
+              deleteError,
+            );
+          });
+
+        return { isNewUser, token };
+      } catch (error: any) {
+        console.error(
+          `[TRPC Verify Flow] Error in profile creation or token generation for ${normalizedAddress}:`,
+          error,
+        );
+
+        // If error occurs during profile creation
+        if (
+          error.message?.includes('profile') ||
+          error.message?.includes('database')
+        ) {
+          try {
+            await ctx.supabase.auth.admin.deleteUser(userId);
+          } catch (deleteUserError) {
+            console.error(
+              `[TRPC Verify Flow Rollback] Failed to delete orphaned Auth user ${userId}:`,
+              deleteUserError,
+            );
+          }
+        }
+
+        if (error instanceof TRPCError) throw error;
+
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Database error when creating profile',
-          cause: createProfileError,
+          message:
+            error.message || 'Error creating profile or generating token',
+          cause: error,
         });
-      }
-
-      try {
-        const token = await generateAuthToken(normalizedAddress, ctx.supabase);
-        return { isNewUser, token };
-      } catch (tokenError) {
-        console.error(
-          `[TRPC Verify Flow] Failed to generate token for new user ${normalizedAddress}:`,
-          tokenError,
-        );
-        if (!(tokenError instanceof TRPCError)) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to generate token for new user.',
-            cause: tokenError,
-          });
-        }
-        throw tokenError;
       }
     }),
 });

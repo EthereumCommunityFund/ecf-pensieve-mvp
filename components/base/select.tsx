@@ -1,8 +1,4 @@
-import {
-  extendVariants,
-  Select as HSelect,
-  SelectItem as HSelectItem,
-} from '@heroui/react';
+import { extendVariants, Select as HSelect, SelectItem } from '@heroui/react';
 
 const Select = extendVariants(HSelect, {
   variants: {
@@ -16,13 +12,17 @@ const Select = extendVariants(HSelect, {
           'bg-black/[0.05] rounded-[8px] text-black placeholder:text-black/60',
       },
     },
+    isDisabled: {
+      true: {
+        base: 'opacity-30',
+        trigger: 'cursor-not-allowed',
+      },
+    },
   },
   defaultVariants: {
     select: 'default',
     variant: 'bordered',
   },
 });
-
-const SelectItem = extendVariants(HSelectItem, {});
 
 export { Select, SelectItem };

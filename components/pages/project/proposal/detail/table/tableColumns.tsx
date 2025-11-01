@@ -11,6 +11,7 @@ import {
   TooltipThWithPin,
 } from '@/components/biz/table';
 import { CaretDownIcon } from '@/components/icons';
+import SablierEntry from '@/components/sablier/SablierEntry';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
 import {
@@ -18,6 +19,7 @@ import {
   IItemSubCategoryEnum,
   IPocItemKey,
 } from '@/types/item';
+import { isSablierDomain } from '@/utils/sablierDetector';
 
 import { useProposalDetailContext } from '../context/proposalDetailContext';
 import { ITableProposalItem } from '../ProposalDetails';
@@ -155,6 +157,7 @@ export const useCreateProposalTableColumns = ({
             </div>
             <TooltipItemWeight
               itemWeight={ALL_POC_ITEM_MAP[rowKey as IPocItemKey].weight}
+              genesisWeight={ALL_POC_ITEM_MAP[rowKey as IPocItemKey].weight}
               isGenesis={true}
             />
           </div>
@@ -270,20 +273,24 @@ export const useCreateProposalTableColumns = ({
       cell: (info) => {
         const { onShowReference } = info.table.options.meta as TableCellsMeta;
         const value = info.getValue();
+        const isMatchSablier = isSablierDomain(value);
 
         return (
           <div className="mx-auto flex w-full justify-center">
             {value ? (
-              <Button
-                color="secondary"
-                size="md"
-                className="w-[104px] text-[13px] font-[400]"
-                onPress={() =>
-                  onShowReference(info.row.original.key as IPocItemKey)
-                }
-              >
-                Reference
-              </Button>
+              <div className="flex flex-col items-center gap-[10px]">
+                {isMatchSablier && <SablierEntry />}
+                <Button
+                  color="secondary"
+                  size="md"
+                  className="w-[104px] text-[13px] font-[400]"
+                  onPress={() =>
+                    onShowReference(info.row.original.key as IPocItemKey)
+                  }
+                >
+                  Reference
+                </Button>
+              </div>
             ) : (
               <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
                 empty

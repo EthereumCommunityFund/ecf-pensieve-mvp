@@ -6,16 +6,17 @@ import {
   itemProposals,
   profiles,
   projects,
-  ranks,
   voteRecords,
 } from '@/lib/db/schema';
+import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addMultiUserNotification,
   addRewardNotification,
+  createMultiUserNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
 import { calculateReward } from '@/lib/utils/itemProposalUtils';
-import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 
 import { protectedProcedure, router } from '../server';
 
@@ -42,6 +43,14 @@ export const itemProposalRouter = router({
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Project not found',
+          });
+        }
+
+        const item = POC_ITEMS[input.key as keyof typeof POC_ITEMS];
+        if (!item) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Item not found',
           });
         }
 
@@ -81,34 +90,15 @@ export const itemProposalRouter = router({
             });
           }
 
-          const caller = voteRouter.createCaller({
-            ...ctx,
-            db: tx as any,
-          });
-
-          if (voteRecord) {
-            await caller.switchItemProposalVote({
-              itemProposalId: itemProposal.id,
-              key: input.key,
-            });
-          } else {
-            await caller.createItemProposalVote({
-              itemProposalId: itemProposal.id,
-              key: input.key,
-            });
-          }
-
           if (!existingProposal) {
             const reward = calculateReward(input.key);
             const finalWeight = (userProfile?.weight ?? 0) + reward;
+
             const hasProposalKeys = new Set([
               ...project.hasProposalKeys,
               input.key,
             ]);
             const updatedHasProposalKeys = Array.from(hasProposalKeys);
-            const newPublishedGenesisWeight = calculatePublishedGenesisWeight(
-              updatedHasProposalKeys,
-            );
 
             const updatePromises = [
               tx
@@ -123,11 +113,6 @@ export const itemProposalRouter = router({
                 })
                 .where(eq(projects.id, input.projectId)),
 
-              tx
-                .update(ranks)
-                .set({ publishedGenesisWeight: newPublishedGenesisWeight })
-                .where(eq(ranks.projectId, input.projectId)),
-
               addRewardNotification(
                 createRewardNotification.createItemProposal(
                   ctx.user.id,
@@ -136,6 +121,14 @@ export const itemProposalRouter = router({
                   reward,
                 ),
                 tx,
+              ),
+
+              addMultiUserNotification(
+                createMultiUserNotification.createItemProposal(
+                  ctx.user.id,
+                  input.projectId,
+                  itemProposal.id,
+                ),
               ),
 
               logUserActivity.itemProposal.create(
@@ -151,7 +144,7 @@ export const itemProposalRouter = router({
 
             await Promise.all(updatePromises);
           } else {
-            logUserActivity.itemProposal.update(
+            await logUserActivity.itemProposal.update(
               {
                 userId: ctx.user.id,
                 targetId: itemProposal.id,
@@ -160,6 +153,23 @@ export const itemProposalRouter = router({
               },
               tx,
             );
+          }
+
+          const caller = voteRouter.createCaller({
+            ...ctx,
+            db: tx as any,
+          });
+
+          if (voteRecord) {
+            await caller.switchItemProposalVote({
+              itemProposalId: itemProposal.id,
+              key: input.key,
+            });
+          } else {
+            await caller.createItemProposalVote({
+              itemProposalId: itemProposal.id,
+              key: input.key,
+            });
           }
 
           return itemProposal;

@@ -15,17 +15,8 @@ import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
 import { supabase } from '@/lib/supabase/client';
 import { trpc } from '@/lib/trpc/client';
-import { setSessionToken } from '@/lib/trpc/sessionStore';
+import { getSessionWithTimeout } from '@/lib/utils/supabaseUtils';
 import { IProfile } from '@/types';
-
-const getSessionWithTimeout = async (timeoutMs = 3000) => {
-  return Promise.race([
-    supabase.auth.getSession(),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs),
-    ),
-  ]);
-};
 
 type AuthStatus =
   | 'idle'
@@ -33,6 +24,7 @@ type AuthStatus =
   | 'fetching_profile'
   | 'creating_profile'
   | 'authenticated'
+  | 'awaiting_turnstile_verification'
   | 'error';
 
 type ConnectSource = 'connectButton' | 'invalidAction' | 'pageLoad';
@@ -80,13 +72,15 @@ interface IAuthContext {
 
   // Actions
   authenticate: () => Promise<void>;
-  createProfile: (username: string, inviteCode?: string) => Promise<void>;
+  createProfile: (username: string) => Promise<void>;
   logout: () => Promise<void>;
   performFullLogoutAndReload: () => Promise<void>;
   showAuthPrompt: (source?: ConnectSource) => void;
   hideAuthPrompt: () => void;
   setConnectSource: (source: ConnectSource) => void;
   fetchUserProfile: () => Promise<IProfile | null>;
+  needsTurnstile: boolean;
+  continueAuthWithTurnstile: (token: string) => Promise<void>;
 }
 
 export const CreateProfileErrorPrefix = '[Create Profile Failed]';
@@ -118,6 +112,8 @@ const initialContext: IAuthContext = {
   setConnectSource: () => {},
   createProfile: async () => {},
   fetchUserProfile: async () => null,
+  needsTurnstile: false,
+  continueAuthWithTurnstile: async () => {},
 };
 
 const AuthContext = createContext<IAuthContext>(initialContext);
@@ -151,6 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const signatureDataRef = useRef<SignatureData>({});
   const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
+
+  const [needsTurnstile, setNeedsTurnstile] = useState(false);
+  const turnstileTokenRef = useRef<string | null>(null);
 
   const { address, isConnected, chain } = useAccount();
   const { disconnectAsync } = useDisconnect();
@@ -195,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const resetAuthState = useCallback(() => {
+    turnstileTokenRef.current = null;
     setUserState({
       session: null,
       user: null,
@@ -213,8 +213,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     updateAuthState('idle');
     await supabase.auth.signOut();
-    // Clear session token from localStorage
-    setSessionToken(null);
     // Clear tRPC cache - this is critical for proper logout
     utils.user.getCurrentUser.setData(undefined, undefined);
     resetAuthState();
@@ -236,57 +234,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [disconnectAsync, logout]);
 
-  const fetchUserProfile = useCallback(async (): Promise<IProfile | null> => {
-    try {
-      const sessionData = await getSessionWithTimeout();
-      const currentSupabaseUser = sessionData?.data?.session?.user;
-
-      if (!currentSupabaseUser) {
-        return handleError(
-          'Get profile failed, please try again.',
-          false,
-          false,
-        );
-      }
-
-      // Ensure local state matches Supabase session user
-      if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
-        setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
-      }
-
-      updateAuthState('fetching_profile');
-
+  const fetchUserProfile = useCallback(
+    async (existingSession?: Session | null): Promise<IProfile | null> => {
       try {
-        const profileData = await getCurrentUserQuery.refetch();
-        if (profileData.error) {
-          throw profileData.error;
-        }
-        if (profileData.data) {
-          setUserState((prev) => ({ ...prev, profile: profileData.data }));
-          updateAuthState('authenticated');
-          return profileData.data;
+        let currentSupabaseUser;
+
+        if (existingSession) {
+          currentSupabaseUser = existingSession.user;
         } else {
-          return handleError('Get profile failed, please try again.');
+          const sessionData = await getSessionWithTimeout();
+          currentSupabaseUser = sessionData?.data?.session?.user;
+        }
+
+        if (!currentSupabaseUser) {
+          return handleError(
+            'Get profile failed, please try again.',
+            false,
+            false,
+          );
+        }
+
+        if (!userState.user || userState.user.id !== currentSupabaseUser.id) {
+          setUserState((prev) => ({ ...prev, user: currentSupabaseUser }));
+        }
+
+        updateAuthState('fetching_profile');
+
+        try {
+          const profileData = await getCurrentUserQuery.refetch();
+          if (profileData.error) {
+            throw profileData.error;
+          }
+          if (profileData.data) {
+            setUserState((prev) => ({ ...prev, profile: profileData.data }));
+            updateAuthState('authenticated');
+            return profileData.data;
+          } else {
+            return handleError('Get profile failed, please try again.');
+          }
+        } catch (error: any) {
+          return handleError(
+            `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+          );
         }
       } catch (error: any) {
         return handleError(
-          `Failed to fetch profile: ${error.message || 'Please try again later'}`,
+          `Session fetch failed: ${error.message || 'Please try again later'}`,
+          false,
+          false,
         );
       }
-    } catch (error: any) {
-      return handleError(
-        `Session fetch failed: ${error.message || 'Please try again later'}`,
-        false,
-        false,
-      );
-    }
-  }, [
-    getCurrentUserQuery,
-    userState.user,
-    authState.status,
-    handleError,
-    updateAuthState,
-  ]);
+    },
+    [
+      getCurrentUserQuery,
+      userState.user,
+      authState.status,
+      handleError,
+      updateAuthState,
+    ],
+  );
 
   const handleSupabaseLogin = useCallback(
     async (token: string): Promise<void> => {
@@ -315,7 +321,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           user: sessionData.user,
         }));
 
-        const profile = await fetchUserProfile();
+        const profile = await fetchUserProfile(sessionData.session);
         if (profile) {
           updateAuthState('authenticated');
           setUserState((prev) => ({ ...prev, newUser: false }));
@@ -340,6 +346,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (
       authState.status === 'authenticating' ||
       authState.status === 'fetching_profile' ||
+      authState.status === 'awaiting_turnstile_verification' ||
       authState.status === 'authenticated'
     ) {
       return;
@@ -369,6 +376,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!nonce) {
         handleError('Failed to retrieve nonce from server.', false, true);
+        return;
       }
 
       const message = createSiweMessage({
@@ -385,19 +393,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const signature = await signMessageAsync({ message });
       signatureDataRef.current = { message, signature };
 
-      if (!isRegistered) {
-        setUserState((prev) => ({ ...prev, newUser: true }));
-        updateAuthState('authenticated');
-        return;
-      } else {
-        const { token } = await verifyMutation.mutateAsync({
-          address,
-          signature,
-          message,
-        });
-
-        await handleSupabaseLogin(token);
-      }
+      setNeedsTurnstile(true);
+      updateAuthState('awaiting_turnstile_verification');
+      setUserState((prev) => ({
+        ...prev,
+        newUser: !isRegistered,
+      }));
     } catch (error: any) {
       const errorMessage =
         error.message || 'Authentication failed. Please try again.';
@@ -416,12 +417,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkRegistrationQuery,
     signMessageAsync,
     verifyMutation,
-    handleError,
     handleSupabaseLogin,
+    handleError,
   ]);
 
+  const continueAuthWithTurnstile = useCallback(
+    async (turnstileToken: string) => {
+      if (
+        !signatureDataRef.current.message ||
+        !signatureDataRef.current.signature
+      ) {
+        handleError('Missing signature data', false, true);
+        return;
+      }
+
+      try {
+        const { message, signature } = signatureDataRef.current;
+
+        if (userState.newUser) {
+          turnstileTokenRef.current = turnstileToken;
+          setNeedsTurnstile(false);
+          updateAuthState('fetching_profile');
+        } else {
+          updateAuthState('fetching_profile');
+          setNeedsTurnstile(false);
+
+          const { token } = await verifyMutation.mutateAsync({
+            address: address!,
+            signature,
+            message,
+            turnstileToken,
+          });
+          await handleSupabaseLogin(token);
+        }
+      } catch (error: any) {
+        setNeedsTurnstile(true);
+        updateAuthState('awaiting_turnstile_verification');
+        handleError(error.message, false, false);
+      }
+    },
+    [
+      address,
+      userState.newUser,
+      verifyMutation,
+      handleSupabaseLogin,
+      updateAuthState,
+      handleError,
+    ],
+  );
+
   const createProfile = useCallback(
-    async (username: string, inviteCode?: string) => {
+    async (username: string) => {
       if (!address) {
         handleError(`${CreateProfileErrorPrefix} Failed to create profile.`);
         return;
@@ -435,14 +481,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           signature: signatureDataRef.current.signature!,
           message: signatureDataRef.current.message!,
           username,
-          inviteCode,
+          turnstileToken: turnstileTokenRef.current!,
         });
 
         setUserState((prev) => ({ ...prev, isNewUserRegistration: true }));
         await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
+        turnstileTokenRef.current = null;
+        setNeedsTurnstile(true);
+        updateAuthState('awaiting_turnstile_verification');
         handleError(
           `${CreateProfileErrorPrefix}: ${error.message || 'Please try again'}`,
+          false,
+          false,
         );
       }
     },
@@ -478,7 +529,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
           console.log('Auth state changed:', event);
-          setSessionToken(session?.access_token || null);
           setUserState((prev) => ({
             ...prev,
             session,
@@ -594,6 +644,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     hideAuthPrompt,
     setConnectSource,
     fetchUserProfile,
+    needsTurnstile,
+    continueAuthWithTurnstile,
   };
 
   return (

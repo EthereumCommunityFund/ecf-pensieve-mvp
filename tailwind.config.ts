@@ -30,6 +30,8 @@ const config: Config = {
         sans: ['var(--font-open-sans)', 'Arial', 'sans-serif'],
         saira: ['var(--font-saira)', 'Arial', 'sans-serif'],
         mona: ['var(--font-mona-sans)', 'Arial', 'sans-serif'],
+        inter: ['var(--font-inter)', 'Arial', 'sans-serif'],
+        roboto: ['var(--font-roboto)', 'Arial', 'sans-serif'],
       },
       scale: {
         '120': '1.2',
@@ -38,6 +40,7 @@ const config: Config = {
   },
   plugins: [
     heroui(),
+    require('@tailwindcss/line-clamp'),
     function ({ addUtilities }: any) {
       addUtilities({
         '.scrollbar-hide': {

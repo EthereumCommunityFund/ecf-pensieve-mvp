@@ -7,6 +7,7 @@ import {
   UseFormWatch,
 } from 'react-hook-form';
 
+import type { SmartContract } from '@/components/biz/project/smart-contracts/ContractEntry';
 import {
   IBasicsKey,
   IEssentialItemKey,
@@ -26,11 +27,20 @@ export type IStepStatus = 'Inactive' | 'Active' | 'Finished';
 export interface IFounder {
   name: string;
   title: string;
+  region?: string;
+  _id?: string;
 }
 
 export interface IWebsite {
   url: string;
   title: string;
+  _id?: string;
+}
+
+export interface ISocialLink {
+  platform: string;
+  url: string;
+  _id?: string;
 }
 
 export interface IReferenceData {
@@ -57,7 +67,7 @@ export interface IProjectFormData
   openSource: 'Yes' | 'No' | '';
   codeRepo: string | null;
   tokenContract: string | null;
-  dappSmartContracts: string;
+  dappSmartContracts: SmartContract[];
   orgStructure: string | null;
   publicGoods: 'Yes' | 'No' | '';
   founders: IFounder[];
@@ -75,22 +85,27 @@ export interface ICreateProjectPayload {
   mainDescription: string;
   logoUrl: string;
   websites: IWebsite[];
-  appUrl?: string;
+  appUrl: string | null;
   tags: string[];
-  whitePaper: string;
+  whitePaper: string | null;
   dateFounded: Date;
-  dateLaunch?: Date;
+  dateLaunch: Date | null;
   devStatus: string;
-  fundingStatus?: string;
+  fundingStatus: string | null;
   openSource: boolean;
-  codeRepo?: string;
-  tokenContract?: string;
-  dappSmartContracts: string;
+  codeRepo: string | null;
+  tokenContract: string | null;
+  dappSmartContracts: SmartContract[] | null;
   orgStructure: string;
   publicGoods: boolean;
   founders: IFounder[];
 
-  refs?: IRef[];
+  refs:
+    | {
+        key: string;
+        value: string;
+      }[]
+    | null;
 }
 export interface ICreateProposalPayload {
   projectId: number;
@@ -116,6 +131,7 @@ export interface IStepFormProps {
   fieldApplicability: Record<string, boolean>;
   onChangeApplicability: (field: string, value: boolean) => void;
   hasFieldReference: (fieldKey: string) => boolean;
+  formType: IFormTypeEnum;
 }
 
 export type IProjectStepFieldsMap = {

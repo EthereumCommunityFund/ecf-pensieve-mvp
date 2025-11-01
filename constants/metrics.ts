@@ -23,10 +23,15 @@ export const LEGITIMACY_METRICS = {
   WEB3_RESILIENCE: 'Web3 Resilience',
 } as const;
 
+export const EXTRA_TRANSPARENCY_POINTS_METRICS = {
+  FINANCIAL_DISCLOSURE: 'Financial Disclosure (Trans)(Security)',
+} as const;
+
 // All metrics combined for easy access
 export const ALL_METRICS = {
   ...ACCOUNTABILITY_METRICS,
   ...LEGITIMACY_METRICS,
+  ...EXTRA_TRANSPARENCY_POINTS_METRICS,
 } as const;
 
 // Type definitions for type safety

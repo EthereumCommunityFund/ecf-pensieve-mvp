@@ -2,6 +2,7 @@
 
 import { Avatar, cn } from '@heroui/react';
 import { ReactNode, memo, useCallback, useEffect, useState } from 'react';
+import { isAddress } from 'viem';
 
 import { Button } from '@/components/base';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
@@ -15,6 +16,8 @@ import {
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { IProposalCreator } from '@/components/pages/project/detail/types';
 import VoteItem from '@/components/pages/project/proposal/detail/table/VoteItem';
+import SablierEntry from '@/components/sablier/SablierEntry';
+import { EMBED_TABLE_FORM_TYPES } from '@/constants/embedTable';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_POC_ITEM_MAP } from '@/lib/constants';
@@ -139,6 +142,7 @@ const PropertyCell = ({
     isPendingValidation,
     itemTopWeight,
     canBePropose,
+    isAiCreator,
   } = rowData;
 
   return (
@@ -169,7 +173,9 @@ const PropertyCell = ({
           itemWeight={
             itemTopWeight || ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight
           }
+          genesisWeight={ALL_POC_ITEM_MAP[itemKey as IPocItemKey].weight}
           isEmptyItem={!!canBePropose}
+          isAiCreator={!!isAiCreator}
         />
       )}
     </div>
@@ -308,6 +314,11 @@ const InputCell = ({
     onToggleExpand?.();
   }, [localExpanded, onToggleExpand]);
 
+  // Check if the cell should be clickable based on display type
+  const isTableDisplayType = EMBED_TABLE_FORM_TYPES.includes(
+    finalDisplayFormType!,
+  );
+
   if (isPendingValidation) {
     return (
       <div
@@ -396,6 +407,39 @@ const InputCell = ({
     );
   }
 
+  // For table display types, make the entire cell clickable
+  if (isTableDisplayType && finalIsExpandable) {
+    return (
+      <div
+        className="font-mona flex w-full cursor-pointer items-center justify-between gap-[10px] transition-colors"
+        onClick={handleToggleExpand}
+      >
+        <div
+          className="flex-1 overflow-hidden whitespace-normal break-all text-[13px] leading-[19px] text-black/80"
+          style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+        >
+          <InputContentRenderer
+            itemKey={itemKey}
+            value={value}
+            displayFormType={finalDisplayFormType}
+            isEssential={itemConfig?.isEssential || false}
+            isExpandable={finalIsExpandable}
+            isExpanded={localExpanded}
+            onToggleExpanded={handleToggleExpand}
+            isTableCell={true}
+          />
+        </div>
+
+        {finalIsExpandable && (
+          <OptimizedExpandButton
+            isExpanded={localExpanded}
+            onToggleExpand={handleToggleExpand}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="font-mona flex w-full items-center justify-between gap-[10px]">
       <div
@@ -446,6 +490,7 @@ export interface ReferenceColHeaderProps extends BaseHeaderProps {
 export interface ReferenceColCellProps extends BaseCellProps {
   hasReference: boolean;
   onShowReference?: () => void;
+  isMatchSablier?: boolean;
 }
 
 const ReferenceHeader = ({
@@ -480,18 +525,22 @@ const ReferenceHeader = ({
 const ReferenceCell = ({
   hasReference,
   onShowReference,
+  isMatchSablier,
 }: ReferenceColCellProps) => {
   return (
     <div className="mx-auto flex justify-center">
       {hasReference ? (
-        <Button
-          color="secondary"
-          size="md"
-          className="w-[104px] text-[13px] font-[400]"
-          onPress={onShowReference}
-        >
-          Reference
-        </Button>
+        <div className="flex flex-col items-center gap-[10px]">
+          {isMatchSablier && <SablierEntry />}
+          <Button
+            color="secondary"
+            size="md"
+            className="w-[104px] text-[13px] font-[400]"
+            onPress={onShowReference}
+          >
+            Reference
+          </Button>
+        </div>
       ) : (
         <div className="font-mona text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
           empty
@@ -665,8 +714,12 @@ const SubmitterCell = memo(
   }: SubmitterColCellProps) => {
     const isNonEssential = !itemConfig?.isEssential;
     const isValueEmpty = isInputValueEmpty(item?.input);
+    const submitterAddress =
+      typeof submitter?.address === 'string' ? submitter.address.trim() : '';
+    const hasSubmitterAddress =
+      submitterAddress.length > 0 && isAddress(submitterAddress);
 
-    if (isNonEssential && isValueEmpty) {
+    if (isNonEssential && isValueEmpty && !hasSubmitterAddress) {
       return (
         <div className="font-mona flex-1 text-center text-[13px] font-[400] italic leading-[19px] text-black/30">
           empty
@@ -676,6 +729,7 @@ const SubmitterCell = memo(
 
     const data = item?.createdAt;
     const avatarSrc = submitter.avatarUrl ?? '/images/user/avatar_p.png';
+    const isAiCreator = item?.isAiCreator;
 
     const handleSubmitterClick = () => {
       showSubmitterModal?.(submitter, data);
@@ -698,11 +752,21 @@ const SubmitterCell = memo(
           />
         </div>
         <div className="flex flex-col">
-          <span className="text-[14px] font-[400] leading-[20px] text-black">
+          <span
+            className={cn(
+              'text-[14px] font-[400] leading-[20px]',
+              isAiCreator ? 'text-[#68C6AC]' : 'text-black',
+            )}
+          >
             {submitter.name}
           </span>
-          <span className="text-[12px] font-[600] leading-[12px] text-black opacity-60">
-            {formatDate(data, 'DD/MM/YYYY', '00/00/0000')}
+          <span
+            className={cn(
+              'text-[12px] font-[600] leading-[12px] opacity-60',
+              isAiCreator ? 'text-[#68C6AC]' : 'text-black',
+            )}
+          >
+            {formatDate(data, 'YYYY-MM-DD', '0000-00-00')}
           </span>
         </div>
       </div>
@@ -767,7 +831,7 @@ const ActionsHeader = ({
 };
 
 const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
-  const { canBePropose } = item;
+  const { canBePropose, isAiCreator } = item;
   const { profile, showAuthPrompt } = useAuth();
 
   const handleProposeAction = useCallback(() => {
@@ -799,10 +863,15 @@ const ActionsCell = ({ onView, item }: ActionsColCellProps) => {
           </Button>
           <Button
             color="secondary"
-            className="h-[30px] w-full rounded-[5px] border-none bg-[#F0F0F0] p-[10px] text-[13px] font-[400]"
+            className={cn(
+              'h-[30px] w-full rounded-[5px] border-none p-[10px] text-[13px] font-[400]',
+              isAiCreator
+                ? 'bg-[#64C0A5] hover:bg-[#64C0A5]/80 text-white'
+                : 'bg-[#F0F0F0]',
+            )}
             onPress={handleProposeAction}
           >
-            Propose Entry
+            {isAiCreator ? 'Propose to earn' : 'Propose Entry'}
           </Button>
         </>
       )}

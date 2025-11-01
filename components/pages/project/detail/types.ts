@@ -14,6 +14,7 @@ export interface IProjectDetailModalProps {
   userWeight?: number;
   contentType: IModalContentType;
   setModalContentType: (contentType: IModalContentType) => void;
+  initialTab?: string;
 }
 
 export interface ITableMetaOfProjectDetail {

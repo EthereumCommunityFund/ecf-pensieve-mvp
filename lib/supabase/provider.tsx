@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { Profile } from '../db/schema/profiles';
 import { trpc } from '../trpc/client';
+import { getSessionWithTimeout } from '../utils/supabaseUtils';
 
 import { supabase } from './client';
 
@@ -34,12 +35,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initializeSupabase = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user || null);
-      setIsLoading(false);
+      try {
+        const {
+          data: { session },
+        } = await getSessionWithTimeout();
+        setSession(session);
+        setUser(session?.user || null);
+        setIsLoading(false);
+      } catch (error) {
+        console.warn('Failed to get session with timeout:', error);
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+      }
 
       const { data: authListener } = supabase.auth.onAuthStateChange(
         (event, session) => {

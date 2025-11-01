@@ -186,44 +186,53 @@ export const likeProjectRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { projectId } = input;
 
-      const [project, existingLikeRecord] = await getProjectAndLikeRecord(
-        ctx.db,
-        projectId,
-        ctx.user.id,
-      );
-
-      if (!project) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Project not found',
-        });
-      }
-
-      if (!existingLikeRecord) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'You have not liked this project yet',
-        });
-      }
-
-      const withdrawnWeight = existingLikeRecord.weight || 0;
-
       return await ctx.db.transaction(async (tx) => {
+        const [project, existingLikeRecord] = await getProjectAndLikeRecord(
+          tx,
+          projectId,
+          ctx.user.id,
+        );
+
+        if (!project) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Project not found',
+          });
+        }
+
+        if (!existingLikeRecord) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'You have not liked this project yet',
+          });
+        }
+
+        const [deletedLikeRecord] = await tx
+          .delete(likeRecords)
+          .where(eq(likeRecords.id, existingLikeRecord.id))
+          .returning();
+
+        if (!deletedLikeRecord) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Like already withdrawn',
+          });
+        }
+
+        const weightToWithdraw = deletedLikeRecord.weight || 0;
+
         await Promise.all([
-          tx
-            .delete(likeRecords)
-            .where(eq(likeRecords.id, existingLikeRecord.id)),
           tx
             .update(projects)
             .set({
-              support: sql`${projects.support} - ${withdrawnWeight}`,
-              likeCount: sql`${projects.likeCount} - 1`,
+              support: sql`GREATEST(${projects.support} - ${weightToWithdraw}, 0)`,
+              likeCount: sql`GREATEST(${projects.likeCount} - 1, 0)`,
             })
             .where(eq(projects.id, projectId)),
           logUserActivity.like.delete(
             {
               userId: ctx.user.id,
-              targetId: existingLikeRecord.id,
+              targetId: deletedLikeRecord.id,
               projectId,
             },
             tx,
@@ -233,7 +242,7 @@ export const likeProjectRouter = router({
         revalidateTag(CACHE_TAGS.PROJECTS);
         revalidateTag(CACHE_TAGS.RANKS);
 
-        return { success: true, withdrawnWeight };
+        return { success: true, withdrawnWeight: weightToWithdraw };
       });
     }),
 });

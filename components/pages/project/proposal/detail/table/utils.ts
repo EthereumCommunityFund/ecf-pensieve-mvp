@@ -2,6 +2,7 @@
 
 import { IRef } from '@/components/pages/project/create/types';
 import { AllItemConfig } from '@/constants/itemConfig';
+import { NA_VALUE } from '@/constants/naSelection';
 import { ProposalTableFieldCategory } from '@/constants/tableConfig';
 import { IProposal } from '@/types';
 import {
@@ -51,7 +52,7 @@ export const prepareProposalTableData = (
       subCategoryConfig.items.forEach((itemKey) => {
         const proposalItem = proposalItemMap[itemKey];
 
-        const value = proposalItem?.value ? proposalItem.value : 'n/a';
+        const value = proposalItem?.value ? proposalItem.value : NA_VALUE;
         const refsArray = proposal?.refs as IRef[] | undefined;
         const referenceObj = refsArray?.find((ref) => ref.key === itemKey);
         const referenceValue = referenceObj ? referenceObj.value : '';

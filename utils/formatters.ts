@@ -8,6 +8,43 @@ import dayjs from '@/lib/dayjs';
 import { IDateConstraints } from '@/types/item';
 
 /**
+ * Format amount with thousands separators
+ *
+ * Examples:
+ * - 1234 -> "1,234"
+ * - 1000000 -> "1,000,000"
+ * - 1234.56 -> "1,234.56"
+ * - "1234" -> "1,234"
+ *
+ * @param amount - The amount to format (string or number)
+ * @returns Formatted amount string with thousands separators
+ */
+export function formatAmount(
+  amount: string | number | null | undefined,
+): string {
+  if (!amount && amount !== 0) return '-';
+
+  // Convert to string and remove any existing commas
+  const cleanedAmount = String(amount).replace(/,/g, '');
+
+  // Check if it's a valid number
+  if (isNaN(Number(cleanedAmount))) return String(amount);
+
+  // Split into integer and decimal parts
+  const parts = cleanedAmount.split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1];
+
+  // Add thousands separators to integer part
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // Combine integer and decimal parts
+  return decimalPart !== undefined
+    ? `${formattedInteger}.${decimalPart}`
+    : formattedInteger;
+}
+
+/**
  * Format a number to a more readable format
  *
  * Examples:
@@ -63,23 +100,27 @@ export function formatNumber(
 }
 
 /**
- * Format a date to a readable string format in local timezone
+ * Format a date to a readable string format
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY')
+ * @param format - The format to use (default: 'YYYY-MM-DD')
  * @param fallback - The fallback value if date is invalid (default: '')
- * @returns Formatted date string in local timezone
+ * @param useUTC - Whether to format in UTC timezone (default: false, uses local timezone)
+ * @returns Formatted date string
  */
 export function formatDate(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY',
+  format: string = 'YYYY-MM-DD',
   fallback: string = '',
+  useUTC: boolean = false,
 ): string {
   if (!date) return fallback;
 
   try {
-    // dayjs automatically handles timezone conversion to local time
-    return dayjs(date).format(format);
+    // Use UTC or local timezone based on useUTC parameter
+    return useUTC
+      ? dayjs(date).utc().format(format)
+      : dayjs(date).format(format);
   } catch (error) {
     console.error('Error formatting date:', error);
     return fallback;
@@ -90,13 +131,13 @@ export function formatDate(
  * Format a date to a readable string format with timezone
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param format - The format to use (default: 'YYYY-MM-DD HH:mm')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string with timezone info
  */
 export function formatDateWithTime(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY HH:mm',
+  format: string = 'YYYY-MM-DD HH:mm',
   fallback: string = '',
 ): string {
   if (!date) return fallback;
@@ -114,13 +155,13 @@ export function formatDateWithTime(
  * Format a date to a readable string format in GMT timezone
  *
  * @param date - The date to format (Date object or ISO string)
- * @param format - The format to use (default: 'MM/DD/YYYY HH:mm')
+ * @param format - The format to use (default: 'YYYY-MM-DD HH:mm')
  * @param fallback - The fallback value if date is invalid (default: '')
  * @returns Formatted date string in GMT timezone
  */
 export function formatDateWithTimeGMT(
   date: Date | string | null | undefined,
-  format: string = 'MM/DD/YYYY HH:mm',
+  format: string = 'YYYY-MM-DD HH:mm',
   fallback: string = '',
 ): string {
   if (!date) return fallback;
@@ -134,12 +175,58 @@ export function formatDateWithTimeGMT(
   }
 }
 
+/**
+ * Format a date to a readable string format in UTC timezone (no conversion)
+ * This is useful for displaying dates exactly as stored in the database
+ *
+ * @param date - The date to format (Date object or ISO string)
+ * @param format - The format to use (default: 'YYYY-MM-DD')
+ * @param fallback - The fallback value if date is invalid (default: '')
+ * @returns Formatted date string in UTC timezone
+ */
+export function formatDateAsUTC(
+  date: Date | string | null | undefined,
+  format: string = 'YYYY-MM-DD',
+  fallback: string = '',
+): string {
+  if (!date) return fallback;
+
+  try {
+    // Always display in UTC timezone
+    return dayjs(date).utc().format(format);
+  } catch (error) {
+    console.error('Error formatting date as UTC:', error);
+    return fallback;
+  }
+}
+
+/**
+ * Convert a JavaScript Date to DateValue for DatePicker component
+ *
+ * @param date - JavaScript Date object or null/undefined
+ * @returns DateValue representing the date in UTC (no timezone conversion)
+ *
+ * @important This function treats the date as UTC to ensure consistent display
+ * across all timezones. The returned DateValue represents a calendar date
+ * without any timezone information, ensuring all users see the same date.
+ */
 export const dateToDateValue = (
-  date: Date | null | undefined,
+  date: Date | string | null | undefined,
 ): DateValue | null => {
   if (!date) return null;
+
+  if (typeof date === 'string' && date.toLowerCase() === 'n/a') {
+    return null;
+  }
+
   try {
-    const dateString = dayjs(date).format('YYYY-MM-DD');
+    const parsed = dayjs(date);
+    if (!parsed.isValid()) {
+      return null;
+    }
+
+    // Use UTC to ensure consistent date display across timezones
+    const dateString = parsed.utc().format('YYYY-MM-DD');
     return parseDate(dateString);
   } catch (e) {
     console.error('Error parsing date for DatePicker:', date, e);
@@ -147,10 +234,33 @@ export const dateToDateValue = (
   }
 };
 
+/**
+ * Convert a DateValue from DatePicker to JavaScript Date
+ *
+ * @param dateValue - DateValue from DatePicker component or null
+ * @returns JavaScript Date object at UTC midnight (00:00:00Z)
+ *
+ * @important This function returns a Date object representing the start of the day
+ * in UTC (00:00:00Z). This ensures consistent storage and prevents timezone shifts.
+ * The returned Date should always be used with UTC formatting functions to maintain
+ * consistency. For storage, this Date can be directly serialized to ISO string.
+ *
+ * @example
+ * const dateValue = parseDate('2024-01-15');
+ * const date = dateValueToDate(dateValue); // Returns Date at 2024-01-15T00:00:00.000Z
+ * // For display: use dayjs.utc(date).format('YYYY-MM-DD')
+ * // For storage: use date.toISOString()
+ */
 export const dateValueToDate = (dateValue: DateValue | null): Date | null => {
   if (!dateValue) return null;
   try {
-    return dayjs(dateValue.toString()).toDate();
+    // Use UTC to ensure consistent date handling across timezones
+    // This creates a Date at UTC midnight (00:00:00Z)
+    const parsed = dayjs(dateValue.toString());
+    if (!parsed.isValid()) {
+      return null;
+    }
+    return dayjs.utc(parsed.format('YYYY-MM-DD')).toDate();
   } catch (e) {
     console.error('Error converting DateValue to Date:', dateValue, e);
     return null;
@@ -200,7 +310,8 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
   if (constraints.minDate) {
     const minDate = parseConstraintDate(constraints.minDate);
     if (minDate) {
-      result.minValue = parseDate(dayjs(minDate).format('YYYY-MM-DD'));
+      // Use UTC to ensure consistent date boundaries across timezones
+      result.minValue = parseDate(dayjs(minDate).utc().format('YYYY-MM-DD'));
     }
   }
 
@@ -209,7 +320,8 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     const minDate = dayjs(today)
       .add(constraints.relativeToToday.minDaysFromToday, 'day')
       .toDate();
-    const minDateValue = parseDate(dayjs(minDate).format('YYYY-MM-DD'));
+    // Use UTC to ensure consistent date boundaries across timezones
+    const minDateValue = parseDate(dayjs(minDate).utc().format('YYYY-MM-DD'));
     // Choose the stricter minimum date constraint (later date)
     if (
       !result.minValue ||
@@ -223,7 +335,8 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
   if (constraints.maxDate) {
     const maxDate = parseConstraintDate(constraints.maxDate);
     if (maxDate) {
-      result.maxValue = parseDate(dayjs(maxDate).format('YYYY-MM-DD'));
+      // Use UTC to ensure consistent date boundaries across timezones
+      result.maxValue = parseDate(dayjs(maxDate).utc().format('YYYY-MM-DD'));
     }
   }
 
@@ -232,7 +345,8 @@ export const processDateConstraints = (constraints: IDateConstraints) => {
     const maxDate = dayjs(today)
       .add(constraints.relativeToToday.maxDaysFromToday, 'day')
       .toDate();
-    const maxDateValue = parseDate(dayjs(maxDate).format('YYYY-MM-DD'));
+    // Use UTC to ensure consistent date boundaries across timezones
+    const maxDateValue = parseDate(dayjs(maxDate).utc().format('YYYY-MM-DD'));
     // Choose the stricter maximum date constraint (earlier date)
     if (
       !result.maxValue ||

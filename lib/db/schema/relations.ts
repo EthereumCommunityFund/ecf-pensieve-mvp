@@ -4,10 +4,15 @@ import { activeLogs } from './activeLogs';
 import { invitationCodes } from './invitations';
 import { itemProposals } from './itemProposals';
 import { likeRecords } from './likeRecord';
+import { listFollows } from './listFollows';
+import { listProjects } from './listProjects';
+import { lists } from './lists';
 import { notifications } from './notifications';
 import { profiles } from './profiles';
 import { projectLogs } from './projectLogs';
+import { projectNotificationSettings } from './projectNotificationSettings';
 import { projects } from './projects';
+import { projectSnaps } from './projectSnaps';
 import { proposals } from './proposals';
 import { ranks } from './ranks';
 import { voteRecords } from './voteRecords';
@@ -20,11 +25,19 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   createdProjects: many(projects),
   createdProposals: many(proposals),
   votes: many(voteRecords),
-  notifications: many(notifications),
+  notificationsAsRecipient: many(notifications, {
+    relationName: 'notificationUser',
+  }),
+  notificationsAsVoter: many(notifications, {
+    relationName: 'notificationVoter',
+  }),
   activeLogs: many(activeLogs, { relationName: 'userActiveLogs' }),
   proposalCreatorLogs: many(activeLogs, {
     relationName: 'proposalCreatorLogs',
   }),
+  createdLists: many(lists),
+  listFollows: many(listFollows),
+  projectNotificationSettings: many(projectNotificationSettings),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -35,10 +48,16 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   proposals: many(proposals),
   notifications: many(notifications),
   activeLogs: many(activeLogs),
+  projectSnap: one(projectSnaps, {
+    fields: [projects.id],
+    references: [projectSnaps.projectId],
+  }),
   rank: one(ranks, {
     fields: [projects.id],
     references: [ranks.projectId],
   }),
+  listProjects: many(listProjects),
+  projectNotificationSettings: many(projectNotificationSettings),
 }));
 
 export const proposalsRelations = relations(proposals, ({ one, many }) => ({
@@ -131,6 +150,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(profiles, {
     fields: [notifications.userId],
     references: [profiles.userId],
+    relationName: 'notificationUser',
   }),
   project: one(projects, {
     fields: [notifications.projectId],
@@ -139,6 +159,19 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   proposal: one(proposals, {
     fields: [notifications.proposalId],
     references: [proposals.id],
+  }),
+  itemProposal: one(itemProposals, {
+    fields: [notifications.itemProposalId],
+    references: [itemProposals.id],
+  }),
+  voter: one(profiles, {
+    fields: [notifications.voter_id],
+    references: [profiles.userId],
+    relationName: 'notificationVoter',
+  }),
+  projectSnaps: one(projectSnaps, {
+    fields: [notifications.projectId],
+    references: [projectSnaps.projectId],
   }),
 }));
 
@@ -159,3 +192,63 @@ export const ranksRelations = relations(ranks, ({ one }) => ({
     references: [projects.id],
   }),
 }));
+
+export const projectSnapsRelations = relations(projectSnaps, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectSnaps.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const listsRelations = relations(lists, ({ one, many }) => ({
+  creator: one(profiles, {
+    fields: [lists.creator],
+    references: [profiles.userId],
+  }),
+  listProjects: many(listProjects),
+  listFollows: many(listFollows),
+}));
+
+export const listProjectsRelations = relations(listProjects, ({ one }) => ({
+  list: one(lists, {
+    fields: [listProjects.listId],
+    references: [lists.id],
+  }),
+  project: one(projects, {
+    fields: [listProjects.projectId],
+    references: [projects.id],
+  }),
+  addedByUser: one(profiles, {
+    fields: [listProjects.addedBy],
+    references: [profiles.userId],
+  }),
+  projectSnap: one(projectSnaps, {
+    fields: [listProjects.projectId],
+    references: [projectSnaps.projectId],
+  }),
+}));
+
+export const listFollowsRelations = relations(listFollows, ({ one }) => ({
+  list: one(lists, {
+    fields: [listFollows.listId],
+    references: [lists.id],
+  }),
+  user: one(profiles, {
+    fields: [listFollows.userId],
+    references: [profiles.userId],
+  }),
+}));
+
+export const projectNotificationSettingsRelations = relations(
+  projectNotificationSettings,
+  ({ one }) => ({
+    user: one(profiles, {
+      fields: [projectNotificationSettings.userId],
+      references: [profiles.userId],
+    }),
+    project: one(projects, {
+      fields: [projectNotificationSettings.projectId],
+      references: [projects.id],
+    }),
+  }),
+);

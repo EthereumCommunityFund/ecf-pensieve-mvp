@@ -2,7 +2,7 @@ import React from 'react';
 
 import { IconProps } from '@/types/common';
 
-const PlusIcon: React.FC<IconProps> = ({ size = 32 }) => {
+const PlusIcon: React.FC<IconProps> = ({ size = 32, ...props }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -10,6 +10,7 @@ const PlusIcon: React.FC<IconProps> = ({ size = 32 }) => {
       height={size}
       viewBox="0 0 16 17"
       fill="none"
+      {...props}
     >
       <g clipPath="url(#clip0_708_15276)">
         <path

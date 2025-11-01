@@ -13,6 +13,7 @@ import {
 import { IKeyItemDataForTable } from '@/components/pages/project/detail/table/ProjectDetailTableColumns';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
+import { useProjectItemValue } from '@/hooks/useProjectItemValue';
 import { trpc } from '@/lib/trpc/client';
 import {
   ILeadingProposalHistory,
@@ -58,6 +59,10 @@ interface ProjectDetailContextType {
 
   // Utility functions
   getItemTopWeight: (key: IPocItemKey) => number;
+  getLeadingProjectName: () => string;
+  getLeadingTagline: () => string;
+  getLeadingCategories: () => string[];
+  getLeadingLogoUrl: () => string;
 
   // Current selected item state
   currentItemKey: string | null;
@@ -115,6 +120,11 @@ interface ProjectDetailContextType {
   // SubmitterModal operations
   showSubmitterModal: (submitter: IProposalCreator, validatedAt: Date) => void;
   closeSubmitterModal: () => void;
+
+  // Submit prefill data management
+  submitPrefillMap: Partial<Record<IPocItemKey, any>>;
+  setSubmitPrefill: (key: IPocItemKey, value: any) => void;
+  clearSubmitPrefill: (key: IPocItemKey) => void;
 }
 
 // Context default values
@@ -148,6 +158,10 @@ const createDefaultContext = (): ProjectDetailContextType => ({
 
   // Utility functions
   getItemTopWeight: () => 0,
+  getLeadingProjectName: () => '',
+  getLeadingTagline: () => '',
+  getLeadingCategories: () => [],
+  getLeadingLogoUrl: () => '',
 
   // Current selected item state
   currentItemKey: null,
@@ -195,6 +209,11 @@ const createDefaultContext = (): ProjectDetailContextType => ({
   // SubmitterModal operations
   showSubmitterModal: () => {},
   closeSubmitterModal: () => {},
+
+  // Submit prefill data management
+  submitPrefillMap: {},
+  setSubmitPrefill: () => {},
+  clearSubmitPrefill: () => {},
 });
 
 // Create Context
@@ -226,6 +245,11 @@ export const ProjectDetailProvider = ({
   >({});
   const [inActionItemProposalIdMap, setInActionItemProposalIdMap] = useState<
     Record<number, boolean>
+  >({});
+
+  // Submit prefill data state
+  const [submitPrefillMap, setSubmitPrefillMap] = useState<
+    Partial<Record<IPocItemKey, any>>
   >({});
 
   // SubmitterModal state management
@@ -393,6 +417,33 @@ export const ProjectDetailProvider = ({
     project?.itemsTopWeight,
     project?.hasProposalKeys,
   ]);
+
+  const {
+    projectName: resolvedProjectName,
+    tagline: resolvedTagline,
+    categories: resolvedCategories,
+    logoUrl: resolvedLogoUrl,
+  } = useProjectItemValue(project ?? null);
+
+  // Utility function: Get leading project name
+  const getLeadingProjectName = useCallback(() => {
+    return typeof resolvedProjectName === 'string' ? resolvedProjectName : '';
+  }, [resolvedProjectName]);
+
+  // Utility function: Get leading project tagline
+  const getLeadingTagline = useCallback(() => {
+    return typeof resolvedTagline === 'string' ? resolvedTagline : '';
+  }, [resolvedTagline]);
+
+  // Utility function: Get leading project categories
+  const getLeadingCategories = useCallback(() => {
+    return Array.isArray(resolvedCategories) ? resolvedCategories : [];
+  }, [resolvedCategories]);
+
+  // Utility function: Get leading project logo URL
+  const getLeadingLogoUrl = useCallback(() => {
+    return typeof resolvedLogoUrl === 'string' ? resolvedLogoUrl : '';
+  }, [resolvedLogoUrl]);
 
   // Calculate display data for current selected key
   const displayProposalDataOfKey = useMemo(() => {
@@ -670,6 +721,19 @@ export const ProjectDetailProvider = ({
     setCurrentRefKey(null);
   }, []);
 
+  // Submit prefill data operations
+  const setSubmitPrefill = useCallback((key: IPocItemKey, value: any) => {
+    setSubmitPrefillMap((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const clearSubmitPrefill = useCallback((key: IPocItemKey) => {
+    setSubmitPrefillMap((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   // Context value assembly
   const contextValue = useMemo(
     (): ProjectDetailContextType => ({
@@ -702,6 +766,10 @@ export const ProjectDetailProvider = ({
 
       // Utility functions
       getItemTopWeight,
+      getLeadingProjectName,
+      getLeadingTagline,
+      getLeadingCategories,
+      getLeadingLogoUrl,
 
       // Current selected item state
       currentItemKey,
@@ -749,6 +817,11 @@ export const ProjectDetailProvider = ({
       // SubmitterModal operations
       showSubmitterModal,
       closeSubmitterModal,
+
+      // Submit prefill data management
+      submitPrefillMap,
+      setSubmitPrefill,
+      clearSubmitPrefill,
     }),
     [
       // Basic project data dependencies
@@ -780,6 +853,10 @@ export const ProjectDetailProvider = ({
 
       // Utility function dependencies
       getItemTopWeight,
+      getLeadingProjectName,
+      getLeadingTagline,
+      getLeadingCategories,
+      getLeadingLogoUrl,
 
       // Current selected item state dependencies
       currentItemKey,
@@ -827,6 +904,11 @@ export const ProjectDetailProvider = ({
       // SubmitterModal operation dependencies
       showSubmitterModal,
       closeSubmitterModal,
+
+      // Submit prefill data management dependencies
+      submitPrefillMap,
+      setSubmitPrefill,
+      clearSubmitPrefill,
     ],
   );
 

@@ -1,15 +1,18 @@
+import { ALL_POC_ITEM_MAP, WEIGHT } from '@/lib/constants';
 import {
   ICategoryConfig,
   IItemCategoryEnum,
   IItemGroupEnum,
   IItemSubCategoryEnum,
+  IPocItemKey,
 } from '@/types/item';
 
 export const ProposalTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Basics,
     title: 'Project Overview',
-    description: 'Section Description',
+    description:
+      'This section contains the basic set of information about a project',
     subCategories: [
       {
         key: IItemSubCategoryEnum.BasicProfile,
@@ -95,6 +98,7 @@ export const ProposalTableFieldCategory: ICategoryConfig[] = [
       },
     ],
   },
+  // if there's no essential items, don't show this category
   // {
   //   key: IItemCategoryEnum.Governance,
   //   title: 'Governance & Legal',
@@ -115,12 +119,14 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Basics,
     title: 'Project Overview',
+    label: 'Project Overview',
     description:
       'This section contains the basic set of information about a project',
     subCategories: [
       {
         key: IItemSubCategoryEnum.BasicProfile,
         title: 'Basic Profile',
+        label: 'Basic Profile',
         description:
           'Basic identifying information about the project, including name, status, categories, and key links',
         items: [
@@ -136,7 +142,12 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
           'dateFounded',
           'dateLaunch',
         ],
-        itemsNotEssential: ['adoption_plan', 'launch_plan'],
+        itemsNotEssential: [
+          'adoption_plan',
+          'launch_plan',
+          'social_links',
+          'roadmap_timeline',
+        ],
         groups: [],
       },
     ],
@@ -144,19 +155,29 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Technicals,
     title: 'Technicals',
+    label: 'Technicals',
     description:
       'Key technical components of the project, including architecture, protocols, and deployment details.',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Development,
         title: 'Development',
+        label: 'Development',
         description:
           'Tracks the project’s development activity, open-source contributions, and codebase evolution',
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
         itemsNotEssential: [
           'audit_status',
+          'smart_contract_audits',
           'dapp_category',
+          'dapp_storage_stack',
+          'dapp_account_management_stack',
+          'dapp_logic_program_stack',
+          'user_data_storage_stack',
+          'unique_value_proposition',
           'protocol_built_on',
+          'stack_integrations',
+          'software_license',
         ],
         groups: [
           {
@@ -172,26 +193,36 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Organization,
     title: 'Organization & Team',
+    label: 'Org & Team',
     description:
       'An overview of the people and entities driving the project, from early founders to current core contributors.',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Organization,
         title: 'Organization',
+        label: 'Organization',
         description: 'How the project is organized legally and operationally',
         items: ['orgStructure', 'publicGoods'],
+        itemsNotEssential: [
+          'affiliated_projects',
+          'contributing_teams',
+          'team_location',
+        ],
         groups: [],
       },
       {
         key: IItemSubCategoryEnum.Team,
         title: 'Team',
+        label: 'Team',
         description:
           'An overview of the people behind the project—pseudonymous or public—including their roles and contributions',
         items: ['founders'],
         itemsNotEssential: [
           'core_team',
           'team_incentives',
-          'ownership_of_project',
+          'ownership_of_projects',
+          'contributors_organization',
+          'advisors',
         ],
         groups: [],
       },
@@ -200,51 +231,114 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   {
     key: IItemCategoryEnum.Financial,
     title: 'Project Financials',
+    label: 'Financials',
     description:
       'An overview of how the project is funded, how resources are allocated, and its current financial state.',
     subCategories: [
       {
         key: IItemSubCategoryEnum.Finances,
         title: 'Finances',
+        label: 'Finances',
         description:
           'A look at the project’s financial setup, including capital flows and long-term sustainability',
         items: ['fundingStatus'],
         itemsNotEssential: [
+          'investment_stage',
+          'funding_received_grants',
+          'private_funding_rounds',
+          'previous_funding_rounds',
+          'decentralized_governance',
+          'audit_report',
           'project_funded_date',
           'budget_plans',
           'expense_statements',
           'runway',
+          'endorsers',
         ],
         groups: [],
       },
       {
         key: IItemSubCategoryEnum.Token,
         title: 'Token',
+        label: 'Token',
         description:
           'Key details about the project’s token, including its purpose, supply, and mechanics',
         items: ['tokenContract'],
         itemsNotEssential: [
           'token_sales',
           'token_type',
-          'token_specifications',
           'token_launch_date',
+          'token_utility',
+          'airdrops',
+          'token_benefits',
+          'token_risks',
+          'token_rights',
+          'token_obligations',
         ],
         groups: [],
       },
     ],
   },
-  // {
-  //   key: IItemCategoryEnum.Governance,
-  //   title: 'Governance & Legal',
-  //   description: '',
-  //   subCategories: [
-  //     {
-  //       key: IItemSubCategoryEnum.Governance,
-  //       title: 'Governance',
-  //       description: '',
-  //       items: [],
-  //       groups: [],
-  //     },
-  //   ],
-  // },
+  {
+    key: IItemCategoryEnum.Governance,
+    title: 'Governance & Legal',
+    label: 'Gov & Legal',
+    description: '',
+    subCategories: [
+      {
+        key: IItemSubCategoryEnum.Governance,
+        title: 'Governance',
+        label: 'Governance',
+        description: '',
+        items: [],
+        itemsNotEssential: [
+          'physical_entity',
+          'constitution',
+          'on_chain_treasury_step1',
+          'vault_address_step2',
+        ],
+        groups: [],
+      },
+    ],
+  },
 ];
+
+export const TotalItemCount = ProjectTableFieldCategory.reduce(
+  (acc, category) =>
+    acc +
+    category.subCategories.reduce(
+      (subAcc, subCategory) =>
+        subAcc +
+        (subCategory.items?.length || 0) +
+        (subCategory.itemsNotEssential?.length || 0),
+      0,
+    ),
+  0,
+);
+
+export const AllItemKeysInPage: IPocItemKey[] =
+  ProjectTableFieldCategory.reduce((acc, category) => {
+    return acc.concat(
+      category.subCategories.reduce((subAcc, subCategory) => {
+        return subAcc.concat(
+          subCategory.items || [],
+          subCategory.itemsNotEssential || [],
+          (subCategory.groups || []).reduce((pre, cur) => {
+            const groupItems = (cur.items || []).filter(
+              (item): item is IPocItemKey => item in ALL_POC_ITEM_MAP,
+            );
+            return pre.concat(groupItems);
+          }, [] as IPocItemKey[]),
+        );
+      }, [] as IPocItemKey[]),
+    );
+  }, [] as IPocItemKey[]);
+
+export const TotalGenesisWeightSum = AllItemKeysInPage.reduce((sum, key) => {
+  const item = ALL_POC_ITEM_MAP[key];
+  if (item) {
+    const genesisWeight = item.accountability_metric * WEIGHT;
+    return sum + genesisWeight;
+  }
+  return sum;
+}, 0);

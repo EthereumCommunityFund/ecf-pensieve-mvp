@@ -21,8 +21,29 @@
       "mcp__fetch__imageFetch",
       "Bash(gh pr view:*)",
       "Bash(mv:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__figma-mcp__get_figma_data",
+      "Bash(pkill:*)",
+      "Bash(git log:*)",
+      "Bash(npx tsx:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(sed:*)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(grep:*)",
+      "Bash(pnpm add:*)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest run:*)",
+      "Bash(true)",
+      "Bash(node:*)",
+      "mcp__browser__getConsoleLogs",
+      "mcp__browser__getConsoleErrors",
+      "mcp__figma-context__get_figma_data",
+      "Bash(git pull:*)",
+      "Bash(node:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

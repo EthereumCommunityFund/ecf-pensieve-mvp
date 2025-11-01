@@ -115,24 +115,50 @@ export interface IItemConfig<K extends IItemKey> {
   minRows?: number; // For Textarea
   accountability?: string[];
   legitimacy?: string[];
+  extraTransparencyPoints?: string[];
   dateConstraints?: IDateConstraints; // Date constraints for date type fields
   validationSchema?: any; // Validation schema for the item
   componentsProps?: Record<string, any>; // For custom props of the components
 }
 
-export type IFormDisplayType =
+export type IBaseFormDisplayType =
   | 'string'
   | 'textarea'
   | 'stringMultiple' // separate by comma
   | 'select'
   | 'selectMultiple'
+  | 'autoComplete'
   | 'img'
   | 'link'
   | 'date'
+  | 'smartContract';
+
+export type IEmbedTableFormDisplayType =
   | 'founderList'
   | 'websites'
-  | 'autoComplete'
-  | 'roadmap';
+  | 'social_links'
+  | 'tablePhysicalEntity'
+  | 'multiContracts'
+  | 'fundingReceivedGrants'
+  | 'affiliated_projects'
+  | 'contributing_teams'
+  | 'contributors'
+  | 'contributors_organization'
+  | 'endorsers'
+  | 'stack_integrations'
+  | 'advisors'
+  | 'private_funding_rounds'
+  | 'previous_funding_rounds'
+  | 'decentralized_governance'
+  | 'audit_report'
+  | 'roadmap_timeline'
+  | 'embedTable'; // only used for placeholder to avoid type errors. will be replaced with a specific type
+
+export type IFormDisplayType =
+  | IBaseFormDisplayType
+  | IEmbedTableFormDisplayType
+  | 'roadmap' // not confirm how to display
+  | 'unknown';
 
 export interface IGroupConfig {
   key: IItemGroupEnum;
@@ -147,6 +173,7 @@ export interface IGroupConfig {
 export interface ISubCategoryConfig {
   key: IItemSubCategoryEnum;
   title: string;
+  label?: string;
   description: string;
   /**
    * essential items that should be shown in the table
@@ -162,6 +189,7 @@ export interface ISubCategoryConfig {
 export interface ICategoryConfig {
   key: IItemCategoryEnum;
   title: string;
+  label?: string;
   description: string;
   subCategories: ISubCategoryConfig[];
 }
@@ -170,3 +198,147 @@ export interface IProposalItem {
   key: string;
   value: any;
 }
+
+export interface IPhysicalEntity {
+  legalName: string;
+  country?: string;
+  _id?: string;
+}
+
+export interface IFundingReceivedGrants {
+  date: Date | null;
+  organization: string | string[];
+  projectDonator: string[];
+  amount: string;
+  reference?: string;
+  expenseSheetUrl?: string;
+  _id?: string;
+}
+
+// Extended interface for useGivenGrantsData with backend relation fields
+export interface IFundingReceivedGrantsWithRelation
+  extends IFundingReceivedGrants {
+  sourceProjectId: number | null;
+  itemProposalId: number | null;
+  targetProjectId: number | null;
+  relationType: string | null;
+}
+
+export interface IAffiliatedProject {
+  project: string | string[];
+  affiliationType: string;
+  description?: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IContributingTeam {
+  project: string | string[];
+  type: string;
+  description?: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IContributors {
+  name: string;
+  role: string;
+  address: string;
+  _id?: string;
+}
+
+export interface IContributorsOrganization {
+  name: string;
+  role: string;
+  address: string;
+  _id?: string;
+}
+
+export interface IAuditReport {
+  reportLink: string;
+  auditorName: string;
+  _id?: string;
+}
+
+export interface IEndorser {
+  name: string;
+  socialIdentifier: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IStackIntegration {
+  project: string | string[];
+  type: string;
+  description?: string;
+  reference?: string;
+  repository?: string;
+  _id?: string;
+}
+
+export interface IAdvisors {
+  name: string;
+  title: string;
+  address: string;
+  active: string;
+  _id?: string;
+}
+
+export type RoadmapStatusOption = 'Reached' | 'In Progress' | 'Planned';
+
+export interface IRoadmapTimelineEntry {
+  milestone: string;
+  description: string;
+  date: Date | null;
+  status: RoadmapStatusOption | '';
+  reference?: string;
+  _id?: string;
+}
+
+// Private Funding Rounds table row type
+export interface IPrivateFundingRound {
+  /** Round date */
+  date: Date | null;
+  /** Fundraising size, keep string for formatting like "$1,000,000" */
+  amount: string;
+  /** Textual name for the round (investor/participant/label) */
+  textName: string;
+  /** Amount of shares or allocation (e.g. %, tokens) */
+  amountShares?: string;
+  _id?: string;
+}
+
+export interface IPreviousFundingRound {
+  date: Date | null;
+  amount: string;
+  reference?: string;
+  _id?: string;
+}
+
+export interface IDecentralizedGovernanceEntry {
+  address: string;
+  _id?: string;
+}
+
+// Type mapping for getItemRowData function
+export interface IItemDataTypeMap {
+  funding_received_grants: IFundingReceivedGrants;
+  affiliated_projects: IAffiliatedProject;
+  contributing_teams: IContributingTeam;
+  contributors: IContributors;
+  contributors_organization: IContributorsOrganization;
+  endorsers: IEndorser;
+  stack_integrations: IStackIntegration;
+  advisors: IAdvisors;
+  private_funding_rounds: IPrivateFundingRound;
+  audit_report: IAuditReport;
+  previous_funding_rounds: IPreviousFundingRound;
+  decentralized_governance: IDecentralizedGovernanceEntry;
+  roadmap_timeline: IRoadmapTimelineEntry;
+  // Add more mappings as needed for other items that return arrays
+  // For items not in this map, the function will return any[]
+}
+
+// Helper type to get the data type for a specific item key
+export type GetItemDataType<K extends IPocItemKey> =
+  K extends keyof IItemDataTypeMap ? IItemDataTypeMap[K][] : any[];

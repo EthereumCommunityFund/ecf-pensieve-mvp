@@ -15,6 +15,7 @@ const FinancialStepForm: React.FC<
   onChangeApplicability,
   onAddReference,
   hasFieldReference,
+  formType,
 }) => {
   const fieldConfigArray = Object.values(financialFieldsConfig);
 
@@ -29,6 +30,7 @@ const FinancialStepForm: React.FC<
           onChangeApplicability={onChangeApplicability}
           onAddReference={onAddReference}
           hasFieldReference={hasFieldReference}
+          formType={formType}
         />
       ))}
     </div>

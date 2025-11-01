@@ -6,13 +6,24 @@ import {
   REWARD_PERCENT,
   WEIGHT,
 } from '@/lib/constants';
-import { profiles, projectLogs, projects, voteRecords } from '@/lib/db/schema';
+import {
+  itemProposals,
+  profiles,
+  projectLogs,
+  projects,
+  projectSnaps,
+  ranks,
+  voteRecords,
+} from '@/lib/db/schema';
 import { POC_ITEMS } from '@/lib/pocItems';
 import { logUserActivity } from '@/lib/services/activeLogsService';
 import {
+  addMultiUserNotification,
   addRewardNotification,
+  createMultiUserNotification,
   createRewardNotification,
 } from '@/lib/services/notification';
+import { calculatePublishedGenesisWeight } from '@/lib/utils/rankUtils';
 
 export const calculateReward = (key: string): number => {
   const item = POC_ITEMS[key as keyof typeof POC_ITEMS];
@@ -24,6 +35,28 @@ export const calculateReward = (key: string): number => {
 
 export const isEssentialItem = (key: string): boolean => {
   return ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
+};
+
+export const updateProjectSnaps = async (
+  tx: any,
+  projectId: number,
+  key: string,
+  value: any,
+): Promise<void> => {
+  const projectSnap = await tx.query.projectSnaps.findFirst({
+    where: eq(projectSnaps.projectId, projectId),
+  });
+  if (!projectSnap) {
+    return;
+  }
+  const updatedItems = projectSnap.items.filter(
+    (item: any) => item.key !== key,
+  );
+  updatedItems.push({ key, value });
+  await tx
+    .update(projectSnaps)
+    .set({ items: updatedItems })
+    .where(eq(projectSnaps.id, projectSnap.id));
 };
 
 export const handleVoteRecord = async (
@@ -101,11 +134,22 @@ export const checkNeedQuorum = async (
   const isEssentialItem = ESSENTIAL_ITEM_LIST.some((item) => item.key === key);
   if (isEssentialItem) return false;
 
-  const hasLeadingProposal = await tx.query.projectLogs.findFirst({
+  const leadingProposal = await tx.query.projectLogs.findFirst({
     where: and(eq(projectLogs.projectId, projectId), eq(projectLogs.key, key)),
   });
 
-  return !hasLeadingProposal;
+  if (!leadingProposal) {
+    return true;
+  }
+
+  const aiCreatorId = process.env.NEXT_PUBLIC_AI_SYSTEM_TOKENS;
+  const leadingCreatorId = leadingProposal.itemProposal?.creator;
+
+  if (aiCreatorId && leadingCreatorId === aiCreatorId) {
+    return true;
+  }
+
+  return false;
 };
 
 export const processItemProposalVoteResult = async (
@@ -138,14 +182,13 @@ export const processItemProposalVoteResult = async (
   const itemsTopWeight = project?.itemsTopWeight as
     | Record<string, number>
     | undefined;
-  const keyWeight = itemsTopWeight?.[key] ?? 0;
+  const genesisWeight =
+    POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric * WEIGHT;
+  const keyWeight = itemsTopWeight?.[key] ?? genesisWeight;
 
   if (voteSum > keyWeight) {
     const rewardMultiplier = !needCheckQuorum ? 1 : 1 - REWARD_PERCENT;
-    const reward =
-      POC_ITEMS[key as keyof typeof POC_ITEMS].accountability_metric *
-      WEIGHT *
-      rewardMultiplier;
+    const reward = genesisWeight * rewardMultiplier;
 
     const finalWeight = (itemProposal.creator.weight ?? 0) + reward;
 
@@ -156,6 +199,11 @@ export const processItemProposalVoteResult = async (
       ),
     });
 
+    const newItemsTopWeight = {
+      ...(project?.itemsTopWeight ?? {}),
+      [key]: voteSum,
+    };
+
     if (oldLog) {
       await Promise.all([
         tx
@@ -165,15 +213,27 @@ export const processItemProposalVoteResult = async (
             createdAt: new Date(),
           })
           .where(eq(projectLogs.id, oldLog.id)),
-        tx.update(projects).set({
-          itemsTopWeight: {
-            ...(project?.itemsTopWeight ?? {}),
-            [key]: voteSum,
-          },
-        }),
+        tx
+          .update(projects)
+          .set({
+            itemsTopWeight: newItemsTopWeight,
+          })
+          .where(eq(projects.id, itemProposal.projectId)),
+        addMultiUserNotification(
+          createMultiUserNotification.itemProposalBecameLeading(
+            itemProposal.creator.userId,
+            itemProposal.projectId,
+            itemProposal.id,
+          ),
+        ),
+        updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
       ]);
       return;
     }
+
+    const newPublishedGenesisWeight = calculatePublishedGenesisWeight(
+      Object.keys(newItemsTopWeight),
+    );
 
     await Promise.all([
       tx.insert(projectLogs).values({
@@ -181,12 +241,18 @@ export const processItemProposalVoteResult = async (
         itemProposalId: itemProposal.id,
         key,
       }),
-      tx.update(projects).set({
-        itemsTopWeight: {
-          ...(project?.itemsTopWeight ?? {}),
-          [key]: voteSum,
-        },
-      }),
+      tx
+        .update(projects)
+        .set({
+          itemsTopWeight: newItemsTopWeight,
+        })
+        .where(eq(projects.id, itemProposal.projectId)),
+      tx
+        .update(ranks)
+        .set({
+          publishedGenesisWeight: newPublishedGenesisWeight,
+        })
+        .where(eq(ranks.projectId, itemProposal.projectId)),
       tx
         .update(profiles)
         .set({
@@ -202,6 +268,14 @@ export const processItemProposalVoteResult = async (
         ),
         tx,
       ),
+      addMultiUserNotification(
+        createMultiUserNotification.itemProposalBecameLeading(
+          itemProposal.creator.userId,
+          itemProposal.projectId,
+          itemProposal.id,
+        ),
+      ),
+      updateProjectSnaps(tx, itemProposal.projectId, key, itemProposal.value),
     ]);
 
     return { reward, finalWeight, voteSum };
@@ -227,12 +301,36 @@ export const processItemProposalUpdate = async (
     return acc;
   }, 0);
 
-  await tx.update(projects).set({
-    itemsTopWeight: {
-      ...(project?.itemsTopWeight ?? {}),
-      [key]: voteSum,
+  await tx
+    .update(projects)
+    .set({
+      itemsTopWeight: {
+        ...(project?.itemsTopWeight ?? {}),
+        [key]: voteSum,
+      },
+    })
+    .where(eq(projects.id, project.id));
+
+  const leadingLog = await tx.query.projectLogs.findFirst({
+    where: and(
+      eq(projectLogs.projectId, project.id),
+      eq(projectLogs.key, key),
+      eq(projectLogs.isNotLeading, false),
+    ),
+    orderBy: (projectLogs: any, { desc }: any) => [desc(projectLogs.createdAt)],
+    with: {
+      itemProposal: true,
     },
   });
+
+  if (leadingLog?.itemProposal) {
+    await updateProjectSnaps(
+      tx,
+      project.id,
+      key,
+      leadingLog.itemProposal.value,
+    );
+  }
 };
 
 export const handleOriginalProposalUpdate = async (
@@ -273,12 +371,30 @@ export const handleOriginalProposalUpdate = async (
     const keyWeight = itemsTopWeight?.[key] ?? 0;
 
     if (originalVoteSum < keyWeight) {
-      await tx
-        .update(projectLogs)
-        .set({
-          isNotLeading: true,
-        })
-        .where(eq(projectLogs.id, originalLeadingCheck.id));
+      const originalItemProposal = await tx.query.itemProposals.findFirst({
+        where: eq(itemProposals.id, originalItemProposalId),
+        with: {
+          creator: true,
+        },
+      });
+
+      await Promise.all([
+        tx
+          .update(projectLogs)
+          .set({
+            isNotLeading: true,
+          })
+          .where(eq(projectLogs.id, originalLeadingCheck.id)),
+        originalItemProposal
+          ? addMultiUserNotification(
+              createMultiUserNotification.itemProposalLostLeading(
+                originalItemProposal.creator.userId,
+                projectId,
+                originalItemProposalId,
+              ),
+            )
+          : Promise.resolve(),
+      ]);
     }
   }
 };

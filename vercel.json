@@ -3,6 +3,18 @@
     {
       "path": "/api/cron/scanPendingProject",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/processNotifications",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/backup",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/rankingSnapshot",
+      "schedule": "0 11 * * *"
     }
   ]
 }

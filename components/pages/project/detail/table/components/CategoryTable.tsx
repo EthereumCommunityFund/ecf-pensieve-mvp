@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, ScrollShadow } from '@heroui/react';
 import { flexRender, Table } from '@tanstack/react-table';
 import React, { FC } from 'react';
 
@@ -8,7 +8,6 @@ import {
   ExpandableRow,
   GroupHeader,
   groupTableRows,
-  PageTableContainer,
   TableCellSkeleton,
   TableFooter,
   TableHeader,
@@ -34,6 +33,8 @@ interface CategoryTableProps {
   project?: any;
   onToggleEmptyItems: (category: IItemSubCategoryEnum) => void;
   onToggleGroupExpanded: (groupKey: string) => void;
+  pendingFilter?: boolean;
+  emptyFilter?: boolean;
 }
 
 /**
@@ -51,9 +52,12 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   project,
   onToggleEmptyItems,
   onToggleGroupExpanded,
+  pendingFilter = false,
+  emptyFilter = false,
 }) => {
   const showSkeleton = isLoading || !project;
   const noDataForThisTable = table.options.data.length === 0;
+  const isFilterActive = pendingFilter || emptyFilter;
 
   // Create stable pinned column styles and position calculations
   // Use useMemo to stabilize columnPinningState, avoiding re-fetching on every render
@@ -244,11 +248,12 @@ export const CategoryTable: FC<CategoryTableProps> = ({
     </thead>
   );
 
-  if (showSkeleton || noDataForThisTable) {
+  if (showSkeleton && !isFilterActive) {
+    // Show loading skeleton only when actually loading and no filters active
     return (
-      <PageTableContainer
-        className="overflow-x-auto rounded-b-[10px] border-x border-black/10 bg-white"
-        allowInternalBorderRadius={true}
+      <ScrollShadow
+        className="rounded-b-[10px] border-x border-black/10 bg-white"
+        orientation="horizontal"
       >
         <table
           className="box-border w-full border-separate border-spacing-0"
@@ -311,7 +316,39 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             </TableFooter>
           </tbody>
         </table>
-      </PageTableContainer>
+      </ScrollShadow>
+    );
+  }
+
+  // Handle filtered empty state
+  if (noDataForThisTable && isFilterActive && !showSkeleton) {
+    return (
+      <ScrollShadow
+        className="rounded-b-[10px] border-x border-black/10 bg-white"
+        orientation="horizontal"
+      >
+        <table
+          className="box-border w-full border-separate border-spacing-0"
+          style={{ minWidth: 'max-content' }}
+        >
+          {colGroupDefinition}
+          {tableHeaders}
+          <tbody>
+            <tr>
+              <td
+                colSpan={table.getAllColumns().length}
+                className="border-b border-black/10 px-[20px] py-[60px] text-center text-[14px] text-black/50"
+              >
+                {emptyFilter
+                  ? 'No empty items found in this category'
+                  : pendingFilter
+                    ? 'No pending items found in this category'
+                    : 'No items found'}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </ScrollShadow>
     );
   }
 
@@ -337,21 +374,11 @@ export const CategoryTable: FC<CategoryTableProps> = ({
   );
 
   return (
-    <PageTableContainer
+    <ScrollShadow
       className={cn(
         'mt-px rounded-b-[10px] border-x border-b border-black/10 bg-white',
-        // '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:bg-gray-100',
       )}
-      allowInternalBorderRadius={true}
-      style={{
-        overflowX: 'auto',
-        // Container settings to ensure sticky positioning works correctly
-        position: 'relative',
-        isolation: 'isolate',
-        // Force scrollbar to always be visible
-        scrollbarWidth: 'thin',
-        WebkitOverflowScrolling: 'touch',
-      }}
+      orientation="horizontal"
     >
       <table
         className="box-border w-full border-separate border-spacing-0"
@@ -391,10 +418,10 @@ export const CategoryTable: FC<CategoryTableProps> = ({
                     !AllItemConfig[row.original.key as IEssentialItemKey]
                       ?.showExpand
                   }
-                  className={
-                    cn()
+                  className={cn(
+                    row.original.isPendingValidation && 'bg-[#7EA9FF]/10',
                     // expandedRows[row.original.key] ? 'bg-[#EBEBEB]' : '',
-                  }
+                  )}
                 >
                   {row.getVisibleCells().map((cell: any, cellIndex: number) => {
                     const isPinned = getColumnPinStatus(cell.column.id);
@@ -527,6 +554,6 @@ export const CategoryTable: FC<CategoryTableProps> = ({
             ))}
         </tbody>
       </table>
-    </PageTableContainer>
+    </ScrollShadow>
   );
 };
