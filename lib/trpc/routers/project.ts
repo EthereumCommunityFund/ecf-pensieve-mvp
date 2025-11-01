@@ -209,8 +209,11 @@ export const projectRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         return await ctx.db.transaction(async (tx) => {
-          const existingProject = await tx.query.projects.findFirst({
-            where: eq(sql`lower(${projects.name})`, input.name.toLowerCase()),
+          const existingProject = await tx.query.projectSnaps.findFirst({
+            where: eq(
+              sql`lower(${projectSnaps.name})`,
+              input.name.toLowerCase(),
+            ),
           });
           if (existingProject) {
             throw new TRPCError({
@@ -332,8 +335,11 @@ export const projectRouter = router({
         };
 
         const result = await ctx.db.transaction(async (tx) => {
-          const existingProject = await tx.query.projects.findFirst({
-            where: eq(sql`lower(${projects.name})`, input.name.toLowerCase()),
+          const existingProject = await tx.query.projectSnaps.findFirst({
+            where: eq(
+              sql`lower(${projectSnaps.name})`,
+              input.name.toLowerCase(),
+            ),
           });
           if (existingProject) {
             throw new TRPCError({
@@ -1235,8 +1241,8 @@ export const projectRouter = router({
     .query(async ({ ctx, input }) => {
       const normalizedName = input.name.toLowerCase();
 
-      const existingProject = await ctx.db.query.projects.findFirst({
-        where: eq(sql`lower(${projects.name})`, normalizedName),
+      const existingProject = await ctx.db.query.projectSnaps.findFirst({
+        where: eq(sql`lower(${projectSnaps.name})`, normalizedName),
         columns: {
           id: true,
         },
