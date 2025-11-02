@@ -153,5 +153,25 @@
       "contentUpdateLimit": "8",
       "dustRateBps": "100"
     }
+  },
+  {
+  "chainId": 11155111,
+  "slotAddress": "0xa4c4AaB5cB55627FBfB36C77864E4e4F7b027eB1",
+  "slotDisplayName": "",
+  "page": "",
+  "position": "",
+  "imageSize": "",
+  "extra": {},
+  "isActive": false,
+  "contractMeta": {
+    "slotType": "enabled",
+    "bondRateBps": "1300",
+    "annualTaxRateBps": "500",
+    "minBidIncrementBps": "1000",
+    "taxPeriodSeconds": "2592000",
+    "minValuationWei": "500000000000000000",
+    "contentUpdateLimit": "5",
+    "dustRateBps": "100"
   }
+}
 ]
