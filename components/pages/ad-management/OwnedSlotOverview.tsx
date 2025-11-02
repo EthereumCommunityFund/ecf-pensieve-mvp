@@ -2,6 +2,7 @@
 
 import { cn } from '@heroui/react';
 import { ReactNode, useMemo } from 'react';
+import { Clock } from '@phosphor-icons/react';
 
 import type { ActiveSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
@@ -12,12 +13,12 @@ import {
   ONE_BIGINT,
   ZERO_BIGINT,
 } from '@/utils/harberger';
+
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 import {
   DESKTOP_CREATIVE_CONFIG,
   MOBILE_CREATIVE_CONFIG,
 } from './creativeConstants';
-import { Clock } from '@phosphor-icons/react';
 
 interface DetailItem {
   label: string;
@@ -145,7 +146,7 @@ export default function OwnedSlotOverview({
       <div className="flex flex-col gap-[8px]">
         {detailItems.map((item) =>
           item.type === 'divider' ? (
-            <div className="w-full h-[1px] bg-black/10"></div>
+            <div className="h-px w-full bg-black/10"></div>
           ) : (
             <div key={item.label} className="flex justify-between gap-[4px]">
               <span className="font-sans text-[14px] text-black/80">

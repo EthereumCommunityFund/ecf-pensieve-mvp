@@ -1,13 +1,18 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import {
+  cn,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+} from '@heroui/react';
 import { TrendUp } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseEther } from 'viem';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
-import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
+import { Modal, ModalContent } from '@/components/base/modal';
 import { Select, SelectItem } from '@/components/base/select';
 import ECFTypography from '@/components/base/typography';
 import { InfoIcon, XIcon } from '@/components/icons';
@@ -72,8 +77,6 @@ export default function ClaimSlotModal({
   const statusLabel = slot?.statusLabel ?? 'Open';
   const valuationDefault = slot?.valuationDefault ?? '0.00';
   const valuationMinimumLabel = slot?.valuationMinimum ?? '0 ETH';
-  const coverageHint =
-    slot?.coverageDescription ?? 'Select how many tax periods to prepay.';
   const [step, setStep] = useState<ClaimStep>(1);
   const [valuationInput, setValuationInput] = useState(valuationDefault);
   const [coverageSliderValue, setCoverageSliderValue] = useState<number>(
@@ -174,14 +177,6 @@ export default function ClaimSlotModal({
       coveragePeriods >= BigInt(1),
   );
 
-  const handleClose = () => {
-    if (isSubmitting) {
-      return;
-    }
-    setStep(1);
-    onClose();
-  };
-
   const handleNext = async () => {
     if (!slot) {
       return;
@@ -252,7 +247,7 @@ export default function ClaimSlotModal({
         },
       });
       setLocalError(null);
-      handleClose();
+      handleModalClose();
     } catch (error) {
       setLocalError(
         error instanceof Error ? error.message : 'Failed to submit claim.',
@@ -266,6 +261,14 @@ export default function ClaimSlotModal({
       setLocalError(null);
     }
   };
+
+  const handleModalClose = useCallback(() => {
+    if (isSubmitting) {
+      return;
+    }
+    setStep(1);
+    onClose();
+  }, [isSubmitting, onClose]);
 
   const breakdownRows = useMemo(() => {
     if (!slot) {
@@ -295,316 +298,365 @@ export default function ClaimSlotModal({
 
   const combinedError = localError ?? errorMessage ?? null;
 
+  const renderOverlayContent = (
+    close: () => void,
+    variant: 'modal' | 'drawer',
+  ) => {
+    const handleOverlayClose = () => {
+      if (isSubmitting) {
+        return;
+      }
+
+      if (variant === 'drawer') {
+        setStep(1);
+        close();
+        return;
+      }
+
+      handleModalClose();
+    };
+
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
+          <div className="flex items-center gap-3 ">
+            <ECFTypography type="subtitle2" className="text-[18px]">
+              Claim Slot
+            </ECFTypography>
+          </div>
+
+          <Button
+            isIconOnly
+            radius="sm"
+            className="size-[32px] rounded-[8px] bg-transparent  p-0 text-black/50 hover:bg-black/10"
+            onPress={handleOverlayClose}
+            isDisabled={isSubmitting}
+          >
+            <XIcon size={16} />
+          </Button>
+        </div>
+
+        <div
+          className={cn(
+            'flex flex-1 flex-col gap-[20px] overflow-y-auto p-[20px]',
+            'mobile:p-[10px]',
+            variant === 'drawer' ? 'pb-[32px]' : '',
+          )}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-[10px]">
+            <div className="flex items-center gap-[10px]">
+              <span className="text-[13px] font-semibold text-black/50">
+                Slot:
+              </span>
+              <span className="text-[14px] font-semibold text-black">
+                {slotMetadataDisplayName}
+              </span>
+            </div>
+
+            <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
+          </div>
+
+          {step === 1 ? (
+            <div className="space-y-[20px]">
+              <div className="space-y-[8px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[10px]">
+                <div className="flex items-center justify-center gap-[8px] text-[14px] leading-[20px] text-black">
+                  <TrendUp size={20} weight="bold" />
+                  <span>Bonding Cost Breakdown:</span>
+                </div>
+
+                <BreakdownRow
+                  label={breakdownRows.bondRateLabel}
+                  value={breakdownRows.bondRateValue}
+                  valueLabelType="light"
+                />
+                <BreakdownRow
+                  label={breakdownRows.taxLabel}
+                  value={breakdownRows.taxValue}
+                  valueLabelType="light"
+                />
+                <BreakdownRow
+                  label={breakdownRows.coverageLabel}
+                  value={breakdownRows.coverageValue}
+                  valueLabelType="pureText"
+                  className="opacity-50"
+                />
+
+                <div className="flex items-center justify-between rounded-[8px] border-t border-black/10 pt-[8px]">
+                  <div className="flex items-center gap-[6px] text-[14px] text-black/80">
+                    <span>{breakdownRows.totalLabel}</span>
+                    <InfoIcon size={16} />
+                  </div>
+                  <span className="text-[16px] font-semibold text-[#3CBF91]">
+                    {breakdownRows.totalValue}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <LabelWithInfo label="Set Valuation (ETH)" />
+                <Input
+                  value={valuationInput}
+                  aria-label="Set valuation"
+                  className="mb-[5px] mt-[10px] bg-[#F5F5F5] text-[16px] font-semibold"
+                  onValueChange={setValuationInput}
+                  isInvalid={Boolean(valuationInput) && !parsedValuationWei}
+                  isDisabled={!slot}
+                />
+                <span className="text-[13px] text-black/80">
+                  Min: {valuationMinimumLabel}
+                </span>
+              </div>
+
+              <div className="flex flex-col">
+                <LabelWithInfo
+                  label={`Tax Coverage (${coverageSliderValue} Days)`}
+                />
+                <span className="mt-[5px] text-[13px] leading-[18px] text-black/80">
+                  Choose how many tax periods to prepay. Longer coverage means
+                  higher upfront cost but no need to pay taxes frequently.{' '}
+                  <strong>(1 tax period = 24 hours / 620000 seconds)</strong>
+                </span>
+                <div className="mt-[10px]">
+                  <CoverageSlider
+                    value={coverageSliderValue}
+                    min={1}
+                    max={365}
+                    step={1}
+                    rangeStart="1 day"
+                    rangeEnd="365 days"
+                    onChange={handleCoverageSliderChange}
+                    onChangeEnd={handleCoverageSliderChange}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-[20px]">
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo label="Content Type" />
+                <Select
+                  selectedKeys={[contentType]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as string | undefined;
+                    if (key) {
+                      setContentType(key);
+                    }
+                  }}
+                  className="w-full bg-[#F5F5F5]"
+                  aria-label="Select content type"
+                >
+                  {CONTENT_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.key}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo label="Title" />
+                <Input
+                  placeholder="type here"
+                  aria-label="Slot title"
+                  value={title}
+                  onValueChange={setTitle}
+                  className="bg-[#F5F5F5]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo label="Link URL" />
+                <Input
+                  placeholder="https://"
+                  aria-label="Link URL"
+                  value={linkUrl}
+                  onValueChange={setLinkUrl}
+                  className="bg-[#F5F5F5]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo
+                  label={`Desktop Creative (${DESKTOP_CREATIVE_CONFIG.labelSuffix})`}
+                />
+                <CreativePhotoUpload
+                  initialUrl={desktopImageUrl || undefined}
+                  onUploadSuccess={(url) => {
+                    setDesktopImageUrl(url);
+                    setLocalError(null);
+                  }}
+                  isDisabled={isSubmitting}
+                  cropAspectRatio={DESKTOP_CREATIVE_CONFIG.aspectRatio}
+                  cropMaxWidth={DESKTOP_CREATIVE_CONFIG.maxWidth}
+                  cropMaxHeight={DESKTOP_CREATIVE_CONFIG.maxHeight}
+                  className={DESKTOP_CREATIVE_CONFIG.previewWidthClass}
+                >
+                  <div
+                    className={`${DESKTOP_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[12px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+                  >
+                    {desktopImageUrl ? (
+                      <img
+                        src={desktopImageUrl}
+                        alt="Desktop creative preview"
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
+                        <span>Click to upload desktop asset</span>
+                        <span className="text-[12px] text-black/40">
+                          {DESKTOP_CREATIVE_CONFIG.helperText}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CreativePhotoUpload>
+                <span className="text-[12px] text-black/50">
+                  The asset will be cropped to a {DESKTOP_CREATIVE_CONFIG.ratioLabel}{' '}
+                  ratio automatically; click again to replace it.
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo
+                  label={`Mobile Creative (${MOBILE_CREATIVE_CONFIG.labelSuffix})`}
+                />
+                <CreativePhotoUpload
+                  initialUrl={mobileImageUrl || undefined}
+                  onUploadSuccess={(url) => {
+                    setMobileImageUrl(url);
+                    setLocalError(null);
+                  }}
+                  isDisabled={isSubmitting}
+                  cropAspectRatio={MOBILE_CREATIVE_CONFIG.aspectRatio}
+                  cropMaxWidth={MOBILE_CREATIVE_CONFIG.maxWidth}
+                  cropMaxHeight={MOBILE_CREATIVE_CONFIG.maxHeight}
+                  className={MOBILE_CREATIVE_CONFIG.previewWidthClass}
+                >
+                  <div
+                    className={`${MOBILE_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[12px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+                  >
+                    {mobileImageUrl ? (
+                      <img
+                        src={mobileImageUrl}
+                        alt="Mobile creative preview"
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
+                        <span>Click to upload mobile asset</span>
+                        <span className="text-[12px] text-black/40">
+                          {MOBILE_CREATIVE_CONFIG.helperText}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CreativePhotoUpload>
+                <span className="text-[12px] text-black/50">
+                  The mobile asset will be cropped to a{' '}
+                  {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive layouts.
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-[12px]">
+                <LabelWithInfo label="Fallback Image URL (Optional)" />
+                <Input
+                  placeholder="https:// or ipfs://"
+                  aria-label="Fallback image reference"
+                  value={mediaUrl}
+                  onValueChange={setMediaUrl}
+                  className="bg-[#F5F5F5]"
+                />
+                <span className="text-[12px] text-black/50">
+                  Provide an optional external asset link if you host creatives elsewhere.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {combinedError ? (
+            <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
+              {combinedError}
+            </div>
+          ) : null}
+
+          <div className="flex items-center gap-[12px]">
+            <Button
+              color="secondary"
+              className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+              onPress={step === 1 ? handleOverlayClose : handleBack}
+              isDisabled={isSubmitting}
+            >
+              {step === 1 ? 'Close' : 'Back'}
+            </Button>
+            <Button
+              color="primary"
+              className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90"
+              onPress={handleNext}
+              isDisabled={
+                step === 1
+                  ? !isStepOneValid || !slot
+                  : isSubmitting ||
+                    desktopImageUrl.trim().length === 0 ||
+                    mobileImageUrl.trim().length === 0
+              }
+              isLoading={isSubmitting}
+            >
+              {step === 1 ? 'Next(1)' : 'Submit Claim'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
+    <>
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={handleModalClose}
       classNames={{
+        wrapper: 'mobile:hidden flex',
         base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]',
-        body: 'max-h-[calc(80vh)] overflow-y-scroll',
+        body: 'p-0 max-h-[calc(80vh)] overflow-hidden',
       }}
       placement="center"
     >
-      <ModalContent>
-        {() => (
-          <>
-            {/* header */}
-            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
-              <div className="flex items-center gap-3 ">
-                <ECFTypography type="subtitle2" className="text-[18px]">
-                  Claim Slot
-                </ECFTypography>
-                {/* <span className="rounded-[6px] border border-black/10 bg-[#F4F5F7] px-[8px] py-[2px] text-[12px] font-semibold uppercase tracking-[0.04em] text-black/70">
-                  {statusLabel}
-                </span> */}
-              </div>
-
-              <Button
-                isIconOnly
-                radius="sm"
-                className="size-[32px] rounded-[8px] bg-transparent  p-0 text-black/50 hover:bg-black/10"
-                onPress={handleClose}
-                isDisabled={isSubmitting}
-              >
-                <XIcon size={16} />
-              </Button>
-            </div>
-
-            <ModalBody className="mobile:p-[10px] flex flex-col gap-[20px] p-[20px]">
-              <div className="flex flex-wrap items-center justify-between gap-[10px]">
-                <div className="flex items-center gap-[10px]">
-                  <span className="text-[13px] font-semibold text-black/50">
-                    Slot:
-                  </span>
-                  <span className="text-[14px] font-semibold text-black">
-                    {slotMetadataDisplayName}
-                  </span>
-                </div>
-
-                <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
-              </div>
-
-              {step === 1 ? (
-                <div className="space-y-[20px]">
-                  <div className="space-y-[8px] rounded-[10px] border border-black/10 bg-[#FCFCFC] p-[10px]">
-                    <div className="flex items-center justify-center gap-[8px] text-[14px] leading-[20px] text-black">
-                      <TrendUp size={20} weight="bold" />
-                      <span>Bonding Cost Breakdown:</span>
-                    </div>
-
-                    <BreakdownRow
-                      label={breakdownRows.bondRateLabel}
-                      value={breakdownRows.bondRateValue}
-                      valueLabelType="light"
-                    />
-                    <BreakdownRow
-                      label={breakdownRows.taxLabel}
-                      value={breakdownRows.taxValue}
-                      valueLabelType="light"
-                    />
-                    <BreakdownRow
-                      label={breakdownRows.coverageLabel}
-                      value={breakdownRows.coverageValue}
-                      valueLabelType="pureText"
-                      className="opacity-50"
-                    />
-
-                    <div className="flex items-center justify-between rounded-[8px] border-t border-black/10 pt-[8px]">
-                      <div className="flex items-center gap-[6px] text-[14px] text-black/80">
-                        <span>{breakdownRows.totalLabel}</span>
-                        <InfoIcon size={16} />
-                      </div>
-                      <span className="text-[16px] font-semibold text-[#3CBF91]">
-                        {breakdownRows.totalValue}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <LabelWithInfo label="Set Valuation (ETH)" />
-                    <Input
-                      value={valuationInput}
-                      aria-label="Set valuation"
-                      className="mb-[5px] mt-[10px] bg-[#F5F5F5] text-[16px] font-semibold"
-                      onValueChange={setValuationInput}
-                      isInvalid={Boolean(valuationInput) && !parsedValuationWei}
-                      isDisabled={!slot}
-                    />
-                    <span className="text-[13px] text-black/80">
-                      Min: {valuationMinimumLabel}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <LabelWithInfo
-                      label={`Tax Coverage (${coverageSliderValue} Days)`}
-                    />
-                    <span className="mt-[5px] text-[13px] leading-[18px] text-black/80">
-                      Choose how many tax periods to prepay. Longer coverage
-                      means higher upfront cost but no need to pay taxes
-                      frequently.{' '}
-                      <strong>
-                        (1 tax period = 24 hours / 620000 seconds)
-                      </strong>
-                    </span>
-                    <div className="mt-[10px]">
-                      <CoverageSlider
-                        value={coverageSliderValue}
-                        min={1}
-                        max={365}
-                        step={1}
-                        rangeStart="1 day"
-                        rangeEnd="365 days"
-                        onChange={handleCoverageSliderChange}
-                        onChangeEnd={handleCoverageSliderChange}
-                      />
-                    </div>
-                    {/* <span className="mt-[6px] text-[12px] text-black/60">
-                      Selected: {coverageLabel}
-                    </span> */}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-[20px]">
-                  <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo label="Content Type" />
-                    <Select
-                      selectedKeys={[contentType]}
-                      onSelectionChange={(keys) => {
-                        const key = Array.from(keys)[0] as string | undefined;
-                        if (key) {
-                          setContentType(key);
-                        }
-                      }}
-                      className="w-full bg-[#F5F5F5]"
-                      aria-label="Select content type"
-                    >
-                      {CONTENT_TYPE_OPTIONS.map((option) => (
-                        <SelectItem key={option.key}>{option.label}</SelectItem>
-                      ))}
-                    </Select>
-                  </div>
-
-                  <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo label="Title" />
-                    <Input
-                      placeholder="type here"
-                      aria-label="Slot title"
-                      value={title}
-                      onValueChange={setTitle}
-                      className="bg-[#F5F5F5]"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo label="Link URL" />
-                    <Input
-                      placeholder="https://"
-                      aria-label="Link URL"
-                      value={linkUrl}
-                      onValueChange={setLinkUrl}
-                      className="bg-[#F5F5F5]"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo
-                      label={`Desktop Creative (${DESKTOP_CREATIVE_CONFIG.labelSuffix})`}
-                    />
-                    <CreativePhotoUpload
-                      initialUrl={desktopImageUrl || undefined}
-                      onUploadSuccess={(url) => {
-                        setDesktopImageUrl(url);
-                        setLocalError(null);
-                      }}
-                      isDisabled={isSubmitting}
-                      cropAspectRatio={DESKTOP_CREATIVE_CONFIG.aspectRatio}
-                      cropMaxWidth={DESKTOP_CREATIVE_CONFIG.maxWidth}
-                      cropMaxHeight={DESKTOP_CREATIVE_CONFIG.maxHeight}
-                      className={DESKTOP_CREATIVE_CONFIG.previewWidthClass}
-                    >
-                      <div
-                        className={`${DESKTOP_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[12px] border border-dashed border-black/20 bg-[#F5F5F5]`}
-                      >
-                        {desktopImageUrl ? (
-                          <img
-                            src={desktopImageUrl}
-                            alt="Desktop creative preview"
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
-                            <span>Click to upload desktop asset</span>
-                            <span className="text-[12px] text-black/40">
-                              {DESKTOP_CREATIVE_CONFIG.helperText}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </CreativePhotoUpload>
-                    <span className="text-[12px] text-black/50">
-                      The asset will be cropped to a{' '}
-                      {DESKTOP_CREATIVE_CONFIG.ratioLabel} ratio automatically;
-                      click again to replace it.
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo
-                      label={`Mobile Creative (${MOBILE_CREATIVE_CONFIG.labelSuffix})`}
-                    />
-                    <CreativePhotoUpload
-                      initialUrl={mobileImageUrl || undefined}
-                      onUploadSuccess={(url) => {
-                        setMobileImageUrl(url);
-                        setLocalError(null);
-                      }}
-                      isDisabled={isSubmitting}
-                      cropAspectRatio={MOBILE_CREATIVE_CONFIG.aspectRatio}
-                      cropMaxWidth={MOBILE_CREATIVE_CONFIG.maxWidth}
-                      cropMaxHeight={MOBILE_CREATIVE_CONFIG.maxHeight}
-                      className={MOBILE_CREATIVE_CONFIG.previewWidthClass}
-                    >
-                      <div
-                        className={`${MOBILE_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[12px] border border-dashed border-black/20 bg-[#F5F5F5]`}
-                      >
-                        {mobileImageUrl ? (
-                          <img
-                            src={mobileImageUrl}
-                            alt="Mobile creative preview"
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-full flex-col items-center justify-center gap-[6px] text-center text-[13px] text-black/50">
-                            <span>Click to upload mobile asset</span>
-                            <span className="text-[12px] text-black/40">
-                              {MOBILE_CREATIVE_CONFIG.helperText}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </CreativePhotoUpload>
-                    <span className="text-[12px] text-black/50">
-                      The mobile asset will be cropped to a{' '}
-                      {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive
-                      layouts.
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col gap-[12px]">
-                    <LabelWithInfo label="Fallback Image URL (Optional)" />
-                    <Input
-                      placeholder="https:// or ipfs://"
-                      aria-label="Fallback image reference"
-                      value={mediaUrl}
-                      onValueChange={setMediaUrl}
-                      className="bg-[#F5F5F5]"
-                    />
-                    <span className="text-[12px] text-black/50">
-                      Provide an optional external asset link if you host
-                      creatives elsewhere.
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {combinedError ? (
-                <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
-                  {combinedError}
-                </div>
-              ) : null}
-
-              {/* footer */}
-              <div className="flex items-center gap-[12px]">
-                <Button
-                  color="secondary"
-                  className="h-[40px] flex-1 rounded-[8px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-                  onPress={step === 1 ? handleClose : handleBack}
-                  isDisabled={isSubmitting}
-                >
-                  {step === 1 ? 'Close' : 'Back'}
-                </Button>
-                <Button
-                  color="primary"
-                  className="h-[40px] flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/90"
-                  onPress={handleNext}
-                  isDisabled={
-                    step === 1
-                      ? !isStepOneValid || !slot
-                      : isSubmitting ||
-                        desktopImageUrl.trim().length === 0 ||
-                        mobileImageUrl.trim().length === 0
-                  }
-                  isLoading={isSubmitting}
-                >
-                  {step === 1 ? 'Next(1)' : 'Submit Claim'}
-                </Button>
-              </div>
-            </ModalBody>
-          </>
-        )}
+      <ModalContent key={`modal-step-${step}`}>
+        {() => renderOverlayContent(handleModalClose, 'modal')}
       </ModalContent>
     </Modal>
+
+      <Drawer
+        isOpen={isOpen}
+        placement="bottom"
+        hideCloseButton
+        onOpenChange={(open) => {
+          if (!open) {
+            handleModalClose();
+          }
+        }}
+        classNames={{
+          wrapper: 'hidden mobile:flex',
+          base: 'hidden w-full max-h-full rounded-t-[20px] border border-black/10 bg-white mobile:flex mobile:flex-col',
+          backdrop: 'hidden bg-black/40 mobile:block',
+          body: 'p-0 h-full',
+        }}
+      >
+        <DrawerContent>
+          {(drawerClose) => (
+            <DrawerBody
+              key={`drawer-step-${step}`}
+              className="h-full p-0"
+            >
+              {renderOverlayContent(() => {
+                if (isSubmitting) {
+                  return;
+                }
+                drawerClose();
+              }, 'drawer')}
+            </DrawerBody>
+          )}
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }
 

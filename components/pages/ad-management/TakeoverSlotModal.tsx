@@ -1,6 +1,13 @@
 'use client';
 
-import { cn, Slider, Tooltip } from '@heroui/react';
+import {
+  cn,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  Slider,
+  Tooltip,
+} from '@heroui/react';
 import { CoinVertical, TrendUp } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseEther } from 'viem';
@@ -11,6 +18,7 @@ import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import ECFTypography from '@/components/base/typography';
 import { InfoIcon, XIcon } from '@/components/icons';
 import type { ActiveSlotData } from '@/hooks/useHarbergerSlots';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   calculateBond,
   calculateTaxForPeriods,
@@ -29,6 +37,9 @@ import {
   DESKTOP_CREATIVE_CONFIG,
   MOBILE_CREATIVE_CONFIG,
 } from './creativeConstants';
+
+const MOBILE_MAX_WIDTH_PX = 809;
+const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_MAX_WIDTH_PX}px)`;
 
 type ContextTone = 'default' | 'danger';
 type SlotModalMode = 'takeover' | 'edit' | 'view';
@@ -81,15 +92,22 @@ export default function TakeoverSlotModal({
   const isTakeoverMode = mode === 'takeover';
   const isEditMode = mode === 'edit';
   const isViewMode = mode === 'view';
-
   const [activeStep, setActiveStep] = useState(isTakeoverMode ? 1 : 2);
+  const isMobileViewport = useMediaQuery(MOBILE_MEDIA_QUERY);
+
+  const resetActiveStep = useCallback(() => {
+    setActiveStep(isTakeoverMode ? 1 : 2);
+  }, [isTakeoverMode]);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
-    setActiveStep(isTakeoverMode ? 1 : 2);
-  }, [isOpen, isTakeoverMode, slot?.id]);
+    resetActiveStep();
+  }, [isOpen, resetActiveStep, slot?.id]);
+
+  const isModalOpen = isOpen && !isMobileViewport;
+  const isDrawerOpen = isOpen && isMobileViewport;
 
   const contextTone: ContextTone =
     slot && (slot.isOverdue || slot.isExpired) ? 'danger' : 'default';
@@ -112,38 +130,6 @@ export default function TakeoverSlotModal({
     ? `Step ${Math.min(activeStep, 2)} of 2`
     : null;
 
-  const takeoverPreviewLabel = slot
-    ? formatEth(slot.minTakeoverBidWei, {
-        maximumFractionDigits: 4,
-      })
-    : null;
-
-  const takeoverOverviewCta = slot
-    ? takeoverPreviewLabel
-      ? `Takeover for ${takeoverPreviewLabel}`
-      : (slot.takeoverCta ?? 'Continue')
-    : 'Continue';
-
-  const forfeitCtaLabel =
-    !slot?.isExpired && onSubmit ? 'Forfeit Slot' : undefined;
-
-  const overviewPrimaryLabel = isTakeoverMode
-    ? takeoverOverviewCta
-    : forfeitCtaLabel;
-
-  const overviewShowCta = Boolean(
-    (isTakeoverMode && slot) ||
-      (isViewMode && overviewPrimaryLabel && onSubmit),
-  );
-
-  const overviewCtaDisabled = Boolean(
-    isSubmitting ||
-      (isTakeoverMode && !slot) ||
-      (isViewMode && (!overviewPrimaryLabel || !onSubmit)),
-  );
-
-  const overviewCancelLabel = isViewMode ? 'Close' : 'Cancel';
-
   const shouldShowOverview = Boolean(
     slot && (isViewMode || (isTakeoverMode && activeStep === 1)),
   );
@@ -152,12 +138,21 @@ export default function TakeoverSlotModal({
     slot && (isEditMode || (isTakeoverMode && activeStep === 2)),
   );
 
-  const handleOverviewAction = useCallback(async () => {
-    if (isTakeoverMode) {
-      setActiveStep(2);
+  const handleProceedToForm = useCallback(() => {
+    if (!isTakeoverMode) {
       return;
     }
+    setActiveStep(2);
+  }, [isTakeoverMode]);
 
+  const handleBackToOverview = useCallback(() => {
+    if (!isTakeoverMode) {
+      return;
+    }
+    setActiveStep(1);
+  }, [isTakeoverMode]);
+
+  const handleForfeitAction = useCallback(async () => {
     if (!onSubmit) {
       return;
     }
@@ -167,91 +162,250 @@ export default function TakeoverSlotModal({
     } catch (error) {
       console.error('Failed to submit action:', error);
     }
-  }, [isTakeoverMode, onSubmit]);
+  }, [onSubmit]);
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      placement="center"
-      classNames={{
-        base: 'w-[600px] mobile:w-[calc(100vw-32px)] bg-white p-0 max-w-[9999px]]',
-        body: 'max-h-[80vh] overflow-y-scroll',
-      }}
-    >
-      <ModalContent>
-        {() => (
-          <>
-            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
-              <div className="flex flex-col gap-[2px]">
-                <ECFTypography type="subtitle2" className="text-[18px]">
-                  {headerTitle}
-                </ECFTypography>
-              </div>
+  const handleModalClose = useCallback(() => {
+    if (isSubmitting) {
+      return;
+    }
+    resetActiveStep();
+    onClose();
+  }, [isSubmitting, onClose, resetActiveStep]);
 
-              <div className="flex items-center gap-2">
-                <Button
-                  isIconOnly
-                  radius="sm"
-                  className="size-[32px] rounded-[8px] p-0 text-black/50 hover:bg-black/10"
-                  onPress={onClose}
-                  isDisabled={isSubmitting}
-                >
-                  <XIcon size={16} />
-                </Button>
-              </div>
+  const renderOverlayContent = useCallback(
+    (close: () => void, variant: 'modal' | 'drawer') => {
+      const handleClose = () => {
+        if (isSubmitting) {
+          return;
+        }
+        resetActiveStep();
+        close();
+      };
+
+      return (
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
+            <div className="flex flex-col gap-[2px]">
+              <ECFTypography type="subtitle2" className="text-[18px]">
+                {headerTitle}
+              </ECFTypography>
             </div>
 
-            <ModalBody className="mobile:p-[10px] flex flex-col gap-[20px] p-[20px]">
-              {!slot ? (
-                <div className="rounded-[10px] border border-black/10 bg-[#FCFCFC] px-4 py-6 text-center text-[13px] text-black/60">
-                  Slot information is unavailable.
-                </div>
-              ) : (
-                <>
-                  {shouldShowOverview ? (
-                    <>
-                      <OwnedSlotOverview slot={slot} tone={contextTone} />
-                      {isViewMode && errorMessage ? (
-                        <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
-                          {errorMessage}
-                        </div>
-                      ) : null}
-                      <div className="flex items-center gap-[10px]">
-                        {overviewShowCta && overviewPrimaryLabel ? (
-                          <Button
-                            color="primary"
-                            className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
-                            isDisabled={overviewCtaDisabled}
-                            isLoading={Boolean(isSubmitting && !isTakeoverMode)}
-                            onPress={handleOverviewAction}
-                          >
-                            {isTakeoverMode ? <CoinVertical size={24} /> : null}
-                            {overviewPrimaryLabel}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </>
-                  ) : null}
+            <div className="flex items-center gap-2">
+              <Button
+                isIconOnly
+                radius="sm"
+                className="size-[32px] rounded-[8px] p-0 text-black/50 hover:bg-black/10"
+                onPress={handleClose}
+                isDisabled={isSubmitting}
+              >
+                <XIcon size={16} />
+              </Button>
+            </div>
+          </div>
 
-                  {shouldShowActionForm ? (
-                    <SlotActionFormContent
-                      slot={slot}
-                      mode={mode}
-                      isOpen={isOpen}
-                      isSubmitting={isSubmitting}
-                      onCancel={onClose}
-                      onSubmit={onSubmit}
-                      errorMessage={errorMessage}
-                    />
-                  ) : null}
-                </>
-              )}
-            </ModalBody>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+          <ModalBody
+            className={cn(
+              'flex flex-1 flex-col gap-[20px] overflow-y-auto p-[20px]',
+              'mobile:p-[10px]',
+              variant === 'drawer' ? 'pb-[32px]' : '',
+            )}
+          >
+            {!slot ? (
+              <div className="rounded-[10px] border border-black/10 bg-[#FCFCFC] px-4 py-6 text-center text-[13px] text-black/60">
+                Slot information is unavailable.
+              </div>
+            ) : (
+              <>
+                {shouldShowOverview ? (
+                  <SlotOverviewStep
+                    slot={slot}
+                    mode={mode}
+                    tone={contextTone}
+                    isSubmitting={isSubmitting}
+                    errorMessage={isViewMode ? errorMessage : undefined}
+                    onCancel={handleClose}
+                    onProceed={isTakeoverMode ? handleProceedToForm : undefined}
+                    onForfeit={isViewMode ? handleForfeitAction : undefined}
+                  />
+                ) : null}
+
+                {shouldShowActionForm ? (
+                  <SlotActionFormContent
+                    slot={slot}
+                    mode={mode}
+                    isOpen={isOpen}
+                    isSubmitting={isSubmitting}
+                    onCancel={handleClose}
+                    onSubmit={onSubmit}
+                    errorMessage={errorMessage}
+                  />
+                ) : null}
+              </>
+            )}
+          </ModalBody>
+        </div>
+      );
+    },
+    [
+      activeStep,
+      contextTone,
+      errorMessage,
+      handleBackToOverview,
+      handleForfeitAction,
+      handleProceedToForm,
+      headerStepLabel,
+      headerSubtitle,
+      headerTitle,
+      isOpen,
+      isSubmitting,
+      isTakeoverMode,
+      isViewMode,
+      mode,
+      onSubmit,
+      resetActiveStep,
+      shouldShowActionForm,
+      shouldShowOverview,
+      slot,
+    ],
+  );
+
+  return (
+    <>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        placement="center"
+        classNames={{
+          wrapper: 'mobile:hidden flex',
+          base: 'w-[600px] bg-white p-0 max-w-[9999px]',
+          body: 'p-0 max-h-[80vh] overflow-hidden',
+        }}
+      >
+        <ModalContent>
+          {() => renderOverlayContent(handleModalClose, 'modal')}
+        </ModalContent>
+      </Modal>
+
+      <Drawer
+        isOpen={isDrawerOpen}
+        placement="bottom"
+        hideCloseButton
+        onOpenChange={(open) => {
+          if (!open && isMobileViewport) {
+            handleModalClose();
+          }
+        }}
+        classNames={{
+          wrapper: 'hidden mobile:flex',
+          base: 'hidden h-full w-full max-h-full rounded-t-[0px] border border-black/10 bg-white mobile:flex mobile:flex-col',
+          backdrop: 'hidden bg-black/40 mobile:block',
+          body: 'p-0 h-full',
+        }}
+      >
+        <DrawerContent>
+          {(drawerClose) => (
+            <DrawerBody className="h-full p-0">
+              {renderOverlayContent(() => {
+                if (isSubmitting) {
+                  return;
+                }
+                resetActiveStep();
+                drawerClose();
+              }, 'drawer')}
+            </DrawerBody>
+          )}
+        </DrawerContent>
+      </Drawer>
+    </>
+  );
+}
+
+export interface SlotOverviewStepProps {
+  slot: ActiveSlotData;
+  mode: SlotModalMode;
+  tone: ContextTone;
+  isSubmitting: boolean;
+  onCancel: () => void;
+  onProceed?: () => void;
+  onForfeit?: () => void | Promise<void>;
+  errorMessage?: string;
+}
+
+export function SlotOverviewStep({
+  slot,
+  mode,
+  tone,
+  isSubmitting,
+  onCancel,
+  onProceed,
+  onForfeit,
+  errorMessage,
+}: SlotOverviewStepProps) {
+  const isTakeoverMode = mode === 'takeover';
+  const isViewMode = mode === 'view';
+
+  const takeoverPreviewLabel = formatEth(slot.minTakeoverBidWei, {
+    maximumFractionDigits: 4,
+  });
+
+  const takeoverLabel = slot.takeoverCta
+    ? slot.takeoverCta
+    : takeoverPreviewLabel
+      ? `Takeover for ${takeoverPreviewLabel}`
+      : 'Continue';
+
+  const cancelLabel = isViewMode ? 'Close' : 'Cancel';
+  const canProceed = Boolean(isTakeoverMode && onProceed);
+  const canForfeit = Boolean(isViewMode && !slot.isExpired && onForfeit);
+  const showPrimaryButton = canProceed || canForfeit;
+  const primaryLabel = isTakeoverMode ? takeoverLabel : 'Forfeit Slot';
+
+  const handlePrimaryAction = useCallback(() => {
+    if (isTakeoverMode) {
+      onProceed?.();
+      return;
+    }
+
+    if (isViewMode && !slot.isExpired) {
+      onForfeit?.();
+    }
+  }, [isTakeoverMode, isViewMode, onForfeit, onProceed, slot.isExpired]);
+
+  return (
+    <div className="flex flex-col gap-[20px]">
+      <OwnedSlotOverview slot={slot} tone={tone} />
+
+      {errorMessage ? (
+        <div className="rounded-[8px] border border-[#F87171] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#B91C1C]">
+          {errorMessage}
+        </div>
+      ) : null}
+
+      <div className="flex items-center gap-[10px]">
+        <Button
+          color="secondary"
+          className="h-[40px] w-[90px] rounded-[5px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+          onPress={onCancel}
+          isDisabled={isSubmitting}
+        >
+          {cancelLabel}
+        </Button>
+        {showPrimaryButton ? (
+          <Button
+            color="primary"
+            className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
+            isDisabled={
+              isSubmitting || (isTakeoverMode && !canProceed) || (isViewMode && !canForfeit)
+            }
+            onPress={handlePrimaryAction}
+          >
+            {isTakeoverMode ? <CoinVertical size={24} /> : null}
+            {primaryLabel}
+          </Button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
