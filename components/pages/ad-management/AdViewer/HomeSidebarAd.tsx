@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { Skeleton } from '@heroui/react';
 
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
-import { Skeleton } from '@heroui/react';
 
 const SIDEBAR_PAGE_KEY = 'home';
 const SIDEBAR_POSITION_KEY = 'Sidebar';
@@ -43,11 +43,20 @@ export default function HomeSidebarAd() {
   const { activeSlots, isLoading } = useHarbergerSlots();
 
   const slot = useMemo(() => {
-    return activeSlots.find(
-      (item) =>
+    return activeSlots.find((item) => {
+      const matchesPlacement =
         item.page?.toLowerCase() === SIDEBAR_PAGE_KEY &&
-        item.position?.toLowerCase() === SIDEBAR_POSITION_KEY.toLowerCase(),
-    );
+        item.position?.toLowerCase() === SIDEBAR_POSITION_KEY.toLowerCase();
+      if (!matchesPlacement) {
+        return false;
+      }
+
+      const hasActiveStatus = item.statusLabel === 'Owned';
+      const hasOwner = Boolean(item.ownerAddress);
+      const isSettled = !item.isOverdue && !item.isExpired;
+
+      return hasActiveStatus && hasOwner && isSettled;
+    });
   }, [activeSlots]);
 
   const { primaryImageUrl, targetUrl } = useMemo(() => {
@@ -106,7 +115,7 @@ export default function HomeSidebarAd() {
             style={{ aspectRatio: `${desktopAspectRatio}` }}
           />
           <Skeleton
-            className="hidden w-full animate-pulse rounded-[10px] border border-black/10 bg-[#EBEBEB] mobile:block"
+            className="mobile:block hidden w-full animate-pulse rounded-[10px] border border-black/10 bg-[#EBEBEB]"
             style={{ aspectRatio: `${mobileAspectRatio}` }}
           />
         </>
@@ -119,7 +128,7 @@ export default function HomeSidebarAd() {
             {renderImageContainer(desktopAspectRatio)}
           </div>
           <div
-            className="hidden mobile:block overflow-hidden rounded-[10px]"
+            className="mobile:block hidden overflow-hidden rounded-[10px]"
             style={{ aspectRatio: `${mobileAspectRatio}` }}
           >
             {renderImageContainer(mobileAspectRatio)}
