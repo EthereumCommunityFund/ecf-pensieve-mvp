@@ -11,14 +11,17 @@ export type IValueLabelType =
 export interface IValueLabelProps {
   valueLabelType?: IValueLabelType;
   className?: string;
+  icon?: React.ReactNode;
 }
 
 const ValueLabel: FC<PropsWithChildren<IValueLabelProps>> = ({
   children,
   valueLabelType = 'light',
   className = '',
+  icon,
 }) => {
   const valueLabelClassNames = cn(
+    'inline-flex items-center gap-[5px]',
     'rounded-[5px] px-[6px] py-[2px] text-[14px] font-semibold text-black/80',
     valueLabelType === 'light' && 'bg-[#F5F5F5]',
     valueLabelType === 'bordered' &&
@@ -28,7 +31,10 @@ const ValueLabel: FC<PropsWithChildren<IValueLabelProps>> = ({
     valueLabelType === 'danger' && 'bg-[rgba(199,24,24,0.20)] text-[#C71818]',
   );
   return (
-    <span className={cn(valueLabelClassNames, className)}>{children}</span>
+    <span className={cn(valueLabelClassNames, className)}>
+      {icon ?? null}
+      {children}
+    </span>
   );
 };
 

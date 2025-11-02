@@ -412,12 +412,12 @@ export default function AdManagementPage() {
               )}
             </Tab>
 
-            <Tab key="templateProposals" title="Template Proposals">
+            {/* <Tab key="templateProposals" title="Template Proposals">
               <TabPlaceholder
                 title="Template library coming soon"
                 description="Save and reuse campaigns for recurring Harberger slots. Upload templates and share with collaborators."
               />
-            </Tab>
+            </Tab> */}
           </Tabs>
         </section>
       </div>
