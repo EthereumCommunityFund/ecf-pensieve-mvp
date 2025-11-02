@@ -16,7 +16,7 @@ export function AdManagementHeader({
   const router = useRouter();
 
   const handleExit = () => {
-    router.push('/');
+    router.replace('/');
   };
 
   const displayAddress = connectedAddress
