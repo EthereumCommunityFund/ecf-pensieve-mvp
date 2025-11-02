@@ -56,10 +56,6 @@ interface ClaimSlotModalProps {
   isOpen: boolean;
   onClose: () => void;
   slot: VacantSlotData | null;
-  statusLabel?: string;
-  valuationDefault: string;
-  valuationMinimumLabel: string;
-  coverageHint: string;
   onSubmit: (payload: ClaimPayload) => Promise<void>;
   isSubmitting?: boolean;
   errorMessage?: string;
@@ -69,14 +65,15 @@ export default function ClaimSlotModal({
   isOpen,
   onClose,
   slot,
-  statusLabel = 'Open',
-  valuationDefault,
-  valuationMinimumLabel,
-  coverageHint,
   onSubmit,
   isSubmitting = false,
   errorMessage,
 }: ClaimSlotModalProps) {
+  const statusLabel = slot?.statusLabel ?? 'Open';
+  const valuationDefault = slot?.valuationDefault ?? '0.00';
+  const valuationMinimumLabel = slot?.valuationMinimum ?? '0 ETH';
+  const coverageHint =
+    slot?.coverageDescription ?? 'Select how many tax periods to prepay.';
   const [step, setStep] = useState<ClaimStep>(1);
   const [valuationInput, setValuationInput] = useState(valuationDefault);
   const [coverageSliderValue, setCoverageSliderValue] = useState<number>(

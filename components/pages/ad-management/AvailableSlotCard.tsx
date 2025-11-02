@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
 import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
+import type { ActiveSlotData, VacantSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
 import { DESKTOP_CREATIVE_CONFIG } from './creativeConstants';
@@ -42,38 +43,28 @@ function InfoStat({ label, helperText, value }: InfoStatProps) {
 }
 
 export interface VacantSlotCardProps {
-  slotName: string;
-  slotDisplayName: string;
-  page: string;
-  position: string;
-  imageSize: string;
-  statusLabel?: string;
-  valuation: string;
-  valuationHelper: string;
-  bondRate: string;
-  bondRateHelper: string;
-  taxRate: string;
-  taxRateHelper: string;
-  actionLabel: string;
-  onClaim?: () => void;
+  slot: VacantSlotData;
+  onClaim?: (slot: VacantSlotData) => void;
 }
 
-export function VacantSlotCard({
-  slotName,
-  slotDisplayName,
-  page,
-  position,
-  imageSize,
-  statusLabel = 'Open',
-  valuation,
-  valuationHelper,
-  bondRate,
-  bondRateHelper,
-  taxRate,
-  taxRateHelper,
-  actionLabel,
-  onClaim,
-}: VacantSlotCardProps) {
+export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
+  const {
+    slotDisplayName,
+    statusLabel = 'Open',
+    valuation,
+    valuationHelper,
+    bondRate,
+    bondRateHelper,
+    taxRate,
+    taxRateHelper,
+    actionLabel,
+  } = slot;
+
+  const handleClaim = () => {
+    if (onClaim) {
+      onClaim(slot);
+    }
+  };
   return (
     <Card
       shadow="none"
@@ -124,7 +115,7 @@ export function VacantSlotCard({
           radius="md"
           size="md"
           className="mt-[8px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
-          onPress={onClaim}
+          onPress={handleClaim}
         >
           <CoinVertical size={20} />
           <span className="text-[14px] font-semibold text-white/80">
@@ -144,46 +135,80 @@ interface StatBlock {
   withBorderTop?: boolean;
 }
 
+type PendingSlotAction = {
+  slotId: string;
+  action: 'renew' | 'forfeit' | 'poke';
+};
+
 export interface ActiveSlotCardProps {
-  slotName: string;
-  slotDisplayName: string;
-  page: string;
-  position: string;
-  imageSize: string;
-  statusLabel?: string;
-  owner: string;
-  ownerLabel?: string;
-  creativeUri?: string;
-  mediaAlt?: string;
-  stats: StatBlock[];
-  takeoverCta: string;
-  onTakeover?: () => void;
-  ctaDisabled?: boolean;
-  ctaLoading?: boolean;
+  slot: ActiveSlotData;
+  onTakeover?: (slot: ActiveSlotData) => void;
+  onPoke?: (slot: ActiveSlotData) => void;
+  takeoverState?: {
+    isSubmitting: boolean;
+    activeSlotId?: string | null;
+  };
+  pendingAction?: PendingSlotAction | null;
 }
 
 export function ActiveSlotCard({
-  slotName,
-  slotDisplayName,
-  page,
-  position,
-  imageSize,
-  statusLabel = 'Owned',
-  owner,
-  ownerLabel = 'Owner',
-  creativeUri,
-  mediaAlt,
-  stats,
-  takeoverCta,
+  slot,
   onTakeover,
-  ctaDisabled,
-  ctaLoading,
+  onPoke,
+  takeoverState,
+  pendingAction,
 }: ActiveSlotCardProps) {
+  const statusLabel = slot.statusLabel ?? 'Owned';
+
   const creativeAssets = useMemo(
-    () => extractCreativeAssets(creativeUri),
-    [creativeUri],
+    () => extractCreativeAssets(slot.currentAdURI ?? ''),
+    [slot.currentAdURI],
   );
   const primaryImageUrl = creativeAssets.primaryImageUrl;
+  const slotDisplayName = slot.slotDisplayName ?? slot.slotName;
+  const ownerLabel = 'Owner';
+  const ownerName = slot.owner;
+  const takeoverCta = slot.takeoverCta;
+
+  const stats = useMemo(
+    () =>
+      buildActiveStats(
+        slot.valuation,
+        slot.lockedBond,
+        slot.remainingUnits,
+        slot.minTakeoverBid,
+        { isOverdue: slot.isOverdue, isExpired: slot.isExpired },
+      ),
+    [
+      slot.isExpired,
+      slot.isOverdue,
+      slot.lockedBond,
+      slot.minTakeoverBid,
+      slot.remainingUnits,
+      slot.valuation,
+    ],
+  );
+
+  const isPokePending =
+    pendingAction?.slotId === slot.id && pendingAction.action === 'poke';
+  const isTakeoverActiveSlot = takeoverState?.activeSlotId === slot.id;
+  const isSubmitting = Boolean(takeoverState?.isSubmitting);
+
+  const ctaDisabled = slot.isExpired
+    ? isSubmitting || isPokePending
+    : isSubmitting;
+
+  const ctaLoading = slot.isExpired
+    ? isPokePending
+    : Boolean(isSubmitting && isTakeoverActiveSlot);
+
+  const handlePrimaryAction = () => {
+    if (slot.isExpired) {
+      onPoke?.(slot);
+      return;
+    }
+    onTakeover?.(slot);
+  };
 
   return (
     <Card
@@ -205,7 +230,7 @@ export function ActiveSlotCard({
 
         <div className="flex w-full flex-wrap items-center justify-between gap-[6px] text-[13px] text-black/60">
           <span className="font-semibold">{ownerLabel}:</span>
-          <ValueLabel className="text-[12px]">{owner}</ValueLabel>
+          <ValueLabel className="text-[12px]">{ownerName}</ValueLabel>
         </div>
 
         <div
@@ -217,7 +242,7 @@ export function ActiveSlotCard({
           {primaryImageUrl ? (
             <Image
               src={primaryImageUrl}
-              alt={mediaAlt ?? slotDisplayName}
+              alt={slotDisplayName}
               fill
               sizes="(min-width: 1280px) 240px, (min-width: 768px) 40vw, 100vw"
               className="object-cover"
@@ -256,7 +281,7 @@ export function ActiveSlotCard({
           size="md"
           className="mt-[4px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
           startContent={<CoinVerticalIcon className="size-[20px]" />}
-          onPress={onTakeover}
+          onPress={handlePrimaryAction}
           isDisabled={ctaDisabled}
           isLoading={ctaLoading}
         >

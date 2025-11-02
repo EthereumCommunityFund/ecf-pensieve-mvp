@@ -3,12 +3,22 @@
 import { cn, Slider, Tooltip } from '@heroui/react';
 import { CoinVertical, TrendUp } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { parseEther } from 'viem';
 
 import { Button } from '@/components/base/button';
 import { Input } from '@/components/base/input';
 import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import ECFTypography from '@/components/base/typography';
 import { InfoIcon, XIcon } from '@/components/icons';
+import type { ActiveSlotData } from '@/hooks/useHarbergerSlots';
+import {
+  calculateBond,
+  calculateTaxForPeriods,
+  formatDuration,
+  formatEth,
+  formatNumberInputFromWei,
+  ZERO_BIGINT,
+} from '@/utils/harberger';
 
 import { BreakdownRow } from './ClaimSlotModal';
 import CreativePhotoUpload from './CreativePhotoUpload';
@@ -56,68 +66,30 @@ interface CoverageConfig {
   onChangeEnd?: (value: number) => void;
 }
 
+export interface TakeoverSubmissionPayload {
+  valuationWei?: bigint;
+  taxPeriods?: bigint;
+  creativeUri?: string;
+}
+
 export interface TakeoverSlotModalProps {
   isOpen: boolean;
   onClose: () => void;
-  contextLabel: string;
-  contextTone?: ContextTone;
-  slotName: string;
-  slotDisplayName?: string;
-  page?: string;
-  position?: string;
-  imageSize?: string;
-  statusLabel?: string;
-  owner: string;
-  ownerLabel?: string;
-  taxRate: string;
-  taxRateLabel?: string;
-  minBidLabel: string;
-  minBidValue: string;
-  minBidHelper?: string;
-  valuation?: ValuationConfig;
-  coverage?: CoverageConfig;
-  breakdown?: BreakdownConfig;
-  harbergerInfo?: string;
-  ctaLabel?: string;
-  isCtaDisabled?: boolean;
-  onSubmit?: () => void;
-  isSubmitting?: boolean;
-  creativeUriValue?: string;
-  onCreativeUriChange?: (value: string) => void;
-  errorMessage?: string;
+  slot: ActiveSlotData | null;
   mode?: SlotModalMode;
+  onSubmit?: (payload: TakeoverSubmissionPayload) => Promise<void> | void;
+  isSubmitting?: boolean;
+  errorMessage?: string;
 }
 
 export default function TakeoverSlotModal({
   isOpen,
   onClose,
-  contextLabel,
-  contextTone = 'default',
-  slotName,
-  slotDisplayName,
-  page,
-  position,
-  imageSize,
-  statusLabel = 'Owned',
-  owner,
-  ownerLabel = 'Owner',
-  taxRate,
-  taxRateLabel = 'Tax Rate',
-  minBidLabel,
-  minBidValue,
-  minBidHelper,
-  valuation,
-  coverage,
-  breakdown,
-  harbergerInfo,
-  ctaLabel,
-  isCtaDisabled,
+  slot,
+  mode = 'takeover',
   onSubmit,
   isSubmitting = false,
-  creativeUriValue,
-  onCreativeUriChange,
   errorMessage,
-  mode = 'takeover',
 }: TakeoverSlotModalProps) {
   const isTakeoverMode = mode === 'takeover';
   const isEditMode = mode === 'edit';
@@ -125,67 +97,121 @@ export default function TakeoverSlotModal({
   const allowCreativeEditing = isTakeoverMode || isEditMode;
   const requireCreativeReady = allowCreativeEditing;
 
-  const displayName = slotDisplayName ?? slotName;
+  const contextTone: ContextTone =
+    slot && (slot.isOverdue || slot.isExpired) ? 'danger' : 'default';
 
-  const minCoverageDays = Math.max(coverage?.minDays ?? 1, 0);
-  const rawMaxCoverageDays = coverage?.maxDays ?? 365;
-  const maxCoverageDays =
-    rawMaxCoverageDays > minCoverageDays ? rawMaxCoverageDays : minCoverageDays;
-  const stepCoverageDays =
-    coverage?.stepDays && coverage.stepDays > 0 ? coverage.stepDays : 1;
+  const contextLabel = useMemo(() => {
+    if (!slot) {
+      return 'Slot Details';
+    }
+    if (isTakeoverMode) {
+      return `${slot.slotTypeLabel} · Takeover`;
+    }
+    if (isEditMode) {
+      return `${slot.slotTypeLabel} · Edit Creative`;
+    }
+    return `${slot.slotTypeLabel} · Slot Details`;
+  }, [isEditMode, isTakeoverMode, slot]);
 
-  const coverageSliderPosition = coverage?.sliderPosition ?? 0;
-  const coverageDefaultDays = coverage?.defaultDays;
-  const coverageLabelText = coverage?.label;
-  const breakdownCoverageText = breakdown?.coverageValue;
+  const slotName = slot?.slotName ?? '';
+  const slotDisplayName = slot?.slotDisplayName ?? slotName;
+  const displayName = slotDisplayName;
+  const statusLabel =
+    slot?.statusLabel ?? (slot?.isExpired ? 'Closed' : 'Owned');
+  const owner = slot?.owner ?? '';
+  const ownerLabel = 'Owner';
+  const taxRate = slot?.taxRate ?? '';
+  const taxRateLabel = 'Tax Rate';
 
-  const derivedInitialCoverageDays = useMemo(() => {
-    const progressDays = computeDaysFromProgress(
-      coverageSliderPosition,
-      minCoverageDays,
-      maxCoverageDays,
-    );
-    const candidateValue =
-      coverageDefaultDays ??
-      extractDaysFromString(coverageLabelText) ??
-      extractDaysFromString(breakdownCoverageText) ??
-      progressDays;
-    return snapToStep(
-      candidateValue ?? minCoverageDays,
-      minCoverageDays,
-      maxCoverageDays,
-      stepCoverageDays,
-    );
-  }, [
-    coverageDefaultDays,
-    coverageLabelText,
-    coverageSliderPosition,
-    breakdownCoverageText,
-    minCoverageDays,
-    maxCoverageDays,
-    stepCoverageDays,
-  ]);
+  const minBidLabel = isTakeoverMode
+    ? 'Minimum Bid Required'
+    : isEditMode
+      ? 'Locked Bond'
+      : 'Min Takeover Bid';
+
+  const minBidValue = isTakeoverMode
+    ? (slot?.minTakeoverBid ?? '—')
+    : isEditMode
+      ? (slot?.lockedBond ?? '—')
+      : (slot?.minTakeoverBid ?? '—');
+
+  const minBidHelper = isTakeoverMode
+    ? slot?.takeoverHelper
+    : isEditMode
+      ? 'Bond currently locked for this slot.'
+      : 'Minimum valuation required for a takeover attempt.';
+
+  const takeoverDefaults = useMemo(() => {
+    if (!slot || !isTakeoverMode) {
+      return {
+        coveragePeriods: 1,
+        fallbackValuationWei: ZERO_BIGINT,
+        valuationInput: '',
+      };
+    }
+
+    const periodSeconds = Number(slot.taxPeriodInSeconds);
+    const remainingSeconds = Number(slot.timeRemainingInSeconds);
+    let coveragePeriods = 1;
+    if (periodSeconds > 0 && remainingSeconds > 0) {
+      coveragePeriods = Math.ceil(remainingSeconds / periodSeconds);
+      coveragePeriods = Math.min(365, Math.max(1, coveragePeriods));
+    }
+
+    const fallbackValuationWei =
+      slot.minTakeoverBidWei > ZERO_BIGINT
+        ? slot.minTakeoverBidWei
+        : slot.minValuationWei;
+
+    return {
+      coveragePeriods,
+      fallbackValuationWei,
+      valuationInput: formatNumberInputFromWei(fallbackValuationWei, 4),
+    };
+  }, [isTakeoverMode, slot]);
+
+  const minCoverageDays = 1;
+  const maxCoverageDays = 365;
+  const stepCoverageDays = 1;
 
   const [selectedCoverageDays, setSelectedCoverageDays] = useState(
-    derivedInitialCoverageDays,
+    takeoverDefaults.coveragePeriods,
+  );
+  const [valuationInput, setValuationInput] = useState(
+    takeoverDefaults.valuationInput,
+  );
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [localCreativeError, setLocalCreativeError] = useState<string | null>(
+    null,
   );
   const [creativeTitle, setCreativeTitle] = useState('');
   const [creativeLink, setCreativeLink] = useState('');
   const [fallbackImageUrl, setFallbackImageUrl] = useState('');
   const [desktopImageUrl, setDesktopImageUrl] = useState('');
   const [mobileImageUrl, setMobileImageUrl] = useState('');
-  const [creativeUri, setCreativeUri] = useState(creativeUriValue ?? '');
-  const [localCreativeError, setLocalCreativeError] = useState<string | null>(
-    null,
-  );
+  const [creativeUri, setCreativeUri] = useState(slot?.currentAdURI ?? '');
 
   useEffect(() => {
-    setSelectedCoverageDays(derivedInitialCoverageDays);
-  }, [derivedInitialCoverageDays]);
+    if (!isOpen) {
+      return;
+    }
+    setLocalError(null);
+    setLocalCreativeError(null);
 
-  useEffect(() => {
-    if (!creativeUriValue) {
-      setCreativeUri('');
+    if (isTakeoverMode) {
+      setSelectedCoverageDays(takeoverDefaults.coveragePeriods);
+      setValuationInput(takeoverDefaults.valuationInput);
+    }
+  }, [
+    isOpen,
+    isTakeoverMode,
+    takeoverDefaults.coveragePeriods,
+    takeoverDefaults.valuationInput,
+  ]);
+
+  const applyCreativeSource = useCallback((source: string) => {
+    const trimmed = source.trim();
+    if (trimmed.length === 0) {
       setCreativeTitle('');
       setCreativeLink('');
       setFallbackImageUrl('');
@@ -195,12 +221,9 @@ export default function TakeoverSlotModal({
       return;
     }
 
-    const trimmedValue = creativeUriValue.trim();
-    setCreativeUri(trimmedValue);
-
-    if (trimmedValue.startsWith('data:application/json')) {
+    if (trimmed.startsWith('data:application/json')) {
       try {
-        const [, payload = ''] = trimmedValue.split(',', 2);
+        const [, payload = ''] = trimmed.split(',', 2);
         if (payload) {
           const decoded = decodeURIComponent(payload);
           const parsed = JSON.parse(decoded) as {
@@ -223,23 +246,27 @@ export default function TakeoverSlotModal({
       } catch (error) {
         console.error('Failed to parse creative metadata:', error);
       }
-    } else {
-      setCreativeTitle('');
-      setCreativeLink('');
-      setFallbackImageUrl('');
-      setMobileImageUrl('');
-      setDesktopImageUrl(trimmedValue);
-      setLocalCreativeError(null);
-      return;
     }
 
     setCreativeTitle('');
     setCreativeLink('');
     setFallbackImageUrl('');
-    setDesktopImageUrl(trimmedValue);
+    setDesktopImageUrl(trimmed);
     setMobileImageUrl('');
     setLocalCreativeError(null);
-  }, [creativeUriValue]);
+  }, []);
+
+  useEffect(() => {
+    if (!slot) {
+      applyCreativeSource('');
+      setCreativeUri('');
+      return;
+    }
+
+    const initialCreative = slot.currentAdURI ?? '';
+    setCreativeUri(initialCreative.trim());
+    applyCreativeSource(initialCreative);
+  }, [applyCreativeSource, slot]);
 
   const isCreativeReady = useMemo(() => {
     if (!requireCreativeReady) {
@@ -283,7 +310,6 @@ export default function TakeoverSlotModal({
     )}`;
 
     setCreativeUri(nextCreativeUri);
-    onCreativeUriChange?.(nextCreativeUri);
   }, [
     creativeLink,
     creativeTitle,
@@ -291,7 +317,6 @@ export default function TakeoverSlotModal({
     fallbackImageUrl,
     isCreativeReady,
     mobileImageUrl,
-    onCreativeUriChange,
     requireCreativeReady,
   ]);
 
@@ -302,10 +327,105 @@ export default function TakeoverSlotModal({
   }, [isCreativeReady, requireCreativeReady]);
 
   const formattedCoverageLabel = `(${formatDaysLabel(selectedCoverageDays)})`;
-  const coverageRangeStartLabel =
-    coverage?.rangeStart ?? formatRangeBoundary(minCoverageDays);
-  const coverageRangeEndLabel =
-    coverage?.rangeEnd ?? formatRangeBoundary(maxCoverageDays);
+  const coverageRangeStartLabel = formatRangeBoundary(minCoverageDays);
+  const coverageRangeEndLabel = formatRangeBoundary(maxCoverageDays);
+
+  const parsedValuationWei = useMemo(() => {
+    if (!isTakeoverMode) {
+      return null;
+    }
+
+    try {
+      if (!valuationInput || valuationInput.trim().length === 0) {
+        return null;
+      }
+      return parseEther(valuationInput.trim());
+    } catch {
+      return null;
+    }
+  }, [isTakeoverMode, valuationInput]);
+
+  const isValuationValid =
+    !isTakeoverMode ||
+    !slot ||
+    (parsedValuationWei !== null &&
+      parsedValuationWei >= slot.minTakeoverBidWei);
+
+  const valuationBasis = slot
+    ? isTakeoverMode
+      ? parsedValuationWei && parsedValuationWei >= slot.minTakeoverBidWei
+        ? parsedValuationWei
+        : takeoverDefaults.fallbackValuationWei
+      : slot.valuationWei > ZERO_BIGINT
+        ? slot.valuationWei
+        : slot.minValuationWei
+    : ZERO_BIGINT;
+
+  const coverageBigInt = BigInt(Math.max(1, selectedCoverageDays));
+  const coverageDuration = slot
+    ? formatDuration(slot.taxPeriodInSeconds * coverageBigInt, {
+        fallback: '0s',
+      })
+    : '0s';
+
+  const bondRequired = slot
+    ? calculateBond(valuationBasis, slot.bondRateBps)
+    : ZERO_BIGINT;
+  const taxRequired = slot
+    ? calculateTaxForPeriods(
+        valuationBasis,
+        slot.taxRateBps,
+        slot.taxPeriodInSeconds,
+        coverageBigInt,
+      )
+    : ZERO_BIGINT;
+  const totalValue = bondRequired + taxRequired;
+
+  const minBidPlaceholder = slot
+    ? formatEth(slot.minTakeoverBidWei, {
+        withUnit: false,
+        maximumFractionDigits: 4,
+      })
+    : undefined;
+
+  const valuation: ValuationConfig | undefined = isTakeoverMode
+    ? {
+        placeholder: minBidPlaceholder ? `≥ ${minBidPlaceholder}` : undefined,
+        helper: slot?.takeoverHelper ?? '',
+        value: valuationInput,
+        errorMessage: isValuationValid
+          ? undefined
+          : 'Bid must meet the minimum increment.',
+        onChange: setValuationInput,
+      }
+    : undefined;
+
+  const breakdown: BreakdownConfig | undefined = isTakeoverMode
+    ? {
+        bondRateLabel: slot ? `Bond Rate (${slot.bondRate})` : 'Bond Rate',
+        bondRateValue: formatEth(bondRequired),
+        taxLabel: `Tax (${selectedCoverageDays} period${
+          selectedCoverageDays > 1 ? 's' : ''
+        })`,
+        taxValue: formatEth(taxRequired),
+        coverageLabel: 'Coverage',
+        coverageValue: coverageDuration,
+        totalLabel: 'Total',
+        totalValue: formatEth(totalValue),
+      }
+    : undefined;
+
+  const harbergerInfo = isTakeoverMode
+    ? 'Takeover pays the declared valuation to the treasury and restarts the tax period at your price.'
+    : undefined;
+
+  const ctaLabel = isTakeoverMode
+    ? (slot?.takeoverCta ?? 'Submit Takeover')
+    : isEditMode
+      ? 'Save Changes'
+      : slot && !slot.isExpired && onSubmit
+        ? 'Forfeit Slot'
+        : undefined;
 
   const handleCoverageSliderChange = useCallback(
     (value: number) => {
@@ -316,9 +436,8 @@ export default function TakeoverSlotModal({
         stepCoverageDays,
       );
       setSelectedCoverageDays(normalizedValue);
-      coverage?.onChange?.(normalizedValue);
     },
-    [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
+    [minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
 
   const handleCoverageSliderChangeEnd = useCallback(
@@ -329,15 +448,22 @@ export default function TakeoverSlotModal({
         maxCoverageDays,
         stepCoverageDays,
       );
-      coverage?.onChangeEnd?.(normalizedValue);
+      setSelectedCoverageDays(normalizedValue);
     },
-    [coverage, minCoverageDays, maxCoverageDays, stepCoverageDays],
+    [minCoverageDays, maxCoverageDays, stepCoverageDays],
   );
 
   const combinedError =
-    (allowCreativeEditing ? localCreativeError : null) ?? errorMessage ?? null;
+    (allowCreativeEditing ? localCreativeError : null) ??
+    localError ??
+    errorMessage ??
+    null;
 
-  const handlePrimaryAction = useCallback(() => {
+  const handlePrimaryAction = useCallback(async () => {
+    if (!onSubmit) {
+      return;
+    }
+
     if (requireCreativeReady && !isCreativeReady) {
       setLocalCreativeError(
         'Upload both desktop and mobile creatives before continuing.',
@@ -346,23 +472,60 @@ export default function TakeoverSlotModal({
     }
 
     setLocalCreativeError(null);
+    setLocalError(null);
 
-    if (allowCreativeEditing && creativeUri) {
-      onCreativeUriChange?.(creativeUri);
+    try {
+      if (isTakeoverMode) {
+        if (!slot) {
+          throw new Error('Slot is not available.');
+        }
+
+        if (
+          !parsedValuationWei ||
+          parsedValuationWei < slot.minTakeoverBidWei
+        ) {
+          setLocalError('Bid must meet the minimum increment.');
+          return;
+        }
+
+        await onSubmit({
+          valuationWei: parsedValuationWei,
+          taxPeriods: BigInt(Math.max(1, selectedCoverageDays)),
+          creativeUri: creativeUri || slot.currentAdURI || '',
+        });
+        return;
+      }
+
+      if (isEditMode) {
+        const trimmedUri = creativeUri.trim();
+        if (!trimmedUri) {
+          setLocalCreativeError('Upload creative assets before saving.');
+          return;
+        }
+        await onSubmit({ creativeUri: trimmedUri });
+        return;
+      }
+
+      await onSubmit({});
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to submit action.';
+      setLocalError(message);
     }
-
-    onSubmit?.();
   }, [
-    allowCreativeEditing,
     creativeUri,
     isCreativeReady,
-    onCreativeUriChange,
+    isEditMode,
+    isTakeoverMode,
     onSubmit,
+    parsedValuationWei,
     requireCreativeReady,
+    selectedCoverageDays,
+    slot,
   ]);
 
   const cancelLabel = isViewMode ? 'Close' : 'Cancel';
-  const showCoverageSection = isTakeoverMode && Boolean(coverage);
+  const showCoverageSection = isTakeoverMode;
   const showValuationSection = isTakeoverMode && Boolean(valuation);
   const showBreakdownSection = isTakeoverMode && Boolean(breakdown);
   const showHarbergerInfo = isTakeoverMode && Boolean(harbergerInfo);
@@ -387,8 +550,8 @@ export default function TakeoverSlotModal({
 
   const ctaDisabled =
     showCtaButton &&
-    (Boolean(isCtaDisabled) ||
-      isSubmitting ||
+    (isSubmitting ||
+      (isTakeoverMode && !isValuationValid) ||
       (requireCreativeReady && !isCreativeReady));
 
   return (
@@ -407,18 +570,8 @@ export default function TakeoverSlotModal({
             <div className="flex items-center justify-between gap-3 border-b border-black/10 px-[20px] py-[10px]">
               <div className="flex flex-col">
                 <ECFTypography type="subtitle2" className="text-[18px]">
-                  {contextLabel}
+                  Takeover Slot
                 </ECFTypography>
-                <span
-                  className={cn(
-                    'text-[12px]',
-                    contextTone === 'danger'
-                      ? 'text-[#D92D20]'
-                      : 'text-black/40',
-                  )}
-                >
-                  {statusLabel}
-                </span>
               </div>
 
               <Button
@@ -913,37 +1066,6 @@ function snapToStep(value: number, min: number, max: number, step: number) {
   const snappedValue = min + steps * safeStep;
 
   return clampValue(snappedValue, min, max);
-}
-
-function computeDaysFromProgress(
-  progress: number | undefined,
-  min: number,
-  max: number,
-) {
-  if (max <= min) {
-    return min;
-  }
-
-  if (typeof progress !== 'number' || Number.isNaN(progress)) {
-    return min;
-  }
-
-  const boundedProgress = clampValue(progress, 0, 1);
-  return min + boundedProgress * (max - min);
-}
-
-function extractDaysFromString(text?: string) {
-  if (!text) {
-    return undefined;
-  }
-
-  const match = text.match(/(\d+(?:\.\d+)?)/);
-  if (!match) {
-    return undefined;
-  }
-
-  const value = Number(match[1]);
-  return Number.isNaN(value) ? undefined : value;
 }
 
 function formatDaysLabel(value: number) {
