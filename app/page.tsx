@@ -12,7 +12,7 @@ export default function Page() {
     <div className="mobile:px-[10px] px-[20px] pb-[56px] pt-[20px]">
       <Banner />
 
-      <HtaxAdBanner />
+      {/* <HtaxAdBanner /> */}
 
       <div className="mobile:block mt-[10px] hidden">
         <ProjectIntroCard />

@@ -22,6 +22,7 @@ import { ProjectListWrapper } from '../project/ProjectListWrapper';
 import ProjectIntroCard from './ProjectIntroCard';
 import SectionHeader from './SectionHeader';
 import SectionHeaderSmall from './SectionHeaderSmall';
+import HomeSidebarAd from '../ad-management/AdViewer/HomeSidebarAd';
 
 const HomeList = () => {
   const router = useRouter();
@@ -288,6 +289,8 @@ const HomeList = () => {
       {/* Right side: 4 columns */}
       <div className="tablet:w-[325px] mobile:hidden flex w-[390px] flex-col gap-[10px]">
         <ProjectIntroCard />
+
+        <HomeSidebarAd />
 
         {/* Column 0: Top Accountable */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">
