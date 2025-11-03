@@ -27,6 +27,10 @@ export const DropDownMenuData: {
       link: 'https://ecf.wiki/s/ae77a12f-106c-429e-a7ed-8cca218bf20b',
     },
     {
+      name: 'Ad Management',
+      link: '/ad-management',
+    },
+    {
       name: 'Irys Storage (Arweave)',
       link: 'https://gateway.irys.xyz/mutable/Cyq1oxWJFfMBvH7pJ83WACcJ7idnwnzUrm5LGzEqP4Xm',
     },

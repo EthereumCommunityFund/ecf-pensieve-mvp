@@ -1,4 +1,4 @@
-import { PencilSimple, UploadSimple } from '@phosphor-icons/react';
+import { PencilSimple } from '@phosphor-icons/react';
 import { Fragment, memo } from 'react';
 
 import { Button } from '@/components/base/button';
@@ -94,7 +94,7 @@ const CustomFilterCard = ({
           Edit Filters
         </Button>
 
-        <Button
+        {/* <Button
           size="sm"
           onPress={onEdit}
           disabled
@@ -102,7 +102,7 @@ const CustomFilterCard = ({
         >
           <UploadSimple width={18} height={18} className="opacity-50" />
           Save as Feed (coming soon)
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

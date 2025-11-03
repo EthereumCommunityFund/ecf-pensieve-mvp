@@ -68,8 +68,6 @@ export const rankRouter = router({
         .orderBy(desc(projects.support), desc(itemsTopWeightSum))
         .limit(limit);
 
-      console.log(topRanksByGenesisSupport);
-
       return {
         byGenesisWeight: topRanksByGenesisWeight,
         byGenesisSupport: topRanksByGenesisSupport.map(

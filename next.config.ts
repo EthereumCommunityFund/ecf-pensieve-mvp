@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         hostname: 'public.rootdata.com',
         pathname: '/images/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
 };

@@ -88,6 +88,21 @@ async function processMultiUserNotification(
     return;
   }
 
+  if (baseData.type === 'harbergerSlotExpiring') {
+    if (!baseData.userId) {
+      throw new Error('Notification payload missing userId');
+    }
+
+    await db.insert(notifications).values({
+      userId: baseData.userId,
+      type: baseData.type,
+      metadata: baseData.metadata,
+    });
+
+    await notificationQueue.markCompleted(item.id);
+    return;
+  }
+
   if (!baseData.userId) {
     throw new Error('Notification payload missing userId');
   }
