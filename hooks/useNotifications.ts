@@ -10,6 +10,7 @@ import {
 } from '@/components/notification/NotificationItem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
+import { parseHarbergerTaxNotificationExtra } from '@/lib/notifications/harbergerTax';
 import {
   parseNotificationMetadata,
   resolveMetadataBody,
@@ -217,6 +218,44 @@ const useRealNotifications = () => {
       const getTransformedContent = (notification: any) => {
         const type = notification.type as NotificationType;
         switch (type) {
+          case 'harbergerSlotExpiring': {
+            const parsedMetadata = parseNotificationMetadata(
+              notification.metadata ?? null,
+            );
+            const harbergerMetadata = parseHarbergerTaxNotificationExtra(
+              parsedMetadata.extra as Record<string, unknown> | undefined,
+            );
+
+            if (!harbergerMetadata) {
+              return {
+                type: 'default' as FrontendNotificationType,
+                title: 'Harberger slot tax update',
+                buttonText: 'View Details',
+                hideButton: true,
+              };
+            }
+
+            const slotUrl = `/ads/slots/${harbergerMetadata.slotAddress.toLowerCase()}`;
+            const payUrl = `${slotUrl}?action=pay`;
+
+            return {
+              type,
+              title: 'Harberger slot tax notification',
+              buttonText: '',
+              hideButton: true,
+              hasMultipleActions: true,
+              metadata: parsedMetadata.raw,
+              metadataTitle: parsedMetadata.title,
+              metadataBody: parsedMetadata.body,
+              metadataExtra: parsedMetadata.extra ?? undefined,
+              harbergerTax: harbergerMetadata,
+              ctaLabel: 'Pay Now',
+              ctaUrl: payUrl,
+              targetUrl: slotUrl,
+              primaryActionUrl: payUrl,
+              secondaryActionUrl: slotUrl,
+            } satisfies NotificationItemData;
+          }
           case 'itemProposalLostLeading':
             return {
               type,
@@ -492,6 +531,24 @@ const useRealNotifications = () => {
 
       // Navigation logic
       const handleNavigation = () => {
+        if (notification.type === 'harbergerSlotExpiring') {
+          const primaryUrl =
+            notification.primaryActionUrl ??
+            notification.ctaUrl ??
+            notification.targetUrl;
+          const secondaryUrl =
+            notification.secondaryActionUrl ??
+            notification.targetUrl ??
+            notification.ctaUrl;
+
+          const destination = isSecondary ? secondaryUrl : primaryUrl;
+
+          if (destination) {
+            router.push(destination);
+          }
+          return;
+        }
+
         if (
           notification.type === 'systemUpdate' ||
           notification.type === 'newItemsAvailable'
@@ -546,8 +603,6 @@ const useRealNotifications = () => {
 
       // Execute navigation
       handleNavigation();
-
-      void isSecondary;
     },
     [
       allNotificationsData,
@@ -581,8 +636,15 @@ const useRealNotifications = () => {
           notificationIds: [notificationId],
         });
       }
+
+      if (
+        notification.type === 'harbergerSlotExpiring' &&
+        notification.secondaryActionUrl
+      ) {
+        router.push(notification.secondaryActionUrl);
+      }
     },
-    [markAsReadMutation, isAuthenticated],
+    [markAsReadMutation, isAuthenticated, router],
   );
 
   const handleMarkAllAsRead = useCallback(() => {

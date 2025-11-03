@@ -3,6 +3,7 @@
 import { Image } from '@heroui/react';
 import React from 'react';
 
+import type { HarbergerTaxNotificationExtra } from '@/lib/notifications/harbergerTax';
 import { NotificationType } from '@/lib/services/notification';
 import { IPocItemKey } from '@/types/item';
 import type { NotificationMetadata } from '@/types/notification';
@@ -18,6 +19,8 @@ import {
   SealCheckIcon,
   ThumbsUpIcon,
 } from '../icons';
+
+import HarbergerTaxNotificationCard from './HarbergerTaxNotificationCard';
 
 export type FrontendNotificationType =
   | NotificationType
@@ -60,6 +63,9 @@ export interface NotificationItemData {
   targetProjectId?: number;
   targetItemId?: number;
   metadataExtra?: Record<string, unknown>;
+  harbergerTax?: HarbergerTaxNotificationExtra;
+  primaryActionUrl?: string;
+  secondaryActionUrl?: string;
 }
 
 export interface NotificationItemProps {
@@ -571,6 +577,17 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     secondaryButtonText,
     hideButton = false,
   } = itemData;
+
+  if (type === 'harbergerSlotExpiring' && itemData.harbergerTax) {
+    return (
+      <HarbergerTaxNotificationCard
+        itemData={itemData}
+        onPrimaryAction={onButtonClick}
+        onSecondaryAction={onSecondaryButtonClick}
+        onNotificationClick={onNotificationClick}
+      />
+    );
+  }
 
   const handlePrimaryAction = () => {
     onButtonClick?.(itemData);

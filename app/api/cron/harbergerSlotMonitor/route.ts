@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
 import { eq, sql } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 
+import { HARBERGER_FACTORY_ADDRESS } from '@/constants/harbergerFactory';
 import { getHarbergerSlotMetadataEntry } from '@/constants/harbergerSlotsMetadata';
 import { db } from '@/lib/db';
 import { addNotificationToQueue } from '@/lib/services/notification';
@@ -12,10 +13,19 @@ import type { NotificationMetadata } from '@/types/notification';
 
 export const maxDuration = 300;
 
-async function dispatchNotifications(
-  chainId: number,
-  alerts: Awaited<ReturnType<typeof monitorValuationTaxEnabledSlots>>['alerts'],
-): Promise<number> {
+interface DispatchNotificationsParams {
+  chainId: number;
+  alerts: Awaited<ReturnType<typeof monitorValuationTaxEnabledSlots>>['alerts'];
+  checkedAt: Awaited<
+    ReturnType<typeof monitorValuationTaxEnabledSlots>
+  >['checkedAt'];
+}
+
+async function dispatchNotifications({
+  chainId,
+  alerts,
+  checkedAt,
+}: DispatchNotificationsParams): Promise<number> {
   let count = 0;
   const notifiedSlots = new Set<string>();
 
@@ -46,8 +56,13 @@ async function dispatchNotifications(
         slotDisplayName: slotName,
         secondsUntilExpiry: alert.secondsUntilExpiry.toString(),
         taxPaidUntil: alert.taxPaidUntil.toString(),
+        taxAccruedWei: alert.taxAccruedWei.toString(),
+        ownerRefundWei: alert.ownerRefundWei.toString(),
         lockedValuationWei: alert.lockedValuation.toString(),
         periodsProcessed: alert.periodsProcessed,
+        calculatedAt: checkedAt.toString(),
+        chainId,
+        factoryAddress: HARBERGER_FACTORY_ADDRESS,
         page,
         position,
       },
@@ -83,7 +98,11 @@ async function runSlotMonitor(request: Request) {
 
   let notificationsEnqueued = 0;
   if (result.alerts.length > 0) {
-    notificationsEnqueued = await dispatchNotifications(chainId, result.alerts);
+    notificationsEnqueued = await dispatchNotifications({
+      chainId,
+      alerts: result.alerts,
+      checkedAt: result.checkedAt,
+    });
   }
 
   return NextResponse.json({
