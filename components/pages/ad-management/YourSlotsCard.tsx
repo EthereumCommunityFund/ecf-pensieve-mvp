@@ -199,9 +199,11 @@ export default function YourSlotsCard({
 
   const contentUpdatesTotal = Number(slot.contentUpdateLimit ?? ZERO_BIGINT);
   const contentUpdatesUsed = Number(slot.contentUpdateCount ?? ZERO_BIGINT);
+  const hasExhaustedContentUpdates =
+    contentUpdatesTotal >= 0 && contentUpdatesUsed >= contentUpdatesTotal;
   const creativeUpdatesUsed =
     contentUpdatesTotal >= 0
-      ? `${Math.max(0, contentUpdatesUsed)} / ${Math.max(0, contentUpdatesTotal)}`
+      ? `${Math.max(0, contentUpdatesUsed)} / ${Math.max(0, contentUpdatesTotal)}${hasExhaustedContentUpdates ? ' (limit reached)' : ''}`
       : '—';
 
   const mediaPreview = creativeAssets.primaryImageUrl ?? null;
@@ -271,7 +273,7 @@ export default function YourSlotsCard({
           : '',
       )}
     >
-      <CardBody className="mobile:p-[14px] mobile:gap-[14px] flex h-full flex-col gap-[20px] p-[20px]">
+      <CardBody className="mobile:gap-[14px] mobile:p-[14px] flex h-full flex-col gap-[20px] p-[20px]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col gap-[8px]">
             <div className="flex flex-wrap items-center gap-[6px]">
@@ -393,8 +395,18 @@ export default function YourSlotsCard({
                 color="secondary"
                 size="sm"
                 className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-                isDisabled={isCardInactive || isRenewPending || isActionLocked}
+                isDisabled={
+                  isCardInactive ||
+                  isRenewPending ||
+                  isActionLocked ||
+                  hasExhaustedContentUpdates
+                }
                 isLoading={isEditPending}
+                title={
+                  hasExhaustedContentUpdates
+                    ? 'Content update limit reached. Request governance reset to enable edits.'
+                    : undefined
+                }
                 onPress={() => onEdit?.(slot)}
                 startContent={<NotePencil size={20} className="opacity-50" />}
               >

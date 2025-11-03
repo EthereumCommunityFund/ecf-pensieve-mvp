@@ -19,6 +19,8 @@ import {
 
 import type { ActiveSlotData, VacantSlotData } from './useHarbergerSlots';
 
+type ViemPublicClient = NonNullable<ReturnType<typeof usePublicClient>>;
+
 type ActionKind =
   | 'claim'
   | 'takeover'
@@ -104,6 +106,93 @@ function formatError(error: unknown): string {
   return 'Unexpected error occurred.';
 }
 
+function collectErrorMessages(
+  error: unknown,
+  messages: string[] = [],
+  visited: Set<unknown> = new Set(),
+): string[] {
+  if (!error || visited.has(error)) {
+    return messages;
+  }
+
+  visited.add(error);
+
+  if (typeof error === 'string') {
+    messages.push(error);
+    return messages;
+  }
+
+  if (error instanceof BaseError) {
+    if (error.shortMessage) {
+      messages.push(error.shortMessage);
+    }
+    if (typeof error.message === 'string' && error.message.length > 0) {
+      messages.push(error.message);
+    }
+    if (Array.isArray(error.metaMessages)) {
+      messages.push(
+        ...error.metaMessages.filter(
+          (msg): msg is string => typeof msg === 'string',
+        ),
+      );
+    }
+  } else if (error instanceof Error) {
+    if (error.message) {
+      messages.push(error.message);
+    }
+  }
+
+  if (typeof error === 'object' && error !== null && 'cause' in error) {
+    const cause = (error as { cause?: unknown }).cause;
+    if (cause) {
+      collectErrorMessages(cause, messages, visited);
+    }
+  }
+
+  return messages;
+}
+
+function isTransportError(error: unknown): boolean {
+  const keyword = 'http request failed';
+  return collectErrorMessages(error).some(
+    (message) =>
+      typeof message === 'string' && message.toLowerCase().includes(keyword),
+  );
+}
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function waitForReceiptWithRetries(
+  client: ViemPublicClient,
+  hash: `0x${string}`,
+  retries: number = 2,
+  baseDelayMs: number = 1500,
+): Promise<boolean> {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      await client.waitForTransactionReceipt({ hash });
+      return true;
+    } catch (err) {
+      if (!isTransportError(err)) {
+        throw err;
+      }
+
+      if (attempt === retries - 1) {
+        return false;
+      }
+
+      const delayMs = baseDelayMs * (attempt + 1);
+      await delay(delayMs);
+    }
+  }
+
+  return false;
+}
+
 function ensureHttpUri(value: string): string {
   if (value.startsWith('http://') || value.startsWith('https://')) {
     return value;
@@ -156,6 +245,8 @@ export function useHarbergerSlotActions() {
 
       setPendingAction(action);
 
+      let txHash: `0x${string}` | null = null;
+
       try {
         const simulationConfig: Record<string, unknown> = {
           account,
@@ -175,8 +266,8 @@ export function useHarbergerSlotActions() {
           >[0],
         );
 
-        const hash = await walletClient.writeContract(request);
-        await publicClient.waitForTransactionReceipt({ hash });
+        txHash = await walletClient.writeContract(request);
+        await publicClient.waitForTransactionReceipt({ hash: txHash });
 
         addToast({
           title: 'Transaction confirmed',
@@ -184,8 +275,42 @@ export function useHarbergerSlotActions() {
           color: 'success',
         });
 
-        return hash;
+        return txHash;
       } catch (error) {
+        if (txHash && publicClient && isTransportError(error)) {
+          try {
+            const confirmed = await waitForReceiptWithRetries(
+              publicClient,
+              txHash,
+            );
+
+            if (confirmed) {
+              addToast({
+                title: 'Transaction confirmed',
+                description: successMessage,
+                color: 'success',
+              });
+            } else {
+              addToast({
+                title: 'Transaction submitted',
+                description: `${successMessage} Network confirmation will appear shortly.`,
+                color: 'success',
+              });
+            }
+
+            return txHash;
+          } catch (retryError) {
+            const message = formatError(retryError);
+            addToast({
+              title: 'Transaction failed',
+              description: message,
+              color: 'danger',
+              timeout: 5000,
+            });
+            throw retryError;
+          }
+        }
+
         const message = formatError(error);
         addToast({
           title: 'Transaction failed',
