@@ -201,8 +201,8 @@ export default function AdManagementPage() {
               ? creativeUri.trim()
               : (selectedTakeoverSlot.currentAdURI ?? ''),
         });
-        await refetch();
         setSelectedTakeoverSlot(null);
+        await refetch();
       } catch (error) {
         throw error;
       } finally {

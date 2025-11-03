@@ -1,8 +1,8 @@
 'use client';
 
+import { Skeleton } from '@heroui/react';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { Skeleton } from '@heroui/react';
 
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
@@ -99,7 +99,7 @@ export default function HomeSidebarAd() {
         <img
           src={primaryImageUrl}
           alt={`${slot.slotDisplayName} creative`}
-          className="size-full object-cover"
+          className="size-full object-cover transition duration-300 hover:scale-105"
           loading="lazy"
         />
       </Link>

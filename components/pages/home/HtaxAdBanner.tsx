@@ -1,206 +1,167 @@
 'use client';
 
-import useEmblaCarousel from 'embla-carousel-react';
+import { Skeleton } from '@heroui/react';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import {
-  type ActiveSlotData,
-  useHarbergerSlots,
-} from '@/hooks/useHarbergerSlots';
+import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
-const AUTO_PLAY_INTERVAL = 8000;
-interface AdSlide {
-  id: string;
-  imageUrl: string;
-  targetUrl?: string | null;
-  altText: string;
-}
+const BANNER_PAGE_KEY = 'home';
+const BANNER_POSITION_KEY = 'TopBanner';
 
-const mapSlotToSlide = (slot: ActiveSlotData): AdSlide | null => {
-  const { primaryImageUrl, targetUrl } = extractCreativeAssets(
-    slot.currentAdURI,
-  );
-  if (!primaryImageUrl) {
-    return null;
+const DEFAULT_DESKTOP_SIZE = { width: 900, height: 225 };
+const DEFAULT_MOBILE_SIZE = { width: 900, height: 225 };
+
+function parseImageSize(imageSize?: string) {
+  if (!imageSize) {
+    return {
+      desktop: DEFAULT_DESKTOP_SIZE,
+      mobile: DEFAULT_MOBILE_SIZE,
+    };
   }
 
-  return {
-    id: slot.id,
-    imageUrl: primaryImageUrl,
-    targetUrl,
-    altText: `${slot.slotDisplayName} creative`,
-  };
-};
+  const [desktopRaw = '', mobileRaw = ''] = imageSize.split('_');
 
-function mapActiveSlotsToSlides(slots: ActiveSlotData[]): AdSlide[] {
-  return slots
-    .map((slot) => mapSlotToSlide(slot))
-    .filter((slide): slide is AdSlide => Boolean(slide));
+  const parsePair = (pair?: string) => {
+    if (!pair) return null;
+    const [w, h] = pair.split('*').map((value) => Number(value));
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+      return null;
+    }
+    return { width: w, height: h } as const;
+  };
+
+  return {
+    desktop: parsePair(desktopRaw) ?? DEFAULT_DESKTOP_SIZE,
+    mobile:
+      parsePair(mobileRaw) ?? parsePair(desktopRaw) ?? DEFAULT_MOBILE_SIZE,
+  };
 }
 
 const HtaxAdBanner = () => {
-  const { activeSlots, isLoading, isRefetching, error, refetch } =
-    useHarbergerSlots();
+  const { activeSlots, isLoading } = useHarbergerSlots();
 
-  const slides = useMemo(
-    () => mapActiveSlotsToSlides(activeSlots),
-    [activeSlots],
-  );
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: slides.length > 1 });
+  const slot = useMemo(() => {
+    return activeSlots.find((item) => {
+      const matchesPlacement =
+        item.page?.toLowerCase() === BANNER_PAGE_KEY &&
+        item.position?.toLowerCase() === BANNER_POSITION_KEY.toLowerCase();
+      if (!matchesPlacement) {
+        return false;
+      }
 
-  useEffect(() => {
-    if (!emblaApi) {
-      setCurrentIndex(0);
-      return;
+      const hasActiveStatus = item.statusLabel === 'Owned';
+      const hasOwner = Boolean(item.ownerAddress);
+      const isSettled = !item.isOverdue && !item.isExpired;
+
+      return hasActiveStatus && hasOwner && isSettled;
+    });
+  }, [activeSlots]);
+
+  const { primaryImageUrl, targetUrl } = useMemo(() => {
+    if (!slot) {
+      return { primaryImageUrl: null, targetUrl: null };
     }
-    emblaApi.reInit();
-  }, [emblaApi, slides.length]);
+    return extractCreativeAssets(slot.currentAdURI ?? undefined);
+  }, [slot]);
 
-  useEffect(() => {
-    if (!emblaApi) {
-      return;
+  const { desktop: desktopSize, mobile: mobileSize } = useMemo(() => {
+    return parseImageSize(slot?.imageSize);
+  }, [slot?.imageSize]);
+
+  const desktopAspectRatio = desktopSize.width / desktopSize.height;
+  const mobileAspectRatio = mobileSize.width / mobileSize.height;
+
+  if (!isLoading && !slot) {
+    return null;
+  }
+
+  const altText = slot ? `${slot.slotDisplayName} creative` : 'Harberger ad';
+
+  const renderImageContainer = (
+    aspectRatio: number,
+    visibilityClass: string,
+  ) => {
+    const baseClass = `relative w-full overflow-hidden rounded-[16px] border border-black/10 bg-black/5 ${visibilityClass}`;
+
+    if (!slot || !primaryImageUrl) {
+      return (
+        <div className={baseClass} style={{ aspectRatio: `${aspectRatio}` }} />
+      );
     }
 
-    const handleSelect = () => {
-      setCurrentIndex(emblaApi.selectedScrollSnap());
-    };
-
-    emblaApi.on('select', handleSelect);
-    handleSelect();
-
-    return () => {
-      emblaApi.off('select', handleSelect);
-    };
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi || slides.length <= 1) {
-      return;
+    if (!targetUrl) {
+      return (
+        <div className={baseClass} style={{ aspectRatio: `${aspectRatio}` }}>
+          <img
+            src={primaryImageUrl}
+            alt={altText}
+            className="size-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      );
     }
 
-    const timer = window.setInterval(() => {
-      emblaApi.scrollNext();
-    }, AUTO_PLAY_INTERVAL);
-
-    return () => window.clearInterval(timer);
-  }, [emblaApi, slides.length]);
-
-  const handleSelectDot = useCallback(
-    (index: number) => {
-      emblaApi?.scrollTo(index);
-    },
-    [emblaApi],
-  );
-
-  const handlePrev = useCallback(() => {
-    emblaApi?.scrollPrev();
-  }, [emblaApi]);
-
-  const handleNext = useCallback(() => {
-    emblaApi?.scrollNext();
-  }, [emblaApi]);
-
-  const hasSlides = slides.length > 0;
+    return (
+      <Link
+        href={targetUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        prefetch={false}
+        className={baseClass}
+        style={{ aspectRatio: `${aspectRatio}` }}
+      >
+        <img
+          src={primaryImageUrl}
+          alt={altText}
+          className="size-full object-cover transition duration-300 hover:scale-105"
+          loading="lazy"
+        />
+      </Link>
+    );
+  };
 
   return (
     <section className="mobile:mt-[12px] mt-[16px]">
-      <div>
+      <div className="flex flex-col gap-[6px]">
         {isLoading ? (
-          <div className="mobile:h-[190px] h-[230px] animate-pulse rounded-[16px] border border-black/5 bg-black/5" />
-        ) : hasSlides ? (
-          <div className="relative">
-            <div
-              className="overflow-hidden rounded-[16px] border border-black/10 bg-black/5"
-              ref={emblaRef}
-            >
-              <div
-                className="flex touch-pan-y select-none"
-                data-embla-container
+          <>
+            <Skeleton
+              className="mobile:hidden w-full animate-pulse rounded-[16px] border border-black/10 bg-black/5"
+              style={{ aspectRatio: `${desktopAspectRatio}` }}
+            />
+            <Skeleton
+              className="mobile:block hidden w-full animate-pulse rounded-[16px] border border-black/10 bg-black/5"
+              style={{ aspectRatio: `${mobileAspectRatio}` }}
+            />
+          </>
+        ) : slot ? (
+          <>
+            {renderImageContainer(desktopAspectRatio, 'mobile:hidden')}
+            {renderImageContainer(mobileAspectRatio, 'mobile:block hidden')}
+          </>
+        ) : null}
+
+        {isLoading || slot ? (
+          <div className="flex items-center justify-between px-[12px] text-[11px] text-black/70">
+            <span className="font-medium">
+              Advertisement | Harberger Tax Ads
+            </span>
+            {targetUrl ? (
+              <Link
+                href={targetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                prefetch={false}
+                className="font-semibold text-black/80 hover:underline"
               >
-                {slides.map((slide) => (
-                  <article key={slide.id} className="min-w-0 flex-[0_0_100%]">
-                    {slide.targetUrl ? (
-                      <Link
-                        href={slide.targetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        prefetch={false}
-                        className="mobile:h-[200px] relative block h-[240px] w-full overflow-hidden rounded-[16px]"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={slide.imageUrl}
-                          alt={slide.altText}
-                          className="size-full object-cover transition duration-300 hover:scale-105"
-                          loading="lazy"
-                          onError={(event) => {
-                            event.currentTarget.style.opacity = '0';
-                          }}
-                        />
-                      </Link>
-                    ) : (
-                      <div className="mobile:h-[200px] relative block h-[240px] w-full overflow-hidden rounded-[16px]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={slide.imageUrl}
-                          alt={slide.altText}
-                          className="size-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                  </article>
-                ))}
-              </div>
-            </div>
-
-            {slides.length > 1 && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-[12px]">
-                <button
-                  type="button"
-                  aria-label="Previous ad"
-                  className="pointer-events-auto inline-flex size-[34px] items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/60"
-                  onClick={handlePrev}
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next ad"
-                  className="pointer-events-auto inline-flex size-[34px] items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/60"
-                  onClick={handleNext}
-                >
-                  ›
-                </button>
-              </div>
-            )}
-
-            {isRefetching && (
-              <div className="absolute right-[12px] top-[12px] rounded-full border border-black/20 bg-white/80 px-[10px] py-[4px] text-[11px] font-semibold uppercase tracking-[0.08em] text-black/70">
-                Refreshing…
-              </div>
-            )}
+                View Details
+              </Link>
+            ) : null}
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-[12px] rounded-[16px] border border-dashed border-black/10 bg-white p-[20px] text-center">
-            <p className="text-[14px] font-semibold text-black/80">
-              No active creatives yet
-            </p>
-            <p className="text-[13px] text-black/60">
-              Claim the first Harberger slot and your creative will be
-              highlighted here.
-            </p>
-            <Link
-              href="/ad-management"
-              className="rounded-full border border-black/15 px-[16px] py-[8px] text-[13px] font-semibold text-black/80 transition hover:bg-black/5"
-            >
-              Launch ad marketplace
-            </Link>
-          </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
