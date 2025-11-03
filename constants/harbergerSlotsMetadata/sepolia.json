@@ -84,7 +84,7 @@
     "position": "TopBanner",
     "imageSize": "900*225_373*93",
     "extra": {},
-    "isActive": true,
+    "isActive": false,
     "contractMeta": {
       "slotType": "enabled",
       "bondRateBps": "2000",
@@ -137,12 +137,12 @@
   {
     "chainId": 11155111,
     "slotAddress": "0x306B1E83cc19bf496d255B84Ad7fE1978980bdbd",
-    "slotDisplayName": "Homescreen Footer",
-    "page": "home",
-    "position": "FooterBanner",
-    "imageSize": "429*235_317*173",
+    "slotDisplayName": "Project TopBanner",
+    "page": "projectDetail",
+    "position": "TopBanner",
+    "imageSize": "900*225_373*93",
     "extra": {},
-    "isActive": false,
+    "isActive": true,
     "contractMeta": {
       "slotType": "enabled",
       "bondRateBps": "500",

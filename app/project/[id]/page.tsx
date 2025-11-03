@@ -14,6 +14,7 @@ import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import SubmitterModal from '@/components/pages/project/detail/modal/Submitter';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
+import ProjectTopBannerAd from '@/components/pages/project/detail/ProjectTopBannerAd';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
 import TransparentScore from '@/components/pages/project/detail/TransparentScore';
 import Ecosystem from '@/components/pages/project/ecosystem';
@@ -215,6 +216,8 @@ const ProjectPage = () => {
         getLeadingCategories={getLeadingCategories}
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
+
+      <ProjectTopBannerAd />
 
       <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
         <ProjectTabs
