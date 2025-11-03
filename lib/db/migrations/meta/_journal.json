@@ -435,6 +435,13 @@
       "when": 1760542807566,
       "tag": "20251015154007_faithful_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1761743219105,
+      "tag": "20251029130659_organic_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

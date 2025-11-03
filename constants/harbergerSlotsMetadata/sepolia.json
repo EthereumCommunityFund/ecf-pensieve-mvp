@@ -1,0 +1,177 @@
+[
+  {
+    "chainId": 11155111,
+    "slotAddress": "0x325912d769C9D032eA4FaaC7e9329BC651b4b661",
+    "slotDisplayName": "Homescreen Sidebar",
+    "page": "home",
+    "position": "Sidebar",
+    "imageSize": "429*235_317*173",
+    "extra": {},
+    "isActive": true,
+    "contractMeta": {
+      "slotType": "enabled",
+      "bondRateBps": "800",
+      "annualTaxRateBps": "1000",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "500000000000000000",
+      "contentUpdateLimit": "7",
+      "dustRateBps": "100"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0x38441A99a2b0Cf8D8732cE22214AC7f4B22f9FCD",
+    "slotDisplayName": "Homescreen Banner(Shielded)",
+    "page": "home",
+    "position": "TopBanner",
+    "imageSize": "900*255_400*100",
+    "extra": {},
+    "isActive": false,
+    "contractMeta": {
+      "slotType": "shielded",
+      "bondRateBps": "1000",
+      "annualTaxRateBps": "1000",
+      "minBidIncrementBps": "2000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "800000000000000000",
+      "contentUpdateLimit": "6"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0x9D1e86c3EcEA90a6d30C7d55F301466C5Ba478a2",
+    "slotDisplayName": "Homescreen Sidebar(Shielded)",
+    "page": "home",
+    "position": "Sidebar",
+    "imageSize": "390*214_390*214",
+    "extra": {},
+    "isActive": false,
+    "contractMeta": {
+      "slotType": "shielded",
+      "bondRateBps": "500",
+      "annualTaxRateBps": "100",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "100000000000000000",
+      "contentUpdateLimit": "7"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0xDD9f9191a6D65441fdE7EAadf4FF535c43933c83",
+    "slotDisplayName": "Homescreen Footer(Shielded)",
+    "page": "home",
+    "position": "FooterBanner",
+    "imageSize": "900*255_400*100",
+    "extra": {},
+    "isActive": false,
+    "contractMeta": {
+      "slotType": "shielded",
+      "bondRateBps": "500",
+      "annualTaxRateBps": "100",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "100000000000000000",
+      "contentUpdateLimit": "7"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0xDFE8264F0BFcDe08DFac358e5246E59eb6AfC471",
+    "slotDisplayName": "Homescreen Banner",
+    "page": "home",
+    "position": "TopBanner",
+    "imageSize": "900*225_373*93",
+    "extra": {},
+    "isActive": false,
+    "contractMeta": {
+      "slotType": "enabled",
+      "bondRateBps": "2000",
+      "annualTaxRateBps": "500",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "500000000000000000",
+      "contentUpdateLimit": "5",
+      "dustRateBps": "100"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0xFD847eBc728439717945Fc12019147A277b74Ccf",
+    "slotDisplayName": "",
+    "page": "",
+    "position": "",
+    "imageSize": "",
+    "extra": {},
+    "isActive": false,
+    "contractMeta": {
+      "slotType": "shielded",
+      "bondRateBps": "500",
+      "annualTaxRateBps": "100",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "100000000000000000",
+      "contentUpdateLimit": "7"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0x67791Ac8e8A45002c4431824dcDf7fB61f9Caba7",
+    "slotDisplayName": "",
+    "page": "",
+    "position": "",
+    "imageSize": "",
+    "extra": {},
+    "isActive": false,
+    "contractMeta": {
+      "slotType": "shielded",
+      "bondRateBps": "500",
+      "annualTaxRateBps": "100",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "100000000000000000",
+      "contentUpdateLimit": "7"
+    }
+  },
+  {
+    "chainId": 11155111,
+    "slotAddress": "0x306B1E83cc19bf496d255B84Ad7fE1978980bdbd",
+    "slotDisplayName": "Project TopBanner",
+    "page": "projectDetail",
+    "position": "TopBanner",
+    "imageSize": "900*225_373*93",
+    "extra": {},
+    "isActive": true,
+    "contractMeta": {
+      "slotType": "enabled",
+      "bondRateBps": "500",
+      "annualTaxRateBps": "100",
+      "minBidIncrementBps": "1000",
+      "taxPeriodSeconds": "86400",
+      "minValuationWei": "100000000000000000",
+      "contentUpdateLimit": "8",
+      "dustRateBps": "100"
+    }
+  },
+  {
+  "chainId": 11155111,
+  "slotAddress": "0xa4c4AaB5cB55627FBfB36C77864E4e4F7b027eB1",
+  "slotDisplayName": "Test claim ad(do not claim)",
+  "page": "all",
+  "position": "head",
+  "imageSize": "429*235_317*173",
+  "extra": {},
+  "isActive": true,
+  "contractMeta": {
+    "slotType": "enabled",
+    "bondRateBps": "1300",
+    "annualTaxRateBps": "500",
+    "minBidIncrementBps": "1000",
+    "taxPeriodSeconds": "2592000",
+    "minValuationWei": "500000000000000000",
+    "contentUpdateLimit": "5",
+    "dustRateBps": "100"
+  }
+}
+]

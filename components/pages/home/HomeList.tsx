@@ -17,6 +17,7 @@ import { SortBy, SortOrder } from '@/types/sort';
 import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
 
+import HomeSidebarAd from '../ad-management/HtaxAd/HomeSidebarAd';
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
 
 import ProjectIntroCard from './ProjectIntroCard';
@@ -288,6 +289,8 @@ const HomeList = () => {
       {/* Right side: 4 columns */}
       <div className="tablet:w-[325px] mobile:hidden flex w-[390px] flex-col gap-[10px]">
         <ProjectIntroCard />
+
+        <HomeSidebarAd />
 
         {/* Column 0: Top Accountable */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">

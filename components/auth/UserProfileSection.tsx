@@ -8,7 +8,7 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import { GitCommit } from '@phosphor-icons/react';
+import { Funnel, GitCommit } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { Button } from '@/components/base';
@@ -168,6 +168,15 @@ const UserProfileSection: React.FC<IUserProfileSection> = ({
             href={`/profile/${profile?.address}?tab=lists`}
           >
             My Lists
+          </DropdownItem>
+          <DropdownItem
+            key="sieve"
+            startContent={<Funnel size={24} />}
+            textValue="My Sieve"
+            className="gap-[7px] rounded-[5px] px-[10px] py-[4px] text-[14px] font-[600] text-black transition-all duration-200 hover:bg-black/[0.05]"
+            href={`/profile/${profile?.address}?tab=sieve`}
+          >
+            My Sieve
           </DropdownItem>
           <DropdownItem
             key="logout"

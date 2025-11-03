@@ -27,7 +27,8 @@ export type NotificationType =
   | 'itemProposalBecameLeading'
   | 'itemProposalLostLeading'
   | 'systemUpdate'
-  | 'newItemsAvailable';
+  | 'newItemsAvailable'
+  | 'harbergerSlotExpiring';
 
 export interface NotificationData {
   userId?: string;
