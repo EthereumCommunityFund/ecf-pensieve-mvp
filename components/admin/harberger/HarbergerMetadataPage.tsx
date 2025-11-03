@@ -290,7 +290,7 @@ export const HarbergerMetadataPage = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-4">
+    <div className="mx-auto flex w-full flex-col gap-4 py-4">
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <Button
@@ -391,89 +391,113 @@ export const HarbergerMetadataPage = () => {
         ) : null}
       </section>
 
-      <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
-        <h2 className="text-xl font-semibold text-black">New slots</h2>
-        <p className="text-sm text-black/60">
-          Addresses that exist on-chain but do not yet appear in
-          harbergerSlotsMetadata JSON.
-        </p>
-
-        {missingMetadata.length === 0 ? (
-          <p className="mt-3 text-sm text-black/60">
-            All on-chain slots have metadata entries.
+      <div className="flex gap-[10px]">
+        <section className="flex-1 rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+          <h2 className="text-xl font-semibold text-black">New slots</h2>
+          <p className="text-sm text-black/60">
+            Addresses that exist on-chain but do not yet appear in
+            harbergerSlotsMetadata JSON.
           </p>
-        ) : (
-          <div className="mt-3 space-y-2.5">
-            {missingMetadata.map((info) => (
-              <div
-                key={info.address}
-                className="rounded-lg border border-amber-200 bg-amber-50 p-3"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-amber-200 px-2 py-1 text-xs font-semibold uppercase text-amber-900">
-                      {info.slotType}
-                    </span>
-                    <span className="break-all text-sm font-semibold text-black">
-                      {info.address}
-                    </span>
+
+          {missingMetadata.length === 0 ? (
+            <p className="mt-3 text-sm text-black/60">
+              All on-chain slots have metadata entries.
+            </p>
+          ) : (
+            <div className="mt-3 space-y-2.5">
+              {missingMetadata.map((info) => (
+                <div
+                  key={info.address}
+                  className="rounded-lg border border-amber-200 bg-amber-50 p-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded bg-amber-200 px-2 py-1 text-xs font-semibold uppercase text-amber-900">
+                        {info.slotType}
+                      </span>
+                      <span className="break-all text-sm font-semibold text-black">
+                        {info.address}
+                      </span>
+                    </div>
+                    <p className="text-xs text-black/60">
+                      Add this entry to {CHAIN_NAME} metadata JSON and fill
+                      display fields before enabling.
+                    </p>
                   </div>
-                  <p className="text-xs text-black/60">
-                    Add this entry to {CHAIN_NAME} metadata JSON and fill
-                    display fields before enabling.
-                  </p>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                    <Copy
+                      text={handleCopyTemplate(info)}
+                      message="Metadata template copied"
+                    >
+                      Copy template
+                    </Copy>
+                  </div>
                 </div>
-                <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                  <Copy
-                    text={handleCopyTemplate(info)}
-                    message="Metadata template copied"
-                  >
-                    Copy template
-                  </Copy>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="flex-3 rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+          <h2 className="text-xl font-semibold text-black">Metadata health</h2>
+          <p className="text-sm text-black/60">
+            Track incomplete or outdated metadata entries to keep the catalog
+            aligned with on-chain parameters.
+          </p>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="rounded-lg border border-black/10 bg-black/5 p-3">
+              <h3 className="font-semibold text-black">
+                Outdated contract meta
+              </h3>
+              {outdatedMetadata.length === 0 ? (
+                <p className="mt-1 text-sm text-black/60">
+                  All entries are up to date.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {outdatedMetadata.map((info) => (
+                    <li
+                      key={info.address}
+                      className="break-all text-sm text-black"
+                    >
+                      {info.address}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-lg border border-black/10 bg-black/5 p-3">
+              <h3 className="font-semibold text-black">Incomplete entries</h3>
+              {incompleteMetadata.length === 0 ? (
+                <p className="mt-1 text-sm text-black/60">
+                  All entries contain required fields.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {incompleteMetadata.map((entry) => (
+                    <li
+                      key={entry.slotAddress}
+                      className="break-all text-sm text-black"
+                    >
+                      {entry.slotAddress}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        )}
-      </section>
 
-      <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
-        <h2 className="text-xl font-semibold text-black">Metadata health</h2>
-        <p className="text-sm text-black/60">
-          Track incomplete or outdated metadata entries to keep the catalog
-          aligned with on-chain parameters.
-        </p>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-black/10 bg-black/5 p-3">
-            <h3 className="font-semibold text-black">Outdated contract meta</h3>
-            {outdatedMetadata.length === 0 ? (
+          <div className="mt-3 rounded-lg border border-black/10 bg-black/5 p-3">
+            <h3 className="font-semibold text-black">Orphaned metadata</h3>
+            {orphanedMetadata.length === 0 ? (
               <p className="mt-1 text-sm text-black/60">
-                All entries are up to date.
+                No metadata entries reference non-existent slots.
               </p>
             ) : (
               <ul className="mt-2 space-y-2">
-                {outdatedMetadata.map((info) => (
-                  <li
-                    key={info.address}
-                    className="break-all text-sm text-black"
-                  >
-                    {info.address}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="rounded-lg border border-black/10 bg-black/5 p-3">
-            <h3 className="font-semibold text-black">Incomplete entries</h3>
-            {incompleteMetadata.length === 0 ? (
-              <p className="mt-1 text-sm text-black/60">
-                All entries contain required fields.
-              </p>
-            ) : (
-              <ul className="mt-2 space-y-2">
-                {incompleteMetadata.map((entry) => (
+                {orphanedMetadata.map((entry) => (
                   <li
                     key={entry.slotAddress}
                     className="break-all text-sm text-black"
@@ -484,28 +508,8 @@ export const HarbergerMetadataPage = () => {
               </ul>
             )}
           </div>
-        </div>
-
-        <div className="mt-3 rounded-lg border border-black/10 bg-black/5 p-3">
-          <h3 className="font-semibold text-black">Orphaned metadata</h3>
-          {orphanedMetadata.length === 0 ? (
-            <p className="mt-1 text-sm text-black/60">
-              No metadata entries reference non-existent slots.
-            </p>
-          ) : (
-            <ul className="mt-2 space-y-2">
-              {orphanedMetadata.map((entry) => (
-                <li
-                  key={entry.slotAddress}
-                  className="break-all text-sm text-black"
-                >
-                  {entry.slotAddress}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+        </section>
+      </div>
 
       <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
         <h2 className="text-xl font-semibold text-black">On-chain slots</h2>
