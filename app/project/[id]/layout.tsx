@@ -1,5 +1,11 @@
 import { Metadata } from 'next';
 
+import { buildProjectJsonLd } from '@/lib/services/projectJsonLd';
+import {
+  getProjectForMeta,
+  getProjectStructuredData,
+} from '@/lib/services/projectService';
+
 import ClientLayout from './layout.client';
 
 export async function generateMetadata({
@@ -8,7 +14,6 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const { getProjectForMeta } = await import('@/lib/services/projectService');
   const project = await getProjectForMeta(Number(id));
 
   if (project) {
@@ -39,11 +44,30 @@ export async function generateMetadata({
     };
   }
 }
-
-export default function ProjectLayout({
+export default async function ProjectLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ id: string }>;
 }) {
-  return <ClientLayout>{children}</ClientLayout>;
+  const { id } = await params;
+  const structured = await getProjectStructuredData(Number(id));
+
+  const jsonLd = structured ? buildProjectJsonLd(id, structured) : null;
+  const jsonLdString = jsonLd ? JSON.stringify(jsonLd) : null;
+
+  return (
+    <>
+      {jsonLdString ? (
+        <script
+          id={`project-jsonld-${id}`}
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: jsonLdString }}
+        />
+      ) : null}
+      <ClientLayout>{children}</ClientLayout>
+    </>
+  );
 }

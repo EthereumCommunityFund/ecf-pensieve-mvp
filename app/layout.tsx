@@ -5,7 +5,11 @@ import { Metadata } from 'next';
 import { ChatwootWidget } from '@/components/layout/ChatwootWidget';
 import { MainLayout } from '@/components/layout/mainLayout';
 import { Providers } from '@/components/layout/providers';
-import { getHomePageStats } from '@/lib/services/projectService';
+import {
+  getHomePageStats,
+  getTopAccountableProjects,
+} from '@/lib/services/projectService';
+import { buildSiteJsonLd } from '@/lib/services/siteJsonLd';
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getHomePageStats();
@@ -37,13 +41,26 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const topAccountableProjects = await getTopAccountableProjects(3);
+  const siteJsonLd = JSON.stringify(
+    buildSiteJsonLd({ topAccountableProjects }),
+  );
+
   return (
     <html lang="en" className="min-w-[390px]">
+      <head>
+        <script
+          id="site-jsonld"
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: siteJsonLd }}
+        />
+      </head>
       <body className="font-sans">
         <Providers>
           <MainLayout>{children}</MainLayout>
