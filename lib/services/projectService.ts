@@ -828,19 +828,19 @@ export async function getTopAccountableProjects(
 
     const uniqueIds = Array.from(new Set(projectIds)).slice(0, limit);
 
-    const structuredData = await Promise.all(
-      uniqueIds.map(async (projectId) => {
-        try {
-          return await getProjectStructuredData(projectId);
-        } catch (error) {
-          console.error(
-            `Failed to resolve structured data for project ${projectId}:`,
-            error,
-          );
-          return null;
-        }
-      }),
-    );
+    const structuredData: Array<ProjectStructuredData | null> = [];
+    for (const projectId of uniqueIds) {
+      try {
+        const data = await getProjectStructuredData(projectId);
+        structuredData.push(data);
+      } catch (error) {
+        console.error(
+          `Failed to resolve structured data for project ${projectId}:`,
+          error,
+        );
+        structuredData.push(null);
+      }
+    }
 
     return structuredData.filter((item): item is ProjectStructuredData =>
       Boolean(item),
@@ -873,19 +873,19 @@ export async function getTopTransparentProjects(
 
     const uniqueIds = Array.from(new Set(projectIds)).slice(0, limit);
 
-    const structuredData = await Promise.all(
-      uniqueIds.map(async (projectId) => {
-        try {
-          return await getProjectStructuredData(projectId);
-        } catch (error) {
-          console.error(
-            `Failed to resolve structured data for project ${projectId}:`,
-            error,
-          );
-          return null;
-        }
-      }),
-    );
+    const structuredData: Array<ProjectStructuredData | null> = [];
+    for (const projectId of uniqueIds) {
+      try {
+        const data = await getProjectStructuredData(projectId);
+        structuredData.push(data);
+      } catch (error) {
+        console.error(
+          `Failed to resolve structured data for project ${projectId}:`,
+          error,
+        );
+        structuredData.push(null);
+      }
+    }
 
     return structuredData.filter((item): item is ProjectStructuredData =>
       Boolean(item),
