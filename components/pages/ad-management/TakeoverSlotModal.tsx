@@ -8,7 +8,7 @@ import {
   Slider,
   Tooltip,
 } from '@heroui/react';
-import { CoinVertical, TrendUp } from '@phosphor-icons/react';
+import { CoinVertical, TrendUp, Warning } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseEther } from 'viem';
 
@@ -22,6 +22,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   calculateBond,
   calculateTaxForPeriods,
+  formatBps,
   formatDuration,
   formatEth,
   formatNumberInputFromWei,
@@ -683,14 +684,24 @@ function SlotActionFormContent({
     maximumFractionDigits: 4,
   });
 
+  const minBidIncrementPercent = formatBps(slot.minBidIncrementBps);
+  const minBidRequirementDesc = `Minimum bid must be at least ${formatEth(
+    slot.minTakeoverBidWei,
+  )} (${minBidIncrementPercent} higher than current valuation).`;
+  const minBidRequirementHelper = `Minimum bid is ${formatEth(slot.minTakeoverBidWei)} (${minBidIncrementPercent} higher than current valuation).`;
+  const shouldShowValuationError =
+    isTakeoverMode &&
+    Boolean(valuationInput && valuationInput.trim().length > 0) &&
+    !isValuationValid;
+
   const valuation: ValuationConfig | undefined = isTakeoverMode
     ? {
         placeholder: minBidPlaceholder ? `≥ ${minBidPlaceholder}` : undefined,
         helper: slot.takeoverHelper ?? '',
         value: valuationInput,
-        errorMessage: isValuationValid
-          ? undefined
-          : 'Bid must meet the minimum increment.',
+        errorMessage: shouldShowValuationError
+          ? minBidRequirementHelper
+          : undefined,
         onChange: setValuationInput,
       }
     : undefined;
@@ -879,9 +890,19 @@ function SlotActionFormContent({
               isInvalid={!!valuation.errorMessage}
               aria-label="Set new valuation"
             />
-            <span className="font-inter text-[13px] font-[400] text-black/80">
-              Must be at least 10.0% higher than current valuation
-            </span>
+            {shouldShowValuationError ? (
+              <div className="flex items-start text-[13px] text-[#E76F37]">
+                <Warning size={20} className="shrink-0 text-[#D9470D]" />
+                <span className="ml-[10px] mr-[5px] font-semibold">
+                  Bid Too Low:
+                </span>
+                <span>{valuation.errorMessage ?? minBidRequirementHelper}</span>
+              </div>
+            ) : (
+              <span className="font-inter text-[13px] font-[400] text-black/80">
+                {minBidRequirementDesc}
+              </span>
+            )}
           </div>
         </div>
       ) : null}
