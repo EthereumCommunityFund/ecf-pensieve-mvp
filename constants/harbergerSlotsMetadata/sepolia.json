@@ -2,7 +2,7 @@
   {
     "chainId": 11155111,
     "slotAddress": "0x325912d769C9D032eA4FaaC7e9329BC651b4b661",
-    "slotDisplayName": "Homescreen Sidebar(Enabled)",
+    "slotDisplayName": "Homescreen Sidebar",
     "page": "home",
     "position": "Sidebar",
     "imageSize": "429*235_317*173",
@@ -79,7 +79,7 @@
   {
     "chainId": 11155111,
     "slotAddress": "0xDFE8264F0BFcDe08DFac358e5246E59eb6AfC471",
-    "slotDisplayName": "Homescreen Banner(Enabled)",
+    "slotDisplayName": "Homescreen Banner",
     "page": "home",
     "position": "TopBanner",
     "imageSize": "429*235_317*173",
@@ -137,7 +137,7 @@
   {
     "chainId": 11155111,
     "slotAddress": "0x306B1E83cc19bf496d255B84Ad7fE1978980bdbd",
-    "slotDisplayName": "Homescreen Footer(Enabled)",
+    "slotDisplayName": "Homescreen Footer",
     "page": "home",
     "position": "FooterBanner",
     "imageSize": "429*235_317*173",

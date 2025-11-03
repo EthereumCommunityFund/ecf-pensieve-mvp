@@ -402,6 +402,7 @@ export default function AdManagementPage() {
                       onRenew={handleRenewSlot}
                       onEdit={setSelectedEditSlot}
                       onShowDetails={setSelectedDetailsSlot}
+                      onForfeit={handleForfeitSlot}
                       editState={{
                         isSubmitting: isEditSubmitting,
                         activeSlotId: selectedEditSlot?.id ?? null,

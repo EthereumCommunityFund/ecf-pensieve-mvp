@@ -357,7 +357,9 @@ export function SlotOverviewStep({
 
   const cancelLabel = isViewMode ? 'Close' : 'Cancel';
   const canProceed = Boolean(isTakeoverMode && onProceed);
-  const canForfeit = Boolean(isViewMode && !slot.isExpired && onForfeit);
+  const canForfeit = Boolean(
+    isViewMode && !slot.isExpired && slot.canForfeit && onForfeit,
+  );
   const showPrimaryButton = canProceed || canForfeit;
   const primaryLabel = isTakeoverMode ? takeoverLabel : 'Forfeit Slot';
 

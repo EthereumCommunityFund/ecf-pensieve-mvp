@@ -1,6 +1,15 @@
 'use client';
 
-import { Card, CardBody, cn } from '@heroui/react';
+import {
+  Card,
+  CardBody,
+  cn,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from '@heroui/react';
 import {
   Clock,
   CoinVertical,
@@ -8,7 +17,7 @@ import {
   NotePencil,
 } from '@phosphor-icons/react';
 import Image from 'next/image';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base/button';
 import type { ActiveSlotData } from '@/hooks/useHarbergerSlots';
@@ -36,6 +45,7 @@ export interface YourSlotCardProps {
   onRenew?: (slot: ActiveSlotData) => void;
   onEdit?: (slot: ActiveSlotData) => void;
   onShowDetails?: (slot: ActiveSlotData) => void;
+  onForfeit?: (slot: ActiveSlotData) => void;
   editState?: {
     isSubmitting: boolean;
     activeSlotId?: string | null;
@@ -88,6 +98,7 @@ export default function YourSlotsCard({
   onRenew,
   onEdit,
   onShowDetails,
+  onForfeit,
   editState,
 }: YourSlotCardProps) {
   const creativeAssets = useMemo(
@@ -196,10 +207,51 @@ export default function YourSlotsCard({
   const mediaPreview = creativeAssets.primaryImageUrl ?? null;
   const isRenewPending =
     pendingAction?.slotId === slot.id && pendingAction.action === 'renew';
+  const isForfeitPending =
+    pendingAction?.slotId === slot.id && pendingAction.action === 'forfeit';
   const isEditPending = Boolean(
     editState?.isSubmitting && editState?.activeSlotId === slot.id,
   );
-  const isCardInactive = status === 'closed' || status === 'overdue';
+  const isCardInactive = status === 'closed';
+  const canForfeit = status === 'overdue' && slot.canForfeit;
+  const isActionLocked = isForfeitPending;
+  const [isConfirmingForfeit, setIsConfirmingForfeit] = useState(false);
+  const [forfeitError, setForfeitError] = useState<string | null>(null);
+
+  const handleOpenConfirm = useCallback(() => {
+    if (isActionLocked || !canForfeit) {
+      return;
+    }
+    setForfeitError(null);
+    setIsConfirmingForfeit(true);
+  }, [canForfeit, isActionLocked]);
+
+  const handleCloseConfirm = useCallback(() => {
+    if (isForfeitPending) {
+      return;
+    }
+    setIsConfirmingForfeit(false);
+    setForfeitError(null);
+  }, [isForfeitPending]);
+
+  const handleConfirmForfeit = useCallback(async () => {
+    if (!onForfeit || isForfeitPending || !canForfeit) {
+      return;
+    }
+    try {
+      setForfeitError(null);
+      await onForfeit(slot);
+      setIsConfirmingForfeit(false);
+    } catch (error) {
+      const rawMessage =
+        error instanceof Error ? (error.message ?? '') : String(error ?? '');
+      const isTaxActive = rawMessage.includes('0x03e6d7c0');
+      const friendlyMessage = isTaxActive
+        ? 'Slot still has active tax coverage on-chain. Wait until coverage fully lapses or have an operator poke before forfeiting.'
+        : 'Unable to submit forfeit transaction. Please retry after a few moments.';
+      setForfeitError(friendlyMessage);
+    }
+  }, [canForfeit, isForfeitPending, onForfeit, slot]);
 
   const taxDueIsOverdue = taxDueCountdown.startsWith('Overdue');
   const isCritical = taxDueIsOverdue || currentAdTone === 'danger';
@@ -311,12 +363,25 @@ export default function YourSlotsCard({
               radius="md"
               size="md"
               className="h-[32px] w-full rounded-[6px] text-[14px] font-semibold"
-              isDisabled={isCardInactive || isRenewPending}
+              isDisabled={isCardInactive || isRenewPending || isActionLocked}
               isLoading={isRenewPending}
               onPress={() => onRenew?.(slot)}
             >
               <CoinVertical className="size-[20px] opacity-50" />
               {`Pay Due Tax ${renewalAmountLabel}`}
+            </Button>
+          ) : null}
+
+          {status === 'overdue' && canForfeit ? (
+            <Button
+              color="danger"
+              size="sm"
+              className="min-w-[140px] flex-1 rounded-[6px] text-[14px] font-semibold text-white"
+              isDisabled={isActionLocked || !canForfeit}
+              isLoading={isForfeitPending}
+              onPress={handleOpenConfirm}
+            >
+              Forfeit Slot
             </Button>
           ) : null}
         </div>
@@ -328,7 +393,7 @@ export default function YourSlotsCard({
                 color="secondary"
                 size="sm"
                 className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-                isDisabled={isCardInactive || isRenewPending}
+                isDisabled={isCardInactive || isRenewPending || isActionLocked}
                 isLoading={isEditPending}
                 onPress={() => onEdit?.(slot)}
                 startContent={<NotePencil size={20} className="opacity-50" />}
@@ -341,7 +406,7 @@ export default function YourSlotsCard({
               color="secondary"
               size="sm"
               className="min-w-[140px] flex-1 rounded-[6px] border border-black/15 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-              isDisabled={isCardInactive}
+              isDisabled={isCardInactive || isActionLocked}
               onPress={() => onShowDetails?.(slot)}
               startContent={<Notebook size={20} className="text-black/50" />}
             >
@@ -357,6 +422,58 @@ export default function YourSlotsCard({
           </div>
         </div>
       </CardBody>
+
+      <Modal
+        isOpen={isConfirmingForfeit}
+        onClose={handleCloseConfirm}
+        isDismissable={!isForfeitPending}
+        placement="center"
+        classNames={{
+          base: 'max-w-[420px] bg-white p-0',
+          header: 'p-[20px] text-[18px] font-semibold text-black',
+          body: 'p-[20px] text-[14px] text-black/70',
+          footer: 'p-[16px] flex justify-end gap-[12px]',
+        }}
+      >
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader>Confirm Forfeit</ModalHeader>
+              <ModalBody>
+                <p>
+                  Forfeiting will immediately release this slot and refund any
+                  remaining balances according to the contract rules. Continue?
+                </p>
+                {forfeitError ? (
+                  <div className="mt-[10px] rounded-[6px] bg-[#FEF2F2] p-[10px] text-[12px] text-[#B91C1C]">
+                    {forfeitError}
+                  </div>
+                ) : null}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="secondary"
+                  size="sm"
+                  className="rounded-[6px] px-[12px] text-[14px] font-semibold"
+                  isDisabled={isForfeitPending}
+                  onPress={handleCloseConfirm}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="danger"
+                  size="sm"
+                  className="rounded-[6px] px-[14px] text-[14px] font-semibold text-white"
+                  isLoading={isForfeitPending}
+                  onPress={handleConfirmForfeit}
+                >
+                  Forfeit Slot
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </Card>
   );
 }

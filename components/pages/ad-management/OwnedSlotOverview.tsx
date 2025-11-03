@@ -99,8 +99,13 @@ export default function OwnedSlotOverview({
       label: 'Tax Due:',
       value: taxDueCountdown,
       icon: <Clock size={14} weight="fill" className="opacity-50" />,
+      valueLabelType: slot.isOverdue ? 'danger' : undefined,
     },
-    { label: 'Remaining Units:', value: slot.remainingUnits },
+    {
+      label: 'Remaining Units:',
+      value: slot.remainingUnits,
+      valueLabelType: slot.isOverdue ? 'danger' : undefined,
+    },
     { label: 'Tax Owed:', value: taxOwedDisplay },
     { label: 'divider-001', value: '', type: 'divider' },
     {

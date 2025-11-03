@@ -209,6 +209,7 @@ export interface ActiveSlotData {
   baseValuationWei?: bigint;
   dustRateBps?: bigint;
   creativeConfig: CreativeConfig;
+  canForfeit: boolean;
 }
 
 type CreativePreviewConfig = {
@@ -836,6 +837,8 @@ function createActiveSlotViewModel(
   const creativeDimensions =
     metadata && metadata.isActive ? metadata.creativeDimensions : undefined;
   const creativeConfig = buildCreativeConfig(creativeDimensions);
+  const coverageRemains = coverageExtendsBeyondNow(slot, nowSeconds);
+  const canForfeit = isOverdue && !coverageRemains;
 
   return {
     id: slot.slotAddress,
@@ -882,10 +885,114 @@ function createActiveSlotViewModel(
     baseValuationWei: slot.baseValuationWei,
     dustRateBps: slot.dustRateBps,
     creativeConfig,
+    canForfeit,
   };
 }
 
 export function aggregatePrepaidTax(slots: ActiveSlotData[]): string {
   const total = sumBigints(slots.map((slot) => slot.prepaidTaxBalanceWei));
   return formatEth(total);
+}
+const SECONDS_PER_YEAR = BigInt(60 * 60 * 24 * 365);
+const TAX_BASE = RATE_DENOMINATOR * SECONDS_PER_YEAR;
+
+function coverageExtendsBeyondNow(
+  slot: NormalizedSlot,
+  nowSeconds: bigint,
+): boolean {
+  if (!slot.isOccupied || slot.isExpired) {
+    return false;
+  }
+
+  if (
+    nowSeconds < slot.taxPaidUntilTimestamp ||
+    slot.taxPeriodInSeconds <= ZERO_BIGINT
+  ) {
+    return true;
+  }
+
+  const taxFactor = slot.annualTaxRateBps * slot.taxPeriodInSeconds;
+  if (taxFactor <= ZERO_BIGINT) {
+    return false;
+  }
+
+  const taxDenominator = TAX_BASE + taxFactor;
+  const overdueSeconds = nowSeconds - slot.taxPaidUntilTimestamp;
+  if (overdueSeconds <= ZERO_BIGINT) {
+    return false;
+  }
+
+  const periodsDue = overdueSeconds / slot.taxPeriodInSeconds + ONE_BIGINT;
+
+  let valuation = slot.valuationWei;
+  let locked = slot.lockedValueWei;
+  let prepaid = slot.prepaidTaxBalanceWei;
+  let taxPaidUntil = slot.taxPaidUntilTimestamp;
+
+  const dustThreshold =
+    slot.baseValuationWei &&
+    slot.baseValuationWei > ZERO_BIGINT &&
+    slot.dustRateBps &&
+    slot.dustRateBps > ZERO_BIGINT
+      ? (slot.baseValuationWei * slot.dustRateBps) / RATE_DENOMINATOR
+      : ZERO_BIGINT;
+
+  for (let i = ZERO_BIGINT; i < periodsDue; i += ONE_BIGINT) {
+    if (valuation <= ZERO_BIGINT || locked <= ZERO_BIGINT) {
+      return false;
+    }
+
+    const theoreticalValuation = (valuation * TAX_BASE) / taxDenominator;
+    let taxRemaining = valuation - theoreticalValuation;
+    if (taxRemaining < ZERO_BIGINT) {
+      taxRemaining = ZERO_BIGINT;
+    }
+
+    if (prepaid > ZERO_BIGINT) {
+      const taxFromPrepaid = prepaid >= taxRemaining ? taxRemaining : prepaid;
+      prepaid -= taxFromPrepaid;
+      taxRemaining -= taxFromPrepaid;
+    }
+
+    let taxFromLocked = ZERO_BIGINT;
+    if (taxRemaining > ZERO_BIGINT) {
+      if (taxRemaining >= locked) {
+        taxFromLocked = locked;
+        taxRemaining -= locked;
+      } else {
+        taxFromLocked = taxRemaining;
+        taxRemaining = ZERO_BIGINT;
+      }
+    }
+
+    if (taxFromLocked >= locked) {
+      return false;
+    }
+
+    const remainingLocked = locked - taxFromLocked;
+    const newValuation =
+      taxRemaining === ZERO_BIGINT
+        ? theoreticalValuation
+        : valuation > taxFromLocked
+          ? valuation - taxFromLocked
+          : ZERO_BIGINT;
+
+    valuation = newValuation;
+    locked = remainingLocked;
+    taxPaidUntil += slot.taxPeriodInSeconds;
+
+    if (dustThreshold > ZERO_BIGINT && valuation <= dustThreshold) {
+      return false;
+    }
+
+    if (taxPaidUntil > nowSeconds) {
+      return true;
+    }
+
+    if (valuation === ZERO_BIGINT || locked === ZERO_BIGINT) {
+      return false;
+    }
+  }
+
+  return false;
 }
