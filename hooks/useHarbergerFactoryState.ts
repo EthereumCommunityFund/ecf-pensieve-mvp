@@ -10,7 +10,6 @@ import {
   ZERO_ADDRESS,
 } from '@/constants/harbergerFactory';
 
-
 export interface HarbergerFactoryState {
   owner: Address;
   treasury: Address;
