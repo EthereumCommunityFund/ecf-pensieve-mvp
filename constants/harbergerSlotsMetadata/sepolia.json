@@ -142,7 +142,7 @@
     "position": "FooterBanner",
     "imageSize": "429*235_317*173",
     "extra": {},
-    "isActive": true,
+    "isActive": false,
     "contractMeta": {
       "slotType": "enabled",
       "bondRateBps": "500",
