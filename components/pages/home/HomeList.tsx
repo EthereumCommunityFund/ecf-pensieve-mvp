@@ -17,8 +17,8 @@ import { SortBy, SortOrder } from '@/types/sort';
 import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
 
-import { ProjectListWrapper } from '../project/ProjectListWrapper';
 import HomeSidebarAd from '../ad-management/HtaxAd/HomeSidebarAd';
+import { ProjectListWrapper } from '../project/ProjectListWrapper';
 
 import ProjectIntroCard from './ProjectIntroCard';
 import SectionHeader from './SectionHeader';

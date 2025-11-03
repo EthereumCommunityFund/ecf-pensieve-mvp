@@ -257,7 +257,7 @@ const useRealNotifications = () => {
               targetUrl: slotUrl,
               primaryActionUrl: payUrl,
               secondaryActionUrl: slotUrl,
-            } satisfies NotificationItemData;
+            } satisfies Partial<NotificationItemData>;
           }
           case 'itemProposalLostLeading':
             return {

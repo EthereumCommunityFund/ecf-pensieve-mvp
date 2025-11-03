@@ -1,4 +1,3 @@
-import React, { JSX } from 'react';
 import { cn } from '@heroui/react';
 import {
   ArrowSquareOut,
@@ -7,6 +6,7 @@ import {
   Notification,
   WarningCircle,
 } from '@phosphor-icons/react';
+import React, { JSX } from 'react';
 
 import { Button } from '@/components/base/button';
 import type { NotificationItemData } from '@/components/notification/NotificationItem';
