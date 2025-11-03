@@ -578,14 +578,23 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     hideButton = false,
   } = itemData;
 
+  const bgColor = isRead
+    ? 'bg-white'
+    : 'bg-[rgba(104,198,172,0.1)] hover:bg-[rgba(104,198,172,0.15)]';
+  const borderClass = 'border-b border-black/10';
+
   if (type === 'harbergerSlotExpiring' && itemData.harbergerTax) {
     return (
-      <HarbergerTaxNotificationCard
-        itemData={itemData}
-        onPrimaryAction={onButtonClick}
-        onSecondaryAction={onSecondaryButtonClick}
-        onNotificationClick={onNotificationClick}
-      />
+      <div
+        className={`flex flex-col gap-4 p-[14px] ${bgColor} ${borderClass} cursor-pointer`}
+        onClick={() => onNotificationClick?.(itemData)}
+      >
+        <HarbergerTaxNotificationCard
+          itemData={itemData}
+          onPrimaryAction={onButtonClick}
+          onSecondaryAction={onSecondaryButtonClick}
+        />
+      </div>
     );
   }
 
@@ -600,11 +609,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   const handleNotificationClick = () => {
     onNotificationClick?.(itemData);
   };
-
-  const bgColor = isRead
-    ? 'bg-white'
-    : 'bg-[rgba(104,198,172,0.1)] hover:bg-[rgba(104,198,172,0.15)]';
-  const borderClass = 'border-b border-black/10';
 
   return (
     <div

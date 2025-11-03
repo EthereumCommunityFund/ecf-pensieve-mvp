@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { mockNotifications } from '@/components/notification/mock/notifications';
 import { NotificationItemData } from '@/components/notification/NotificationItem';
@@ -14,6 +14,42 @@ export const useMockNotifications = () => {
     [],
   );
   const allNotifications = useMemo(() => mockNotifications, []);
+
+  const handleNotificationAction = useCallback(
+    (notification: NotificationItemData, isSecondary = false) => {
+      const destination = isSecondary
+        ? (notification.secondaryActionUrl ?? notification.targetUrl)
+        : (notification.primaryActionUrl ??
+          notification.ctaUrl ??
+          notification.targetUrl);
+
+      if (destination) {
+        router.push(destination);
+      }
+
+      console.log('Mock Notification Action:', {
+        notification,
+        isSecondary,
+      });
+    },
+    [router],
+  );
+
+  const handleNotificationClick = useCallback(
+    (notification: NotificationItemData) => {
+      const fallbackUrl =
+        notification.secondaryActionUrl ??
+        notification.targetUrl ??
+        notification.ctaUrl;
+
+      if (fallbackUrl) {
+        router.push(fallbackUrl);
+      }
+
+      console.log('Mock Notification Click:', notification);
+    },
+    [router],
+  );
 
   return {
     // Data
@@ -55,12 +91,8 @@ export const useMockNotifications = () => {
     },
 
     // Actions
-    handleNotificationAction: (notification: NotificationItemData) => {
-      console.log('Mock Notification Action:', notification);
-    },
-    handleNotificationClick: (notification: NotificationItemData) => {
-      console.log('Mock Notification Click:', notification);
-    },
+    handleNotificationAction,
+    handleNotificationClick,
     handleMarkAllAsRead: () => {
       console.log('Mock Mark All As Read');
     },

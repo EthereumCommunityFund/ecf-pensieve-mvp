@@ -23,6 +23,9 @@ import { getItemValueFromSnap } from '@/lib/services/share/shareUtils';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
+const MOCK_NOTIFICATIONS_ENABLED =
+  process.env.NEXT_PUBLIC_USE_MOCK_NOTIFICATIONS === 'true';
+
 const useRealNotifications = () => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -760,6 +763,9 @@ const useRealNotifications = () => {
 };
 
 export const useNotifications = () => {
-  // return useMockNotifications();
+  // if (MOCK_NOTIFICATIONS_ENABLED) {
+  //   return useMockNotifications();
+  // }
+
   return useRealNotifications();
 };

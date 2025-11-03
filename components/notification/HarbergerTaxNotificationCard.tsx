@@ -1,4 +1,12 @@
-import React from 'react';
+import React, { JSX } from 'react';
+import { cn } from '@heroui/react';
+import {
+  ArrowSquareOut,
+  Clock,
+  CoinVertical,
+  Notification,
+  WarningCircle,
+} from '@phosphor-icons/react';
 
 import { Button } from '@/components/base/button';
 import type { NotificationItemData } from '@/components/notification/NotificationItem';
@@ -10,7 +18,18 @@ const formatEthFixed = (value: bigint): string => {
   return `${formatted} ETH`;
 };
 
-const toTitleCase = (value: string | undefined): string | undefined => {
+const formatCountdown = (secondsInput: number): string => {
+  const totalSeconds = Number.isFinite(secondsInput) ? secondsInput : 0;
+  const clamped = Math.max(totalSeconds, 0);
+
+  const days = Math.floor(clamped / 86_400);
+  const hours = Math.floor((clamped % 86_400) / 3_600);
+  const minutes = Math.floor((clamped % 3_600) / 60);
+
+  return `${days}d ${hours}h ${minutes}m`;
+};
+
+const toTitleCase = (value?: string): string | undefined => {
   if (!value) {
     return undefined;
   }
@@ -22,50 +41,65 @@ const toTitleCase = (value: string | undefined): string | undefined => {
     .join(' ');
 };
 
-const STATUS_CONFIG: Record<
-  HarbergerTaxNotificationExtra['status'],
-  {
-    title: string;
-    accentClass: string;
-    badgeClass: string;
-    iconLabel: string;
-    iconClass: string;
-    titleClass: string;
-    description: string;
+const buildSlotContextLabel = (
+  page?: string,
+  position?: string,
+): string | undefined => {
+  const normalizedPage = toTitleCase(page);
+  const normalizedPosition = toTitleCase(position);
+
+  if (normalizedPage && normalizedPosition) {
+    return `${normalizedPage} ${normalizedPosition}`;
   }
-> = {
+
+  return normalizedPage ?? normalizedPosition ?? undefined;
+};
+
+type StatusKey = HarbergerTaxNotificationExtra['status'];
+
+type StatusVisualConfig = {
+  title: string;
+  icon: JSX.Element;
+  titleClass: string;
+  contextPillClass: string;
+  taxDuePillBg: string;
+  taxDueTextClass: string;
+  taxDueIconClass: string;
+  gracePillBg?: string;
+  graceTextClass?: string;
+  graceIconColor?: string;
+};
+
+const STATUS_VISUALS: Record<StatusKey, StatusVisualConfig> = {
   dueSoon: {
     title: 'Tax Due Soon',
-    accentClass: 'border-[#FFD4B8] bg-[#FFF5EF]',
-    badgeClass: 'bg-[#FFE2C7] text-[#9B5A00]',
-    iconLabel: '!',
-    iconClass:
-      'bg-[#FF995D]/20 border border-[#FF995D] text-[#FF995D] text-[16px]',
-    titleClass: 'text-[#C15F1D]',
-    description:
-      'Keep your slot active by settling the upcoming tax before the deadline.',
+    icon: <Notification size={32} className="text-[#D88B3E]" />,
+    titleClass: '',
+    contextPillClass: '',
+    taxDuePillBg: 'bg-[rgba(216,139,62,0.20)]',
+    taxDueTextClass: 'text-[#D88B3E]',
+    taxDueIconClass: 'text-[#D88B3E] opacity-50',
   },
   dueImminent: {
     title: 'Tax Due Soon',
-    accentClass: 'border-[#FFB5B5] bg-[#FFF2F2]',
-    badgeClass: 'bg-[#FFD7D7] text-[#A12A2A]',
-    iconLabel: '!',
-    iconClass:
-      'bg-[#FF5D5D]/20 border border-[#FF5D5D] text-[#FF5D5D] text-[16px]',
-    titleClass: 'text-[#B22626]',
-    description:
-      'Your grace window is approaching. Complete the payment to avoid suspension.',
+    icon: <WarningCircle size={32} className="text-[#C71818] opacity-50" />,
+    titleClass: '',
+    contextPillClass: '',
+    taxDuePillBg: 'bg-[rgba(199,24,24,0.20)]',
+    taxDueTextClass: 'text-[#C71818]',
+    taxDueIconClass: 'text-[#C71818] opacity-50',
   },
   overdue: {
     title: 'Tax Overdue',
-    accentClass: 'border-[#FF9B9B] bg-[#FFECEC]',
-    badgeClass: 'bg-[#FFD2D2] text-[#9F1F1F]',
-    iconLabel: '!',
-    iconClass:
-      'bg-[#E04343]/20 border border-[#E04343] text-[#E04343] text-[16px]',
-    titleClass: 'text-[#B21C1C]',
-    description:
-      'The slot is in its grace period. Settle the outstanding tax immediately.',
+    icon: <WarningCircle size={32} className="text-[#C71818] opacity-50" />,
+    titleClass: '',
+    contextPillClass: '',
+    taxDuePillBg: 'bg-[#FFC7CE]',
+    taxDueTextClass: 'text-[#B0162B]',
+    taxDueIconClass: 'text-[#C71818] opacity-50',
+    gracePillBg: 'bg-[#FFC7CE]',
+    graceTextClass: 'text-[#B0162B]',
+    graceIconColor: '#B0162B',
   },
 };
 
@@ -73,36 +107,26 @@ interface HarbergerTaxNotificationCardProps {
   itemData: NotificationItemData;
   onPrimaryAction?: (itemData: NotificationItemData) => void;
   onSecondaryAction?: (itemData: NotificationItemData) => void;
-  onNotificationClick?: (itemData: NotificationItemData) => void;
 }
 
-const buildSlotContextLabel = (
-  page?: string,
-  position?: string,
-): string | undefined => {
-  const formattedPage = toTitleCase(page);
-  const formattedPosition = toTitleCase(position);
-
-  if (formattedPage && formattedPosition) {
-    return `${formattedPage} ${formattedPosition}`;
-  }
-
-  return formattedPage ?? formattedPosition ?? undefined;
-};
+const labelClass = 'text-[12px] leading-[18px] text-black/80';
+const valuePillBaseClass =
+  'inline-flex items-center gap-[5px] rounded-[5px] border px-[6px] h-[20px] text-[12px] font-semibold leading-[16px]';
 
 const HarbergerTaxNotificationCard: React.FC<
   HarbergerTaxNotificationCardProps
-> = ({ itemData, onPrimaryAction, onSecondaryAction, onNotificationClick }) => {
+> = ({ itemData, onPrimaryAction, onSecondaryAction }) => {
   const tax = itemData.harbergerTax;
 
   if (!tax) {
     return null;
   }
 
-  const statusConfig = STATUS_CONFIG[tax.status];
-  const stateRingClass = itemData.isRead
-    ? ''
-    : 'ring-1 ring-[rgba(104,198,172,0.35)]';
+  const visuals = STATUS_VISUALS[tax.status];
+  const slotContextLabel = buildSlotContextLabel(tax.page, tax.position);
+
+  const taxDueLabel = formatCountdown(tax.secondsUntilDue);
+  const graceLabel = formatCountdown(tax.gracePeriodRemainingSeconds);
 
   const handlePrimary = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -114,117 +138,116 @@ const HarbergerTaxNotificationCard: React.FC<
     onSecondaryAction?.(itemData);
   };
 
-  const handleCardClick = () => {
-    onNotificationClick?.(itemData);
-  };
-
-  const slotContextLabel = buildSlotContextLabel(tax.page, tax.position);
-
-  const dueValue =
-    tax.secondsUntilDue <= 0 ? 'Due Now' : tax.formattedDueCountdown;
-
   return (
-    <div
-      className={`flex flex-col gap-4 rounded-[12px] border p-4 transition-colors ${statusConfig.accentClass} ${stateRingClass}`}
-      onClick={handleCardClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === ' ') {
-          event.preventDefault();
-        }
-      }}
-      onKeyUp={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          onNotificationClick?.(itemData);
-        }
-      }}
-    >
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className={`flex size-8 items-center justify-center rounded-full font-semibold ${statusConfig.iconClass}`}
-            >
-              {statusConfig.iconLabel}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`text-[15px] font-semibold ${statusConfig.titleClass}`}
-              >
-                {statusConfig.title}
-              </span>
-              <span className="rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-black/60">
-                Slot
-              </span>
-              <span className="rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-medium text-black/70">
-                {tax.slotDisplayName}
-              </span>
-              {slotContextLabel && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusConfig.badgeClass}`}
-                >
-                  for {slotContextLabel}
-                </span>
-              )}
-            </div>
-          </div>
-          <span className="text-[12px] font-medium text-black/40">
-            {itemData.timeAgo}
+    <div className="flex items-start gap-[10px]">
+      <div className="size-[32px] shrink-0">{visuals.icon}</div>
+      <div className="flex flex-col gap-[5px]">
+        <div className="flex flex-wrap items-center gap-[5px] text-[14px] leading-[20px] text-black">
+          <span className={`text-[14px] leading-[20px] ${visuals.titleClass}`}>
+            {visuals.title}
           </span>
+          <span className="rounded-[10px] border border-black/10 px-[8px] py-[2px] text-[13px] leading-[16px] text-black">
+            Slot
+          </span>
+          <span className="rounded-[10px] border border-black/10 px-[8px] py-[2px] text-[13px] leading-[16px] text-black">
+            {tax.slotDisplayName}
+          </span>
+          {slotContextLabel && (
+            <>
+              <span className="text-[14px] leading-[20px] text-black/50">
+                for
+              </span>
+              <span
+                className={cn(
+                  'rounded-[10px] border border-black/10 px-[8px] py-[2px] text-[13px] leading-[16px] text-black',
+                  visuals.contextPillClass,
+                )}
+              >
+                {slotContextLabel}
+              </span>
+            </>
+          )}
         </div>
-        <p className="text-[13px] leading-[18px] text-black/70">
-          {statusConfig.description}
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <div className="min-w-[140px] rounded-[10px] border border-black/10 bg-white px-3 py-2">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-black/45">
-            Tax Owed
-          </p>
-          <p className="text-[18px] font-semibold text-black">
-            {formatEthFixed(tax.taxOwedWei)}
-          </p>
-        </div>
-        <div className="min-w-[140px] rounded-[10px] border border-black/10 bg-white px-3 py-2">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-black/45">
-            Tax Due
-          </p>
-          <p className="text-[15px] font-semibold text-black">{dueValue}</p>
-        </div>
-        {tax.status === 'overdue' && (
-          <div className="min-w-[160px] rounded-[10px] border border-black/10 bg-white px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-black/45">
-              Grace Period Remaining
-            </p>
-            <p className="text-[15px] font-semibold text-black">
-              {tax.formattedGraceCountdown}
-            </p>
+        <div className="flex flex-col gap-[5px]">
+          <div className="flex items-center justify-between gap-[10px]">
+            <span className={labelClass}>Tax Owed:</span>
+            <span
+              className={`${valuePillBaseClass} border-[rgba(0,0,0,0.1)] bg-[#F5F5F5] text-black/80`}
+            >
+              {formatEthFixed(tax.taxOwedWei)}
+            </span>
           </div>
-        )}
-      </div>
-
-      <div
-        className="flex flex-wrap gap-2"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <Button
-          size="sm"
-          className="h-[32px] rounded-lg bg-black text-white hover:bg-black/80"
-          onPress={handlePrimary}
+          <div className="flex items-center justify-between gap-[10px]">
+            <span className={labelClass}>Tax Due:</span>
+            <span
+              className={`${valuePillBaseClass} ${visuals.taxDuePillBg} ${visuals.taxDueTextClass}`}
+            >
+              <Clock
+                size={12}
+                weight="fill"
+                className={visuals.taxDueIconClass}
+              />
+              {taxDueLabel}
+            </span>
+          </div>
+          {visuals.gracePillBg && visuals.graceTextClass && (
+            <div className="flex items-center justify-between gap-[12px]">
+              <span className={labelClass}>Grace Period Remaining:</span>
+              <span
+                className={`${valuePillBaseClass} ${visuals.gracePillBg} ${visuals.graceTextClass}`}
+              >
+                {graceLabel}
+              </span>
+            </div>
+          )}
+        </div>
+        <div
+          className="flex flex-wrap gap-[8px]"
+          onClick={(event) => event.stopPropagation()}
         >
-          Pay Now
-        </Button>
-        <Button
-          size="sm"
-          className="h-[32px] rounded-lg border border-black/15 bg-white text-black hover:bg-black/5"
-          onPress={handleSecondary}
-        >
-          View Slot
-        </Button>
+          <Button
+            size="sm"
+            radius="sm"
+            className="h-[32px] flex-1 gap-[6px] rounded-[5px] border border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.05)] px-[10px] text-[13px] font-normal text-black hover:bg-[rgba(0,0,0,0.12)]"
+            onPress={handlePrimary}
+          >
+            <CoinVertical size={18} weight="fill" className="text-black/50" />
+            Pay Now
+          </Button>
+          <Button
+            size="sm"
+            radius="sm"
+            className="h-[32px] flex-1 gap-[6px] rounded-[5px] border border-[rgba(0,0,0,0.1)] bg-white px-[10px] text-[13px] font-normal text-black hover:bg-[rgba(0,0,0,0.04)]"
+            onPress={handleSecondary}
+          >
+            <ArrowSquareOut size={18} className="text-black/50" />
+            View Slot
+          </Button>
+        </div>
       </div>
     </div>
+  );
+};
+
+const ClockBadge = ({ color }: { color: string }) => {
+  return (
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 14 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0"
+    >
+      <circle cx="7" cy="7" r="7" fill={`${color}1A`} />
+      <path
+        d="M7 3.5V7L9 8"
+        stroke={color}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 };
 
