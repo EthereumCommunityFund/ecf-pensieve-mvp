@@ -133,6 +133,7 @@ export default async function ProjectsLayout({
 }: {
   children: ReactNode;
 }) {
+  const siteRoot = buildAbsoluteUrl('/');
   const [accountableProjects, transparentProjects] = await Promise.all([
     getTopAccountableProjects(3),
     getTopTransparentProjects(3),
@@ -164,6 +165,12 @@ export default async function ProjectsLayout({
       name: 'ECF Pensieve Projects Directory',
       description:
         'Discover transparent and accountable blockchain projects curated by the ECF Pensieve community.',
+      isPartOf: {
+        '@id': `${siteRoot}#application`,
+      },
+      publisher: {
+        '@id': `${siteRoot}#organization`,
+      },
     },
     ...buildFeaturedProjectsJsonLd(featuredProjects),
   ];

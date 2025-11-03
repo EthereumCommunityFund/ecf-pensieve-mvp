@@ -64,6 +64,7 @@ export function getAdManagementOverview(): AdManagementOverview {
 export function buildAdManagementJsonLd(): Array<Record<string, unknown>> {
   const { slots } = getAdManagementOverview();
   const pageUrl = buildAbsoluteUrl(AD_MANAGEMENT_ROUTE);
+  const siteRoot = buildAbsoluteUrl('/');
 
   const jsonLdNodes: Array<Record<string, unknown>> = [
     {
@@ -74,6 +75,12 @@ export function buildAdManagementJsonLd(): Array<Record<string, unknown>> {
       name: 'ECF Pensieve Harberger Ad Management',
       description:
         'Manage continuous auction ad placements on ECF Pensieve using Harberger tax slots.',
+      isPartOf: {
+        '@id': `${siteRoot}#application`,
+      },
+      publisher: {
+        '@id': `${siteRoot}#organization`,
+      },
     },
   ];
 

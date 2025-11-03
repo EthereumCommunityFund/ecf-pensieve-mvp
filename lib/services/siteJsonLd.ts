@@ -11,10 +11,12 @@ export function buildSiteJsonLd({
 }: BuildSiteJsonLdOptions = {}): Array<Record<string, unknown>> {
   const siteUrl = buildAbsoluteUrl('/');
   const logoUrl = buildAbsoluteUrl('/images/Logo.png');
+  const appImageUrl = buildAbsoluteUrl('/images/home-og.png');
 
   const organization = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${siteUrl}#organization`,
     name: 'ECF Pensieve',
     url: siteUrl,
     logo: logoUrl,
@@ -29,9 +31,41 @@ export function buildSiteJsonLd({
     url: siteUrl,
     description:
       'Discover and validate blockchain projects with the ECF Pensieve community knowledge base.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: buildAbsoluteUrl(
+          '/projects?search={search_term_string}',
+          siteUrl,
+        ),
+      },
+      'query-input': 'required name=search_term_string',
+    },
   };
 
-  const jsonLd: Array<Record<string, unknown>> = [organization, website];
+  const softwareApplication = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    '@id': `${siteUrl}#application`,
+    name: 'ECF Pensieve',
+    applicationCategory: 'WebApplication',
+    applicationSubCategory: 'KnowledgeBaseApplication',
+    operatingSystem: 'Web',
+    url: siteUrl,
+    image: appImageUrl,
+    description:
+      'ECF Pensieve is a collaborative Web3 knowledge base for discovering, validating, and tracking blockchain projects.',
+    publisher: {
+      '@id': `${siteUrl}#organization`,
+    },
+  };
+
+  const jsonLd: Array<Record<string, unknown>> = [
+    organization,
+    softwareApplication,
+    website,
+  ];
 
   if (topAccountableProjects.length > 0) {
     const itemListElement = topAccountableProjects

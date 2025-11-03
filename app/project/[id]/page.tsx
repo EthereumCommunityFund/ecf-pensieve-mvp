@@ -209,6 +209,7 @@ const ProjectPage = () => {
         </div>
       </BackHeader>
 
+      <ProjectTopBannerAd />
       <ProjectDetailCard
         project={project}
         getLeadingProjectName={getLeadingProjectName}
@@ -216,8 +217,6 @@ const ProjectPage = () => {
         getLeadingCategories={getLeadingCategories}
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
-
-      <ProjectTopBannerAd />
 
       <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
         <ProjectTabs

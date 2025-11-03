@@ -1,5 +1,5 @@
-import { buildAbsoluteUrl } from '@/lib/utils/url';
 import type { ProjectStructuredData } from '@/lib/services/projectService';
+import { buildAbsoluteUrl } from '@/lib/utils/url';
 
 const ADDITIONAL_PROPERTY_IGNORED_KEYS = new Set([
   'name',
@@ -93,6 +93,7 @@ export function buildProjectJsonLd(
 ): Record<string, unknown> | null {
   const pagePath = `/project/${id}`;
   const pageUrl = buildAbsoluteUrl(pagePath);
+  const siteRoot = buildAbsoluteUrl('/');
   const imageUrl = resolveImageUrl(data.logoUrl);
 
   const keywordSet = new Set<string>();
@@ -189,6 +190,12 @@ export function buildProjectJsonLd(
     url: pageUrl,
     mainEntityOfPage: pageUrl,
     image: imageUrl,
+    isPartOf: {
+      '@id': `${siteRoot}#application`,
+    },
+    publisher: {
+      '@id': `${siteRoot}#organization`,
+    },
   };
 
   if (data.name) {
@@ -208,13 +215,17 @@ export function buildProjectJsonLd(
     jsonLd.category = data.categories;
   }
   if (creators.length > 0) {
-    jsonLd.creator = creators;
+    jsonLd.founder = creators;
   }
   if (data.dateFounded) {
-    jsonLd.dateCreated = data.dateFounded;
+    jsonLd.foundingDate = data.dateFounded;
   }
   if (data.dateLaunch) {
-    jsonLd.datePublished = data.dateLaunch;
+    additionalProperty.push({
+      '@type': 'PropertyValue',
+      name: 'Launch Date',
+      value: data.dateLaunch,
+    });
   }
   if (sameAs.length > 0) {
     jsonLd.sameAs = sameAs;
