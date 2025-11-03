@@ -28,6 +28,12 @@ const getCachedSitemap = unstable_cache(
         changeFrequency: 'daily',
         priority: 0.5,
       },
+      {
+        url: `${siteUrl}/ad-management`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.6,
+      },
     ];
 
     const projectUrls: MetadataRoute.Sitemap = data.projects.flatMap(
