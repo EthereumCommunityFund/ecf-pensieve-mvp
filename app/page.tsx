@@ -1,11 +1,11 @@
 'use client';
 
-import HomeSidebarAd from '@/components/pages/ad-management/AdViewer/HomeSidebarAd';
+import HomeSidebarAd from '@/components/pages/ad-management/HtaxAd/HomeSidebarAd';
+import HomeTopBannerAd from '@/components/pages/ad-management/HtaxAd/HomeTopBannerAd';
 import Banner from '@/components/pages/home/Banner';
 import BugBountyEntry from '@/components/pages/home/BugBountyEntry';
 import Categories from '@/components/pages/home/Categories';
 import HomeList from '@/components/pages/home/HomeList';
-import HtaxAdBanner from '@/components/pages/home/HtaxAdBanner';
 import ProjectIntroCard from '@/components/pages/home/ProjectIntroCard';
 
 export default function Page() {
@@ -13,7 +13,7 @@ export default function Page() {
     <div className="mobile:px-[10px] px-[20px] pb-[56px] pt-[20px]">
       <Banner />
 
-      <HtaxAdBanner />
+      <HomeTopBannerAd />
 
       <div className="mobile:block mt-[10px] hidden space-y-[10px]">
         <ProjectIntroCard />

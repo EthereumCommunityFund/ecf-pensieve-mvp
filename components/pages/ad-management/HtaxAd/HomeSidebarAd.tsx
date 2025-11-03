@@ -7,8 +7,13 @@ import { useMemo } from 'react';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
+import { isHtaxAdPlacementActive } from './utils';
+
 const SIDEBAR_PAGE_KEY = 'home';
 const SIDEBAR_POSITION_KEY = 'Sidebar';
+
+const SIDEBAR_PAGE_KEY_NORMALIZED = SIDEBAR_PAGE_KEY.toLowerCase();
+const SIDEBAR_POSITION_KEY_NORMALIZED = SIDEBAR_POSITION_KEY.toLowerCase();
 
 const DEFAULT_DESKTOP_SIZE = { width: 390, height: 214 };
 const DEFAULT_MOBILE_SIZE = { width: 390, height: 214 };
@@ -45,8 +50,8 @@ export default function HomeSidebarAd() {
   const slot = useMemo(() => {
     return activeSlots.find((item) => {
       const matchesPlacement =
-        item.page?.toLowerCase() === SIDEBAR_PAGE_KEY &&
-        item.position?.toLowerCase() === SIDEBAR_POSITION_KEY.toLowerCase();
+        item.page?.toLowerCase() === SIDEBAR_PAGE_KEY_NORMALIZED &&
+        item.position?.toLowerCase() === SIDEBAR_POSITION_KEY_NORMALIZED;
       if (!matchesPlacement) {
         return false;
       }
@@ -59,12 +64,17 @@ export default function HomeSidebarAd() {
     });
   }, [activeSlots]);
 
-  const { primaryImageUrl, targetUrl } = useMemo(() => {
+  const creativeAssets = useMemo(() => {
     if (!slot) {
-      return { primaryImageUrl: null, targetUrl: null };
+      return {
+        primaryImageUrl: null,
+        desktopImageUrl: null,
+        mobileImageUrl: null,
+        fallbackImageUrl: null,
+        targetUrl: null,
+      };
     }
-    const assets = extractCreativeAssets(slot.currentAdURI ?? undefined);
-    return assets;
+    return extractCreativeAssets(slot.currentAdURI ?? undefined);
   }, [slot]);
 
   const { desktop: desktopSize, mobile: mobileSize } = useMemo(() => {
@@ -79,17 +89,40 @@ export default function HomeSidebarAd() {
   }
 
   const renderImageContainer = (aspectRatio: number, className?: string) => {
-    const baseClass = `relative w-full  bg-[#EBEBEB] ${className ?? ''}`;
+    const baseClass = `relative w-full bg-[#EBEBEB] overflow-hidden rounded-[10px] ${className ?? ''}`;
 
-    if (!slot || !primaryImageUrl || !targetUrl) {
+    if (!slot) {
       return (
         <div className={baseClass} style={{ aspectRatio: `${aspectRatio}` }} />
       );
     }
 
+    const assetUrl = className?.includes('mobile:hidden')
+      ? (creativeAssets.desktopImageUrl ?? creativeAssets.primaryImageUrl)
+      : (creativeAssets.mobileImageUrl ?? creativeAssets.primaryImageUrl);
+
+    if (!assetUrl) {
+      return (
+        <div className={baseClass} style={{ aspectRatio: `${aspectRatio}` }} />
+      );
+    }
+
+    if (!creativeAssets.targetUrl) {
+      return (
+        <div className={baseClass} style={{ aspectRatio: `${aspectRatio}` }}>
+          <img
+            src={assetUrl}
+            alt={`${slot.slotDisplayName} creative`}
+            className="size-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      );
+    }
+
     return (
       <Link
-        href={targetUrl}
+        href={creativeAssets.targetUrl}
         target="_blank"
         rel="noopener noreferrer"
         className={baseClass}
@@ -97,7 +130,7 @@ export default function HomeSidebarAd() {
         style={{ aspectRatio: `${aspectRatio}` }}
       >
         <img
-          src={primaryImageUrl}
+          src={assetUrl}
           alt={`${slot.slotDisplayName} creative`}
           className="size-full object-cover transition duration-300 hover:scale-105"
           loading="lazy"
@@ -105,6 +138,10 @@ export default function HomeSidebarAd() {
       </Link>
     );
   };
+
+  if (!isHtaxAdPlacementActive(SIDEBAR_PAGE_KEY, SIDEBAR_POSITION_KEY)) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-[5px]">
@@ -119,7 +156,7 @@ export default function HomeSidebarAd() {
             style={{ aspectRatio: `${mobileAspectRatio}` }}
           />
         </>
-      ) : slot && targetUrl ? (
+      ) : slot && creativeAssets.targetUrl ? (
         <>
           <div
             className="mobile:hidden overflow-hidden rounded-[10px]"
@@ -139,9 +176,9 @@ export default function HomeSidebarAd() {
       {isLoading || slot ? (
         <div className="flex items-center justify-between px-[10px] text-[10px] text-black/80">
           <span className="font-medium">Advertisement | Harberger Tax Ads</span>
-          {targetUrl ? (
+          {creativeAssets.targetUrl ? (
             <Link
-              href={targetUrl}
+              href={creativeAssets.targetUrl}
               target="_blank"
               rel="noopener noreferrer"
               prefetch={false}

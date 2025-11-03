@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import ProjectTabs from '@/components/base/ProjectTabs';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
+import ProjectTopBannerAd from '@/components/pages/ad-management/HtaxAd/ProjectTopBannerAd';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import ContributingFunds from '@/components/pages/project/contributingFunds';
@@ -14,7 +15,6 @@ import ProjectDetailMainModal from '@/components/pages/project/detail/modal';
 import ReferenceModal from '@/components/pages/project/detail/modal/reference';
 import SubmitterModal from '@/components/pages/project/detail/modal/Submitter';
 import ProjectDetailCard from '@/components/pages/project/detail/ProjectDetailCard';
-import ProjectTopBannerAd from '@/components/pages/project/detail/ProjectTopBannerAd';
 import ProjectDetailTable from '@/components/pages/project/detail/table/ProjectDetailTable';
 import TransparentScore from '@/components/pages/project/detail/TransparentScore';
 import Ecosystem from '@/components/pages/project/ecosystem';

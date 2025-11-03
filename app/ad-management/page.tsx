@@ -6,7 +6,7 @@ import { useAccount } from 'wagmi';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
-import AdManagementHeader from '@/components/pages/ad-management/AdViewer/AdManagementHeader';
+import AdManagementHeader from '@/components/pages/ad-management/AdManagementHeader';
 import {
   ActiveSlotCard,
   ActiveSlotCardSkeleton,

@@ -18,11 +18,11 @@ import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
 
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
+import HomeSidebarAd from '../ad-management/HtaxAd/HomeSidebarAd';
 
 import ProjectIntroCard from './ProjectIntroCard';
 import SectionHeader from './SectionHeader';
 import SectionHeaderSmall from './SectionHeaderSmall';
-import HomeSidebarAd from '../ad-management/AdViewer/HomeSidebarAd';
 
 const HomeList = () => {
   const router = useRouter();
