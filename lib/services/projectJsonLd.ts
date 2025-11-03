@@ -190,10 +190,7 @@ export function buildProjectJsonLd(
     url: pageUrl,
     mainEntityOfPage: pageUrl,
     image: imageUrl,
-    isPartOf: {
-      '@id': `${siteRoot}#application`,
-    },
-    publisher: {
+    provider: {
       '@id': `${siteRoot}#organization`,
     },
   };
