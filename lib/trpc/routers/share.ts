@@ -16,8 +16,11 @@ const ensureInput = z.object({
   entityId: z.union([z.string().min(1), z.number()]),
 });
 
+const visibilityEnum = z.enum(['public', 'private']);
+
 const ensureCustomFilterInput = z.object({
   targetPath: z.string().min(1),
+  visibility: visibilityEnum.optional(),
 });
 
 export const shareRouter = router({
@@ -39,6 +42,7 @@ export const shareRouter = router({
       const payload = await ShareService.ensureCustomFilterShareLink({
         targetPath: input.targetPath,
         createdBy: ctx.user?.id,
+        visibility: input.visibility,
       });
 
       return {

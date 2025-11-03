@@ -15,6 +15,8 @@ import { projects } from './projects';
 import { projectSnaps } from './projectSnaps';
 import { proposals } from './proposals';
 import { ranks } from './ranks';
+import { shareLinks } from './shareLinks';
+import { sieves } from './sieves';
 import { voteRecords } from './voteRecords';
 
 export const profilesRelations = relations(profiles, ({ one, many }) => ({
@@ -37,6 +39,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   }),
   createdLists: many(lists),
   listFollows: many(listFollows),
+  createdSieves: many(sieves),
   projectNotificationSettings: many(projectNotificationSettings),
 }));
 
@@ -252,3 +255,14 @@ export const projectNotificationSettingsRelations = relations(
     }),
   }),
 );
+
+export const sievesRelations = relations(sieves, ({ one }) => ({
+  creator: one(profiles, {
+    fields: [sieves.creator],
+    references: [profiles.userId],
+  }),
+  shareLink: one(shareLinks, {
+    fields: [sieves.shareLinkId],
+    references: [shareLinks.id],
+  }),
+}));

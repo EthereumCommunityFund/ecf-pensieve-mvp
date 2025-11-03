@@ -1,7 +1,12 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
+import {
+  ArrowSquareUp,
+  Funnel,
+  GitCommit,
+  UserSquare,
+} from '@phosphor-icons/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -31,6 +36,11 @@ const tabItemsWithIcons = [
     key: 'lists',
     label: 'My Lists',
     icon: <ListsIcon size={28} />,
+  },
+  {
+    key: 'sieve',
+    label: 'My Sieve',
+    icon: <Funnel width={28} height={28} />,
   },
 ];
 
