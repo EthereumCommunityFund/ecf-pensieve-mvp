@@ -1,9 +1,13 @@
 'use client';
 
-import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
+import {
+  ArrowSquareUp,
+  Funnel,
+  GitCommit,
+  UserSquare,
+} from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Funnel } from '@phosphor-icons/react';
 
 import BookmarksIcon from '@/components/icons/Bookmarks';
 

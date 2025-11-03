@@ -3,6 +3,7 @@
 import { Image } from '@heroui/react';
 import React from 'react';
 
+import type { HarbergerTaxNotificationExtra } from '@/lib/notifications/harbergerTax';
 import { NotificationType } from '@/lib/services/notification';
 import { IPocItemKey } from '@/types/item';
 import type { NotificationMetadata } from '@/types/notification';
@@ -18,6 +19,8 @@ import {
   SealCheckIcon,
   ThumbsUpIcon,
 } from '../icons';
+
+import HarbergerTaxNotificationCard from './HarbergerTaxNotificationCard';
 
 export type FrontendNotificationType =
   | NotificationType
@@ -60,6 +63,9 @@ export interface NotificationItemData {
   targetProjectId?: number;
   targetItemId?: number;
   metadataExtra?: Record<string, unknown>;
+  harbergerTax?: HarbergerTaxNotificationExtra;
+  primaryActionUrl?: string;
+  secondaryActionUrl?: string;
 }
 
 export interface NotificationItemProps {
@@ -572,6 +578,26 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     hideButton = false,
   } = itemData;
 
+  const bgColor = isRead
+    ? 'bg-white'
+    : 'bg-[rgba(104,198,172,0.1)] hover:bg-[rgba(104,198,172,0.15)]';
+  const borderClass = 'border-b border-black/10';
+
+  if (type === 'harbergerSlotExpiring' && itemData.harbergerTax) {
+    return (
+      <div
+        className={`flex flex-col gap-4 p-[14px] ${bgColor} ${borderClass} cursor-pointer`}
+        onClick={() => onNotificationClick?.(itemData)}
+      >
+        <HarbergerTaxNotificationCard
+          itemData={itemData}
+          onPrimaryAction={onButtonClick}
+          onSecondaryAction={onSecondaryButtonClick}
+        />
+      </div>
+    );
+  }
+
   const handlePrimaryAction = () => {
     onButtonClick?.(itemData);
   };
@@ -583,11 +609,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   const handleNotificationClick = () => {
     onNotificationClick?.(itemData);
   };
-
-  const bgColor = isRead
-    ? 'bg-white'
-    : 'bg-[rgba(104,198,172,0.1)] hover:bg-[rgba(104,198,172,0.15)]';
-  const borderClass = 'border-b border-black/10';
 
   return (
     <div

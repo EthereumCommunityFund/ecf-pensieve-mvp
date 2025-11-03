@@ -355,7 +355,7 @@ export function SlotOverviewStep({
       ? `Takeover for ${takeoverPreviewLabel}`
       : 'Continue';
 
-  const cancelLabel = isViewMode ? 'Close' : 'Cancel';
+  const cancelLabel = 'Cancel';
   const canProceed = Boolean(isTakeoverMode && onProceed);
   const canForfeit = Boolean(
     isViewMode && !slot.isExpired && slot.canForfeit && onForfeit,
@@ -385,14 +385,16 @@ export function SlotOverviewStep({
       ) : null}
 
       <div className="flex items-center gap-[10px]">
-        <Button
-          color="secondary"
-          className="h-[40px] w-[90px] rounded-[5px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
-          onPress={onCancel}
-          isDisabled={isSubmitting}
-        >
-          {cancelLabel}
-        </Button>
+        {!isViewMode ? (
+          <Button
+            color="secondary"
+            className="h-[40px] w-[90px] rounded-[5px] border border-black/20 bg-white text-[14px] font-semibold text-black hover:bg-black/[0.05]"
+            onPress={onCancel}
+            isDisabled={isSubmitting}
+          >
+            {cancelLabel}
+          </Button>
+        ) : null}
         {showPrimaryButton ? (
           <Button
             color="primary"
