@@ -235,16 +235,13 @@ export function ActiveSlotCard({
           <ValueLabel className="text-[12px]">{ownerName}</ValueLabel>
         </div>
 
-        <div
-          className="relative !w-[196px] overflow-hidden rounded-[5px] border border-black/10 bg-black/5"
-          style={desktopAspectStyle}
-        >
+        <div className="relative !h-[96px]" style={desktopAspectStyle}>
           {primaryImageUrl ? (
             <Image
               src={primaryImageUrl}
               alt={slotDisplayName}
               fill
-              className="object-cover"
+              className="!h-full !w-auto overflow-hidden rounded-[5px] border  border-black/10 object-cover"
               priority={false}
             />
           ) : (
