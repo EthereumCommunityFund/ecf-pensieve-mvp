@@ -8,6 +8,17 @@ export interface HarbergerSlotMetadata {
   extra: Record<string, unknown>;
   isActive: boolean;
   contractMeta?: HarbergerSlotContractMeta;
+  creativeDimensions?: {
+    desktop: {
+      width: number;
+      height: number;
+    } | null;
+    mobile: {
+      width: number;
+      height: number;
+    } | null;
+    raw: string;
+  };
 }
 
 export type HarbergerSlotMetadataMap = Record<string, HarbergerSlotMetadata>;

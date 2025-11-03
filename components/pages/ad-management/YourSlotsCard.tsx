@@ -21,7 +21,6 @@ import {
   ZERO_BIGINT,
 } from '@/utils/harberger';
 
-import { DESKTOP_CREATIVE_CONFIG } from './creativeConstants';
 import ValueLabel from './ValueLabel';
 
 type PendingSlotAction = {
@@ -95,6 +94,8 @@ export default function YourSlotsCard({
     () => extractCreativeAssets(slot.currentAdURI ?? ''),
     [slot.currentAdURI],
   );
+  const desktopCreativeConfig = slot.creativeConfig.desktop;
+  const desktopAspectStyle = desktopCreativeConfig.style;
 
   const status: SlotStatus = slot.isExpired
     ? 'closed'
@@ -218,7 +219,7 @@ export default function YourSlotsCard({
           : '',
       )}
     >
-      <CardBody className="flex h-full flex-col gap-[20px] p-5">
+      <CardBody className="mobile:p-[14px] mobile:gap-[14px] flex h-full flex-col gap-[20px] p-[20px]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col gap-[8px]">
             <div className="flex flex-wrap items-center gap-[6px]">
@@ -256,10 +257,8 @@ export default function YourSlotsCard({
           </div>
 
           <div
-            className={cn(
-              'relative overflow-hidden rounded-[10px] border border-black/10 bg-black/5',
-              DESKTOP_CREATIVE_CONFIG.previewAspectClass,
-            )}
+            className="relative overflow-hidden rounded-[10px] border border-black/10 bg-black/5"
+            style={desktopAspectStyle}
           >
             {mediaPreview ? (
               <Image

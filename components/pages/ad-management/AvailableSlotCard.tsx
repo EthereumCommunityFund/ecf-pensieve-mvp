@@ -6,11 +6,10 @@ import Image from 'next/image';
 import { useMemo } from 'react';
 
 import { Button } from '@/components/base/button';
-import { CoinVerticalIcon, InfoIcon } from '@/components/icons';
+import { InfoIcon } from '@/components/icons';
 import type { ActiveSlotData, VacantSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
-import { DESKTOP_CREATIVE_CONFIG } from './creativeConstants';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface InfoStatProps {
@@ -117,7 +116,7 @@ export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
           className="mt-[8px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
           onPress={handleClaim}
         >
-          <CoinVertical size={20} />
+          <CoinVertical size={24} weight="fill" />
           <span className="text-[14px] font-semibold text-white/80">
             {actionLabel}
           </span>
@@ -188,6 +187,8 @@ export function ActiveSlotCard({
       slot.valuation,
     ],
   );
+  const desktopCreativeConfig = slot.creativeConfig.desktop;
+  const desktopAspectStyle = desktopCreativeConfig.style;
 
   const isPokePending =
     pendingAction?.slotId === slot.id && pendingAction.action === 'poke';
@@ -213,9 +214,9 @@ export function ActiveSlotCard({
   return (
     <Card
       shadow="none"
-      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white "
     >
-      <CardBody className="flex h-full flex-col gap-[20px] p-5">
+      <CardBody className="mobile:p-[14px] mobile:gap-[14px] flex h-full flex-col gap-[20px] p-[20px]">
         <div className="flex justify-between gap-[6px]">
           <div className="flex flex-wrap items-center gap-[6px]">
             <span className="text-[13px] font-semibold text-black/50">
@@ -234,17 +235,14 @@ export function ActiveSlotCard({
         </div>
 
         <div
-          className={cn(
-            'relative overflow-hidden rounded-[10px] border border-black/10 bg-black/5',
-            DESKTOP_CREATIVE_CONFIG.previewAspectClass,
-          )}
+          className="relative !w-[196px] overflow-hidden rounded-[5px] border border-black/10 bg-black/5"
+          style={desktopAspectStyle}
         >
           {primaryImageUrl ? (
             <Image
               src={primaryImageUrl}
               alt={slotDisplayName}
               fill
-              sizes="(min-width: 1280px) 240px, (min-width: 768px) 40vw, 100vw"
               className="object-cover"
               priority={false}
             />
@@ -280,12 +278,11 @@ export function ActiveSlotCard({
           radius="md"
           size="md"
           className="mt-[4px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
-          startContent={<CoinVerticalIcon className="size-[20px]" />}
           onPress={handlePrimaryAction}
           isDisabled={ctaDisabled}
           isLoading={ctaLoading}
         >
-          <CoinVertical size={20} />
+          <CoinVertical size={24} weight="fill" />
           <span className="text-[14px] font-semibold text-white/80">
             {takeoverCta}
           </span>
@@ -345,10 +342,8 @@ export function ActiveSlotCardSkeleton() {
         </div>
 
         <Skeleton
-          className={cn(
-            'w-full rounded-[10px]',
-            DESKTOP_CREATIVE_CONFIG.previewAspectClass,
-          )}
+          className="w-full rounded-[10px]"
+          style={{ aspectRatio: '4 / 1' }}
         />
 
         <div className="flex flex-col gap-[10px]">

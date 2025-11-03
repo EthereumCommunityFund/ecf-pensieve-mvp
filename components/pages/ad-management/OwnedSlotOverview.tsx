@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { ReactNode, useMemo } from 'react';
 import { Clock } from '@phosphor-icons/react';
+import { ReactNode, useMemo, type CSSProperties } from 'react';
 
 import type { ActiveSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
@@ -15,10 +15,6 @@ import {
 } from '@/utils/harberger';
 
 import ValueLabel, { IValueLabelType } from './ValueLabel';
-import {
-  DESKTOP_CREATIVE_CONFIG,
-  MOBILE_CREATIVE_CONFIG,
-} from './creativeConstants';
 
 interface DetailItem {
   label: string;
@@ -43,6 +39,8 @@ export default function OwnedSlotOverview({
     () => extractCreativeAssets(slot.currentAdURI ?? ''),
     [slot.currentAdURI],
   );
+  const { desktop: desktopCreativeConfig, mobile: mobileCreativeConfig } =
+    slot.creativeConfig;
 
   const valuationBasis =
     slot.valuationWei > ZERO_BIGINT ? slot.valuationWei : slot.minValuationWei;
@@ -97,12 +95,20 @@ export default function OwnedSlotOverview({
     { label: 'Minimum Valuation:', value: formatEth(slot.minValuationWei) },
     { label: 'Locked Bond:', value: slot.lockedBond },
     { label: 'Prepaid Tax:', value: formatEth(slot.prepaidTaxBalanceWei) },
-    { label: 'Tax Due:', value: taxDueCountdown, icon: <Clock size={14} weight='fill'  className='opacity-50' /> },
+    {
+      label: 'Tax Due:',
+      value: taxDueCountdown,
+      icon: <Clock size={14} weight="fill" className="opacity-50" />,
+    },
     { label: 'Remaining Units:', value: slot.remainingUnits },
     { label: 'Tax Owed:', value: taxOwedDisplay },
-    { label: '', value: '', type: 'divider' },
-    { label: 'Min Takeover Bid:', value: slot.minTakeoverBid, valueLabelType: 'dark' },
-    { label: '', value: '', type: 'divider' },
+    { label: 'divider-001', value: '', type: 'divider' },
+    {
+      label: 'Min Takeover Bid:',
+      value: slot.minTakeoverBid,
+      valueLabelType: 'dark',
+    },
+    { label: 'divider-002', value: '', type: 'divider' },
     { label: 'Owner:', value: slot.owner },
     { label: 'Tax Rate:', value: slot.taxRate },
   ];
@@ -132,27 +138,36 @@ export default function OwnedSlotOverview({
           <CreativePreview
             label="Desktop"
             imageUrl={desktopPreview}
-            aspectClass={DESKTOP_CREATIVE_CONFIG.previewAspectClass}
+            aspectStyle={desktopCreativeConfig.style}
+            helper={desktopCreativeConfig.label}
+            classnames={{
+              container: 'w-[419px] mobile:w-[80vw]',
+            }}
           />
           <CreativePreview
             label="Mobile"
             imageUrl={mobilePreview}
-            aspectClass={MOBILE_CREATIVE_CONFIG.previewAspectClass}
+            aspectStyle={mobileCreativeConfig.style}
+            helper={mobileCreativeConfig.label}
+            classnames={{
+              container: 'w-[317px] mobile:w-[60vw]',
+            }}
           />
         </div>
-
       </div>
 
       <div className="flex flex-col gap-[8px]">
-        {detailItems.map((item) =>
+        {detailItems.map((item, idx) =>
           item.type === 'divider' ? (
-            <div className="h-px w-full bg-black/10"></div>
+            <div key={item.label} className="h-px w-full bg-black/10"></div>
           ) : (
             <div key={item.label} className="flex justify-between gap-[4px]">
               <span className="font-sans text-[14px] text-black/80">
                 {item.label}
               </span>
-              <ValueLabel valueLabelType={item.valueLabelType} icon={item.icon}>{item.value}</ValueLabel>
+              <ValueLabel valueLabelType={item.valueLabelType} icon={item.icon}>
+                {item.value}
+              </ValueLabel>
             </div>
           ),
         )}
@@ -164,33 +179,36 @@ export default function OwnedSlotOverview({
 function CreativePreview({
   label,
   imageUrl,
-  aspectClass,
+  aspectStyle,
   helper,
+  classnames = {},
 }: {
   label: string;
   imageUrl: string | null;
-  aspectClass: string;
+  aspectStyle: CSSProperties;
   helper?: string;
+  classnames?: Partial<Record<'container' | 'imageWrapper' | 'image', string>>;
 }) {
   return (
-    <div className="flex flex-col gap-[8px]">
+    <div className={cn('flex flex-col gap-[8px]', classnames?.container)}>
       <div className="flex flex-wrap items-center gap-[6px]">
         <span className="text-[14px] text-black/70">{label}</span>
-        {helper ? (
+        {/* {helper ? (
           <span className="text-[11px] text-black/40">{helper}</span>
-        ) : null}
+        ) : null} */}
       </div>
       <div
         className={cn(
-          'relative w-full overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]',
-          aspectClass,
+          'relative w-full overflow-hidden rounded-[10px] border border-black/10 bg-[#F5F5F5]',
+          classnames?.imageWrapper,
         )}
+        style={aspectStyle}
       >
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={`${label} creative`}
-            className="size-full object-cover"
+            className={cn('size-full object-cover', classnames?.image)}
           />
         ) : (
           <div className="flex size-full items-center justify-center px-[12px] text-center text-[12px] text-black/40">

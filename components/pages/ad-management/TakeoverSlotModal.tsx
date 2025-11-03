@@ -34,8 +34,7 @@ import OwnedSlotOverview from './OwnedSlotOverview';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 import {
   CREATIVE_GUIDANCE,
-  DESKTOP_CREATIVE_CONFIG,
-  MOBILE_CREATIVE_CONFIG,
+  resolveCreativeUploadConfigs,
 } from './creativeConstants';
 
 const MOBILE_MAX_WIDTH_PX = 809;
@@ -396,7 +395,9 @@ export function SlotOverviewStep({
             color="primary"
             className="h-[40px] flex-1 rounded-[5px] bg-black text-[14px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
             isDisabled={
-              isSubmitting || (isTakeoverMode && !canProceed) || (isViewMode && !canForfeit)
+              isSubmitting ||
+              (isTakeoverMode && !canProceed) ||
+              (isViewMode && !canForfeit)
             }
             onPress={handlePrimaryAction}
           >
@@ -434,6 +435,13 @@ function SlotActionFormContent({
   const requireCreativeReady = allowCreativeEditing;
   const contextTone: ContextTone =
     slot.isOverdue || slot.isExpired ? 'danger' : 'default';
+  const creativeUploadConfigs = useMemo(() => {
+    return resolveCreativeUploadConfigs(slot.creativeConfig);
+  }, [slot.creativeConfig]);
+  const desktopCreativeConfig = creativeUploadConfigs.desktop;
+  const mobileCreativeConfig = creativeUploadConfigs.mobile;
+  const desktopAspectRatio = `${desktopCreativeConfig.width} / ${desktopCreativeConfig.height}`;
+  const mobileAspectRatio = `${mobileCreativeConfig.width} / ${mobileCreativeConfig.height}`;
 
   const minCoverageDays = 1;
   const maxCoverageDays = 365;
@@ -719,8 +727,8 @@ function SlotActionFormContent({
 
   const creativeDescription = allowCreativeEditing
     ? CREATIVE_GUIDANCE.combinedDescription(
-        MOBILE_CREATIVE_CONFIG.ratioLabel,
-        DESKTOP_CREATIVE_CONFIG.labelSuffix,
+        mobileCreativeConfig.ratioLabel,
+        desktopCreativeConfig.label,
       )
     : CREATIVE_GUIDANCE.viewDescription;
 
@@ -942,14 +950,14 @@ function SlotActionFormContent({
           <span className="text-[14px] font-semibold text-black/80">
             Creative Assets
           </span>
-          <span className="text-[12px] leading-[18px] text-black/50">
+          {/* <span className="text-[12px] leading-[18px] text-black/50">
             {creativeDescription}
-          </span>
+          </span> */}
         </div>
 
         <div className="flex flex-col gap-[12px]">
           <span className="text-[13px] font-semibold text-black/70">
-            {`Desktop Creative (${DESKTOP_CREATIVE_CONFIG.labelSuffix})`}
+            {`Desktop Creative (${desktopCreativeConfig.label})`}
           </span>
           <CreativePhotoUpload
             initialUrl={desktopImageUrl || undefined}
@@ -958,13 +966,14 @@ function SlotActionFormContent({
               setLocalCreativeError(null);
             }}
             isDisabled={creativeInputDisabled}
-            cropAspectRatio={DESKTOP_CREATIVE_CONFIG.aspectRatio}
-            cropMaxWidth={DESKTOP_CREATIVE_CONFIG.maxWidth}
-            cropMaxHeight={DESKTOP_CREATIVE_CONFIG.maxHeight}
-            className={DESKTOP_CREATIVE_CONFIG.previewWidthClass}
+            cropAspectRatio={desktopCreativeConfig.aspectRatio}
+            cropMaxWidth={desktopCreativeConfig.width}
+            cropMaxHeight={desktopCreativeConfig.height}
+            className="mobile:w-[80vw] w-[317px] overflow-hidden rounded-[10px]"
           >
             <div
-              className={`${DESKTOP_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+              className="w-[429px] overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]"
+              style={{ aspectRatio: desktopAspectRatio }}
             >
               {desktopImageUrl ? (
                 <img
@@ -977,23 +986,23 @@ function SlotActionFormContent({
                   <span>{desktopPlaceholderLabel}</span>
                   {allowCreativeEditing ? (
                     <span className="text-[11px] text-black/40">
-                      {DESKTOP_CREATIVE_CONFIG.helperText}
+                      {desktopCreativeConfig.helperText}
                     </span>
                   ) : null}
                 </div>
               )}
             </div>
           </CreativePhotoUpload>
-          {allowCreativeEditing ? (
+          {/* {allowCreativeEditing ? (
             <span className="text-[11px] text-black/50">
               Supports JPG, PNG, or GIF up to 10MB.
             </span>
-          ) : null}
+          ) : null} */}
         </div>
 
         <div className="flex flex-col gap-[12px]">
           <span className="text-[13px] font-semibold text-black/70">
-            {`Mobile Creative (${MOBILE_CREATIVE_CONFIG.labelSuffix})`}
+            {`Mobile Creative (${mobileCreativeConfig.label})`}
           </span>
           <CreativePhotoUpload
             initialUrl={mobileImageUrl || undefined}
@@ -1002,13 +1011,14 @@ function SlotActionFormContent({
               setLocalCreativeError(null);
             }}
             isDisabled={creativeInputDisabled}
-            cropAspectRatio={MOBILE_CREATIVE_CONFIG.aspectRatio}
-            cropMaxWidth={MOBILE_CREATIVE_CONFIG.maxWidth}
-            cropMaxHeight={MOBILE_CREATIVE_CONFIG.maxHeight}
-            className={MOBILE_CREATIVE_CONFIG.previewWidthClass}
+            cropAspectRatio={mobileCreativeConfig.aspectRatio}
+            cropMaxWidth={mobileCreativeConfig.width}
+            cropMaxHeight={mobileCreativeConfig.height}
+            className="mobile:w-[60vw] w-[317px] overflow-hidden rounded-[10px]"
           >
             <div
-              className={`${MOBILE_CREATIVE_CONFIG.previewAspectClass} w-full overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]`}
+              className="mobile:w-[60vw] w-[317px] overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]"
+              style={{ aspectRatio: mobileAspectRatio }}
             >
               {mobileImageUrl ? (
                 <img
@@ -1021,19 +1031,19 @@ function SlotActionFormContent({
                   <span>{mobilePlaceholderLabel}</span>
                   {allowCreativeEditing ? (
                     <span className="text-[11px] text-black/40">
-                      {MOBILE_CREATIVE_CONFIG.helperText}
+                      {mobileCreativeConfig.helperText}
                     </span>
                   ) : null}
                 </div>
               )}
             </div>
           </CreativePhotoUpload>
-          {allowCreativeEditing ? (
+          {/* {allowCreativeEditing ? (
             <span className="text-[11px] text-black/50">
               The mobile asset is cropped to a{' '}
-              {MOBILE_CREATIVE_CONFIG.ratioLabel} ratio for responsive layouts.
+              {mobileCreativeConfig.ratioLabel} ratio for responsive layouts.
             </span>
-          ) : null}
+          ) : null} */}
         </div>
 
         <div className="flex flex-col gap-[8px]">

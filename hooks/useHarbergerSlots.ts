@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, type CSSProperties } from 'react';
 import type { Address } from 'viem';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
@@ -126,6 +126,7 @@ interface NormalizedSlot {
   contentUpdateLimit: bigint;
   baseValuationWei?: bigint;
   dustRateBps?: bigint;
+  creativeDimensions?: HarbergerSlotMetadata['creativeDimensions'];
 }
 
 export interface VacantSlotData {
@@ -140,6 +141,7 @@ export interface VacantSlotData {
   imageSize: string;
   extra: Record<string, unknown>;
   contractMeta?: HarbergerSlotContractMeta;
+  creativeConfig: CreativeConfig;
   statusLabel: string;
   valuation: string;
   valuationHelper: string;
@@ -206,6 +208,108 @@ export interface ActiveSlotData {
   minValuationWei: bigint;
   baseValuationWei?: bigint;
   dustRateBps?: bigint;
+  creativeConfig: CreativeConfig;
+}
+
+type CreativePreviewConfig = {
+  width: number;
+  height: number;
+  aspectRatio: number;
+  label: string;
+  helperText: string;
+  ratioLabel: string;
+  style: CSSProperties;
+};
+
+export interface CreativeConfig {
+  desktop: CreativePreviewConfig;
+  mobile: CreativePreviewConfig;
+  raw: string;
+}
+
+const DEFAULT_DESKTOP_CONFIG: CreativePreviewConfig = {
+  width: 900,
+  height: 225,
+  aspectRatio: 900 / 225,
+  label: '900 × 225',
+  helperText: 'Recommended dimensions 900 × 225',
+  ratioLabel: '4:1',
+  style: { aspectRatio: '900 / 225' },
+};
+
+const DEFAULT_MOBILE_CONFIG: CreativePreviewConfig = {
+  width: 900,
+  height: 225,
+  aspectRatio: 900 / 225,
+  label: '900 × 225',
+  helperText: 'Recommended dimensions 900 × 225',
+  ratioLabel: '4:1',
+  style: { aspectRatio: '900 / 225' },
+};
+
+function formatRatioLabel(width: number, height: number) {
+  const gcd = (a: number, b: number): number => {
+    return b === 0 ? Math.abs(a) : gcd(b, a % b);
+  };
+
+  const divisor = gcd(width, height) || 1;
+  const simplifiedWidth = Math.round(width / divisor);
+  const simplifiedHeight = Math.round(height / divisor);
+  return `${simplifiedWidth}:${simplifiedHeight}`;
+}
+
+function buildCreativeConfig(
+  dimensions?: HarbergerSlotMetadata['creativeDimensions'],
+): CreativeConfig {
+  const fallbackDesktop = DEFAULT_DESKTOP_CONFIG;
+  const fallbackMobile = DEFAULT_MOBILE_CONFIG;
+
+  if (!dimensions) {
+    return {
+      desktop: fallbackDesktop,
+      mobile: fallbackMobile,
+      raw: '',
+    };
+  }
+
+  const { desktop, mobile, raw } = dimensions;
+
+  const resolveConfig = (
+    source: typeof desktop,
+    fallback: CreativePreviewConfig,
+  ): CreativePreviewConfig => {
+    if (
+      !source ||
+      !Number.isFinite(source.width) ||
+      !Number.isFinite(source.height)
+    ) {
+      return fallback;
+    }
+    const safeWidth = Math.max(1, Math.round(source.width));
+    const safeHeight = Math.max(1, Math.round(source.height));
+    const aspectRatioValue = safeWidth / safeHeight;
+    return {
+      width: safeWidth,
+      height: safeHeight,
+      aspectRatio: aspectRatioValue,
+      label: `${safeWidth} × ${safeHeight}`,
+      helperText: `Recommended dimensions ${safeWidth} × ${safeHeight}`,
+      ratioLabel: formatRatioLabel(safeWidth, safeHeight),
+      style: { aspectRatio: `${safeWidth} / ${safeHeight}` },
+    };
+  };
+
+  const desktopConfig = resolveConfig(desktop, fallbackDesktop);
+  const mobileConfig = resolveConfig(
+    mobile,
+    desktop ? desktopConfig : fallbackMobile,
+  );
+
+  return {
+    desktop: desktopConfig,
+    mobile: mobileConfig,
+    raw: raw ?? '',
+  };
 }
 
 export interface SlotMetrics {
@@ -379,6 +483,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
           result.currentOwner && result.currentOwner !== ZERO_ADDRESS
             ? result.currentOwner
             : null;
+        const slotMetadata = getSlotMetadata(slotAddress);
 
         return {
           slotAddress,
@@ -402,6 +507,10 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
           contentUpdateLimit: result.contentUpdateLimit ?? ZERO_BIGINT,
           baseValuationWei: result.baseValuation ?? ZERO_BIGINT,
           dustRateBps: result.dustRate ?? ZERO_BIGINT,
+          creativeDimensions:
+            slotMetadata && slotMetadata.isActive
+              ? slotMetadata.creativeDimensions
+              : undefined,
         } satisfies NormalizedSlot;
       })
       .filter(Boolean) as NormalizedSlot[];
@@ -425,6 +534,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
           result.currentOwner && result.currentOwner !== ZERO_ADDRESS
             ? result.currentOwner
             : null;
+        const slotMetadata = getSlotMetadata(slotAddress);
 
         return {
           slotAddress,
@@ -446,6 +556,10 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
           currentAdURI: result.currentAdURI ?? '',
           contentUpdateCount: result.contentUpdateCount ?? ZERO_BIGINT,
           contentUpdateLimit: result.contentUpdateLimit ?? ZERO_BIGINT,
+          creativeDimensions:
+            slotMetadata && slotMetadata.isActive
+              ? slotMetadata.creativeDimensions
+              : undefined,
         } satisfies NormalizedSlot;
       })
       .filter(Boolean) as NormalizedSlot[];
@@ -615,6 +729,9 @@ function createVacantSlotViewModel(
   const imageSize = metadata?.imageSize ?? 'unknown';
   const extra = metadata?.extra ? { ...metadata.extra } : {};
   const contractMeta = metadata?.contractMeta;
+  const creativeDimensions =
+    metadata && metadata.isActive ? metadata.creativeDimensions : undefined;
+  const creativeConfig = buildCreativeConfig(creativeDimensions);
   const coverageLabel = formatDuration(slot.taxPeriodInSeconds);
   const bondRequired = calculateBond(slot.minValuationWei, slot.bondRateBps);
   const taxRequired = calculateTaxForPeriods(
@@ -637,6 +754,7 @@ function createVacantSlotViewModel(
     imageSize,
     extra,
     contractMeta,
+    creativeConfig,
     statusLabel: 'Open',
     valuation: formatEth(slot.minValuationWei),
     valuationHelper: 'Minimum valuation required to claim this slot.',
@@ -715,6 +833,9 @@ function createActiveSlotViewModel(
       : slot.minValuationWei;
 
   const coverageLabel = formatDuration(slot.taxPeriodInSeconds);
+  const creativeDimensions =
+    metadata && metadata.isActive ? metadata.creativeDimensions : undefined;
+  const creativeConfig = buildCreativeConfig(creativeDimensions);
 
   return {
     id: slot.slotAddress,
@@ -760,6 +881,7 @@ function createActiveSlotViewModel(
     minValuationWei: slot.minValuationWei,
     baseValuationWei: slot.baseValuationWei,
     dustRateBps: slot.dustRateBps,
+    creativeConfig,
   };
 }
 

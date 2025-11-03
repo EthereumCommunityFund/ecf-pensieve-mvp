@@ -301,7 +301,7 @@ export default function AdManagementPage() {
   }, []);
 
   return (
-    <div className="mobile:px-[12px] px-[32px] pb-[72px]">
+    <div className="mobile:px-[10px] px-[32px] pb-[72px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[20px]">
         <AdManagementHeader connectedAddress={connectedAddress} />
 
