@@ -568,9 +568,21 @@ function SlotActionFormContent({
 
   useEffect(() => {
     const initialCreative = slot.currentAdURI ?? '';
+
+    if (isTakeoverMode) {
+      setCreativeUri('');
+      setCreativeTitle('');
+      setCreativeLink('');
+      setFallbackImageUrl('');
+      setDesktopImageUrl('');
+      setMobileImageUrl('');
+      setLocalCreativeError(null);
+      return;
+    }
+
     setCreativeUri(initialCreative.trim());
     applyCreativeSource(initialCreative);
-  }, [applyCreativeSource, slot]);
+  }, [applyCreativeSource, isTakeoverMode, slot]);
 
   const isCreativeReady = useMemo(() => {
     if (!requireCreativeReady) {
@@ -990,7 +1002,7 @@ function SlotActionFormContent({
             cropAspectRatio={desktopCreativeConfig.aspectRatio}
             cropMaxWidth={desktopCreativeConfig.width}
             cropMaxHeight={desktopCreativeConfig.height}
-            className="mobile:w-[80vw] w-[317px] overflow-hidden rounded-[10px]"
+            className="mobile:w-[80vw] w-[429px] overflow-hidden rounded-[10px]"
           >
             <div
               className="w-[429px] overflow-hidden rounded-[10px] border border-dashed border-black/20 bg-[#F5F5F5]"
