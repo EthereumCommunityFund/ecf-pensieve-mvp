@@ -2,7 +2,7 @@
 
 import { Tab, Tabs } from '@heroui/react';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import { ECFButton } from '@/components/base/button';
@@ -38,7 +38,7 @@ import {
 
 type TabKey = 'yourSlots' | 'templateProposals' | 'availableSlots';
 
-export default function AdManagementPage() {
+function AdManagementPageContent() {
   const [selectedTab, setSelectedTab] = useState<TabKey>('availableSlots');
   const [selectedVacantSlot, setSelectedVacantSlot] =
     useState<VacantSlotData | null>(null);
@@ -516,6 +516,14 @@ function TabPlaceholder({
         </ECFButton>
       ) : null}
     </div>
+  );
+}
+
+export default function AdManagementPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdManagementPageContent />
+    </Suspense>
   );
 }
 
