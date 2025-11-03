@@ -24,6 +24,7 @@ import { devLog } from '@/utils/devLog';
 import {
   ONE_BIGINT,
   RATE_DENOMINATOR,
+  SECONDS_PER_YEAR,
   ZERO_BIGINT,
   calculateBond,
   calculateTaxForPeriods,
@@ -210,6 +211,7 @@ export interface ActiveSlotData {
   dustRateBps?: bigint;
   creativeConfig: CreativeConfig;
   canForfeit: boolean;
+  canPoke: boolean;
 }
 
 type CreativePreviewConfig = {
@@ -839,6 +841,7 @@ function createActiveSlotViewModel(
   const creativeConfig = buildCreativeConfig(creativeDimensions);
   const coverageRemains = coverageExtendsBeyondNow(slot, nowSeconds);
   const canForfeit = isOverdue && !coverageRemains;
+  const canPoke = isOverdue;
 
   return {
     id: slot.slotAddress,
@@ -886,6 +889,7 @@ function createActiveSlotViewModel(
     dustRateBps: slot.dustRateBps,
     creativeConfig,
     canForfeit,
+    canPoke,
   };
 }
 
@@ -893,7 +897,6 @@ export function aggregatePrepaidTax(slots: ActiveSlotData[]): string {
   const total = sumBigints(slots.map((slot) => slot.prepaidTaxBalanceWei));
   return formatEth(total);
 }
-const SECONDS_PER_YEAR = BigInt(60 * 60 * 24 * 365);
 const TAX_BASE = RATE_DENOMINATOR * SECONDS_PER_YEAR;
 
 function coverageExtendsBeyondNow(
@@ -929,12 +932,11 @@ function coverageExtendsBeyondNow(
   let prepaid = slot.prepaidTaxBalanceWei;
   let taxPaidUntil = slot.taxPaidUntilTimestamp;
 
+  const baseValuation = slot.baseValuationWei ?? ZERO_BIGINT;
+  const dustRateBps = slot.dustRateBps ?? ZERO_BIGINT;
   const dustThreshold =
-    slot.baseValuationWei &&
-    slot.baseValuationWei > ZERO_BIGINT &&
-    slot.dustRateBps &&
-    slot.dustRateBps > ZERO_BIGINT
-      ? (slot.baseValuationWei * slot.dustRateBps) / RATE_DENOMINATOR
+    baseValuation > ZERO_BIGINT && dustRateBps > ZERO_BIGINT
+      ? (baseValuation * dustRateBps) / RATE_DENOMINATOR
       : ZERO_BIGINT;
 
   for (let i = ZERO_BIGINT; i < periodsDue; i += ONE_BIGINT) {

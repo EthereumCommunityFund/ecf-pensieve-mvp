@@ -194,6 +194,7 @@ export function ActiveSlotCard({
     pendingAction?.slotId === slot.id && pendingAction.action === 'poke';
   const isTakeoverActiveSlot = takeoverState?.activeSlotId === slot.id;
   const isSubmitting = Boolean(takeoverState?.isSubmitting);
+  const canPoke = slot.canPoke;
 
   const ctaDisabled = slot.isExpired
     ? isSubmitting || isPokePending
@@ -216,7 +217,7 @@ export function ActiveSlotCard({
       shadow="none"
       className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white "
     >
-      <CardBody className="mobile:p-[14px] mobile:gap-[14px] flex h-full flex-col gap-[20px] p-[20px]">
+      <CardBody className="mobile:gap-[14px] mobile:p-[14px] flex h-full flex-col gap-[20px] p-[20px]">
         <div className="flex justify-between gap-[6px]">
           <div className="flex flex-wrap items-center gap-[6px]">
             <span className="text-[13px] font-semibold text-black/50">
@@ -287,6 +288,22 @@ export function ActiveSlotCard({
             {takeoverCta}
           </span>
         </Button>
+
+        {/* {canPoke ? (
+          <Button
+            color="danger"
+            variant="bordered"
+            radius="md"
+            size="sm"
+            className="flex items-center justify-center gap-[6px] rounded-[6px] border border-[#F87171] bg-[#FFF4F4] text-[13px] font-semibold text-[#B91C1C]"
+            onPress={() => onPoke?.(slot)}
+            isDisabled={isPokePending}
+            isLoading={isPokePending}
+          >
+            <WarningCircle size={18} weight="fill" />
+            Poke Slot
+          </Button>
+        ) : null} */}
       </CardBody>
     </Card>
   );
