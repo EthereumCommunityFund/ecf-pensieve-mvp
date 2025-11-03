@@ -1,9 +1,9 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
-import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
@@ -45,6 +45,7 @@ function parseImageSize(imageSize?: string) {
 }
 
 const HomeTopBannerAd = () => {
+  const { openExternalLink } = useExternalLink();
   const { activeSlots, isLoading } = useHarbergerSlots();
 
   const slot = useMemo(() => {
@@ -110,12 +111,10 @@ const HomeTopBannerAd = () => {
     }
 
     return (
-      <Link
-        href={targetUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        prefetch={false}
-        className={baseClass}
+      <button
+        type="button"
+        onClick={() => openExternalLink(targetUrl)}
+        className={`${baseClass} cursor-pointer p-0`}
         style={{ aspectRatio: `${aspectRatio}` }}
       >
         <img
@@ -124,7 +123,7 @@ const HomeTopBannerAd = () => {
           className="size-full object-cover transition duration-300 hover:scale-105"
           loading="lazy"
         />
-      </Link>
+      </button>
     );
   };
 
@@ -159,15 +158,13 @@ const HomeTopBannerAd = () => {
               Advertisement | Harberger Tax Ads
             </span>
             {targetUrl ? (
-              <Link
-                href={targetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                prefetch={false}
+              <button
+                type="button"
+                onClick={() => openExternalLink(targetUrl)}
                 className="font-semibold text-black/80 hover:underline"
               >
                 View Details
-              </Link>
+              </button>
             ) : null}
           </div>
         ) : null}

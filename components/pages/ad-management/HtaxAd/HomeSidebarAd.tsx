@@ -1,9 +1,9 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
-import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
@@ -45,6 +45,7 @@ function parseImageSize(imageSize?: string) {
 }
 
 export default function HomeSidebarAd() {
+  const { openExternalLink } = useExternalLink();
   const { activeSlots, isLoading } = useHarbergerSlots();
 
   const slot = useMemo(() => {
@@ -121,12 +122,10 @@ export default function HomeSidebarAd() {
     }
 
     return (
-      <Link
-        href={creativeAssets.targetUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={baseClass}
-        prefetch={false}
+      <button
+        type="button"
+        onClick={() => openExternalLink(creativeAssets.targetUrl!)}
+        className={`${baseClass} cursor-pointer p-0`}
         style={{ aspectRatio: `${aspectRatio}` }}
       >
         <img
@@ -135,7 +134,7 @@ export default function HomeSidebarAd() {
           className="size-full object-cover transition duration-300 hover:scale-105"
           loading="lazy"
         />
-      </Link>
+      </button>
     );
   };
 
@@ -177,15 +176,13 @@ export default function HomeSidebarAd() {
         <div className="flex items-center justify-between px-[10px] text-[10px] text-black/80">
           <span className="font-medium">Advertisement | Harberger Tax Ads</span>
           {creativeAssets.targetUrl ? (
-            <Link
-              href={creativeAssets.targetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              prefetch={false}
+            <button
+              type="button"
+              onClick={() => openExternalLink(creativeAssets.targetUrl!)}
               className="font-semibold text-black/80 hover:underline"
             >
               View Details
-            </Link>
+            </button>
           ) : null}
         </div>
       ) : null}

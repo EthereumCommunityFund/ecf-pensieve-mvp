@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { PlusCircle } from '@phosphor-icons/react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -38,6 +39,7 @@ import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { ADVANCED_FILTER_FETCH_LIMIT } from '@/constants/projectFilters';
 import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useOffsetPagination } from '@/hooks/useOffsetPagination';
 import { UpvoteActionResult } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
@@ -50,6 +52,7 @@ const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
 
 const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
+  const { openExternalLink } = useExternalLink();
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams?.toString() ?? '';
@@ -934,9 +937,20 @@ const ProjectsContent = () => {
           <ECFTypography type={'subtitle2'} className="mt-2.5">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          <ECFButton onPress={handleProposeProject} className="mt-2.5">
-            Propose a Project
-          </ECFButton>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <ECFButton onPress={handleProposeProject}>
+              Propose a Project
+            </ECFButton>
+            <ECFButton
+              onPress={() =>
+                openExternalLink('https://ecf-pensieve-ai.vercel.app/')
+              }
+              className="border border-black/10 bg-transparent font-semibold hover:bg-black/5 focus:bg-black/5 active:bg-black/10"
+            >
+              <PlusCircle className="size-[20px] opacity-50" />
+              <span>Pensieve AutoFill Agent(v0)</span>
+            </ECFButton>
+          </div>
         </div>
       </div>
 

@@ -1,9 +1,9 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
-import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
@@ -45,6 +45,7 @@ function parseImageSize(imageSize?: string) {
 }
 
 export default function ProjectTopBannerAd() {
+  const { openExternalLink } = useExternalLink();
   const { activeSlots, isLoading } = useHarbergerSlots();
 
   const slot = useMemo(() => {
@@ -126,12 +127,10 @@ export default function ProjectTopBannerAd() {
     }
 
     return (
-      <Link
-        href={creativeAssets.targetUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        prefetch={false}
-        className={baseClass}
+      <button
+        type="button"
+        onClick={() => openExternalLink(creativeAssets.targetUrl!)}
+        className={`${baseClass} cursor-pointer p-0`}
         style={{ aspectRatio: `${aspectRatio}` }}
       >
         <img
@@ -140,7 +139,7 @@ export default function ProjectTopBannerAd() {
           className="size-full object-cover transition duration-300 hover:scale-105"
           loading="lazy"
         />
-      </Link>
+      </button>
     );
   };
 
@@ -175,15 +174,13 @@ export default function ProjectTopBannerAd() {
               Advertisement | Harberger Tax Ads
             </span>
             {creativeAssets.targetUrl ? (
-              <Link
-                href={creativeAssets.targetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                prefetch={false}
+              <button
+                type="button"
+                onClick={() => openExternalLink(creativeAssets.targetUrl!)}
                 className="font-semibold text-black/80 hover:underline"
               >
                 View Details
-              </Link>
+              </button>
             ) : null}
           </div>
         ) : null}
