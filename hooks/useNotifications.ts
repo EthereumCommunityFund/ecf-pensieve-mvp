@@ -535,20 +535,8 @@ const useRealNotifications = () => {
       // Navigation logic
       const handleNavigation = () => {
         if (notification.type === 'harbergerSlotExpiring') {
-          const primaryUrl =
-            notification.primaryActionUrl ??
-            notification.ctaUrl ??
-            notification.targetUrl;
-          const secondaryUrl =
-            notification.secondaryActionUrl ??
-            notification.targetUrl ??
-            notification.ctaUrl;
-
-          const destination = isSecondary ? secondaryUrl : primaryUrl;
-
-          if (destination) {
-            router.push(destination);
-          }
+          const destination = '/ad-management?tab=yourSlots';
+          router.push(destination);
           return;
         }
 
@@ -640,11 +628,8 @@ const useRealNotifications = () => {
         });
       }
 
-      if (
-        notification.type === 'harbergerSlotExpiring' &&
-        notification.secondaryActionUrl
-      ) {
-        router.push(notification.secondaryActionUrl);
+      if (notification.type === 'harbergerSlotExpiring') {
+        router.push('/ad-management?tab=yourSlot');
       }
     },
     [markAsReadMutation, isAuthenticated, router],

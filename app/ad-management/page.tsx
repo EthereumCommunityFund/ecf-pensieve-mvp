@@ -1,7 +1,8 @@
 'use client';
 
 import { Tab, Tabs } from '@heroui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import { ECFButton } from '@/components/base/button';
@@ -58,6 +59,29 @@ export default function AdManagementPage() {
 
   const { metrics, vacantSlots, activeSlots, isLoading, error, refetch } =
     useHarbergerSlots();
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (!tabParam) {
+      return;
+    }
+
+    if (tabParam === 'yourSlot' || tabParam === 'yourSlots') {
+      setSelectedTab('yourSlots');
+      return;
+    }
+
+    if (tabParam === 'availableSlots') {
+      setSelectedTab('availableSlots');
+      return;
+    }
+
+    if (tabParam === 'templateProposals') {
+      setSelectedTab('templateProposals');
+    }
+  }, [searchParams]);
 
   const {
     claim: claimSlot,
