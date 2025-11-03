@@ -1,0 +1,424 @@
+'use client';
+
+import { Card, CardBody, cn, Skeleton, Tooltip } from '@heroui/react';
+import { CoinVertical } from '@phosphor-icons/react';
+import Image from 'next/image';
+import { useMemo } from 'react';
+
+import { Button } from '@/components/base/button';
+import { InfoIcon } from '@/components/icons';
+import type { ActiveSlotData, VacantSlotData } from '@/hooks/useHarbergerSlots';
+import { extractCreativeAssets } from '@/utils/creative';
+
+import ValueLabel, { IValueLabelType } from './ValueLabel';
+
+interface InfoStatProps {
+  label: string;
+  helperText?: string;
+  value: string;
+}
+
+function InfoStat({ label, helperText, value }: InfoStatProps) {
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <div className="flex items-center justify-between gap-[12px]">
+        <div className="flex items-center gap-[6px]">
+          <span className="text-[14px] text-black/80">{label}</span>
+          <Tooltip content={helperText}>
+            <span className="flex items-center opacity-60">
+              <InfoIcon size={20} />
+            </span>
+          </Tooltip>
+        </div>
+        <ValueLabel>{value}</ValueLabel>
+      </div>
+      {helperText ? (
+        <span className="text-[12px] leading-[18px] text-black/50">
+          {helperText}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+export interface VacantSlotCardProps {
+  slot: VacantSlotData;
+  onClaim?: (slot: VacantSlotData) => void;
+}
+
+export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
+  const {
+    slotDisplayName,
+    statusLabel = 'Open',
+    valuation,
+    valuationHelper,
+    bondRate,
+    bondRateHelper,
+    taxRate,
+    taxRateHelper,
+    actionLabel,
+  } = slot;
+
+  const handleClaim = () => {
+    if (onClaim) {
+      onClaim(slot);
+    }
+  };
+  return (
+    <Card
+      shadow="none"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
+    >
+      <CardBody className="mobile:p-[10px] flex h-full flex-col gap-[20px] p-[20px]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-[6px]">
+            <span className="text-[13px] font-semibold text-black/50">
+              Slot:
+            </span>
+            <span className="text-[13px] font-semibold text-black">
+              {slotDisplayName}
+            </span>
+          </div>
+
+          <ValueLabel className="text-[12px] text-black/70">
+            {statusLabel}
+          </ValueLabel>
+        </div>
+
+        <div className="flex h-[98px] flex-col items-center justify-center gap-[10px] rounded-[12px] border-2 border-dashed border-black/10 bg-black/[0.02] px-[16px] py-[36px] text-center">
+          <span className="text-[13px] font-semibold tracking-[0.12em] text-black/50">
+            Vacant Slot
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-[8px]">
+          <InfoStat
+            label="Minimum Valuation"
+            helperText={valuationHelper}
+            value={valuation}
+          />
+          <InfoStat
+            label="Bond Rate"
+            helperText={bondRateHelper}
+            value={bondRate}
+          />
+          <InfoStat
+            label="Tax Rate (Annually)"
+            helperText={taxRateHelper}
+            value={taxRate}
+          />
+        </div>
+
+        <Button
+          color="primary"
+          radius="md"
+          size="md"
+          className="mt-[8px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
+          onPress={handleClaim}
+        >
+          <CoinVertical size={24} weight="fill" />
+          <span className="text-[14px] font-semibold text-white/80">
+            {actionLabel}
+          </span>
+        </Button>
+      </CardBody>
+    </Card>
+  );
+}
+
+interface StatBlock {
+  id: string;
+  label: string;
+  value: string;
+  valueLabelType: IValueLabelType;
+  withBorderTop?: boolean;
+}
+
+type PendingSlotAction = {
+  slotId: string;
+  action: 'renew' | 'forfeit' | 'poke';
+};
+
+export interface ActiveSlotCardProps {
+  slot: ActiveSlotData;
+  onTakeover?: (slot: ActiveSlotData) => void;
+  onPoke?: (slot: ActiveSlotData) => void;
+  takeoverState?: {
+    isSubmitting: boolean;
+    activeSlotId?: string | null;
+  };
+  pendingAction?: PendingSlotAction | null;
+}
+
+export function ActiveSlotCard({
+  slot,
+  onTakeover,
+  onPoke,
+  takeoverState,
+  pendingAction,
+}: ActiveSlotCardProps) {
+  const statusLabel = slot.statusLabel ?? 'Owned';
+
+  const creativeAssets = useMemo(
+    () => extractCreativeAssets(slot.currentAdURI ?? ''),
+    [slot.currentAdURI],
+  );
+  const primaryImageUrl = creativeAssets.primaryImageUrl;
+  const slotDisplayName = slot.slotDisplayName ?? slot.slotName;
+  const ownerLabel = 'Owner';
+  const ownerName = slot.owner;
+  const takeoverCta = slot.takeoverCta;
+
+  const stats = useMemo(
+    () =>
+      buildActiveStats(
+        slot.valuation,
+        slot.lockedBond,
+        slot.remainingUnits,
+        slot.minTakeoverBid,
+        { isOverdue: slot.isOverdue, isExpired: slot.isExpired },
+      ),
+    [
+      slot.isExpired,
+      slot.isOverdue,
+      slot.lockedBond,
+      slot.minTakeoverBid,
+      slot.remainingUnits,
+      slot.valuation,
+    ],
+  );
+  const desktopCreativeConfig = slot.creativeConfig.desktop;
+  const desktopAspectStyle = desktopCreativeConfig.style;
+
+  const isPokePending =
+    pendingAction?.slotId === slot.id && pendingAction.action === 'poke';
+  const isTakeoverActiveSlot = takeoverState?.activeSlotId === slot.id;
+  const isSubmitting = Boolean(takeoverState?.isSubmitting);
+  const canPoke = slot.canPoke;
+
+  const ctaDisabled = slot.isExpired
+    ? isSubmitting || isPokePending
+    : isSubmitting;
+
+  const ctaLoading = slot.isExpired
+    ? isPokePending
+    : Boolean(isSubmitting && isTakeoverActiveSlot);
+
+  const handlePrimaryAction = () => {
+    if (slot.isExpired) {
+      onPoke?.(slot);
+      return;
+    }
+    onTakeover?.(slot);
+  };
+
+  return (
+    <Card
+      shadow="none"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white "
+    >
+      <CardBody className="mobile:gap-[14px] mobile:p-[14px] flex h-full flex-col gap-[20px] p-[20px]">
+        <div className="flex justify-between gap-[6px]">
+          <div className="flex flex-wrap items-center gap-[6px]">
+            <span className="text-[13px] font-semibold text-black/50">
+              Slot:
+            </span>
+            <span className="text-[13px] font-semibold text-black">
+              {slotDisplayName}
+            </span>
+          </div>
+          <ValueLabel className="text-[12px]">{statusLabel}</ValueLabel>
+        </div>
+
+        <div className="flex w-full flex-wrap items-center justify-between gap-[6px] text-[13px] text-black/60">
+          <span className="font-semibold">{ownerLabel}:</span>
+          <ValueLabel className="text-[12px]">{ownerName}</ValueLabel>
+        </div>
+
+        <div className="relative !h-[96px]" style={desktopAspectStyle}>
+          {primaryImageUrl ? (
+            <Image
+              src={primaryImageUrl}
+              alt={slotDisplayName}
+              fill
+              className="!h-full !w-auto overflow-hidden rounded-[5px] border  border-black/10 object-cover"
+              priority={false}
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center text-[12px] text-black/40">
+              No creative uploaded
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-[8px]">
+          {stats.map((stat) => {
+            const { id, label, value, valueLabelType, withBorderTop } = stat;
+            return (
+              <div
+                key={id}
+                className={cn(
+                  'flex items-center justify-between gap-[12px]',
+                  withBorderTop && 'border-t border-black/10 pt-[8px]',
+                )}
+              >
+                <span className="text-[14px] font-medium text-black/80">
+                  {label}
+                </span>
+                <ValueLabel valueLabelType={valueLabelType}>{value}</ValueLabel>
+              </div>
+            );
+          })}
+        </div>
+
+        <Button
+          color="primary"
+          radius="md"
+          size="md"
+          className="mt-[4px] h-[36px] w-full rounded-[6px] text-[14px] font-semibold"
+          onPress={handlePrimaryAction}
+          isDisabled={ctaDisabled}
+          isLoading={ctaLoading}
+        >
+          <CoinVertical size={24} weight="fill" />
+          <span className="text-[14px] font-semibold text-white/80">
+            {takeoverCta}
+          </span>
+        </Button>
+
+        {/* {canPoke ? (
+          <Button
+            color="danger"
+            variant="bordered"
+            radius="md"
+            size="sm"
+            className="flex items-center justify-center gap-[6px] rounded-[6px] border border-[#F87171] bg-[#FFF4F4] text-[13px] font-semibold text-[#B91C1C]"
+            onPress={() => onPoke?.(slot)}
+            isDisabled={isPokePending}
+            isLoading={isPokePending}
+          >
+            <WarningCircle size={18} weight="fill" />
+            Poke Slot
+          </Button>
+        ) : null} */}
+      </CardBody>
+    </Card>
+  );
+}
+
+export function VacantSlotCardSkeleton() {
+  return (
+    <Card
+      shadow="none"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
+    >
+      <CardBody className="mobile:p-[10px] flex h-full flex-col gap-[20px] p-[20px]">
+        <div className="flex items-start justify-between gap-3">
+          <Skeleton className="h-[18px] w-[120px] rounded-[5px]" />
+          <Skeleton className="h-[20px] w-[70px] rounded-[5px]" />
+        </div>
+
+        <Skeleton className="h-[98px] w-full rounded-[12px]" />
+
+        <div className="flex flex-col gap-[8px]">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="flex flex-col gap-[6px]">
+              <div className="flex items-center justify-between gap-[12px]">
+                <Skeleton className="h-[16px] w-[150px] rounded-[4px]" />
+                <Skeleton className="h-[24px] w-[80px] rounded-[5px]" />
+              </div>
+              <Skeleton className="h-[12px] w-[190px] rounded-[4px]" />
+            </div>
+          ))}
+        </div>
+
+        <Skeleton className="mt-[8px] h-[36px] w-full rounded-[6px]" />
+      </CardBody>
+    </Card>
+  );
+}
+
+export function ActiveSlotCardSkeleton() {
+  return (
+    <Card
+      shadow="none"
+      className="flex h-full flex-col justify-between rounded-[10px] border border-black/10 bg-white"
+    >
+      <CardBody className="flex h-full flex-col gap-[20px] p-5">
+        <div className="flex justify-between gap-[6px]">
+          <Skeleton className="h-[18px] w-[160px] rounded-[5px]" />
+          <Skeleton className="h-[20px] w-[80px] rounded-[5px]" />
+        </div>
+
+        <div className="flex w-full items-center justify-between gap-[6px]">
+          <Skeleton className="h-[16px] w-[80px] rounded-[4px]" />
+          <Skeleton className="h-[20px] w-[120px] rounded-[5px]" />
+        </div>
+
+        <Skeleton
+          className="w-full rounded-[10px]"
+          style={{ aspectRatio: '4 / 1' }}
+        />
+
+        <div className="flex flex-col gap-[10px]">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className={cn(
+                'flex items-center justify-between gap-[12px]',
+                index === 3 && 'border-t border-black/10 pt-[8px]',
+              )}
+            >
+              <Skeleton className="h-[16px] w-[150px] rounded-[4px]" />
+              <Skeleton className="h-[22px] w-[100px] rounded-[5px]" />
+            </div>
+          ))}
+        </div>
+
+        <Skeleton className="h-[36px] w-full rounded-[6px]" />
+      </CardBody>
+    </Card>
+  );
+}
+
+export function buildActiveStats(
+  valuation: string,
+  lockedBond: string,
+  remainingUnits: string,
+  minTakeoverBid: string,
+  options?: { isOverdue?: boolean; isExpired?: boolean },
+): StatBlock[] {
+  const remainingValueLabelType: IValueLabelType = options?.isOverdue
+    ? 'danger'
+    : options?.isExpired
+      ? 'bordered'
+      : 'light';
+
+  return [
+    {
+      id: 'valuation',
+      label: 'Current Valuation',
+      value: valuation,
+      valueLabelType: 'light',
+    },
+    {
+      id: 'bond',
+      label: 'Locked Bond',
+      value: lockedBond,
+      valueLabelType: 'bordered',
+    },
+    {
+      id: 'units',
+      label: 'Remaining Units',
+      value: remainingUnits,
+      valueLabelType: remainingValueLabelType,
+    },
+    {
+      id: 'takeover',
+      label: 'Min Takeover Bid',
+      value: minTakeoverBid,
+      valueLabelType: 'dark',
+      withBorderTop: true,
+    },
+  ];
+}

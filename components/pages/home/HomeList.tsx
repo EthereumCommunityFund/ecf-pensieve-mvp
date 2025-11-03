@@ -18,6 +18,7 @@ import { devLog } from '@/utils/devLog';
 import { formatDateWithTimeGMT } from '@/utils/formatters';
 
 import { ProjectListWrapper } from '../project/ProjectListWrapper';
+import HomeSidebarAd from '../ad-management/HtaxAd/HomeSidebarAd';
 
 import ProjectIntroCard from './ProjectIntroCard';
 import SectionHeader from './SectionHeader';
@@ -288,6 +289,8 @@ const HomeList = () => {
       {/* Right side: 4 columns */}
       <div className="tablet:w-[325px] mobile:hidden flex w-[390px] flex-col gap-[10px]">
         <ProjectIntroCard />
+
+        <HomeSidebarAd />
 
         {/* Column 0: Top Accountable */}
         <div className="rounded-[10px] border border-black/10 p-[14px]">

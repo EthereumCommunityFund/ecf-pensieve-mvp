@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import ProjectTabs from '@/components/base/ProjectTabs';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
+import ProjectTopBannerAd from '@/components/pages/ad-management/HtaxAd/ProjectTopBannerAd';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useProjectDetailContext } from '@/components/pages/project/context/projectDetailContext';
 import ContributingFunds from '@/components/pages/project/contributingFunds';
@@ -215,6 +216,8 @@ const ProjectPage = () => {
         getLeadingCategories={getLeadingCategories}
         getLeadingLogoUrl={getLeadingLogoUrl}
       />
+
+      <ProjectTopBannerAd />
 
       <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
         <ProjectTabs
