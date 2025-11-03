@@ -211,9 +211,6 @@ export function buildProjectJsonLd(
     jsonLd.keywords = keywords.join(', ');
     jsonLd.knowsAbout = keywords;
   }
-  if (data.categories.length > 0) {
-    jsonLd.category = data.categories;
-  }
   if (creators.length > 0) {
     jsonLd.founder = creators;
   }
