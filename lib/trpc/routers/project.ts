@@ -757,28 +757,6 @@ export const projectRouter = router({
         });
       }
 
-      const recordedHasProposalKeys = new Set(project.hasProposalKeys ?? []);
-
-      const proposalKeyRecords = await ctx.db
-        .selectDistinct({ key: itemProposals.key })
-        .from(itemProposals)
-        .where(eq(itemProposals.projectId, project.id));
-
-      let hasNewKeys = false;
-      for (const { key } of proposalKeyRecords) {
-        if (key && !recordedHasProposalKeys.has(key)) {
-          recordedHasProposalKeys.add(key);
-          hasNewKeys = true;
-        }
-      }
-
-      if (hasNewKeys) {
-        return {
-          ...project,
-          hasProposalKeys: Array.from(recordedHasProposalKeys),
-        };
-      }
-
       return project;
     }),
 

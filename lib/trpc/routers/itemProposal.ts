@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
 import {
@@ -90,20 +90,15 @@ export const itemProposalRouter = router({
             });
           }
 
-          const projectHasProposalKeysResult = await tx.execute(
-            sql<{ hasProposalKeys: string[] }>`
-              SELECT ${projects.hasProposalKeys} AS "hasProposalKeys"
-              FROM ${projects}
-              WHERE ${projects.id} = ${input.projectId}
-              FOR UPDATE
-            `,
-          );
+          const [projectRow] = await tx
+            .select({ hasProposalKeys: projects.hasProposalKeys })
+            .from(projects)
+            .where(eq(projects.id, input.projectId))
+            .for('update');
 
-          const currentHasProposalKeys =
-            (projectHasProposalKeysResult[0]?.hasProposalKeys as
-              | string[]
-              | undefined) ?? [];
-          const projectHasProposalKeys = new Set(currentHasProposalKeys);
+          const projectHasProposalKeys = new Set(
+            projectRow?.hasProposalKeys ?? [],
+          );
           const isKeyRecorded = projectHasProposalKeys.has(input.key);
 
           if (!isKeyRecorded) {
