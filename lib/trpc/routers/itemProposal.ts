@@ -90,28 +90,32 @@ export const itemProposalRouter = router({
             });
           }
 
+          const [projectRow] = await tx
+            .select({ hasProposalKeys: projects.hasProposalKeys })
+            .from(projects)
+            .where(eq(projects.id, input.projectId))
+            .for('update');
+
+          const projectHasProposalKeys = new Set(
+            projectRow?.hasProposalKeys ?? [],
+          );
+          const isKeyRecorded = projectHasProposalKeys.has(input.key);
+
+          if (!isKeyRecorded) {
+            projectHasProposalKeys.add(input.key);
+          }
+
+          const updatedHasProposalKeys = Array.from(projectHasProposalKeys);
+
           if (!existingProposal) {
             const reward = calculateReward(input.key);
             const finalWeight = (userProfile?.weight ?? 0) + reward;
 
-            const hasProposalKeys = new Set([
-              ...project.hasProposalKeys,
-              input.key,
-            ]);
-            const updatedHasProposalKeys = Array.from(hasProposalKeys);
-
-            const updatePromises = [
+            const updatePromises: Array<Promise<unknown>> = [
               tx
                 .update(profiles)
                 .set({ weight: finalWeight })
                 .where(eq(profiles.userId, ctx.user.id)),
-
-              tx
-                .update(projects)
-                .set({
-                  hasProposalKeys: updatedHasProposalKeys,
-                })
-                .where(eq(projects.id, input.projectId)),
 
               addRewardNotification(
                 createRewardNotification.createItemProposal(
@@ -142,17 +146,43 @@ export const itemProposalRouter = router({
               ),
             ];
 
+            if (!isKeyRecorded) {
+              updatePromises.push(
+                tx
+                  .update(projects)
+                  .set({
+                    hasProposalKeys: updatedHasProposalKeys,
+                  })
+                  .where(eq(projects.id, input.projectId)),
+              );
+            }
+
             await Promise.all(updatePromises);
           } else {
-            await logUserActivity.itemProposal.update(
-              {
-                userId: ctx.user.id,
-                targetId: itemProposal.id,
-                projectId: itemProposal.projectId,
-                items: [{ field: input.key }],
-              },
-              tx,
-            );
+            const updatePromises: Array<Promise<unknown>> = [
+              logUserActivity.itemProposal.update(
+                {
+                  userId: ctx.user.id,
+                  targetId: itemProposal.id,
+                  projectId: itemProposal.projectId,
+                  items: [{ field: input.key }],
+                },
+                tx,
+              ),
+            ];
+
+            if (!isKeyRecorded) {
+              updatePromises.push(
+                tx
+                  .update(projects)
+                  .set({
+                    hasProposalKeys: updatedHasProposalKeys,
+                  })
+                  .where(eq(projects.id, input.projectId)),
+              );
+            }
+
+            await Promise.all(updatePromises);
           }
 
           const caller = voteRouter.createCaller({
