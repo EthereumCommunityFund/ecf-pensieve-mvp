@@ -5,7 +5,11 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { GitPullDarkIcon, GitPullLightIcon } from '@/components/icons';
+import {
+  GitPullDarkIcon,
+  GitPullLightIcon,
+  MegaphoneIcon,
+} from '@/components/icons';
 import DropDownMenu from '@/components/topbar/dropDownMenu';
 import FeedbackButton from '@/components/topbar/FeedbackButton';
 import { ProjectsNavItem } from '@/components/topbar/ProjectsNavItem';
@@ -52,6 +56,13 @@ export const navigationItems: NavigationItem[] = [
     activeIcon: '/images/docs/FileText.svg',
     isExternal: true,
     isDesktopOnly: false,
+  },
+  {
+    name: 'Pensieve Ads',
+    href: '/ad-management',
+    icon: <MegaphoneIcon size={24} className="text-black" />,
+    activeIcon: <MegaphoneIcon size={24} className="text-white" />,
+    matchPath: '/ad-management',
   },
 ] as const;
 

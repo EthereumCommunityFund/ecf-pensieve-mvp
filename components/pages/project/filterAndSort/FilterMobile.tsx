@@ -31,6 +31,9 @@ interface ProjectFilterMobileProps {
   onClearAdvancedFilters: () => void;
   canUseAdvancedFilters: boolean;
   disabledReason?: string;
+  onSaveAsFeed?: () => void;
+  canSaveFeed?: boolean;
+  saveDisabledReason?: string;
 }
 
 export default function ProjectFilterMobile({
@@ -41,6 +44,9 @@ export default function ProjectFilterMobile({
   onClearAdvancedFilters,
   canUseAdvancedFilters,
   disabledReason,
+  onSaveAsFeed,
+  canSaveFeed,
+  saveDisabledReason,
 }: ProjectFilterMobileProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<FilterSection | null>(
@@ -379,6 +385,16 @@ export default function ProjectFilterMobile({
                       variant="mobile"
                       isDisabled={!canUseAdvancedFilters}
                       disabledReason={disabledReason}
+                      onSaveAsFeed={
+                        onSaveAsFeed
+                          ? () => {
+                              onSaveAsFeed();
+                              setIsOpen(false);
+                            }
+                          : undefined
+                      }
+                      canSaveFeed={canSaveFeed}
+                      saveDisabledReason={saveDisabledReason}
                     />
                   </div>
                 ) : (

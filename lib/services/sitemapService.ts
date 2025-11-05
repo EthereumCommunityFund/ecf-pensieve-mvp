@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { db, profiles, projects, proposals } from '@/lib/db';
 
@@ -53,7 +54,9 @@ export async function getSitemapData(): Promise<SitemapData> {
       projectId: proposals.projectId,
       createdAt: proposals.createdAt,
     })
-    .from(proposals);
+    .from(proposals)
+    .leftJoin(projects, eq(proposals.projectId, projects.id))
+    .where(eq(projects.isPublished, false));
 
   return {
     projects: allProjects,

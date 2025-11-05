@@ -15,6 +15,7 @@ import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
 import CustomFilterModal from '@/components/pages/project/customFilters/CustomFilterModal';
 import CustomFilterPanel from '@/components/pages/project/customFilters/CustomFilterPanel';
+import SaveFeedModal from '@/components/pages/project/customFilters/SaveFeedModal';
 import {
   type AdvancedFilterCard,
   type AdvancedFilterModalState,
@@ -37,6 +38,7 @@ import RewardCard from '@/components/pages/project/RewardCardEntry';
 import { ADVANCED_FILTER_FETCH_LIMIT } from '@/constants/projectFilters';
 import { TotalGenesisWeightSum } from '@/constants/tableConfig';
 import { useAuth } from '@/context/AuthContext';
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useOffsetPagination } from '@/hooks/useOffsetPagination';
 import { UpvoteActionResult } from '@/hooks/useUpvote';
 import { trpc } from '@/lib/trpc/client';
@@ -49,8 +51,15 @@ const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
 
 const ProjectsContent = () => {
   const { profile, showAuthPrompt } = useAuth();
+  const { openExternalLink } = useExternalLink();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? '';
+  const currentTargetPath = useMemo(
+    () =>
+      searchParamsString ? `/projects?${searchParamsString}` : '/projects',
+    [searchParamsString],
+  );
 
   // Get filter and sort parameters from URL - memoize to prevent recreation
   const catsParam = searchParams.get('cats');
@@ -85,6 +94,7 @@ const ProjectsContent = () => {
     useState(false);
   const [isAccountableFilterRefreshing, setIsAccountableFilterRefreshing] =
     useState(false);
+  const [isSaveFeedModalOpen, setIsSaveFeedModalOpen] = useState(false);
   const trackUserAction = trpc.userActionLog.track.useMutation();
 
   useEffect(() => {
@@ -103,6 +113,25 @@ const ProjectsContent = () => {
     () => JSON.stringify(advancedFilters),
     [advancedFilters],
   );
+  const hasCategoryFilters = (cats?.length ?? 0) > 0;
+  const hasSaveableState =
+    shouldUseAdvancedFilter || hasCategoryFilters || Boolean(sort);
+  const saveFeedDisabledReason = hasSaveableState
+    ? undefined
+    : 'Add filters or sorting to save a feed';
+
+  const handleOpenSaveFeed = useCallback(() => {
+    if (!hasSaveableState) {
+      return;
+    }
+
+    if (!profile) {
+      showAuthPrompt('invalidAction');
+      return;
+    }
+
+    setIsSaveFeedModalOpen(true);
+  }, [hasSaveableState, profile, showAuthPrompt]);
 
   const updateAdvancedFilters = useCallback(
     (nextFilters: AdvancedFilterCard[]) => {
@@ -907,9 +936,11 @@ const ProjectsContent = () => {
           <ECFTypography type={'subtitle2'} className="mt-2.5">
             Explore projects and initiatives here or add your own to the list!
           </ECFTypography>
-          <ECFButton onPress={handleProposeProject} className="mt-2.5">
-            Propose a Project
-          </ECFButton>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <ECFButton onPress={handleProposeProject}>
+              Propose a Project
+            </ECFButton>
+          </div>
         </div>
       </div>
 
@@ -925,6 +956,9 @@ const ProjectsContent = () => {
             onClearAdvancedFilters={clearAdvancedFilters}
             canUseAdvancedFilters={canUseAdvancedFilters}
             disabledReason={advancedFilterDisabledReason}
+            onSaveAsFeed={handleOpenSaveFeed}
+            canSaveFeed={hasSaveableState}
+            saveDisabledReason={saveFeedDisabledReason}
           />
         </div>
         {/* Active Filters Display */}
@@ -985,6 +1019,9 @@ const ProjectsContent = () => {
             onClearAll={clearAdvancedFilters}
             isDisabled={!canUseAdvancedFilters}
             disabledReason={advancedFilterDisabledReason}
+            onSaveAsFeed={handleOpenSaveFeed}
+            canSaveFeed={hasSaveableState}
+            saveDisabledReason={saveFeedDisabledReason}
           />
           <RewardCard />
         </div>
@@ -1000,6 +1037,11 @@ const ProjectsContent = () => {
         onClose={handleModalClose}
         onSave={handleModalSave}
         onDelete={handleRemoveFilter}
+      />
+      <SaveFeedModal
+        isOpen={isSaveFeedModalOpen}
+        targetPath={currentTargetPath}
+        onClose={() => setIsSaveFeedModalOpen(false)}
       />
     </div>
   );

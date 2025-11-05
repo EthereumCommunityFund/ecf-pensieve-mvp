@@ -28,6 +28,12 @@ const getCachedSitemap = unstable_cache(
         changeFrequency: 'daily',
         priority: 0.5,
       },
+      {
+        url: `${siteUrl}/ad-management`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.6,
+      },
     ];
 
     const projectUrls: MetadataRoute.Sitemap = data.projects.flatMap(
@@ -73,26 +79,7 @@ const getCachedSitemap = unstable_cache(
       }),
     );
 
-    const pendingProjectUrls: MetadataRoute.Sitemap = data.proposals
-      .filter(
-        (proposal, index, self) =>
-          index === self.findIndex((p) => p.projectId === proposal.projectId),
-      )
-      .map((proposal) => ({
-        url: `${siteUrl}/project/pending/${proposal.projectId}`,
-        lastModified: proposal.createdAt,
-        changeFrequency: 'daily',
-        priority: 0.7,
-      }));
-
-    const result = [
-      ...baseUrls,
-      ...projectUrls,
-      ...profileUrls,
-      ...proposalUrls,
-      ...pendingProjectUrls,
-    ];
-    return result;
+    return [...baseUrls, ...projectUrls, ...profileUrls, ...proposalUrls];
   },
   ['sitemap'],
   { revalidate: 21600 },

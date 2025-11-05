@@ -1,6 +1,11 @@
 'use client';
 
-import { ArrowSquareUp, GitCommit, UserSquare } from '@phosphor-icons/react';
+import {
+  ArrowSquareUp,
+  Funnel,
+  GitCommit,
+  UserSquare,
+} from '@phosphor-icons/react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -9,6 +14,7 @@ import BookmarksIcon from '@/components/icons/Bookmarks';
 import Contributions from './components/contributions';
 import MyLists from './components/list/myLists';
 import Setting from './components/setting';
+import MySieve from './components/sieve/MySieve';
 import Upvotes from './components/upvotes';
 
 const tabItems = [
@@ -32,6 +38,11 @@ const tabItems = [
     label: 'My Lists',
     icon: <BookmarksIcon size={28} />,
   },
+  {
+    key: 'sieve',
+    label: 'My Sieve',
+    icon: <Funnel width={28} height={28} />,
+  },
 ];
 
 const ProfileSettingsPage = () => {
@@ -41,7 +52,7 @@ const ProfileSettingsPage = () => {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<
-    'profile' | 'contributions' | 'upvotes' | 'lists'
+    'profile' | 'contributions' | 'upvotes' | 'lists' | 'sieve'
   >(
     initialTab === 'contributions'
       ? 'contributions'
@@ -49,7 +60,9 @@ const ProfileSettingsPage = () => {
         ? 'upvotes'
         : initialTab === 'lists'
           ? 'lists'
-          : 'profile',
+          : initialTab === 'sieve'
+            ? 'sieve'
+            : 'profile',
   );
 
   useEffect(() => {
@@ -59,10 +72,16 @@ const ProfileSettingsPage = () => {
       (currentTab === 'profile' ||
         currentTab === 'contributions' ||
         currentTab === 'upvotes' ||
-        currentTab === 'lists')
+        currentTab === 'lists' ||
+        currentTab === 'sieve')
     ) {
       setActiveTab(
-        currentTab as 'profile' | 'contributions' | 'upvotes' | 'lists',
+        currentTab as
+          | 'profile'
+          | 'contributions'
+          | 'upvotes'
+          | 'lists'
+          | 'sieve',
       );
     } else if (!currentTab) {
       router.push(`/profile/${address}?tab=profile`, { scroll: false });
@@ -80,6 +99,9 @@ const ProfileSettingsPage = () => {
           {activeTab === 'lists' && (
             <MyLists profileAddress={address as string} />
           )}
+          {activeTab === 'sieve' && (
+            <MySieve profileAddress={address as string} />
+          )}
         </div>
 
         {/* Mobile Content - Full width */}
@@ -89,6 +111,9 @@ const ProfileSettingsPage = () => {
           {activeTab === 'upvotes' && <Upvotes />}
           {activeTab === 'lists' && (
             <MyLists profileAddress={address as string} />
+          )}
+          {activeTab === 'sieve' && (
+            <MySieve profileAddress={address as string} />
           )}
         </div>
       </div>

@@ -1,0 +1,13 @@
+'use client';
+
+import { ProjectDetailProvider } from '@/components/pages/project/context/projectDetailContext';
+
+const ClientLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <ProjectDetailProvider>
+      <div className="pt-[20px]">{children}</div>
+    </ProjectDetailProvider>
+  );
+};
+
+export default ClientLayout;

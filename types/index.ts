@@ -119,6 +119,8 @@ export type IListDetail = RouterOutputs['list']['getListBySlug'];
 export type IListProjectWithOrder =
   RouterOutputs['list']['getListProjects']['items'][0];
 
+export type ISieve = RouterOutputs['sieve']['getUserSieves'][0];
+
 // Edit state for list management
 export interface IEditState {
   editedItems: IListProjectWithOrder[];

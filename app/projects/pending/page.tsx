@@ -1,6 +1,7 @@
 'use client';
 
 import { Image } from '@heroui/react';
+import { PlusCircle } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -13,6 +14,7 @@ import ProposalRequirements from '@/components/pages/project/ProposalRequirement
 import RewardCard from '@/components/pages/project/RewardCardEntry';
 import ScanPendingProject from '@/components/pages/ScanPendingProject';
 import { useAuth } from '@/context/AuthContext';
+import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useOffsetPagination } from '@/hooks/useOffsetPagination';
 import { trpc } from '@/lib/trpc/client';
 import type { IProject } from '@/types';
@@ -22,6 +24,7 @@ const PAGE_SIZE = 10;
 const PendingProjectsPage = () => {
   const router = useRouter();
   const { profile, showAuthPrompt } = useAuth();
+  const { openExternalLink } = useExternalLink();
 
   const {
     offset,
@@ -76,6 +79,15 @@ const PendingProjectsPage = () => {
             >
               Propose a Project
             </Button>
+            <ECFButton
+              onPress={() =>
+                openExternalLink('https://ecf-pensieve-ai.vercel.app/')
+              }
+              className="border border-black/10 bg-transparent font-semibold hover:bg-black/5 focus:bg-black/5 active:bg-black/10"
+            >
+              <PlusCircle className="size-[20px] opacity-50" />
+              <span>Pensieve Magic Pen</span>
+            </ECFButton>
             <ScanPendingProject />
           </div>
         </div>

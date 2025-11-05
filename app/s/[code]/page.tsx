@@ -7,6 +7,7 @@ import ShareService from '@/lib/services/share';
 import { buildShareOgImageUrl } from '@/lib/services/share/url';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
+import PrivateSieveRedirectClient from './PrivateSieveRedirectClient';
 import ShareRedirectClient from './ShareRedirectClient';
 
 export const dynamic = 'force-dynamic';
@@ -107,8 +108,18 @@ export async function generateMetadata({
   const snapshotTimestamp = normalizeTimestampParam(resolvedSearchParams['ts']);
   const payload = await ShareService.getSharePayload(code);
 
-  if (!payload || payload.visibility === 'private') {
+  if (!payload) {
     notFound();
+  }
+
+  if (payload.visibility === 'private') {
+    return {
+      title: 'Private Feed',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    } as Metadata;
   }
 
   if (payload.entityType === 'customFilter') {
@@ -124,12 +135,20 @@ export default async function SharePage({ params, searchParams }: PageProps) {
 
   const payload = await ShareService.getSharePayload(code);
 
-  if (!payload || payload.visibility === 'private') {
+  if (!payload) {
     notFound();
   }
 
   const origin = getAppOrigin();
   const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
+
+  if (payload.visibility === 'private') {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f9f9f9] px-4 py-16">
+        <PrivateSieveRedirectClient code={code} targetUrl={targetUrl} />
+      </main>
+    );
+  }
 
   if (payload.entityType === 'customFilter') {
     redirect(targetUrl);

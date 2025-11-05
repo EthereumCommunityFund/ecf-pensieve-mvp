@@ -1,5 +1,5 @@
 import { X } from '@phosphor-icons/react';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { CopyIcon } from '@/components/icons';
@@ -19,6 +19,25 @@ const ExternalLinkModal: FC<IExternalLinkModalProps> = ({
   onClose,
   url,
 }) => {
+  const isMagicPenLink = useMemo(() => {
+    if (!url) {
+      return false;
+    }
+    return url.includes('ecf-pensieve-ai.vercel.app');
+  }, [url]);
+
+  const headerText = isMagicPenLink
+    ? 'Launch Pensieve Magic Pen'
+    : 'You are leaving Pensieve';
+
+  const descriptionText = isMagicPenLink
+    ? 'Pensieve Magic Pen opens in a new tab to help you draft proposals. Projects submitted directly from the tool are published by an agent and will not earn contribution points. You can use it to collect details, then submit yourself when ready.'
+    : "You're about to visit a link shared by another user. Please proceed with caution—external sites may not be safe or trustworthy.";
+
+  const primaryButtonLabel = isMagicPenLink
+    ? 'Open Pensieve Magic Pen'
+    : 'Open Site';
+
   const onCopySuccess = useCallback(() => {
     addToast({
       title: 'Success',
@@ -81,7 +100,7 @@ const ExternalLinkModal: FC<IExternalLinkModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-center">
             <h2 className="text-[16px] font-[600] leading-[22px] text-black">
-              You are leaving Pensieve
+              {headerText}
             </h2>
           </div>
 
@@ -109,8 +128,7 @@ const ExternalLinkModal: FC<IExternalLinkModalProps> = ({
 
           {/* Warning Message */}
           <p className="text-[14px] font-[400] leading-[20px] text-black">
-            You're about to visit a link shared by another user. Please proceed
-            with caution—external sites may not be safe or trustworthy.
+            {descriptionText}
           </p>
 
           {/* Open Site Button */}
@@ -120,7 +138,7 @@ const ExternalLinkModal: FC<IExternalLinkModalProps> = ({
               className="h-[39px] w-full rounded-[5px] border border-black bg-white px-[20px] py-[10px] hover:bg-gray-50"
             >
               <span className="text-[14px] font-[600] text-black">
-                Open Site
+                {primaryButtonLabel}
               </span>
             </Button>
           </div>

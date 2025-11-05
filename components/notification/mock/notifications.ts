@@ -3,6 +3,127 @@ import {
   NotificationItemData,
 } from '@/components/notification/NotificationItem';
 
+const harbergerSlotAddressA =
+  '0x1234567890abcdef1234567890abcdef12345678' as const;
+const harbergerSlotAddressB =
+  '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' as const;
+const harbergerSlotAddressC =
+  '0xfedcba9876543210fedcba9876543210fedcba98' as const;
+
+const harbergerBaseUrl = (address: `0x${string}`) =>
+  `/ads/slots/${address.toLowerCase()}`;
+
+const harbergerPayUrl = (address: `0x${string}`) =>
+  `${harbergerBaseUrl(address)}?action=pay`;
+
+const harbergerMockNotifications: NotificationItemData[] = [
+  {
+    id: 'harberger-1',
+    type: 'harbergerSlotExpiring',
+    title: 'Harberger slot tax notification',
+    timeAgo: '1m ago',
+    isRead: false,
+    buttonText: '',
+    hideButton: true,
+    hasMultipleActions: true,
+    ctaLabel: 'Pay Now',
+    ctaUrl: harbergerPayUrl(harbergerSlotAddressA),
+    targetUrl: harbergerBaseUrl(harbergerSlotAddressA),
+    primaryActionUrl: harbergerPayUrl(harbergerSlotAddressA),
+    secondaryActionUrl: harbergerBaseUrl(harbergerSlotAddressA),
+    harbergerTax: {
+      slotAddress: harbergerSlotAddressA,
+      slotDisplayName: 'Homescreen Banner',
+      secondsUntilExpiry: 48 * 60 * 60,
+      taxPaidUntil: Math.floor(Date.now() / 1000) + 48 * 60 * 60,
+      taxOwedWei: BigInt('250000000000000000'),
+      lockedValuationWei: BigInt('1200000000000000000'),
+      ownerRefundWei: BigInt('0'),
+      periodsProcessed: 1,
+      calculatedAt: Math.floor(Date.now() / 1000),
+      chainId: 11155111,
+      factoryAddress: harbergerSlotAddressA,
+      page: 'homescreen',
+      position: 'banner',
+      gracePeriodRemainingSeconds: 0,
+      secondsUntilDue: 48 * 60 * 60,
+      status: 'dueSoon',
+      formattedDueCountdown: '2d 0h',
+      formattedGraceCountdown: '0s',
+    },
+  },
+  {
+    id: 'harberger-2',
+    type: 'harbergerSlotExpiring',
+    title: 'Harberger slot tax notification',
+    timeAgo: '3m ago',
+    isRead: false,
+    buttonText: '',
+    hideButton: true,
+    hasMultipleActions: true,
+    ctaLabel: 'Pay Now',
+    ctaUrl: harbergerPayUrl(harbergerSlotAddressB),
+    targetUrl: harbergerBaseUrl(harbergerSlotAddressB),
+    primaryActionUrl: harbergerPayUrl(harbergerSlotAddressB),
+    secondaryActionUrl: harbergerBaseUrl(harbergerSlotAddressB),
+    harbergerTax: {
+      slotAddress: harbergerSlotAddressB,
+      slotDisplayName: 'Community Spotlight',
+      secondsUntilExpiry: 3 * 60 * 60,
+      taxPaidUntil: Math.floor(Date.now() / 1000) + 3 * 60 * 60,
+      taxOwedWei: BigInt('375000000000000000'),
+      lockedValuationWei: BigInt('1500000000000000000'),
+      ownerRefundWei: BigInt('0'),
+      periodsProcessed: 2,
+      calculatedAt: Math.floor(Date.now() / 1000),
+      chainId: 11155111,
+      factoryAddress: harbergerSlotAddressB,
+      page: 'homescreen',
+      position: 'spotlight',
+      gracePeriodRemainingSeconds: 0,
+      secondsUntilDue: 3 * 60 * 60,
+      status: 'dueImminent',
+      formattedDueCountdown: '3h 0m',
+      formattedGraceCountdown: '0s',
+    },
+  },
+  {
+    id: 'harberger-3',
+    type: 'harbergerSlotExpiring',
+    title: 'Harberger slot tax notification',
+    timeAgo: '10m ago',
+    isRead: false,
+    buttonText: '',
+    hideButton: true,
+    hasMultipleActions: true,
+    ctaLabel: 'Pay Now',
+    ctaUrl: harbergerPayUrl(harbergerSlotAddressC),
+    targetUrl: harbergerBaseUrl(harbergerSlotAddressC),
+    primaryActionUrl: harbergerPayUrl(harbergerSlotAddressC),
+    secondaryActionUrl: harbergerBaseUrl(harbergerSlotAddressC),
+    harbergerTax: {
+      slotAddress: harbergerSlotAddressC,
+      slotDisplayName: 'Network Masthead',
+      secondsUntilExpiry: 0,
+      taxPaidUntil: Math.floor(Date.now() / 1000) - 60 * 60,
+      taxOwedWei: BigInt('500000000000000000'),
+      lockedValuationWei: BigInt('2000000000000000000'),
+      ownerRefundWei: BigInt('0'),
+      periodsProcessed: 3,
+      calculatedAt: Math.floor(Date.now() / 1000),
+      chainId: 11155111,
+      factoryAddress: harbergerSlotAddressC,
+      page: 'homescreen',
+      position: 'masthead',
+      gracePeriodRemainingSeconds: 24 * 60 * 60,
+      secondsUntilDue: -60 * 60,
+      status: 'overdue',
+      formattedDueCountdown: '0s',
+      formattedGraceCountdown: '24h 0m',
+    },
+  },
+];
+
 const projects = [
   'DeFi Protocol Alpha',
   'Web3 Gaming Platform',
@@ -110,7 +231,7 @@ const notificationTypes: FrontendNotificationType[] = [
   'default',
 ];
 
-export const mockNotifications: NotificationItemData[] = notificationTypes
+const baseMockNotifications: NotificationItemData[] = notificationTypes
   .map((type, index) => {
     const id = (index + 1).toString();
     const isRead = getRandomBool();
@@ -269,3 +390,8 @@ export const mockNotifications: NotificationItemData[] = notificationTypes
 
     return timeToMinutes(a.timeAgo) - timeToMinutes(b.timeAgo);
   });
+
+export const mockNotifications: NotificationItemData[] = [
+  ...harbergerMockNotifications,
+  ...baseMockNotifications,
+];
