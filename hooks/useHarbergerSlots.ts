@@ -469,6 +469,9 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     },
   });
 
+  const hasEnabledDetails = enabledContracts.length > 0;
+  const hasShieldedDetails = shieldedContracts.length > 0;
+
   const normalizedEnabledSlots = useMemo<NormalizedSlot[]>(() => {
     if (!enabledDetailsQuery.data) {
       return [];
@@ -662,15 +665,15 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
       slotIdCounterQuery.isLoading ||
       treasuryQuery.isLoading ||
       governanceQuery.isLoading ||
-      enabledDetailsQuery.isLoading ||
-      shieldedDetailsQuery.isLoading ||
+      (hasEnabledDetails && enabledDetailsQuery.isLoading) ||
+      (hasShieldedDetails && shieldedDetailsQuery.isLoading) ||
       enabledAddressesQuery.isPending ||
       shieldedAddressesQuery.isPending ||
       slotIdCounterQuery.isPending ||
       treasuryQuery.isPending ||
       governanceQuery.isPending ||
-      enabledDetailsQuery.isPending ||
-      shieldedDetailsQuery.isPending,
+      (hasEnabledDetails && enabledDetailsQuery.isPending) ||
+      (hasShieldedDetails && shieldedDetailsQuery.isPending),
   );
 
   const isRefetching = Boolean(
@@ -679,8 +682,8 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
       slotIdCounterQuery.isRefetching ||
       treasuryQuery.isRefetching ||
       governanceQuery.isRefetching ||
-      enabledDetailsQuery.isRefetching ||
-      shieldedDetailsQuery.isRefetching,
+      (hasEnabledDetails && enabledDetailsQuery.isRefetching) ||
+      (hasShieldedDetails && shieldedDetailsQuery.isRefetching),
   );
 
   const refetch = useCallback(async () => {
