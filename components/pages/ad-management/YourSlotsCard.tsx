@@ -461,7 +461,7 @@ export default function YourSlotsCard({
               onPress={handleOpenRenewModal}
             >
               <CoinVertical className="size-[20px] opacity-50" />
-              {`${renewalCtaLabel} ${perPeriodTaxLabel}`}
+              {renewalCtaLabel}
             </Button>
           ) : null}
 
