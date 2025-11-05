@@ -20,6 +20,7 @@
     "fix:item-weights": "dotenv -e .env tsx scripts/fixItemWeights.ts",
     "slot:create": "dotenv -e .env tsx scripts/createHarbergerSlot.ts",
     "slot:sync": "dotenv -e .env tsx scripts/syncHarbergerSlotMetadata.ts",
+    "slot:transfer-owner": "dotenv -e .env tsx scripts/transferHarbergerFactoryOwnership.ts",
     "add:short-code": "dotenv -e .env tsx scripts/addShortCodeToExistingProjects.ts",
     "add:default-list": "dotenv -e .env tsx scripts/addDefaultList.ts",
     "migrate:smart-contracts": "dotenv -e .env tsx scripts/migrateDappSmartContracts.ts",

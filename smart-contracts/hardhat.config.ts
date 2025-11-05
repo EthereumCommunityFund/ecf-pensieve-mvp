@@ -4,13 +4,10 @@ import 'dotenv/config';
 import type { HardhatUserConfig } from 'hardhat/config';
 import { configVariable } from 'hardhat/config';
 
-const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY ?? '';
+const ETHERSCAN_API_KEY =
+  process.env.ETHERSCAN_API_KEY ?? configVariable('ETHERSCAN_API_KEY');
 
-const config: HardhatUserConfig & {
-  etherscan?: {
-    apiKey?: Record<string, string>;
-  };
-} = {
+const config: HardhatUserConfig = {
   plugins: [hardhatToolboxViemPlugin],
   solidity: {
     profiles: {
@@ -57,10 +54,16 @@ const config: HardhatUserConfig & {
       url: configVariable('SEPOLIA_RPC_URL'),
       accounts: [configVariable('SEPOLIA_PRIVATE_KEY')],
     },
+    mainnet: {
+      type: 'http',
+      chainType: 'l1',
+      url: configVariable('MAINNET_RPC_URL'),
+      accounts: [configVariable('MAINNET_PRIVATE_KEY')],
+    },
   },
-  etherscan: {
-    apiKey: {
-      sepolia: ETHERSCAN_API_KEY,
+  verify: {
+    etherscan: {
+      apiKey: ETHERSCAN_API_KEY,
     },
   },
 };

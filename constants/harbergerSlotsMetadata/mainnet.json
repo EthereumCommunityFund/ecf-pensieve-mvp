@@ -1,1 +1,42 @@
-[]
+[
+    {
+        "chainId": 1,
+        "slotAddress": "0x30b459af348d22550348ad897da9505e5149a063",
+        "slotDisplayName": "Homescreen Sidebar",
+        "page": "home",
+        "position": "Sidebar",
+        "imageSize": "429*235_317*173",
+        "extra": {},
+        "isActive": true,
+        "contractMeta": {
+            "slotType": "enabled",
+            "bondRateBps": "1",
+            "annualTaxRateBps": "13000",
+            "minBidIncrementBps": "1000",
+            "taxPeriodSeconds": "86400",
+            "minValuationWei": "1200000000000000000",
+            "contentUpdateLimit": "1",
+            "dustRateBps": "1000"
+        }
+    },
+    {
+        "chainId": 1,
+        "slotAddress": "0x6CB3D12984FD53A365360C4DC0975c88a649c24A",
+        "slotDisplayName": "Project TopBanner",
+        "page": "projectDetail",
+        "position": "TopBanner",
+        "imageSize": "900*225_373*93",
+        "extra": {},
+        "isActive": true,
+        "contractMeta": {
+            "slotType": "enabled",
+            "bondRateBps": "1",
+            "annualTaxRateBps": "13000",
+            "minBidIncrementBps": "1000",
+            "taxPeriodSeconds": "86400",
+            "minValuationWei": "1000000000000000000",
+            "contentUpdateLimit": "1",
+            "dustRateBps": "1000"
+        }
+    }
+]
