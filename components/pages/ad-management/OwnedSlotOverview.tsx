@@ -117,11 +117,12 @@ export default function OwnedSlotOverview({
       helper:
         'Time until current coverage ends; shows overdue duration after expiry.',
     },
-    {
-      label: 'Tax Owed',
-      value: taxOwedDisplay,
-      helper: 'Amount payable when renewing once the slot becomes overdue.',
-    },
+    // {
+    //   label: 'Remaining Units:',
+    //   value: slot.remainingUnits,
+    //   valueLabelType: slot.isOverdue ? 'danger' : undefined,
+    // },
+    { label: 'Tax Owed:', value: taxOwedDisplay },
     { label: 'divider-001', value: '', type: 'divider' },
     {
       label: 'Min Takeover Bid',
