@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { PlusCircle } from '@phosphor-icons/react';
 
 import { ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -940,15 +939,6 @@ const ProjectsContent = () => {
           <div className="mt-2.5 flex flex-wrap gap-2">
             <ECFButton onPress={handleProposeProject}>
               Propose a Project
-            </ECFButton>
-            <ECFButton
-              onPress={() =>
-                openExternalLink('https://ecf-pensieve-ai.vercel.app/')
-              }
-              className="border border-black/10 bg-transparent font-semibold hover:bg-black/5 focus:bg-black/5 active:bg-black/10"
-            >
-              <PlusCircle className="size-[20px] opacity-50" />
-              <span>Pensieve AutoFill Agent(v0)</span>
             </ECFButton>
           </div>
         </div>

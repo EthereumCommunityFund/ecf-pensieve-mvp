@@ -1,9 +1,9 @@
 'use client';
 
 import { Image } from '@heroui/react';
+import { PlusCircle } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { PlusCircle } from '@phosphor-icons/react';
 
 import { Button, ECFButton } from '@/components/base/button';
 import ECFTypography from '@/components/base/typography';
@@ -86,7 +86,7 @@ const PendingProjectsPage = () => {
               className="border border-black/10 bg-transparent font-semibold hover:bg-black/5 focus:bg-black/5 active:bg-black/10"
             >
               <PlusCircle className="size-[20px] opacity-50" />
-              <span>Pensieve AutoFill Agent(v0)</span>
+              <span>Pensieve Magic Pen</span>
             </ECFButton>
             <ScanPendingProject />
           </div>
