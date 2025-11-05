@@ -387,7 +387,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     address: HARBERGER_FACTORY_ADDRESS,
     abi: HARBERGER_FACTORY_ABI,
     functionName: 'governance',
-    chainId: sepolia.id,
+    chainId: AD_SLOT_CHAIN.id,
     query: {
       staleTime: 30_000,
       refetchInterval: 30_000,
@@ -433,7 +433,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
         address,
         abi: VALUATION_TAX_ENABLED_SLOT_ABI,
         functionName: 'getSlotDetails',
-        chainId: sepolia.id,
+        chainId: AD_SLOT_CHAIN_ID,
       })),
     [enabledAddresses],
   );
@@ -444,7 +444,7 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
         address,
         abi: VALUATION_TAX_SHIELDED_SLOT_ABI,
         functionName: 'getSlotDetails',
-        chainId: sepolia.id,
+        chainId: AD_SLOT_CHAIN_ID,
       })),
     [shieldedAddresses],
   );
