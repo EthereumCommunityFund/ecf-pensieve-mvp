@@ -30,6 +30,7 @@ import {
   ZERO_BIGINT,
 } from '@/utils/harberger';
 
+import { CoverageSlider } from './TakeoverSlotModal';
 import ValueLabel from './ValueLabel';
 
 type PendingSlotAction = {
@@ -42,7 +43,7 @@ type SlotStatus = 'owned' | 'overdue' | 'vacant' | 'closed';
 export interface YourSlotCardProps {
   slot: ActiveSlotData;
   pendingAction?: PendingSlotAction | null;
-  onRenew?: (slot: ActiveSlotData) => void;
+  onRenew?: (slot: ActiveSlotData, taxPeriods: bigint) => Promise<void> | void;
   onEdit?: (slot: ActiveSlotData) => void;
   onShowDetails?: (slot: ActiveSlotData) => void;
   onForfeit?: (slot: ActiveSlotData) => void;
@@ -91,6 +92,12 @@ function formatUtcTimestamp(timestamp: bigint): string {
 }
 
 const THREE_DAYS_IN_SECONDS = BigInt(60 * 60 * 24 * 3);
+const MIN_RENEW_PERIODS = 1;
+const MAX_RENEW_PERIODS = 30;
+
+const formatPeriodsLabel = (value: number): string => {
+  return value === 1 ? '1 period' : `${value} periods`;
+};
 
 export default function YourSlotsCard({
   slot,
@@ -114,26 +121,22 @@ export default function YourSlotsCard({
       ? 'overdue'
       : 'owned';
 
-  const taxPerPeriodWei = useMemo(() => {
-    const valuationBasis =
-      slot.valuationWei > ZERO_BIGINT
-        ? slot.valuationWei
-        : slot.minValuationWei;
+  const valuationBasis = useMemo(() => {
+    return slot.valuationWei > ZERO_BIGINT
+      ? slot.valuationWei
+      : slot.minValuationWei;
+  }, [slot.minValuationWei, slot.valuationWei]);
 
+  const taxPerPeriodWei = useMemo(() => {
     return calculateTaxForPeriods(
       valuationBasis,
       slot.taxRateBps,
       slot.taxPeriodInSeconds,
       ONE_BIGINT,
     );
-  }, [
-    slot.minValuationWei,
-    slot.taxPeriodInSeconds,
-    slot.taxRateBps,
-    slot.valuationWei,
-  ]);
+  }, [valuationBasis, slot.taxPeriodInSeconds, slot.taxRateBps]);
 
-  const renewalAmountLabel = formatEth(taxPerPeriodWei);
+  const perPeriodTaxLabel = formatEth(taxPerPeriodWei);
   const taxOwedWei = slot.isOverdue ? taxPerPeriodWei : ZERO_BIGINT;
   const taxOwedDisplay = formatEth(taxOwedWei);
 
@@ -219,6 +222,93 @@ export default function YourSlotsCard({
   const isActionLocked = isForfeitPending;
   const [isConfirmingForfeit, setIsConfirmingForfeit] = useState(false);
   const [forfeitError, setForfeitError] = useState<string | null>(null);
+  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
+  const [selectedCoveragePeriods, setSelectedCoveragePeriods] =
+    useState<number>(MIN_RENEW_PERIODS);
+  const [renewError, setRenewError] = useState<string | null>(null);
+
+  const selectedCoverageBigInt = useMemo(() => {
+    const normalized = Math.max(selectedCoveragePeriods, MIN_RENEW_PERIODS);
+    return BigInt(normalized);
+  }, [selectedCoveragePeriods]);
+
+  const totalTaxWei = useMemo(() => {
+    return calculateTaxForPeriods(
+      valuationBasis,
+      slot.taxRateBps,
+      slot.taxPeriodInSeconds,
+      selectedCoverageBigInt,
+    );
+  }, [
+    valuationBasis,
+    slot.taxPeriodInSeconds,
+    slot.taxRateBps,
+    selectedCoverageBigInt,
+  ]);
+
+  const totalTaxLabel = formatEth(totalTaxWei);
+  const coverageDurationLabel = useMemo(() => {
+    const totalCoverageSeconds =
+      slot.taxPeriodInSeconds * selectedCoverageBigInt;
+    return formatDuration(totalCoverageSeconds, { fallback: '0s' });
+  }, [selectedCoverageBigInt, slot.taxPeriodInSeconds]);
+
+  const periodDurationLabel = formatDuration(slot.taxPeriodInSeconds, {
+    fallback: '0s',
+  });
+  const coverageRangeStartLabel = formatPeriodsLabel(MIN_RENEW_PERIODS);
+  const coverageRangeEndLabel = formatPeriodsLabel(MAX_RENEW_PERIODS);
+  const selectedPeriodsLabel = formatPeriodsLabel(selectedCoveragePeriods);
+  const isRenewConfirmDisabled =
+    totalTaxWei <= ZERO_BIGINT || isRenewPending || !onRenew;
+
+  const handleOpenRenewModal = useCallback(() => {
+    if (isCardInactive || isRenewPending || isActionLocked) {
+      return;
+    }
+    setRenewError(null);
+    setSelectedCoveragePeriods(MIN_RENEW_PERIODS);
+    setIsRenewModalOpen(true);
+  }, [isActionLocked, isCardInactive, isRenewPending]);
+
+  const handleCloseRenewModal = useCallback(() => {
+    if (isRenewPending) {
+      return;
+    }
+    setIsRenewModalOpen(false);
+    setRenewError(null);
+  }, [isRenewPending]);
+
+  const handleCoverageSliderChange = useCallback((value: number) => {
+    const normalized = Math.min(
+      Math.max(value, MIN_RENEW_PERIODS),
+      MAX_RENEW_PERIODS,
+    );
+    setSelectedCoveragePeriods(normalized);
+  }, []);
+
+  const handleConfirmRenew = useCallback(async () => {
+    if (!onRenew) {
+      return;
+    }
+
+    if (selectedCoverageBigInt <= ZERO_BIGINT) {
+      setRenewError('Select at least one tax period.');
+      return;
+    }
+
+    try {
+      setRenewError(null);
+      await Promise.resolve(onRenew(slot, selectedCoverageBigInt));
+      setIsRenewModalOpen(false);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message || 'Failed to renew coverage.'
+          : 'Failed to renew coverage.';
+      setRenewError(message);
+    }
+  }, [onRenew, selectedCoverageBigInt, slot]);
 
   const handleOpenConfirm = useCallback(() => {
     if (isActionLocked || !canForfeit) {
@@ -257,6 +347,7 @@ export default function YourSlotsCard({
 
   const taxDueIsOverdue = taxDueCountdown.startsWith('Overdue');
   const isCritical = taxDueIsOverdue || currentAdTone === 'danger';
+  const renewalCtaLabel = status === 'overdue' ? 'Pay Due Tax' : 'Prepay Tax';
 
   const displayName = slot.slotDisplayName ?? slot.slotName;
 
@@ -367,10 +458,10 @@ export default function YourSlotsCard({
               className="h-[32px] w-full rounded-[6px] text-[14px] font-semibold"
               isDisabled={isCardInactive || isRenewPending || isActionLocked}
               isLoading={isRenewPending}
-              onPress={() => onRenew?.(slot)}
+              onPress={handleOpenRenewModal}
             >
               <CoinVertical className="size-[20px] opacity-50" />
-              {`Pay Due Tax ${renewalAmountLabel}`}
+              {`${renewalCtaLabel} ${perPeriodTaxLabel}`}
             </Button>
           ) : null}
 
@@ -434,6 +525,102 @@ export default function YourSlotsCard({
           </div>
         </div>
       </CardBody>
+
+      <Modal
+        isOpen={isRenewModalOpen}
+        onClose={handleCloseRenewModal}
+        isDismissable={!isRenewPending}
+        placement="center"
+        classNames={{
+          base: 'max-w-[420px] bg-white p-0',
+          header: 'p-[20px] text-[18px] font-semibold text-black',
+          body: 'p-[20px] flex flex-col gap-[14px] text-[14px] text-black/70',
+          footer: 'p-[16px] flex justify-end gap-[12px]',
+        }}
+      >
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader>Prepay Tax</ModalHeader>
+              <ModalBody>
+                <p className="text-[13px] text-black/60">
+                  One period ≈ {periodDurationLabel}. Adjust coverage to prepay
+                  multiple periods at once.
+                </p>
+
+                <CoverageSlider
+                  value={selectedCoveragePeriods}
+                  min={MIN_RENEW_PERIODS}
+                  max={MAX_RENEW_PERIODS}
+                  rangeStart={coverageRangeStartLabel}
+                  rangeEnd={coverageRangeEndLabel}
+                  onChange={handleCoverageSliderChange}
+                  onChangeEnd={handleCoverageSliderChange}
+                />
+
+                <div className="flex flex-col gap-[10px] rounded-[8px] border border-black/10 bg-[#F9F9F9] p-[12px]">
+                  <div className="flex items-center justify-between text-[13px] text-black/70">
+                    <span>Tax per Period</span>
+                    <ValueLabel valueLabelType="bordered">
+                      {perPeriodTaxLabel}
+                    </ValueLabel>
+                  </div>
+                  <div className="flex items-center justify-between text-[13px] text-black/70">
+                    <span>Selected Coverage</span>
+                    <ValueLabel valueLabelType="pureText">
+                      {selectedPeriodsLabel}
+                    </ValueLabel>
+                  </div>
+                  <div className="flex items-center justify-between text-[13px] text-black/70">
+                    <span>Coverage Duration</span>
+                    <ValueLabel valueLabelType="pureText">
+                      {coverageDurationLabel}
+                    </ValueLabel>
+                  </div>
+                  <div className="flex items-center justify-between text-[13px] font-semibold text-black">
+                    <span>Total Tax</span>
+                    <ValueLabel valueLabelType="dark">
+                      {totalTaxLabel}
+                    </ValueLabel>
+                  </div>
+                  <div className="rounded-[6px] bg-black/[0.04] px-[10px] py-[8px] text-[12px] text-black/50">
+                    {perPeriodTaxLabel} × {selectedCoveragePeriods}{' '}
+                    {selectedCoveragePeriods === 1 ? 'period' : 'periods'} ={' '}
+                    {totalTaxLabel}
+                  </div>
+                </div>
+
+                {renewError ? (
+                  <div className="rounded-[6px] bg-[#FEF2F2] px-[10px] py-[8px] text-[12px] text-[#B91C1C]">
+                    {renewError}
+                  </div>
+                ) : null}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="secondary"
+                  size="sm"
+                  className="rounded-[6px] px-[12px] text-[14px] font-semibold"
+                  isDisabled={isRenewPending}
+                  onPress={handleCloseRenewModal}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  size="sm"
+                  className="rounded-[6px] px-[14px] text-[14px] font-semibold text-white"
+                  isDisabled={isRenewConfirmDisabled}
+                  isLoading={isRenewPending}
+                  onPress={handleConfirmRenew}
+                >
+                  {`Prepay ${totalTaxLabel}`}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       <Modal
         isOpen={isConfirmingForfeit}

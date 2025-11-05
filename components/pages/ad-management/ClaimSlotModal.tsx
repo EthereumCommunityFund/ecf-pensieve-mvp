@@ -1,6 +1,6 @@
 'use client';
 
-import { cn, Drawer, DrawerBody, DrawerContent } from '@heroui/react';
+import { cn, Drawer, DrawerBody, DrawerContent, Tooltip } from '@heroui/react';
 import { TrendUp } from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseEther } from 'viem';
@@ -283,27 +283,33 @@ export default function ClaimSlotModal({
   }, [isSubmitting, onClose]);
 
   const breakdownRows = useMemo(() => {
+    const defaults = {
+      bondRateLabel: 'Bond Rate',
+      bondRateValue: '—',
+      bondRateHelper:
+        'Portion of the valuation locked as collateral when you claim the slot.',
+      taxLabel: 'Tax',
+      taxValue: '—',
+      taxHelper: 'Upfront tax payment covering the selected number of periods.',
+      coverageLabel: 'Coverage',
+      coverageValue: coverageLabel,
+      coverageHelper:
+        'Duration that your prepaid tax covers before renewal is required.',
+      totalLabel: 'Total Cost',
+      totalValue: '—',
+      totalHelper: 'Combined ETH required now, including bond and prepaid tax.',
+    };
+
     if (!slot) {
-      return {
-        bondRateLabel: 'Bond Rate',
-        bondRateValue: '—',
-        taxLabel: 'Tax',
-        taxValue: '—',
-        coverageLabel: 'Coverage',
-        coverageValue: coverageLabel,
-        totalLabel: 'Total Cost',
-        totalValue: '—',
-      };
+      return defaults;
     }
 
     return {
+      ...defaults,
       bondRateLabel: `Bond Rate (${slot.bondRate})`,
       bondRateValue: formatEth(bondRequired),
       taxLabel: `Tax (${coverageLabel})`,
       taxValue: formatEth(taxRequired),
-      coverageLabel: 'Coverage',
-      coverageValue: coverageLabel,
-      totalLabel: 'Total Cost',
       totalValue: formatEth(totalValue),
     };
   }, [bondRequired, coverageLabel, slot, taxRequired, totalValue]);
@@ -376,16 +382,19 @@ export default function ClaimSlotModal({
 
                   <BreakdownRow
                     label={breakdownRows.bondRateLabel}
+                    helperText={breakdownRows.bondRateHelper}
                     value={breakdownRows.bondRateValue}
                     valueLabelType="light"
                   />
                   <BreakdownRow
                     label={breakdownRows.taxLabel}
+                    helperText={breakdownRows.taxHelper}
                     value={breakdownRows.taxValue}
                     valueLabelType="light"
                   />
                   <BreakdownRow
                     label={breakdownRows.coverageLabel}
+                    helperText={breakdownRows.coverageHelper}
                     value={breakdownRows.coverageValue}
                     valueLabelType="pureText"
                     className="opacity-50"
@@ -394,7 +403,11 @@ export default function ClaimSlotModal({
                   <div className="flex items-center justify-between border-t border-black/10 pt-[8px]">
                     <div className="flex items-center gap-[6px] text-[14px] text-black/80">
                       <span>{breakdownRows.totalLabel}</span>
-                      <InfoIcon size={16} />
+                      <Tooltip content={breakdownRows.totalHelper}>
+                        <span className="flex items-center opacity-60">
+                          <InfoIcon size={16} />
+                        </span>
+                      </Tooltip>
                     </div>
                     <span className="text-[16px] font-semibold text-[#3CBF91]">
                       {breakdownRows.totalValue}
@@ -711,11 +724,13 @@ function LabelWithInfo({ label }: { label: string }) {
 
 export function BreakdownRow({
   label,
+  helperText,
   value,
   valueLabelType,
   className = '',
 }: {
   label: string;
+  helperText?: string;
   value: string;
   valueLabelType: IValueLabelType;
   className?: string;
@@ -729,7 +744,11 @@ export function BreakdownRow({
     >
       <div className="flex items-center gap-[6px]">
         <span>{label}</span>
-        <InfoIcon size={16} />
+        <Tooltip content={helperText ?? label}>
+          <span className="flex items-center opacity-60">
+            <InfoIcon size={16} />
+          </span>
+        </Tooltip>
       </div>
       <ValueLabel valueLabelType={valueLabelType}>{value}</ValueLabel>
     </div>

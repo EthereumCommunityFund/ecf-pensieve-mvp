@@ -125,10 +125,10 @@ function AdManagementPageContent() {
   }, []);
 
   const handleRenewSlot = useCallback(
-    async (slot: ActiveSlotData) => {
+    async (slot: ActiveSlotData, taxPeriods: bigint = ONE_BIGINT) => {
       setPendingSlotAction({ slotId: slot.id, action: 'renew' });
       try {
-        await renewSlot({ slot, taxPeriods: ONE_BIGINT });
+        await renewSlot({ slot, taxPeriods });
         await refetch();
       } finally {
         setPendingSlotAction(null);

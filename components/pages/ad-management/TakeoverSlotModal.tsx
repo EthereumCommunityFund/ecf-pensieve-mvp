@@ -47,12 +47,16 @@ type SlotModalMode = 'takeover' | 'edit' | 'view';
 interface BreakdownConfig {
   bondRateLabel: string;
   bondRateValue: string;
+  bondRateHelper: string;
   taxLabel: string;
   taxValue: string;
+  taxHelper: string;
   coverageLabel: string;
   coverageValue: string;
+  coverageHelper: string;
   totalLabel: string;
   totalValue: string;
+  totalHelper: string;
 }
 
 interface ValuationConfig {
@@ -726,14 +730,22 @@ function SlotActionFormContent({
     ? {
         bondRateLabel: `Bond Rate (${slot.bondRate})`,
         bondRateValue: formatEth(bondRequired),
+        bondRateHelper:
+          'Portion of the valuation locked as collateral during the takeover.',
         taxLabel: `Tax (${selectedCoverageDays} period${
           selectedCoverageDays > 1 ? 's' : ''
         })`,
         taxValue: formatEth(taxRequired),
+        taxHelper:
+          'Prepaid tax owed for the coverage you select before renewing.',
         coverageLabel: 'Coverage',
         coverageValue: coverageDuration,
+        coverageHelper:
+          'Total duration that prepaid taxes will keep the slot current.',
         totalLabel: 'Total',
         totalValue: formatEth(totalValue),
+        totalHelper:
+          'Combined ETH needed now: bond requirement plus prepaid tax.',
       }
     : undefined;
 
@@ -886,7 +898,11 @@ function SlotActionFormContent({
 
       <div className="grid grid-cols-1 gap-[8px] rounded-[10px] border border-black/10 bg-white p-[10px] md:grid-cols-3">
         <InfoStat label="Owner" value={slot.owner ?? '—'} labelType={'light'} />
-        <InfoStat label="Tax Rate" value={slot.taxRate} labelType={'light'} />
+        <InfoStat
+          label="Tax Rate (Annually)"
+          value={slot.taxRate}
+          labelType={'light'}
+        />
         <InfoStat
           label={minBidLabel}
           value={minBidValue}
@@ -955,16 +971,19 @@ function SlotActionFormContent({
           </div>
           <BreakdownRow
             label={breakdown.bondRateLabel}
+            helperText={breakdown.bondRateHelper}
             value={breakdown.bondRateValue}
             valueLabelType="light"
           />
           <BreakdownRow
             label={breakdown.taxLabel}
+            helperText={breakdown.taxHelper}
             value={breakdown.taxValue}
             valueLabelType="light"
           />
           <BreakdownRow
             label={breakdown.coverageLabel}
+            helperText={breakdown.coverageHelper}
             value={breakdown.coverageValue}
             valueLabelType="pureText"
             className="opacity-50"
@@ -973,7 +992,11 @@ function SlotActionFormContent({
           <div className="flex items-center justify-between border-t border-black/10 pt-[8px]">
             <div className="flex items-center gap-[6px] text-[14px] text-black/80">
               <span>{breakdown.totalLabel}</span>
-              <InfoIcon size={16} />
+              <Tooltip content={breakdown.totalHelper}>
+                <span className="flex items-center opacity-60">
+                  <InfoIcon size={16} />
+                </span>
+              </Tooltip>
             </div>
             <span className="text-[16px] font-semibold text-[#3CBF91]">
               {breakdown.totalValue}

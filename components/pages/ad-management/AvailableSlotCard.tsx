@@ -129,6 +129,7 @@ export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
 interface StatBlock {
   id: string;
   label: string;
+  helperText?: string;
   value: string;
   valueLabelType: IValueLabelType;
   withBorderTop?: boolean;
@@ -253,7 +254,14 @@ export function ActiveSlotCard({
 
         <div className="flex flex-col gap-[8px]">
           {stats.map((stat) => {
-            const { id, label, value, valueLabelType, withBorderTop } = stat;
+            const {
+              id,
+              label,
+              helperText,
+              value,
+              valueLabelType,
+              withBorderTop,
+            } = stat;
             return (
               <div
                 key={id}
@@ -262,9 +270,18 @@ export function ActiveSlotCard({
                   withBorderTop && 'border-t border-black/10 pt-[8px]',
                 )}
               >
-                <span className="text-[14px] font-medium text-black/80">
-                  {label}
-                </span>
+                <div className="flex items-center gap-[6px]">
+                  <span className="text-[14px] font-medium text-black/80">
+                    {label}
+                  </span>
+                  {helperText ? (
+                    <Tooltip content={helperText}>
+                      <span className="flex items-center opacity-60">
+                        <InfoIcon size={18} />
+                      </span>
+                    </Tooltip>
+                  ) : null}
+                </div>
                 <ValueLabel valueLabelType={valueLabelType}>{value}</ValueLabel>
               </div>
             );
@@ -398,24 +415,32 @@ export function buildActiveStats(
     {
       id: 'valuation',
       label: 'Current Valuation',
+      helperText:
+        'Declared valuation that governs tax accrual and takeover pricing.',
       value: valuation,
       valueLabelType: 'light',
     },
     {
       id: 'bond',
       label: 'Locked Bond',
+      helperText:
+        'Collateral held in escrow; covers overdue tax before being refunded.',
       value: lockedBond,
       valueLabelType: 'bordered',
     },
     {
       id: 'units',
-      label: 'Remaining Units',
+      label: 'Tax Due',
+      helperText:
+        'Countdown until taxes come due; switches to overdue time after expiry.',
       value: remainingUnits,
       valueLabelType: remainingValueLabelType,
     },
     {
       id: 'takeover',
       label: 'Min Takeover Bid',
+      helperText:
+        'Minimum bid required to seize the slot, including the mandated increment.',
       value: minTakeoverBid,
       valueLabelType: 'dark',
       withBorderTop: true,

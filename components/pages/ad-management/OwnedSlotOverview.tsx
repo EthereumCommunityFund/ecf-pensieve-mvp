@@ -1,9 +1,10 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, Tooltip } from '@heroui/react';
 import { Clock } from '@phosphor-icons/react';
 import { ReactNode, useMemo, type CSSProperties } from 'react';
 
+import { InfoIcon } from '@/components/icons';
 import type { ActiveSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 import {
@@ -22,6 +23,7 @@ interface DetailItem {
   type?: 'content' | 'divider';
   valueLabelType?: IValueLabelType;
   icon?: ReactNode;
+  helper?: string;
 }
 
 export interface OwnedSlotOverviewProps {
@@ -92,30 +94,53 @@ export default function OwnedSlotOverview({
   })();
 
   const detailItems: DetailItem[] = [
-    { label: 'Minimum Valuation:', value: formatEth(slot.minValuationWei) },
-    { label: 'Locked Bond:', value: slot.lockedBond },
-    { label: 'Prepaid Tax:', value: formatEth(slot.prepaidTaxBalanceWei) },
     {
-      label: 'Tax Due:',
+      label: 'Minimum Valuation',
+      value: formatEth(slot.minValuationWei),
+      helper: 'Lowest valuation allowed when placing bids on this slot.',
+    },
+    {
+      label: 'Locked Bond',
+      value: slot.lockedBond,
+      helper: 'Collateral held in escrow; covers overdue tax before refunding.',
+    },
+    {
+      label: 'Prepaid Tax',
+      value: formatEth(slot.prepaidTaxBalanceWei),
+      helper: 'Remaining prepaid tax balance available for future coverage.',
+    },
+    {
+      label: 'Tax Due',
       value: taxDueCountdown,
       icon: <Clock size={14} weight="fill" className="opacity-50" />,
       valueLabelType: slot.isOverdue ? 'danger' : undefined,
+      helper:
+        'Time until current coverage ends; shows overdue duration after expiry.',
     },
     {
-      label: 'Remaining Units:',
-      value: slot.remainingUnits,
-      valueLabelType: slot.isOverdue ? 'danger' : undefined,
+      label: 'Tax Owed',
+      value: taxOwedDisplay,
+      helper: 'Amount payable when renewing once the slot becomes overdue.',
     },
-    { label: 'Tax Owed:', value: taxOwedDisplay },
     { label: 'divider-001', value: '', type: 'divider' },
     {
-      label: 'Min Takeover Bid:',
+      label: 'Min Takeover Bid',
       value: slot.minTakeoverBid,
       valueLabelType: 'dark',
+      helper:
+        'Minimum offer required for takeover, including mandated increment.',
     },
     { label: 'divider-002', value: '', type: 'divider' },
-    { label: 'Owner:', value: slot.owner },
-    { label: 'Tax Rate:', value: slot.taxRate },
+    {
+      label: 'Owner',
+      value: slot.owner,
+      helper: 'Current wallet address that controls this slot.',
+    },
+    {
+      label: 'Tax Rate (Annually)',
+      value: slot.taxRate,
+      helper: 'Annualized tax percentage applied to the declared valuation.',
+    },
   ];
 
   const statusLabelType = tone === 'danger' ? 'danger' : 'light';
@@ -167,9 +192,18 @@ export default function OwnedSlotOverview({
             <div key={item.label} className="h-px w-full bg-black/10"></div>
           ) : (
             <div key={item.label} className="flex justify-between gap-[4px]">
-              <span className="font-sans text-[14px] text-black/80">
-                {item.label}
-              </span>
+              <div className="flex items-center gap-[6px]">
+                <span className="font-sans text-[14px] text-black/80">
+                  {item.label}:
+                </span>
+                {item.helper ? (
+                  <Tooltip content={item.helper}>
+                    <span className="flex items-center opacity-50">
+                      <InfoIcon size={18} />
+                    </span>
+                  </Tooltip>
+                ) : null}
+              </div>
               <ValueLabel valueLabelType={item.valueLabelType} icon={item.icon}>
                 {item.value}
               </ValueLabel>
