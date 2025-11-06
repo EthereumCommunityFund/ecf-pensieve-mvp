@@ -8,6 +8,7 @@ import { eq, sql } from 'drizzle-orm';
 
 import { db } from '../lib/db';
 import { shareLinks, sieveFollows, sieves, type Sieve } from '../lib/db/schema';
+import { buildPublicSievePath } from '../lib/services/share';
 import { resolveFilterState } from '../lib/services/sieveFilterService';
 import type { StoredSieveFilterConditions } from '../types/sieve';
 
@@ -18,8 +19,6 @@ type SieveWithRelations = Sieve & {
 };
 
 const CUSTOM_FILTER_ENTITY_PREFIX = 'customFilter:';
-
-const buildPublicSievePath = (code: string) => `/sieve/${code}`;
 
 function normalizeCustomFilterTargetPath(rawPath: string): string {
   const trimmed = (rawPath ?? '').trim();

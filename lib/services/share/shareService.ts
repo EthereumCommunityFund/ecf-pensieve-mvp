@@ -192,6 +192,7 @@ export interface SharePayload {
   entityId: string;
   sharePath: string;
   targetUrl: string;
+  filterTargetPath?: string;
   parentId?: string | null;
   visibility: ShareVisibility;
   metadata: ShareMetadata;
@@ -268,6 +269,10 @@ export class ShareServiceError extends Error {
 }
 
 const CUSTOM_FILTER_ENTITY_PREFIX = 'customFilter:';
+
+export function buildPublicSievePath(code: string): string {
+  return `/sieve/${code}`;
+}
 
 function normalizeCustomFilterTargetPath(rawPath: string): string {
   const trimmed = (rawPath ?? '').trim();
@@ -2126,12 +2131,34 @@ async function buildPayloadFromRecord(
         ? 'public'
         : mergeVisibility(recordVisibility, contextVisibility);
 
+    let targetUrl = context.targetUrl;
+    let filterTargetPath: string | undefined;
+
+    if (entityType === 'customFilter') {
+      filterTargetPath = context.targetUrl;
+      const expectedTargetUrl = buildPublicSievePath(record.code);
+
+      if (record.targetUrl !== expectedTargetUrl) {
+        try {
+          await db
+            .update(shareLinks)
+            .set({ targetUrl: expectedTargetUrl })
+            .where(eq(shareLinks.id, record.id));
+        } catch (error) {
+          console.error('Failed to sync custom filter target url', error);
+        }
+      }
+
+      targetUrl = expectedTargetUrl;
+    }
+
     return {
       code: record.code,
       entityType,
       entityId: record.entityId,
       sharePath: `/s/${record.code}`,
-      targetUrl: context.targetUrl,
+      targetUrl,
+      filterTargetPath,
       parentId: context.parentId ?? record.parentId ?? null,
       visibility: effectiveVisibility,
       metadata: context.metadata,

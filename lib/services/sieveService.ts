@@ -3,6 +3,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { db, type Database } from '@/lib/db';
 import { shareLinks, sieveFollows, sieves } from '@/lib/db/schema';
 import ShareService, {
+  buildPublicSievePath,
   buildShareUrl,
   type SharePayload,
 } from '@/lib/services/share';
@@ -98,10 +99,6 @@ async function fetchShareLinkByCode(
   }
 
   return record;
-}
-
-function buildPublicSievePath(code: string): string {
-  return `/sieve/${code}`;
 }
 
 async function ensureShareLinkTargetPath(

@@ -48,7 +48,7 @@ export const shareRouter = router({
       return {
         ...payload,
         shareUrl: ShareService.buildShareUrl(payload.code),
-        targetPath: payload.targetUrl,
+        targetPath: payload.filterTargetPath ?? payload.targetUrl,
       };
     }),
 });
