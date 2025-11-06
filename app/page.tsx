@@ -1,7 +1,6 @@
 'use client';
 
 import HomeSidebarAd from '@/components/pages/ad-management/HtaxAd/HomeSidebarAd';
-import HomeTopBannerAd from '@/components/pages/ad-management/HtaxAd/HomeTopBannerAd';
 import Banner from '@/components/pages/home/Banner';
 import BugBountyEntry from '@/components/pages/home/BugBountyEntry';
 import Categories from '@/components/pages/home/Categories';
@@ -13,7 +12,7 @@ export default function Page() {
     <div className="mobile:px-[10px] px-[20px] pb-[56px] pt-[20px]">
       <Banner />
 
-      <HomeTopBannerAd />
+      {/* <HomeTopBannerAd /> */}
 
       <div className="mobile:block mt-[10px] hidden space-y-[10px]">
         <ProjectIntroCard />

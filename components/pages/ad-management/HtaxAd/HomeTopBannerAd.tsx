@@ -7,6 +7,7 @@ import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
+import OpenToAdFallback from './OpenToAdFallback';
 import { isHtaxAdPlacementActive } from './utils';
 
 const BANNER_PAGE_KEY = 'home';
@@ -47,6 +48,10 @@ function parseImageSize(imageSize?: string) {
 const HomeTopBannerAd = () => {
   const { openExternalLink } = useExternalLink();
   const { activeSlots, isLoading } = useHarbergerSlots();
+  const isPlacementActive = isHtaxAdPlacementActive(
+    BANNER_PAGE_KEY,
+    BANNER_POSITION_KEY,
+  );
 
   const slot = useMemo(() => {
     return activeSlots.find((item) => {
@@ -79,7 +84,11 @@ const HomeTopBannerAd = () => {
   const desktopAspectRatio = desktopSize.width / desktopSize.height;
   const mobileAspectRatio = mobileSize.width / mobileSize.height;
 
-  if (!isLoading && !slot) {
+  const hasRenderableAd = Boolean(slot && primaryImageUrl);
+  const shouldShowFallback =
+    isPlacementActive && !isLoading && !hasRenderableAd;
+
+  if (!isPlacementActive) {
     return null;
   }
 
@@ -127,9 +136,13 @@ const HomeTopBannerAd = () => {
     );
   };
 
-  if (!isHtaxAdPlacementActive(BANNER_PAGE_KEY, BANNER_POSITION_KEY)) {
-    return null;
-  }
+  const renderFallbackContainer = (
+    aspectRatio: number,
+    visibilityClass: string,
+  ) => {
+    const baseClass = `overflow-hidden rounded-[16px] border border-black/10 bg-black/5 text-[14px] font-semibold text-black/70 ${visibilityClass}`;
+    return <OpenToAdFallback aspectRatio={aspectRatio} className={baseClass} />;
+  };
 
   return (
     <section className="mobile:mt-[12px] mt-[16px]">
@@ -145,14 +158,19 @@ const HomeTopBannerAd = () => {
               style={{ aspectRatio: `${mobileAspectRatio}` }}
             />
           </>
-        ) : slot ? (
+        ) : hasRenderableAd ? (
           <>
             {renderImageContainer(desktopAspectRatio, 'mobile:hidden')}
             {renderImageContainer(mobileAspectRatio, 'mobile:block hidden')}
           </>
+        ) : shouldShowFallback ? (
+          <>
+            {renderFallbackContainer(desktopAspectRatio, 'mobile:hidden')}
+            {renderFallbackContainer(mobileAspectRatio, 'mobile:block hidden')}
+          </>
         ) : null}
 
-        {isLoading || slot ? (
+        {isLoading || hasRenderableAd || shouldShowFallback ? (
           <div className="flex items-center justify-between px-[12px] text-[11px] text-black/70">
             <span className="font-medium">
               Advertisement | Harberger Tax Ads
