@@ -27,7 +27,8 @@ export class SieveServiceError extends Error {
   }
 }
 
-type DatabaseClient = Database;
+type TransactionClient = Parameters<Parameters<Database['transaction']>[0]>[0];
+type DatabaseClient = Database | TransactionClient;
 
 type SieveRecord = typeof sieves.$inferSelect;
 type ShareLinkRecord = typeof shareLinks.$inferSelect;
@@ -124,11 +125,13 @@ async function ensureCustomFilterShareLink(params: {
   targetPath: string;
   visibility: SieveVisibility;
   createdBy: string;
+  preferredCode?: string;
 }): Promise<SharePayload> {
   return ShareService.ensureCustomFilterShareLink({
     targetPath: params.targetPath,
     createdBy: params.createdBy,
     visibility: params.visibility,
+    preferredCode: params.preferredCode,
   });
 }
 
@@ -400,6 +403,7 @@ export async function updateSieve(
       targetPath: nextState.targetPath,
       visibility: nextVisibility,
       createdBy: input.creatorId,
+      preferredCode: existing.shareLink.code,
     });
 
     nextShareLink = await fetchShareLinkByCode(nextPayload.code, currentDb);

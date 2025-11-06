@@ -98,7 +98,7 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
               </span>
             )}
           </div>
-          <div className="flex flex-col gap-[6px]">
+          {/* <div className="flex flex-col gap-[6px]">
             <span className="text-[12px] font-semibold text-black/70">
               Public page
             </span>
@@ -124,7 +124,7 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
             <span className="text-[11px] text-black/45">
               Share this URL when you want others to view and follow your feed.
             </span>
-          </div>
+          </div> */}
         </ModalBody>
         <ModalFooter className="flex items-center justify-end gap-[10px] border-t border-black/10 px-5 py-[12px]">
           <Button color="primary" onPress={onClose}>

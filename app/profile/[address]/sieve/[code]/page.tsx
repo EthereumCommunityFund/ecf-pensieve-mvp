@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DeleteSieveModal from '@/app/profile/[address]/components/sieve/modals/DeleteSieveModal';
 import EditSieveModal from '@/app/profile/[address]/components/sieve/modals/EditSieveModal';
@@ -36,22 +36,29 @@ const ManagementSievePage = () => {
     {
       enabled: Boolean(code),
       retry: false,
-      onError: (error) => {
-        const errorCode = error.data?.code;
-        if (errorCode === 'FORBIDDEN') {
-          router.replace(`/sieve/${code}`);
-          return;
-        }
-        if (errorCode === 'NOT_FOUND') {
-          addToast({
-            title: 'Feed not found',
-            color: 'danger',
-          });
-          router.push(`/profile/${address}?tab=sieve`);
-        }
-      },
     },
   );
+
+  useEffect(() => {
+    const error = sieveQuery.error;
+    if (!error) {
+      return;
+    }
+
+    const errorCode = error.data?.code;
+    if (errorCode === 'FORBIDDEN') {
+      router.replace(`/sieve/${code}`);
+      return;
+    }
+
+    if (errorCode === 'NOT_FOUND') {
+      addToast({
+        title: 'Feed not found',
+        color: 'danger',
+      });
+      router.push(`/profile/${address}?tab=sieve`);
+    }
+  }, [address, code, router, sieveQuery.error]);
 
   const sieve = sieveQuery.data;
 

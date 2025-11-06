@@ -201,16 +201,12 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
         ) : followedSieves.length > 0 ? (
           <div className="flex flex-col gap-[12px]">
             {followedSieves.map((sieve) => (
-              <div
+              <SieveCard
                 key={`followed-${sieve.id}`}
-                className="rounded-[12px] border border-black/10 bg-white p-[16px]"
-              >
-                <SieveCard
-                  canManage={false}
-                  sieve={sieve}
-                  onView={() => handleViewPublic(sieve)}
-                />
-                <div className="mt-[12px] flex justify-end">
+                canManage={false}
+                sieve={sieve}
+                onView={() => handleViewPublic(sieve)}
+                extraActions={
                   <Button
                     size="sm"
                     color="danger"
@@ -226,8 +222,8 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
                   >
                     Unfollow
                   </Button>
-                </div>
-              </div>
+                }
+              />
             ))}
           </div>
         ) : (

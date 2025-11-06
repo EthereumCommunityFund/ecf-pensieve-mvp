@@ -2419,12 +2419,93 @@ export async function ensureCustomFilterShareLink(params: {
   targetPath: string;
   createdBy?: string;
   visibility?: ShareVisibility;
+  preferredCode?: string;
 }): Promise<SharePayload> {
+  const requestedVisibility = params.visibility
+    ? normalizeVisibility(params.visibility)
+    : undefined;
+
+  if (params.preferredCode) {
+    const existingRecord = await db.query.shareLinks.findFirst({
+      where: eq(shareLinks.code, params.preferredCode),
+    });
+
+    if (existingRecord?.entityType === 'customFilter') {
+      const encodedEntityId = encodeCustomFilterEntityId(params.targetPath);
+      const existingVisibility = normalizeVisibility(existingRecord.visibility);
+
+      const updates: Partial<typeof shareLinks.$inferInsert> = {};
+      let resolvedRecord: ShareLinkRecord = existingRecord;
+      let requiresUpdate = false;
+
+      if (existingRecord.entityId !== encodedEntityId) {
+        updates.entityId = encodedEntityId;
+        requiresUpdate = true;
+      }
+
+      if (requestedVisibility && requestedVisibility !== existingVisibility) {
+        updates.visibility = requestedVisibility;
+        requiresUpdate = true;
+      }
+
+      if (requiresUpdate) {
+        try {
+          const [updated] = await db
+            .update(shareLinks)
+            .set(updates)
+            .where(eq(shareLinks.id, existingRecord.id))
+            .returning();
+
+          if (updated) {
+            resolvedRecord = updated;
+          } else {
+            resolvedRecord = {
+              ...existingRecord,
+              ...updates,
+            } as ShareLinkRecord;
+          }
+        } catch (error) {
+          if (isUniqueConstraintError(error)) {
+            const conflictRecord = await db.query.shareLinks.findFirst({
+              where: and(
+                eq(shareLinks.entityType, 'customFilter'),
+                eq(shareLinks.entityId, encodedEntityId),
+              ),
+            });
+
+            if (conflictRecord) {
+              const conflictPayload = await buildPayloadFromRecord(
+                conflictRecord,
+                {
+                  disableCache: true,
+                },
+              );
+              if (conflictPayload) {
+                return conflictPayload;
+              }
+            }
+          }
+
+          throw error;
+        }
+      }
+
+      const payload = await buildPayloadFromRecord(resolvedRecord, {
+        disableCache: requiresUpdate,
+      });
+      if (!payload) {
+        throw new ShareServiceError('Share payload unavailable', 404);
+      }
+
+      return payload;
+    }
+  }
+
   return ensureShareLink({
     entityType: 'customFilter',
     entityId: params.targetPath,
     createdBy: params.createdBy,
-    visibility: params.visibility,
+    visibility: requestedVisibility,
   });
 }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import {
   Dropdown,
   DropdownItem,
@@ -36,10 +37,11 @@ type SieveRecord = RouterOutputs['sieve']['getUserSieves'][0];
 interface SieveCardProps {
   sieve: SieveRecord;
   canManage: boolean;
-  onEdit: () => void;
-  onShare: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onShare?: () => void;
+  onDelete?: () => void;
   onView?: (sieve: SieveRecord) => void;
+  extraActions?: ReactNode;
 }
 
 const ADVANCED_FILTER_KEY = getAdvancedFilterQueryKey();
@@ -178,6 +180,7 @@ const SieveCard = ({
   onShare,
   onDelete,
   onView,
+  extraActions,
 }: SieveCardProps) => {
   const createdAt = dayjs(sieve.createdAt).format('MMM D, YYYY');
   const filterSummaries = extractFilterSummaries(sieve.targetPath);
@@ -245,14 +248,18 @@ const SieveCard = ({
             >
               <DropdownItem
                 key="edit"
-                onPress={onEdit}
+                onPress={() => {
+                  onEdit?.();
+                }}
                 endContent={<PencilSimpleIcon size={18} />}
               >
                 Edit Feed
               </DropdownItem>
               <DropdownItem
                 key="delete"
-                onPress={onDelete}
+                onPress={() => {
+                  onDelete?.();
+                }}
                 className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
                 endContent={<TrashIcon size={18} />}
               >
@@ -325,11 +332,14 @@ const SieveCard = ({
         <Button size="sm" onPress={handleViewFeed}>
           View Feed
         </Button>
+        {extraActions}
         {canManage ? (
           <Button
             color="primary"
             size="sm"
-            onPress={onShare}
+            onPress={() => {
+              onShare?.();
+            }}
             isDisabled={sieve.share.visibility !== 'public'}
             className="min-w-[120px]"
           >

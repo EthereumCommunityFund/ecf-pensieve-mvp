@@ -17,6 +17,7 @@ const PublicSievePage = () => {
   const params = useParams<{ code: string }>();
   const router = useRouter();
   const { profile, showAuthPrompt } = useAuth();
+  const utils = trpc.useUtils();
 
   const code = params?.code ? String(params.code) : '';
 
@@ -41,14 +42,16 @@ const PublicSievePage = () => {
   }, [sieve]);
 
   const followMutation = trpc.sieve.followSieve.useMutation({
-    onSuccess: () => {
-      sieveQuery.refetch();
+    onSuccess: async () => {
+      await utils.sieve.getUserFollowedSieves.invalidate();
+      await sieveQuery.refetch();
     },
   });
 
   const unfollowMutation = trpc.sieve.unfollowSieve.useMutation({
-    onSuccess: () => {
-      sieveQuery.refetch();
+    onSuccess: async () => {
+      await utils.sieve.getUserFollowedSieves.invalidate();
+      await sieveQuery.refetch();
     },
   });
 
