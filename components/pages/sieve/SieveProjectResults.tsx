@@ -47,7 +47,7 @@ const mapSortToParams = (sortValue: string | null): SortParams => {
     case 'top-community-trusted':
       return { sortBy: SortBy.COMMUNITY_TRUSTED, sortOrder: SortOrder.DESC };
     case 'top-accountable':
-      return { sortBy: SortBy.TRANSPARENT, sortOrder: SortOrder.DESC };
+      return {};
     default:
       return {};
   }
@@ -89,12 +89,13 @@ const SieveProjectResults = ({
   );
 
   const shouldUseAdvancedFilter = advancedFilters.length > 0;
+  const isAccountableSort = conditions.sort === 'top-accountable';
   const fetchLimit = shouldUseAdvancedFilter
     ? ADVANCED_FILTER_FETCH_LIMIT
     : PAGE_SIZE;
   const sortParams = useMemo(
-    () => mapSortToParams(conditions.sort ?? null),
-    [conditions.sort],
+    () => (isAccountableSort ? {} : mapSortToParams(conditions.sort ?? null)),
+    [conditions.sort, isAccountableSort],
   );
 
   const searchTerm = useMemo(() => {
@@ -112,7 +113,7 @@ const SieveProjectResults = ({
     setRawProjects([]);
     setHasNextPage(true);
     setIsFetchingMore(false);
-  }, [conditionsKey]);
+  }, [conditionsKey, isAccountableSort]);
 
   const projectQuery = trpc.project.getProjects.useQuery(
     {
@@ -124,10 +125,26 @@ const SieveProjectResults = ({
     },
     {
       keepPreviousData: true,
+      enabled: !isAccountableSort,
     },
   );
 
+  const accountableQuery =
+    trpc.rank.getTopRanksByGenesisSupportPaginated.useInfiniteQuery(
+      { limit: fetchLimit },
+      {
+        getNextPageParam: (lastPage) =>
+          lastPage.hasNextPage ? lastPage.nextCursor : undefined,
+        enabled: isAccountableSort,
+        refetchOnWindowFocus: false,
+      },
+    );
+
   useEffect(() => {
+    if (isAccountableSort) {
+      return;
+    }
+
     if (!projectQuery.data) {
       return;
     }
@@ -144,10 +161,57 @@ const SieveProjectResults = ({
 
     setHasNextPage(Boolean(projectQuery.data.hasNextPage));
     setIsFetchingMore(false);
-  }, [projectQuery.data, offset]);
+  }, [projectQuery.data, offset, isAccountableSort]);
+
+  const accountableProjects = useMemo(() => {
+    if (!isAccountableSort || !accountableQuery.data?.pages) {
+      return [] as IProject[];
+    }
+
+    const aggregated = accountableQuery.data.pages.flatMap((page) =>
+      page.items.map((entry) => entry.project),
+    ) as unknown as IProject[];
+
+    return dedupeProjects(aggregated);
+  }, [isAccountableSort, accountableQuery.data]);
+
+  const baseProjects = useMemo(
+    () => (isAccountableSort ? accountableProjects : rawProjects),
+    [isAccountableSort, accountableProjects, rawProjects],
+  );
+
+  const categoryFilteredProjects = useMemo(() => {
+    if (!categories.length) {
+      return baseProjects;
+    }
+
+    const categorySet = new Set(categories);
+
+    return baseProjects.filter((project) => {
+      const rawCategories =
+        (project as unknown as { categories?: string[] }).categories ??
+        (
+          project as unknown as {
+            projectSnap?: { categories?: string[] | null } | null;
+          }
+        ).projectSnap?.categories ??
+        [];
+
+      if (!Array.isArray(rawCategories)) {
+        return false;
+      }
+
+      return rawCategories.some((category) => {
+        if (typeof category !== 'string') {
+          return false;
+        }
+        return categorySet.has(category);
+      });
+    });
+  }, [baseProjects, categories]);
 
   const filteredProjects = useMemo(() => {
-    let items = rawProjects;
+    let items = categoryFilteredProjects;
     if (shouldUseAdvancedFilter) {
       items = filterProjectsByAdvancedFilters(items, advancedFilters);
     }
@@ -161,9 +225,26 @@ const SieveProjectResults = ({
     }
 
     return items;
-  }, [rawProjects, shouldUseAdvancedFilter, advancedFilters, searchTerm]);
+  }, [
+    categoryFilteredProjects,
+    shouldUseAdvancedFilter,
+    advancedFilters,
+    searchTerm,
+  ]);
 
   const handleLoadMore = () => {
+    if (isAccountableSort) {
+      if (
+        !accountableQuery.hasNextPage ||
+        accountableQuery.isFetchingNextPage
+      ) {
+        return;
+      }
+
+      void accountableQuery.fetchNextPage();
+      return;
+    }
+
     if (!hasNextPage || isFetchingMore || projectQuery.isFetching) {
       return;
     }
@@ -177,17 +258,32 @@ const SieveProjectResults = ({
     [conditions],
   );
 
-  const isInitialLoading = projectQuery.isLoading && offset === 0;
+  const isInitialLoading = isAccountableSort
+    ? accountableQuery.isLoading && filteredProjects.length === 0
+    : projectQuery.isLoading && offset === 0;
+
+  const effectiveHasNextPage = isAccountableSort
+    ? Boolean(accountableQuery.hasNextPage)
+    : hasNextPage;
+
+  const effectiveIsFetchingMore = isAccountableSort
+    ? accountableQuery.isFetchingNextPage
+    : isFetchingMore;
 
   return (
     <ProjectListWrapper
       isLoading={isInitialLoading}
-      isFetchingNextPage={isFetchingMore}
-      hasNextPage={hasNextPage}
+      isFetchingNextPage={effectiveIsFetchingMore}
+      hasNextPage={effectiveHasNextPage}
       projectList={filteredProjects}
       emptyMessage="No projects match this feed yet."
       onLoadMore={handleLoadMore}
       onSuccess={() => {
+        if (isAccountableSort) {
+          accountableQuery.refetch();
+          return;
+        }
+
         projectQuery.refetch();
       }}
       showCreator={mode === 'public'}
