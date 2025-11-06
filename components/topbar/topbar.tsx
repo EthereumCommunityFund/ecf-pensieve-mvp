@@ -63,8 +63,8 @@ export function Topbar() {
     <header className="fixed inset-x-0 top-0 z-50 h-[50px] min-w-[390px] border-b border-[rgba(0,0,0,0.1)] bg-white">
       {/* desktop/tablet */}
       <div className="mobile:hidden size-full px-5">
-        <div className="flex h-full items-center justify-between">
-          <div className="flex h-full items-center gap-5">
+        <div className="flex h-full items-center justify-between gap-[20px]">
+          <div className="pc:gap-[16px] tablet:gap-[10px] flex h-full items-center gap-[20px]">
             <Link
               href="/"
               className="flex h-full min-w-[171px] shrink-0 items-center"
