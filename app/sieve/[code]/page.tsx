@@ -144,6 +144,7 @@ const PublicSievePage = () => {
             color={sieve.isFollowing ? 'danger' : 'primary'}
             onPress={handleFollowToggle}
             isDisabled={followButtonDisabled}
+            isLoading={followMutation.isPending || unfollowMutation.isPending}
           >
             {followButtonLabel}
           </Button>
