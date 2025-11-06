@@ -1,6 +1,6 @@
 'use client';
 
-import { Image } from '@heroui/react';
+import { Image, ScrollShadow } from '@heroui/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -62,8 +62,11 @@ export function Topbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-[50px] min-w-[390px] border-b border-[rgba(0,0,0,0.1)] bg-white">
       {/* desktop/tablet */}
-      <div className="mobile:hidden size-full px-5">
-        <div className="flex h-full items-center justify-between gap-[20px]">
+      <div className="mobile:hidden size-full">
+        <ScrollShadow
+          className="tablet:max-w-[9999px] mobile:max-w-[9999px] flex size-full items-center justify-between gap-[20px] overflow-x-scroll px-5"
+          orientation="horizontal"
+        >
           <div className="pc:gap-[16px] tablet:gap-[10px] flex h-full items-center gap-[20px]">
             <Link
               href="/"
@@ -87,7 +90,7 @@ export function Topbar() {
           </div>
 
           {/* <AuthSection /> */}
-        </div>
+        </ScrollShadow>
       </div>
 
       {/* mobile */}
