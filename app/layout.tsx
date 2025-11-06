@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 
 import { ChatwootWidget } from '@/components/layout/ChatwootWidget';
 import { MainLayout } from '@/components/layout/mainLayout';
-import { Providers } from '@/components/layout/providers';
+import Providers from '@/components/layout/providers';
 import {
   getHomePageStats,
   getTopAccountableProjects,

@@ -27,8 +27,11 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
   }
 
   const shareUrl = sieve.share.url;
-  // const targetUrl = sieve.share.targetUrl ?? sieve.targetPath;
   const isPublic = sieve.share.visibility === 'public';
+  const publicUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/sieve/${sieve.share.code}`
+      : `/sieve/${sieve.share.code}`;
 
   const handleCopy = async (value: string) => {
     try {
@@ -94,6 +97,33 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
                 enable sharing.
               </span>
             )}
+          </div>
+          <div className="flex flex-col gap-[6px]">
+            <span className="text-[12px] font-semibold text-black/70">
+              Public page
+            </span>
+            <Input
+              value={publicUrl}
+              readOnly
+              classNames={{
+                inputWrapper:
+                  'border border-black/10 bg-[rgba(0,0,0,0.03)] h-[40px] rounded-[8px] px-[10px] text-[13px]',
+              }}
+              endContent={
+                <Button
+                  size="sm"
+                  isIconOnly
+                  onPress={() => handleCopy(publicUrl)}
+                  isDisabled={!isPublic}
+                  aria-label="Copy public page link"
+                >
+                  <CopyIcon className="size-4" />
+                </Button>
+              }
+            />
+            <span className="text-[11px] text-black/45">
+              Share this URL when you want others to view and follow your feed.
+            </span>
           </div>
         </ModalBody>
         <ModalFooter className="flex items-center justify-end gap-[10px] border-t border-black/10 px-5 py-[12px]">
