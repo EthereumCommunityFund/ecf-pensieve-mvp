@@ -300,9 +300,16 @@ function normalizeCustomFilterTargetPath(rawPath: string): string {
   return `/${trimmed}`;
 }
 
-function encodeCustomFilterEntityId(targetPath: string): string {
+function encodeCustomFilterEntityId(
+  targetPath: string,
+  ownerId?: string | null,
+): string {
   const normalized = normalizeCustomFilterTargetPath(targetPath);
-  const encoded = Buffer.from(normalized, 'utf-8').toString('base64url');
+  const payload =
+    ownerId && ownerId.length > 0
+      ? JSON.stringify({ path: normalized, ownerId })
+      : normalized;
+  const encoded = Buffer.from(payload, 'utf-8').toString('base64url');
   return `${CUSTOM_FILTER_ENTITY_PREFIX}${encoded}`;
 }
 
@@ -314,7 +321,25 @@ function decodeCustomFilterEntityId(entityId: string): string | null {
   const encoded = entityId.slice(CUSTOM_FILTER_ENTITY_PREFIX.length);
   try {
     const decoded = Buffer.from(encoded, 'base64url').toString('utf-8');
-    return normalizeCustomFilterTargetPath(decoded);
+    try {
+      const parsed = JSON.parse(decoded);
+      if (typeof parsed === 'string') {
+        return normalizeCustomFilterTargetPath(parsed);
+      }
+
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'path' in parsed &&
+        typeof parsed.path === 'string'
+      ) {
+        return normalizeCustomFilterTargetPath(parsed.path);
+      }
+
+      return normalizeCustomFilterTargetPath(decoded);
+    } catch {
+      return normalizeCustomFilterTargetPath(decoded);
+    }
   } catch (error) {
     console.error('Failed to decode custom filter entity id', error);
     return null;
@@ -2195,7 +2220,7 @@ export async function ensureShareLink(
   const rawEntityId = String(input.entityId);
   const entityId =
     entityType === 'customFilter'
-      ? encodeCustomFilterEntityId(rawEntityId)
+      ? encodeCustomFilterEntityId(rawEntityId, input.createdBy)
       : rawEntityId;
 
   const requestedVisibility = input.visibility
@@ -2431,7 +2456,10 @@ export async function ensureCustomFilterShareLink(params: {
     });
 
     if (existingRecord?.entityType === 'customFilter') {
-      const encodedEntityId = encodeCustomFilterEntityId(params.targetPath);
+      const encodedEntityId = encodeCustomFilterEntityId(
+        params.targetPath,
+        params.createdBy,
+      );
       const existingVisibility = normalizeVisibility(existingRecord.visibility);
 
       const updates: Partial<typeof shareLinks.$inferInsert> = {};

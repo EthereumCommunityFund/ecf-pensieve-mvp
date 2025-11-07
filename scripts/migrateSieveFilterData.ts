@@ -46,9 +46,16 @@ function normalizeCustomFilterTargetPath(rawPath: string): string {
   return `/${trimmed}`;
 }
 
-function encodeCustomFilterEntityId(targetPath: string): string {
+function encodeCustomFilterEntityId(
+  targetPath: string,
+  ownerId?: string | null,
+): string {
   const normalized = normalizeCustomFilterTargetPath(targetPath);
-  const encoded = Buffer.from(normalized, 'utf-8').toString('base64url');
+  const payload =
+    ownerId && ownerId.length > 0
+      ? JSON.stringify({ path: normalized, ownerId })
+      : normalized;
+  const encoded = Buffer.from(payload, 'utf-8').toString('base64url');
   return `${CUSTOM_FILTER_ENTITY_PREFIX}${encoded}`;
 }
 
@@ -153,7 +160,10 @@ async function migrateExistingSieveFilters() {
         shareLinkUpdates.targetUrl = expectedShareTarget;
       }
 
-      const expectedEntityId = encodeCustomFilterEntityId(canonicalTargetPath);
+      const expectedEntityId = encodeCustomFilterEntityId(
+        canonicalTargetPath,
+        record.creator,
+      );
       if (shareLink.entityId !== expectedEntityId) {
         shareLinkUpdates.entityId = expectedEntityId;
       }

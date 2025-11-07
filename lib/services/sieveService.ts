@@ -233,10 +233,6 @@ export async function createSieve(
       throw error;
     }
 
-    if (error instanceof Error && error.message.includes('sieves_share_link')) {
-      throw new SieveServiceError('Feed already exists for this filter', 409);
-    }
-
     throw new SieveServiceError('Failed to create sieve', 500);
   }
 }
