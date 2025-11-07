@@ -17,10 +17,10 @@ const visibilityEnum = z.enum(['public', 'private']);
 const advancedConditionSchema = z.object({
   id: z.string(),
   connector: z.enum(['AND', 'OR']).optional(),
-  fieldType: z.string(),
+  fieldType: z.enum(['special', 'select']),
   fieldKey: z.string(),
-  operator: z.string(),
-  value: z.string().optional().nullable(),
+  operator: z.enum(['is', 'is_not']),
+  value: z.string().optional(),
 });
 
 const advancedFilterSchema = z.object({

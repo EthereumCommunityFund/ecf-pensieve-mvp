@@ -124,7 +124,6 @@ const SieveProjectResults = ({
       ...(sortParams as object),
     },
     {
-      keepPreviousData: true,
       enabled: !isAccountableSort,
     },
   );
