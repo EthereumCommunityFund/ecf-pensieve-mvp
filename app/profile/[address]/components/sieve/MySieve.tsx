@@ -209,7 +209,7 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
                 extraActions={
                   <Button
                     size="sm"
-                    color="danger"
+                    color="primary"
                     onPress={() => handleUnfollow(sieve.id)}
                     isDisabled={
                       unfollowMutation.isPending &&

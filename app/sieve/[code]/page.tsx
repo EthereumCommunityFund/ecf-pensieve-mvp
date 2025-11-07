@@ -141,7 +141,7 @@ const PublicSievePage = () => {
         actions={
           <Button
             size="sm"
-            color={sieve.isFollowing ? 'danger' : 'primary'}
+            color={sieve.isFollowing ? 'secondary' : 'primary'}
             onPress={handleFollowToggle}
             isDisabled={followButtonDisabled}
             isLoading={followMutation.isPending || unfollowMutation.isPending}
