@@ -1,6 +1,6 @@
 'use client';
 
-import { BookmarkSimple, PlusCircle, ShareFat } from '@phosphor-icons/react';
+import { BookmarkSimple, PlusCircle } from '@phosphor-icons/react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Fragment,
@@ -246,7 +246,7 @@ const CustomFilterPanel = ({
             <BookmarkSimple />
             Save as Feed
           </Button>
-          <Button
+          {/* <Button
             size="sm"
             aria-label="Share custom filter"
             onPress={handleShareCustomFilter}
@@ -256,7 +256,7 @@ const CustomFilterPanel = ({
           >
             <ShareFat />
             Share Filters
-          </Button>
+          </Button> */}
           {isSaveDisabled && saveDisabledReason && (
             <p className="text-[11px] text-[#D14343]">{saveDisabledReason}</p>
           )}
