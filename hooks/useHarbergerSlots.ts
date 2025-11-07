@@ -212,6 +212,7 @@ export interface ActiveSlotData {
   creativeConfig: CreativeConfig;
   canForfeit: boolean;
   canPoke: boolean;
+  isDisplayEligible: boolean;
 }
 
 type CreativePreviewConfig = {
@@ -798,10 +799,10 @@ function createActiveSlotViewModel(
   const imageSize = metadata?.imageSize ?? 'unknown';
   const extra = metadata?.extra ? { ...metadata.extra } : {};
   const contractMeta = metadata?.contractMeta;
-  const owner =
-    slot.ownerAddress !== null
-      ? AddressValidator.shortenAddress(slot.ownerAddress)
-      : '—';
+  const hasOwner = slot.ownerAddress !== null;
+  const owner = hasOwner
+    ? AddressValidator.shortenAddress(slot.ownerAddress)
+    : '—';
   const isOverdue =
     slot.isOccupied &&
     !slot.isExpired &&
@@ -823,6 +824,7 @@ function createActiveSlotViewModel(
     : slot.isExpired
       ? 'Expired'
       : 'Owned';
+  const isDisplayEligible = statusLabel === 'Owned' && hasOwner;
 
   const remainingUnits = !slot.isOccupied
     ? 'Vacant'
@@ -893,6 +895,7 @@ function createActiveSlotViewModel(
     creativeConfig,
     canForfeit,
     canPoke,
+    isDisplayEligible,
   };
 }
 
