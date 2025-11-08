@@ -45,14 +45,6 @@ export const ProposalTableFieldCategory: ICategoryConfig[] = [
         title: 'Development',
         description: '',
         items: ['devStatus', 'openSource', 'codeRepo', 'dappSmartContracts'],
-        groups: [
-          {
-            key: IItemGroupEnum.CodeAudits,
-            title: 'Code Audits',
-            description: '',
-            items: ['auditStatus', 'reports'],
-          },
-        ],
       },
     ],
   },
@@ -184,7 +176,12 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
             key: IItemGroupEnum.CodeAudits,
             title: 'Code Audits',
             description: '',
-            items: ['audit_status', 'dapp_category', 'protocol_built_on'],
+            items: [
+              'reports',
+              'audit_status',
+              'dapp_category',
+              'protocol_built_on',
+            ],
           },
         ],
       },
