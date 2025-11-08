@@ -7,6 +7,7 @@ import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
+import OpenToAdFallback from './OpenToAdFallback';
 import { isHtaxAdPlacementActive } from './utils';
 
 const SIDEBAR_PAGE_KEY = 'home';
@@ -47,6 +48,10 @@ function parseImageSize(imageSize?: string) {
 export default function HomeSidebarAd() {
   const { openExternalLink } = useExternalLink();
   const { activeSlots, isLoading } = useHarbergerSlots();
+  const isPlacementActive = isHtaxAdPlacementActive(
+    SIDEBAR_PAGE_KEY,
+    SIDEBAR_POSITION_KEY,
+  );
 
   const slot = useMemo(() => {
     return activeSlots.find((item) => {
@@ -57,11 +62,7 @@ export default function HomeSidebarAd() {
         return false;
       }
 
-      const hasActiveStatus = item.statusLabel === 'Owned';
-      const hasOwner = Boolean(item.ownerAddress);
-      const isSettled = !item.isOverdue && !item.isExpired;
-
-      return hasActiveStatus && hasOwner && isSettled;
+      return item.isDisplayEligible;
     });
   }, [activeSlots]);
 
@@ -85,7 +86,18 @@ export default function HomeSidebarAd() {
   const desktopAspectRatio = desktopSize.width / desktopSize.height;
   const mobileAspectRatio = mobileSize.width / mobileSize.height;
 
-  if (!isLoading && !slot) {
+  const hasRenderableAd = Boolean(
+    slot &&
+      (creativeAssets.desktopImageUrl ??
+        creativeAssets.mobileImageUrl ??
+        creativeAssets.primaryImageUrl ??
+        creativeAssets.fallbackImageUrl) &&
+      creativeAssets.targetUrl,
+  );
+  const shouldShowFallback =
+    isPlacementActive && !isLoading && !hasRenderableAd;
+
+  if (!isPlacementActive) {
     return null;
   }
 
@@ -138,9 +150,11 @@ export default function HomeSidebarAd() {
     );
   };
 
-  if (!isHtaxAdPlacementActive(SIDEBAR_PAGE_KEY, SIDEBAR_POSITION_KEY)) {
-    return null;
-  }
+  const renderFallbackContainer = (aspectRatio: number) => {
+    const baseClass =
+      'overflow-hidden rounded-[10px] border border-black/10 bg-[#EBEBEB] text-[12px] font-semibold text-black/70';
+    return <OpenToAdFallback aspectRatio={aspectRatio} className={baseClass} />;
+  };
 
   return (
     <div className="flex flex-col gap-[5px]">
@@ -155,7 +169,7 @@ export default function HomeSidebarAd() {
             style={{ aspectRatio: `${mobileAspectRatio}` }}
           />
         </>
-      ) : slot && creativeAssets.targetUrl ? (
+      ) : hasRenderableAd ? (
         <>
           <div
             className="mobile:hidden overflow-hidden rounded-[10px]"
@@ -170,9 +184,24 @@ export default function HomeSidebarAd() {
             {renderImageContainer(mobileAspectRatio)}
           </div>
         </>
+      ) : shouldShowFallback ? (
+        <>
+          <div
+            className="mobile:hidden overflow-hidden rounded-[10px]"
+            style={{ aspectRatio: `${desktopAspectRatio}` }}
+          >
+            {renderFallbackContainer(desktopAspectRatio)}
+          </div>
+          <div
+            className="mobile:block hidden overflow-hidden rounded-[10px]"
+            style={{ aspectRatio: `${mobileAspectRatio}` }}
+          >
+            {renderFallbackContainer(mobileAspectRatio)}
+          </div>
+        </>
       ) : null}
 
-      {isLoading || slot ? (
+      {isLoading || hasRenderableAd || shouldShowFallback ? (
         <div className="flex items-center justify-between px-[10px] text-[10px] text-black/80">
           <span className="font-medium">Advertisement | Harberger Tax Ads</span>
           {creativeAssets.targetUrl ? (

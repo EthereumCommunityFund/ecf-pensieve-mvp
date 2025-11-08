@@ -1,5 +1,3 @@
-'use client';
-
 import type { Abi } from 'viem';
 
 import harbergerAbi from '@/abi/HarbergerFactory.json';
