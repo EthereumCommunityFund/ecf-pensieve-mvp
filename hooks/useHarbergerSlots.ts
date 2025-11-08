@@ -799,10 +799,12 @@ function createActiveSlotViewModel(
   const imageSize = metadata?.imageSize ?? 'unknown';
   const extra = metadata?.extra ? { ...metadata.extra } : {};
   const contractMeta = metadata?.contractMeta;
-  const hasOwner = slot.ownerAddress !== null;
-  const owner = hasOwner
-    ? AddressValidator.shortenAddress(slot.ownerAddress)
-    : '—';
+  const ownerAddress = slot.ownerAddress;
+  const hasOwner = ownerAddress !== null;
+  const owner =
+    hasOwner && ownerAddress
+      ? AddressValidator.shortenAddress(ownerAddress)
+      : '—';
   const isOverdue =
     slot.isOccupied &&
     !slot.isExpired &&
