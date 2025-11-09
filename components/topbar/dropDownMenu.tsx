@@ -5,7 +5,7 @@ import {
   DropdownTrigger,
   Image,
 } from '@heroui/react';
-import NextImage from 'next/image';
+import { DotsThree } from '@phosphor-icons/react';
 
 type CommonLink = {
   name: string;
@@ -47,7 +47,7 @@ export const DropDownMenuData: {
       link: 'https://ecf.network/privacy-policy-and-terms-of-service',
     },
     {
-      name: 'Feedback',
+      name: 'Have Feedback?',
       link: 'https://discord.gg/9763r5XRpP',
     },
   ],
@@ -79,15 +79,8 @@ const DropDownMenu = () => {
   return (
     <Dropdown className="shrink-0">
       <DropdownTrigger>
-        <div className="rounded-[10px] p-1 hover:bg-[rgba(0,0,0,0.05)]">
-          <Image
-            as={NextImage}
-            src="/images/common/DotsThree.png"
-            className="cursor-pointer"
-            alt="menu"
-            width={24}
-            height={24}
-          />
+        <div className="pc:rounded-[8px] tablet:rounded-[4px] cursor-pointer rounded-[10px] p-1 hover:bg-[rgba(0,0,0,0.05)]">
+          <DotsThree className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
         </div>
       </DropdownTrigger>
       <DropdownMenu>
