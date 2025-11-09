@@ -29,6 +29,8 @@ import {
   type SpecialFieldDefinition,
 } from './types';
 
+export type { AdvancedFilterCard } from './types';
+
 const PRE_STAGE_VALUES = ['No Investment'];
 
 const FALLBACK_FIELD_TYPES: readonly AdvancedFilterFieldType[] = [

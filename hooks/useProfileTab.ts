@@ -42,6 +42,9 @@ export const useProfileTab = () => {
     if (pathname.includes(`/list/`)) {
       return tabItems.find((item) => item.key === 'lists');
     }
+    if (pathname.includes(`/sieve/`)) {
+      return tabItems.find((item) => item.key === 'sieve');
+    }
     if (!initialTab) {
       return tabItems.find((item) => item.key === 'profile');
     }

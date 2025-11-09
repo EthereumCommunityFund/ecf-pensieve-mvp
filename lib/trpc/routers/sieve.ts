@@ -8,16 +8,45 @@ import SieveService, {
   type SieveWithShareLink,
   SieveServiceError,
 } from '@/lib/services/sieveService';
+import type { StoredSieveFilterConditions } from '@/types/sieve';
 
 import { protectedProcedure, publicProcedure, router } from '../server';
 
 const visibilityEnum = z.enum(['public', 'private']);
+
+const advancedConditionSchema = z.object({
+  id: z.string(),
+  connector: z.enum(['AND', 'OR']).optional(),
+  fieldType: z.enum(['special', 'select']),
+  fieldKey: z.string(),
+  operator: z.enum(['is', 'is_not']),
+  value: z.string().optional(),
+});
+
+const advancedFilterSchema = z.object({
+  id: z.string(),
+  conditions: z.array(advancedConditionSchema),
+});
+
+const filterConditionsSchema = z.object({
+  version: z.number(),
+  basePath: z.string(),
+  sort: z.string().nullable(),
+  categories: z.array(z.string()),
+  search: z.string().nullable(),
+  advancedFilters: z.array(advancedFilterSchema),
+  metadata: z.object({
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  }),
+});
 
 const createInput = z.object({
   name: z.string().min(1),
   description: z.string().max(5000).optional().nullable(),
   targetPath: z.string().min(1),
   visibility: visibilityEnum,
+  filterConditions: filterConditionsSchema.optional(),
 });
 
 const updateInput = z.object({
@@ -26,6 +55,11 @@ const updateInput = z.object({
   description: z.string().max(5000).optional().nullable(),
   targetPath: z.string().min(1).optional(),
   visibility: visibilityEnum.optional(),
+  filterConditions: filterConditionsSchema.optional(),
+});
+
+const followInput = z.object({
+  sieveId: z.number(),
 });
 
 const deleteInput = z.object({
@@ -51,6 +85,10 @@ function serializeSieve(sieve: SieveWithShareLink) {
     description: sieve.description,
     targetPath: sieve.targetPath,
     visibility: sieve.visibility as SieveVisibility,
+    followCount: sieve.followCount ?? 0,
+    filterConditions:
+      (sieve.filterConditions as StoredSieveFilterConditions | null) ?? null,
+    creatorId: sieve.creator,
     createdAt: sieve.createdAt,
     updatedAt: sieve.updatedAt,
     share: {
@@ -100,6 +138,7 @@ export const sieveRouter = router({
           targetPath: input.targetPath,
           visibility: input.visibility,
           creatorId: ctx.user.id,
+          filterConditions: input.filterConditions ?? undefined,
         });
 
         return serializeSieve(sieved);
@@ -153,6 +192,7 @@ export const sieveRouter = router({
           description: input.description ?? undefined,
           targetPath: input.targetPath,
           visibility: input.visibility,
+          filterConditions: input.filterConditions ?? undefined,
         });
 
         return serializeSieve(sieved);
@@ -195,4 +235,93 @@ export const sieveRouter = router({
         handleServiceError(error);
       }
     }),
+  getPublicSieveByCode: publicProcedure
+    .input(getByCodeInput)
+    .query(async ({ ctx, input }) => {
+      try {
+        const record = await SieveService.getSieveByCode(input.code);
+        if (!record) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Feed not found' });
+        }
+
+        const isOwner = ctx.user?.id === record.creator;
+        if (record.visibility !== 'public' && !isOwner) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You do not have access to this feed',
+          });
+        }
+
+        const serialized = serializeSieve(record);
+
+        const creatorProfile = await ctx.db.query.profiles.findFirst({
+          columns: {
+            name: true,
+            avatarUrl: true,
+            address: true,
+          },
+          where: eq(profiles.userId, record.creator),
+        });
+
+        let isFollowing = false;
+        if (ctx.user?.id && !isOwner) {
+          isFollowing = await SieveService.isUserFollowingSieve(
+            record.id,
+            ctx.user.id,
+            ctx.db,
+          );
+        }
+
+        return {
+          ...serialized,
+          creator: creatorProfile
+            ? {
+                name: creatorProfile.name,
+                avatarUrl: creatorProfile.avatarUrl,
+                address: creatorProfile.address,
+              }
+            : null,
+          isOwner,
+          isFollowing,
+        };
+      } catch (error) {
+        handleServiceError(error);
+      }
+    }),
+  followSieve: protectedProcedure
+    .input(followInput)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const record = await SieveService.followSieve({
+          sieveId: input.sieveId,
+          userId: ctx.user.id,
+        });
+
+        return serializeSieve(record);
+      } catch (error) {
+        handleServiceError(error);
+      }
+    }),
+  unfollowSieve: protectedProcedure
+    .input(followInput)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const record = await SieveService.unfollowSieve({
+          sieveId: input.sieveId,
+          userId: ctx.user.id,
+        });
+
+        return serializeSieve(record);
+      } catch (error) {
+        handleServiceError(error);
+      }
+    }),
+  getUserFollowedSieves: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const sieves = await SieveService.getUserFollowedSieves(ctx.user.id);
+      return sieves.map(serializeSieve);
+    } catch (error) {
+      handleServiceError(error);
+    }
+  }),
 });
