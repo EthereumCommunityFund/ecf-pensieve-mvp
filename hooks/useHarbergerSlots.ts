@@ -212,6 +212,7 @@ export interface ActiveSlotData {
   creativeConfig: CreativeConfig;
   canForfeit: boolean;
   canPoke: boolean;
+  isDisplayEligible: boolean;
 }
 
 type CreativePreviewConfig = {
@@ -469,6 +470,9 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
     },
   });
 
+  const hasEnabledDetails = enabledContracts.length > 0;
+  const hasShieldedDetails = shieldedContracts.length > 0;
+
   const normalizedEnabledSlots = useMemo<NormalizedSlot[]>(() => {
     if (!enabledDetailsQuery.data) {
       return [];
@@ -662,15 +666,15 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
       slotIdCounterQuery.isLoading ||
       treasuryQuery.isLoading ||
       governanceQuery.isLoading ||
-      enabledDetailsQuery.isLoading ||
-      shieldedDetailsQuery.isLoading ||
+      (hasEnabledDetails && enabledDetailsQuery.isLoading) ||
+      (hasShieldedDetails && shieldedDetailsQuery.isLoading) ||
       enabledAddressesQuery.isPending ||
       shieldedAddressesQuery.isPending ||
       slotIdCounterQuery.isPending ||
       treasuryQuery.isPending ||
       governanceQuery.isPending ||
-      enabledDetailsQuery.isPending ||
-      shieldedDetailsQuery.isPending,
+      (hasEnabledDetails && enabledDetailsQuery.isPending) ||
+      (hasShieldedDetails && shieldedDetailsQuery.isPending),
   );
 
   const isRefetching = Boolean(
@@ -679,8 +683,8 @@ export function useHarbergerSlots(): UseHarbergerSlotsResult {
       slotIdCounterQuery.isRefetching ||
       treasuryQuery.isRefetching ||
       governanceQuery.isRefetching ||
-      enabledDetailsQuery.isRefetching ||
-      shieldedDetailsQuery.isRefetching,
+      (hasEnabledDetails && enabledDetailsQuery.isRefetching) ||
+      (hasShieldedDetails && shieldedDetailsQuery.isRefetching),
   );
 
   const refetch = useCallback(async () => {
@@ -795,9 +799,11 @@ function createActiveSlotViewModel(
   const imageSize = metadata?.imageSize ?? 'unknown';
   const extra = metadata?.extra ? { ...metadata.extra } : {};
   const contractMeta = metadata?.contractMeta;
+  const ownerAddress = slot.ownerAddress;
+  const hasOwner = ownerAddress !== null;
   const owner =
-    slot.ownerAddress !== null
-      ? AddressValidator.shortenAddress(slot.ownerAddress)
+    hasOwner && ownerAddress
+      ? AddressValidator.shortenAddress(ownerAddress)
       : '—';
   const isOverdue =
     slot.isOccupied &&
@@ -820,6 +826,7 @@ function createActiveSlotViewModel(
     : slot.isExpired
       ? 'Expired'
       : 'Owned';
+  const isDisplayEligible = statusLabel === 'Owned' && hasOwner;
 
   const remainingUnits = !slot.isOccupied
     ? 'Vacant'
@@ -890,6 +897,7 @@ function createActiveSlotViewModel(
     creativeConfig,
     canForfeit,
     canPoke,
+    isDisplayEligible,
   };
 }
 

@@ -26,6 +26,7 @@
     "migrate:smart-contracts": "dotenv -e .env tsx scripts/migrateDappSmartContracts.ts",
     "rollback:smart-contracts": "dotenv -e .env tsx scripts/rollbackDappSmartContracts.ts",
     "cleanup:smart-contracts-backup": "dotenv -e .env tsx scripts/cleanupDappSmartContractsBackup.ts",
+    "migrate:sieve-filters": "dotenv -e .env tsx scripts/migrateSieveFilterData.ts",
     "recalculate:reward-notifications": "dotenv -e .env tsx scripts/recalculateRewardNotifications.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

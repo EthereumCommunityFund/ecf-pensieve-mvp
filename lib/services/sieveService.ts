@@ -1,11 +1,19 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 
 import { db, type Database } from '@/lib/db';
-import { shareLinks, sieves } from '@/lib/db/schema';
+import { shareLinks, sieveFollows, sieves } from '@/lib/db/schema';
 import ShareService, {
+  buildPublicSievePath,
   buildShareUrl,
   type SharePayload,
 } from '@/lib/services/share';
+import {
+  buildTargetPathFromConditions,
+  normalizeStoredConditions,
+  parseTargetPathToConditions,
+  resolveFilterState,
+} from '@/lib/services/sieveFilterService';
+import type { StoredSieveFilterConditions } from '@/types/sieve';
 
 export type SieveVisibility = 'public' | 'private';
 
@@ -19,7 +27,8 @@ export class SieveServiceError extends Error {
   }
 }
 
-type DatabaseClient = Database;
+type TransactionClient = Parameters<Parameters<Database['transaction']>[0]>[0];
+type DatabaseClient = Database | TransactionClient;
 
 type SieveRecord = typeof sieves.$inferSelect;
 type ShareLinkRecord = typeof shareLinks.$inferSelect;
@@ -30,6 +39,7 @@ export interface CreateSieveInput {
   targetPath: string;
   visibility: SieveVisibility;
   creatorId: string;
+  filterConditions?: StoredSieveFilterConditions;
 }
 
 export interface UpdateSieveInput {
@@ -39,6 +49,17 @@ export interface UpdateSieveInput {
   description?: string | null;
   targetPath?: string;
   visibility?: SieveVisibility;
+  filterConditions?: StoredSieveFilterConditions;
+}
+
+export interface FollowSieveInput {
+  sieveId: number;
+  userId: string;
+}
+
+export interface UnfollowSieveInput {
+  sieveId: number;
+  userId: string;
 }
 
 export interface DeleteSieveInput {
@@ -81,15 +102,36 @@ async function fetchShareLinkByCode(
   return record;
 }
 
+async function ensureShareLinkTargetPath(
+  link: ShareLinkRecord,
+  code: string,
+  currentDb: DatabaseClient,
+): Promise<ShareLinkRecord> {
+  const targetPath = buildPublicSievePath(code);
+  if (link.targetUrl === targetPath) {
+    return link;
+  }
+
+  const [updated] = await currentDb
+    .update(shareLinks)
+    .set({ targetUrl: targetPath })
+    .where(eq(shareLinks.id, link.id))
+    .returning();
+
+  return updated ?? link;
+}
+
 async function ensureCustomFilterShareLink(params: {
   targetPath: string;
   visibility: SieveVisibility;
   createdBy: string;
+  preferredCode?: string;
 }): Promise<SharePayload> {
   return ShareService.ensureCustomFilterShareLink({
     targetPath: params.targetPath,
     createdBy: params.createdBy,
     visibility: params.visibility,
+    preferredCode: params.preferredCode,
   });
 }
 
@@ -97,9 +139,23 @@ async function mapToSieveWithPayload(
   sieve: SieveRecord,
   shareLink: ShareLinkRecord,
   payload?: SharePayload,
+  currentDb: DatabaseClient = db,
 ): Promise<SieveWithShareLink> {
+  const normalizedShareLink = await ensureShareLinkTargetPath(
+    shareLink,
+    shareLink.code,
+    currentDb,
+  );
+
+  const filterState = resolveFilterState({
+    targetPath: sieve.targetPath,
+    stored: sieve.filterConditions ?? undefined,
+    createdAt: sieve.createdAt,
+    updatedAt: sieve.updatedAt,
+  });
+
   const resolvedPayload =
-    payload ?? (await ShareService.getSharePayload(shareLink.code));
+    payload ?? (await ShareService.getSharePayload(normalizedShareLink.code));
 
   if (!resolvedPayload) {
     throw new SieveServiceError('Failed to resolve share payload', 500);
@@ -107,8 +163,10 @@ async function mapToSieveWithPayload(
 
   return {
     ...sieve,
-    shareLink,
-    shareUrl: buildShareUrl(shareLink.code),
+    targetPath: filterState.targetPath,
+    filterConditions: filterState.conditions,
+    shareLink: normalizedShareLink,
+    shareUrl: buildShareUrl(normalizedShareLink.code),
     sharePayload: resolvedPayload,
   };
 }
@@ -120,13 +178,31 @@ export async function createSieve(
   const name = coerceName(input.name);
   const description = coerceDescription(input.description);
 
+  const now = new Date();
+  const baseConditions = input.filterConditions
+    ? normalizeStoredConditions(input.filterConditions, {
+        createdAt: input.filterConditions.metadata.createdAt ?? now,
+        updatedAt: now,
+      })
+    : parseTargetPathToConditions(input.targetPath, {
+        createdAt: now,
+        updatedAt: now,
+      });
+
+  const canonicalTargetPath = buildTargetPathFromConditions(baseConditions);
+
   const payload = await ensureCustomFilterShareLink({
-    targetPath: input.targetPath,
+    targetPath: canonicalTargetPath,
     visibility: input.visibility,
     createdBy: input.creatorId,
   });
 
   const shareLinkRecord = await fetchShareLinkByCode(payload.code, currentDb);
+  const normalizedShareLink = await ensureShareLinkTargetPath(
+    shareLinkRecord,
+    payload.code,
+    currentDb,
+  );
 
   try {
     const [created] = await currentDb
@@ -134,10 +210,11 @@ export async function createSieve(
       .values({
         name,
         description,
-        targetPath: payload.targetUrl,
+        targetPath: canonicalTargetPath,
         visibility: payload.visibility as SieveVisibility,
         creator: input.creatorId,
-        shareLinkId: shareLinkRecord.id,
+        shareLinkId: normalizedShareLink.id,
+        filterConditions: baseConditions,
       })
       .returning();
 
@@ -145,14 +222,15 @@ export async function createSieve(
       throw new SieveServiceError('Failed to create sieve', 500);
     }
 
-    return mapToSieveWithPayload(created, shareLinkRecord, payload);
+    return mapToSieveWithPayload(
+      created,
+      normalizedShareLink,
+      payload,
+      currentDb,
+    );
   } catch (error) {
     if (error instanceof SieveServiceError) {
       throw error;
-    }
-
-    if (error instanceof Error && error.message.includes('sieves_share_link')) {
-      throw new SieveServiceError('Feed already exists for this filter', 409);
     }
 
     throw new SieveServiceError('Failed to create sieve', 500);
@@ -177,6 +255,20 @@ async function getSieveInternal(
   return { sieve: record, shareLink: record.shareLink };
 }
 
+async function refreshSieveFollowCount(
+  tx: DatabaseClient,
+  sieveId: number,
+): Promise<void> {
+  const result = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(sieveFollows)
+    .where(eq(sieveFollows.sieveId, sieveId));
+
+  const followCount = result[0]?.count ?? 0;
+
+  await tx.update(sieves).set({ followCount }).where(eq(sieves.id, sieveId));
+}
+
 export async function getUserSieves(
   creatorId: string,
   currentDb: DatabaseClient = db,
@@ -194,16 +286,14 @@ export async function getUserSieves(
     if (!record.shareLink) {
       continue;
     }
-    const payload = await ShareService.getSharePayload(record.shareLink.code);
-    if (!payload) {
-      continue;
-    }
-    mapped.push({
-      ...record,
-      shareLink: record.shareLink,
-      shareUrl: buildShareUrl(record.shareLink.code),
-      sharePayload: payload,
-    });
+    mapped.push(
+      await mapToSieveWithPayload(
+        record,
+        record.shareLink,
+        undefined,
+        currentDb,
+      ),
+    );
   }
 
   return mapped;
@@ -226,16 +316,14 @@ export async function getPublicSievesByCreator(
     if (!record.shareLink) {
       continue;
     }
-    const payload = await ShareService.getSharePayload(record.shareLink.code);
-    if (!payload) {
-      continue;
-    }
-    mapped.push({
-      ...record,
-      shareLink: record.shareLink,
-      shareUrl: buildShareUrl(record.shareLink.code),
-      sharePayload: payload,
-    });
+    mapped.push(
+      await mapToSieveWithPayload(
+        record,
+        record.shareLink,
+        undefined,
+        currentDb,
+      ),
+    );
   }
 
   return mapped;
@@ -255,6 +343,40 @@ export async function updateSieve(
     throw new SieveServiceError('Forbidden', 403);
   }
 
+  const existingState = resolveFilterState({
+    targetPath: existing.sieve.targetPath,
+    stored: existing.sieve.filterConditions ?? undefined,
+    createdAt: existing.sieve.createdAt,
+    updatedAt: existing.sieve.updatedAt,
+  });
+
+  const now = new Date();
+  let nextState = existingState;
+  let filterStateChanged = false;
+
+  if (input.filterConditions) {
+    const normalized = normalizeStoredConditions(input.filterConditions, {
+      createdAt: existingState.conditions.metadata.createdAt,
+      updatedAt: now,
+    });
+    nextState = {
+      targetPath: buildTargetPathFromConditions(normalized),
+      conditions: normalized,
+    };
+    filterStateChanged = true;
+  } else if (
+    typeof input.targetPath === 'string' &&
+    input.targetPath.trim().length > 0 &&
+    input.targetPath !== existingState.targetPath
+  ) {
+    nextState = resolveFilterState({
+      targetPath: input.targetPath,
+      createdAt: existingState.conditions.metadata.createdAt,
+      updatedAt: now,
+    });
+    filterStateChanged = true;
+  }
+
   const updates: Partial<typeof sieves.$inferInsert> = {};
   let nextShareLink = existing.shareLink;
   let nextPayload: SharePayload | null = null;
@@ -262,28 +384,35 @@ export async function updateSieve(
   const nextVisibility =
     input.visibility ?? (existing.sieve.visibility as SieveVisibility);
 
-  const shouldUpdateTarget =
-    typeof input.targetPath === 'string' &&
-    input.targetPath.trim().length > 0 &&
-    input.targetPath !== existing.sieve.targetPath;
+  const visibilityChanged =
+    nextVisibility !== (existing.sieve.visibility as SieveVisibility);
 
-  if (shouldUpdateTarget || input.visibility) {
+  if (filterStateChanged) {
+    updates.targetPath = nextState.targetPath;
+    updates.filterConditions = nextState.conditions;
+  } else if (!existing.sieve.filterConditions) {
+    updates.filterConditions = existingState.conditions;
+  }
+
+  if (filterStateChanged || visibilityChanged) {
     nextPayload = await ensureCustomFilterShareLink({
-      targetPath: shouldUpdateTarget
-        ? input.targetPath!
-        : existing.sieve.targetPath,
+      targetPath: nextState.targetPath,
       visibility: nextVisibility,
       createdBy: input.creatorId,
+      preferredCode: existing.shareLink.code,
     });
 
     nextShareLink = await fetchShareLinkByCode(nextPayload.code, currentDb);
 
-    if (shouldUpdateTarget) {
-      updates.targetPath = nextPayload.targetUrl;
+    if (nextShareLink.id !== existing.shareLink.id) {
       updates.shareLinkId = nextShareLink.id;
     }
 
     updates.visibility = nextPayload.visibility as SieveVisibility;
+  }
+
+  if (visibilityChanged && !updates.visibility) {
+    updates.visibility = nextVisibility;
   }
 
   if (typeof input.name === 'string') {
@@ -295,7 +424,12 @@ export async function updateSieve(
   }
 
   if (Object.keys(updates).length === 0) {
-    return mapToSieveWithPayload(existing.sieve, nextShareLink);
+    return mapToSieveWithPayload(
+      existing.sieve,
+      nextShareLink,
+      nextPayload ?? undefined,
+      currentDb,
+    );
   }
 
   const [updated] = await currentDb
@@ -312,6 +446,7 @@ export async function updateSieve(
     updated,
     nextShareLink,
     nextPayload ?? undefined,
+    currentDb,
   );
 }
 
@@ -369,12 +504,173 @@ export async function getSieveByCode(
     return null;
   }
 
-  return {
-    ...sieveRecord,
-    shareLink: shareLinkRecord,
-    shareUrl: buildShareUrl(code),
-    sharePayload: payload,
-  };
+  const normalizedLink = await ensureShareLinkTargetPath(
+    shareLinkRecord,
+    code,
+    currentDb,
+  );
+
+  return mapToSieveWithPayload(sieveRecord, normalizedLink, payload, currentDb);
+}
+
+export async function followSieve(
+  input: FollowSieveInput,
+  currentDb: DatabaseClient = db,
+): Promise<SieveWithShareLink> {
+  const existing = await getSieveInternal(input.sieveId, currentDb);
+
+  if (!existing) {
+    throw new SieveServiceError('Sieve not found', 404);
+  }
+
+  if (existing.sieve.creator === input.userId) {
+    throw new SieveServiceError('Cannot follow your own sieve', 400);
+  }
+
+  if (
+    (existing.sieve.visibility as SieveVisibility) !== 'public' &&
+    existing.sieve.creator !== input.userId
+  ) {
+    throw new SieveServiceError('Access denied for this sieve', 403);
+  }
+
+  const alreadyFollowing = await currentDb.query.sieveFollows.findFirst({
+    where: and(
+      eq(sieveFollows.sieveId, input.sieveId),
+      eq(sieveFollows.userId, input.userId),
+    ),
+  });
+
+  if (alreadyFollowing) {
+    throw new SieveServiceError('Already following this sieve', 409);
+  }
+
+  await currentDb.transaction(async (tx) => {
+    await tx.insert(sieveFollows).values({
+      sieveId: input.sieveId,
+      userId: input.userId,
+    });
+
+    await refreshSieveFollowCount(tx, input.sieveId);
+  });
+
+  const refreshed = await getSieveInternal(input.sieveId, currentDb);
+  if (!refreshed) {
+    throw new SieveServiceError('Sieve not found after follow', 500);
+  }
+
+  return mapToSieveWithPayload(
+    refreshed.sieve,
+    refreshed.shareLink,
+    undefined,
+    currentDb,
+  );
+}
+
+export async function unfollowSieve(
+  input: UnfollowSieveInput,
+  currentDb: DatabaseClient = db,
+): Promise<SieveWithShareLink> {
+  const existing = await getSieveInternal(input.sieveId, currentDb);
+
+  if (!existing) {
+    throw new SieveServiceError('Sieve not found', 404);
+  }
+
+  const followRecord = await currentDb.query.sieveFollows.findFirst({
+    where: and(
+      eq(sieveFollows.sieveId, input.sieveId),
+      eq(sieveFollows.userId, input.userId),
+    ),
+  });
+
+  if (!followRecord) {
+    throw new SieveServiceError('Not following this sieve', 404);
+  }
+
+  await currentDb.transaction(async (tx) => {
+    await tx
+      .delete(sieveFollows)
+      .where(
+        and(
+          eq(sieveFollows.sieveId, input.sieveId),
+          eq(sieveFollows.userId, input.userId),
+        ),
+      );
+
+    await refreshSieveFollowCount(tx, input.sieveId);
+  });
+
+  const refreshed = await getSieveInternal(input.sieveId, currentDb);
+  if (!refreshed) {
+    throw new SieveServiceError('Sieve not found after unfollow', 500);
+  }
+
+  return mapToSieveWithPayload(
+    refreshed.sieve,
+    refreshed.shareLink,
+    undefined,
+    currentDb,
+  );
+}
+
+export async function getUserFollowedSieves(
+  userId: string,
+  currentDb: DatabaseClient = db,
+): Promise<SieveWithShareLink[]> {
+  const records = await currentDb.query.sieveFollows.findMany({
+    where: eq(sieveFollows.userId, userId),
+    orderBy: [desc(sieveFollows.createdAt)],
+    with: {
+      sieve: {
+        with: {
+          shareLink: true,
+        },
+      },
+    },
+  });
+
+  const mapped: SieveWithShareLink[] = [];
+
+  for (const record of records) {
+    const sieveRecord = record.sieve;
+    if (!sieveRecord || !sieveRecord.shareLink) {
+      continue;
+    }
+
+    if (
+      (sieveRecord.visibility as SieveVisibility) !== 'public' &&
+      sieveRecord.creator !== userId
+    ) {
+      continue;
+    }
+
+    mapped.push(
+      await mapToSieveWithPayload(
+        sieveRecord,
+        sieveRecord.shareLink,
+        undefined,
+        currentDb,
+      ),
+    );
+  }
+
+  return mapped;
+}
+
+export async function isUserFollowingSieve(
+  sieveId: number,
+  userId: string,
+  currentDb: DatabaseClient = db,
+): Promise<boolean> {
+  const record = await currentDb.query.sieveFollows.findFirst({
+    where: and(
+      eq(sieveFollows.sieveId, sieveId),
+      eq(sieveFollows.userId, userId),
+    ),
+  });
+
+  return !!record;
 }
 
 export function checkSieveOwnership(
@@ -394,6 +690,10 @@ const SieveService = {
   updateSieve,
   deleteSieve,
   getSieveByCode,
+  followSieve,
+  unfollowSieve,
+  getUserFollowedSieves,
+  isUserFollowingSieve,
   checkSieveOwnership,
 };
 

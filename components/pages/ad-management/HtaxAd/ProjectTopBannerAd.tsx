@@ -7,6 +7,7 @@ import { useExternalLink } from '@/context/ExternalLinkContext';
 import { useHarbergerSlots } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 
+import OpenToAdFallback from './OpenToAdFallback';
 import { isHtaxAdPlacementActive } from './utils';
 
 const PAGE_KEY = 'projectDetail';
@@ -47,6 +48,7 @@ function parseImageSize(imageSize?: string) {
 export default function ProjectTopBannerAd() {
   const { openExternalLink } = useExternalLink();
   const { activeSlots, isLoading } = useHarbergerSlots();
+  const isPlacementActive = isHtaxAdPlacementActive(PAGE_KEY, POSITION_KEY);
 
   const slot = useMemo(() => {
     return activeSlots.find((item) => {
@@ -57,11 +59,7 @@ export default function ProjectTopBannerAd() {
         return false;
       }
 
-      const hasActiveStatus = item.statusLabel === 'Owned';
-      const hasOwner = Boolean(item.ownerAddress);
-      const isSettled = !item.isOverdue && !item.isExpired;
-
-      return hasActiveStatus && hasOwner && isSettled;
+      return item.isDisplayEligible;
     });
   }, [activeSlots]);
 
@@ -85,7 +83,17 @@ export default function ProjectTopBannerAd() {
   const desktopAspectRatio = desktopSize.width / desktopSize.height;
   const mobileAspectRatio = mobileSize.width / mobileSize.height;
 
-  if (!isLoading && !slot) {
+  const hasRenderableAd = Boolean(
+    slot &&
+      (creativeAssets.desktopImageUrl ??
+        creativeAssets.mobileImageUrl ??
+        creativeAssets.primaryImageUrl ??
+        creativeAssets.fallbackImageUrl),
+  );
+  const shouldShowFallback =
+    isPlacementActive && !isLoading && !hasRenderableAd;
+
+  if (!isPlacementActive) {
     return null;
   }
 
@@ -143,9 +151,13 @@ export default function ProjectTopBannerAd() {
     );
   };
 
-  if (!isHtaxAdPlacementActive(PAGE_KEY, POSITION_KEY)) {
-    return null;
-  }
+  const renderFallbackContainer = (
+    aspectRatio: number,
+    visibilityClass: string,
+  ) => {
+    const baseClass = `overflow-hidden rounded-[10px] border border-black/10 bg-black/5 text-[14px] font-semibold text-black/70 ${visibilityClass}`;
+    return <OpenToAdFallback aspectRatio={aspectRatio} className={baseClass} />;
+  };
 
   return (
     <section className="mobile:mx-[10px] mx-[20px] mt-[20px]">
@@ -161,14 +173,19 @@ export default function ProjectTopBannerAd() {
               style={{ aspectRatio: `${mobileAspectRatio}` }}
             />
           </>
-        ) : slot ? (
+        ) : hasRenderableAd ? (
           <>
             {renderImageContainer(desktopAspectRatio, 'mobile:hidden')}
             {renderImageContainer(mobileAspectRatio, 'mobile:block hidden')}
           </>
+        ) : shouldShowFallback ? (
+          <>
+            {renderFallbackContainer(desktopAspectRatio, 'mobile:hidden')}
+            {renderFallbackContainer(mobileAspectRatio, 'mobile:block hidden')}
+          </>
         ) : null}
 
-        {isLoading || slot ? (
+        {isLoading || hasRenderableAd || shouldShowFallback ? (
           <div className="flex items-center justify-between px-[12px] text-[11px] text-black/70">
             <span className="font-medium">
               Advertisement | Harberger Tax Ads

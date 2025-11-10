@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import type { SharePayload } from '@/lib/services/share';
-import ShareService from '@/lib/services/share';
+import ShareService, { buildPublicSievePath } from '@/lib/services/share';
 import { buildShareOgImageUrl } from '@/lib/services/share/url';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
@@ -140,7 +140,11 @@ export default async function SharePage({ params, searchParams }: PageProps) {
   }
 
   const origin = getAppOrigin();
-  const targetUrl = buildAbsoluteUrl(payload.targetUrl, origin);
+  const redirectPath =
+    payload.entityType === 'customFilter'
+      ? buildPublicSievePath(code)
+      : payload.targetUrl;
+  const targetUrl = buildAbsoluteUrl(redirectPath, origin);
 
   if (payload.visibility === 'private') {
     return (
@@ -151,7 +155,7 @@ export default async function SharePage({ params, searchParams }: PageProps) {
   }
 
   if (payload.entityType === 'customFilter') {
-    redirect(targetUrl);
+    redirect(redirectPath);
   }
 
   return (

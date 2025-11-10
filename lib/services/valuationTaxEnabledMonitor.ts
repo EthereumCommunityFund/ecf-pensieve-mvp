@@ -135,7 +135,10 @@ export async function monitorValuationTaxEnabledSlots(
       details.taxPaidUntil,
     );
 
-    if (settlement.state.lockedValuation !== 0n) {
+    if (
+      settlement.state.lockedValuation !== 0n &&
+      details.timeRemainingInSeconds > 0n
+    ) {
       continue;
     }
 
@@ -163,11 +166,18 @@ export function createMonitorClientFromEnv() {
   const chain = process.env.NODE_ENV === 'production' ? mainnet : sepolia;
 
   const rpcUrl = process.env.RPC_URL;
+  const transport = http(rpcUrl);
 
   const publicClient = createPublicClient({
     chain,
-    transport: http(rpcUrl),
+    transport,
   });
 
-  return { publicClient, chainName: chain.name, chainId: chain.id };
+  return {
+    publicClient,
+    chainName: chain.name,
+    chainId: chain.id,
+    chain,
+    transport,
+  };
 }

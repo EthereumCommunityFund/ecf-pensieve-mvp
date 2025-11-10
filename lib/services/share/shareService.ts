@@ -192,6 +192,7 @@ export interface SharePayload {
   entityId: string;
   sharePath: string;
   targetUrl: string;
+  filterTargetPath?: string;
   parentId?: string | null;
   visibility: ShareVisibility;
   metadata: ShareMetadata;
@@ -269,6 +270,10 @@ export class ShareServiceError extends Error {
 
 const CUSTOM_FILTER_ENTITY_PREFIX = 'customFilter:';
 
+export function buildPublicSievePath(code: string): string {
+  return `/sieve/${code}`;
+}
+
 function normalizeCustomFilterTargetPath(rawPath: string): string {
   const trimmed = (rawPath ?? '').trim();
   if (!trimmed) {
@@ -295,9 +300,16 @@ function normalizeCustomFilterTargetPath(rawPath: string): string {
   return `/${trimmed}`;
 }
 
-function encodeCustomFilterEntityId(targetPath: string): string {
+function encodeCustomFilterEntityId(
+  targetPath: string,
+  ownerId?: string | null,
+): string {
   const normalized = normalizeCustomFilterTargetPath(targetPath);
-  const encoded = Buffer.from(normalized, 'utf-8').toString('base64url');
+  const payload =
+    ownerId && ownerId.length > 0
+      ? JSON.stringify({ path: normalized, ownerId })
+      : normalized;
+  const encoded = Buffer.from(payload, 'utf-8').toString('base64url');
   return `${CUSTOM_FILTER_ENTITY_PREFIX}${encoded}`;
 }
 
@@ -309,7 +321,25 @@ function decodeCustomFilterEntityId(entityId: string): string | null {
   const encoded = entityId.slice(CUSTOM_FILTER_ENTITY_PREFIX.length);
   try {
     const decoded = Buffer.from(encoded, 'base64url').toString('utf-8');
-    return normalizeCustomFilterTargetPath(decoded);
+    try {
+      const parsed = JSON.parse(decoded);
+      if (typeof parsed === 'string') {
+        return normalizeCustomFilterTargetPath(parsed);
+      }
+
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'path' in parsed &&
+        typeof parsed.path === 'string'
+      ) {
+        return normalizeCustomFilterTargetPath(parsed.path);
+      }
+
+      return normalizeCustomFilterTargetPath(decoded);
+    } catch {
+      return normalizeCustomFilterTargetPath(decoded);
+    }
   } catch (error) {
     console.error('Failed to decode custom filter entity id', error);
     return null;
@@ -2126,12 +2156,34 @@ async function buildPayloadFromRecord(
         ? 'public'
         : mergeVisibility(recordVisibility, contextVisibility);
 
+    let targetUrl = context.targetUrl;
+    let filterTargetPath: string | undefined;
+
+    if (entityType === 'customFilter') {
+      filterTargetPath = context.targetUrl;
+      const expectedTargetUrl = buildPublicSievePath(record.code);
+
+      if (record.targetUrl !== expectedTargetUrl) {
+        try {
+          await db
+            .update(shareLinks)
+            .set({ targetUrl: expectedTargetUrl })
+            .where(eq(shareLinks.id, record.id));
+        } catch (error) {
+          console.error('Failed to sync custom filter target url', error);
+        }
+      }
+
+      targetUrl = expectedTargetUrl;
+    }
+
     return {
       code: record.code,
       entityType,
       entityId: record.entityId,
       sharePath: `/s/${record.code}`,
-      targetUrl: context.targetUrl,
+      targetUrl,
+      filterTargetPath,
       parentId: context.parentId ?? record.parentId ?? null,
       visibility: effectiveVisibility,
       metadata: context.metadata,
@@ -2168,7 +2220,7 @@ export async function ensureShareLink(
   const rawEntityId = String(input.entityId);
   const entityId =
     entityType === 'customFilter'
-      ? encodeCustomFilterEntityId(rawEntityId)
+      ? encodeCustomFilterEntityId(rawEntityId, input.createdBy)
       : rawEntityId;
 
   const requestedVisibility = input.visibility
@@ -2392,12 +2444,96 @@ export async function ensureCustomFilterShareLink(params: {
   targetPath: string;
   createdBy?: string;
   visibility?: ShareVisibility;
+  preferredCode?: string;
 }): Promise<SharePayload> {
+  const requestedVisibility = params.visibility
+    ? normalizeVisibility(params.visibility)
+    : undefined;
+
+  if (params.preferredCode) {
+    const existingRecord = await db.query.shareLinks.findFirst({
+      where: eq(shareLinks.code, params.preferredCode),
+    });
+
+    if (existingRecord?.entityType === 'customFilter') {
+      const encodedEntityId = encodeCustomFilterEntityId(
+        params.targetPath,
+        params.createdBy,
+      );
+      const existingVisibility = normalizeVisibility(existingRecord.visibility);
+
+      const updates: Partial<typeof shareLinks.$inferInsert> = {};
+      let resolvedRecord: ShareLinkRecord = existingRecord;
+      let requiresUpdate = false;
+
+      if (existingRecord.entityId !== encodedEntityId) {
+        updates.entityId = encodedEntityId;
+        requiresUpdate = true;
+      }
+
+      if (requestedVisibility && requestedVisibility !== existingVisibility) {
+        updates.visibility = requestedVisibility;
+        requiresUpdate = true;
+      }
+
+      if (requiresUpdate) {
+        try {
+          const [updated] = await db
+            .update(shareLinks)
+            .set(updates)
+            .where(eq(shareLinks.id, existingRecord.id))
+            .returning();
+
+          if (updated) {
+            resolvedRecord = updated;
+          } else {
+            resolvedRecord = {
+              ...existingRecord,
+              ...updates,
+            } as ShareLinkRecord;
+          }
+        } catch (error) {
+          if (isUniqueConstraintError(error)) {
+            const conflictRecord = await db.query.shareLinks.findFirst({
+              where: and(
+                eq(shareLinks.entityType, 'customFilter'),
+                eq(shareLinks.entityId, encodedEntityId),
+              ),
+            });
+
+            if (conflictRecord) {
+              const conflictPayload = await buildPayloadFromRecord(
+                conflictRecord,
+                {
+                  disableCache: true,
+                },
+              );
+              if (conflictPayload) {
+                return conflictPayload;
+              }
+            }
+          }
+
+          throw error;
+        }
+      }
+
+      const payload = await buildPayloadFromRecord(resolvedRecord, {
+        disableCache: requiresUpdate,
+      });
+      if (!payload) {
+        throw new ShareServiceError('Share payload unavailable', 404);
+      }
+
+      return payload;
+    }
+  }
+
   return ensureShareLink({
     entityType: 'customFilter',
     entityId: params.targetPath,
     createdBy: params.createdBy,
-    visibility: params.visibility,
+    visibility: requestedVisibility,
   });
 }
 

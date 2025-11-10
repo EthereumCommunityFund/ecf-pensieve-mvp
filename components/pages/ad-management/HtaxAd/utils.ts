@@ -19,7 +19,7 @@ export function isHtaxAdPlacementActive(
   });
 
   if (matchedEntries.length === 0) {
-    return true;
+    return false;
   }
 
   return matchedEntries.some((entry) => entry.isActive);

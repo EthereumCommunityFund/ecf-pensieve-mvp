@@ -1,55 +1,50 @@
-import AppWindowIcon from '@/components/icons/AppWindow';
-import BuildingsIcon from '@/components/icons/Buildings';
-import CodeIcon from '@/components/icons/CodeIcon';
-import UsersFourIcon from '@/components/icons/UsersFour';
-
 export const AllCategories = [
   {
     value: 'Network States',
     label: 'Network States',
-    icon: <BuildingsIcon size={24} />,
+    icon: null,
   },
   {
     value: 'Zu-Villages',
     label: 'Zu-Villages',
-    icon: <BuildingsIcon size={24} />,
+    icon: null,
   },
   {
     value: 'Applications/dApps',
     label: 'Applications/dApps',
-    icon: <AppWindowIcon />,
+    icon: null,
   },
   {
     value: 'Community & Coordination',
     label: 'Community & Coordination',
-    icon: <UsersFourIcon />,
+    icon: null,
   },
   {
     value: 'Developer tools',
     label: 'Developer tools',
-    icon: <CodeIcon />,
+    icon: null,
   },
-  { value: 'Hubs', label: 'Hubs', icon: <BuildingsIcon size={24} /> },
+  { value: 'Hubs', label: 'Hubs', icon: null },
   {
     value: 'Infrastructure',
     label: 'Infrastructure',
-    icon: <BuildingsIcon size={24} />,
+    icon: null,
   },
   {
     value: 'Security & Privacy',
     label: 'Security & Privacy',
-    icon: <BuildingsIcon size={24} />,
+    icon: null,
   },
   {
     value: 'Storage & Data',
     label: 'Storage & Data',
-    icon: <BuildingsIcon size={24} />,
+    icon: null,
   },
-  { value: 'Events', label: 'Events', icon: <BuildingsIcon size={24} /> },
+  { value: 'Events', label: 'Events', icon: null },
   {
     value: 'Local Communities',
     label: 'Local Communities',
-    icon: <BuildingsIcon size={24} />,
+    icon: null,
   },
-  { value: 'Other', label: 'Other', icon: <BuildingsIcon size={24} /> },
+  { value: 'Other', label: 'Other', icon: null },
 ];
