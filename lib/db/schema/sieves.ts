@@ -2,12 +2,16 @@ import {
   bigint,
   bigserial,
   index,
+  integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+
+import type { StoredSieveFilterConditions } from '@/types/sieve';
 
 import { profiles } from './profiles';
 import { shareLinks } from './shareLinks';
@@ -29,6 +33,10 @@ export const sieves = pgTable(
     shareLinkId: bigint('share_link_id', { mode: 'number' })
       .notNull()
       .references(() => shareLinks.id, { onDelete: 'cascade' }),
+    followCount: integer('follow_count').default(0).notNull(),
+    filterConditions: jsonb(
+      'filter_conditions',
+    ).$type<StoredSieveFilterConditions | null>(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .defaultNow()
       .notNull(),

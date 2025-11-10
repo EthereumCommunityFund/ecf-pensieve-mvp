@@ -1,7 +1,6 @@
 'use client';
 
-import { Image, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
-import NextImage from 'next/image';
+import { Popover, PopoverContent, PopoverTrigger, cn } from '@heroui/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -16,8 +15,8 @@ interface ProjectsNavItemProps {
   item: {
     name: string;
     href: string;
-    icon: string | React.ReactNode;
-    activeIcon: string | React.ReactNode;
+    icon: React.ReactNode;
+    activeIcon: React.ReactNode;
     matchPath: string;
   };
 }
@@ -37,38 +36,22 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
   };
   const isActiveRoute = pathname === item.matchPath;
 
+  const renderedIcon = isActiveRoute ? item.activeIcon : item.icon;
+
   const linkContent = (
     <>
-      {typeof (isActiveRoute ? item.activeIcon : item.icon) === 'string' ? (
-        <Image
-          src={
-            isActiveRoute ? (item.activeIcon as string) : (item.icon as string)
-          }
-          as={NextImage}
-          alt={item.name}
-          width={24}
-          height={24}
-          className={`
-            !scale-1 size-6
-            shrink-0
-            ${
-              isActiveRoute
-                ? 'brightness-0 invert' // Active state (white icon)
-                : 'brightness-0' // Default state (black icon)
-            }
-          `}
-        />
-      ) : (
-        <div className="size-6 shrink-0">
-          {isActiveRoute ? item.activeIcon : item.icon}
-        </div>
-      )}
-      <ECFTypography type={'body2'} className="font-semibold text-inherit">
+      <div className="pc:size-[18px] tablet:size-4 flex size-6 shrink-0 items-center justify-center">
+        {renderedIcon}
+      </div>
+      <ECFTypography
+        type={'body2'}
+        className={cn('text-inherit font-semibold')}
+      >
         {item.name}
       </ECFTypography>
       <CaretDownIcon
         className={`
-          size-4 shrink-0 transition-transform duration-200
+          pc:size-[15px] tablet:size-[15px] size-4 shrink-0 transition-transform duration-200
           ${isOpen ? 'rotate-0' : '-rotate-90'}
           ${isActiveRoute ? 'text-white' : 'text-gray-600'}
         `}
@@ -95,16 +78,15 @@ export function ProjectsNavItem({ item }: ProjectsNavItemProps) {
       <PopoverTrigger>
         <Link
           href={item.href}
-          className={`
-            flex h-8 shrink-0 !scale-100 items-center gap-2
-            whitespace-nowrap rounded-[10px]
-            px-2.5
-            ${
-              isActiveRoute
-                ? 'bg-black text-white' // Active state
-                : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]' // Default & Hover states
-            }
-          `}
+          className={cn(
+            'flex h-8 min-w-0 shrink-0 items-center gap-2 whitespace-nowrap',
+            'rounded-[10px] px-2.5 text-[14px] transition-all duration-200',
+            'pc:h-[30px] pc:gap-1.5 pc:px-2 pc:text-[14px]',
+            'tablet:h-[28px] tablet:gap-1.5 tablet:px-1.5 tablet:text-[12px]',
+            isActiveRoute
+              ? 'bg-black text-white'
+              : 'text-gray-600 hover:bg-[rgba(0,0,0,0.1)]',
+          )}
           onMouseEnter={handleOpen}
           onMouseLeave={handleClose}
         >

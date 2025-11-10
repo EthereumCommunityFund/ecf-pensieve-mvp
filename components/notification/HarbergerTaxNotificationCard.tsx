@@ -128,13 +128,11 @@ const HarbergerTaxNotificationCard: React.FC<
   const taxDueLabel = formatCountdown(tax.secondsUntilDue);
   const graceLabel = formatCountdown(tax.gracePeriodRemainingSeconds);
 
-  const handlePrimary = (event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handlePrimary = () => {
     onPrimaryAction?.(itemData);
   };
 
-  const handleSecondary = (event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleSecondary = () => {
     onSecondaryAction?.(itemData);
   };
 

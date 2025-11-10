@@ -25,7 +25,7 @@ const OpenToAdFallback = ({
       style={{ aspectRatio: `${aspectRatio}` }}
       aria-label="Open to Advertisement"
     >
-      Open to ad
+      Promote Your Project
     </button>
   );
 };

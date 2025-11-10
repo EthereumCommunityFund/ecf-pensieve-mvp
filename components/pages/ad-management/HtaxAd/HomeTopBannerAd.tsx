@@ -62,11 +62,7 @@ const HomeTopBannerAd = () => {
         return false;
       }
 
-      const hasActiveStatus = item.statusLabel === 'Owned';
-      const hasOwner = Boolean(item.ownerAddress);
-      const isSettled = !item.isOverdue && !item.isExpired;
-
-      return hasActiveStatus && hasOwner && isSettled;
+      return item.isDisplayEligible;
     });
   }, [activeSlots]);
 
