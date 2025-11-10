@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+import { randomUUID } from 'crypto';
 
 import { TRPCError } from '@trpc/server';
 import {
@@ -962,12 +963,11 @@ export const projectRouter = router({
               return refs.find((ref: any) => ref.key === key)?.value || null;
             };
 
-            const itemProposalMap: Record<string, number> = {};
-            let itemProposalIdCounter = Date.now() * 1000;
+            const itemProposalMap: Record<string, string> = {};
 
             for (const item of originalProposal.items as any[]) {
               if (item.key) {
-                const tempId = itemProposalIdCounter++;
+                const tempId = randomUUID();
                 itemProposalMap[item.key] = tempId;
 
                 itemProposalBatch.push({
@@ -1074,7 +1074,7 @@ export const projectRouter = router({
               projectId: itemProposals.projectId,
             });
 
-          const tempToRealIdMap = new Map<number, number>();
+          const tempToRealIdMap = new Map<string, number>();
           for (let i = 0; i < insertedItemProposals.length; i++) {
             tempToRealIdMap.set(
               itemProposalBatch[i].tempId,
