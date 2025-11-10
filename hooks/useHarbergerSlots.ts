@@ -32,6 +32,7 @@ import {
   formatDuration,
   formatEth,
   formatNumberInputFromWei,
+  formatWeeklyRateFromAnnualBps,
   sumBigints,
 } from '@/utils/harberger';
 
@@ -767,8 +768,8 @@ function createVacantSlotViewModel(
     valuationHelper: 'Minimum valuation required to claim this slot.',
     bondRate: formatBps(slot.bondRateBps),
     bondRateHelper: 'Bond locked against your stated valuation.',
-    taxRate: formatBps(slot.annualTaxRateBps),
-    taxRateHelper: 'Annual tax applied to your declared valuation.',
+    taxRate: formatWeeklyRateFromAnnualBps(slot.annualTaxRateBps),
+    taxRateHelper: 'Weekly tax applied to your declared valuation.',
     actionLabel: 'Make Claim',
     bondRateValue: formatEth(bondRequired),
     taxCostValue: formatEth(taxRequired),
@@ -866,7 +867,7 @@ function createActiveSlotViewModel(
     statusLabel,
     owner,
     ownerAddress: slot.ownerAddress,
-    taxRate: formatBps(slot.annualTaxRateBps),
+    taxRate: formatWeeklyRateFromAnnualBps(slot.annualTaxRateBps),
     taxRateBps: slot.annualTaxRateBps,
     bondRate: formatBps(slot.bondRateBps),
     bondRateBps: slot.bondRateBps,

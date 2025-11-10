@@ -20,9 +20,9 @@ export const isInputValueEmpty = (value: any) => {
   // Treat null/undefined/empty string as empty
   if (value === null || value === undefined || value === '') return true;
 
-  // Treat string 'N/A' (case-insensitive) as empty
-  if (typeof value === 'string' && value.trim() && isNAValue(value))
-    return true;
+  // // Treat string 'N/A' (case-insensitive) as empty， why ????
+  // if (typeof value === 'string' && value.trim() && isNAValue(value))
+  //   return true;
 
   // Try to parse JSON strings to actual values
   let actualValue = value;

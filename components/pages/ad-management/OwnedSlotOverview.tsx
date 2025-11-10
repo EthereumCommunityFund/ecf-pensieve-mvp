@@ -122,7 +122,7 @@ export default function OwnedSlotOverview({
     //   value: slot.remainingUnits,
     //   valueLabelType: slot.isOverdue ? 'danger' : undefined,
     // },
-    { label: 'Tax Owed:', value: taxOwedDisplay },
+    { label: 'Tax Owed', value: taxOwedDisplay },
     { label: 'divider-001', value: '', type: 'divider' },
     {
       label: 'Min Takeover Bid',
@@ -138,9 +138,9 @@ export default function OwnedSlotOverview({
       helper: 'Current wallet address that controls this slot.',
     },
     {
-      label: 'Tax Rate (Annually)',
+      label: 'Tax Rate (Weekly)',
       value: slot.taxRate,
-      helper: 'Annualized tax percentage applied to the declared valuation.',
+      helper: 'Weekly tax percentage applied to the declared valuation.',
     },
   ];
 

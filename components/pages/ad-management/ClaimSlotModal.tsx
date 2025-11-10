@@ -20,6 +20,7 @@ import {
   ZERO_BIGINT,
 } from '@/utils/harberger';
 
+import { DEFAULT_CLAIM_COVERAGE_DAYS } from './constants';
 import {
   DEFAULT_CREATIVE_UPLOAD_CONFIG,
   resolveCreativeUploadConfigs,
@@ -44,8 +45,6 @@ interface ClaimPayload {
 }
 
 type ClaimStep = 1 | 2;
-
-const DEFAULT_CLAIM_COVERAGE_DAYS = 7;
 const MOBILE_MAX_WIDTH_PX = 809;
 const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_MAX_WIDTH_PX}px)`;
 

@@ -899,7 +899,7 @@ function SlotActionFormContent({
       <div className="grid grid-cols-1 gap-[8px] rounded-[10px] border border-black/10 bg-white p-[10px] md:grid-cols-3">
         <InfoStat label="Owner" value={slot.owner ?? '—'} labelType={'light'} />
         <InfoStat
-          label="Tax Rate (Annually)"
+          label="Tax Rate (Weekly)"
           value={slot.taxRate}
           labelType={'light'}
         />
