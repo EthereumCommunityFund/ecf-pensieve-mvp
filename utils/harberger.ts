@@ -6,6 +6,7 @@ export const ZERO_BIGINT = BigInt(0);
 export const ONE_BIGINT = BigInt(1);
 export const RATE_DENOMINATOR = BigInt(10_000);
 export const SECONDS_PER_YEAR = BigInt(365 * 24 * 60 * 60);
+export const WEEKS_PER_YEAR = 52;
 
 export interface FormatEthOptions {
   maximumFractionDigits?: number;
@@ -43,6 +44,20 @@ export function formatBps(
     minimumFractionDigits: 0,
     maximumFractionDigits,
   })}%`;
+}
+
+export function formatWeeklyRateFromAnnualBps(
+  value: bigint | number,
+  maximumFractionDigits: number = 2,
+): string {
+  const numeric = typeof value === 'bigint' ? Number(value) : value;
+  const weeklyBps = numeric / WEEKS_PER_YEAR;
+
+  if (!Number.isFinite(weeklyBps) || weeklyBps <= 0) {
+    return formatBps(0, maximumFractionDigits);
+  }
+
+  return formatBps(weeklyBps, maximumFractionDigits);
 }
 
 export function calculateBond(

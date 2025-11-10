@@ -1,0 +1,1 @@
+export const DEFAULT_CLAIM_COVERAGE_DAYS = 7;

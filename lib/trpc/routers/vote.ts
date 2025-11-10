@@ -378,6 +378,19 @@ export const voteRouter = router({
         }
 
         return await ctx.db.transaction(async (tx) => {
+          const [project] = await tx
+            .select()
+            .from(projects)
+            .where(eq(projects.id, itemProposal.projectId))
+            .for('update');
+
+          if (!project) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Project not found while processing vote',
+            });
+          }
+
           const vote = await handleVoteRecord(tx, {
             userId: ctx.user.id,
             projectId: itemProposal.projectId,
@@ -395,15 +408,12 @@ export const voteRouter = router({
             ),
           );
 
-          const [votes, project, leadingProposal] = await Promise.all([
+          const [votes, leadingProposal] = await Promise.all([
             tx.query.voteRecords.findMany({
               where: and(
                 eq(voteRecords.itemProposalId, itemProposalId),
                 eq(voteRecords.key, key),
               ),
-            }),
-            tx.query.projects.findFirst({
-              where: eq(projects.id, itemProposal.projectId),
             }),
             tx.query.projectLogs.findFirst({
               where: and(
@@ -518,20 +528,6 @@ export const voteRouter = router({
 
         const originalItemProposalId = voteToSwitch.itemProposalId;
 
-        const [project, leadingProposal] = await Promise.all([
-          ctx.db.query.projects.findFirst({
-            where: eq(projects.id, projectId),
-          }),
-          ctx.db.query.projectLogs.findFirst({
-            where: and(
-              eq(projectLogs.projectId, targetItemProposal.projectId),
-              eq(projectLogs.key, key),
-              eq(projectLogs.isNotLeading, false),
-            ),
-            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
-          }),
-        ]);
-
         return await ctx.db.transaction(async (tx) => {
           const [updatedVote] = await tx
             .update(voteRecords)
@@ -557,6 +553,28 @@ export const voteRouter = router({
               eq(voteRecords.itemProposalId, itemProposalId),
               eq(voteRecords.key, key),
             ),
+          });
+
+          const [project] = await tx
+            .select()
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .for('update');
+
+          if (!project) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Project not found while switching vote',
+            });
+          }
+
+          const leadingProposal = await tx.query.projectLogs.findFirst({
+            where: and(
+              eq(projectLogs.projectId, targetItemProposal.projectId),
+              eq(projectLogs.key, key),
+              eq(projectLogs.isNotLeading, false),
+            ),
+            orderBy: (projectLogs, { desc }) => [desc(projectLogs.createdAt)],
           });
 
           if (leadingProposal?.itemProposalId === itemProposalId) {

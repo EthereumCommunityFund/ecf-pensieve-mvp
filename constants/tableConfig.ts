@@ -303,36 +303,28 @@ export const ProjectTableFieldCategory: ICategoryConfig[] = [
   },
 ];
 
-export const TotalItemCount = ProjectTableFieldCategory.reduce(
-  (acc, category) =>
-    acc +
-    category.subCategories.reduce(
-      (subAcc, subCategory) =>
-        subAcc +
-        (subCategory.items?.length || 0) +
-        (subCategory.itemsNotEssential?.length || 0),
-      0,
-    ),
-  0,
+const allItemKeysInPage = ProjectTableFieldCategory.reduce((acc, category) => {
+  return acc.concat(
+    category.subCategories.reduce((subAcc, subCategory) => {
+      return subAcc.concat(
+        subCategory.items || [],
+        subCategory.itemsNotEssential || [],
+        (subCategory.groups || []).reduce((pre, cur) => {
+          const groupItems = (cur.items || []).filter(
+            (item): item is IPocItemKey => item in ALL_POC_ITEM_MAP,
+          );
+          return pre.concat(groupItems);
+        }, [] as IPocItemKey[]),
+      );
+    }, [] as IPocItemKey[]),
+  );
+}, [] as IPocItemKey[]);
+
+export const AllItemKeysInPage: IPocItemKey[] = Array.from(
+  new Set(allItemKeysInPage),
 );
 
-export const AllItemKeysInPage: IPocItemKey[] =
-  ProjectTableFieldCategory.reduce((acc, category) => {
-    return acc.concat(
-      category.subCategories.reduce((subAcc, subCategory) => {
-        return subAcc.concat(
-          subCategory.items || [],
-          subCategory.itemsNotEssential || [],
-          (subCategory.groups || []).reduce((pre, cur) => {
-            const groupItems = (cur.items || []).filter(
-              (item): item is IPocItemKey => item in ALL_POC_ITEM_MAP,
-            );
-            return pre.concat(groupItems);
-          }, [] as IPocItemKey[]),
-        );
-      }, [] as IPocItemKey[]),
-    );
-  }, [] as IPocItemKey[]);
+export const TotalItemCount = AllItemKeysInPage.length;
 
 export const TotalGenesisWeightSum = AllItemKeysInPage.reduce((sum, key) => {
   const item = ALL_POC_ITEM_MAP[key];
