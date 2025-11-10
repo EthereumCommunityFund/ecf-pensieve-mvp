@@ -95,20 +95,6 @@ export function calculateTaxForPeriods(
   );
 }
 
-export function calculateWeeklyTaxFromAnnualRate(
-  valuationWei: bigint,
-  annualTaxRateBps: bigint,
-): bigint {
-  if (valuationWei <= ZERO_BIGINT || annualTaxRateBps <= ZERO_BIGINT) {
-    return ZERO_BIGINT;
-  }
-
-  return (
-    (valuationWei * annualTaxRateBps) /
-    (RATE_DENOMINATOR * BigInt(WEEKS_PER_YEAR))
-  );
-}
-
 export function formatDuration(
   secondsInput: bigint | number,
   {

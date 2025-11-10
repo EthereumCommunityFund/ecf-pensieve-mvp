@@ -11,10 +11,11 @@ import type { ActiveSlotData, VacantSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
 import {
   calculateBond,
-  calculateWeeklyTaxFromAnnualRate,
+  calculateTaxForPeriods,
   formatEth,
 } from '@/utils/harberger';
 
+import { DEFAULT_CLAIM_COVERAGE_DAYS } from './constants';
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
 interface InfoStatProps {
@@ -66,12 +67,19 @@ export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
 
   const estimatedWeeklyPayment = useMemo(() => {
     const bondWei = calculateBond(slot.minValuationWei, slot.bondRateBps);
-    const weeklyTaxWei = calculateWeeklyTaxFromAnnualRate(
+    const weeklyTaxWei = calculateTaxForPeriods(
       slot.minValuationWei,
       slot.annualTaxRateBps,
+      slot.taxPeriodInSeconds,
+      BigInt(DEFAULT_CLAIM_COVERAGE_DAYS),
     );
     return formatEth(bondWei + weeklyTaxWei);
-  }, [slot.annualTaxRateBps, slot.bondRateBps, slot.minValuationWei]);
+  }, [
+    slot.annualTaxRateBps,
+    slot.bondRateBps,
+    slot.minValuationWei,
+    slot.taxPeriodInSeconds,
+  ]);
 
   const handleClaim = () => {
     if (onClaim) {
@@ -123,7 +131,7 @@ export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
           />
           <InfoStat
             label="Est. Weekly Payment"
-            helperText="Bond + weekly tax at the minimum valuation."
+            helperText={`Bond + tax (${DEFAULT_CLAIM_COVERAGE_DAYS} days) at the minimum valuation.`}
             value={estimatedWeeklyPayment}
           />
         </div>
@@ -190,12 +198,19 @@ export function ActiveSlotCard({
   const takeoverCta = slot.takeoverCta;
   const minTakeoverWeeklyEstimate = useMemo(() => {
     const bondWei = calculateBond(slot.minTakeoverBidWei, slot.bondRateBps);
-    const weeklyTaxWei = calculateWeeklyTaxFromAnnualRate(
+    const weeklyTaxWei = calculateTaxForPeriods(
       slot.minTakeoverBidWei,
       slot.taxRateBps,
+      slot.taxPeriodInSeconds,
+      BigInt(DEFAULT_CLAIM_COVERAGE_DAYS),
     );
     return formatEth(bondWei + weeklyTaxWei);
-  }, [slot.bondRateBps, slot.minTakeoverBidWei, slot.taxRateBps]);
+  }, [
+    slot.bondRateBps,
+    slot.minTakeoverBidWei,
+    slot.taxPeriodInSeconds,
+    slot.taxRateBps,
+  ]);
 
   const stats = useMemo(
     () =>
@@ -478,7 +493,7 @@ export function buildActiveStats(
     {
       id: 'takeover-weekly',
       label: 'Min Takeover Weekly Est.',
-      helperText: 'Bond + weekly tax at the minimum takeover valuation.',
+      helperText: `Bond + tax (${DEFAULT_CLAIM_COVERAGE_DAYS} days) at the minimum takeover valuation.`,
       value: minTakeoverWeeklyEstimate,
       valueLabelType: 'dark',
     },
