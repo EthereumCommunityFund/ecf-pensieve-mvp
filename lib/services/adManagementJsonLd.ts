@@ -232,7 +232,7 @@ function buildSlotProperties(
   if (meta) {
     addProperty('Slot Type', formatLabel(meta.slotType));
     addProperty('Minimum Valuation', formatWei(meta.minValuationWei));
-    addProperty('Tax Rate', formatBps(meta.annualTaxRateBps));
+    addProperty('Weekly Tax Rate', formatWeeklyBps(meta.annualTaxRateBps));
     addProperty('Bond Rate', formatBps(meta.bondRateBps));
     addProperty('Minimum Bid Increment', formatBps(meta.minBidIncrementBps));
     addProperty('Tax Period', formatDuration(meta.taxPeriodSeconds));
@@ -336,6 +336,14 @@ function formatWei(value?: string): string | undefined {
   }
 }
 
+function formatPercentFromBps(numericBps: number): string {
+  const percent = numericBps / 100;
+  return `${percent.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}%`;
+}
+
 function formatBps(value?: string): string | undefined {
   if (!value) {
     return undefined;
@@ -346,11 +354,20 @@ function formatBps(value?: string): string | undefined {
     return undefined;
   }
 
-  const percent = numeric / 100;
-  return `${percent.toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}%`;
+  return formatPercentFromBps(numeric);
+}
+
+function formatWeeklyBps(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const numeric = Number.parseFloat(value);
+  if (!Number.isFinite(numeric)) {
+    return undefined;
+  }
+
+  return formatPercentFromBps(numeric / 52);
 }
 
 function formatDuration(value?: string): string | undefined {

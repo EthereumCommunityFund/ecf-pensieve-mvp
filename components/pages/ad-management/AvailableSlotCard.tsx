@@ -9,6 +9,11 @@ import { Button } from '@/components/base/button';
 import { InfoIcon } from '@/components/icons';
 import type { ActiveSlotData, VacantSlotData } from '@/hooks/useHarbergerSlots';
 import { extractCreativeAssets } from '@/utils/creative';
+import {
+  calculateBond,
+  calculateWeeklyTaxFromAnnualRate,
+  formatEth,
+} from '@/utils/harberger';
 
 import ValueLabel, { IValueLabelType } from './ValueLabel';
 
@@ -59,6 +64,15 @@ export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
     actionLabel,
   } = slot;
 
+  const estimatedWeeklyPayment = useMemo(() => {
+    const bondWei = calculateBond(slot.minValuationWei, slot.bondRateBps);
+    const weeklyTaxWei = calculateWeeklyTaxFromAnnualRate(
+      slot.minValuationWei,
+      slot.annualTaxRateBps,
+    );
+    return formatEth(bondWei + weeklyTaxWei);
+  }, [slot.annualTaxRateBps, slot.bondRateBps, slot.minValuationWei]);
+
   const handleClaim = () => {
     if (onClaim) {
       onClaim(slot);
@@ -103,9 +117,14 @@ export function VacantSlotCard({ slot, onClaim }: VacantSlotCardProps) {
             value={bondRate}
           />
           <InfoStat
-            label="Tax Rate (Annually)"
+            label="Tax Rate (Weekly)"
             helperText={taxRateHelper}
             value={taxRate}
+          />
+          <InfoStat
+            label="Est. Weekly Payment"
+            helperText="Bond + weekly tax at the minimum valuation."
+            value={estimatedWeeklyPayment}
           />
         </div>
 
@@ -169,6 +188,14 @@ export function ActiveSlotCard({
   const ownerLabel = 'Owner';
   const ownerName = slot.owner;
   const takeoverCta = slot.takeoverCta;
+  const minTakeoverWeeklyEstimate = useMemo(() => {
+    const bondWei = calculateBond(slot.minTakeoverBidWei, slot.bondRateBps);
+    const weeklyTaxWei = calculateWeeklyTaxFromAnnualRate(
+      slot.minTakeoverBidWei,
+      slot.taxRateBps,
+    );
+    return formatEth(bondWei + weeklyTaxWei);
+  }, [slot.bondRateBps, slot.minTakeoverBidWei, slot.taxRateBps]);
 
   const stats = useMemo(
     () =>
@@ -177,6 +204,7 @@ export function ActiveSlotCard({
         slot.lockedBond,
         slot.remainingUnits,
         slot.minTakeoverBid,
+        minTakeoverWeeklyEstimate,
         { isOverdue: slot.isOverdue, isExpired: slot.isExpired },
       ),
     [
@@ -186,6 +214,7 @@ export function ActiveSlotCard({
       slot.minTakeoverBid,
       slot.remainingUnits,
       slot.valuation,
+      minTakeoverWeeklyEstimate,
     ],
   );
   const desktopCreativeConfig = slot.creativeConfig.desktop;
@@ -403,6 +432,7 @@ export function buildActiveStats(
   lockedBond: string,
   remainingUnits: string,
   minTakeoverBid: string,
+  minTakeoverWeeklyEstimate: string,
   options?: { isOverdue?: boolean; isExpired?: boolean },
 ): StatBlock[] {
   const remainingValueLabelType: IValueLabelType = options?.isOverdue
@@ -444,6 +474,13 @@ export function buildActiveStats(
       value: minTakeoverBid,
       valueLabelType: 'dark',
       withBorderTop: true,
+    },
+    {
+      id: 'takeover-weekly',
+      label: 'Min Takeover Weekly Est.',
+      helperText: 'Bond + weekly tax at the minimum takeover valuation.',
+      value: minTakeoverWeeklyEstimate,
+      valueLabelType: 'dark',
     },
   ];
 }

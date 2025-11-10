@@ -6,6 +6,7 @@ export const ZERO_BIGINT = BigInt(0);
 export const ONE_BIGINT = BigInt(1);
 export const RATE_DENOMINATOR = BigInt(10_000);
 export const SECONDS_PER_YEAR = BigInt(365 * 24 * 60 * 60);
+export const WEEKS_PER_YEAR = 52;
 
 export interface FormatEthOptions {
   maximumFractionDigits?: number;
@@ -45,6 +46,20 @@ export function formatBps(
   })}%`;
 }
 
+export function formatWeeklyRateFromAnnualBps(
+  value: bigint | number,
+  maximumFractionDigits: number = 2,
+): string {
+  const numeric = typeof value === 'bigint' ? Number(value) : value;
+  const weeklyBps = numeric / WEEKS_PER_YEAR;
+
+  if (!Number.isFinite(weeklyBps) || weeklyBps <= 0) {
+    return formatBps(0, maximumFractionDigits);
+  }
+
+  return formatBps(weeklyBps, maximumFractionDigits);
+}
+
 export function calculateBond(
   valuationWei: bigint,
   bondRateBps: bigint,
@@ -77,6 +92,20 @@ export function calculateTaxForPeriods(
   return (
     (valuationWei * annualTaxRateBps * taxPeriodInSeconds * periods) /
     (RATE_DENOMINATOR * SECONDS_PER_YEAR)
+  );
+}
+
+export function calculateWeeklyTaxFromAnnualRate(
+  valuationWei: bigint,
+  annualTaxRateBps: bigint,
+): bigint {
+  if (valuationWei <= ZERO_BIGINT || annualTaxRateBps <= ZERO_BIGINT) {
+    return ZERO_BIGINT;
+  }
+
+  return (
+    (valuationWei * annualTaxRateBps) /
+    (RATE_DENOMINATOR * BigInt(WEEKS_PER_YEAR))
   );
 }
 
