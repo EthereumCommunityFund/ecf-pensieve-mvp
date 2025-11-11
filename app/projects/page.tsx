@@ -984,7 +984,7 @@ const ProjectsContent = () => {
         )}
       </div>
 
-      <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
+      <div className="mobile:flex-col mobile:gap-5 mobile:px-0 flex items-start justify-between gap-10 px-2.5">
         <div className="w-full flex-1">
           <div className="border-b border-black/10 px-2.5 py-4">
             {sort === 'top-transparent' ||
