@@ -67,6 +67,7 @@ const ProjectsContent = () => {
   const cats = useMemo(() => {
     return catsParam?.split(',').filter(Boolean);
   }, [catsParam]);
+  const catsKey = cats?.join(',') ?? '';
 
   const sort = searchParams.get('sort');
   const isAccountableSort = sort === 'top-accountable';
@@ -353,8 +354,11 @@ const ProjectsContent = () => {
   );
 
   const accountableQueryInput = useMemo(
-    () => ({ limit: accountableQueryLimit }),
-    [accountableQueryLimit],
+    () => ({
+      limit: accountableQueryLimit,
+      ...(cats && cats.length > 0 ? { categories: cats } : {}),
+    }),
+    [accountableQueryLimit, cats],
   );
 
   const {
@@ -763,8 +767,6 @@ const ProjectsContent = () => {
   ]);
 
   // Reset when filters (cats) or sort change. Also trigger a refetch to avoid stale UI
-  const catsKey = cats?.join(',') || '';
-
   useEffect(() => {
     reset();
     if (shouldUseAdvancedFilter) {
@@ -982,7 +984,7 @@ const ProjectsContent = () => {
         )}
       </div>
 
-      <div className="mobile:flex-col mobile:gap-5 flex items-start justify-between gap-10 px-2.5">
+      <div className="mobile:flex-col mobile:gap-5 mobile:px-0 flex items-start justify-between gap-10 px-2.5">
         <div className="w-full flex-1">
           <div className="border-b border-black/10 px-2.5 py-4">
             {sort === 'top-transparent' ||
