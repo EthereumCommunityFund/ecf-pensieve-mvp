@@ -1,4 +1,4 @@
-import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, SQL, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache } from 'next/cache';
 import { z } from 'zod';
 
@@ -106,24 +106,46 @@ export const rankRouter = router({
               id: z.number(),
             })
             .optional(),
+          categories: z.array(z.string()).optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 10;
       const cursor = input?.cursor;
+      const categories = input?.categories;
 
       const genesisSupportScore = sql<number>`
         (${ranks.publishedGenesisWeight}) * sqrt(GREATEST(${projects.support}, 0))
       `;
 
       const getTopRanksData = async () => {
-        const whereCondition = cursor
-          ? and(
-              eq(projects.isPublished, true),
-              sql`(${genesisSupportScore} < ${cursor.score} OR (${genesisSupportScore} = ${cursor.score} AND ${ranks.id} < ${cursor.id}))`,
-            )
-          : eq(projects.isPublished, true);
+        const conditions: (SQL<unknown> | undefined)[] = [
+          eq(projects.isPublished, true),
+        ];
+
+        if (cursor) {
+          conditions.push(
+            sql`(${genesisSupportScore} < ${cursor.score} OR (${genesisSupportScore} = ${cursor.score} AND ${ranks.id} < ${cursor.id}))`,
+          );
+        }
+
+        if (categories && categories.length > 0) {
+          conditions.push(
+            sql`${projectSnaps.categories} && ARRAY[${sql.join(
+              categories.map((cat) => sql`${cat}`),
+              sql`, `,
+            )}]`,
+          );
+        }
+
+        const filteredConditions = conditions.filter(
+          (condition): condition is SQL<unknown> => Boolean(condition),
+        );
+        const whereCondition =
+          filteredConditions.length > 1
+            ? and(...filteredConditions)
+            : filteredConditions[0];
 
         const results = await ctx.db
           .select({
