@@ -59,12 +59,12 @@ const visibilityOptions: Array<{
   {
     value: 'public',
     label: 'Public',
-    description: 'Anyone with the link can view and use this feed.',
+    description: 'Anyone with the link can view and use this sieve.',
   },
   {
     value: 'private',
     label: 'Private',
-    description: 'Only you can access this feed. Sharing is disabled.',
+    description: 'Only you can access this sieve. Sharing is disabled.',
   },
 ];
 
@@ -109,7 +109,7 @@ const EditSieveModal = ({
   const updateMutation = trpc.sieve.updateSieve.useMutation({
     onSuccess: (data) => {
       addToast({
-        title: 'Feed updated',
+        title: 'Sieve updated',
         color: 'success',
       });
       onUpdated();
@@ -117,7 +117,7 @@ const EditSieveModal = ({
     },
     onError: (error) => {
       addToast({
-        title: error.message || 'Failed to update feed',
+        title: error.message || 'Failed to update sieve',
         color: 'danger',
       });
     },
@@ -126,7 +126,7 @@ const EditSieveModal = ({
   const createMutation = trpc.sieve.createSieve.useMutation({
     onSuccess: () => {
       addToast({
-        title: 'Feed created',
+        title: 'Sieve created',
         color: 'success',
       });
       onUpdated();
@@ -134,7 +134,7 @@ const EditSieveModal = ({
     },
     onError: (error) => {
       addToast({
-        title: error.message || 'Failed to create feed',
+        title: error.message || 'Failed to create sieve',
         color: 'danger',
       });
     },
@@ -233,7 +233,7 @@ const EditSieveModal = ({
     ? ''
     : name.trim()
       ? ''
-      : 'Feed name is required';
+      : 'Sieve name is required';
 
   const handleSave = () => {
     setHasTriedSubmit(true);
@@ -356,13 +356,13 @@ const EditSieveModal = ({
       <ModalContent>
         <ModalHeader className="flex items-center justify-between border-b border-black/10 px-5 py-[12px]">
           <span className="text-[16px] font-semibold text-black">
-            {mode === 'edit' ? 'Edit Feed' : 'Create Feed'}
+            {mode === 'edit' ? 'Edit Sieve' : 'Create Sieve'}
           </span>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-[16px] p-5">
           <div className="flex flex-col gap-[8px]">
             <span className="text-[14px] font-semibold text-black/80">
-              Feed Name
+              Sieve Name
             </span>
             <Input
               value={name}
@@ -595,7 +595,7 @@ const EditSieveModal = ({
               </div>
             ) : (
               <span className="text-[12px] text-black/50">
-                No custom filters are attached to this feed yet.
+                No custom filters are attached to this sieve yet.
               </span>
             )}
             <Button
@@ -679,7 +679,7 @@ const EditSieveModal = ({
                 : createMutation.isPending
             }
           >
-            {mode === 'edit' ? 'Save Changes' : 'Create Feed'}
+            {mode === 'edit' ? 'Save Changes' : 'Create Sieve'}
           </Button>
         </ModalFooter>
       </ModalContent>

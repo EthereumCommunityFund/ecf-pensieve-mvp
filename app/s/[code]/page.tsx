@@ -114,7 +114,7 @@ export async function generateMetadata({
 
   if (payload.visibility === 'private') {
     return {
-      title: 'Private Feed',
+      title: 'Private Sieve',
       robots: {
         index: false,
         follow: false,

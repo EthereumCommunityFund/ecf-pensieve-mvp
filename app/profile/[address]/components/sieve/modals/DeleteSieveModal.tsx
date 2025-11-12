@@ -31,7 +31,7 @@ const DeleteSieveModal = ({
   const deleteMutation = trpc.sieve.deleteSieve.useMutation({
     onSuccess: () => {
       addToast({
-        title: 'Feed deleted',
+        title: 'Sieve deleted',
         color: 'success',
       });
       onDeleted();
@@ -39,7 +39,7 @@ const DeleteSieveModal = ({
     },
     onError: (error) => {
       addToast({
-        title: error.message || 'Failed to delete feed',
+        title: error.message || 'Failed to delete sieve',
         color: 'danger',
       });
     },
@@ -66,7 +66,7 @@ const DeleteSieveModal = ({
         <ModalHeader className="flex items-center gap-[10px] border-b border-black/10 px-5 py-[12px]">
           <WarningCircleIcon size={24} className="text-[#D14343]" />
           <span className="text-[16px] font-semibold text-black">
-            Delete Feed
+            Delete Sieve
           </span>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-[12px] p-5">

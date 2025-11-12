@@ -69,13 +69,13 @@ const visibilityOptions: Array<{
   {
     value: 'public',
     label: 'Public',
-    description: 'Anyone with the link can view this feed.',
+    description: 'Anyone with the link can view this sieve.',
     icon: 'public',
   },
   {
     value: 'private',
     label: 'Private',
-    description: 'Only you can access this feed. Sharing is disabled.',
+    description: 'Only you can access this sieve. Sharing is disabled.',
     icon: 'private',
   },
 ];
@@ -99,7 +99,7 @@ const SaveFeedModal = ({
     onSuccess: async (data) => {
       const shareUrl =
         data.share.visibility === 'public' ? data.share.url : undefined;
-      let toastTitle = 'Feed saved successfully';
+      let toastTitle = 'Sieve saved successfully';
       let toastColor: 'success' | 'warning' = 'success';
 
       if (shareUrl) {
@@ -107,7 +107,7 @@ const SaveFeedModal = ({
         if (copied) {
           toastTitle = 'Link has been copied to clipboard';
         } else {
-          toastTitle = 'Feed saved but failed to copy link';
+          toastTitle = 'Sieve saved but failed to copy link';
           toastColor = 'warning';
         }
       }
@@ -128,7 +128,7 @@ const SaveFeedModal = ({
     },
     onError: (error) => {
       addToast({
-        title: error.message || 'Failed to save feed',
+        title: error.message || 'Failed to save sieve',
         color: 'danger',
       });
     },
@@ -139,7 +139,7 @@ const SaveFeedModal = ({
       return '';
     }
     if (!name.trim()) {
-      return 'Feed name is required';
+      return 'Sieve name is required';
     }
     return '';
   }, [hasTriedSubmit, name]);
@@ -203,7 +203,7 @@ const SaveFeedModal = ({
             type="subtitle2"
             className="text-[16px] font-semibold leading-[22px] text-black opacity-80"
           >
-            Save as Feed
+            Save as Sieve
           </ECFTypography>
           <button
             onClick={handleClose}
@@ -219,12 +219,12 @@ const SaveFeedModal = ({
               type="body1"
               className="text-[16px] font-semibold leading-[24px]"
             >
-              Feed Name
+              Sieve Name
             </ECFTypography>
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Name your feed"
+              placeholder="Name your sieve"
               classNames={{
                 inputWrapper:
                   'border border-black/10 bg-[rgba(0,0,0,0.05)] h-[40px] rounded-[8px] px-[10px]',
@@ -255,7 +255,7 @@ const SaveFeedModal = ({
             <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Add notes to remember why you saved this feed"
+              placeholder="Add notes to remember why you saved this sieve"
               classNames={{
                 inputWrapper:
                   'border border-black/10 bg-[rgba(0,0,0,0.05)] min-h-[80px] rounded-[8px] px-[10px] py-[10px]',
@@ -363,7 +363,7 @@ const SaveFeedModal = ({
             onPress={handleSave}
             isLoading={createMutation.isPending}
           >
-            Save Feed
+            Save Sieve
           </Button>
         </ModalFooter>
       </ModalContent>
