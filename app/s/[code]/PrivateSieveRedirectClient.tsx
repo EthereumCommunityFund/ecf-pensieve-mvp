@@ -44,9 +44,9 @@ const PrivateSieveRedirectClient = ({
   if (!isAuthenticated) {
     return (
       <div className="flex w-full max-w-[420px] flex-col items-center gap-6 rounded-[12px] border border-black/10 bg-white p-8 text-center shadow-sm">
-        <h1 className="text-lg font-semibold text-black">Private Feed</h1>
+        <h1 className="text-lg font-semibold text-black">Private Sieve</h1>
         <p className="text-sm text-black/60">
-          This feed is private. Sign in with the owning account to open it.
+          This sieve is private. Sign in with the owning account to open it.
         </p>
         <Button
           color="primary"
@@ -64,7 +64,7 @@ const PrivateSieveRedirectClient = ({
       <div className="flex w-full max-w-[420px] flex-col items-center gap-4 rounded-[12px] border border-black/10 bg-white p-8 text-center shadow-sm">
         <h1 className="text-lg font-semibold text-black">Checking access…</h1>
         <p className="text-sm text-black/60">
-          Verifying that you own this feed.
+          Verifying that you own this sieve.
         </p>
       </div>
     );
@@ -73,8 +73,8 @@ const PrivateSieveRedirectClient = ({
   if (sieveQuery.error) {
     const message =
       sieveQuery.error.data?.code === 'FORBIDDEN'
-        ? 'You do not have permission to view this feed.'
-        : 'Feed not found or unavailable.';
+        ? 'You do not have permission to view this sieve.'
+        : 'Sieve not found or unavailable.';
 
     return (
       <div className="flex w-full max-w-[420px] flex-col items-center gap-4 rounded-[12px] border border-black/10 bg-white p-8 text-center shadow-sm">
@@ -88,7 +88,7 @@ const PrivateSieveRedirectClient = ({
     <div className="flex w-full max-w-[420px] flex-col items-center gap-4 rounded-[12px] border border-black/10 bg-white p-8 text-center shadow-sm">
       <h1 className="text-lg font-semibold text-black">Redirecting…</h1>
       <p className="text-sm text-black/60">
-        Opening your feed. You may close this window if nothing happens.
+        Opening your sieve. You may close this window if nothing happens.
       </p>
     </div>
   );

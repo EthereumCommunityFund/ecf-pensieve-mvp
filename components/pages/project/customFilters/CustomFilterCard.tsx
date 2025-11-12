@@ -101,7 +101,7 @@ const CustomFilterCard = ({
           className="flex h-[32px] cursor-not-allowed items-center justify-center gap-[6px] rounded-[6px] border  border-black/10 text-[14px] font-semibold text-black/30"
         >
           <UploadSimple width={18} height={18} className="opacity-50" />
-          Save as Feed (coming soon)
+          Save as Sieve (coming soon)
         </Button> */}
       </div>
     </div>

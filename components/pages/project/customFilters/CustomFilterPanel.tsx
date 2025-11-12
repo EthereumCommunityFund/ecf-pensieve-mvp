@@ -238,13 +238,13 @@ const CustomFilterPanel = ({
         <div className="flex flex-col gap-[10px]">
           <Button
             size="sm"
-            aria-label="Save filters as feed"
+            aria-label="Save filters as sieve"
             onPress={onSaveAsFeed}
             isDisabled={isSaveDisabled}
             className={`flex h-[30px] w-full items-center justify-center gap-[5px] rounded-[5px] border text-[14px] font-semibold text-black/60`}
           >
             <BookmarkSimple />
-            Save as Feed
+            Save as Sieve
           </Button>
           {/* <Button
             size="sm"

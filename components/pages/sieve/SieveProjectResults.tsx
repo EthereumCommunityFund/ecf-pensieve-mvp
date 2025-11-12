@@ -283,7 +283,7 @@ const SieveProjectResults = ({
       isFetchingNextPage={effectiveIsFetchingMore}
       hasNextPage={effectiveHasNextPage}
       projectList={filteredProjects}
-      emptyMessage="No projects match this feed yet."
+      emptyMessage="No projects match this sieve yet."
       onLoadMore={handleLoadMore}
       onSuccess={() => {
         if (isAccountableSort) {

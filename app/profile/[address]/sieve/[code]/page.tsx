@@ -53,7 +53,7 @@ const ManagementSievePage = () => {
 
     if (errorCode === 'NOT_FOUND') {
       addToast({
-        title: 'Feed not found',
+        title: 'Sieve not found',
         color: 'danger',
       });
       router.push(`/profile/${address}?tab=sieve`);
@@ -95,10 +95,10 @@ const ManagementSievePage = () => {
     return (
       <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4 px-[16px] py-[48px] text-center">
         <h1 className="text-[22px] font-semibold text-black">
-          Feed unavailable
+          Sieve unavailable
         </h1>
         <p className="text-[14px] text-black/50">
-          This feed could not be loaded. It may have been deleted or you might
+          This sieve could not be loaded. It may have been deleted or you might
           not have access.
         </p>
         <Button

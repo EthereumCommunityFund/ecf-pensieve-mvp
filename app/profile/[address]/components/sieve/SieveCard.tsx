@@ -1,12 +1,12 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
 } from '@heroui/react';
+import type { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
 import VisibilityBadge from '@/components/common/VisibilityBadge';
@@ -240,7 +240,7 @@ const SieveCard = ({
               </button>
             </DropdownTrigger>
             <DropdownMenu
-              aria-label="Feed actions"
+              aria-label="Sieve actions"
               className="min-w-[171px] rounded-[10px] p-[10px] shadow-lg"
               itemClasses={{
                 base: 'rounded-[5px] px-[10px] py-[4px] gap-[10px]',
@@ -253,7 +253,7 @@ const SieveCard = ({
                 }}
                 endContent={<PencilSimpleIcon size={18} />}
               >
-                Edit Feed
+                Edit Sieve
               </DropdownItem>
               <DropdownItem
                 key="delete"
@@ -263,7 +263,7 @@ const SieveCard = ({
                 className="text-red-500 data-[hover=true]:bg-red-50 data-[hover=true]:text-red-600"
                 endContent={<TrashIcon size={18} />}
               >
-                Delete Feed
+                Delete Sieve
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
@@ -330,7 +330,7 @@ const SieveCard = ({
 
       <div className="flex w-full justify-end gap-[8px]">
         <Button size="sm" onPress={handleViewFeed}>
-          View Feed
+          View Sieve
         </Button>
         {extraActions}
         {canManage ? (
@@ -343,7 +343,7 @@ const SieveCard = ({
             isDisabled={sieve.share.visibility !== 'public'}
             className="min-w-[120px]"
           >
-            Share Feed
+            Share Sieve
           </Button>
         ) : null}
       </div>

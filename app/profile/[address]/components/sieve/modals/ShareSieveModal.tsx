@@ -61,7 +61,7 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
       <ModalContent>
         <ModalHeader className="flex flex-col gap-[4px] border-b border-black/10 px-5 py-[12px]">
           <span className="text-[16px] font-semibold text-black">
-            Share Feed
+            Share Sieve
           </span>
           <span className="text-[13px] text-black/50">
             Share your saved filters with teammates or the community.
@@ -93,7 +93,7 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
             />
             {!isPublic && (
               <span className="text-[11px] text-[#D14343]">
-                This feed is private. Switch it to Public in edit settings to
+                This sieve is private. Switch it to Public in edit settings to
                 enable sharing.
               </span>
             )}
@@ -122,7 +122,7 @@ const ShareSieveModal = ({ isOpen, sieve, onClose }: ShareSieveModalProps) => {
               }
             />
             <span className="text-[11px] text-black/45">
-              Share this URL when you want others to view and follow your feed.
+              Share this URL when you want others to view and follow your sieve.
             </span>
           </div> */}
         </ModalBody>

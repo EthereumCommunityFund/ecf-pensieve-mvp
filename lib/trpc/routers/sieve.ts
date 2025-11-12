@@ -220,13 +220,16 @@ export const sieveRouter = router({
       try {
         const record = await SieveService.getSieveByCode(input.code);
         if (!record) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Feed not found' });
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Sieve not found',
+          });
         }
 
         if (!SieveService.checkSieveOwnership(record, ctx.user.id)) {
           throw new TRPCError({
             code: 'FORBIDDEN',
-            message: 'You do not have access to this feed',
+            message: 'You do not have access to this sieve',
           });
         }
 
@@ -241,14 +244,17 @@ export const sieveRouter = router({
       try {
         const record = await SieveService.getSieveByCode(input.code);
         if (!record) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Feed not found' });
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Sieve not found',
+          });
         }
 
         const isOwner = ctx.user?.id === record.creator;
         if (record.visibility !== 'public' && !isOwner) {
           throw new TRPCError({
             code: 'FORBIDDEN',
-            message: 'You do not have access to this feed',
+            message: 'You do not have access to this sieve',
           });
         }
 
