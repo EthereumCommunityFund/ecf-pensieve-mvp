@@ -148,7 +148,7 @@ const FilterConditionsDisplay = ({
         !searchTerm &&
         advancedFilters.length === 0 ? (
           <span className="text-[12px] text-black/45">
-            No additional filters are applied to this feed.
+            No additional filters are applied to this sieve.
           </span>
         ) : null}
       </div>

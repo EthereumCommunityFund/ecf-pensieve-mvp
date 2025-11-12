@@ -120,7 +120,7 @@ const ProjectsContent = () => {
     shouldUseAdvancedFilter || hasCategoryFilters || Boolean(sort);
   const saveFeedDisabledReason = hasSaveableState
     ? undefined
-    : 'Add filters or sorting to save a feed';
+    : 'Add filters or sorting to save a sieve';
 
   const handleOpenSaveFeed = useCallback(() => {
     if (!hasSaveableState) {

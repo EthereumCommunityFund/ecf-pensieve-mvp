@@ -51,7 +51,7 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
     },
     onError: (error) => {
       addToast({
-        title: error.message || 'Failed to unfollow feed',
+        title: error.message || 'Failed to unfollow sieve',
         color: 'danger',
       });
     },
@@ -75,7 +75,7 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
     const shareCode = sieve.share?.code;
 
     if (!shareCode) {
-      addToast({ title: 'Feed link unavailable', color: 'warning' });
+      addToast({ title: 'Sieve link unavailable', color: 'warning' });
       return;
     }
 
@@ -86,7 +86,7 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
     const shareCode = sieve.share?.code;
 
     if (!shareCode) {
-      addToast({ title: 'Feed target unavailable', color: 'warning' });
+      addToast({ title: 'Sieve target unavailable', color: 'warning' });
       return;
     }
 
@@ -159,7 +159,7 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
             </p>
             <p className="text-[13px] text-black/50">
               Head over to the Projects page, apply filters, and save them as a
-              feed to see them listed here.
+              sieve to see them listed here.
             </p>
             <Button
               color="primary"
@@ -182,7 +182,7 @@ const MySieve = ({ profileAddress }: MySieveProps) => {
             onPress={handleCreate}
             className="flex items-center gap-[6px]"
           >
-            New Feed
+            New Sieve
           </Button>
         </div>
       ) : null}
