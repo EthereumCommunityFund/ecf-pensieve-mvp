@@ -344,11 +344,11 @@ const SaveFeedModal = ({
 
             {visibility === 'private' ? (
               <span className="rounded-[8px] bg-[#FDEBEC] px-[10px] py-[6px] text-[12px] text-[#D14343]">
-                Private feeds stay personal. Switch to Public to enable sharing.
+                Private sieve stay personal. Switch to Public to enable sharing.
               </span>
             ) : (
               <span className="rounded-[8px] bg-[#EEF8F2] px-[10px] py-[6px] text-[12px] text-[#1E9E5D]">
-                Public feeds generate a shareable short link automatically.
+                Public sieve generate a shareable short link automatically.
               </span>
             )}
           </div>
