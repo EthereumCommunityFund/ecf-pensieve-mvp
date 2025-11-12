@@ -91,7 +91,7 @@ const PublicSievePage = () => {
       <div className="mx-auto flex w-full max-w-[720px] flex-col items-center gap-4 px-[16px] py-[64px] text-center">
         <h1 className="text-[22px] font-semibold text-black">Access denied</h1>
         <p className="text-[14px] text-black/55">
-          This feed is private. Please request access from the owner.
+          This sieve is private. Please request access from the owner.
         </p>
         <Button
           color="primary"
@@ -107,10 +107,12 @@ const PublicSievePage = () => {
   if (!sieve || !filterConditions) {
     return (
       <div className="mx-auto flex w-full max-w-[720px] flex-col items-center gap-4 px-[16px] py-[64px] text-center">
-        <h1 className="text-[22px] font-semibold text-black">Feed not found</h1>
+        <h1 className="text-[22px] font-semibold text-black">
+          Sieve not found
+        </h1>
         <p className="text-[14px] text-black/55">
-          The feed you&apos;re looking for may have been removed or is no longer
-          available.
+          The sieve you&apos;re looking for may have been removed or is no
+          longer available.
         </p>
         <Button
           color="primary"
@@ -127,10 +129,10 @@ const PublicSievePage = () => {
     followMutation.isPending || unfollowMutation.isPending || sieve.isOwner;
 
   const followButtonLabel = sieve.isOwner
-    ? 'You own this feed'
+    ? 'You own this sieve'
     : sieve.isFollowing
-      ? 'Unfollow Feed'
-      : 'Follow Feed';
+      ? 'Unfollow Sieve'
+      : 'Follow Sieve';
 
   return (
     <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-[20px] px-[16px] py-[32px]">

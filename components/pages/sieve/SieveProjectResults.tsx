@@ -128,9 +128,17 @@ const SieveProjectResults = ({
     },
   );
 
+  const accountableQueryInput = useMemo(
+    () => ({
+      limit: fetchLimit,
+      ...(categories.length > 0 ? { categories } : {}),
+    }),
+    [fetchLimit, categories],
+  );
+
   const accountableQuery =
     trpc.rank.getTopRanksByGenesisSupportPaginated.useInfiniteQuery(
-      { limit: fetchLimit },
+      accountableQueryInput,
       {
         getNextPageParam: (lastPage) =>
           lastPage.hasNextPage ? lastPage.nextCursor : undefined,
@@ -275,7 +283,7 @@ const SieveProjectResults = ({
       isFetchingNextPage={effectiveIsFetchingMore}
       hasNextPage={effectiveHasNextPage}
       projectList={filteredProjects}
-      emptyMessage="No projects match this feed yet."
+      emptyMessage="No projects match this sieve yet."
       onLoadMore={handleLoadMore}
       onSuccess={() => {
         if (isAccountableSort) {
