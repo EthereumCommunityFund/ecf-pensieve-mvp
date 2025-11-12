@@ -128,9 +128,17 @@ const SieveProjectResults = ({
     },
   );
 
+  const accountableQueryInput = useMemo(
+    () => ({
+      limit: fetchLimit,
+      ...(categories.length > 0 ? { categories } : {}),
+    }),
+    [fetchLimit, categories],
+  );
+
   const accountableQuery =
     trpc.rank.getTopRanksByGenesisSupportPaginated.useInfiniteQuery(
-      { limit: fetchLimit },
+      accountableQueryInput,
       {
         getNextPageParam: (lastPage) =>
           lastPage.hasNextPage ? lastPage.nextCursor : undefined,
