@@ -1,9 +1,32 @@
-'use client';
+import { notFound, redirect } from 'next/navigation';
 
-import { ProposalDetailProvider } from '@/components/pages/project/proposal/detail/context/proposalDetailContext';
+import { getProjectPublicationStatus } from '@/lib/services/projectService';
 
-const ProposalLayout = ({ children }: { children: React.ReactNode }) => {
-  return <ProposalDetailProvider>{children}</ProposalDetailProvider>;
-};
+import ClientLayout from './layout.client';
 
-export default ProposalLayout;
+export default async function ProposalLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ id: string; proposalId: string }>;
+}) {
+  const { id } = await params;
+  const projectId = Number(id);
+
+  if (!Number.isFinite(projectId)) {
+    notFound();
+  }
+
+  const project = await getProjectPublicationStatus(projectId);
+
+  if (!project) {
+    notFound();
+  }
+
+  if (project.isPublished) {
+    redirect(`/project/${projectId}`);
+  }
+
+  return <ClientLayout>{children}</ClientLayout>;
+}
