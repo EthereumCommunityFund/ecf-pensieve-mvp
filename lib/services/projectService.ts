@@ -802,6 +802,30 @@ export const getProjectForMeta = unstable_cache(
   },
 );
 
+export const getProjectPublicationStatus = unstable_cache(
+  async (id: number) => {
+    try {
+      const project = await db.query.projects.findFirst({
+        where: eq(projects.id, id),
+        columns: {
+          id: true,
+          isPublished: true,
+        },
+      });
+
+      return project ?? null;
+    } catch (error) {
+      console.error('Failed to fetch project publication status:', error);
+      return null;
+    }
+  },
+  ['project-publication-status'],
+  {
+    revalidate: 300,
+    tags: ['project-detail'],
+  },
+);
+
 export async function getTopAccountableProjects(
   limit = 3,
 ): Promise<ProjectStructuredData[]> {
