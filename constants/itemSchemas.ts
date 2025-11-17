@@ -224,6 +224,7 @@ const fundingReceivedGrantsSchema: yup.ObjectSchema<IFundingReceivedGrants> =
       )
       .required('Project donator is required'),
     amount: yup.string().trim().required('amount is required'),
+    currency: yup.string().trim().required('currency or token is required'),
     reference: yup
       .string()
       .trim()

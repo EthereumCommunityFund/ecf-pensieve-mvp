@@ -30,6 +30,7 @@ const FundingReceivedGrantsTableItem: React.FC<
       organization: `${itemKey}.${index}.organization`,
       projectDonator: `${itemKey}.${index}.projectDonator`,
       amount: `${itemKey}.${index}.amount`,
+      currency: `${itemKey}.${index}.currency`,
       reference: `${itemKey}.${index}.reference`,
       expenseSheetUrl: `${itemKey}.${index}.expenseSheetUrl`,
     }),
@@ -148,11 +149,43 @@ const FundingReceivedGrantsTableItem: React.FC<
               <AmountInput
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="$000.00"
+                placeholder="000.00"
               />
               {fieldState.error && (
                 <span className="mt-1 text-[12px] text-red-500">
                   {fieldState.error.message || 'amount is required'}
+                </span>
+              )}
+            </>
+          )}
+        />
+      </div>
+
+      {/* Currency Column */}
+      <div className="flex w-[160px] shrink-0 flex-col justify-center border-r border-black/10 px-[10px] py-[5px]">
+        <Controller
+          name={fieldPaths.currency}
+          control={control}
+          render={({ field, fieldState }) => (
+            <>
+              <input
+                type="text"
+                value={field.value || ''}
+                onChange={(event) =>
+                  field.onChange(event.target.value.toUpperCase())
+                }
+                placeholder="USD"
+                maxLength={12}
+                className="h-[20px] w-full border-none bg-transparent text-[13px] font-[500] uppercase text-black placeholder:text-black/60 focus:outline-none"
+                style={{
+                  boxShadow: 'none !important',
+                  outline: 'none !important',
+                  border: 'none !important',
+                }}
+              />
+              {fieldState.error && (
+                <span className="mt-1 text-[12px] text-red-500">
+                  {fieldState.error.message || 'currency is required'}
                 </span>
               )}
             </>

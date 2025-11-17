@@ -59,7 +59,10 @@ const GrantsTable: FC<GrantsTableProps> = ({
 
   const receivedGrantsData = useMemo(() => {
     if (!isDataFetched || type === 'given') return [];
-    return getItemRowData('funding_received_grants');
+    return getItemRowData('funding_received_grants').map((entry) => ({
+      ...entry,
+      currency: entry.currency || 'USD',
+    }));
   }, [getItemRowData, isDataFetched, type]);
 
   const data = useMemo(() => {

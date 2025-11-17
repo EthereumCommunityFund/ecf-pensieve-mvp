@@ -989,6 +989,20 @@ const InputContentRenderer: React.FC<IProps> = ({
           return <>{parsed}</>;
         }
 
+        if (parsed.length === 0) {
+          return (
+            <span className="text-gray-400">No funding received entries</span>
+          );
+        }
+
+        const normalizedGrants = parsed.map((grant: any) => ({
+          ...grant,
+          currency:
+            typeof grant?.currency === 'string' && grant.currency.trim()
+              ? grant.currency
+              : 'USD',
+        }));
+
         if (isInExpandableRow) {
           return (
             <div className="w-full ">
@@ -1016,8 +1030,14 @@ const InputContentRenderer: React.FC<IProps> = ({
                       </TableHeader>
                       <TableHeader width={160} isContainerBordered>
                         <div className="flex items-center gap-[5px]">
-                          <span>Amount (USD)</span>
+                          <span>Amount</span>
                           <TooltipWithQuestionIcon content="This is the amount received at the time of this grant was given" />
+                        </div>
+                      </TableHeader>
+                      <TableHeader width={120} isContainerBordered>
+                        <div className="flex items-center gap-[5px]">
+                          <span>Currency/Token</span>
+                          <TooltipWithQuestionIcon content="Native token or currency symbol used for this amount" />
                         </div>
                       </TableHeader>
                       <TableHeader width={200} isContainerBordered>
@@ -1035,13 +1055,14 @@ const InputContentRenderer: React.FC<IProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {parsed.map(
+                    {normalizedGrants.map(
                       (
                         grant: {
                           date: Date | string;
                           organization: string | string[];
                           projectDonator?: string[];
                           amount: string;
+                          currency?: string;
                           reference: string;
                           expenseSheetUrl?: string;
                         },
@@ -1049,19 +1070,19 @@ const InputContentRenderer: React.FC<IProps> = ({
                       ) => (
                         <TableRow
                           key={index}
-                          isLastRow={index === parsed.length - 1}
+                          isLastRow={index === normalizedGrants.length - 1}
                         >
                           <TableCell
                             width={158}
                             isContainerBordered
-                            isLastRow={index === parsed.length - 1}
+                            isLastRow={index === normalizedGrants.length - 1}
                           >
                             {dayjs.utc(grant.date).format('YYYY-MM-DD')}
                           </TableCell>
                           <TableCell
                             width={301}
                             isContainerBordered
-                            isLastRow={index === parsed.length - 1}
+                            isLastRow={index === normalizedGrants.length - 1}
                           >
                             <ProjectFieldRenderer
                               projectValue={grant.organization}
@@ -1072,7 +1093,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                           <TableCell
                             width={300}
                             isContainerBordered
-                            isLastRow={index === parsed.length - 1}
+                            isLastRow={index === normalizedGrants.length - 1}
                           >
                             <ProjectFieldRenderer
                               projectValue={grant.projectDonator}
@@ -1083,14 +1104,23 @@ const InputContentRenderer: React.FC<IProps> = ({
                           <TableCell
                             width={138}
                             isContainerBordered
-                            isLastRow={index === parsed.length - 1}
+                            isLastRow={index === normalizedGrants.length - 1}
                           >
                             {formatAmount(grant.amount)}
                           </TableCell>
                           <TableCell
+                            width={120}
+                            isContainerBordered
+                            isLastRow={index === normalizedGrants.length - 1}
+                          >
+                            <span className="uppercase">
+                              {grant.currency || 'USD'}
+                            </span>
+                          </TableCell>
+                          <TableCell
                             width={200}
                             isContainerBordered
-                            isLastRow={index === parsed.length - 1}
+                            isLastRow={index === normalizedGrants.length - 1}
                           >
                             {grant.expenseSheetUrl ? (
                               <Link
@@ -1108,7 +1138,7 @@ const InputContentRenderer: React.FC<IProps> = ({
                           <TableCell
                             isLast
                             isContainerBordered
-                            isLastRow={index === parsed.length - 1}
+                            isLastRow={index === normalizedGrants.length - 1}
                           >
                             {grant.reference ? (
                               <Link
@@ -1156,17 +1186,18 @@ const InputContentRenderer: React.FC<IProps> = ({
         // Default collapsed summary
         return (
           <>
-            {parsed
+            {normalizedGrants
               .map(
                 (grant: {
                   date: Date | string;
                   organization: string;
                   amount: string;
+                  currency?: string;
                   reference: string;
                   expenseSheetUrl?: string;
                 }) => {
                   const dateStr = dayjs.utc(grant.date).format('YYYY-MM-DD');
-                  return `${dateStr}: ${grant.organization} - ${formatAmount(grant.amount)} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
+                  return `${dateStr}: ${grant.organization} - ${formatAmount(grant.amount)} ${grant.currency || 'USD'} - ${grant.expenseSheetUrl ? `${grant.expenseSheetUrl} -` : ''}${grant.reference}`;
                 },
               )
               .join(', ')}
