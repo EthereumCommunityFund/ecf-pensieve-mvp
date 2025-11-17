@@ -217,7 +217,7 @@ const GrantsTable: FC<GrantsTableProps> = ({
         </div>
       )}
 
-      <div className="mobile:overflow-auto overflow-hidden rounded-b-[10px] border border-t-0 border-black/10">
+      <div className="mobile:overflow-auto overflow-x-auto rounded-b-[10px] border border-t-0 border-black/10">
         {/* <PageTableContainer > */}
         <table className="w-full border-separate border-spacing-0">
           <thead>
