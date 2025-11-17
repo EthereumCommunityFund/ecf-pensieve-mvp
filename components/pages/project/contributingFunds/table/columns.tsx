@@ -16,6 +16,7 @@ export interface IGivenGrant {
   organization: string | null;
   projectDonator: string;
   amount: string;
+  currency: string;
   expenseSheet: string;
   reference: string;
 }
@@ -119,9 +120,9 @@ export const useGrantColumns = (type: GrantType) => {
             tooltip={FUNDING_GRANTS_COLUMNS.amount.tooltip}
           />
         ),
-        size: type === 'given' ? 160 : 180,
-        minSize: type === 'given' ? 160 : 180,
-        maxSize: type === 'given' ? 160 : 180,
+        size: type === 'given' ? 140 : 160,
+        minSize: type === 'given' ? 140 : 160,
+        maxSize: type === 'given' ? 140 : 160,
         enableResizing: false,
         cell: (info) => {
           const value = info.getValue();
@@ -132,6 +133,27 @@ export const useGrantColumns = (type: GrantType) => {
           return (
             <span className="text-[14px] font-[500] text-black">
               {formatAmount(value)}
+            </span>
+          );
+        },
+      }),
+      columnHelper.accessor('currency', {
+        id: 'currency',
+        header: () => (
+          <ColumnHeaderWithTooltip
+            label={FUNDING_GRANTS_COLUMNS.currency.label}
+            tooltip={FUNDING_GRANTS_COLUMNS.currency.tooltip}
+          />
+        ),
+        size: type === 'given' ? 110 : 130,
+        minSize: type === 'given' ? 110 : 130,
+        maxSize: type === 'given' ? 110 : 130,
+        enableResizing: false,
+        cell: (info) => {
+          const value = info.getValue() || 'USD';
+          return (
+            <span className="text-[14px] font-[500] uppercase text-black/80">
+              {value}
             </span>
           );
         },

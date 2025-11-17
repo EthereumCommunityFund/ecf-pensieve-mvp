@@ -7,7 +7,7 @@
         "position": "Sidebar",
         "imageSize": "429*235_317*173",
         "extra": {},
-        "isActive": true,
+        "isActive": false,
         "contractMeta": {
             "slotType": "enabled",
             "bondRateBps": "1",
@@ -21,7 +21,47 @@
     },
     {
         "chainId": 1,
+        "slotAddress": "0x024f0cf2c092d0Fb0565149d38751f512a4B3c11",
+        "slotDisplayName": "Homescreen Sidebar",
+        "page": "home",
+        "position": "Sidebar",
+        "imageSize": "429*235_317*173",
+        "extra": {},
+        "isActive": true,
+        "contractMeta": {
+            "slotType": "enabled",
+            "bondRateBps": "1",
+            "annualTaxRateBps": "13000",
+            "minBidIncrementBps": "1000",
+            "taxPeriodSeconds": "86400",
+            "minValuationWei": "12000000000000000",
+            "contentUpdateLimit": "1",
+            "dustRateBps": "1000"
+        }
+    },
+    {
+        "chainId": 1,
         "slotAddress": "0x6CB3D12984FD53A365360C4DC0975c88a649c24A",
+        "slotDisplayName": "Project TopBanner",
+        "page": "projectDetail",
+        "position": "TopBanner",
+        "imageSize": "900*225_373*93",
+        "extra": {},
+        "isActive": false,
+        "contractMeta": {
+            "slotType": "enabled",
+            "bondRateBps": "1",
+            "annualTaxRateBps": "13000",
+            "minBidIncrementBps": "1000",
+            "taxPeriodSeconds": "86400",
+            "minValuationWei": "1000000000000000000",
+            "contentUpdateLimit": "1",
+            "dustRateBps": "1000"
+        }
+    },
+    {
+        "chainId": 1,
+        "slotAddress": "0x0F12750201680eD8edcb53cc7b40b3A7E064FF20",
         "slotDisplayName": "Project TopBanner",
         "page": "projectDetail",
         "position": "TopBanner",
@@ -34,7 +74,7 @@
             "annualTaxRateBps": "13000",
             "minBidIncrementBps": "1000",
             "taxPeriodSeconds": "86400",
-            "minValuationWei": "1000000000000000000",
+            "minValuationWei": "10000000000000000",
             "contentUpdateLimit": "1",
             "dustRateBps": "1000"
         }

@@ -30,8 +30,13 @@ export const FUNDING_GRANTS_COLUMNS: Record<string, IColumnDescription> = {
   },
   amount: {
     key: 'amount',
-    label: 'Amount (USD)',
+    label: 'Amount',
     tooltip: 'This is the amount received at the time of this grant was given',
+  },
+  currency: {
+    key: 'currency',
+    label: 'Currency/Token',
+    tooltip: 'Native token or currency symbol used for this amount',
   },
   expenseSheetUrl: {
     key: 'expenseSheetUrl',
