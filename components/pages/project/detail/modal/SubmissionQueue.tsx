@@ -104,6 +104,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
     return Object.values(submissionQueueExpandedRows).some(Boolean);
   }, [submissionQueueExpandedRows]);
 
+  const hasDisplayedExpandedRows = useMemo(() => {
+    return Object.values(displayedExpandedRows).some(Boolean);
+  }, [displayedExpandedRows]);
+
   const getSubmissionQueueExpandableRowIds = useCallback(() => {
     const submissionQueueRowIds: string[] = [];
 
@@ -381,7 +385,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
             ) : (
               <ModalTableContainer
                 style={{
-                  overflowX: showMetricsLeading ? 'auto' : 'hidden',
+                  overflowX:
+                    showMetricsLeading || hasDisplayedExpandedRows
+                      ? 'auto'
+                      : 'hidden',
                 }}
                 className="tablet:w-auto mobile:w-auto w-[762px]"
               >
@@ -646,7 +653,10 @@ const SubmissionQueue: FC<ISubmissionQueueProps> = ({
         ) : (
           <ModalTableContainer
             style={{
-              overflowX: showMetricsSubmissionQueue ? 'auto' : 'hidden',
+              overflowX:
+                showMetricsSubmissionQueue || hasSubmissionQueueExpandedRows
+                  ? 'auto'
+                  : 'hidden',
             }}
             className="tablet:w-auto mobile:w-auto w-[762px]"
           >

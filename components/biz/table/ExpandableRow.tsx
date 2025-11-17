@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, ScrollShadow } from '@heroui/react';
 import { FC } from 'react';
 
 import { AllItemConfig } from '@/constants/itemConfig';
@@ -60,7 +60,14 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
           isLastRow ? 'border-b-0' : ''
         }`}
       >
-        <div className="w-full overflow-hidden rounded-[10px] border border-black/10 bg-white text-[13px]">
+        <ScrollShadow
+          orientation="horizontal"
+          className="w-full max-w-full overflow-x-auto overflow-y-hidden rounded-[10px] border border-black/10 bg-white text-[13px]"
+          style={{
+            scrollbarWidth: 'thin',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           <div
             className={cn(
               'font-sans text-[13px] font-[400] text-black',
@@ -80,7 +87,7 @@ export const ExpandableRow: FC<ExpandableRowProps> = ({
               isInExpandableRow={true}
             />
           </div>
-        </div>
+        </ScrollShadow>
       </td>
     </tr>
   );

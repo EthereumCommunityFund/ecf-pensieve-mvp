@@ -415,7 +415,10 @@ export default function ClaimSlotModal({
                 </div>
 
                 <div className="flex flex-col">
-                  <LabelWithInfo label="Set Valuation (ETH)" />
+                  <LabelWithInfo
+                    label="Set Valuation (ETH)"
+                    infoText="Declare the price you value this slot at. You post a takeover price, lock the matching bond, and owe tax on this amount until someone buys you out."
+                  />
                   <Input
                     value={valuationInput}
                     aria-label="Set valuation"
@@ -432,6 +435,7 @@ export default function ClaimSlotModal({
                 <div className="flex flex-col">
                   <LabelWithInfo
                     label={`Tax Coverage (${coverageSliderValue} Days)`}
+                    infoText="Select how many 24-hour tax periods to prepay upfront. Longer coverage reduces how often you need to top up."
                   />
                   <span className="mt-[5px] text-[13px] leading-[18px] text-black/80">
                     Choose how many tax periods to prepay. Longer coverage means
@@ -710,13 +714,23 @@ export default function ClaimSlotModal({
   );
 }
 
-function LabelWithInfo({ label }: { label: string }) {
+function LabelWithInfo({
+  label,
+  infoText,
+}: {
+  label: string;
+  infoText?: string;
+}) {
   return (
     <div className="flex items-center gap-[8px]">
       <span className="text-[16px] font-semibold leading-[1.6] text-black">
         {label}
       </span>
-      <InfoIcon size={20} />
+      <Tooltip content={infoText ?? label}>
+        <span className="flex items-center opacity-60">
+          <InfoIcon size={20} />
+        </span>
+      </Tooltip>
     </div>
   );
 }
