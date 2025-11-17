@@ -138,7 +138,7 @@ const BugBountyCard = ({
           <span className="font-bold">Top Accountable Projects</span>: $400
         </p>
 
-        <div className="flex flex-col gap-[10px]">
+        <div className="flex-gcol flex gap-[10px]">
           <button
             type="button"
             onClick={onRead}

@@ -750,7 +750,7 @@ function SlotActionFormContent({
     : undefined;
 
   const harbergerInfo = isTakeoverMode
-    ? `You pay the current owner's declared price to the community treasury. Set your own valuation carefully - you'll pay continuous taxes on it, and others can buy from you at that price.`
+    ? `Takeovers buy out the current owner at or above their posted valuation. After you win the slot, you declare a new valuation, pay the associated tax to the treasury, and stay buyable at that price if someone else wants the slot.`
     : undefined;
 
   const ctaLabel = isTakeoverMode
@@ -913,7 +913,10 @@ function SlotActionFormContent({
 
       {showValuationSection && valuation ? (
         <div className="flex flex-col gap-[10px]">
-          <LabelWithInfo label="Set New Valuation (ETH)" />
+          <LabelWithInfo
+            label="Set New Valuation (ETH)"
+            tooltip="Enter the valuation you want to set after takeover. It determines the bid you must place plus future tax and bond costs."
+          />
           <div className="flex flex-col gap-[5px]">
             <Input
               placeholder={valuation.placeholder}
@@ -942,7 +945,10 @@ function SlotActionFormContent({
       {showCoverageSection ? (
         <div className="flex flex-col gap-[10px]">
           <div className="flex flex-col gap-[5px]">
-            <LabelWithInfo label={`Tax Coverage ${formattedCoverageLabel}`} />
+            <LabelWithInfo
+              label={`Tax Coverage ${formattedCoverageLabel}`}
+              tooltip="Pick how many 24-hour tax periods you prepay after takeover so the slot stays funded without immediate top-ups."
+            />
             <span className="text-[13px] text-black/80">
               Choose how many tax periods to prepay. Longer coverage means
               higher upfront cost but no need to pay taxes frequently. (1 tax
