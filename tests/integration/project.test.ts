@@ -732,6 +732,23 @@ describe('Project Integration Tests', () => {
       ).toBe(true);
     });
 
+    it('should find projects even when query removes spaces', async () => {
+      const ctx = { db, supabase, user: null };
+      const caller = projectRouter.createCaller(ctx);
+
+      const result = await caller.searchProjects({
+        query: 'EthereumBlockchainPlatform',
+        limit: 20,
+      });
+
+      expect(result.unpublished.items.length).toBeGreaterThan(0);
+      expect(
+        result.unpublished.items.some(
+          (project) => project.name === 'Ethereum Blockchain Platform',
+        ),
+      ).toBe(true);
+    });
+
     it('should validate search query is not empty', async () => {
       const ctx = { db, supabase, user: null };
       const caller = projectRouter.createCaller(ctx);
@@ -812,6 +829,48 @@ describe('Project Integration Tests', () => {
         ).toBe(true);
         expect(result.published.totalCount).toBeGreaterThan(0);
       }
+    });
+
+    it('should find published projects when query omits spaces', async () => {
+      const ctx = { db, supabase, user: { id: testUserId } };
+      const caller = projectRouter.createCaller(ctx);
+
+      const projectData = {
+        ...createValidProjectData(),
+        name: 'Space Published Project',
+        tagline: 'Testing space insensitive search',
+      };
+
+      const project = await caller.createProject(projectData);
+
+      await db.transaction(async (tx) => {
+        await tx
+          .update(projects)
+          .set({ isPublished: true })
+          .where(eq(projects.id, project.id));
+
+        await tx.insert(projectSnaps).values({
+          projectId: project.id,
+          items: [],
+          name: projectData.name,
+          categories: projectData.categories,
+        });
+      });
+
+      const searchCtx = { db, supabase, user: null };
+      const searchCaller = projectRouter.createCaller(searchCtx);
+
+      const result = await searchCaller.searchProjects({
+        query: 'SpacePublishedProject',
+        limit: 20,
+      });
+
+      expect(result.published.items.length).toBeGreaterThan(0);
+      expect(
+        result.published.items.some(
+          (p) => p.projectSnap?.name === 'Space Published Project',
+        ),
+      ).toBe(true);
     });
 
     it('should handle pagination for published project search', async () => {

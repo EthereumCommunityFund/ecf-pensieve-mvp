@@ -2,17 +2,7 @@ import { Buffer } from 'buffer';
 import { randomUUID } from 'crypto';
 
 import { TRPCError } from '@trpc/server';
-import {
-  and,
-  desc,
-  eq,
-  exists,
-  ilike,
-  inArray,
-  isNull,
-  lt,
-  sql,
-} from 'drizzle-orm';
+import { and, desc, eq, exists, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { unstable_cache as nextCache, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
@@ -633,21 +623,38 @@ export const projectRouter = router({
     .query(async ({ ctx, input }) => {
       const { query, limit, publishedCursor, unpublishedCursor } = input;
       const searchTerm = query.trim();
+      const normalizedSearchTerm = searchTerm.replace(/\s+/g, '');
+      const searchPattern = `%${searchTerm}%`;
+      const normalizedSearchPattern =
+        normalizedSearchTerm.length > 0 ? `%${normalizedSearchTerm}%` : null;
 
       const publishedSearchCondition = sql`
         EXISTS (
           SELECT 1 
           FROM ${projectSnaps} ps
           WHERE ps.project_id = ${projects.id}
-          AND ps.name ILIKE ${`%${searchTerm}%`}
+          AND (
+            ps.name ILIKE ${searchPattern}
+            ${
+              normalizedSearchPattern
+                ? sql`OR regexp_replace(ps.name, '\\s+', '', 'g') ILIKE ${normalizedSearchPattern}`
+                : sql``
+            }
+          )
           LIMIT 1
         )
       `;
 
-      const unpublishedSearchCondition = ilike(
-        projects.name,
-        `%${searchTerm}%`,
-      );
+      const unpublishedSearchCondition = sql`
+        (
+          ${projects.name} ILIKE ${searchPattern}
+          ${
+            normalizedSearchPattern
+              ? sql`OR regexp_replace(${projects.name}, '\\s+', '', 'g') ILIKE ${normalizedSearchPattern}`
+              : sql``
+          }
+        )
+      `;
 
       const publishedCondition = and(
         publishedSearchCondition,
