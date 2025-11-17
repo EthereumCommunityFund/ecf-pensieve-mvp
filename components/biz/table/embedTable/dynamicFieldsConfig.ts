@@ -54,10 +54,16 @@ export const DYNAMIC_FIELDS_CONFIG: Record<string, DynamicFieldConfig> = {
       },
       {
         key: 'amount',
-        label: 'Amount (USD)',
+        label: 'Amount',
         width: 138,
         tooltip:
           'This is the amount received at the time of this grant was given',
+      },
+      {
+        key: 'currency',
+        label: 'Currency/Token',
+        width: 160,
+        tooltip: 'Native token or currency symbol for this grant amount',
       },
       {
         key: 'expenseSheetUrl',

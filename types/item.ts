@@ -210,6 +210,7 @@ export interface IFundingReceivedGrants {
   organization: string | string[];
   projectDonator: string[];
   amount: string;
+  currency: string;
   reference?: string;
   expenseSheetUrl?: string;
   _id?: string;

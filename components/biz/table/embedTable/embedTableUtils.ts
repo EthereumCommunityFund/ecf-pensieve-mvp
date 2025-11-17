@@ -32,6 +32,7 @@ export const getDefaultEmbedTableFormItemValue = (
         date: null,
         organization: '',
         amount: '',
+        currency: 'USD',
         expenseSheetUrl: '',
         reference: '',
         _id: crypto.randomUUID(),
@@ -181,10 +182,19 @@ export const normalizeEmbedTableValue = (
       };
     }
 
-    return {
+    const normalizedRow = {
       _id: row?._id || crypto.randomUUID(),
       ...row,
     };
+
+    if (formDisplayType === 'fundingReceivedGrants') {
+      return {
+        ...normalizedRow,
+        currency: row?.currency ?? 'USD',
+      };
+    }
+
+    return normalizedRow;
   });
 };
 

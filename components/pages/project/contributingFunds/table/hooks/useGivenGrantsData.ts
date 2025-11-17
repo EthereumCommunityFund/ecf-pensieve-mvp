@@ -114,6 +114,7 @@ export function useGivenGrantsData(projectId: number) {
               organization: grantItem.organization ?? '',
               projectDonator: grantItem.projectDonator ?? [],
               amount: grantItem.amount ?? '',
+              currency: grantItem.currency ?? 'USD',
               reference: grantItem.reference,
               expenseSheetUrl: grantItem.expenseSheetUrl,
               _id: grantItem._id || `${sourceId}-${idx}`,
