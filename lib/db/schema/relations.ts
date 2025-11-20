@@ -9,6 +9,7 @@ import { listProjects } from './listProjects';
 import { lists } from './lists';
 import { notifications } from './notifications';
 import { profiles } from './profiles';
+import { projectDiscussionThreads } from './projectDiscussionThreads';
 import { projectLogs } from './projectLogs';
 import { projectNotificationSettings } from './projectNotificationSettings';
 import { projects } from './projects';
@@ -43,6 +44,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   createdSieves: many(sieves),
   sieveFollows: many(sieveFollows),
   projectNotificationSettings: many(projectNotificationSettings),
+  discussionThreads: many(projectDiscussionThreads),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -57,6 +59,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     fields: [projects.id],
     references: [projectSnaps.projectId],
   }),
+  discussionThreads: many(projectDiscussionThreads),
   rank: one(ranks, {
     fields: [projects.id],
     references: [ranks.projectId],
@@ -197,6 +200,20 @@ export const ranksRelations = relations(ranks, ({ one }) => ({
     references: [projects.id],
   }),
 }));
+
+export const projectDiscussionThreadsRelations = relations(
+  projectDiscussionThreads,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectDiscussionThreads.projectId],
+      references: [projects.id],
+    }),
+    creator: one(profiles, {
+      fields: [projectDiscussionThreads.creator],
+      references: [profiles.userId],
+    }),
+  }),
+);
 
 export const projectSnapsRelations = relations(projectSnaps, ({ one }) => ({
   project: one(projects, {

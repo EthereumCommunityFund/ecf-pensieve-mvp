@@ -10,6 +10,7 @@ export * from './nonces';
 export * from './notificationQueue';
 export * from './notifications';
 export * from './profiles';
+export * from './projectDiscussionThreads';
 export * from './projectLogs';
 export * from './projectNotificationSettings';
 export * from './projectRelations';
