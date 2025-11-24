@@ -32,7 +32,7 @@ function validateApiKey(request: NextRequest): boolean {
 
   const authorization = request.headers.get('authorization');
   const bearerToken = authorization?.match(/^Bearer\\s+(.+)$/i)?.[1]?.trim();
-  const validApiKey = process.env.API_KEY?.trim();
+  const validApiKey = process.env.AI_BOT_SECRET?.trim();
 
   if (!bearerToken || !validApiKey) {
     return false;
