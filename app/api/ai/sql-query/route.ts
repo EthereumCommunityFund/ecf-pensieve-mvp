@@ -31,8 +31,7 @@ function validateApiKey(request: NextRequest): boolean {
   }
 
   const authorization = request.headers.get('authorization');
-  const bearerToken = authorization?.match(/^Bearer\\s+(.+)$/i)?.[1]?.trim();
-  console.info('bearerToken', bearerToken);
+  const bearerToken = authorization?.split(' ')[1]?.trim();
   const validApiKey = process.env.AI_BOT_SECRET?.trim();
 
   if (!bearerToken || !validApiKey) {
@@ -59,10 +58,6 @@ function validateSelectOnly(
 
   if (!sanitized) {
     return { ok: false, reason: 'SQL is required' };
-  }
-
-  if (/;/.test(sanitized)) {
-    return { ok: false, reason: 'Multiple statements are not allowed' };
   }
 
   const normalized = sanitized.toLowerCase();
