@@ -2,6 +2,7 @@
 
 import { Skeleton } from '@heroui/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -21,12 +22,6 @@ import Ecosystem from '@/components/pages/project/ecosystem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
 import { IPocItemKey } from '@/types/item';
-
-const tabItems = [
-  { key: 'profile', label: 'Profile' },
-  { key: 'contributing-funds', label: 'Fund Contributions' },
-  { key: 'ecosystem', label: 'Ecosystem' },
-];
 
 // Animation variants for tab content
 const tabContentVariants = {
@@ -54,6 +49,12 @@ const tabContentVariants = {
 
 export type ITabKey = 'profile' | 'ecosystem' | 'contributing-funds';
 export type IModalContentType = 'viewItemProposal' | 'submitPropose';
+
+type ProjectComplaintsMeta = {
+  complaintsCount?: number;
+  redressedCount?: number;
+  scamAlertCount?: number;
+};
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
@@ -83,9 +84,29 @@ const ProjectPage = () => {
     getLeadingLogoUrl,
   } = useProjectDetailContext();
 
-  const displayedCount = useMemo(() => {
-    return Object.keys(project?.itemsTopWeight || {}).length;
-  }, [project]);
+  const projectWithMeta = project as typeof project & ProjectComplaintsMeta;
+  const complaintsCount = projectWithMeta?.complaintsCount ?? 0;
+  const scamAlertCount = projectWithMeta?.scamAlertCount ?? 0;
+
+  const tabs = useMemo(
+    () => [
+      { key: 'profile', label: 'Profile' },
+      { key: 'contributing-funds', label: 'Fund Contributions' },
+      { key: 'ecosystem', label: 'Ecosystem' },
+      {
+        key: 'complaints',
+        label: (
+          <span className="flex items-center gap-2">
+            Complaints
+            <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs font-semibold text-black">
+              {complaintsCount}
+            </span>
+          </span>
+        ),
+      },
+    ],
+    [complaintsCount],
+  );
 
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
@@ -109,16 +130,28 @@ const ProjectPage = () => {
       currentTab === 'contributing-funds'
     ) {
       setActiveTab(currentTab as ITabKey);
-    } else {
-      // Redirect any other tab to profile
-      router.replace(`/project/${projectId}?tab=profile`, {
+      return;
+    }
+
+    if (currentTab === 'complaints') {
+      router.replace(`/project/${projectId}/complaints`, {
         scroll: false,
       });
+      return;
     }
+
+    // Redirect any other tab (including null) to profile query param
+    router.replace(`/project/${projectId}?tab=profile`, {
+      scroll: false,
+    });
   }, [searchParams, projectId, router]);
 
   const handleTabChange = useCallback(
     (tabKey: string) => {
+      if (tabKey === 'complaints') {
+        router.push(`/project/${projectId}/complaints`);
+        return;
+      }
       router.push(`/project/${projectId}?tab=${tabKey}`, {
         scroll: false,
       });
@@ -219,11 +252,22 @@ const ProjectPage = () => {
       />
 
       <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
-        <ProjectTabs
-          tabs={tabItems}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
+        <div className="flex flex-wrap items-center gap-[12px]">
+          <ProjectTabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+          <Link
+            href={`/project/${projectId}/complaints`}
+            className="flex items-center gap-2 rounded-full border border-[#c46a1d] bg-[#fff6ee] px-3 py-1 text-sm font-semibold text-[#c46a1d] transition hover:bg-[#ffe7d6]"
+          >
+            View Scam Alerts
+            <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs font-bold">
+              {scamAlertCount}
+            </span>
+          </Link>
+        </div>
         <TransparentScore
           isDataFetched={isProjectFetched}
           itemsTopWeight={project?.itemsTopWeight || {}}

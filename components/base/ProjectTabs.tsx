@@ -2,11 +2,11 @@
 
 import { cn } from '@heroui/react';
 import { motion } from 'framer-motion';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 interface Tab {
   key: string;
-  label: string;
+  label: ReactNode;
 }
 
 interface ProjectTabsProps {
