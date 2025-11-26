@@ -1,30 +1,64 @@
 'use client';
 
-import { cn, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
-import {
-  Link as LinkIcon,
-  ListBullets,
-  ListNumbers,
-  Quotes,
-  TextB as TextBold,
-  TextHOne,
-  TextHThree,
-  TextHTwo,
-  TextItalic,
-} from '@phosphor-icons/react';
-import Link from '@tiptap/extension-link';
-import {
-  EditorContent,
-  type EditorContentProps,
-  useEditor,
-} from '@tiptap/react';
+import { Highlight } from '@tiptap/extension-highlight';
+import { Image } from '@tiptap/extension-image';
+import TiptapLink from '@tiptap/extension-link';
+import { TaskItem, TaskList } from '@tiptap/extension-list';
+import { Subscript } from '@tiptap/extension-subscript';
+import { Superscript } from '@tiptap/extension-superscript';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { Typography } from '@tiptap/extension-typography';
+import { Selection } from '@tiptap/extensions';
+import type { Editor, EditorContentProps } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button } from '../button';
-import { Input } from '../input';
+import { useCursorVisibility } from '@/hooks/use-cursor-visibility';
+import { useIsBreakpoint } from '@/hooks/use-is-breakpoint';
+import { useWindowSize } from '@/hooks/use-window-size';
+import { cn, handleImageUpload, MAX_FILE_SIZE } from '@/lib/tiptap-utils';
+import { Button } from '@/components/base/MdEditor/tiptap-ui-primitive/button';
+import { Spacer } from '@/components/base/MdEditor/tiptap-ui-primitive/spacer';
+import {
+  Toolbar,
+  ToolbarGroup,
+  ToolbarSeparator,
+} from '@/components/base/MdEditor/tiptap-ui-primitive/toolbar';
+import { BlockquoteButton } from '@/components/base/MdEditor/tiptap-ui/blockquote-button';
+import { ColorHighlightPopoverContent } from '@/components/base/MdEditor/tiptap-ui/color-highlight-popover';
+import { HeadingDropdownMenu } from '@/components/base/MdEditor/tiptap-ui/heading-dropdown-menu';
+import {
+  LinkButton,
+  LinkContent,
+  LinkPopover,
+} from '@/components/base/MdEditor/tiptap-ui/link-popover';
+import { ListDropdownMenu } from '@/components/base/MdEditor/tiptap-ui/list-dropdown-menu';
+import { MarkButton } from '@/components/base/MdEditor/tiptap-ui/mark-button';
+import { TextAlignButton } from '@/components/base/MdEditor/tiptap-ui/text-align-button';
+import { UndoRedoButton } from '@/components/base/MdEditor/tiptap-ui/undo-redo-button';
+import { ArrowLeftIcon } from '@/components/base/MdEditor/tiptap-icons/arrow-left-icon';
+import { HighlighterIcon } from '@/components/base/MdEditor/tiptap-icons/highlighter-icon';
+import { LinkIcon } from '@/components/base/MdEditor/tiptap-icons/link-icon';
+import { HorizontalRule } from '@/components/base/MdEditor/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
+import { ImageUploadNode } from '@/components/base/MdEditor/tiptap-node/image-upload-node/image-upload-node-extension';
 
-import { MarkdownPastePlugin } from './mdPasteHandler';
+import '@/components/base/MdEditor/tiptap-node/blockquote-node/blockquote-node.scss';
+import '@/components/base/MdEditor/tiptap-node/code-block-node/code-block-node.scss';
+import '@/components/base/MdEditor/tiptap-node/heading-node/heading-node.scss';
+import '@/components/base/MdEditor/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss';
+import '@/components/base/MdEditor/tiptap-node/image-node/image-node.scss';
+import '@/components/base/MdEditor/tiptap-node/list-node/list-node.scss';
+import '@/components/base/MdEditor/tiptap-node/paragraph-node/paragraph-node.scss';
+
+import '@/components/base/MdEditor/md-editor.scss';
+import { MarkdownPastePlugin } from '@/components/base/MdEditor/mdPasteHandler';
+
+const EditorContentComponent =
+  EditorContent as unknown as ComponentType<EditorContentProps>;
+
+type MdEditorMode = 'edit' | 'readonly';
 
 interface EditorValue {
   content: string;
@@ -43,13 +77,14 @@ export interface MdEditorProps {
     editor?: string;
   };
   hideMenuBar?: boolean;
+  mode?: MdEditorMode;
   isEdit?: boolean;
   onClick?: () => void;
   collapsable?: boolean;
   collapseHeight?: number;
   collapsed?: boolean;
   onCollapse?: (collapsed: boolean) => void;
-  debounceMs?: number; // 新增：防抖时间配置
+  debounceMs?: number;
 }
 
 const isContentEmpty = (content: string): boolean => {
@@ -62,251 +97,179 @@ const isContentEmpty = (content: string): boolean => {
   return plainText.length === 0;
 };
 
-const isValidEditorValue = (value: any): value is EditorValue => {
+const isValidEditorValue = (value: unknown): value is EditorValue => {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Partial<EditorValue>;
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.content === 'string' &&
-    (value.type === 'doc' || value.type === 'text') &&
-    typeof value.isEmpty === 'boolean'
+    typeof candidate.content === 'string' &&
+    (candidate.type === 'doc' || candidate.type === 'text') &&
+    typeof candidate.isEmpty === 'boolean'
   );
 };
 
-const LinkInput = ({ editor, isOpen }: { editor: any; isOpen: boolean }) => {
-  const [url, setUrl] = useState('');
+type MobileViewMode = 'main' | 'highlighter' | 'link';
 
-  useEffect(() => {
-    if (isOpen) {
-      const previousUrl = editor.getAttributes('link').href;
-      setUrl(previousUrl || '');
-    }
-  }, [isOpen, editor]);
+interface MainToolbarContentProps {
+  editor: Editor | null;
+  isMobile: boolean;
+  onHighlighterClick: () => void;
+  onLinkClick: () => void;
+}
 
-  const addLink = () => {
-    if (!url || !editor) return;
-
-    let processedUrl = url.trim();
-    if (processedUrl.startsWith('www.')) {
-      processedUrl = `https://${processedUrl}`;
-    }
-
-    const { empty, from, to } = editor.state.selection;
-    if (empty) {
-      return;
-    }
-
-    const isUpdatingLink = editor.isActive('link');
-
-    const { state, view } = editor;
-    const { tr } = state;
-    const linkMark = state.schema.marks.link.create({ href: processedUrl });
-
-    let transaction = tr.addMark(from, to, linkMark);
-
-    if (!isUpdatingLink) {
-      transaction = transaction.setSelection(
-        state.selection.constructor.near(transaction.doc.resolve(to)),
-      );
-
-      transaction = transaction.insertText(' ', to);
-
-      transaction = transaction.removeStoredMark(linkMark);
-    }
-
-    view.dispatch(transaction);
-
-    view.focus();
-
-    setUrl('');
-  };
-
-  const removeLink = () => {
-    editor.chain().focus().unsetLink().run();
-    setUrl('');
-  };
-
-  return (
-    <div className="flex flex-col gap-2 p-2">
-      <Input
-        size="sm"
-        placeholder="Enter link URL..."
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            addLink();
-          }
-        }}
-      />
-      <div className="flex gap-2">
-        <Button size="sm" color="primary" onPress={addLink}>
-          {editor.isActive('link') ? 'Update Link' : 'Add Link'}
-        </Button>
-        {editor.isActive('link') && (
-          <Button size="sm" color="secondary" onPress={removeLink}>
-            Remove Link
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const EditorContentComponent =
-  EditorContent as unknown as React.ComponentType<EditorContentProps>;
-
-const MenuBar = ({
+const MainToolbarContent = ({
   editor,
-  className,
-}: {
-  editor: any;
+  isMobile,
+  onHighlighterClick,
+  onLinkClick,
+}: MainToolbarContentProps) => {
+  if (!editor) return null;
+
+  return (
+    <>
+      <Spacer />
+
+      <ToolbarGroup>
+        <UndoRedoButton editor={editor} action="undo" />
+        <UndoRedoButton editor={editor} action="redo" />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <HeadingDropdownMenu
+          editor={editor}
+          levels={[1, 2, 3, 4]}
+          portal={isMobile}
+        />
+        <ListDropdownMenu
+          editor={editor}
+          types={['bulletList', 'orderedList', 'taskList']}
+          portal={isMobile}
+        />
+        <BlockquoteButton editor={editor} />
+        {/* <CodeBlockButton editor={editor} /> */}
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <MarkButton editor={editor} type="bold" />
+        <MarkButton editor={editor} type="italic" />
+        <MarkButton editor={editor} type="strike" />
+        {/* <MarkButton editor={editor} type="code" /> */}
+        <MarkButton editor={editor} type="underline" />
+        {/* {!isMobile ? (
+          <ColorHighlightPopover editor={editor} />
+        ) : (
+          <ColorHighlightPopoverButton onClick={onHighlighterClick} />
+        )} */}
+        {!isMobile ? (
+          <LinkPopover editor={editor} />
+        ) : (
+          <LinkButton onClick={onLinkClick} />
+        )}
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      {/* <ToolbarGroup>
+        <MarkButton editor={editor} type="superscript" />
+        <MarkButton editor={editor} type="subscript" />
+      </ToolbarGroup> */}
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <TextAlignButton editor={editor} align="left" />
+        <TextAlignButton editor={editor} align="center" />
+        <TextAlignButton editor={editor} align="right" />
+        <TextAlignButton editor={editor} align="justify" />
+      </ToolbarGroup>
+
+      <Spacer />
+    </>
+  );
+};
+
+interface MobileToolbarContentProps {
+  editor: Editor | null;
+  type: 'highlighter' | 'link';
+  onBack: () => void;
+}
+
+const MobileToolbarContent = ({
+  editor,
+  type,
+  onBack,
+}: MobileToolbarContentProps) => (
+  <>
+    <ToolbarGroup>
+      <Button data-style="ghost" onClick={onBack}>
+        <ArrowLeftIcon className="tiptap-button-icon" />
+        {type === 'highlighter' ? (
+          <HighlighterIcon className="tiptap-button-icon" />
+        ) : (
+          <LinkIcon className="tiptap-button-icon" />
+        )}
+      </Button>
+    </ToolbarGroup>
+
+    <ToolbarSeparator />
+
+    {type === 'highlighter' ? (
+      <ColorHighlightPopoverContent editor={editor} />
+    ) : (
+      <LinkContent editor={editor} />
+    )}
+  </>
+);
+
+interface MdEditorToolbarProps {
+  editor: Editor | null;
+  isMobile: boolean;
+  mobileView: MobileViewMode;
+  setMobileView: (mode: MobileViewMode) => void;
   className?: string;
-}) => {
-  const [isLinkOpen, setIsLinkOpen] = useState(false);
+}
+
+const MdEditorToolbar = ({
+  editor,
+  isMobile,
+  mobileView,
+  setMobileView,
+  className,
+}: MdEditorToolbarProps) => {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const { height } = useWindowSize();
+  const overlayHeight = toolbarRef.current?.getBoundingClientRect().height ?? 0;
+  const rect = useCursorVisibility({ editor, overlayHeight });
 
   if (!editor) {
     return null;
   }
 
+  const mobileOffset = Math.max(0, height - rect.y);
+  const toolbarStyle = isMobile
+    ? { bottom: `calc(100% - ${mobileOffset}px)` }
+    : undefined;
+
   return (
-    <div
-      className={cn(
-        'flex flex-wrap gap-1 border-b border-white/10 p-[10px]',
-        className,
+    <Toolbar ref={toolbarRef} className={className} style={toolbarStyle}>
+      {mobileView === 'main' ? (
+        <MainToolbarContent
+          editor={editor}
+          isMobile={isMobile}
+          onHighlighterClick={() => setMobileView('highlighter')}
+          onLinkClick={() => setMobileView('link')}
+        />
+      ) : (
+        <MobileToolbarContent
+          editor={editor}
+          type={mobileView === 'highlighter' ? 'highlighter' : 'link'}
+          onBack={() => setMobileView('main')}
+        />
       )}
-    >
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('heading', { level: 1 }) && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Heading 1"
-      >
-        <TextHOne size={20} />
-      </Button>
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('heading', { level: 2 }) && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Heading 2"
-      >
-        <TextHTwo size={20} />
-      </Button>
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('heading', { level: 3 }) && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Heading 3"
-      >
-        <TextHThree size={20} />
-      </Button>
-      <div className="mx-1 my-auto h-6 w-px bg-white/10" />
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('bold') && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Bold"
-      >
-        <TextBold size={20} />
-      </Button>
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('italic') && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Italic"
-      >
-        <TextItalic size={20} />
-      </Button>
-      <div className="mx-1 my-auto h-6 w-px bg-white/10" />
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('bulletList') && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Bullet List"
-      >
-        <ListBullets size={20} />
-      </Button>
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('orderedList') && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Ordered List"
-      >
-        <ListNumbers size={20} />
-      </Button>
-      <Button
-        isIconOnly
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={cn(
-          'bg-transparent hover:bg-[#363636]',
-          editor.isActive('blockquote') && 'bg-[#363636]',
-          'p-[5px]',
-        )}
-        title="Quote"
-      >
-        <Quotes size={20} />
-      </Button>
-      <Popover
-        isOpen={isLinkOpen}
-        onOpenChange={(open) => {
-          setIsLinkOpen(open);
-        }}
-      >
-        <PopoverTrigger>
-          <Button
-            isIconOnly
-            size="sm"
-            className={cn(
-              'bg-transparent hover:bg-[#363636]',
-              editor.isActive('link') && 'bg-[#363636]',
-              'p-[5px]',
-            )}
-            title={editor.isActive('link') ? 'Edit Link' : 'Add Link'}
-          >
-            <LinkIcon size={20} />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent>
-          <LinkInput editor={editor} isOpen={isLinkOpen} />
-        </PopoverContent>
-      </Popover>
-    </div>
+    </Toolbar>
   );
 };
 
@@ -316,46 +279,54 @@ const defaultValue = JSON.stringify({
   isEmpty: true,
 });
 
-const MdEditor: React.FC<MdEditorProps> = ({
+const MdEditor = ({
   value = '',
   onChange,
   placeholder = 'Write about your issue',
   className,
   hideMenuBar = false,
+  mode,
   isEdit = true,
   onClick,
   collapsable = false,
   collapseHeight = 150,
   collapsed = false,
   onCollapse,
-  debounceMs = 300, // 默认300ms防抖
-}) => {
+  debounceMs = 300,
+}: MdEditorProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
+  const isEditable = mode ? mode === 'edit' : isEdit;
+  const [mobileView, setMobileView] = useState<MobileViewMode>('main');
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMobile = useIsBreakpoint();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [canCollapse, setCanCollapse] = useState(false);
 
-  // 防抖的 onChange 处理函数
+  useEffect(() => {
+    if (!isMobile && mobileView !== 'main') {
+      setMobileView('main');
+    }
+  }, [isMobile, mobileView]);
+
   const debouncedOnChange = useCallback(
     (html: string) => {
-      // 清除之前的定时器
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
 
-      // 设置新的定时器
       debounceTimeoutRef.current = setTimeout(() => {
         const contentIsEmpty = isContentEmpty(html);
-        const jsonValue: EditorValue = {
+        const payload: EditorValue = {
           content: html,
           type: 'doc',
           isEmpty: contentIsEmpty,
         };
-        onChange?.(JSON.stringify(jsonValue));
+        onChange?.(JSON.stringify(payload));
       }, debounceMs);
     },
-    [onChange, debounceMs],
+    [debounceMs, onChange],
   );
 
-  // 清理函数
   useEffect(() => {
     return () => {
       if (debounceTimeoutRef.current) {
@@ -364,123 +335,100 @@ const MdEditor: React.FC<MdEditorProps> = ({
     };
   }, []);
 
-  const editorValue = React.useMemo(() => {
-    if (!value) return JSON.parse(defaultValue);
+  const editorValue = useMemo(() => {
+    if (!value) return JSON.parse(defaultValue) as EditorValue;
     try {
-      const parsedValue = JSON.parse(value);
-
-      if (!isValidEditorValue(parsedValue)) {
-        return JSON.parse(defaultValue);
+      const parsed = JSON.parse(value);
+      if (!isValidEditorValue(parsed)) {
+        return JSON.parse(defaultValue) as EditorValue;
       }
-
-      const contentIsEmpty = isContentEmpty(parsedValue.content);
       return {
-        ...parsedValue,
-        isEmpty: contentIsEmpty,
+        ...parsed,
+        isEmpty: isContentEmpty(parsed.content),
       };
-    } catch (e) {
-      return JSON.parse(defaultValue);
+    } catch {
+      return JSON.parse(defaultValue) as EditorValue;
     }
   }, [value]);
 
-  const editor = useEditor({
-    extensions: [
+  const extensions = useMemo(
+    () => [
       StarterKit.configure({
-        bulletList: {
-          HTMLAttributes: {
-            class: 'custom-bullet-list pl-4 my-[10px] list-disc',
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: 'custom-ordered-list pl-4 my-[10px] list-decimal',
-          },
-        },
-        blockquote: {
-          HTMLAttributes: {
-            class: 'custom-blockquote border-l-[3px] border-white/20 my-6 pl-4',
-          },
-        },
-        code: {
-          HTMLAttributes: {
-            class:
-              'custom-code bg-[#1f1f1f] rounded-[0.4rem] text-[0.85rem] px-[0.3em] py-[0.25em]',
-          },
-        },
-        codeBlock: {
-          HTMLAttributes: {
-            class: 'custom-code-block bg-[#1f1f1f] rounded-[0.5rem] my-6 p-4',
-          },
-        },
-        heading: {
-          levels: [1, 2, 3],
-          HTMLAttributes: {
-            class: 'custom-heading',
-          },
-        },
+        horizontalRule: false,
+        link: false,
       }),
-      Link.configure({
-        openOnClick: true,
-        HTMLAttributes: {
-          class: 'custom-link underline cursor-pointer transition-colors',
-          rel: 'noopener noreferrer',
-          target: '_blank',
-        },
+      TiptapLink.configure({
+        openOnClick: false,
         autolink: true,
         linkOnPaste: true,
       }),
+      HorizontalRule,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Highlight.configure({ multicolor: true }),
+      Image,
+      Typography,
+      Superscript,
+      Subscript,
+      Selection,
+      ImageUploadNode.configure({
+        accept: 'image/*',
+        maxSize: MAX_FILE_SIZE,
+        limit: 3,
+        upload: handleImageUpload,
+        onError: (error) => console.error('Upload failed:', error),
+      }),
       MarkdownPastePlugin,
     ],
+    [handleImageUpload],
+  );
+
+  const editor = useEditor({
+    extensions,
     content: editorValue.content,
-    editable: isEdit,
+    editable: isEditable,
     editorProps: {
       attributes: {
+        autocomplete: 'off',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+        'data-placeholder': placeholder,
+        'aria-label': placeholder,
         class: cn(
           'tiptap prose prose-invert max-w-none focus:outline-none',
           '[&_.tiptap]:first:mt-0',
           '[&_h1]:text-[2rem] [&_h1]:leading-[1.4]',
           '[&_h2]:text-[1.6rem] [&_h2]:leading-[1.4]',
           '[&_h3]:text-[1.4rem] [&_h3]:leading-[1.4]',
-          !isEdit && 'cursor-default',
-          className,
+          !isEditable && 'cursor-default',
         ),
       },
     },
-    onUpdate: ({ editor }) => {
-      if (!isEdit || !isInitialized) return;
-      const html = editor.getHTML();
+    onUpdate: ({ editor: instance }) => {
+      if (!isEditable || !isInitialized) return;
+      const html = instance.getHTML();
       debouncedOnChange(html);
     },
     immediatelyRender: false,
   });
 
   useEffect(() => {
-    if (!editor) return;
+    if (editorValue.content === editor?.getHTML() || !editor) return;
 
-    // Only sync external content when editor is NOT focused.
-    // This avoids resetting selection or affecting typing/newline behavior.
-    if (editor.isFocused) return;
+    if (/<[^>]+>/.test(editorValue.content)) {
+      editor.commands.setContent(editorValue.content);
+    } else {
+      const htmlContent = editorValue.content
+        .trim()
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
 
-    if (editorValue.content !== editor.getHTML()) {
-      // Check if content contains HTML tags
-      const isHTML = /<[^>]+>/.test(editorValue.content);
-
-      if (isHTML) {
-        // If it's HTML, set it directly
-        editor.commands.setContent(editorValue.content);
-      } else {
-        // If it's plain text, handle paragraph breaks properly
-        const htmlContent = editorValue.content
-          .trim()
-          .replace(/\n\n/g, '<br><br>') // 双换行转为段落分隔
-          .replace(/\n/g, '<br>') // 单换行转为 <br>
-          .replace(/^/, '<p>') // 开头加 <p>
-          .replace(/$/, '</p>'); // 结尾加 </p>
-
-        editor.commands.setContent(htmlContent || '<p></p>');
-      }
+      editor.commands.setContent(htmlContent || '<p></p>');
     }
-  }, [editorValue.content, editor]);
+  }, [editor, editorValue.content]);
 
   useEffect(() => {
     if (editor) {
@@ -490,47 +438,45 @@ const MdEditor: React.FC<MdEditorProps> = ({
 
   useEffect(() => {
     if (editor) {
-      editor.setEditable(isEdit);
+      editor.setEditable(isEditable);
     }
-  }, [isEdit, editor]);
-
-  const [canCollapse, setCanCollapse] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+  }, [editor, isEditable]);
 
   useEffect(() => {
-    if (!collapsable || isEdit || !contentRef.current) return;
+    if (!collapsable || isEditable || !contentRef.current) return;
 
     const checkHeight = () => {
       const contentHeight = contentRef.current?.scrollHeight || 0;
       const shouldCollapse = contentHeight > collapseHeight * 1.5;
-
       setCanCollapse(shouldCollapse);
-
       if (shouldCollapse) {
         onCollapse?.(shouldCollapse);
       }
     };
 
-    setTimeout(checkHeight, 100);
-
+    const timeout = window.setTimeout(checkHeight, 100);
     window.addEventListener('resize', checkHeight);
-    return () => window.removeEventListener('resize', checkHeight);
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener('resize', checkHeight);
+    };
   }, [
     collapsable,
-    isEdit,
     collapseHeight,
-    editor,
     editorValue.content,
+    isEditable,
     onCollapse,
   ]);
 
+  const shouldShowToolbar = isEditable && !hideMenuBar;
+
   return (
-    <div className="size-full">
+    <div className="md-editor-root size-full">
       <div
         className={cn(
-          'rounded-lg bg-white/[0.02]',
+          'md-editor-container relative flex flex-col rounded-lg bg-white/[0.02]',
           collapsable &&
-            !isEdit &&
+            !isEditable &&
             canCollapse &&
             collapsed &&
             'overflow-hidden',
@@ -538,39 +484,41 @@ const MdEditor: React.FC<MdEditorProps> = ({
         )}
         onClick={onClick}
         style={
-          collapsable && !isEdit && canCollapse && collapsed
+          collapsable && !isEditable && canCollapse && collapsed
             ? { maxHeight: `${collapseHeight}px` }
             : undefined
         }
       >
-        {isEdit && !hideMenuBar && (
-          <MenuBar editor={editor} className={className?.menuBar} />
+        {shouldShowToolbar && (
+          <MdEditorToolbar
+            editor={editor}
+            isMobile={isMobile}
+            mobileView={mobileView}
+            setMobileView={setMobileView}
+            className={className?.menuBar}
+          />
         )}
+
         <div
           ref={contentRef}
           className={cn(
-            'relative p-[10px]',
+            'md-editor-content relative p-[10px]',
             collapsable &&
-              !isEdit &&
+              !isEditable &&
               canCollapse &&
               'transition-all duration-300',
-            isEdit && 'min-h-[20px]',
+            isEditable && 'min-h-[20px]',
             className?.editorWrapper,
           )}
-          onClick={(e) => {
-            e.stopPropagation();
+          onClick={(event) => {
+            event.stopPropagation();
             editor?.commands.focus();
           }}
         >
           <EditorContentComponent
             editor={editor}
-            className={className?.editor}
+            className={cn('md-editor-prose', className?.editor)}
           />
-          {editorValue.isEmpty && isEdit && (
-            <div className="pointer-events-none absolute left-[10px] top-[10px] text-[16px] text-white/50">
-              <span className="text-black/60">{placeholder}</span>
-            </div>
-          )}
         </div>
       </div>
     </div>

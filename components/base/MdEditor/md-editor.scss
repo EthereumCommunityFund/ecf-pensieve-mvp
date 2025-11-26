@@ -1,0 +1,37 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+.md-editor-root {
+  font-family: "Inter", sans-serif;
+  // color: var(--tt-theme-text, var(--foreground));
+}
+
+.md-editor-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  // background-color: var(--tt-card-bg, rgba(22, 22, 22, 0.8));
+  // border: 1px solid var(--tt-gray-light-a-100, rgba(255, 255, 255, 0.08));
+}
+
+.dark .md-editor-container {
+  border-color: var(--tt-gray-dark-a-50, rgba(255, 255, 255, 0.08));
+}
+
+.md-editor-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.md-editor-content .tiptap.ProseMirror {
+  flex: 1;
+  min-height: 240px;
+  font-family: "DM Sans", sans-serif;
+  padding: 1.5rem 1.75rem 3rem;
+}
+
+@media screen and (max-width: 768px) {
+  .md-editor-content .tiptap.ProseMirror {
+    padding: 1rem 1.25rem 2.5rem;
+  }
+}
