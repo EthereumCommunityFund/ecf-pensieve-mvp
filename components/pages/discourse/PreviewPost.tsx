@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 
-import EditorPro from '@/components/biz/editorPro';
+import MdEditor from '@/components/base/MdEditor';
 
 import { discourseTopicOptions } from './topicOptions';
 
@@ -44,7 +44,7 @@ export function PreviewPostCard({
           <span className="ml-3 text-black/60">{timeAgo}</span>
         </div>
       </div>
-      <EditorPro
+      <MdEditor
         value={serializeEditorValue(contentHtml)}
         isEdit={false}
         hideMenuBar

@@ -75,6 +75,15 @@ export type HighlightColor = (typeof HIGHLIGHT_COLORS)[number];
 
 export type HighlightMode = 'mark' | 'node';
 
+type NodeBackgroundCanCommands = ReturnType<Editor['can']> & {
+  toggleNodeBackgroundColor?: (color: string) => boolean;
+};
+
+type NodeBackgroundChainCommands = ReturnType<Editor['chain']> & {
+  toggleNodeBackgroundColor?: (color: string) => ReturnType<Editor['chain']>;
+  unsetNodeBackgroundColor?: () => ReturnType<Editor['chain']>;
+};
+
 /**
  * Configuration for the color highlight functionality
  */
@@ -146,8 +155,10 @@ export function canColorHighlight(
   } else {
     if (!isExtensionAvailable(editor, ['nodeBackground'])) return false;
 
+    const canCommands = editor.can() as NodeBackgroundCanCommands;
+
     try {
-      return editor.can().toggleNodeBackgroundColor('test');
+      return canCommands.toggleNodeBackgroundColor?.('test') ?? false;
     } catch {
       return false;
     }
@@ -202,7 +213,9 @@ export function removeHighlight(
   if (mode === 'mark') {
     return editor.chain().focus().unsetMark('highlight').run();
   } else {
-    return editor.chain().focus().unsetNodeBackgroundColor().run();
+    const chain = editor.chain().focus() as NodeBackgroundChainCommands;
+    if (!chain.unsetNodeBackgroundColor) return false;
+    return chain.unsetNodeBackgroundColor().run();
   }
 }
 
@@ -291,11 +304,9 @@ export function useColorHighlight(config: UseColorHighlightConfig) {
 
       return true;
     } else {
-      const success = editor
-        .chain()
-        .focus()
-        .toggleNodeBackgroundColor(highlightColor)
-        .run();
+      const chain = editor.chain().focus() as NodeBackgroundChainCommands;
+      const toggleCommand = chain.toggleNodeBackgroundColor?.(highlightColor);
+      const success = toggleCommand ? toggleCommand.run() : false;
 
       if (success) {
         onApplied?.({ color: highlightColor, label, mode });

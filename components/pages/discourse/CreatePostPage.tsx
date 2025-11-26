@@ -4,7 +4,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import EditorPro from '@/components/biz/editorPro';
+import MdEditor from '@/components/base/MdEditor';
 
 import { CategorySelector } from './CategorySelector';
 import { PreviewPost } from './PreviewPost';
@@ -128,7 +128,7 @@ export function CreatePostPage() {
               <label className="text-[16px] font-semibold text-black">
                 Post
               </label>
-              <EditorPro
+              <MdEditor
                 value={body}
                 onChange={(value) => setBody(value)}
                 debounceMs={500}

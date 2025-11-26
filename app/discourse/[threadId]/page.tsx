@@ -1,11 +1,15 @@
 import { ThreadDetailPage } from '@/components/pages/discourse/ThreadDetailPage';
 
 type ThreadDetailRouteProps = {
-  params: {
+  params: Promise<{
     threadId: string;
-  };
+  }>;
 };
 
-export default function ThreadDetailRoute({ params }: ThreadDetailRouteProps) {
-  return <ThreadDetailPage threadId={params.threadId} />;
+export default async function ThreadDetailRoute({
+  params,
+}: ThreadDetailRouteProps) {
+  const { threadId } = await params;
+
+  return <ThreadDetailPage threadId={threadId} />;
 }
