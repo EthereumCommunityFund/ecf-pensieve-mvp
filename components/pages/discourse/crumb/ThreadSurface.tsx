@@ -1,7 +1,14 @@
 'use client';
 
+import {
+  ArrowBendUpLeft,
+  CaretCircleUp,
+  CaretDown,
+  ChartBar,
+  ChatCircle,
+  ThumbsDown,
+} from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
-import { CaretCircleUp, CaretDown, ChartBar } from '@phosphor-icons/react';
 
 import { MetricPill } from './MetricPill';
 import type { SentimentStat } from './SentimentCard';
@@ -16,6 +23,19 @@ type SentimentOption = {
   value: 'all' | 'positive' | 'balanced' | 'critical';
   label: string;
   description: string;
+};
+
+type DiscussionComment = {
+  id: string;
+  author: string;
+  timestamp: string;
+  content: string[];
+  tags: string[];
+  isOp?: boolean;
+  isReply?: boolean;
+  score: number;
+  chartValues: number[];
+  reactions?: Array<'arrow' | 'thumbs-down'>;
 };
 
 const SENTIMENT_OPTIONS: SentimentOption[] = [
@@ -38,6 +58,43 @@ const SENTIMENT_OPTIONS: SentimentOption[] = [
     value: 'critical',
     label: 'Critical focus',
     description: 'Surface the most skeptical viewpoints.',
+  },
+];
+
+const discussionComments: DiscussionComment[] = [
+  {
+    id: 'comment-1',
+    author: 'Username',
+    timestamp: 'a week ago',
+    content: ['Here is a comment'],
+    tags: ['Reno disagrees with this', 'Reno finds this provocative'],
+    score: 4,
+    chartValues: [65, 30, 45, 80, 50],
+  },
+  {
+    id: 'comment-2',
+    author: 'Username (OP)',
+    timestamp: 'a week ago',
+    content: ['Here is a response from OP'],
+    tags: [
+      'Reno agrees with this',
+      'Reno finds this insightful',
+      'Reno recommends this',
+    ],
+    isOp: true,
+    score: 4,
+    chartValues: [20, 45, 35, 55, 70],
+    reactions: ['arrow', 'thumbs-down'],
+  },
+  {
+    id: 'comment-3',
+    author: 'Username',
+    timestamp: '5 days ago',
+    content: ['Follow up thought from community'],
+    tags: ['Reno finds this provocative'],
+    isReply: true,
+    score: 2,
+    chartValues: [30, 30, 30, 30, 30],
   },
 ];
 
@@ -167,12 +224,36 @@ export function ThreadSurface({
       </div>
       <div className="space-y-6 p-6">
         {activeTab === 'answers' ? (
-          <AnswerCard
-            answerHighlights={answerHighlights}
-            sentimentStats={sentimentStats}
-          />
+          <div className="space-y-6">
+            <AnswerCard
+              answerHighlights={answerHighlights}
+              sentimentStats={sentimentStats}
+            />
+            <CommentThread />
+          </div>
         ) : (
-          <CommentThread />
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-[#e7e4df] pb-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-black">
+                Discussion comments
+                <span className="rounded-md bg-black/10 px-1 text-xs font-bold text-black/60">
+                  {String(discussionComments.length).padStart(2, '0')}
+                </span>
+              </div>
+              <button className="rounded-md border border-black/10 bg-neutral-50 px-4 py-1 text-sm font-semibold text-black">
+                Post Comment
+              </button>
+            </div>
+            <div className="space-y-4">
+              {discussionComments.map((comment, index) => (
+                <DiscussionCommentCard
+                  key={comment.id}
+                  comment={comment}
+                  showConnector={index === 1}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -323,6 +404,101 @@ function CommentThread() {
               Reply
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DiscussionCommentCard({
+  comment,
+  showConnector = false,
+}: {
+  comment: DiscussionComment;
+  showConnector?: boolean;
+}) {
+  return (
+    <div className={`relative flex gap-4 ${comment.isReply ? 'pl-8' : ''}`}>
+      {showConnector ? (
+        <span className="pointer-events-none absolute bottom-[-40px] left-[22px] top-10 w-px bg-[#e7e4df]" />
+      ) : null}
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex size-12 items-center justify-center rounded-full bg-black/5 text-sm font-semibold text-black">
+          {comment.author.charAt(0)}
+        </div>
+        {comment.reactions ? (
+          <div className="flex flex-col items-center gap-2 text-black/60">
+            {comment.reactions.map((reaction) => (
+              <div
+                key={reaction}
+                className="flex size-8 items-center justify-center rounded-full border border-black/10 bg-black/5"
+              >
+                {reaction === 'arrow' ? (
+                  <ArrowBendUpLeft className="size-4" />
+                ) : (
+                  <ThumbsDown className="size-4" />
+                )}
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="flex-1 space-y-4 rounded-2xl border border-[#e7e4df] bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="inline-flex items-center gap-2 text-black">
+              <ChatCircle className="size-5 text-black/60" weight="fill" />
+              <p className="font-semibold">{comment.author}</p>
+            </div>
+            {comment.isOp ? (
+              <span className="rounded-md border border-white bg-[#43bd9b]/20 px-2 py-0.5 text-xs font-semibold text-[#1b9573]">
+                OP
+              </span>
+            ) : null}
+            <span className="text-xs font-semibold text-black/50">
+              {comment.timestamp}
+            </span>
+          </div>
+          <div className="flex items-end gap-1 rounded-md border border-black/10 bg-black/5 px-2 py-1">
+            {comment.chartValues.map((value, index) => (
+              <span
+                key={`${comment.id}-${value}-${index}`}
+                className="flex h-8 w-1.5 items-end rounded-full bg-black/10"
+              >
+                <span
+                  className="w-full rounded-full bg-black/50"
+                  style={{
+                    height: `${Math.min(Math.max(value, 8), 100)}%`,
+                  }}
+                />
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2 text-sm text-black/80">
+          {comment.content.map((text) => (
+            <p key={text}>{text}</p>
+          ))}
+          {comment.isOp ? (
+            <span className="text-xs font-semibold text-black/50">
+              EDITED 000/00/00
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-black/60">
+          {comment.tags.map((tag) => (
+            <TagPill key={tag} label={tag} />
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-black/70">
+          <div className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-black/5 px-3 py-1">
+            <ChartBar className="size-4 text-black/60" weight="bold" />
+            {comment.score}
+          </div>
+          <button className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold text-black">
+            Reply
+            <ArrowBendUpLeft className="size-4" />
+          </button>
         </div>
       </div>
     </div>
