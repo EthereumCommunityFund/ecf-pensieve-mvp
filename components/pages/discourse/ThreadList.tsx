@@ -1,8 +1,14 @@
 'use client';
 
-import { CaretCircleUp, CheckSquare, Question } from '@phosphor-icons/react';
-import { KeyboardEvent, useMemo, useState } from 'react';
 import { cn } from '@heroui/react';
+import {
+  CaretCircleUp,
+  CheckCircle,
+  CheckSquare,
+  Question,
+  Warning,
+} from '@phosphor-icons/react';
+import { KeyboardEvent, useMemo, useState } from 'react';
 
 import { SentimentIndicator } from './SentimentIndicator';
 import { SentimentModal } from './SentimentModal';
@@ -40,6 +46,8 @@ type ThreadItemProps = {
 function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
   const authorInitial = thread.author?.[0]?.toUpperCase() ?? '?';
   const hasAnswers = typeof thread.answeredCount === 'number';
+  const isScamThread = thread.tag?.toLowerCase().includes('scam') ?? false;
+  const hasStatus = Boolean(thread.status);
   const clickableProps = onSelect
     ? {
         role: 'button' as const,
@@ -65,9 +73,40 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-black/70">
             {thread.tag ? (
-              <span className="inline-flex items-center gap-[5px] rounded-[4px] border border-black/10 bg-[#f5f5f5] px-[8px] py-[4px] text-[13px] font-[600] text-black">
-                <Question size={20} className="text-black/80" weight="fill" />
+              <span
+                className={cn(
+                  'inline-flex items-center gap-[5px] rounded-[4px] border px-[8px] py-[4px] text-[13px] font-[600]',
+                  isScamThread
+                    ? 'border-black/10 bg-[#ebebeb] text-black'
+                    : 'border-black/10 bg-[#f5f5f5] text-black',
+                )}
+              >
+                {isScamThread ? (
+                  <Warning size={18} weight="fill" className="text-[#bb5d00]" />
+                ) : (
+                  <Question size={20} className="text-black/80" weight="fill" />
+                )}
                 {thread.tag}
+              </span>
+            ) : null}
+            {hasStatus ? (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold',
+                  isScamThread
+                    ? 'border-[#bb5d00]/40 bg-[#fff2e5] text-[#bb5d00]'
+                    : 'border-black/10 bg-[#f5f5f5] text-black/80',
+                )}
+              >
+                <CheckCircle
+                  size={16}
+                  weight="fill"
+                  className={cn(
+                    'text-black/60',
+                    isScamThread ? 'text-[#bb5d00]' : 'text-black/50',
+                  )}
+                />
+                {thread.status}
               </span>
             ) : null}
             {hasAnswers ? (

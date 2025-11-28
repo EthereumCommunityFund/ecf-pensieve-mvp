@@ -270,6 +270,48 @@ const placeholderThreads: ThreadMeta[] = [
       { key: 'provocative', percentage: 14 },
     ],
   },
+  {
+    id: 'p-13',
+    title: 'Fake bounty landing page harvesting seed phrases',
+    excerpt:
+      'Community managers spotted clones of the official site with a wallet-connection step before showing tasks.',
+    author: 'Guardian',
+    timeAgo: '6 hours ago',
+    replies: 5,
+    votes: 77,
+    badge: 'Complaint Topic',
+    status: 'Alert Displayed',
+    tag: 'Scam & Fraud Concerns',
+    sentiment: 'Provocative',
+    totalSentimentVotes: 41,
+    sentimentBreakdown: [
+      { key: 'recommend', percentage: 12 },
+      { key: 'agree', percentage: 18 },
+      { key: 'provocative', percentage: 45 },
+      { key: 'disagree', percentage: 25 },
+    ],
+  },
+  {
+    id: 'p-14',
+    title: 'Telegram giveaway bot draining multisig signer wallets',
+    excerpt:
+      'Two guardians clicked a calendar invite bot that silently queued transactions and tried to drain signer wallets.',
+    author: 'ScamOps',
+    timeAgo: '2 days ago',
+    replies: 7,
+    votes: 88,
+    badge: 'Complaint Topic',
+    status: 'Escalated',
+    tag: 'Scam & Fraud Concerns',
+    sentiment: 'Disagree',
+    totalSentimentVotes: 52,
+    sentimentBreakdown: [
+      { key: 'recommend', percentage: 10 },
+      { key: 'agree', percentage: 20 },
+      { key: 'provocative', percentage: 30 },
+      { key: 'disagree', percentage: 40 },
+    ],
+  },
 ];
 
 type ProjectComplaintsPageProps = {
