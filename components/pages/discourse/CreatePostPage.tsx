@@ -119,7 +119,7 @@ export function CreatePostPage() {
                     setTitle(event.target.value.slice(0, MAX_TITLE))
                   }
                   placeholder="Type a title for your thread"
-                  className="h-10 rounded-[8px] border border-[#d9d5cc] bg-[#f2f0ed] px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:border-black/40 focus:outline-none"
+                  className="h-10 rounded-[8px] border border-black/10 bg-black/5 px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:border-black/40 focus:outline-none"
                 />
                 <p className="text-right text-xs text-black/60">
                   {remainingTitle} characters remaining
@@ -135,7 +135,7 @@ export function CreatePostPage() {
                   onChange={(value) => setBody(value)}
                   debounceMs={500}
                   className={{
-                    base: 'min-h-[280px] rounded-[12px] border border-[#d9d5cc] bg-[#f2f0ed]',
+                    base: 'min-h-[280px] rounded-[12px] border border-black/10 bg-black/5',
                     editorWrapper: 'p-4',
                     editor: 'prose prose-sm max-w-none text-[#1b1b1f]',
                   }}
@@ -156,7 +156,7 @@ export function CreatePostPage() {
                 onChange={(category) => setSelectedCategory(category)}
               />
 
-              <div className="flex items-center justify-between rounded-[8px] border border-[#e0dbcf] bg-[#f7f5f1] px-4 py-3">
+              <div className="flex items-center justify-between rounded-[8px] border border-black/10 px-4 py-3">
                 <div className="flex items-center gap-3 text-sm text-black">
                   <WarningCircle size={20} />
                   <span className="font-semibold">Post as Scam Alert?</span>
@@ -194,7 +194,7 @@ export function CreatePostPage() {
                       }
                     }}
                     placeholder="Create a tag"
-                    className="h-10 flex-1 rounded-[8px] border border-[#d9d5cc] bg-[#f2f0ed] px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:border-black/40 focus:outline-none"
+                    className="h-10 flex-1 rounded-[8px] border border-black/10 bg-black/5 px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:border-black/40 focus:outline-none"
                   />
                   <Button
                     onPress={handleAddTag}

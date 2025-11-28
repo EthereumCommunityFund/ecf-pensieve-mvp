@@ -46,7 +46,7 @@ export function CategorySelector({
         className="w-full"
         classNames={{
           trigger:
-            'flex h-10 w-full items-center justify-between rounded-[8px] border border-[#d9d5cc] bg-[#f2f0ed] px-4 text-left text-[14px] text-black/80',
+            'flex h-10 w-full items-center justify-between rounded-[8px] border border-[#d9d5cc] bg-black/5 px-4 text-left text-[14px] text-black/80',
         }}
         selectorIcon={<CaretDown size={16} className="text-black/60" />}
       >
