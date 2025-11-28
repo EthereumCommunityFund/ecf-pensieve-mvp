@@ -2,6 +2,7 @@
 
 import { CaretCircleUp, CheckSquare, Question } from '@phosphor-icons/react';
 import { KeyboardEvent, useMemo, useState } from 'react';
+import { cn } from '@heroui/react';
 
 import { SentimentIndicator } from './SentimentIndicator';
 import { SentimentModal } from './SentimentModal';
@@ -55,7 +56,7 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
 
   return (
     <article
-      className={`flex flex-col gap-4 rounded-[10px] border border-black/10 bg-white px-5 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] ${
+      className={`flex flex-col gap-4 rounded-[10px] px-5 py-[10px] hover:bg-[#EBEBEB] ${
         onSelect ? 'cursor-pointer transition hover:-translate-y-0.5' : ''
       }`}
       {...clickableProps}
@@ -63,10 +64,10 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
       <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-black/70">
-            {thread.badge ? (
-              <span className="inline-flex items-center gap-1 rounded-[4px] border border-black/10 bg-[#f5f5f5] px-2.5 py-1 text-[11px] uppercase tracking-wide text-black">
-                <Question size={14} className="text-black/50" />
-                {thread.badge}
+            {thread.tag ? (
+              <span className="inline-flex items-center gap-[5px] rounded-[4px] border border-black/10 bg-[#f5f5f5] px-[8px] py-[4px] text-[13px] font-[600] text-black">
+                <Question size={20} className="text-black/80" weight="fill" />
+                {thread.tag}
               </span>
             ) : null}
             {hasAnswers ? (
@@ -96,7 +97,7 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
             <p className="text-[14px] leading-5 text-black/70">
               {thread.excerpt}
             </p>
-            <div className="flex flex-wrap items-center gap-3 text-[12px] uppercase tracking-[0.12em] text-black/50">
+            <div className="flex flex-wrap items-center gap-3 text-[12px] tracking-[0.12em] text-black/50">
               <span>BY:</span>
               <span className="flex items-center gap-2 text-[13px] tracking-normal text-black">
                 <span className="inline-flex size-6 items-center justify-center rounded-full bg-black/10 text-[11px] font-semibold text-black/50">
@@ -114,12 +115,14 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
             <div className="flex flex-col items-center gap-1 text-sm text-black">
               <button
                 type="button"
-                className={`flex size-10 items-center justify-center rounded-full text-white transition hover:-translate-y-0.5 ${
-                  hasAnswers ? 'bg-black/30' : 'bg-black'
-                }`}
                 aria-label="Upvote"
+                className="transition-transform hover:scale-105 hover:opacity-80"
               >
-                <CaretCircleUp size={22} weight="fill" />
+                <CaretCircleUp
+                  size={36}
+                  weight="fill"
+                  className={cn(hasAnswers ? 'opacity-100' : 'opacity-30')}
+                />
               </button>
               <span className="text-[13px] font-semibold">{thread.votes}</span>
             </div>
@@ -144,12 +147,16 @@ export function ThreadList({
     }
 
     return threads.map((thread) => (
-      <ThreadItem
+      <div
         key={thread.id}
-        thread={thread}
-        onSentimentClick={setActiveSentimentThread}
-        onSelect={onThreadSelect}
-      />
+        className="border-b border-black/10 pb-[10px] last:border-0"
+      >
+        <ThreadItem
+          thread={thread}
+          onSentimentClick={setActiveSentimentThread}
+          onSelect={onThreadSelect}
+        />
+      </div>
     ));
   }, [threads, onThreadSelect]);
 
@@ -162,8 +169,8 @@ export function ThreadList({
   }
 
   return (
-    <div className="space-y-4">
-      {renderedThreads}
+    <div className="">
+      <div className="flex flex-col gap-[10px]">{renderedThreads}</div>
 
       <SentimentModal
         open={Boolean(activeSentimentThread)}

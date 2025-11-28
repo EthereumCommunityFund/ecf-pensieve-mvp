@@ -46,7 +46,7 @@ export function SentimentIndicator({
       return {
         key,
         height,
-        width: BAR_WIDTHS[index] ?? 8,
+        width: 10,
         color: sentimentDefinitions[key]?.color || '#cccccc',
         label: sentimentDefinitions[key]?.label ?? key,
         percentage: clamped,
@@ -64,13 +64,13 @@ export function SentimentIndicator({
       type="button"
       onClick={handleClick}
       aria-label="View sentiment breakdown"
-      className="inline-flex items-center rounded-[18px] border border-[#dfe3ee] bg-[#f7f8fb] px-2.5 py-1.5 shadow-[0px_10px_26px_rgba(31,37,56,0.15)] transition hover:-translate-y-0.5"
+      className="inline-flex h-[30px] items-center rounded-[4px] border border-black/10 p-[4px] transition hover:-translate-y-0.5"
     >
-      <div className="flex h-[28px] items-end gap-[3px]">
+      <div className="flex h-[20px] items-end gap-[3px]">
         {bars.map((bar) => (
           <span
             key={bar.key}
-            className="rounded-[999px]"
+            className="rounded-[2px]"
             style={{
               width: `${bar.width}px`,
               height: `${bar.height}px`,

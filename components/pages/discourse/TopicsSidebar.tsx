@@ -36,7 +36,7 @@ export function TopicsSidebar({
   };
 
   return (
-    <div className="flex w-full flex-col gap-4 rounded-[10px] border border-black/10 bg-white p-5">
+    <div className="flex w-full flex-col gap-4 rounded-[10px] px-[10px]">
       <div className="relative h-[32px]">
         <SearchIcon
           width={18}

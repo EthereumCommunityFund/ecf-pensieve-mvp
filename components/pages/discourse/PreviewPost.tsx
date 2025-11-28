@@ -80,7 +80,7 @@ export function PreviewPostCard({
           className="w-full rounded-[6px] bg-black/80 px-4 py-3 text-sm font-semibold text-white"
           disabled
         >
-          Answer This Question (Earn CP)
+          Answer This Question
         </button>
         <button
           className="w-full rounded-[6px] border border-black/10 px-4 py-3 text-sm font-semibold text-black/70"

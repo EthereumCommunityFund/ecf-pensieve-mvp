@@ -34,7 +34,7 @@ export function DiscoursePageLayout({
 
   return (
     <div className="min-h-screen w-full bg-[#f6f4f1]">
-      <section className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-5 pb-16 pt-6 md:px-10 lg:px-[100px]">
+      <section className="tablet:mx-[20px] mobile:mx-[10px] mx-auto flex w-full max-w-[1200px] flex-col gap-5 pb-16 pt-6 ">
         <nav className="flex flex-wrap items-center gap-3 text-sm">
           {backCrumb ? (
             <Link
