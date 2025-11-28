@@ -1,7 +1,9 @@
 'use client';
 
 import { CaretDown } from '@phosphor-icons/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
+
+import { Select, SelectItem } from '@/components/base';
 
 import { DiscourseTopicOption, discourseTopicOptions } from './topicOptions';
 
@@ -25,52 +27,33 @@ export function CategorySelector({
     [options, value],
   );
 
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (containerRef.current?.contains(event.target as Node)) return;
-      setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
   return (
-    <div className="flex w-full flex-col gap-2" ref={containerRef}>
+    <div className="flex w-full flex-col gap-2">
       <div>
         <p className="text-[16px] font-semibold text-black">{label}</p>
         <p className="text-sm text-black/60">{description}</p>
       </div>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex h-10 w-full items-center justify-between rounded-[8px] border border-[#d9d5cc] bg-[#f2f0ed] px-4 text-left text-[14px] text-black/80"
+      <Select
+        selectedKeys={currentOption ? [currentOption.value] : []}
+        onSelectionChange={(keys) => {
+          const key = Array.from(keys)[0];
+          const nextOption = options.find((option) => option.value === key);
+          if (nextOption) {
+            onChange?.(nextOption);
+          }
+        }}
+        aria-label="Select a discussion category"
+        className="w-full"
+        classNames={{
+          trigger:
+            'flex h-10 w-full items-center justify-between rounded-[8px] border border-[#d9d5cc] bg-[#f2f0ed] px-4 text-left text-[14px] text-black/80',
+        }}
+        selectorIcon={<CaretDown size={16} className="text-black/60" />}
       >
-        <span>{currentOption ? currentOption.label : 'Select'}</span>
-        <CaretDown
-          className={`transition ${open ? 'rotate-180' : ''}`}
-          size={16}
-        />
-      </button>
-      {open ? (
-        <div className="mt-2 max-h-[320px] w-full overflow-y-auto rounded-[10px] border border-[#e0dbcf] bg-white p-2 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange?.(option);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center justify-between rounded-[6px] px-2 py-1.5 text-left text-[15px] ${
-                option.value === currentOption?.value
-                  ? 'bg-[#f7f5f1] text-black'
-                  : 'text-black/80 hover:bg-[#f7f5f1]'
-              }`}
-            >
-              <span className="flex items-center gap-2 text-[15px]">
+        {options.map((option) => (
+          <SelectItem key={option.value} textValue={option.label}>
+            <div className="flex items-center justify-between gap-2 text-[15px] text-black">
+              <span className="flex items-center gap-2">
                 {option.icon}
                 {option.label}
               </span>
@@ -79,10 +62,10 @@ export function CategorySelector({
                   CP Requirement: {option.cpRequirement}
                 </span>
               ) : null}
-            </button>
-          ))}
-        </div>
-      ) : null}
+            </div>
+          </SelectItem>
+        ))}
+      </Select>
     </div>
   );
 }
