@@ -46,7 +46,7 @@ export function CategorySelector({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex h-10 w-full items-center justify-between rounded-[8px] border border-black/10 bg-black/5 px-3 text-left text-[14px] text-black/70"
+        className="flex h-10 w-full items-center justify-between rounded-[8px] border border-[#d9d5cc] bg-[#f2f0ed] px-4 text-left text-[14px] text-black/80"
       >
         <span>{currentOption ? currentOption.label : 'Select'}</span>
         <CaretDown
@@ -55,7 +55,7 @@ export function CategorySelector({
         />
       </button>
       {open ? (
-        <div className="mt-2 max-h-[320px] w-full overflow-y-auto rounded-[10px] border border-black/10 bg-white p-2 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
+        <div className="mt-2 max-h-[320px] w-full overflow-y-auto rounded-[10px] border border-[#e0dbcf] bg-white p-2 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
           {options.map((option) => (
             <button
               key={option.value}
@@ -66,8 +66,8 @@ export function CategorySelector({
               }}
               className={`flex w-full items-center justify-between rounded-[6px] px-2 py-1.5 text-left text-[15px] ${
                 option.value === currentOption?.value
-                  ? 'bg-black/[0.04] text-black'
-                  : 'text-black/80 hover:bg-black/[0.04]'
+                  ? 'bg-[#f7f5f1] text-black'
+                  : 'text-black/80 hover:bg-[#f7f5f1]'
               }`}
             >
               <span className="flex items-center gap-2 text-[15px]">

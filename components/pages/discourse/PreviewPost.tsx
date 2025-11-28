@@ -32,7 +32,7 @@ export function PreviewPostCard({
     discourseTopicOptions[0];
 
   return (
-    <article className="flex flex-col gap-4 rounded-[16px] border border-black/10 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
+    <article className="flex flex-col gap-4 rounded-[16px]  p-6">
       <div className="inline-flex w-fit items-center gap-2 rounded-[6px] border border-black/10 bg-black/[0.05] px-3 py-1 text-[12px] font-semibold text-black">
         {topic.icon}
         {categoryLabel}
