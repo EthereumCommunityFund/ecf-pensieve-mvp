@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeft } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
@@ -41,7 +41,7 @@ export function DiscoursePageLayout({
               href={backCrumb.href ?? '#'}
               className="inline-flex items-center gap-2 text-[14px] font-semibold text-black hover:text-black/80"
             >
-              <ArrowLeftIcon className="size-4" />
+              <ArrowLeft size={20} className="" />
               {backCrumb.label}
             </Link>
           ) : null}

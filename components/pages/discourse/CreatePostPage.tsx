@@ -1,6 +1,6 @@
 'use client';
 
-import { WarningCircle } from '@phosphor-icons/react';
+import { ArrowLeft, WarningCircle } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -61,7 +61,7 @@ export function CreatePostPage() {
 
   return (
     <div className="min-h-screen w-full">
-      <div className="mx-auto flex w-full max-w-[900px] flex-col gap-10 px-4 pb-16 pt-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 pb-16 pt-[10px]">
         {showPreview ? (
           <PreviewPost
             onBack={() => setShowPreview(false)}
@@ -93,13 +93,14 @@ export function CreatePostPage() {
             }
           />
         ) : (
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-[20px]">
             <div className="flex flex-wrap items-center gap-3 text-[14px] text-black/60">
               <Button
                 onPress={() => router.back()}
-                className="flex items-center gap-2 rounded-[6px] px-3 py-1 text-[14px] font-semibold text-black hover:bg-black/5"
+                className="flex items-center gap-2 rounded-[6px] border-none px-3 py-1 text-[14px] font-semibold text-black hover:bg-black/5"
               >
-                ← Back
+                <ArrowLeft size={20} />
+                <span>Back</span>
               </Button>
               <span>Project Name</span>
               <span>/</span>

@@ -1,15 +1,15 @@
 import {
-  ChatTeardrop,
-  CurrencyCircleDollar,
-  GlobeHemisphereWest,
-  Headphones,
-  Lightning,
-  MegaphoneSimple,
-  NotePencil,
+  ChartLine,
+  Code,
+  Dna,
+  GlobeSimple,
+  HandPointing,
+  Headset,
+  NewspaperClipping,
   Question,
   Scales,
-  ShieldWarning,
-  UsersThree,
+  UsersFour,
+  Warning,
 } from '@phosphor-icons/react';
 import { ReactNode } from 'react';
 
@@ -21,57 +21,65 @@ export type DiscourseTopicOption = {
 };
 
 export const discourseTopicOptions: DiscourseTopicOption[] = [
-  { value: 'general', label: 'General Issue', icon: <Question size={18} /> },
+  {
+    value: 'general',
+    label: 'General Issue',
+    icon: <Question size={20} weight="fill" className="opacity-50" />,
+  },
   {
     value: 'financial',
     label: 'Financial Loss / Token Issues',
-    icon: <CurrencyCircleDollar size={18} />,
+    icon: <ChartLine size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'scam',
     label: 'Scam & Fraud Concerns',
-    icon: <ShieldWarning size={18} />,
+    icon: <Warning size={20} weight="fill" className="opacity-50" />,
     cpRequirement: '0000 CP',
   },
   {
     value: 'governance',
     label: 'Governance & DAO',
-    icon: <NotePencil size={18} />,
+    icon: <Scales size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'technical',
     label: 'Technical Failures / Security',
-    icon: <Lightning size={18} />,
+    icon: <Code size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'support',
     label: 'Customer Support & Comms',
-    icon: <Headphones size={18} />,
+    icon: <Headset size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'marketing',
     label: 'Marketing & Transparency',
-    icon: <MegaphoneSimple size={18} />,
+    icon: <NewspaperClipping size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'ux',
     label: 'User Experience & Usability',
-    icon: <ChatTeardrop size={18} />,
+    icon: <HandPointing size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'regulatory',
     label: 'Regulatory & Compliance',
-    icon: <Scales size={18} />,
+    icon: <GlobeSimple size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'community',
     label: 'Community & Reputation',
-    icon: <UsersThree size={18} />,
+    icon: <UsersFour size={20} weight="fill" className="opacity-50" />,
   },
   {
     value: 'ethics',
     label: 'Ethical & Value Concerns',
-    icon: <GlobeHemisphereWest size={18} />,
+    icon: <Dna size={20} weight="fill" className="opacity-50" />,
   },
-  { value: 'misc', label: 'Misc', icon: <Question size={18} /> },
+  {
+    value: 'misc',
+    label: 'Misc',
+    icon: <Question size={20} weight="fill" className="opacity-50" />,
+  },
 ] as const;

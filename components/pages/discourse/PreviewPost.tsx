@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { ArrowLeft } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
@@ -111,15 +112,16 @@ export function PreviewPost({
   ...cardProps
 }: PreviewPostProps) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex w-full flex-col gap-[20px]">
       {(onBack || headerLabel || headerNote) && (
         <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
           {onBack ? (
             <Button
               onPress={onBack}
-              className="flex items-center gap-2 rounded-md px-2 py-1 font-semibold text-black transition hover:bg-black/5"
+              className="flex items-center gap-2 rounded-md border-none px-2 py-1 font-semibold text-black transition hover:bg-black/5"
             >
-              ← {backLabel}
+              <ArrowLeft size={20} />
+              <span>{backLabel}</span>
             </Button>
           ) : null}
           {headerLabel ? (

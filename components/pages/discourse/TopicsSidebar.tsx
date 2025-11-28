@@ -76,7 +76,7 @@ export function TopicsSidebar({
           </div>
           {hasSelectedTopics ? (
             <Button
-              className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/80"
+              className="inline-flex h-[20px] items-center gap-1.5 border-none bg-transparent p-0 text-[13px] text-black/50 hover:bg-transparent"
               onPress={() => onClear?.()}
             >
               Clear this filter
