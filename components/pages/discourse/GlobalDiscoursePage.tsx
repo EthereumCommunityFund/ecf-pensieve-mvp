@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
+
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadFilters } from './ThreadFilters';
 import { ThreadList, type ThreadMeta } from './ThreadList';
@@ -379,15 +381,15 @@ export default function GlobalDiscoursePage() {
       breadcrumbs={[{ label: 'Back', href: '/' }, { label: 'Discourse' }]}
       actions={
         <>
-          <button
+          <Button
             className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
-            onClick={() => router.push('/discourse/create')}
+            onPress={() => router.push('/discourse/create')}
           >
             Create a Thread
-          </button>
-          <button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
+          </Button>
+          <Button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
             Leaderboard
-          </button>
+          </Button>
         </>
       }
       sidebar={

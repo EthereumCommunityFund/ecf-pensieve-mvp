@@ -88,12 +88,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         { label: 'Scam Thread' },
       ]}
       actions={
-        <button
+        <Button
           className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
-          onClick={() => router.push('/discourse/create')}
+          onPress={() => router.push('/discourse/create')}
         >
           Create Alert
-        </button>
+        </Button>
       }
       sidebar={
         <div className="space-y-5">
@@ -125,7 +125,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           <div className="flex flex-col gap-4 border-b border-black/10 px-6 pb-4 pt-5 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-wrap gap-6 text-sm font-semibold text-black">
               {tabItems.map((tab) => (
-                <button
+                <Button
                   key={tab.key}
                   type="button"
                   className={`flex items-center gap-2 pb-1 transition ${
@@ -145,13 +145,13 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                   >
                     {tab.count}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
               <div className="inline-flex items-center rounded-[6px] border border-black/15">
                 {(['top', 'new'] as const).map((option) => (
-                  <button
+                  <Button
                     key={option}
                     type="button"
                     className={`rounded-[6px] px-4 py-1.5 text-sm font-semibold ${
@@ -162,7 +162,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     onClick={() => setSortOption(option)}
                   >
                     {option === 'top' ? 'Top' : 'New'}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <label className="flex items-center gap-2 text-sm font-semibold text-black">
@@ -284,12 +284,12 @@ function ScamThreadHeader({ thread }: ScamThreadHeaderProps) {
           target={thread.cpProgress.target}
         />
         <div className="flex flex-col gap-3">
-          <button className="min-w-[160px] flex-1 rounded-[8px] bg-black px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-black/85">
+          <Button className="min-w-[160px] flex-1 rounded-[8px] bg-black px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-black/85">
             Counter This Claim
-          </button>
-          <button className="min-w-[160px] flex-1 rounded-[8px] border border-black/20 px-5 py-3 text-sm font-semibold text-black">
+          </Button>
+          <Button className="min-w-[160px] flex-1 rounded-[8px] border border-black/20 px-5 py-3 text-sm font-semibold text-black">
             Post Comment
-          </button>
+          </Button>
         </div>
       </div>
     </article>
@@ -389,9 +389,9 @@ function CounterClaimCard({ claim }: CounterClaimCardProps) {
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between text-sm font-semibold text-black/60">
         <span>Comments {claim.commentsCount}</span>
-        <button className="rounded-[6px] border border-black/20 px-4 py-1.5 text-sm font-semibold text-black">
+        <Button className="rounded-[6px] border border-black/20 px-4 py-1.5 text-sm font-semibold text-black">
           Post Comment
-        </button>
+        </Button>
       </div>
     </article>
   );
@@ -422,12 +422,12 @@ function DiscussionCommentCard({ comment }: DiscussionCommentCardProps) {
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button className="rounded-[6px] border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
+        <Button className="rounded-[6px] border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
           Reply
-        </button>
-        <button className="rounded-[6px] border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
+        </Button>
+        <Button className="rounded-[6px] border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
           React
-        </button>
+        </Button>
       </div>
     </article>
   );

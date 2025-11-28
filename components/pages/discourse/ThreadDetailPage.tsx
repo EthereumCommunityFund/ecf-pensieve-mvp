@@ -12,6 +12,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
+
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { SentimentIndicator } from './SentimentIndicator';
 import {
@@ -80,15 +82,15 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       ]}
       actions={
         <>
-          <button
+          <Button
             className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
-            onClick={() => router.push('/discourse/create')}
+            onPress={() => router.push('/discourse/create')}
           >
             Create a Thread
-          </button>
-          <button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
+          </Button>
+          <Button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
             Leaderboard
-          </button>
+          </Button>
         </>
       }
       sidebar={
@@ -197,16 +199,16 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
         <article className="rounded-[16px] border border-[#ebe4dc] bg-white p-6 shadow-[0px_12px_30px_rgba(15,23,42,0.04)]">
           <div className="flex flex-wrap items-center gap-3">
-            <button className="h-11 rounded-full bg-black px-6 text-[14px] font-semibold text-white transition hover:bg-black/85">
+            <Button className="h-11 rounded-full bg-black px-6 text-[14px] font-semibold text-white transition hover:bg-black/85">
               {thread.isScam ? 'Support This Claim' : 'Answer This Question'}
-            </button>
-            <button className="h-11 rounded-full border border-black/15 px-5 text-[14px] font-semibold text-black transition hover:bg-black/5">
+            </Button>
+            <Button className="h-11 rounded-full border border-black/15 px-5 text-[14px] font-semibold text-black transition hover:bg-black/5">
               {thread.isScam ? 'Counter This Claim' : 'Post Comment'}
-            </button>
-            <button className="inline-flex h-11 items-center gap-2 rounded-full border border-black/15 px-5 text-[13px] font-semibold text-black/70 hover:bg-black/5">
+            </Button>
+            <Button className="inline-flex h-11 items-center gap-2 rounded-full border border-black/15 px-5 text-[13px] font-semibold text-black/70 hover:bg-black/5">
               <ArrowSquareOut size={18} />
               Share thread
-            </button>
+            </Button>
           </div>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div>
@@ -254,7 +256,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           <div className="flex flex-col gap-4 border-b border-black/10 pb-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-wrap gap-3">
               {tabOptions.map((tab) => (
-                <button
+                <Button
                   key={tab.key}
                   type="button"
                   className={`rounded-full px-5 py-2 text-sm font-semibold ${
@@ -272,13 +274,13 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                       {thread.counterClaims?.length ?? 0}
                     </span>
                   ) : null}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
               <div className="flex gap-2">
                 {(['top', 'new'] as const).map((option) => (
-                  <button
+                  <Button
                     key={option}
                     type="button"
                     className={`rounded-full border px-4 py-1.5 ${
@@ -289,7 +291,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                     onClick={() => setSortOption(option)}
                   >
                     {option === 'top' ? 'Top' : 'New'}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <label className="text-xs uppercase tracking-[0.2em] text-black/40">
@@ -493,7 +495,7 @@ export function QuickActionsCard({ actions }: QuickActionsCardProps) {
       <p className="text-sm font-semibold text-black/70">Quick actions</p>
       <div className="mt-4 space-y-3">
         {actions.map((action) => (
-          <button
+          <Button
             key={action.label}
             className="flex w-full items-center gap-3 rounded-[12px] border border-black/10 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:bg-black/5"
           >
@@ -503,7 +505,7 @@ export function QuickActionsCard({ actions }: QuickActionsCardProps) {
               <p className="text-xs text-black/60">{action.helper}</p>
             </div>
             <ArrowSquareOut size={16} className="text-black/40" />
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -594,16 +596,19 @@ export function AnswerCard({ answer, isScam }: AnswerCardProps) {
           {sentimentDefinition.label}
           <span className="text-black/60">({answer.sentimentVotes} votes)</span>
         </span>
-        <button className="text-sm font-semibold text-black hover:underline">
+        <Button
+          className="bg-transparent p-0 text-sm font-semibold text-black hover:underline"
+          variant="light"
+        >
           View {answer.commentsCount} comments
-        </button>
+        </Button>
         <div className="ml-auto flex flex-wrap gap-2">
-          <button className="rounded-full border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
+          <Button className="rounded-full border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
             Upvote CP
-          </button>
-          <button className="rounded-full border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
+          </Button>
+          <Button className="rounded-full border border-black/15 px-4 py-1.5 text-sm font-semibold text-black">
             Add Comment
-          </button>
+          </Button>
         </div>
       </div>
     </article>
@@ -650,12 +655,12 @@ export function CommentCard({ comment }: CommentCardProps) {
         {comment.body}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-black/60">
-        <button className="rounded-full border border-black/15 px-4 py-1.5 font-semibold text-black">
+        <Button className="rounded-full border border-black/15 px-4 py-1.5 font-semibold text-black">
           React
-        </button>
-        <button className="rounded-full border border-black/15 px-4 py-1.5 font-semibold text-black">
+        </Button>
+        <Button className="rounded-full border border-black/15 px-4 py-1.5 font-semibold text-black">
           Reply
-        </button>
+        </Button>
       </div>
     </article>
   );

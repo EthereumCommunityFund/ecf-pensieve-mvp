@@ -2,6 +2,8 @@
 
 import { MouseEvent, useMemo } from 'react';
 
+import { Button } from '@/components/base';
+
 import {
   sentimentDefinitions,
   SentimentKey,
@@ -60,7 +62,7 @@ export function SentimentIndicator({
   };
 
   return (
-    <button
+    <Button
       type="button"
       onClick={handleClick}
       aria-label="View sentiment breakdown"
@@ -80,6 +82,6 @@ export function SentimentIndicator({
           />
         ))}
       </div>
-    </button>
+    </Button>
   );
 }

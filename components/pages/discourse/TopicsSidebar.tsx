@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import { Button } from '@/components/base';
 import { CircleXIcon, FunnelSimpleIcon, SearchIcon } from '@/components/icons';
 import { CustomCheckbox } from '@/components/pages/project/filterAndSort/CustomCheckbox';
 
@@ -49,12 +50,12 @@ export function TopicsSidebar({
         />
       </div>
 
-      <button
-        onClick={() => onCreateThread?.()}
+      <Button
+        onPress={() => onCreateThread?.()}
         className="h-10 w-full rounded-[5px] bg-black text-[13px] font-semibold text-white transition hover:bg-black/90"
       >
         Create a Thread
-      </button>
+      </Button>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between border-b border-black/10 pb-2">
@@ -74,13 +75,13 @@ export function TopicsSidebar({
             ) : null}
           </div>
           {hasSelectedTopics ? (
-            <button
+            <Button
               className="inline-flex items-center gap-1.5 text-[13px] text-black/50 hover:text-black/80"
-              onClick={() => onClear?.()}
+              onPress={() => onClear?.()}
             >
               Clear this filter
               <CircleXIcon width={18} height={18} className="text-black" />
-            </button>
+            </Button>
           ) : null}
         </div>
 
@@ -92,17 +93,17 @@ export function TopicsSidebar({
             {topics.map((topic) => {
               const isSelected = selectedTopics.includes(topic.value);
               return (
-                <button
+                <Button
                   key={topic.value}
-                  onClick={() => onTopicToggle?.(topic.value, !isSelected)}
-                  className="flex h-[34px] w-full items-center justify-between rounded-[5px] px-2 text-left hover:bg-[#EBEBEB]/60"
+                  onPress={() => onTopicToggle?.(topic.value, !isSelected)}
+                  className="flex h-[34px] w-full items-center justify-between rounded-[5px] border-none px-2 text-left hover:bg-[#EBEBEB]/60"
                 >
                   <span className="flex items-center gap-3 text-[14px] text-black/70">
                     {topic.icon ?? null}
                     {topic.label}
                   </span>
                   <CustomCheckbox checked={isSelected} size={20} />
-                </button>
+                </Button>
               );
             })}
           </div>

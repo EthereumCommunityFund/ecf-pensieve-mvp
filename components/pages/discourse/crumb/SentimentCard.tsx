@@ -2,6 +2,8 @@
 
 import { ChartBar } from '@phosphor-icons/react';
 
+import { Button } from '@/components/base';
+
 import type { IconComponent } from './MetricPill';
 
 export type SentimentStat = {
@@ -48,12 +50,12 @@ export function SentimentCard({ stats }: SentimentCardProps) {
           </div>
         ))}
       </div>
-      <button
+      <Button
         className="ml-auto mt-4 block text-right text-[13px] font-medium text-black/50"
         type="button"
       >
         What is User Sentiment?
-      </button>
+      </Button>
     </div>
   );
 }

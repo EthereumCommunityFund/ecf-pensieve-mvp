@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@/components/base';
+
 export type ParticipationStep = {
   title: string;
   description: string;
@@ -27,13 +29,13 @@ export function ParticipationCard({ steps }: ParticipationCardProps) {
             </div>
             <div className="space-y-2">
               {step.actions.map((action) => (
-                <button
+                <Button
                   key={action}
                   type="button"
-                  className="w-full rounded-[5px] border border-black/10 px-2.5 py-1.5 text-[13px] font-medium text-[#222] transition-colors hover:bg-black/5"
+                  className="w-full rounded-[5px] border border-black/10 px-2.5 py-1.5 text-[13px] font-medium text-[#222] shadow-none hover:bg-black/5"
                 >
                   {action}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

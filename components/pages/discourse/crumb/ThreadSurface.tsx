@@ -10,6 +10,8 @@ import {
 } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/base';
+
 import { MetricPill } from './MetricPill';
 import type { SentimentStat } from './SentimentCard';
 import { TagPill } from './TagPill';
@@ -138,7 +140,7 @@ export function ThreadSurface({
     <div className="rounded-2xl border border-[#e7e4df] bg-white">
       <div className="flex flex-wrap items-center justify-between border-b border-[#e7e4df] px-6 py-4">
         <div className="flex flex-wrap items-center gap-6 text-sm font-semibold">
-          <button
+          <Button
             type="button"
             aria-pressed={activeTab === 'answers'}
             className={tabButtonClasses('answers')}
@@ -148,8 +150,8 @@ export function ThreadSurface({
             <span className="rounded-md bg-black/10 px-1 text-xs font-bold text-black/60">
               2
             </span>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             aria-pressed={activeTab === 'discuss'}
             className={tabButtonClasses('discuss')}
@@ -159,12 +161,12 @@ export function ThreadSurface({
             <span className="rounded-md bg-black/5 px-1 text-xs font-bold text-black/40">
               5
             </span>
-          </button>
+          </Button>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <div className="flex items-center gap-1 rounded-md border border-black/10 bg-[#ebebeb] p-1">
             {(['top', 'new'] as const).map((option) => (
-              <button
+              <Button
                 key={option}
                 type="button"
                 aria-pressed={sortOption === option}
@@ -176,11 +178,11 @@ export function ThreadSurface({
                 onClick={() => setSortOption(option)}
               >
                 {option === 'top' ? 'Top' : 'New'}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="relative" ref={sentimentSelectRef}>
-            <button
+            <Button
               type="button"
               aria-haspopup="listbox"
               aria-expanded={isSentimentOpen}
@@ -190,12 +192,12 @@ export function ThreadSurface({
               <ChartBar className="size-4 text-black/60" weight="bold" />
               <span>{sentimentButtonLabel}</span>
               <CaretDown className="size-4 text-black/40" weight="bold" />
-            </button>
+            </Button>
             {isSentimentOpen ? (
               <div className="absolute right-0 z-10 mt-2 w-56 overflow-hidden rounded-xl border border-black/10 bg-white shadow-xl">
                 <div role="listbox" aria-label="Sentiment filter options">
                   {SENTIMENT_OPTIONS.map((option) => (
-                    <button
+                    <Button
                       key={option.value}
                       type="button"
                       role="option"
@@ -214,7 +216,7 @@ export function ThreadSurface({
                       <span className="text-xs text-black/50">
                         {option.description}
                       </span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -240,9 +242,9 @@ export function ThreadSurface({
                   {String(discussionComments.length).padStart(2, '0')}
                 </span>
               </div>
-              <button className="rounded-md border border-black/10 bg-neutral-50 px-4 py-1 text-sm font-semibold text-black">
+              <Button className="rounded-md border border-black/10 bg-neutral-50 px-4 py-1 text-sm font-semibold text-black">
                 Post Comment
-              </button>
+              </Button>
             </div>
             <div className="space-y-4">
               {discussionComments.map((comment, index) => (
@@ -348,9 +350,9 @@ function AnswerCard({
             </div>
             <div className="flex flex-wrap gap-3">
               <MetricPill icon={ChartBar} label="Q Points" value="4" />
-              <button className="rounded-md border border-black/20 px-3 py-1 text-xs font-semibold text-black/80">
+              <Button className="rounded-md border border-black/20 px-3 py-1 text-xs font-semibold text-black/80">
                 Reply
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -369,9 +371,9 @@ function CommentThread() {
             00
           </span>
         </div>
-        <button className="rounded-md border border-black/10 bg-neutral-50 px-4 py-1 text-sm font-semibold text-black">
+        <Button className="rounded-md border border-black/10 bg-neutral-50 px-4 py-1 text-sm font-semibold text-black">
           Post Comment
-        </button>
+        </Button>
       </div>
       <div className="flex gap-4">
         <div className="flex size-10 items-center justify-center rounded-full bg-black/5 text-sm font-semibold text-black">
@@ -400,9 +402,9 @@ function CommentThread() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <MetricPill icon={ChartBar} label="Q Points" value="4" />
-            <button className="rounded-md border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold text-black">
+            <Button className="rounded-md border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold text-black">
               Reply
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -495,10 +497,10 @@ function DiscussionCommentCard({
             <ChartBar className="size-4 text-black/60" weight="bold" />
             {comment.score}
           </div>
-          <button className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold text-black">
+          <Button className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-black/5 px-3 py-1 text-xs font-semibold text-black">
             Reply
             <ArrowBendUpLeft className="size-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -4,6 +4,8 @@ import { Avatar } from '@heroui/react';
 import { Question } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 
+import { Button } from '@/components/base';
+
 import { MetricPill, type IconComponent } from './MetricPill';
 
 export type HeroMetric = {
@@ -102,18 +104,12 @@ export function DiscourseCrumbHero({
           ))}
         </div>
         <div className="grid gap-3 border-t border-black/10 pt-4 sm:grid-cols-2">
-          <button
-            type="button"
-            className="h-11 rounded-md bg-[#202223] text-sm font-semibold text-white transition hover:bg-[#202223]/85"
-          >
+          <Button className="h-11 rounded-md bg-[#202223] text-sm font-semibold text-white transition hover:bg-[#202223]/85">
             {primaryActionLabel}
-          </button>
-          <button
-            type="button"
-            className="h-11 rounded-md border border-black/20 text-sm font-semibold text-black transition hover:bg-black/5"
-          >
+          </Button>
+          <Button className="h-11 rounded-md border border-black/20 text-sm font-semibold text-black transition hover:bg-black/5">
             {secondaryActionLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

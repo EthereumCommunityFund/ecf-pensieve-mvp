@@ -10,6 +10,8 @@ import {
 } from '@phosphor-icons/react';
 import { KeyboardEvent, useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
+
 import { SentimentIndicator } from './SentimentIndicator';
 import { SentimentModal } from './SentimentModal';
 import { SentimentMetric } from './sentimentConfig';
@@ -152,17 +154,18 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
 
           <div className="flex items-center gap-6 sm:ml-auto">
             <div className="flex flex-col items-center gap-1 text-sm text-black">
-              <button
+              <Button
+                isIconOnly
                 type="button"
                 aria-label="Upvote"
-                className="transition-transform hover:scale-105 hover:opacity-80"
+                className="min-w-0 border-none bg-transparent p-0 transition-transform hover:scale-105 hover:opacity-80"
               >
                 <CaretCircleUp
                   size={36}
                   weight="fill"
                   className={cn(hasAnswers ? 'opacity-100' : 'opacity-30')}
                 />
-              </button>
+              </Button>
               <span className="text-[13px] font-semibold">{thread.votes}</span>
             </div>
           </div>

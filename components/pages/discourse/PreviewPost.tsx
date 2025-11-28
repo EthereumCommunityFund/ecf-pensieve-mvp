@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 
+import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
 import { discourseTopicOptions } from './topicOptions';
@@ -76,18 +77,18 @@ export function PreviewPostCard({
         </div>
       </div>
       <div className="flex flex-col gap-3">
-        <button
+        <Button
           className="w-full rounded-[6px] bg-black/80 px-4 py-3 text-sm font-semibold text-white"
-          disabled
+          isDisabled
         >
           Answer This Question
-        </button>
-        <button
+        </Button>
+        <Button
           className="w-full rounded-[6px] border border-black/10 px-4 py-3 text-sm font-semibold text-black/70"
-          disabled
+          isDisabled
         >
           Leave a Comment
-        </button>
+        </Button>
       </div>
     </article>
   );
@@ -114,12 +115,12 @@ export function PreviewPost({
       {(onBack || headerLabel || headerNote) && (
         <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
           {onBack ? (
-            <button
-              onClick={onBack}
+            <Button
+              onPress={onBack}
               className="flex items-center gap-2 rounded-md px-2 py-1 font-semibold text-black transition hover:bg-black/5"
             >
               ← {backLabel}
-            </button>
+            </Button>
           ) : null}
           {headerLabel ? (
             <span className="font-semibold text-black">{headerLabel}</span>

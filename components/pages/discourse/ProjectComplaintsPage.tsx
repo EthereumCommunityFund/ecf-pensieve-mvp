@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
+
 import { useProjectDetailContext } from '../project/context/projectDetailContext';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
@@ -394,21 +396,21 @@ export default function ProjectComplaintsPage({
       }
       actions={
         <>
-          <button
+          <Button
             className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
-            onClick={() => router.push('/discourse/create')}
+            onPress={() => router.push('/discourse/create')}
           >
             Create a Thread
-          </button>
-          <button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
+          </Button>
+          <Button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
             Leaderboard
-          </button>
-          <button className="h-10 rounded-[5px] border border-[#c46a1d] bg-[#fff6ee] px-5 text-[13px] font-semibold text-[#c46a1d]">
+          </Button>
+          <Button className="h-10 rounded-[5px] border border-[#c46a1d] bg-[#fff6ee] px-5 text-[13px] font-semibold text-[#c46a1d]">
             View Scam Alerts
             <span className="ml-2 rounded-full bg-white/80 px-2 py-0.5 text-xs font-bold">
               {scamAlertCount}
             </span>
-          </button>
+          </Button>
         </>
       }
       sidebar={
@@ -433,12 +435,12 @@ export default function ProjectComplaintsPage({
         selectedSentiment={activeSentiment}
         onSentimentChange={(value) => setActiveSentiment(value)}
         secondaryAction={
-          <button
+          <Button
             className="inline-flex h-9 items-center rounded-[6px] bg-black px-4 text-[13px] font-semibold text-white hover:bg-black/80"
-            onClick={() => router.push('/discourse/create')}
+            onPress={() => router.push('/discourse/create')}
           >
             Create a Thread
-          </button>
+          </Button>
         }
       />
       <ThreadList

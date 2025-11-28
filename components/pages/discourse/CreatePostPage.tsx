@@ -4,6 +4,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
 import { CategorySelector } from './CategorySelector';
@@ -73,32 +74,32 @@ export function CreatePostPage() {
           categoryLabel={selectedCategory?.label || 'General Issue'}
           actions={
             <>
-              <button
-                onClick={() => setShowPreview(false)}
+              <Button
+                onPress={() => setShowPreview(false)}
                 className="rounded-[6px] border border-black/20 px-5 py-2 text-sm font-semibold text-black"
               >
                 Back to Edit
-              </button>
-              <button
-                disabled={isPublishDisabled}
+              </Button>
+              <Button
+                isDisabled={isPublishDisabled}
                 className={`rounded-[6px] px-6 py-2 text-sm font-semibold text-white ${
                   isPublishDisabled ? 'bg-black/30' : 'bg-black'
                 }`}
               >
                 Publish Post
-              </button>
+              </Button>
             </>
           }
         />
       ) : (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-10">
           <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
-            <button
-              onClick={() => router.back()}
+            <Button
+              onPress={() => router.back()}
               className="flex items-center gap-2 rounded-md px-2 py-1 font-semibold text-black transition hover:bg-black/5"
             >
               ← Back
-            </button>
+            </Button>
             <span>Project Name</span>
             <span>/</span>
             <span>Discussions</span>
@@ -154,8 +155,8 @@ export function CreatePostPage() {
                 <WarningCircle size={20} />
                 <span className="font-semibold">Post as Scam Alert?</span>
               </div>
-              <button
-                onClick={() => setIsScam((prev) => !prev)}
+              <Button
+                onPress={() => setIsScam((prev) => !prev)}
                 className={`flex h-6 w-12 items-center rounded-full border border-black/10 px-1 transition ${
                   isScam ? 'bg-black' : 'bg-black/10'
                 }`}
@@ -165,7 +166,7 @@ export function CreatePostPage() {
                     isScam ? 'translate-x-6' : 'translate-x-0'
                   }`}
                 />
-              </button>
+              </Button>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -188,12 +189,12 @@ export function CreatePostPage() {
                   placeholder="Create a tag"
                   className="h-10 flex-1 rounded-[8px] border border-black/10 bg-black/5 px-3 text-[14px] text-black/70 focus:border-black/30 focus:outline-none"
                 />
-                <button
-                  onClick={handleAddTag}
+                <Button
+                  onPress={handleAddTag}
                   className="rounded-[8px] border border-black/20 px-3 text-sm font-semibold text-black/70"
                 >
                   Add
-                </button>
+                </Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
@@ -202,37 +203,37 @@ export function CreatePostPage() {
                     className="inline-flex items-center gap-2 rounded-[999px] bg-black/10 px-3 py-1 text-sm text-black"
                   >
                     {tag}
-                    <button
-                      onClick={() =>
+                    <Button
+                      onPress={() =>
                         setTags((prev) => prev.filter((item) => item !== tag))
                       }
                       className="text-black/50"
                     >
                       ×
-                    </button>
+                    </Button>
                   </span>
                 ))}
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setShowPreview(true)}
+              <Button
+                onPress={() => setShowPreview(true)}
                 className="rounded-[6px] border border-black/20 px-5 py-2 text-sm font-semibold text-black"
               >
                 Preview Post
-              </button>
-              <button className="rounded-[6px] border border-black/20 px-5 py-2 text-sm font-semibold text-black">
+              </Button>
+              <Button className="rounded-[6px] border border-black/20 px-5 py-2 text-sm font-semibold text-black">
                 Discard Draft
-              </button>
-              <button
-                disabled={isPublishDisabled}
+              </Button>
+              <Button
+                isDisabled={isPublishDisabled}
                 className={`rounded-[6px] px-6 py-2 text-sm font-semibold text-white ${
                   isPublishDisabled ? 'bg-black/30' : 'bg-black'
                 }`}
               >
                 Publish Post
-              </button>
+              </Button>
             </div>
           </div>
         </div>

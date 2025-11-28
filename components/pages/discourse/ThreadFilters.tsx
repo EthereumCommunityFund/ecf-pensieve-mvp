@@ -3,6 +3,8 @@
 import { CaretDown } from '@phosphor-icons/react';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/base';
+
 import {
   defaultSentimentDisplay,
   SentimentDefinition,
@@ -91,7 +93,7 @@ export function ThreadFilters({
             const normalizedTab = tab.toLowerCase();
             const isActive = normalizedTab === activeStatus?.toLowerCase();
             return (
-              <button
+              <Button
                 key={tab}
                 onClick={() => onStatusChange?.(tab)}
                 className={`relative pb-2 text-[15px] font-semibold tracking-tight transition ${
@@ -104,7 +106,7 @@ export function ThreadFilters({
                     isActive ? 'bg-black' : 'bg-transparent'
                   }`}
                 />
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -114,7 +116,7 @@ export function ThreadFilters({
             {sortOptions.map((option) => {
               const isActive = option === activeSort;
               return (
-                <button
+                <Button
                   key={option}
                   onClick={() => onSortChange?.(option)}
                   className={`min-w-[60px] rounded-[4px] px-3 py-1 text-sm font-semibold capitalize transition ${
@@ -124,7 +126,7 @@ export function ThreadFilters({
                   }`}
                 >
                   {tabLabel(option)}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -132,7 +134,7 @@ export function ThreadFilters({
           {secondaryAction}
 
           <div ref={sentimentRef} className="relative">
-            <button
+            <Button
               type="button"
               onClick={() => setSentimentOpen((prev) => !prev)}
               className="inline-flex h-9 items-center gap-2 rounded-[6px] border bg-white px-3 text-sm font-semibold"
@@ -155,14 +157,14 @@ export function ThreadFilters({
                 style={{ color: sentimentDisplay.color }}
                 className={`transition ${sentimentOpen ? 'rotate-180' : ''}`}
               />
-            </button>
+            </Button>
             {sentimentOpen ? (
               <div className="absolute right-0 top-[calc(100%+6px)] z-10 w-[200px] rounded-[8px] border border-[#d7d3cc] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.12)]">
                 <div className="flex flex-col p-1">
                   {dropdownOptions.map(({ value, display }) => {
                     const isActiveChoice = value === normalizedSentiment;
                     return (
-                      <button
+                      <Button
                         key={value}
                         onClick={() => {
                           onSentimentChange?.(value);
@@ -184,7 +186,7 @@ export function ThreadFilters({
                         <span style={{ color: display.color }}>
                           {display.label}
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>

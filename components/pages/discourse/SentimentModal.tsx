@@ -3,6 +3,8 @@
 import { X } from '@phosphor-icons/react';
 import { createPortal } from 'react-dom';
 
+import { Button } from '@/components/base';
+
 import {
   defaultSentimentDisplay,
   sentimentDefinitions,
@@ -64,13 +66,14 @@ export function SentimentModal({
               </p>
             ) : null}
           </div>
-          <button
+          <Button
+            isIconOnly
             onClick={onClose}
             aria-label="Close sentiment modal"
-            className="rounded-full p-1 text-black/60 hover:bg-black/5"
+            className="rounded-full border-none bg-transparent p-1 text-black/60 hover:bg-black/5"
           >
             <X size={20} />
-          </button>
+          </Button>
         </header>
 
         <div className="space-y-4">
