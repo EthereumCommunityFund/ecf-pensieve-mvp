@@ -132,7 +132,7 @@ const BugBountyCard = ({
         </div>
 
         <p className="font-mona text-[10px] font-[500] leading-normal tracking-[0.14em] text-black/35">
-          Weekly 5 Awards-{' '}
+          Weekly 6 Awards-{' '}
           <span className="font-bold">Top Transparent Projects</span>: $400
           <br />
           <span className="font-bold">Top Accountable Projects</span>: $400
