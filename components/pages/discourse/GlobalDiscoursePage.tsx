@@ -382,12 +382,12 @@ export default function GlobalDiscoursePage() {
       actions={
         <>
           <Button
-            className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
+            className="h-10 bg-black px-[10px] text-white hover:bg-black/80"
             onPress={() => router.push('/discourse/create')}
           >
             Create a Thread
           </Button>
-          <Button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
+          <Button className="h-10 border border-[#222] bg-white px-[10px] font-semibold text-black hover:bg-black/20">
             Leaderboard
           </Button>
         </>

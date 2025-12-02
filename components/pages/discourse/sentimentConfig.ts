@@ -7,6 +7,8 @@ import {
   ThumbsUp,
 } from '@phosphor-icons/react';
 
+export const DEFAULT_SENTIMENT_VALUE = 'all';
+
 export type SentimentKey =
   | 'recommend'
   | 'agree'

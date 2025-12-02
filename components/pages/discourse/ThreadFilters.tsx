@@ -1,19 +1,10 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { CaretDown } from '@phosphor-icons/react';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode } from 'react';
 
-import { Button } from '@/components/base';
-
-import {
-  defaultSentimentDisplay,
-  SentimentDefinition,
-  sentimentDefinitions,
-  SentimentKey,
-} from './sentimentConfig';
-
-const DEFAULT_SENTIMENT_VALUE = 'all';
+import { DEFAULT_SENTIMENT_VALUE } from './sentimentConfig';
+import { SentimentSelector } from './SentimentSelector';
 
 type ThreadFiltersProps = {
   statusTabs: string[];
@@ -43,51 +34,8 @@ export function ThreadFilters({
   const tabLabel = (label: string) =>
     label.charAt(0).toUpperCase() + label.slice(1);
 
-  const normalizedSentiment = selectedSentiment || DEFAULT_SENTIMENT_VALUE;
-  const sentimentKey = normalizedSentiment as SentimentKey;
-  const activeSentiment =
-    normalizedSentiment !== DEFAULT_SENTIMENT_VALUE
-      ? sentimentDefinitions[sentimentKey]
-      : undefined;
-
-  const getSentimentDisplay = (value: string): SentimentDefinition =>
-    sentimentDefinitions[value as SentimentKey] || defaultSentimentDisplay;
-
-  const sentimentDisplay: SentimentDefinition =
-    activeSentiment || defaultSentimentDisplay;
-
-  const [sentimentOpen, setSentimentOpen] = useState(false);
-  const sentimentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        sentimentRef.current &&
-        !sentimentRef.current.contains(event.target as Node)
-      ) {
-        setSentimentOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const dropdownOptions: { value: string; display: SentimentDefinition }[] = [
-    {
-      value: DEFAULT_SENTIMENT_VALUE,
-      display: { ...defaultSentimentDisplay, label: 'All Sentiments' },
-    },
-    ...sentimentOptions.map((option) => ({
-      value: option,
-      display: getSentimentDisplay(option),
-    })),
-  ];
-
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-black/10 py-2">
+    <div className="flex flex-wrap items-center gap-3 border-b border-black/10">
       <div className="flex min-h-[40px] min-w-0 flex-1 flex-wrap items-center gap-2">
         {statusTabs.map((tab) => {
           const normalizedTab = tab.toLowerCase();
@@ -138,64 +86,12 @@ export function ThreadFilters({
 
         {secondaryAction}
 
-        <div ref={sentimentRef} className="relative">
-          <Button
-            type="button"
-            onClick={() => setSentimentOpen((prev) => !prev)}
-            className="inline-flex h-9 items-center gap-2 rounded-[6px] border bg-white px-3 text-sm font-semibold"
-            style={{
-              borderColor: activeSentiment
-                ? sentimentDisplay.color
-                : 'rgba(0,0,0,0.12)',
-            }}
-          >
-            <sentimentDisplay.Icon
-              size={18}
-              weight={activeSentiment ? 'fill' : 'regular'}
-              style={{ color: sentimentDisplay.color }}
-            />
-            <span style={{ color: sentimentDisplay.color }}>
-              {sentimentDisplay.label}
-            </span>
-            <CaretDown
-              size={16}
-              style={{ color: sentimentDisplay.color }}
-              className={`transition ${sentimentOpen ? 'rotate-180' : ''}`}
-            />
-          </Button>
-          {sentimentOpen ? (
-            <div className="absolute right-0 top-[calc(100%+6px)] z-10 w-[200px] rounded-[8px] border border-[#d7d3cc] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.12)]">
-              <div className="flex flex-col p-1">
-                {dropdownOptions.map(({ value, display }) => {
-                  const isActiveChoice = value === normalizedSentiment;
-                  return (
-                    <Button
-                      key={value}
-                      onClick={() => {
-                        onSentimentChange?.(value);
-                        setSentimentOpen(false);
-                      }}
-                      className={`flex w-full items-center gap-3 rounded-[6px] px-3 py-2 text-left text-sm font-semibold ${
-                        isActiveChoice ? 'bg-black/5' : 'hover:bg-black/5'
-                      }`}
-                    >
-                      <display.Icon
-                        size={18}
-                        weight={
-                          value === DEFAULT_SENTIMENT_VALUE ? 'regular' : 'fill'
-                        }
-                        style={{ color: display.color }}
-                      />
-                      <span style={{ color: display.color }}>
-                        {display.label}
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <SentimentSelector
+          options={sentimentOptions}
+          value={selectedSentiment}
+          onChange={onSentimentChange}
+          defaultValue={DEFAULT_SENTIMENT_VALUE}
+        />
       </div>
     </div>
   );
