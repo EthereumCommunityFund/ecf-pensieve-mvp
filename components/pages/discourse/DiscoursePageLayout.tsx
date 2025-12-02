@@ -1,8 +1,9 @@
 'use client';
 
-import { ArrowLeft } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { ReactNode } from 'react';
+
+import BackHeader from '../project/BackHeader';
 
 type Breadcrumb = {
   label: string;
@@ -36,17 +37,9 @@ export function DiscoursePageLayout({
     <div className="min-h-screen w-full bg-[#f6f4f1]">
       <section className="tablet:mx-[20px] mobile:mx-[10px] mx-auto flex w-full max-w-[1200px] flex-col gap-5 pb-16 pt-6 ">
         <nav className="flex flex-wrap items-center gap-3 text-sm">
-          {backCrumb ? (
-            <Link
-              href={backCrumb.href ?? '#'}
-              className="inline-flex items-center gap-2 text-[14px] font-semibold text-black hover:text-black/80"
-            >
-              <ArrowLeft size={20} className="" />
-              {backCrumb.label}
-            </Link>
-          ) : null}
+          <BackHeader className="px-0" />
           {crumbTrail.length ? (
-            <div className="flex flex-wrap items-center gap-1 text-black/55">
+            <div className="flex flex-wrap items-center gap-1 text-[14px] text-black/60">
               {crumbTrail.map((crumb, index) => (
                 <span key={crumb.label} className="flex items-center gap-1">
                   {crumb.href ? (
