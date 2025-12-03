@@ -775,7 +775,7 @@ function createVacantSlotViewModel(
     taxCostValue: formatEth(taxRequired),
     coverageDuration: coverageLabel,
     totalCostValue: formatEth(totalCost),
-    valuationDefault: formatNumberInputFromWei(slot.minValuationWei),
+    valuationDefault: formatNumberInputFromWei(slot.minValuationWei, 4),
     valuationMinimum: formatEth(slot.minValuationWei),
     coverageDescription: `${slotTypeLabel} claims prepay one tax period (${coverageLabel}). Amounts above assume the minimum valuation.`,
     bondRateBps: slot.bondRateBps,
