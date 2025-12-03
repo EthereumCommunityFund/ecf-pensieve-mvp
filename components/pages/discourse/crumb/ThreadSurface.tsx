@@ -12,13 +12,20 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/base';
 
+import {
+  defaultSentimentDisplay,
+  fallbackSentiments,
+  sentimentDefinitions,
+  SentimentKey,
+  SentimentMetric,
+} from '../sentimentConfig';
+
 import { MetricPill } from './MetricPill';
-import type { SentimentStat } from './SentimentCard';
 import { TagPill } from './TagPill';
 
 type ThreadSurfaceProps = {
   answerHighlights: string[];
-  sentimentStats: SentimentStat[];
+  sentimentStats: SentimentMetric[];
 };
 
 type SentimentOption = {
@@ -267,8 +274,13 @@ function AnswerCard({
   sentimentStats,
 }: {
   answerHighlights: string[];
-  sentimentStats: SentimentStat[];
+  sentimentStats: SentimentMetric[];
 }) {
+  const stats =
+    sentimentStats && sentimentStats.length
+      ? sentimentStats
+      : fallbackSentiments;
+
   return (
     <div className="rounded-2xl border border-[#e7e4df] bg-white p-6">
       <div className="flex gap-4">
@@ -322,23 +334,38 @@ function AnswerCard({
               Sentiment breakdown
             </h4>
             <div className="space-y-3">
-              {sentimentStats.map((stat) => (
-                <div key={stat.label}>
-                  <div className="flex items-center justify-between text-sm font-medium text-black">
-                    <div className="flex items-center gap-2">
-                      <stat.icon className="size-4 text-black/50" />
-                      <span>{stat.label}</span>
+              {stats.map((stat) => {
+                const definition =
+                  sentimentDefinitions[stat.key as SentimentKey] ||
+                  defaultSentimentDisplay;
+                const percentage = Math.max(0, Math.min(100, stat.percentage));
+                return (
+                  <div key={`${stat.key}-${percentage}`}>
+                    <div className="flex items-center justify-between text-sm font-medium text-black">
+                      <div className="flex items-center gap-2">
+                        <definition.Icon
+                          className="size-4"
+                          weight="fill"
+                          style={{ color: definition.color }}
+                        />
+                        <span>{definition.label}</span>
+                      </div>
+                      <span className="text-black/60">
+                        {percentage.toFixed(1)}%
+                      </span>
                     </div>
-                    <span className="text-black/60">{stat.value}%</span>
+                    <div className="mt-1 h-2 rounded-full bg-black/5">
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${percentage}%`,
+                          backgroundColor: definition.color,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-1 h-2 rounded-full bg-black/5">
-                    <div
-                      className={`h-2 rounded-full ${stat.accent}`}
-                      style={{ width: `${stat.value}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-black/50">

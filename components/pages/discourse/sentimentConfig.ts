@@ -40,3 +40,11 @@ export type SentimentMetric = {
   key: SentimentKey;
   percentage: number;
 };
+
+export const fallbackSentiments: SentimentMetric[] = [
+  { key: 'recommend', percentage: 25 },
+  { key: 'agree', percentage: 25 },
+  { key: 'insightful', percentage: 25 },
+  { key: 'provocative', percentage: 15 },
+  { key: 'disagree', percentage: 10 },
+];

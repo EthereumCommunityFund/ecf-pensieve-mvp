@@ -7,18 +7,22 @@ export type IconComponent = ComponentType<IconProps>;
 
 type MetricPillProps = {
   icon: IconComponent;
-  label: string;
+  label?: string;
   value: string;
+  showLabel?: boolean;
 };
 
-export function MetricPill({ icon: Icon, label, value }: MetricPillProps) {
-  const displayValue = value ? `${label}: ${value}` : label;
+export function MetricPill({
+  icon: Icon,
+  label,
+  value,
+  showLabel = true,
+}: MetricPillProps) {
+  const displayValue = showLabel && label ? `${label}: ${value}` : value;
 
   return (
-    <span className="inline-flex items-center gap-3 rounded-xl bg-[#ebebeb] px-3 py-2 text-[13px] font-semibold text-black/70">
-      <span className="flex size-8 items-center justify-center rounded-full bg-white/60 text-black/60">
-        <Icon className="size-5" weight="bold" />
-      </span>
+    <span className="inline-flex min-h-[32px] items-center gap-2.5 rounded-[8px] bg-[#ebebeb] px-2.5 py-1.5 text-xs font-semibold text-black/60">
+      <Icon className="size-[18px]" weight="bold" />
       <span className="tracking-[0.2px]">{displayValue}</span>
     </span>
   );

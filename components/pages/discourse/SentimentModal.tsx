@@ -7,12 +7,13 @@ import { Button } from '@/components/base';
 
 import {
   defaultSentimentDisplay,
+  fallbackSentiments,
   sentimentDefinitions,
   SentimentKey,
   SentimentMetric,
 } from './sentimentConfig';
 
-type SentimentModalProps = {
+export type SentimentModalProps = {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -20,14 +21,6 @@ type SentimentModalProps = {
   sentiments?: SentimentMetric[];
   totalVotes?: number;
 };
-
-const fallbackSentiments: SentimentMetric[] = [
-  { key: 'recommend', percentage: 25 },
-  { key: 'agree', percentage: 25 },
-  { key: 'insightful', percentage: 25 },
-  { key: 'provocative', percentage: 15 },
-  { key: 'disagree', percentage: 10 },
-];
 
 export function SentimentModal({
   open,

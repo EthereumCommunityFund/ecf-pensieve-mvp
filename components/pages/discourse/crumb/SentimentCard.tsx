@@ -4,58 +4,79 @@ import { ChartBar } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 
-import type { IconComponent } from './MetricPill';
-
-export type SentimentStat = {
-  label: string;
-  icon: IconComponent;
-  value: number;
-  accent: string;
-};
+import {
+  defaultSentimentDisplay,
+  fallbackSentiments,
+  sentimentDefinitions,
+  SentimentKey,
+  SentimentMetric,
+} from '../sentimentConfig';
 
 type SentimentCardProps = {
-  stats: SentimentStat[];
+  sentiments?: SentimentMetric[];
+  totalVotes?: number;
 };
 
-export function SentimentCard({ stats }: SentimentCardProps) {
+export function SentimentCard({ sentiments, totalVotes }: SentimentCardProps) {
+  const stats =
+    sentiments && sentiments.length ? sentiments : fallbackSentiments;
+
   return (
-    <div className="rounded-[10px] border border-black/10 bg-white p-3.5">
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2 text-sm font-semibold text-black/80">
-          <ChartBar className="size-5 text-[#6d6d6d]" />
-          <span className="text-black/80">User Sentiment</span>
+    <section className="rounded-[16px] border border-black/10 bg-white p-5 shadow-[0_10px_20px_rgba(15,23,42,0.05)]">
+      <header className="mb-4 flex items-start justify-between">
+        <div>
+          <p className="flex items-center gap-2 text-sm font-semibold text-black/60">
+            <ChartBar size={18} weight="bold" className="text-black/50" />
+            User Sentiment
+          </p>
+          {typeof totalVotes === 'number' ? (
+            <p className="mt-1 text-xs uppercase tracking-[0.15em] text-black/50">
+              {totalVotes} voted
+            </p>
+          ) : null}
         </div>
-        <p className="text-[13px] font-medium text-black/60">4 voted</p>
-      </div>
-      <div className="mt-3.5 space-y-2.5">
-        {stats.map((stat) => (
-          <div key={stat.label} className="space-y-1.5">
-            <div className="flex items-center justify-between text-sm font-medium text-black/80">
-              <div className="flex items-center gap-2">
-                <stat.icon className="size-5 text-[#7a7a7a]" />
-                <span className="tracking-[0.25px] text-[#222222]/70">
-                  {stat.label}
-                </span>
+      </header>
+      <div className="space-y-4">
+        {stats.map((stat) => {
+          const definition =
+            sentimentDefinitions[stat.key as SentimentKey] ||
+            defaultSentimentDisplay;
+          const percentage = Number.isFinite(stat.percentage)
+            ? Math.max(0, Math.min(100, stat.percentage))
+            : 0;
+
+          return (
+            <div key={`${stat.key}-${percentage}`} className="space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-black/80">
+                  <definition.Icon
+                    size={20}
+                    weight="fill"
+                    style={{ color: definition.color }}
+                  />
+                  <span>{definition.label}</span>
+                </div>
+                <span className="text-black/60">{percentage.toFixed(1)}%</span>
               </div>
-              <span className="text-[13px] font-semibold text-[#505050]">
-                {stat.value.toFixed(1)}%
-              </span>
+              <div className="h-2 rounded-full bg-black/5">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${percentage}%`,
+                    backgroundColor: definition.color,
+                  }}
+                />
+              </div>
             </div>
-            <div className="h-[2px] w-full rounded-full bg-black/10">
-              <div
-                className={`h-full rounded-full ${stat.accent}`}
-                style={{ width: `${stat.value}%` }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <Button
-        className="ml-auto mt-4 block text-right text-[13px] font-medium text-black/50"
+        className="ml-auto mt-5 block text-right text-sm font-semibold text-black/50"
         type="button"
       >
         What is User Sentiment?
       </Button>
-    </div>
+    </section>
   );
 }

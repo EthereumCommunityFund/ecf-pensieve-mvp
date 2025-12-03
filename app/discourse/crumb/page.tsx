@@ -6,13 +6,6 @@ import {
   ArrowUpIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import {
-  ChatCircle,
-  Eye,
-  Star,
-  ThumbsDown,
-  ThumbsUp,
-} from '@phosphor-icons/react';
 import Link from 'next/link';
 
 import { ContributionCard } from '@/components/pages/discourse/crumb/ContributionCard';
@@ -21,11 +14,9 @@ import {
   ParticipationCard,
   type ParticipationStep,
 } from '@/components/pages/discourse/crumb/ParticipationCard';
-import {
-  SentimentCard,
-  type SentimentStat,
-} from '@/components/pages/discourse/crumb/SentimentCard';
+import { SentimentCard } from '@/components/pages/discourse/crumb/SentimentCard';
 import { ThreadSurface } from '@/components/pages/discourse/crumb/ThreadSurface';
+import type { SentimentMetric } from '@/components/pages/discourse/sentimentConfig';
 
 const answerHighlights = [
   '“Trust math + open networks” rather than middlemen',
@@ -34,12 +25,26 @@ const answerHighlights = [
   'Communities and digital economies owned by users',
 ];
 
-const sentimentStats: SentimentStat[] = [
-  { label: 'Recommend', icon: Star, value: 40, accent: 'bg-[#eca048]' },
-  { label: 'Agree', icon: ThumbsUp, value: 60, accent: 'bg-[#43bd9b]' },
-  { label: 'Insightful', icon: Eye, value: 35, accent: 'bg-[#6c6cff]' },
-  { label: 'Provocative', icon: ChatCircle, value: 25, accent: 'bg-[#f97316]' },
-  { label: 'Disagree', icon: ThumbsDown, value: 15, accent: 'bg-[#ef4444]' },
+const heroBodyParagraphs = [
+  'Every time I search “What is Ethereum” I get 18 paragraphs about smart contracts, decentralized networks, blockchain scalability, zk-roll-whatevers, and at no point does anyone just say straight up what Ethereum is trying to do in the world.',
+  'Is the point to replace banks? Become some world computer? Let people trade cartoon cats for six figures?',
+  'Something like: “Ethereum exists to ______.”',
+];
+
+const heroBodyDoc = JSON.stringify({
+  content: heroBodyParagraphs
+    .map((paragraph) => `<p>${paragraph}</p>`)
+    .join(''),
+  type: 'doc',
+  isEmpty: heroBodyParagraphs.every((paragraph) => !paragraph.trim()),
+});
+
+const sentimentStats: SentimentMetric[] = [
+  { key: 'recommend', percentage: 40 },
+  { key: 'agree', percentage: 60 },
+  { key: 'insightful', percentage: 35 },
+  { key: 'provocative', percentage: 25 },
+  { key: 'disagree', percentage: 15 },
 ];
 
 const participationSteps: ParticipationStep[] = [
@@ -72,19 +77,15 @@ export default function DiscourseCrumbPage() {
             <DiscourseCrumbHero
               badgeLabel="Complaint Topic"
               title="What in the actual..is Ethereum’s Mission?"
-              body={[
-                'Every time I search “What is Ethereum” I get 18 paragraphs about smart contracts, decentralized networks, blockchain scalability, zk-roll-whatevers, and at no point does anyone just say straight up what Ethereum is trying to do in the world.',
-                'Is the point to replace banks? Become some world computer? Let people trade cartoon cats for six figures?',
-                'Something like: “Ethereum exists to ______.”',
-              ]}
+              body={heroBodyDoc}
               tags={['WTF', 'Ethereum']}
               author={{ name: 'Username', initial: 'U', timeAgo: 'a week ago' }}
               metrics={[
-                { icon: ChartBarIcon, label: 'Q Points', value: '4' },
+                { icon: ChartBarIcon, value: '4', showLabel: false },
                 { icon: ArrowUpIcon, label: 'CPs', value: '380' },
               ]}
-              primaryActionLabel="Answer This Question"
-              secondaryActionLabel="Post Comment"
+              primaryAction={{ label: 'Answer This Question' }}
+              secondaryAction={{ label: 'Post Comment' }}
             />
             <ThreadSurface
               answerHighlights={answerHighlights}
@@ -93,7 +94,7 @@ export default function DiscourseCrumbPage() {
           </div>
           <aside className="w-full max-w-[320px] space-y-5">
             <ContributionCard voteCount={380} />
-            <SentimentCard stats={sentimentStats} />
+            <SentimentCard sentiments={sentimentStats} totalVotes={4} />
             <ParticipationCard steps={participationSteps} />
           </aside>
         </section>
