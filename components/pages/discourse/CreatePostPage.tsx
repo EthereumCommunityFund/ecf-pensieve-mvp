@@ -1,13 +1,21 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 
-import { CreatePost } from './CreatePost';
+import { CreatePost, type CreatePostErrors } from './CreatePost';
 import { PreviewPost } from './PreviewPost';
 import { DiscourseTopicOption } from './topicOptions';
+
+const stripHtml = (value: string) =>
+  value
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const parseEditorHtml = (value: string) => {
   try {
@@ -28,14 +36,81 @@ export function CreatePostPage() {
   const [selectedCategory, setSelectedCategory] = useState<
     DiscourseTopicOption | undefined
   >();
-  const [tags, setTags] = useState<string[]>(['EIP']);
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [isScam, setIsScam] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [errors, setErrors] = useState<CreatePostErrors>({});
 
   const bodyHtml = useMemo(() => parseEditorHtml(body), [body]);
+  const plainBody = useMemo(() => stripHtml(bodyHtml), [bodyHtml]);
   const isPublishDisabled =
-    !title.trim() || !bodyHtml.trim() || !selectedCategory;
+    !title.trim() || !plainBody || !selectedCategory || !tags.length;
+
+  const clearError = (field: keyof CreatePostErrors) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleTitleChange = (value: string) => {
+    clearError('title');
+    setTitle(value);
+  };
+
+  const handleBodyChange = (value: string) => {
+    clearError('body');
+    setBody(value);
+  };
+
+  const handleCategoryChange = (category?: DiscourseTopicOption) => {
+    clearError('category');
+    setSelectedCategory(category);
+  };
+
+  const handleTagsChange: Dispatch<SetStateAction<string[]>> = (updater) => {
+    setTags((prev) => {
+      const next =
+        typeof updater === 'function'
+          ? (updater as (current: string[]) => string[])(prev)
+          : updater;
+      if (next.length) {
+        clearError('tags');
+      }
+      return next;
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors: CreatePostErrors = {};
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (!plainBody) {
+      newErrors.body = 'Post content is required';
+    }
+    if (!selectedCategory) {
+      newErrors.category = 'Category is required';
+    }
+    if (!tags.length) {
+      newErrors.tags = 'At least one tag is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePreview = () => {
+    if (!validateForm()) return;
+    setShowPreview(true);
+  };
+
+  const handlePublish = () => {
+    if (!validateForm()) return;
+    // TODO: integrate publish flow
+  };
 
   return (
     <div className="min-h-screen w-full">
@@ -58,6 +133,7 @@ export function CreatePostPage() {
                   Back to Edit
                 </Button>
                 <Button
+                  onPress={handlePublish}
                   isDisabled={isPublishDisabled}
                   className={`rounded-[8px] px-6 py-2 text-sm font-semibold text-white ${
                     isPublishDisabled ? 'bg-black/30' : 'bg-black'
@@ -77,14 +153,15 @@ export function CreatePostPage() {
             tags={tags}
             tagInput={tagInput}
             isScam={isScam}
-            onTitleChange={(value) => setTitle(value)}
-            onBodyChange={(value) => setBody(value)}
-            onCategoryChange={(category) => setSelectedCategory(category)}
-            onTagsChange={setTags}
+            errors={errors}
+            onTitleChange={handleTitleChange}
+            onBodyChange={handleBodyChange}
+            onCategoryChange={handleCategoryChange}
+            onTagsChange={handleTagsChange}
             onTagInputChange={(value) => setTagInput(value)}
             onIsScamChange={(value) => setIsScam(value)}
-            onPreview={() => setShowPreview(true)}
-            onPublish={() => {}}
+            onPreview={handlePreview}
+            onPublish={handlePublish}
             onBack={() => router.back()}
             isPublishDisabled={isPublishDisabled}
           />

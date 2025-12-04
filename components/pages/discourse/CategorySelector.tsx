@@ -13,6 +13,7 @@ type CategorySelectorProps = {
   value?: string;
   onChange?: (category: DiscourseTopicOption) => void;
   options?: DiscourseTopicOption[];
+  error?: string;
 };
 
 export function CategorySelector({
@@ -21,6 +22,7 @@ export function CategorySelector({
   value,
   onChange,
   options = discourseTopicOptions,
+  error,
 }: CategorySelectorProps) {
   const currentOption = useMemo(
     () => options.find((option) => option.value === value),
@@ -67,6 +69,7 @@ export function CategorySelector({
           </SelectItem>
         ))}
       </Select>
+      {error ? <p className="text-xs text-[#d14343]">{error}</p> : null}
     </div>
   );
 }

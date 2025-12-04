@@ -20,6 +20,13 @@ const stripHtml = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
+export type CreatePostErrors = {
+  title?: string;
+  body?: string;
+  category?: string;
+  tags?: string;
+};
+
 type CreatePostProps = {
   title: string;
   body: string;
@@ -28,6 +35,7 @@ type CreatePostProps = {
   tags: string[];
   tagInput: string;
   isScam: boolean;
+  errors?: CreatePostErrors;
   onTitleChange: (value: string) => void;
   onBodyChange: (value: string) => void;
   onCategoryChange: (category?: DiscourseTopicOption) => void;
@@ -49,6 +57,7 @@ export function CreatePost({
   tags,
   tagInput,
   isScam,
+  errors,
   onTitleChange,
   onBodyChange,
   onCategoryChange,
@@ -106,8 +115,15 @@ export function CreatePost({
               onTitleChange(event.target.value.slice(0, MAX_TITLE))
             }
             placeholder="Type a title for your thread"
-            className="h-10 rounded-[8px] border border-black/10 bg-black/5 px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:border-black/40 focus:outline-none"
+            className={`h-10 rounded-[8px] border bg-black/5 px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:outline-none ${
+              errors?.title
+                ? 'border-[#d14343] focus:border-[#d14343]'
+                : 'border-black/10 focus:border-black/40'
+            }`}
           />
+          {errors?.title ? (
+            <p className="text-xs text-[#d14343]">{errors.title}</p>
+          ) : null}
           <p className="text-right text-xs text-black/60">
             {remainingTitle} characters remaining
           </p>
@@ -120,11 +136,16 @@ export function CreatePost({
             onChange={(value) => onBodyChange(value)}
             debounceMs={500}
             className={{
-              base: 'min-h-[280px] rounded-[12px] border border-black/10 bg-black/5',
-              editorWrapper: 'p-0',
+              base: `min-h-[280px] rounded-[12px] border bg-black/5 ${
+                errors?.body ? 'border-[#d14343]' : 'border-black/10'
+              }`,
+              editorWrapper: 'p-[10px]',
               editor: 'prose prose-sm max-w-none text-[#1b1b1f]',
             }}
           />
+          {errors?.body ? (
+            <p className="text-xs text-[#d14343]">{errors.body}</p>
+          ) : null}
           <div className="flex items-center justify-between text-xs text-black/60">
             <span className="inline-flex items-center gap-2">
               <span className="inline-flex items-center rounded-[4px] bg-black px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">
@@ -139,6 +160,7 @@ export function CreatePost({
         <CategorySelector
           value={selectedCategory?.value}
           onChange={(category) => onCategoryChange(category)}
+          error={errors?.category}
         />
 
         <div className="flex items-center justify-between rounded-[8px] border border-black/10 px-4 py-3">
@@ -179,7 +201,11 @@ export function CreatePost({
                 }
               }}
               placeholder="Create a tag"
-              className="h-10 flex-1 rounded-[8px] border border-black/10 bg-black/5 px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:border-black/40 focus:outline-none"
+              className={`h-10 flex-1 rounded-[8px] border bg-black/5 px-4 text-[14px] text-black/80 placeholder:text-black/40 focus:outline-none ${
+                errors?.tags
+                  ? 'border-[#d14343] focus:border-[#d14343]'
+                  : 'border-black/10 focus:border-black/40'
+              }`}
             />
             <Button
               onPress={handleAddTag}
@@ -205,6 +231,9 @@ export function CreatePost({
               </span>
             ))}
           </div>
+          {errors?.tags ? (
+            <p className="text-xs text-[#d14343]">{errors.tags}</p>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">

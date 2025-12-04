@@ -1,11 +1,12 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { CaretCircleUpIcon, ChartBarIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
-import { discourseTopicOptions } from './topicOptions';
+import { TopicTag } from './TopicTag';
 
 type PreviewPostCardProps = {
   title: string;
@@ -27,22 +28,21 @@ export function PreviewPostCard({
   tags,
   categoryLabel,
 }: PreviewPostCardProps) {
-  const topic =
-    discourseTopicOptions.find((option) => option.label === categoryLabel) ||
-    discourseTopicOptions[0];
-
   return (
-    <article className="flex flex-col gap-4 rounded-[16px]">
-      <div className="inline-flex w-fit items-center gap-2 rounded-[6px] border border-black/10 bg-black/[0.05] px-3 py-1 text-[12px] font-semibold text-black">
-        {topic.icon}
-        {categoryLabel}
-      </div>
-      <div>
-        <h1 className="text-[22px] font-semibold text-[#1b1b1f]">{title}</h1>
-        <div className="mt-2 text-sm uppercase tracking-[0.12em] text-black/50">
-          <span className="font-semibold text-black">BY:</span>
-          <span className="ml-2 text-black">{author}</span>
-          <span className="ml-3 text-black/60">{timeAgo}</span>
+    <article className="flex flex-col gap-[20px] rounded-[16px]">
+      <TopicTag
+        label={categoryLabel}
+        className="inline-flex w-fit bg-[#EBEBEB]"
+      />
+      <div className="flex flex-col gap-[14px]">
+        <h1 className="leading-1 text-[20px] font-[500] text-black">{title}</h1>
+        <div className=" flex items-center gap-[10px] text-[12px] text-black">
+          <span className="text-black/50">BY:</span>
+          <div className="flex items-center gap-[5px]">
+            <span className="size-[24px] rounded-full bg-[#D9D9D9]"></span>
+            <span className="text-[14px]">{author}</span>
+          </div>
+          <span className=" text-black/60">{timeAgo}</span>
         </div>
       </div>
       <MdEditor
@@ -55,25 +55,25 @@ export function PreviewPostCard({
           editor: 'prose prose-base max-w-none text-black/80',
         }}
       />
-      <div className="flex flex-wrap items-center gap-2 text-sm text-black/60">
-        <span className="font-semibold text-black">Tags:</span>
+      <div className="flex flex-wrap items-center gap-[10px] text-[14px] text-black/60">
+        <span className="font-semibold text-black/50">Tags:</span>
         {tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-[6px] bg-black/10 px-2 py-1 text-xs text-black"
+            className="rounded-[6px] bg-black/5 px-[10px] py-[5px] text-xs font-[600] text-black"
           >
             {tag}
           </span>
         ))}
       </div>
-      <div className="flex gap-3 border-t border-black/10 pt-4 text-xs font-semibold text-black/60">
-        <div className="inline-flex items-center gap-2 rounded-[8px] bg-black/10 px-3 py-2">
-          <span>000</span>
-          <span>CP</span>
+      <div className="flex gap-[10px] border-t border-black/10 pt-4 ">
+        <div className="inline-flex items-center gap-[10px] rounded-[8px] bg-[#EBEBEB] px-[8px] py-[4px]">
+          <ChartBarIcon size={30} className="opacity-30" />
+          <span className="text-[12px] font-semibold text-black/60">000</span>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-[8px] bg-black/10 px-3 py-2">
-          <span>000</span>
-          <span>Votes</span>
+        <div className="inline-flex items-center gap-[10px] rounded-[8px] bg-[#EBEBEB] px-[8px] py-[4px]">
+          <CaretCircleUpIcon size={30} className="opacity-30" />
+          <span className="text-[12px] font-semibold text-black/60">000</span>
         </div>
       </div>
       <div className="flex flex-col gap-3">
@@ -114,7 +114,7 @@ export function PreviewPost({
         >
           Back
         </Button>
-        <span className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[5px] border border-black/10 px-[10px] text-sm font-medium text-black">
+        <span className="font-inter inline-flex h-[42px] flex-1 items-center justify-center rounded-[5px] border border-black/10 px-[10px] text-[16px] font-[500] text-black">
           You are previewing your post
         </span>
       </div>

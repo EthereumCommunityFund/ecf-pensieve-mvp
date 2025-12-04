@@ -1,19 +1,14 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import {
-  CaretCircleUp,
-  CheckCircle,
-  CheckSquare,
-  Question,
-  Warning,
-} from '@phosphor-icons/react';
+import { CaretCircleUp, CheckCircle, CheckSquare } from '@phosphor-icons/react';
 import { KeyboardEvent, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 
 import { SentimentIndicator } from './SentimentIndicator';
 import { SentimentModal } from './SentimentModal';
+import { TopicTag } from './TopicTag';
 import { SentimentMetric } from './sentimentConfig';
 
 export type ThreadMeta = {
@@ -67,7 +62,7 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
   return (
     <article
       className={`flex flex-col gap-4 rounded-[10px] px-5 py-[10px] hover:bg-[#EBEBEB] ${
-        onSelect ? 'cursor-pointer transition hover:-translate-y-0.5' : ''
+        onSelect ? 'cursor-pointer transition' : ''
       }`}
       {...clickableProps}
     >
@@ -75,21 +70,7 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-black/70">
             {thread.tag ? (
-              <span
-                className={cn(
-                  'inline-flex items-center gap-[5px] rounded-[4px] border px-[8px] py-[4px] text-[13px] font-[600]',
-                  isScamThread
-                    ? 'border-black/10 bg-[#ebebeb] text-black'
-                    : 'border-black/10 bg-[#f5f5f5] text-black',
-                )}
-              >
-                {isScamThread ? (
-                  <Warning size={18} weight="fill" className="text-[#bb5d00]" />
-                ) : (
-                  <Question size={20} className="text-black/80" weight="fill" />
-                )}
-                {thread.tag}
-              </span>
+              <TopicTag label={thread.tag} isScam={isScamThread} />
             ) : null}
             {hasStatus ? (
               <span
