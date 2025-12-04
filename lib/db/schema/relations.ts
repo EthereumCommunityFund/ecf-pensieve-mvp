@@ -9,6 +9,11 @@ import { listProjects } from './listProjects';
 import { lists } from './lists';
 import { notifications } from './notifications';
 import { profiles } from './profiles';
+import { projectDiscussionAnswers } from './projectDiscussionAnswers';
+import { projectDiscussionAnswerVotes } from './projectDiscussionAnswerVotes';
+import { projectDiscussionComments } from './projectDiscussionComments';
+import { projectDiscussionSentiments } from './projectDiscussionSentiments';
+import { projectDiscussionThreads } from './projectDiscussionThreads';
 import { projectLogs } from './projectLogs';
 import { projectNotificationSettings } from './projectNotificationSettings';
 import { projects } from './projects';
@@ -43,6 +48,11 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   createdSieves: many(sieves),
   sieveFollows: many(sieveFollows),
   projectNotificationSettings: many(projectNotificationSettings),
+  discussionThreads: many(projectDiscussionThreads),
+  discussionAnswers: many(projectDiscussionAnswers),
+  discussionComments: many(projectDiscussionComments),
+  discussionAnswerVotes: many(projectDiscussionAnswerVotes),
+  discussionSentiments: many(projectDiscussionSentiments),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -57,6 +67,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     fields: [projects.id],
     references: [projectSnaps.projectId],
   }),
+  discussionThreads: many(projectDiscussionThreads),
   rank: one(ranks, {
     fields: [projects.id],
     references: [ranks.projectId],
@@ -197,6 +208,99 @@ export const ranksRelations = relations(ranks, ({ one }) => ({
     references: [projects.id],
   }),
 }));
+
+export const projectDiscussionThreadsRelations = relations(
+  projectDiscussionThreads,
+  ({ one, many }) => ({
+    project: one(projects, {
+      fields: [projectDiscussionThreads.projectId],
+      references: [projects.id],
+    }),
+    creator: one(profiles, {
+      fields: [projectDiscussionThreads.creator],
+      references: [profiles.userId],
+    }),
+    answers: many(projectDiscussionAnswers),
+    comments: many(projectDiscussionComments),
+    sentiments: many(projectDiscussionSentiments),
+  }),
+);
+
+export const projectDiscussionAnswersRelations = relations(
+  projectDiscussionAnswers,
+  ({ one, many }) => ({
+    thread: one(projectDiscussionThreads, {
+      fields: [projectDiscussionAnswers.threadId],
+      references: [projectDiscussionThreads.id],
+    }),
+    creator: one(profiles, {
+      fields: [projectDiscussionAnswers.creator],
+      references: [profiles.userId],
+    }),
+    comments: many(projectDiscussionComments),
+    votes: many(projectDiscussionAnswerVotes),
+    sentiments: many(projectDiscussionSentiments),
+  }),
+);
+
+export const projectDiscussionAnswerVotesRelations = relations(
+  projectDiscussionAnswerVotes,
+  ({ one }) => ({
+    answer: one(projectDiscussionAnswers, {
+      fields: [projectDiscussionAnswerVotes.answerId],
+      references: [projectDiscussionAnswers.id],
+    }),
+    voter: one(profiles, {
+      fields: [projectDiscussionAnswerVotes.voter],
+      references: [profiles.userId],
+    }),
+  }),
+);
+
+export const projectDiscussionCommentsRelations = relations(
+  projectDiscussionComments,
+  ({ one, many }) => ({
+    thread: one(projectDiscussionThreads, {
+      fields: [projectDiscussionComments.threadId],
+      references: [projectDiscussionThreads.id],
+    }),
+    answer: one(projectDiscussionAnswers, {
+      fields: [projectDiscussionComments.answerId],
+      references: [projectDiscussionAnswers.id],
+    }),
+    creator: one(profiles, {
+      fields: [projectDiscussionComments.creator],
+      references: [profiles.userId],
+    }),
+    parentComment: one(projectDiscussionComments, {
+      fields: [projectDiscussionComments.parentCommentId],
+      references: [projectDiscussionComments.id],
+      relationName: 'parentComment',
+    }),
+    replies: many(projectDiscussionComments, {
+      relationName: 'parentComment',
+    }),
+    comments: many(projectDiscussionComments),
+  }),
+);
+
+export const projectDiscussionSentimentsRelations = relations(
+  projectDiscussionSentiments,
+  ({ one }) => ({
+    thread: one(projectDiscussionThreads, {
+      fields: [projectDiscussionSentiments.threadId],
+      references: [projectDiscussionThreads.id],
+    }),
+    answer: one(projectDiscussionAnswers, {
+      fields: [projectDiscussionSentiments.answerId],
+      references: [projectDiscussionAnswers.id],
+    }),
+    creator: one(profiles, {
+      fields: [projectDiscussionSentiments.creator],
+      references: [profiles.userId],
+    }),
+  }),
+);
 
 export const projectSnapsRelations = relations(projectSnaps, ({ one }) => ({
   project: one(projects, {

@@ -9,6 +9,8 @@ import { likeProjectRouter } from './likeProject';
 import { listRouter } from './list';
 import { notificationRouter } from './notification';
 import { projectRouter } from './project';
+import { projectDiscussionInteractionRouter } from './projectDiscussionInteraction';
+import { projectDiscussionThreadRouter } from './projectDiscussionThread';
 import { projectLogRouter } from './projectLog';
 import { projectNotificationSettingsRouter } from './projectNotificationSettings';
 import { projectRelationRouter } from './projectRelation';
@@ -33,6 +35,8 @@ export const appRouter = router({
   list: listRouter,
   notification: notificationRouter,
   projectNotificationSettings: projectNotificationSettingsRouter,
+  projectDiscussionThread: projectDiscussionThreadRouter,
+  projectDiscussionInteraction: projectDiscussionInteractionRouter,
   active: activeRouter,
   vote: voteRouter,
   projectLog: projectLogRouter,
