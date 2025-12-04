@@ -5,7 +5,7 @@ import { Button } from '@/components/base';
 import {
   defaultSentimentDisplay,
   sentimentDefinitions,
-} from '../common/setiment/sentimentConfig';
+} from '../common/sentiment/sentimentConfig';
 import { CommentItem } from '../common/threadData';
 
 type CommentCardProps = {

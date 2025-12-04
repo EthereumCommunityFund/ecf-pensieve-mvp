@@ -10,7 +10,7 @@ import {
   sentimentDefinitions,
   SentimentKey,
   SentimentMetric,
-} from '../common/setiment/sentimentConfig';
+} from '../common/sentiment/sentimentConfig';
 
 type SentimentCardProps = {
   sentiments?: SentimentMetric[];

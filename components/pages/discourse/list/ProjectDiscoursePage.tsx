@@ -8,9 +8,9 @@ import { Button } from '@/components/base';
 import { useProjectDetailContext } from '../../project/context/projectDetailContext';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
+import { TopbarFilters } from '../common/TopbarFilters';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
-import { ThreadFilters } from './ThreadFilters';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
 
@@ -147,7 +147,7 @@ export default function ProjectDiscoursePage({
         />
       }
     >
-      <ThreadFilters
+      <TopbarFilters
         statusTabs={statusTabs}
         activeStatus={activeStatus}
         onStatusChange={setActiveStatus}

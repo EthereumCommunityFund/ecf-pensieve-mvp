@@ -4,11 +4,11 @@ import { CheckCircle } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 
-import { SentimentSelector } from '../common/setiment/SentimentSelector';
+import { SentimentSelector } from '../common/sentiment/SentimentSelector';
 import {
   defaultSentimentDisplay,
   sentimentDefinitions,
-} from '../common/setiment/sentimentConfig';
+} from '../common/sentiment/sentimentConfig';
 import { AnswerItem } from '../common/threadData';
 import { SENTIMENT_KEYS } from '../utils/threadTransforms';
 

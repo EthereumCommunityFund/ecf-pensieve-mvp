@@ -21,8 +21,8 @@ import type { RouterOutputs } from '@/types';
 import {
   sentimentDefinitions,
   SentimentKey,
-} from '../common/setiment/sentimentConfig';
-import { SentimentSummaryPanel } from '../common/setiment/SentimentModal';
+} from '../common/sentiment/sentimentConfig';
+import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
 import {
   AnswerItem,
   CommentItem,

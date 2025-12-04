@@ -7,9 +7,9 @@ import { Button } from '@/components/base';
 
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
+import { TopbarFilters } from '../common/TopbarFilters';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
-import { ThreadFilters } from './ThreadFilters';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
 
@@ -76,7 +76,7 @@ export default function GlobalDiscoursePage() {
         />
       }
     >
-      <ThreadFilters
+      <TopbarFilters
         statusTabs={statusTabs}
         activeStatus={activeStatus}
         onStatusChange={setActiveStatus}

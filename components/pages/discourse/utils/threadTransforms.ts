@@ -5,7 +5,7 @@ import {
   sentimentDefinitions,
   type SentimentKey,
   type SentimentMetric,
-} from '../common/setiment/sentimentConfig';
+} from '../common/sentiment/sentimentConfig';
 import type { ThreadMeta } from '../list/ThreadList';
 
 export type ThreadListItem =

@@ -4,6 +4,7 @@ import { ChartBarIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -12,14 +13,15 @@ import { formatTimeAgo } from '@/lib/utils';
 import {
   SentimentKey,
   SentimentMetric,
-} from '../common/setiment/sentimentConfig';
-import { SentimentSummaryPanel } from '../common/setiment/SentimentModal';
+} from '../common/sentiment/sentimentConfig';
+import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
 import {
   AnswerItem,
   CommentItem,
   QuickAction,
   ThreadDetailRecord,
 } from '../common/threadData';
+import { TopbarFilters } from '../common/TopbarFilters';
 import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
@@ -27,7 +29,12 @@ import {
   type ThreadSentimentRecord,
 } from '../utils/threadTransforms';
 
+import { AnswerCard } from './AnswerCard';
+import { CommentCard } from './CommentCard';
+import { ComposerCard } from './ComposerCard';
 import { ContributionVotesCard } from './ContributionVotesCard';
+import { EmptyState } from './EmptyState';
+import { mockThreadAnswers, mockThreadComments } from './mockDiscussionData';
 import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
 
@@ -119,6 +126,16 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         refetchOnWindowFocus: false,
       },
     );
+
+  const fallbackAnswerRecords = useMemo(
+    () => mockThreadAnswers[threadId] ?? mockThreadAnswers.default ?? [],
+    [threadId],
+  );
+
+  const fallbackCommentRecords = useMemo(
+    () => mockThreadComments[threadId] ?? mockThreadComments.default ?? [],
+    [threadId],
+  );
 
   const baseThread = threadQuery.data;
 
@@ -343,60 +360,73 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   };
 
   const answersFromApi = useMemo<AnswerItem[]>(() => {
-    if (!answersQuery.data?.pages.length) return [];
-    return answersQuery.data.pages.flatMap((page) =>
-      page.items.map((answer) => {
-        const sentiment = summarizeSentiments(answer.sentiments);
-        const sentimentKey = sentiment.dominantKey ?? 'recommend';
-        const viewerSentiment = findUserSentiment(answer.sentiments, user?.id);
-        const mappedComments: CommentItem[] = (answer.comments ?? []).map(
-          (comment) => ({
-            id: `answer-${answer.id}-comment-${comment.id}`,
-            numericId: comment.id,
-            answerId: answer.id,
-            author: comment.creator?.name ?? 'Anonymous',
-            role: 'Community Member',
-            createdAt: formatTimeAgo(comment.createdAt),
-            body: comment.content,
-            sentimentLabel: 'recommend',
-          }),
-        );
+    const remoteItems = answersQuery.data?.pages?.length
+      ? answersQuery.data.pages.flatMap((page) => page.items)
+      : [];
+    const sourceItems =
+      remoteItems.length > 0 ? remoteItems : fallbackAnswerRecords;
+    if (!sourceItems.length) return [];
 
-        return {
-          id: `answer-${answer.id}`,
-          numericId: answer.id,
-          author: answer.creator?.name ?? 'Anonymous',
+    return sourceItems.map((answer) => {
+      const sentiment = summarizeSentiments(answer.sentiments);
+      const sentimentKey = sentiment.dominantKey ?? 'recommend';
+      const viewerSentiment = findUserSentiment(answer.sentiments, user?.id);
+      const mappedComments: CommentItem[] = (answer.comments ?? []).map(
+        (comment) => ({
+          id: `answer-${answer.id}-comment-${comment.id}`,
+          numericId: comment.id,
+          answerId: answer.id,
+          author: comment.creator?.name ?? 'Anonymous',
           role: 'Community Member',
-          createdAt: formatTimeAgo(answer.createdAt),
-          body: answer.content,
-          cpSupport: answer.voteCount ?? 0,
-          cpTarget: undefined,
-          sentimentLabel: sentimentKey,
-          sentimentVotes: sentiment.totalVotes,
-          commentsCount: mappedComments.length,
-          comments: mappedComments,
-          viewerSentiment: viewerSentiment ?? undefined,
-          viewerHasSupported: Boolean(answer.viewerHasSupported),
-        } satisfies AnswerItem;
-      }),
-    );
-  }, [answersQuery.data, user?.id]);
+          createdAt: formatTimeAgo(comment.createdAt),
+          body: comment.content,
+          sentimentLabel: 'recommend',
+        }),
+      );
+
+      return {
+        id: `answer-${answer.id}`,
+        numericId: answer.id,
+        author: answer.creator?.name ?? 'Anonymous',
+        role: 'Community Member',
+        createdAt: formatTimeAgo(answer.createdAt),
+        body: answer.content,
+        cpSupport: answer.voteCount ?? 0,
+        cpTarget: undefined,
+        sentimentLabel: sentimentKey,
+        sentimentVotes: sentiment.totalVotes,
+        commentsCount: mappedComments.length,
+        comments: mappedComments,
+        viewerSentiment: viewerSentiment ?? undefined,
+        viewerHasSupported: Boolean(answer.viewerHasSupported),
+      } satisfies AnswerItem;
+    });
+  }, [answersQuery.data, fallbackAnswerRecords, user?.id]);
 
   const commentsFromApi = useMemo<CommentItem[]>(() => {
-    if (!commentsQuery.data?.pages.length) return [];
-    return commentsQuery.data.pages.flatMap((page) =>
-      page.items.map((comment) => ({
-        id: `comment-${comment.id}`,
-        numericId: comment.id,
-        answerId: comment.answerId ?? undefined,
-        author: comment.creator?.name ?? 'Anonymous',
-        role: 'Community Member',
-        createdAt: formatTimeAgo(comment.createdAt),
-        body: comment.content,
-        sentimentLabel: 'recommend',
-      })),
-    );
-  }, [commentsQuery.data]);
+    const remoteItems = commentsQuery.data?.pages?.length
+      ? commentsQuery.data.pages.flatMap((page) => page.items)
+      : [];
+    const sourceItems =
+      remoteItems.length > 0 ? remoteItems : fallbackCommentRecords;
+    if (!sourceItems.length) return [];
+
+    return sourceItems.map((comment) => ({
+      id: `comment-${comment.id}`,
+      numericId: comment.id,
+      answerId: comment.answerId ?? undefined,
+      author: comment.creator?.name ?? 'Anonymous',
+      role: 'Community Member',
+      createdAt: formatTimeAgo(comment.createdAt),
+      body: comment.content,
+      sentimentLabel: 'recommend',
+    }));
+  }, [commentsQuery.data, fallbackCommentRecords]);
+
+  const isAnswersInitialLoading =
+    answersQuery.isLoading && !answersFromApi.length;
+  const isCommentsInitialLoading =
+    commentsQuery.isLoading && !commentsFromApi.length;
 
   const sentimentSummary = useMemo(() => {
     if (!baseThread) {
@@ -513,15 +543,62 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const answersToRender = thread.isScam
     ? (thread.counterClaims ?? [])
     : thread.answers;
+
   const tabOptions = thread.isScam
     ? [
-        { key: 'answers', label: 'Counter Claims' },
-        { key: 'comments', label: 'Discussion' },
+        {
+          key: 'answers',
+          label: 'Counter Claims',
+          count: answersToRender.length,
+        },
+        { key: 'comments', label: 'Discussion', count: thread.comments.length },
       ]
     : [
-        { key: 'answers', label: 'Answers' },
-        { key: 'comments', label: 'Comments' },
+        {
+          key: 'answers',
+          label: 'Answers',
+          count: answersToRender.length,
+        },
+        { key: 'comments', label: 'Discuss', count: thread.comments.length },
       ];
+
+  const filteredAnswers =
+    sentimentFilter === 'all'
+      ? answersToRender
+      : answersToRender.filter(
+          (answer) => answer.sentimentLabel === sentimentFilter,
+        );
+
+  const filteredComments =
+    sentimentFilter === 'all'
+      ? thread.comments
+      : thread.comments.filter(
+          (comment) => comment.sentimentLabel === sentimentFilter,
+        );
+
+  const isAnswersTab = activeTab === 'answers';
+  const answerComposerTitle = thread.isScam
+    ? 'Share a counter claim'
+    : 'Share an answer';
+  const answerComposerPlaceholder = thread.isScam
+    ? 'Document remediation progress or counter evidence.'
+    : 'Outline actionable steps to resolve this complaint.';
+  const answerEmptyState = thread.isScam
+    ? {
+        title: 'No counter claims yet',
+        description:
+          'Share evidence or remediation updates to challenge this claim.',
+      }
+    : {
+        title: 'No answers yet',
+        description:
+          'Be the first to propose accountable steps for resolution.',
+      };
+  const discussionEmptyState = {
+    title: 'No discussion yet',
+    description:
+      'Ask clarifying questions or share context to help the community respond.',
+  };
 
   const sentimentMetrics: SentimentMetric[] = thread.sentiment.map(
     (metric) => ({
@@ -550,7 +627,162 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           onAnswer={() => setShowAnswerComposer(true)}
           onComment={() => setShowCommentComposer(true)}
         />
+
+        <div className="pb-[40px]">
+          <TopbarFilters
+            statusTabs={tabOptions.map((tab) => tab.key)}
+            activeStatus={activeTab}
+            onStatusChange={(value) =>
+              setActiveTab(value === 'comments' ? 'comments' : 'answers')
+            }
+            sortOptions={['top', 'new']}
+            activeSort={sortOption}
+            onSortChange={(value) =>
+              setSortOption(value === 'new' ? 'new' : 'top')
+            }
+            sentimentOptions={SENTIMENT_KEYS}
+            selectedSentiment={sentimentFilter}
+            onSentimentChange={(value) => setSentimentFilter(value)}
+            renderStatusLabel={(value) => {
+              const tab = tabOptions.find((item) => item.key === value);
+              if (!tab) return value;
+              return (
+                <span className="flex items-center gap-2">
+                  <span>{tab.label}</span>
+                  <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
+                    {tab.count}
+                  </span>
+                </span>
+              );
+            }}
+          />
+          <div className="space-y-5 pt-5">
+            {isAnswersTab ? (
+              <>
+                {showAnswerComposer ? (
+                  <ComposerCard
+                    title={answerComposerTitle}
+                    placeholder={answerComposerPlaceholder}
+                    value={answerDraft}
+                    onChange={(value) => setAnswerDraft(value)}
+                    onSubmit={handleSubmitAnswer}
+                    onCancel={() => setShowAnswerComposer(false)}
+                    submitLabel={
+                      createAnswerMutation.isPending
+                        ? 'Submitting…'
+                        : 'Publish answer'
+                    }
+                    isSubmitting={createAnswerMutation.isPending}
+                    error={answerError}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowAnswerComposer(true)}
+                    className="w-full rounded-[12px] border border-dashed border-black/20 bg-white px-4 py-3 text-left text-sm font-semibold text-black/50 transition hover:border-black/40 hover:text-black"
+                  >
+                    {thread.isScam
+                      ? 'Post a counter claim to challenge this alert'
+                      : 'Share an answer with actionable next steps'}
+                  </button>
+                )}
+                {isAnswersInitialLoading ? (
+                  <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                    Loading answers…
+                  </div>
+                ) : null}
+                {filteredAnswers.length
+                  ? filteredAnswers.map((answer) => (
+                      <AnswerCard
+                        key={answer.id}
+                        answer={answer}
+                        isScam={thread.isScam}
+                        onSupport={handleSupportAnswer}
+                        onWithdraw={handleWithdrawSupport}
+                        onSentimentChange={handleAnswerSentimentChange}
+                        supportPending={supportingAnswerId === answer.numericId}
+                        withdrawPending={
+                          withdrawingAnswerId === answer.numericId
+                        }
+                      />
+                    ))
+                  : !isAnswersInitialLoading && (
+                      <EmptyState
+                        title={answerEmptyState.title}
+                        description={answerEmptyState.description}
+                      />
+                    )}
+                {answersQuery.hasNextPage ? (
+                  <div className="flex justify-center">
+                    <Button
+                      className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
+                      onPress={() => answersQuery.fetchNextPage()}
+                      isLoading={answersQuery.isFetchingNextPage}
+                    >
+                      Load more {thread.isScam ? 'counter claims' : 'answers'}
+                    </Button>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {showCommentComposer ? (
+                  <ComposerCard
+                    title="Post a comment"
+                    placeholder="Add context, questions, or sentiment to keep the thread active."
+                    value={commentDraft}
+                    onChange={(value) => setCommentDraft(value)}
+                    onSubmit={handleSubmitComment}
+                    onCancel={() => setShowCommentComposer(false)}
+                    submitLabel={
+                      createCommentMutation.isPending
+                        ? 'Posting…'
+                        : 'Publish comment'
+                    }
+                    isSubmitting={createCommentMutation.isPending}
+                    error={commentError}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCommentComposer(true)}
+                    className="w-full rounded-[12px] border border-dashed border-black/20 bg-white px-4 py-3 text-left text-sm font-semibold text-black/50 transition hover:border-black/40 hover:text-black"
+                  >
+                    Post a comment to guide the discussion
+                  </button>
+                )}
+                {isCommentsInitialLoading ? (
+                  <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                    Loading discussion…
+                  </div>
+                ) : null}
+                {filteredComments.length
+                  ? filteredComments.map((comment) => (
+                      <CommentCard key={comment.id} comment={comment} />
+                    ))
+                  : !isCommentsInitialLoading && (
+                      <EmptyState
+                        title={discussionEmptyState.title}
+                        description={discussionEmptyState.description}
+                      />
+                    )}
+                {commentsQuery.hasNextPage ? (
+                  <div className="flex justify-center">
+                    <Button
+                      className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
+                      onPress={() => commentsQuery.fetchNextPage()}
+                      isLoading={commentsQuery.isFetchingNextPage}
+                    >
+                      Load more comments
+                    </Button>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
       </section>
+
       <div className="w-[300px] space-y-[20px]">
         <ContributionVotesCard
           current={thread.cpProgress.current}

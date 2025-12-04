@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
-import type { SentimentMetric } from '@/components/pages/discourse/common/setiment/sentimentConfig';
+import type { SentimentMetric } from '@/components/pages/discourse/common/sentiment/sentimentConfig';
 import { ContributionCard } from '@/components/pages/discourse/crumb/ContributionCard';
 import { DiscourseCrumbHero } from '@/components/pages/discourse/crumb/DiscourseCrumbHero';
 import {

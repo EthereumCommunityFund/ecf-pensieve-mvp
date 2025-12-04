@@ -3,10 +3,10 @@
 import { cn } from '@heroui/react';
 import { ReactNode } from 'react';
 
-import { DEFAULT_SENTIMENT_VALUE } from '../common/setiment/sentimentConfig';
-import { SentimentSelector } from '../common/setiment/SentimentSelector';
+import { DEFAULT_SENTIMENT_VALUE } from './sentiment/sentimentConfig';
+import { SentimentSelector } from './sentiment/SentimentSelector';
 
-type ThreadFiltersProps = {
+type TopbarFiltersProps = {
   statusTabs: string[];
   activeStatus?: string;
   onStatusChange?: (value: string) => void;
@@ -17,9 +17,10 @@ type ThreadFiltersProps = {
   selectedSentiment?: string;
   onSentimentChange?: (value: string) => void;
   secondaryAction?: ReactNode;
+  renderStatusLabel?: (value: string) => ReactNode;
 };
 
-export function ThreadFilters({
+export function TopbarFilters({
   statusTabs,
   activeStatus = statusTabs[0],
   onStatusChange,
@@ -30,7 +31,8 @@ export function ThreadFilters({
   selectedSentiment = DEFAULT_SENTIMENT_VALUE,
   onSentimentChange,
   secondaryAction,
-}: ThreadFiltersProps) {
+  renderStatusLabel,
+}: TopbarFiltersProps) {
   const tabLabel = (label: string) =>
     label.charAt(0).toUpperCase() + label.slice(1);
 
@@ -50,7 +52,7 @@ export function ThreadFilters({
                 isActive ? 'text-black' : 'text-black/50 hover:text-black/80',
               )}
             >
-              {tabLabel(tab)}
+              {renderStatusLabel ? renderStatusLabel(tab) : tabLabel(tab)}
               <span
                 className={cn(
                   'pointer-events-none absolute inset-x-0 bottom-0 h-[2px] rounded-full transition-colors duration-150',
