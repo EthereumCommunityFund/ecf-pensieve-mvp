@@ -28,7 +28,6 @@ import {
 } from '../utils/threadTransforms';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
-import { ParticipationCard } from './ParticipationCard';
 import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
 
@@ -552,7 +551,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           onComment={() => setShowCommentComposer(true)}
         />
       </section>
-      <div className="w-[300px] space-y-5">
+      <div className="w-[300px] space-y-[20px]">
         <ContributionVotesCard
           current={thread.cpProgress.current}
           target={thread.cpProgress.target}
@@ -561,6 +560,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           status={thread.status}
           isScam={thread.isScam}
         />
+
         <SentimentSummaryPanel
           sentiments={thread.sentiment.map((item) => ({
             key: item.key,
@@ -576,11 +576,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             </div>
           }
         />
-        <ParticipationCard
-          supportSteps={thread.participation.supportSteps}
-          counterSteps={thread.participation.counterSteps}
-          isScam={thread.isScam}
-        />
+
         <QuickActionsCard actions={thread.quickActions} />
       </div>
     </div>

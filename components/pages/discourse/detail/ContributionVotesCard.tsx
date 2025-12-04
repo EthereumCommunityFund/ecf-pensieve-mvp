@@ -1,5 +1,7 @@
 'use client';
 
+import { CaretCircleUpIcon } from '@phosphor-icons/react';
+
 type ContributionVotesCardProps = {
   current: number;
   target: number;
@@ -17,27 +19,35 @@ export function ContributionVotesCard({
   status,
   isScam,
 }: ContributionVotesCardProps) {
-  const percentage = Math.min(100, Math.round((current / target) * 100));
+  const accentClass = isScam ? 'text-[#c64b13]' : 'text-black/70';
+  const thresholdLabel = status ? `${status} Threshold` : 'Threshold';
 
   return (
-    <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between text-sm font-semibold text-black/70">
-        <span>{label}</span>
-        <span>{status}</span>
+    <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
+      <header className="flex items-center gap-[10px] text-[14px] font-semibold text-black/80">
+        <CaretCircleUpIcon size={20} weight="fill" className={accentClass} />
+        <span className="leading-[1.2]">Contribution Point Votes</span>
+      </header>
+      <p className="mt-[6px] text-[18px] font-semibold leading-none text-black/60">
+        {current.toLocaleString()}
+      </p>
+
+      <div className="mt-[10px] border-t border-black/10 pt-[10px]">
+        <p className="text-[14px] font-semibold text-black/80">
+          {thresholdLabel}:
+        </p>
+        {helper ? (
+          <p className="mt-[2px] text-[12px] leading-[1.3] text-black/60">
+            {helper}
+          </p>
+        ) : null}
+        <p className="mt-[6px] text-[14px] font-semibold text-black">
+          {target.toLocaleString()}{' '}
+          <span className="text-[10px] uppercase tracking-[0.15em] text-black/60">
+            CP
+          </span>
+        </p>
       </div>
-      <div className="mt-3 h-3 rounded-full bg-black/5">
-        <div
-          className={`h-full rounded-full ${
-            isScam ? 'bg-[#c64b13]' : 'bg-black'
-          }`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <div className="mt-2 flex items-center justify-between text-sm font-semibold text-black">
-        <span>{current.toLocaleString()} CP</span>
-        <span>{target.toLocaleString()} CP</span>
-      </div>
-      <p className="mt-1 text-xs text-black/60">{helper}</p>
-    </div>
+    </section>
   );
 }

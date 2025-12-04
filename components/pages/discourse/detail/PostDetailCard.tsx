@@ -79,6 +79,7 @@ export default function PostDetailCard({
           <span className="text-[12px] font-semibold text-black/60">000</span>
         </div>
       </div>
+      {/* TODO 非 preview 模式，未登录的情况下展示登录按钮，不显示 action 按钮 */}
       <div className="flex flex-col gap-3">
         <Button
           className="w-full rounded-[6px] bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-black/80"
