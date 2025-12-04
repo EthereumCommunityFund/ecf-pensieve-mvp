@@ -1,8 +1,13 @@
 'use client';
 
-import { ChartBarIcon } from '@phosphor-icons/react';
+import {
+  ArrowBendUpLeft,
+  ChartBar as ChartBarGlyph,
+  ChartBarIcon,
+  ThumbsDown,
+} from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
@@ -10,10 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
-import {
-  SentimentKey,
-  SentimentMetric,
-} from '../common/sentiment/sentimentConfig';
+import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
 import {
   AnswerItem,
@@ -29,14 +31,12 @@ import {
   type ThreadSentimentRecord,
 } from '../utils/threadTransforms';
 
-import { AnswerCard } from './AnswerCard';
-import { CommentCard } from './CommentCard';
-import { ComposerCard } from './ComposerCard';
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
 import { mockThreadAnswers, mockThreadComments } from './mockDiscussionData';
 import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
+import { ComposerContext, ThreadComposerModal } from './ThreadComposerModal';
 
 type ThreadDetailPageProps = {
   threadId: string;
@@ -68,10 +68,15 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [activeTab, setActiveTab] = useState<'answers' | 'comments'>('answers');
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
   const [sentimentFilter, setSentimentFilter] = useState<string>('all');
-  const [showAnswerComposer, setShowAnswerComposer] = useState(false);
-  const [showCommentComposer, setShowCommentComposer] = useState(false);
-  const [threadSentimentSelection, setThreadSentimentSelection] =
-    useState<SentimentKey | null>(null);
+  const [composerVariant, setComposerVariant] = useState<
+    'answer' | 'comment' | null
+  >(null);
+  const [commentComposerTitle, setCommentComposerTitle] = useState<
+    string | undefined
+  >(undefined);
+  const [commentContext, setCommentContext] = useState<ComposerContext | null>(
+    null,
+  );
   const [answerDraft, setAnswerDraft] = useState('');
   const [commentDraft, setCommentDraft] = useState('');
   const [answerError, setAnswerError] = useState<string | null>(null);
@@ -149,7 +154,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         });
         setAnswerDraft('');
         setAnswerError(null);
-        setShowAnswerComposer(false);
+        setComposerVariant(null);
         answersQuery.refetch();
       },
       onError: (error) => {
@@ -171,7 +176,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         });
         setCommentDraft('');
         setCommentError(null);
-        setShowCommentComposer(false);
+        setComposerVariant(null);
         commentsQuery.refetch();
       },
       onError: (error) => {
@@ -221,30 +226,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       },
     });
 
-  const setSentimentMutation =
-    trpc.projectDiscussionInteraction.setSentiment.useMutation({
-      onSuccess: () => {
-        threadQuery.refetch();
-        answersQuery.refetch();
-      },
-      onError: (error) => {
-        addToast({
-          title: 'Unable to update sentiment',
-          description: error.message,
-          color: 'danger',
-        });
-      },
-    });
-
-  const viewerThreadSentiment = useMemo(
-    () => findUserSentiment(baseThread?.sentiments, user?.id),
-    [baseThread?.sentiments, user?.id],
-  );
-
-  useEffect(() => {
-    setThreadSentimentSelection(viewerThreadSentiment ?? null);
-  }, [viewerThreadSentiment]);
-
   const handleSubmitAnswer = async () => {
     if (!isValidThreadId || !requireAuth()) {
       return;
@@ -260,6 +241,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         threadId: numericThreadId,
         content: trimmed,
       });
+      setComposerVariant(null);
     } catch (error: any) {
       setAnswerError(error.message ?? 'Failed to submit answer');
     }
@@ -280,9 +262,39 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         threadId: numericThreadId,
         content: trimmed,
       });
+      setComposerVariant(null);
     } catch (error: any) {
       setCommentError(error.message ?? 'Failed to post comment');
     }
+  };
+
+  const handleCloseComposer = () => {
+    if (composerVariant === 'answer' && createAnswerMutation.isPending) {
+      return;
+    }
+    if (composerVariant === 'comment' && createCommentMutation.isPending) {
+      return;
+    }
+    setComposerVariant(null);
+    setAnswerError(null);
+    setCommentError(null);
+    setCommentComposerTitle(undefined);
+    setCommentContext(null);
+  };
+
+  const openCommentComposer = (options?: {
+    title?: string;
+    context?: ComposerContext | null;
+  }) => {
+    setCommentComposerTitle(options?.title);
+    setCommentContext(options?.context ?? null);
+    setComposerVariant('comment');
+  };
+
+  const openAnswerComposer = () => {
+    setComposerVariant('answer');
+    setCommentComposerTitle(undefined);
+    setCommentContext(null);
   };
 
   const handleSupportAnswer = async (answerId: number) => {
@@ -314,48 +326,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       setWithdrawingAnswerId((current) =>
         current === answerId ? null : current,
       );
-    }
-  };
-
-  const handleThreadSentimentChange = async (value: string) => {
-    if (value === 'all' || !isValidSentimentValue(value) || !requireAuth()) {
-      return;
-    }
-    try {
-      await setSentimentMutation.mutateAsync({
-        threadId: numericThreadId,
-        type: value,
-      });
-      setThreadSentimentSelection(value);
-      addToast({
-        title: 'Sentiment recorded',
-        description: 'Thanks for sharing your perspective.',
-        color: 'success',
-      });
-    } catch {
-      // Errors handled in mutation
-    }
-  };
-
-  const handleAnswerSentimentChange = async (
-    answerId: number,
-    value: string,
-  ) => {
-    if (value === 'all' || !isValidSentimentValue(value) || !requireAuth()) {
-      return;
-    }
-    try {
-      await setSentimentMutation.mutateAsync({
-        answerId,
-        type: value,
-      });
-      addToast({
-        title: 'Sentiment recorded',
-        description: 'Thanks for reviewing this answer.',
-        color: 'success',
-      });
-    } catch {
-      // handled globally
     }
   };
 
@@ -577,12 +547,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         );
 
   const isAnswersTab = activeTab === 'answers';
-  const answerComposerTitle = thread.isScam
-    ? 'Share a counter claim'
-    : 'Share an answer';
-  const answerComposerPlaceholder = thread.isScam
-    ? 'Document remediation progress or counter evidence.'
-    : 'Outline actionable steps to resolve this complaint.';
   const answerEmptyState = thread.isScam
     ? {
         title: 'No counter claims yet',
@@ -599,220 +563,530 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     description:
       'Ask clarifying questions or share context to help the community respond.',
   };
+  return (
+    <>
+      <div className="flex items-start justify-center gap-[40px] pt-[20px]">
+        <section className="w-[700px] space-y-6">
+          <PostDetailCard
+            title={thread.title}
+            author={thread.author.name}
+            timeAgo={thread.author.postedAt}
+            contentHtml={threadContentHtml}
+            tags={thread.tags}
+            categoryLabel={
+              thread.categories[0] ??
+              (thread.isScam ? 'Scam & Fraud' : 'General')
+            }
+            onAnswer={() => openAnswerComposer()}
+            onComment={() => openCommentComposer()}
+          />
 
-  const sentimentMetrics: SentimentMetric[] = thread.sentiment.map(
-    (metric) => ({
-      key: metric.key,
-      percentage: metric.percentage,
-    }),
-  );
+          <div className="pb-[40px]">
+            <TopbarFilters
+              statusTabs={tabOptions.map((tab) => tab.key)}
+              activeStatus={activeTab}
+              onStatusChange={(value) =>
+                setActiveTab(value === 'comments' ? 'comments' : 'answers')
+              }
+              sortOptions={['top', 'new']}
+              activeSort={sortOption}
+              onSortChange={(value) =>
+                setSortOption(value === 'new' ? 'new' : 'top')
+              }
+              sentimentOptions={SENTIMENT_KEYS}
+              selectedSentiment={sentimentFilter}
+              onSentimentChange={(value) => setSentimentFilter(value)}
+              renderStatusLabel={(value) => {
+                const tab = tabOptions.find((item) => item.key === value);
+                if (!tab) return value;
+                return (
+                  <span className="flex items-center gap-2">
+                    <span>{tab.label}</span>
+                    <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
+                      {tab.count}
+                    </span>
+                  </span>
+                );
+              }}
+            />
+            {/* Answer & discussion lists, aligned to Figma spec */}
+            <div className="space-y-4 pt-5">
+              {isAnswersTab ? (
+                <>
+                  <div className="flex justify-end">
+                    <Button
+                      color="primary"
+                      className="rounded-[8px] px-4 py-2 text-sm font-semibold"
+                      onPress={() => openAnswerComposer()}
+                    >
+                      Post Answer
+                    </Button>
+                  </div>
+                  {isAnswersInitialLoading ? (
+                    <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                      Loading answers…
+                    </div>
+                  ) : null}
+                  {filteredAnswers.length
+                    ? filteredAnswers.map((answer) => (
+                        <AnswerDetailCard
+                          key={answer.id}
+                          answer={answer}
+                          isScam={thread.isScam}
+                          onSupport={handleSupportAnswer}
+                          onWithdraw={handleWithdrawSupport}
+                          onPostComment={(context) =>
+                            openCommentComposer({
+                              title: 'Post Comment',
+                              context,
+                            })
+                          }
+                          threadAuthorName={thread.author.name}
+                          supportPending={
+                            supportingAnswerId === answer.numericId
+                          }
+                          withdrawPending={
+                            withdrawingAnswerId === answer.numericId
+                          }
+                        />
+                      ))
+                    : !isAnswersInitialLoading && (
+                        <EmptyState
+                          title={answerEmptyState.title}
+                          description={answerEmptyState.description}
+                        />
+                      )}
+                  {answersQuery.hasNextPage ? (
+                    <div className="flex justify-center">
+                      <Button
+                        className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
+                        onPress={() => answersQuery.fetchNextPage()}
+                        isLoading={answersQuery.isFetchingNextPage}
+                      >
+                        Load more {thread.isScam ? 'counter claims' : 'answers'}
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between rounded-[10px] border border-black/10 bg-white px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-[14px] font-semibold text-black">
+                        Discussion
+                      </span>
+                      <span className="text-xs text-black/60">
+                        Post a comment
+                      </span>
+                    </div>
+                    <Button
+                      color="primary"
+                      className="rounded-[8px] px-4 py-2 text-sm font-semibold"
+                      onPress={() => openCommentComposer()}
+                    >
+                      Post Comment
+                    </Button>
+                  </div>
+                  {isCommentsInitialLoading ? (
+                    <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                      Loading discussion…
+                    </div>
+                  ) : null}
+                  {filteredComments.length
+                    ? filteredComments.map((comment, index) => (
+                        <CommentThreadItem
+                          key={comment.id}
+                          comment={comment}
+                          showConnector={
+                            index === 0 && filteredComments.length > 1
+                          }
+                          onReply={(context) =>
+                            openCommentComposer({
+                              title: 'Post Reply',
+                              context,
+                            })
+                          }
+                          threadAuthorName={thread.author.name}
+                        />
+                      ))
+                    : !isCommentsInitialLoading && (
+                        <EmptyState
+                          title={discussionEmptyState.title}
+                          description={discussionEmptyState.description}
+                        />
+                      )}
+                  {commentsQuery.hasNextPage ? (
+                    <div className="flex justify-center">
+                      <Button
+                        className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
+                        onPress={() => commentsQuery.fetchNextPage()}
+                        isLoading={commentsQuery.isFetchingNextPage}
+                      >
+                        Load more comments
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </div>
+        </section>
 
-  const cpPercent = Math.min(
-    100,
-    Math.round((thread.cpProgress.current / thread.cpProgress.target) * 100),
+        <div className="w-[300px] space-y-[20px]">
+          <ContributionVotesCard
+            current={thread.cpProgress.current}
+            target={thread.cpProgress.target}
+            label={thread.cpProgress.label}
+            helper={thread.cpProgress.helper}
+            status={thread.status}
+            isScam={thread.isScam}
+          />
+
+          <SentimentSummaryPanel
+            sentiments={thread.sentiment.map((item) => ({
+              key: item.key,
+              percentage: item.percentage,
+            }))}
+            totalVotes={thread.totalSentimentVotes}
+            customHeader={
+              <div className="flex items-center gap-[10px]">
+                <ChartBarIcon size={20} weight="fill" />
+                <span className="text-[14px] font-[600]">
+                  User sentiment for this post
+                </span>
+              </div>
+            }
+          />
+
+          <QuickActionsCard actions={thread.quickActions} />
+        </div>
+      </div>
+
+      {composerVariant ? (
+        <ThreadComposerModal
+          variant={composerVariant}
+          isOpen
+          value={composerVariant === 'answer' ? answerDraft : commentDraft}
+          onChange={(value) =>
+            composerVariant === 'answer'
+              ? setAnswerDraft(value)
+              : setCommentDraft(value)
+          }
+          onSubmit={
+            composerVariant === 'answer'
+              ? handleSubmitAnswer
+              : handleSubmitComment
+          }
+          onClose={handleCloseComposer}
+          isSubmitting={
+            composerVariant === 'answer'
+              ? createAnswerMutation.isPending
+              : createCommentMutation.isPending
+          }
+          error={composerVariant === 'answer' ? answerError : commentError}
+          threadTitle={thread.title}
+          threadCategory={
+            thread.categories[0] ?? (thread.isScam ? 'Scam & Fraud' : undefined)
+          }
+          isScam={thread.isScam}
+          contextCard={
+            composerVariant === 'comment'
+              ? (commentContext ?? undefined)
+              : undefined
+          }
+          titleOverride={
+            composerVariant === 'comment' ? commentComposerTitle : undefined
+          }
+        />
+      ) : null}
+    </>
   );
+}
+
+type AnswerDetailCardProps = {
+  answer: AnswerItem;
+  isScam: boolean;
+  onSupport: (answerId: number) => void;
+  onWithdraw: (answerId: number) => void;
+  onPostComment: (context?: ComposerContext) => void;
+  threadAuthorName: string;
+  supportPending?: boolean;
+  withdrawPending?: boolean;
+};
+
+function AnswerDetailCard({
+  answer,
+  isScam,
+  onSupport,
+  onWithdraw,
+  onPostComment,
+  threadAuthorName,
+  supportPending = false,
+  withdrawPending = false,
+}: AnswerDetailCardProps) {
+  const commentCount = answer.comments?.length ?? answer.commentsCount;
+  const primaryTag = answer.isAccepted ? 'Highest voted answer' : undefined;
+  const secondaryTag =
+    answer.statusTag ||
+    (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
+  const cpLabel = formatCompactNumber(answer.cpSupport);
+  const isOp = answer.author === threadAuthorName;
 
   return (
-    <div className="flex items-start justify-center gap-[40px] pt-[20px]">
-      <section className="w-[700px] space-y-6">
-        <PostDetailCard
-          title={thread.title}
-          author={thread.author.name}
-          timeAgo={thread.author.postedAt}
-          contentHtml={threadContentHtml}
-          tags={thread.tags}
-          categoryLabel={
-            thread.categories[0] ?? (thread.isScam ? 'Scam & Fraud' : 'General')
-          }
-          onAnswer={() => setShowAnswerComposer(true)}
-          onComment={() => setShowCommentComposer(true)}
-        />
-
-        <div className="pb-[40px]">
-          <TopbarFilters
-            statusTabs={tabOptions.map((tab) => tab.key)}
-            activeStatus={activeTab}
-            onStatusChange={(value) =>
-              setActiveTab(value === 'comments' ? 'comments' : 'answers')
-            }
-            sortOptions={['top', 'new']}
-            activeSort={sortOption}
-            onSortChange={(value) =>
-              setSortOption(value === 'new' ? 'new' : 'top')
-            }
-            sentimentOptions={SENTIMENT_KEYS}
-            selectedSentiment={sentimentFilter}
-            onSentimentChange={(value) => setSentimentFilter(value)}
-            renderStatusLabel={(value) => {
-              const tab = tabOptions.find((item) => item.key === value);
-              if (!tab) return value;
-              return (
-                <span className="flex items-center gap-2">
-                  <span>{tab.label}</span>
-                  <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
-                    {tab.count}
-                  </span>
-                </span>
-              );
-            }}
-          />
-          <div className="space-y-5 pt-5">
-            {isAnswersTab ? (
-              <>
-                {showAnswerComposer ? (
-                  <ComposerCard
-                    title={answerComposerTitle}
-                    placeholder={answerComposerPlaceholder}
-                    value={answerDraft}
-                    onChange={(value) => setAnswerDraft(value)}
-                    onSubmit={handleSubmitAnswer}
-                    onCancel={() => setShowAnswerComposer(false)}
-                    submitLabel={
-                      createAnswerMutation.isPending
-                        ? 'Submitting…'
-                        : 'Publish answer'
-                    }
-                    isSubmitting={createAnswerMutation.isPending}
-                    error={answerError}
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowAnswerComposer(true)}
-                    className="w-full rounded-[12px] border border-dashed border-black/20 bg-white px-4 py-3 text-left text-sm font-semibold text-black/50 transition hover:border-black/40 hover:text-black"
-                  >
-                    {thread.isScam
-                      ? 'Post a counter claim to challenge this alert'
-                      : 'Share an answer with actionable next steps'}
-                  </button>
-                )}
-                {isAnswersInitialLoading ? (
-                  <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                    Loading answers…
-                  </div>
-                ) : null}
-                {filteredAnswers.length
-                  ? filteredAnswers.map((answer) => (
-                      <AnswerCard
-                        key={answer.id}
-                        answer={answer}
-                        isScam={thread.isScam}
-                        onSupport={handleSupportAnswer}
-                        onWithdraw={handleWithdrawSupport}
-                        onSentimentChange={handleAnswerSentimentChange}
-                        supportPending={supportingAnswerId === answer.numericId}
-                        withdrawPending={
-                          withdrawingAnswerId === answer.numericId
-                        }
-                      />
-                    ))
-                  : !isAnswersInitialLoading && (
-                      <EmptyState
-                        title={answerEmptyState.title}
-                        description={answerEmptyState.description}
-                      />
-                    )}
-                {answersQuery.hasNextPage ? (
-                  <div className="flex justify-center">
-                    <Button
-                      className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
-                      onPress={() => answersQuery.fetchNextPage()}
-                      isLoading={answersQuery.isFetchingNextPage}
-                    >
-                      Load more {thread.isScam ? 'counter claims' : 'answers'}
-                    </Button>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <>
-                {showCommentComposer ? (
-                  <ComposerCard
-                    title="Post a comment"
-                    placeholder="Add context, questions, or sentiment to keep the thread active."
-                    value={commentDraft}
-                    onChange={(value) => setCommentDraft(value)}
-                    onSubmit={handleSubmitComment}
-                    onCancel={() => setShowCommentComposer(false)}
-                    submitLabel={
-                      createCommentMutation.isPending
-                        ? 'Posting…'
-                        : 'Publish comment'
-                    }
-                    isSubmitting={createCommentMutation.isPending}
-                    error={commentError}
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowCommentComposer(true)}
-                    className="w-full rounded-[12px] border border-dashed border-black/20 bg-white px-4 py-3 text-left text-sm font-semibold text-black/50 transition hover:border-black/40 hover:text-black"
-                  >
-                    Post a comment to guide the discussion
-                  </button>
-                )}
-                {isCommentsInitialLoading ? (
-                  <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                    Loading discussion…
-                  </div>
-                ) : null}
-                {filteredComments.length
-                  ? filteredComments.map((comment) => (
-                      <CommentCard key={comment.id} comment={comment} />
-                    ))
-                  : !isCommentsInitialLoading && (
-                      <EmptyState
-                        title={discussionEmptyState.title}
-                        description={discussionEmptyState.description}
-                      />
-                    )}
-                {commentsQuery.hasNextPage ? (
-                  <div className="flex justify-center">
-                    <Button
-                      className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
-                      onPress={() => commentsQuery.fetchNextPage()}
-                      isLoading={commentsQuery.isFetchingNextPage}
-                    >
-                      Load more comments
-                    </Button>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </div>
+    <article className="rounded-[10px] border border-black/10 bg-white p-4 shadow-[0_12px_36px_rgba(15,23,42,0.08)]">
+      <div className="flex gap-3">
+        <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9] text-sm font-semibold text-black/70">
+          {answer.author?.[0]?.toUpperCase()}
         </div>
-      </section>
+        <div className="flex-1 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[15px] font-semibold text-black">
+                {answer.author}
+              </span>
+              {primaryTag ? (
+                <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
+                  {primaryTag}
+                </span>
+              ) : null}
+              {secondaryTag ? (
+                <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
+                  {secondaryTag}
+                </span>
+              ) : null}
+              {isScam ? (
+                <span className="rounded-[4px] border border-[#d14343] bg-[#fff0ee] px-2 py-1 text-[12px] font-semibold text-[#b53c1d]">
+                  Counter Claim
+                </span>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2 text-[12px] text-black/70">
+              <div className="inline-flex items-center gap-2 rounded-[6px] border border-black/10 bg-[#f4f4f4] px-2 py-1">
+                <ChartBarGlyph
+                  size={16}
+                  weight="fill"
+                  className="text-[#64c0a5]"
+                />
+                <span className="text-[13px] font-semibold text-black">
+                  {cpLabel}
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-[3px] rounded-[6px] border border-black/10 bg-white px-[6px] py-[3px]">
+                <span className="block size-[8px] rounded-sm bg-[#24d3aa]" />
+                <span className="block size-[8px] rounded-sm bg-[#4ea5ff]" />
+                <span className="block size-[8px] rounded-sm bg-[#8f85ff]" />
+                <span className="block size-[8px] rounded-sm bg-[#f7b500]" />
+                <span className="block size-[8px] rounded-sm bg-[#f86c6b]" />
+              </div>
+            </div>
+          </div>
 
-      <div className="w-[300px] space-y-[20px]">
-        <ContributionVotesCard
-          current={thread.cpProgress.current}
-          target={thread.cpProgress.target}
-          label={thread.cpProgress.label}
-          helper={thread.cpProgress.helper}
-          status={thread.status}
-          isScam={thread.isScam}
-        />
+          <div className="whitespace-pre-line text-[14px] leading-[20px] text-black/80">
+            {answer.body}
+          </div>
 
-        <SentimentSummaryPanel
-          sentiments={thread.sentiment.map((item) => ({
-            key: item.key,
-            percentage: item.percentage,
-          }))}
-          totalVotes={thread.totalSentimentVotes}
-          customHeader={
-            <div className="flex items-center gap-[10px]">
-              <ChartBarIcon size={20} weight="fill" />
-              <span className="text-[14px] font-[600]">
-                User sentiment for this post
+          <div className="flex items-center gap-2 text-xs text-black/60">
+            <span>{answer.createdAt}</span>
+            <div className="inline-flex items-center gap-2 rounded-[8px] bg-[#f2f2f2] px-2 py-1">
+              <ChartBarGlyph
+                size={16}
+                weight="fill"
+                className="text-black/40"
+              />
+              <span className="text-[12px] font-semibold text-black/70">
+                {commentCount?.toString() || '0'}
               </span>
             </div>
-          }
-        />
+          </div>
 
-        <QuickActionsCard actions={thread.quickActions} />
+          <div className="flex flex-wrap items-center gap-2 text-sm text-black/70">
+            <Button
+              className="rounded-[5px] border border-black/15 bg-white px-4 py-2 text-[13px] font-semibold text-black"
+              onPress={() => onSupport(answer.numericId)}
+              isDisabled={answer.viewerHasSupported || supportPending}
+            >
+              {supportPending ? 'Supporting…' : 'Support'}
+            </Button>
+            <Button
+              className="rounded-[5px] border border-black/15 bg-white px-4 py-2 text-[13px] font-semibold text-black"
+              onPress={() => onWithdraw(answer.numericId)}
+              isDisabled={!answer.viewerHasSupported || withdrawPending}
+            >
+              {withdrawPending ? 'Withdrawing…' : 'Withdraw'}
+            </Button>
+          </div>
+
+          <div className="mt-2 border-t border-black/10 pt-3">
+            <div className="flex items-center justify-between text-[14px] font-semibold text-black">
+              <div className="flex items-center gap-2">
+                <span>Comments</span>
+                <span className="text-black/50">
+                  {String(commentCount ?? 0).padStart(2, '0')}
+                </span>
+              </div>
+              <Button
+                className="rounded-[5px] border border-black/15 bg-white px-3 py-1 text-[12px] font-semibold text-black"
+                onPress={() =>
+                  onPostComment({
+                    title: 'Commenting to Answer:',
+                    author: answer.author,
+                    isOp,
+                    timestamp: answer.createdAt,
+                    excerpt: formatExcerpt(answer.body),
+                  })
+                }
+              >
+                Post Comment
+              </Button>
+            </div>
+            <div className="mt-3 space-y-3">
+              {answer.comments?.length ? (
+                answer.comments.map((comment) => (
+                  <AnswerCommentRow key={comment.id} comment={comment} />
+                ))
+              ) : (
+                <p className="text-[13px] text-black/60">No comments yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function AnswerCommentRow({ comment }: { comment: CommentItem }) {
+  const isOp = comment.author?.toLowerCase().includes('(op)');
+  const badgeNumber =
+    typeof comment.numericId === 'number'
+      ? Math.max(1, comment.numericId % 10)
+      : 4;
+
+  return (
+    <div className="flex gap-3">
+      <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9]" />
+      <div className="flex-1 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[14px] font-semibold text-black">
+            {comment.author}
+          </span>
+          {isOp ? (
+            <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
+              OP
+            </span>
+          ) : null}
+          <span className="text-[12px] text-black/60">{comment.createdAt}</span>
+        </div>
+        <p className="text-[14px] leading-[20px] text-black/80">
+          {comment.body}
+        </p>
+        <div className="flex items-center gap-3 text-[12px] text-black/70">
+          <span className="inline-flex items-center gap-1 rounded-[6px] border border-black/10 bg-[#f2f2f2] px-2 py-1">
+            <ChartBarGlyph size={14} className="text-black/40" />
+            <span className="font-semibold text-black/80">{badgeNumber}</span>
+          </span>
+          <Button className="rounded-[6px] border border-black/15 bg-[#f2f2f2] px-3 py-1 text-[12px] font-semibold text-black">
+            Reply
+          </Button>
+        </div>
       </div>
     </div>
   );
+}
+
+function CommentThreadItem({
+  comment,
+  showConnector = false,
+  onReply,
+  threadAuthorName,
+}: {
+  comment: CommentItem;
+  showConnector?: boolean;
+  onReply: (context?: ComposerContext) => void;
+  threadAuthorName: string;
+}) {
+  const isOp =
+    comment.author?.toLowerCase().includes('(op)') ||
+    comment.author === threadAuthorName;
+
+  return (
+    <div className="relative flex gap-3 rounded-[10px] bg-[#f7f7f7] p-3">
+      {showConnector ? (
+        <div className="absolute left-[24px] top-[38px] h-[calc(100%-38px)] w-px bg-black/10" />
+      ) : null}
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex size-[30px] items-center justify-center rounded-full bg-[#d9d9d9]" />
+        {isOp ? (
+          <div className="flex flex-col items-center gap-1 text-black/50">
+            <ArrowBendUpLeft size={14} />
+            <ThumbsDown size={18} weight="fill" />
+          </div>
+        ) : null}
+      </div>
+      <div className="flex-1 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[14px] font-semibold text-black">
+              {comment.author}
+            </span>
+            {isOp ? (
+              <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
+                OP
+              </span>
+            ) : null}
+            <span className="text-[12px] text-black/60">
+              {comment.createdAt}
+            </span>
+          </div>
+          <div className="inline-flex items-center gap-[3px] rounded-[6px] border border-black/10 bg-white px-[6px] py-[3px]">
+            <span className="block size-[8px] rounded-sm bg-[#24d3aa]" />
+            <span className="block size-[8px] rounded-sm bg-[#4ea5ff]" />
+            <span className="block size-[8px] rounded-sm bg-[#8f85ff]" />
+            <span className="block size-[8px] rounded-sm bg-[#f7b500]" />
+            <span className="block size-[8px] rounded-sm bg-[#f86c6b]" />
+          </div>
+        </div>
+
+        <p className="text-[14px] leading-[20px] text-black/80">
+          {comment.body}
+        </p>
+
+        <div className="flex items-center gap-3 text-[12px] text-black/70">
+          <span className="inline-flex items-center gap-1 rounded-[6px] border border-black/10 bg-[#efefef] px-2 py-1">
+            <ChartBarGlyph size={14} className="text-black/50" />
+            <span className="font-semibold text-black/80">4</span>
+          </span>
+          <Button
+            className="rounded-[6px] border border-black/15 bg-[#efefef] px-3 py-1 text-[12px] font-semibold text-black"
+            onPress={() =>
+              onReply({
+                title: 'Replying to:',
+                author: comment.author,
+                isOp,
+                timestamp: comment.createdAt,
+                excerpt: formatExcerpt(comment.body),
+              })
+            }
+          >
+            Reply
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function formatExcerpt(text: string, maxLength = 180) {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1)}…`;
 }
 
 function extractParagraphs(raw?: string) {
@@ -838,10 +1112,6 @@ function findUserSentiment(
   }
   const normalized = record.type.toLowerCase() as SentimentKey;
   return SENTIMENT_KEYS.includes(normalized) ? normalized : null;
-}
-
-function isValidSentimentValue(value: string): value is SentimentKey {
-  return SENTIMENT_KEYS.includes(value as SentimentKey);
 }
 
 export { SentimentSummaryPanel };
