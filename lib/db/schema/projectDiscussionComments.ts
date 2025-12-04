@@ -4,7 +4,6 @@ import {
   bigserial,
   boolean,
   foreignKey,
-  index,
   pgTable,
   text,
   timestamp,
@@ -33,6 +32,7 @@ export const projectDiscussionComments = pgTable(
       () => projectDiscussionAnswers.id,
     ),
     parentCommentId: bigint('parent_comment_id', { mode: 'number' }),
+    commentId: bigint('root_comment_id', { mode: 'number' }),
     creator: uuid('creator')
       .notNull()
       .references(() => profiles.userId),
@@ -46,15 +46,11 @@ export const projectDiscussionComments = pgTable(
       foreignColumns: [table.id],
       name: 'project_discussion_comments_parent_comment_id_fkey',
     }),
-    threadCreatedAtIdx: index(
-      'project_discussion_comments_thread_created_at_idx',
-    ).on(table.threadId, table.createdAt.desc()),
-    answerCreatedAtIdx: index(
-      'project_discussion_comments_answer_created_at_idx',
-    ).on(table.answerId, table.createdAt.desc()),
-    parentCommentCreatedAtIdx: index(
-      'project_discussion_comments_parent_created_at_idx',
-    ).on(table.parentCommentId, table.createdAt.desc()),
+    commentFk: foreignKey({
+      columns: [table.commentId],
+      foreignColumns: [table.id],
+      name: 'project_discussion_comments_comment_id_fkey',
+    }),
   }),
 );
 

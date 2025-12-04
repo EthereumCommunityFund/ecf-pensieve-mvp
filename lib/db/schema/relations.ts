@@ -280,6 +280,7 @@ export const projectDiscussionCommentsRelations = relations(
     replies: many(projectDiscussionComments, {
       relationName: 'parentComment',
     }),
+    comments: many(projectDiscussionComments),
   }),
 );
 

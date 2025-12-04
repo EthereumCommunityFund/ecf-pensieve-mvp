@@ -1,32 +1,8 @@
-import { TRPCError } from '@trpc/server';
 import { and, desc, eq, lt, sql } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
-import { projectDiscussionThreads, projects } from '@/lib/db/schema';
-
-const ensurePublishedProject = async (db: Database, projectId: number) => {
-  const project = await db.query.projects.findFirst({
-    columns: {
-      id: true,
-      isPublished: true,
-    },
-    where: eq(projects.id, projectId),
-  });
-
-  if (!project) {
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'Project not found',
-    });
-  }
-
-  if (!project.isPublished) {
-    throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'Project is not published',
-    });
-  }
-};
+import { projectDiscussionThreads } from '@/lib/db/schema';
+import { ensurePublishedProject } from '@/lib/services/projectGuards';
 
 type CreateThreadInput = {
   projectId: number;
@@ -127,6 +103,7 @@ export const listDiscussionThreads = async ({
           avatarUrl: true,
         },
       },
+      sentiments: true,
     },
   });
 
