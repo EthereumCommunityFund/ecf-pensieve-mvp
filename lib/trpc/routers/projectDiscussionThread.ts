@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import {
   createDiscussionThread,
+  getDiscussionThreadById,
   listDiscussionThreads,
 } from '@/lib/services/projectDiscussionThreadService';
 import { normalizeStringArray } from '@/lib/utils';
@@ -29,7 +30,7 @@ const createThreadInput = z.object({
 });
 
 const listThreadsInput = z.object({
-  projectId: z.number(),
+  projectId: z.number().optional(),
   category: z.array(z.string().trim().min(1)).optional(),
   tags: z.array(z.string().trim().min(1)).optional(),
   isScam: z.boolean().optional(),
@@ -76,6 +77,15 @@ export const projectDiscussionThreadRouter = router({
           cursor: input.cursor,
           limit,
         },
+      });
+    }),
+
+  getThreadById: publicProcedure
+    .input(z.object({ threadId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return getDiscussionThreadById({
+        db: ctx.db,
+        threadId: input.threadId,
       });
     }),
 });

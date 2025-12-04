@@ -1,4 +1,5 @@
-import { and, desc, eq, lt, sql } from 'drizzle-orm';
+import { TRPCError } from '@trpc/server';
+import { and, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import { projectDiscussionThreads } from '@/lib/db/schema';
@@ -41,7 +42,7 @@ export const createDiscussionThread = async ({
 };
 
 type ListThreadsInput = {
-  projectId: number;
+  projectId?: number;
   category: string[];
   tags: string[];
   isScam?: boolean;
@@ -56,9 +57,12 @@ export const listDiscussionThreads = async ({
   db: Database;
   input: ListThreadsInput;
 }) => {
-  await ensurePublishedProject(db, input.projectId);
+  const conditions: SQL<unknown>[] = [];
 
-  const conditions = [eq(projectDiscussionThreads.projectId, input.projectId)];
+  if (input.projectId) {
+    await ensurePublishedProject(db, input.projectId);
+    conditions.push(eq(projectDiscussionThreads.projectId, input.projectId));
+  }
 
   if (input.cursor) {
     conditions.push(lt(projectDiscussionThreads.id, input.cursor));
@@ -86,7 +90,7 @@ export const listDiscussionThreads = async ({
     );
   }
 
-  const whereCondition = and(...conditions);
+  const whereCondition = conditions.length ? and(...conditions) : undefined;
 
   const results = await db.query.projectDiscussionThreads.findMany({
     where: whereCondition,
@@ -116,4 +120,32 @@ export const listDiscussionThreads = async ({
     nextCursor,
     hasNextPage,
   };
+};
+
+export const getDiscussionThreadById = async ({
+  db,
+  threadId,
+}: {
+  db: Database;
+  threadId: number;
+}) => {
+  const thread = await db.query.projectDiscussionThreads.findFirst({
+    where: eq(projectDiscussionThreads.id, threadId),
+    with: {
+      creator: {
+        columns: {
+          userId: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+      sentiments: true,
+    },
+  });
+
+  if (!thread) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Thread not found' });
+  }
+
+  return thread;
 };

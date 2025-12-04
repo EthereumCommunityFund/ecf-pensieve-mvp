@@ -1,6 +1,6 @@
 import { ScamThreadDetailPage } from '@/components/pages/discourse/ScamThreadDetailPage';
-import { ThreadDetailPage } from '@/components/pages/discourse/ThreadDetailPage';
 import { threadDataset } from '@/components/pages/discourse/threadData';
+import { ThreadDetailPage } from '@/components/pages/discourse/ThreadDetailPage';
 
 type ThreadDetailRouteProps = {
   params: Promise<{
@@ -12,11 +12,15 @@ export default async function ThreadDetailRoute({
   params,
 }: ThreadDetailRouteProps) {
   const { threadId } = await params;
+  const fallbackRecord = threadDataset[threadId];
 
-  const record = threadDataset[threadId];
-
-  if (record?.isScam) {
-    return <ScamThreadDetailPage threadId={threadId} />;
+  if (fallbackRecord?.isScam) {
+    return (
+      <ScamThreadDetailPage
+        threadId={threadId}
+        fallbackThread={fallbackRecord}
+      />
+    );
   }
 
   return <ThreadDetailPage threadId={threadId} />;

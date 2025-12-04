@@ -17,8 +17,7 @@ export type ThreadMeta = {
   excerpt: string;
   author: string;
   timeAgo: string;
-  replies: number;
-  votes: number;
+  votes?: number;
   badge?: string;
   status?: string;
   tag?: string;
@@ -29,6 +28,8 @@ export type ThreadMeta = {
 };
 
 type ThreadListProps = {
+  isLoading: boolean;
+  isFetched: boolean;
   threads: ThreadMeta[];
   emptyMessage?: string;
   onThreadSelect?: (thread: ThreadMeta) => void;
@@ -45,6 +46,7 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
   const hasAnswers = typeof thread.answeredCount === 'number';
   const isScamThread = thread.tag?.toLowerCase().includes('scam') ?? false;
   const hasStatus = Boolean(thread.status);
+  const voteCount = thread.votes ?? 0;
   const clickableProps = onSelect
     ? {
         role: 'button' as const,
@@ -147,7 +149,7 @@ function ThreadItem({ thread, onSentimentClick, onSelect }: ThreadItemProps) {
                   className={cn(hasAnswers ? 'opacity-100' : 'opacity-30')}
                 />
               </Button>
-              <span className="text-[13px] font-semibold">{thread.votes}</span>
+              <span className="text-[13px] font-semibold">{voteCount}</span>
             </div>
           </div>
         </div>
@@ -160,15 +162,18 @@ export function ThreadList({
   threads,
   emptyMessage,
   onThreadSelect,
+  isLoading,
+  isFetched,
 }: ThreadListProps) {
   const [activeSentimentThread, setActiveSentimentThread] =
     useState<ThreadMeta | null>(null);
 
   const renderedThreads = useMemo(() => {
-    if (!threads.length) {
+    if (!isFetched && !threads.length) {
       return null;
     }
 
+    // TODO 展示骨架屏
     return threads.map((thread) => (
       <div
         key={thread.id}
@@ -185,7 +190,7 @@ export function ThreadList({
 
   if (!renderedThreads) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+      <div className="rounded-[10px] border border-black/10 bg-white p-10 text-center text-sm text-gray-500">
         {emptyMessage || 'No threads yet.'}
       </div>
     );

@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, WarningCircle } from '@phosphor-icons/react';
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
@@ -21,6 +21,7 @@ const stripHtml = (value: string) =>
     .trim();
 
 export type CreatePostErrors = {
+  project?: string;
   title?: string;
   body?: string;
   category?: string;
@@ -36,6 +37,9 @@ type CreatePostProps = {
   tagInput: string;
   isScam: boolean;
   errors?: CreatePostErrors;
+  projectName?: string;
+  projectSelector?: ReactNode;
+  projectError?: string;
   onTitleChange: (value: string) => void;
   onBodyChange: (value: string) => void;
   onCategoryChange: (category?: DiscourseTopicOption) => void;
@@ -58,6 +62,9 @@ export function CreatePost({
   tagInput,
   isScam,
   errors,
+  projectName,
+  projectSelector,
+  projectError,
   onTitleChange,
   onBodyChange,
   onCategoryChange,
@@ -99,7 +106,7 @@ export function CreatePost({
           <ArrowLeft size={20} />
           <span>Back</span>
         </Button>
-        <span>Project Name</span>
+        <span>{projectName || 'Project'}</span>
         <span>/</span>
         <span>Discussions</span>
         <span>/</span>
@@ -107,6 +114,21 @@ export function CreatePost({
       </div>
 
       <div className="tablet:max-a-auto mobile:max-w-auto flex w-full max-w-[700px] flex-col gap-8 rounded-[20px] px-10 py-8">
+        <div className="rounded-[12px] border border-black/10 bg-white/60 p-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-semibold text-black/60">
+              Target project
+            </p>
+            <p className="text-base font-semibold text-black">
+              {projectName || 'Select a project to publish your complaint'}
+            </p>
+          </div>
+          <div className="mt-3">{projectSelector}</div>
+          {projectError ? (
+            <p className="mt-2 text-xs text-[#d14343]">{projectError}</p>
+          ) : null}
+        </div>
+
         <div className="flex flex-col gap-1">
           <label className="text-[16px] font-semibold text-black">Title</label>
           <input
@@ -254,7 +276,7 @@ export function CreatePost({
               onPress={onPublish}
               isDisabled={isPublishDisabled}
               className={`rounded-[8px] px-6 py-2 text-sm font-semibold text-white ${
-                isPublishDisabled ? 'bg-black/30' : 'bg-black'
+                isPublishDisabled ? 'bg-black/30' : 'bg-black hover:bg-black/80'
               }`}
             >
               Publish Post
