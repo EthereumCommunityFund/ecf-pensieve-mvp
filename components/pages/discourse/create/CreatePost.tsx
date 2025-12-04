@@ -6,8 +6,8 @@ import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react';
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
-import { CategorySelector } from './CategorySelector';
-import { DiscourseTopicOption } from './topicOptions';
+import { CategorySelector } from '../common/CategorySelector';
+import { DiscourseTopicOption } from '../common/topicOptions';
 
 const MAX_TITLE = 40;
 const MAX_BODY = 4000;
@@ -161,7 +161,7 @@ export function CreatePost({
               base: `min-h-[280px] rounded-[12px] border bg-black/5 ${
                 errors?.body ? 'border-[#d14343]' : 'border-black/10'
               }`,
-              editorWrapper: 'p-[10px]',
+              editorWrapper: 'p-0',
               editor: 'prose prose-sm max-w-none text-[#1b1b1f]',
             }}
           />

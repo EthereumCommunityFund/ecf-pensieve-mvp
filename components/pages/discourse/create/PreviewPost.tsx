@@ -1,12 +1,12 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { CaretCircleUpIcon, ChartBarIcon } from '@phosphor-icons/react';
+import { ReactNode } from 'react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
-import { TopicTag } from './TopicTag';
+import { TopicTag } from '../common/TopicTag';
 
 type PreviewPostCardProps = {
   title: string;

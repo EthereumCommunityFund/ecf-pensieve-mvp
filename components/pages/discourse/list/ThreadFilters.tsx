@@ -3,8 +3,8 @@
 import { cn } from '@heroui/react';
 import { ReactNode } from 'react';
 
-import { DEFAULT_SENTIMENT_VALUE } from './sentimentConfig';
-import { SentimentSelector } from './SentimentSelector';
+import { DEFAULT_SENTIMENT_VALUE } from '../common/setiment/sentimentConfig';
+import { SentimentSelector } from '../common/setiment/SentimentSelector';
 
 type ThreadFiltersProps = {
   statusTabs: string[];

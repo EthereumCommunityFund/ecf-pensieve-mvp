@@ -27,11 +27,11 @@
   flex: 1;
   min-height: 240px;
   font-family: "DM Sans", sans-serif;
-  padding: 1.5rem 1.75rem 3rem;
+  padding: 10px;
 }
 
 @media screen and (max-width: 768px) {
   .md-editor-content .tiptap.ProseMirror {
-    padding: 1rem 1.25rem 2.5rem;
+    padding: 10px;
   }
 }

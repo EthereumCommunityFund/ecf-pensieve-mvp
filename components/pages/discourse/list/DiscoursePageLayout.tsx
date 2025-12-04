@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
-import BackHeader from '../project/BackHeader';
+import BackHeader from '../../project/BackHeader';
 
 type Breadcrumb = {
   label: string;

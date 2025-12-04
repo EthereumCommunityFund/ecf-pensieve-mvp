@@ -6,10 +6,10 @@ import { KeyboardEvent, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 
-import { SentimentIndicator } from './SentimentIndicator';
-import { SentimentModal } from './SentimentModal';
-import { TopicTag } from './TopicTag';
-import { SentimentMetric } from './sentimentConfig';
+import { SentimentMetric } from '../common/setiment/sentimentConfig';
+import { SentimentIndicator } from '../common/setiment/SentimentIndicator';
+import { SentimentModal } from '../common/setiment/SentimentModal';
+import { TopicTag } from '../common/TopicTag';
 
 export type ThreadMeta = {
   id: string;

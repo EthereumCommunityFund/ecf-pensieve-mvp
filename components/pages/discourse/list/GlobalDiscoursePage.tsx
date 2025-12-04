@@ -5,12 +5,13 @@ import { useState } from 'react';
 
 import { Button } from '@/components/base';
 
+import { discourseTopicOptions } from '../common/topicOptions';
+import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
+
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadFilters } from './ThreadFilters';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
-import { discourseTopicOptions } from './topicOptions';
-import { useDiscussionThreads } from './useDiscussionThreads';
 
 const statusTabs = ['all', 'redressed', 'unanswered'];
 const sortOptions = ['top', 'new'];

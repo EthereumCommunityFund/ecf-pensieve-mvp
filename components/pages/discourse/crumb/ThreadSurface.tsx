@@ -18,7 +18,7 @@ import {
   sentimentDefinitions,
   SentimentKey,
   SentimentMetric,
-} from '../sentimentConfig';
+} from '../common/setiment/sentimentConfig';
 
 import { MetricPill } from './MetricPill';
 import { TagPill } from './TagPill';

@@ -1,12 +1,12 @@
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
 
-import type { ThreadMeta } from './ThreadList';
 import {
   sentimentDefinitions,
   type SentimentKey,
   type SentimentMetric,
-} from './sentimentConfig';
+} from '../common/setiment/sentimentConfig';
+import type { ThreadMeta } from '../list/ThreadList';
 
 export type ThreadListItem =
   RouterOutputs['projectDiscussionThread']['listThreads']['items'][0];

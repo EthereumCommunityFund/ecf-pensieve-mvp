@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
+import type { SentimentMetric } from '@/components/pages/discourse/common/setiment/sentimentConfig';
 import { ContributionCard } from '@/components/pages/discourse/crumb/ContributionCard';
 import { DiscourseCrumbHero } from '@/components/pages/discourse/crumb/DiscourseCrumbHero';
 import {
@@ -16,7 +17,6 @@ import {
 } from '@/components/pages/discourse/crumb/ParticipationCard';
 import { SentimentCard } from '@/components/pages/discourse/crumb/SentimentCard';
 import { ThreadSurface } from '@/components/pages/discourse/crumb/ThreadSurface';
-import type { SentimentMetric } from '@/components/pages/discourse/sentimentConfig';
 
 const answerHighlights = [
   '“Trust math + open networks” rather than middlemen',

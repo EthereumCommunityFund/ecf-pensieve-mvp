@@ -1,4 +1,4 @@
-import GlobalDiscoursePage from '@/components/pages/discourse/GlobalDiscoursePage';
+import GlobalDiscoursePage from '@/components/pages/discourse/list/GlobalDiscoursePage';
 
 export default function DiscoursePage() {
   return <GlobalDiscoursePage />;

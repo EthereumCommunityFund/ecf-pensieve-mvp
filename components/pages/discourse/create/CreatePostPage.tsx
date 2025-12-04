@@ -8,9 +8,10 @@ import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { trpc } from '@/lib/trpc/client';
 
+import { DiscourseTopicOption } from '../common/topicOptions';
+import { PreviewPost } from '../create/PreviewPost';
+
 import { CreatePost, type CreatePostErrors } from './CreatePost';
-import { PreviewPost } from './PreviewPost';
-import { DiscourseTopicOption } from './topicOptions';
 
 const stripHtml = (value: string) =>
   value

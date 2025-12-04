@@ -21,7 +21,6 @@ import { LinkIcon } from '@/components/base/MdEditor/tiptap-icons/link-icon';
 import { HorizontalRule } from '@/components/base/MdEditor/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
 import { ImageUploadNode } from '@/components/base/MdEditor/tiptap-node/image-upload-node/image-upload-node-extension';
 import { Button } from '@/components/base/MdEditor/tiptap-ui-primitive/button';
-import { Spacer } from '@/components/base/MdEditor/tiptap-ui-primitive/spacer';
 import {
   Toolbar,
   ToolbarGroup,
@@ -126,7 +125,7 @@ const MainToolbarContent = ({
 
   return (
     <>
-      <Spacer />
+      {/* <Spacer /> */}
 
       <ToolbarGroup>
         <UndoRedoButton editor={editor} action="undo" />
@@ -186,7 +185,7 @@ const MainToolbarContent = ({
         <TextAlignButton editor={editor} align="justify" />
       </ToolbarGroup>
 
-      <Spacer />
+      {/* <Spacer /> */}
     </>
   );
 };

@@ -2,8 +2,11 @@ import { useMemo } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
 
-import type { ThreadMeta } from './ThreadList';
-import { mapThreadToMeta, type ThreadListItem } from './threadTransforms';
+import type { ThreadMeta } from '../list/ThreadList';
+import {
+  mapThreadToMeta,
+  type ThreadListItem,
+} from '../utils/threadTransforms';
 
 export type UseDiscussionThreadsParams = {
   projectId?: number;

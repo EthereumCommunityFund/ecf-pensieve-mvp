@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 
+import { discourseTopicOptions } from '../common/topicOptions';
+
 import { PreviewPost } from './PreviewPost';
-import { discourseTopicOptions } from './topicOptions';
 
 export default function PreviewPostPage() {
   const router = useRouter();

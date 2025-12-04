@@ -5,14 +5,14 @@ import { useState } from 'react';
 
 import { Button } from '@/components/base';
 
-import { useProjectDetailContext } from '../project/context/projectDetailContext';
+import { useProjectDetailContext } from '../../project/context/projectDetailContext';
+import { discourseTopicOptions } from '../common/topicOptions';
+import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadFilters } from './ThreadFilters';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
-import { discourseTopicOptions } from './topicOptions';
-import { useDiscussionThreads } from './useDiscussionThreads';
 
 const projectSortOptions = ['top', 'new', 'agreed'];
 const statusTabs = ['all', 'redressed', 'unanswered'];
@@ -34,7 +34,7 @@ type ProjectComplaintsMeta = {
   scamAlertCount?: number;
 };
 
-export default function ProjectComplaintsPage({
+export default function ProjectDiscoursePage({
   projectId,
 }: ProjectComplaintsPageProps) {
   const router = useRouter();
@@ -52,12 +52,18 @@ export default function ProjectComplaintsPage({
   const [activeSentiment, setActiveSentiment] = useState<string>('all');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
-  const { threads, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useDiscussionThreads({
-      projectId: numericProjectId,
-      categories: selectedTopics,
-      enabled: isValidProjectId,
-    });
+  const {
+    threads,
+    isLoading,
+    isFetched,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useDiscussionThreads({
+    projectId: numericProjectId,
+    categories: selectedTopics,
+    enabled: isValidProjectId,
+  });
 
   const createThreadHref = `/discourse/create?projectId=${projectId}`;
 
@@ -166,6 +172,8 @@ export default function ProjectComplaintsPage({
         </div>
       ) : null}
       <ThreadList
+        isLoading={isLoading}
+        isFetched={isFetched}
         threads={threads}
         emptyMessage={
           isValidProjectId

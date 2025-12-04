@@ -1,6 +1,6 @@
-import { ScamThreadDetailPage } from '@/components/pages/discourse/ScamThreadDetailPage';
-import { threadDataset } from '@/components/pages/discourse/threadData';
-import { ThreadDetailPage } from '@/components/pages/discourse/ThreadDetailPage';
+import { threadDataset } from '@/components/pages/discourse/common/threadData';
+import { ScamThreadDetailPage } from '@/components/pages/discourse/detail/ScamThreadDetailPage';
+import { ThreadDetailPage } from '@/components/pages/discourse/detail/ThreadDetailPage';
 
 type ThreadDetailRouteProps = {
   params: Promise<{

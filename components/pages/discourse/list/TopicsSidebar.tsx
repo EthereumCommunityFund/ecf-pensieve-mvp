@@ -6,7 +6,7 @@ import { Button } from '@/components/base';
 import { CircleXIcon, FunnelSimpleIcon, SearchIcon } from '@/components/icons';
 import { CustomCheckbox } from '@/components/pages/project/filterAndSort/CustomCheckbox';
 
-import type { DiscourseTopicOption } from './topicOptions';
+import type { DiscourseTopicOption } from '../common/topicOptions';
 
 type TopicsSidebarProps = {
   title?: string;

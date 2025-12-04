@@ -17,17 +17,25 @@ import { Button } from '@/components/base';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
-import { DiscoursePageLayout } from './DiscoursePageLayout';
 import {
   defaultSentimentDisplay,
   sentimentDefinitions,
   SentimentKey,
   SentimentMetric,
-} from './sentimentConfig';
-import { SentimentIndicator } from './SentimentIndicator';
-import { SentimentSummaryPanel } from './SentimentModal';
-import { AnswerItem, CommentItem, QuickAction } from './threadData';
-import { stripHtmlToPlainText, summarizeSentiments } from './threadTransforms';
+} from '../common/setiment/sentimentConfig';
+import { SentimentIndicator } from '../common/setiment/SentimentIndicator';
+import { SentimentSummaryPanel } from '../common/setiment/SentimentModal';
+import {
+  AnswerItem,
+  CommentItem,
+  QuickAction,
+  ThreadDetailRecord,
+} from '../common/threadData';
+import { DiscoursePageLayout } from '../list/DiscoursePageLayout';
+import {
+  stripHtmlToPlainText,
+  summarizeSentiments,
+} from '../utils/threadTransforms';
 
 type ThreadDetailPageProps = {
   threadId: string;

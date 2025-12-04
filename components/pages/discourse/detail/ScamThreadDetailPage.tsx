@@ -16,10 +16,11 @@ import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
 
-import { DiscoursePageLayout } from './DiscoursePageLayout';
-import { SentimentSummaryPanel } from './SentimentModal';
-import { ParticipationCard } from './crumb/ParticipationCard';
-import { sentimentDefinitions, SentimentKey } from './sentimentConfig';
+import {
+  sentimentDefinitions,
+  SentimentKey,
+} from '../common/setiment/sentimentConfig';
+import { SentimentSummaryPanel } from '../common/setiment/SentimentModal';
 import {
   AnswerItem,
   CommentItem,
@@ -27,8 +28,13 @@ import {
   scamThread,
   threadDataset,
   ThreadDetailRecord,
-} from './threadData';
-import { stripHtmlToPlainText, summarizeSentiments } from './threadTransforms';
+} from '../common/threadData';
+import { ParticipationCard } from '../crumb/ParticipationCard';
+import { DiscoursePageLayout } from '../list/DiscoursePageLayout';
+import {
+  stripHtmlToPlainText,
+  summarizeSentiments,
+} from '../utils/threadTransforms';
 
 const sentimentFilterOptions: Array<'all' | SentimentKey> = [
   'all',

@@ -1,4 +1,4 @@
-import ProjectComplaintsPage from '@/components/pages/discourse/ProjectComplaintsPage';
+import ProjectDiscoursePage from '@/components/pages/discourse/list/ProjectDiscoursePage';
 
 type ComplaintsPageProps = {
   params: Promise<{ id: string }>;
@@ -7,5 +7,5 @@ type ComplaintsPageProps = {
 export default async function ComplaintsPage({ params }: ComplaintsPageProps) {
   const { id } = await params;
 
-  return <ProjectComplaintsPage projectId={id} />;
+  return <ProjectDiscoursePage projectId={id} />;
 }

@@ -1,4 +1,4 @@
-import { SentimentKey } from './sentimentConfig';
+import { SentimentKey } from './setiment/sentimentConfig';
 
 export type DetailedSentimentMetric = {
   key: SentimentKey;
