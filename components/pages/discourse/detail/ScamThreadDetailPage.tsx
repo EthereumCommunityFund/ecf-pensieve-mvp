@@ -2,9 +2,11 @@
 
 import {
   ArrowSquareOut,
+  BookBookmark,
   CaretCircleUp,
   CaretDown,
   ChartBar,
+  Lightning,
   ShieldWarning,
   UserCircle,
 } from '@phosphor-icons/react';
@@ -29,7 +31,6 @@ import {
   threadDataset,
   ThreadDetailRecord,
 } from '../common/threadData';
-import { ParticipationCard } from '../crumb/ParticipationCard';
 import { DiscoursePageLayout } from '../list/DiscoursePageLayout';
 import {
   stripHtmlToPlainText,
@@ -72,7 +73,7 @@ export function ScamThreadDetailPage({
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
 
-  const fallback = useMemo(
+  const fallback: ThreadDetailRecord = useMemo(
     () => fallbackThread ?? threadDataset[threadId] ?? scamThread,
     [fallbackThread, threadId],
   );
@@ -130,6 +131,7 @@ export function ScamThreadDetailPage({
 
       return {
         id: String(answer.id),
+        numericId: answer.id,
         author: answer.creator?.name ?? 'Anonymous',
         role: fallback.author.role,
         createdAt: formatTimeAgo(answer.createdAt),
@@ -139,6 +141,9 @@ export function ScamThreadDetailPage({
         sentimentLabel: label,
         sentimentVotes: sentiment.totalVotes,
         commentsCount: answer.comments.length,
+        comments: [],
+        viewerSentiment: undefined,
+        viewerHasSupported: false,
       } satisfies AnswerItem;
     });
   }, [answers, fallback]);
@@ -147,6 +152,8 @@ export function ScamThreadDetailPage({
     if (!comments.length) return fallback.comments;
     return comments.map((comment) => ({
       id: String(comment.id),
+      numericId: comment.id,
+      answerId: comment.answerId ?? undefined,
       author: comment.creator?.name ?? 'Anonymous',
       role: fallback.author.role,
       createdAt: formatTimeAgo(comment.createdAt),
@@ -586,41 +593,41 @@ type ParticipationCardProps = {
   isScam: boolean;
 };
 
-// function ParticipationCard({
-//   supportSteps,
-//   counterSteps,
-//   isScam,
-// }: ParticipationCardProps) {
-//   return (
-//     <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
-//       <p className="text-sm font-semibold text-black/70">How to participate</p>
-//       <div className="mt-4 space-y-4">
-//         <div>
-//           <div className="flex items-center gap-2 text-[13px] font-semibold text-black">
-//             <Lightning size={18} weight="fill" className="text-[#f78f1e]" />
-//             {isScam ? 'Support Main Claim' : 'Support Answer'}
-//           </div>
-//           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-black/70">
-//             {supportSteps.map((step) => (
-//               <li key={step}>{step}</li>
-//             ))}
-//           </ul>
-//         </div>
-//         <div className="border-t border-dashed border-black/10 pt-4">
-//           <div className="flex items-center gap-2 text-[13px] font-semibold text-black">
-//             <BookBookmark size={18} weight="fill" className="text-[#4c6ef5]" />
-//             {isScam ? 'Create Counter Claim' : 'Join Discussion'}
-//           </div>
-//           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-black/70">
-//             {counterSteps.map((step) => (
-//               <li key={step}>{step}</li>
-//             ))}
-//           </ul>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+function ParticipationCard({
+  supportSteps,
+  counterSteps,
+  isScam,
+}: ParticipationCardProps) {
+  return (
+    <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
+      <p className="text-sm font-semibold text-black/70">How to participate</p>
+      <div className="mt-4 space-y-4">
+        <div>
+          <div className="flex items-center gap-2 text-[13px] font-semibold text-black">
+            <Lightning size={18} weight="fill" className="text-[#f78f1e]" />
+            {isScam ? 'Support Main Claim' : 'Support Answer'}
+          </div>
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-black/70">
+            {supportSteps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="border-t border-dashed border-black/10 pt-4">
+          <div className="flex items-center gap-2 text-[13px] font-semibold text-black">
+            <BookBookmark size={18} weight="fill" className="text-[#4c6ef5]" />
+            {isScam ? 'Create Counter Claim' : 'Join Discussion'}
+          </div>
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-black/70">
+            {counterSteps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type QuickActionsCardProps = {
   actions: QuickAction[];

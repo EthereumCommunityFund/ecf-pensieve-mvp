@@ -8,6 +8,7 @@ export type DetailedSentimentMetric = {
 
 export type AnswerItem = {
   id: string;
+  numericId: number;
   author: string;
   role: string;
   createdAt: string;
@@ -17,12 +18,18 @@ export type AnswerItem = {
   sentimentLabel: SentimentKey;
   sentimentVotes: number;
   commentsCount: number;
+  comments?: CommentItem[];
+  viewerSentiment?: SentimentKey | null;
+  viewerHasSupported?: boolean;
   isAccepted?: boolean;
   statusTag?: string;
 };
 
 export type CommentItem = {
   id: string;
+  numericId: number;
+  answerId?: number;
+  parentCommentId?: number;
   author: string;
   role: string;
   createdAt: string;
@@ -116,6 +123,7 @@ export const generalThread: ThreadDetailRecord = {
   answers: [
     {
       id: 'ans-1',
+      numericId: 1,
       author: 'BuilderOne',
       role: 'Core Contributor',
       createdAt: 'Posted 6 days ago',
@@ -125,11 +133,26 @@ export const generalThread: ThreadDetailRecord = {
       sentimentLabel: 'agree',
       sentimentVotes: 86,
       commentsCount: 4,
+      viewerSentiment: 'agree',
+      viewerHasSupported: true,
+      comments: [
+        {
+          id: 'ans-1-comment-1',
+          numericId: 101,
+          answerId: 1,
+          author: 'Community Lead',
+          role: 'Community Member',
+          createdAt: '2 days ago',
+          body: 'Appreciate the synthesis — are there public notes for the roadmap call?',
+          sentimentLabel: 'insightful',
+        },
+      ],
       isAccepted: true,
       statusTag: 'Adopted',
     },
     {
       id: 'ans-2',
+      numericId: 2,
       author: 'ResearchGuild',
       role: 'Community Working Group',
       createdAt: 'Posted 4 days ago',
@@ -138,11 +161,13 @@ export const generalThread: ThreadDetailRecord = {
       sentimentLabel: 'insightful',
       sentimentVotes: 44,
       commentsCount: 6,
+      comments: [],
     },
   ],
   comments: [
     {
       id: 'c-1',
+      numericId: 201,
       author: 'Watcher',
       role: 'Community Member',
       createdAt: '3 days ago',
@@ -151,6 +176,7 @@ export const generalThread: ThreadDetailRecord = {
     },
     {
       id: 'c-2',
+      numericId: 202,
       author: 'OpsLead',
       role: 'EF Moderator',
       createdAt: '2 days ago',
@@ -227,6 +253,7 @@ export const scamThread: ThreadDetailRecord = {
   counterClaims: [
     {
       id: 'counter-1',
+      numericId: 11,
       author: 'SecurityOps',
       role: 'Project Team',
       createdAt: 'Posted 3 hours ago',
@@ -237,9 +264,12 @@ export const scamThread: ThreadDetailRecord = {
       sentimentVotes: 38,
       commentsCount: 8,
       statusTag: 'Investigation',
+      viewerSentiment: 'agree',
+      comments: [],
     },
     {
       id: 'counter-2',
+      numericId: 12,
       author: 'CommunityWatch',
       role: 'Community Reviewer',
       createdAt: 'Posted 1 hour ago',
@@ -249,11 +279,13 @@ export const scamThread: ThreadDetailRecord = {
       sentimentLabel: 'provocative',
       sentimentVotes: 22,
       commentsCount: 3,
+      comments: [],
     },
   ],
   comments: [
     {
       id: 'scam-c-1',
+      numericId: 301,
       author: 'ConcernedHolder',
       role: 'Token Holder',
       createdAt: '1 hour ago',
@@ -262,6 +294,7 @@ export const scamThread: ThreadDetailRecord = {
     },
     {
       id: 'scam-c-2',
+      numericId: 302,
       author: 'ProjectMod',
       role: 'Moderator',
       createdAt: '45 minutes ago',

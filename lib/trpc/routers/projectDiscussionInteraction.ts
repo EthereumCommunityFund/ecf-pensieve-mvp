@@ -66,6 +66,7 @@ export const projectDiscussionInteractionRouter = router({
           cursor: input.cursor,
           limit: input.limit ?? DEFAULT_PAGE_SIZE,
           sortBy: input.sortBy ?? 'recent',
+          viewerId: ctx.user?.id ?? null,
         },
       });
     }),

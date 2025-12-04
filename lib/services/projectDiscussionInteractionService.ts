@@ -1,5 +1,16 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  lt,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
@@ -101,6 +112,7 @@ type ListAnswersInput = {
   cursor?: number;
   limit: number;
   sortBy?: 'recent' | 'votes';
+  viewerId?: string | null;
 };
 
 export const listDiscussionAnswers = async ({
@@ -167,10 +179,34 @@ export const listDiscussionAnswers = async ({
 
   const hasNextPage = results.length > input.limit;
   const items = hasNextPage ? results.slice(0, input.limit) : results;
+
+  let viewerVotes = new Set<number>();
+  if (input.viewerId && items.length) {
+    const voteRows = await db
+      .select({
+        answerId: projectDiscussionAnswerVotes.answerId,
+      })
+      .from(projectDiscussionAnswerVotes)
+      .where(
+        and(
+          eq(projectDiscussionAnswerVotes.voter, input.viewerId),
+          inArray(
+            projectDiscussionAnswerVotes.answerId,
+            items.map((item) => item.id),
+          ),
+        ),
+      );
+    viewerVotes = new Set(voteRows.map((row) => row.answerId));
+  }
+
+  const hydratedItems = items.map((item) => ({
+    ...item,
+    viewerHasSupported: viewerVotes.has(item.id),
+  }));
   const nextCursor = hasNextPage ? (items[items.length - 1]?.id ?? null) : null;
 
   return {
-    items,
+    items: hydratedItems,
     nextCursor,
     hasNextPage,
   };
