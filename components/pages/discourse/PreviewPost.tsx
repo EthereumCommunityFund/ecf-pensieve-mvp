@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ArrowLeft } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
@@ -33,7 +32,7 @@ export function PreviewPostCard({
     discourseTopicOptions[0];
 
   return (
-    <article className="flex flex-col gap-4 rounded-[16px]  p-6">
+    <article className="flex flex-col gap-4 rounded-[16px]">
       <div className="inline-flex w-fit items-center gap-2 rounded-[6px] border border-black/10 bg-black/[0.05] px-3 py-1 text-[12px] font-semibold text-black">
         {topic.icon}
         {categoryLabel}
@@ -97,45 +96,30 @@ export function PreviewPostCard({
 
 type PreviewPostProps = PreviewPostCardProps & {
   onBack?: () => void;
-  backLabel?: string;
-  headerLabel?: string;
-  headerNote?: string;
   actions?: ReactNode;
 };
 
 export function PreviewPost({
   onBack,
-  backLabel = 'Back',
-  headerLabel = 'Preview',
-  headerNote,
   actions,
   ...cardProps
 }: PreviewPostProps) {
   return (
-    <div className="mx-auto flex w-full flex-col gap-[20px]">
-      {(onBack || headerLabel || headerNote) && (
-        <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
-          {onBack ? (
-            <Button
-              onPress={onBack}
-              className="flex items-center gap-2 rounded-md border-none px-2 py-1 font-semibold text-black transition hover:bg-black/5"
-            >
-              <ArrowLeft size={20} />
-              <span>{backLabel}</span>
-            </Button>
-          ) : null}
-          {headerLabel ? (
-            <span className="font-semibold text-black">{headerLabel}</span>
-          ) : null}
-          {headerNote ? <span>{headerNote}</span> : null}
-        </div>
-      )}
+    <div className="tablet:max-a-auto mobile:max-w-auto mx-auto flex w-full max-w-[700px] flex-col gap-[20px] px-[10px]">
+      <div className="flex items-center gap-3">
+        <Button
+          size={'md'}
+          onPress={onBack}
+          className="bg-black px-[30px] font-semibold text-white hover:bg-black/80"
+        >
+          Back
+        </Button>
+        <span className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[5px] border border-black/10 px-[10px] text-sm font-medium text-black">
+          You are previewing your post
+        </span>
+      </div>
 
       <PreviewPostCard {...cardProps} />
-
-      {actions ? (
-        <div className="flex flex-wrap items-center gap-3">{actions}</div>
-      ) : null}
     </div>
   );
 }

@@ -15,10 +15,11 @@ import StarterKit from '@tiptap/starter-kit';
 import type { ComponentType } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCursorVisibility } from '@/hooks/use-cursor-visibility';
-import { useIsBreakpoint } from '@/hooks/use-is-breakpoint';
-import { useWindowSize } from '@/hooks/use-window-size';
-import { cn, handleImageUpload, MAX_FILE_SIZE } from '@/lib/tiptap-utils';
+import { ArrowLeftIcon } from '@/components/base/MdEditor/tiptap-icons/arrow-left-icon';
+import { HighlighterIcon } from '@/components/base/MdEditor/tiptap-icons/highlighter-icon';
+import { LinkIcon } from '@/components/base/MdEditor/tiptap-icons/link-icon';
+import { HorizontalRule } from '@/components/base/MdEditor/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
+import { ImageUploadNode } from '@/components/base/MdEditor/tiptap-node/image-upload-node/image-upload-node-extension';
 import { Button } from '@/components/base/MdEditor/tiptap-ui-primitive/button';
 import { Spacer } from '@/components/base/MdEditor/tiptap-ui-primitive/spacer';
 import {
@@ -38,11 +39,10 @@ import { ListDropdownMenu } from '@/components/base/MdEditor/tiptap-ui/list-drop
 import { MarkButton } from '@/components/base/MdEditor/tiptap-ui/mark-button';
 import { TextAlignButton } from '@/components/base/MdEditor/tiptap-ui/text-align-button';
 import { UndoRedoButton } from '@/components/base/MdEditor/tiptap-ui/undo-redo-button';
-import { ArrowLeftIcon } from '@/components/base/MdEditor/tiptap-icons/arrow-left-icon';
-import { HighlighterIcon } from '@/components/base/MdEditor/tiptap-icons/highlighter-icon';
-import { LinkIcon } from '@/components/base/MdEditor/tiptap-icons/link-icon';
-import { HorizontalRule } from '@/components/base/MdEditor/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
-import { ImageUploadNode } from '@/components/base/MdEditor/tiptap-node/image-upload-node/image-upload-node-extension';
+import { useCursorVisibility } from '@/hooks/use-cursor-visibility';
+import { useIsBreakpoint } from '@/hooks/use-is-breakpoint';
+import { useWindowSize } from '@/hooks/use-window-size';
+import { cn, handleImageUpload, MAX_FILE_SIZE } from '@/lib/tiptap-utils';
 
 import '@/components/base/MdEditor/tiptap-node/blockquote-node/blockquote-node.scss';
 import '@/components/base/MdEditor/tiptap-node/code-block-node/code-block-node.scss';
@@ -502,7 +502,7 @@ const MdEditor = ({
         <div
           ref={contentRef}
           className={cn(
-            'md-editor-content relative p-[10px]',
+            'md-editor-content relative',
             collapsable &&
               !isEditable &&
               canCollapse &&
@@ -517,7 +517,7 @@ const MdEditor = ({
         >
           <EditorContentComponent
             editor={editor}
-            className={cn('md-editor-prose', className?.editor)}
+            className={cn('md-editor-prose ', className?.editor)}
           />
         </div>
       </div>

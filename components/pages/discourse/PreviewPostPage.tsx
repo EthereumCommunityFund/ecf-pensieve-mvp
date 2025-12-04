@@ -21,8 +21,6 @@ export default function PreviewPostPage() {
     <div className="flex min-h-screen w-full flex-col gap-8 bg-[#f6f4f1] px-4 pb-20 pt-10">
       <PreviewPost
         onBack={() => router.back()}
-        backLabel="Back"
-        headerLabel="You are previewing your post"
         title="What in the actual..is Ethereum’s Mission?"
         author="Username"
         timeAgo="a week ago"

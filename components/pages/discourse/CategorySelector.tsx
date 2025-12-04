@@ -43,6 +43,7 @@ export function CategorySelector({
           }
         }}
         aria-label="Select a discussion category"
+        placeholder="Select a category"
         className="w-full"
         classNames={{
           trigger:
