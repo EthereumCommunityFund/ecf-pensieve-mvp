@@ -3,6 +3,7 @@
 import {
   ArrowSquareOut,
   BookBookmark,
+  ChartBarIcon,
   ChatCenteredDots,
   CheckCircle,
   Lightning,
@@ -16,6 +17,7 @@ import { Button } from '@/components/base';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { SentimentIndicator } from './SentimentIndicator';
+import { SentimentSummaryPanel } from './SentimentModal';
 import {
   defaultSentimentDisplay,
   sentimentDefinitions,
@@ -25,7 +27,6 @@ import {
 import {
   AnswerItem,
   CommentItem,
-  DetailedSentimentMetric,
   generalThread,
   QuickAction,
   threadDataset,
@@ -103,9 +104,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             status={thread.status}
             isScam={thread.isScam}
           />
-          <SentimentSummaryCard
-            sentiments={thread.sentiment}
+          <SentimentSummaryPanel
+            sentiments={thread.sentiment.map((item) => ({
+              key: item.key,
+              percentage: item.percentage,
+            }))}
             totalVotes={thread.totalSentimentVotes}
+            customHeader={
+              <div className="flex items-center gap-[10px]">
+                <ChartBarIcon size={20} weight="fill" />
+                <span className="text-[14px] font-[600]">
+                  User sentiment for this post
+                </span>
+              </div>
+            }
           />
           <ParticipationCard
             supportSteps={thread.participation.supportSteps}
@@ -390,59 +402,6 @@ export function ContributionVotesCard({
   );
 }
 
-type SentimentSummaryCardProps = {
-  sentiments: DetailedSentimentMetric[];
-  totalVotes: number;
-};
-
-export function SentimentSummaryCard({
-  sentiments,
-  totalVotes,
-}: SentimentSummaryCardProps) {
-  return (
-    <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-black/70">
-        User Sentiment for this post
-      </p>
-      <p className="text-xs uppercase tracking-[0.2em] text-black/40">
-        {totalVotes} votes
-      </p>
-      <div className="mt-4 space-y-3">
-        {sentiments.map((sentiment) => {
-          const definition =
-            sentimentDefinitions[sentiment.key] || defaultSentimentDisplay;
-          return (
-            <div key={`${sentiment.key}-${sentiment.votes}`}>
-              <div className="flex items-center justify-between text-sm text-black/70">
-                <div className="flex items-center gap-2">
-                  <definition.Icon
-                    size={18}
-                    weight="fill"
-                    style={{ color: definition.color }}
-                  />
-                  <span>{definition.label}</span>
-                </div>
-                <span className="font-semibold text-black">
-                  {sentiment.votes} ({sentiment.percentage}%)
-                </span>
-              </div>
-              <div className="mt-2 h-2 rounded-full bg-black/5">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${Math.min(100, sentiment.percentage)}%`,
-                    backgroundColor: definition.color,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 type ParticipationCardProps = {
   supportSteps: string[];
   counterSteps: string[];
@@ -680,3 +639,5 @@ export function EmptyState({ title, description }: EmptyStateProps) {
     </div>
   );
 }
+
+export { SentimentSummaryPanel };

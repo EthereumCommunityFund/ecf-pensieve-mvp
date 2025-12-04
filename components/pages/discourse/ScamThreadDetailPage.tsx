@@ -16,7 +16,7 @@ import {
   ContributionVotesCard,
   ParticipationCard,
   QuickActionsCard,
-  SentimentSummaryCard,
+  SentimentSummaryPanel,
 } from './ThreadDetailPage';
 import { sentimentDefinitions, SentimentKey } from './sentimentConfig';
 import {
@@ -105,8 +105,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             status={thread.status}
             isScam={thread.isScam}
           />
-          <SentimentSummaryCard
-            sentiments={thread.sentiment}
+          <SentimentSummaryPanel
+            title="User Sentiment for this post"
+            sentiments={thread.sentiment.map((item) => ({
+              key: item.key,
+              percentage: item.percentage,
+            }))}
             totalVotes={thread.totalSentimentVotes}
           />
           <ParticipationCard
