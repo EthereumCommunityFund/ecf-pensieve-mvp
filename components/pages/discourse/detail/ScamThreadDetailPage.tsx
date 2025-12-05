@@ -11,11 +11,11 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
+import { useAuth } from '@/context/AuthContext';
 import { SentimentKey } from '@/components/pages/discourse/common/sentiment/sentimentConfig';
 import { SentimentSummaryPanel } from '@/components/pages/discourse/common/sentiment/SentimentModal';
 import { TopbarFilters } from '@/components/pages/discourse/common/TopbarFilters';
 import BackHeader from '@/components/pages/project/BackHeader';
-import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
@@ -32,6 +32,14 @@ import {
   stripHtmlToPlainText,
   summarizeSentiments,
 } from '../utils/threadTransforms';
+import {
+  EDITOR_MAX_CHARACTERS,
+  parseEditorValue,
+} from '../utils/editorValue';
+import {
+  ComposerContext,
+  ThreadComposerModal,
+} from './ThreadComposerModal';
 
 const sentimentFilterOptions: Array<'all' | SentimentKey> = [
   'all',
@@ -73,6 +81,25 @@ export function ScamThreadDetailPage({
   const [withdrawingClaimId, setWithdrawingClaimId] = useState<number | null>(
     null,
   );
+  const [composerVariant, setComposerVariant] = useState<
+    'counter' | 'comment' | null
+  >(null);
+  const [commentComposerTitle, setCommentComposerTitle] = useState<
+    string | undefined
+  >(undefined);
+  const [counterDraft, setCounterDraft] = useState('');
+  const [commentDraft, setCommentDraft] = useState('');
+  const [counterError, setCounterError] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [commentContext, setCommentContext] = useState<ComposerContext | null>(
+    null,
+  );
+  const [commentTarget, setCommentTarget] = useState<{
+    threadId: number;
+    parentCommentId?: number;
+    commentId?: number;
+    answerId?: number;
+  } | null>(null);
 
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
@@ -95,6 +122,50 @@ export function ScamThreadDetailPage({
     trpc.projectDiscussionInteraction.voteAnswer.useMutation();
   const unvoteAnswerMutation =
     trpc.projectDiscussionInteraction.unvoteAnswer.useMutation();
+  const createCounterClaimMutation =
+    trpc.projectDiscussionInteraction.createAnswer.useMutation({
+      onSuccess: () => {
+        addToast({
+          title: 'Counter claim submitted',
+          description: 'Your counter claim is now visible.',
+          color: 'success',
+        });
+        setCounterDraft('');
+        setCounterError(null);
+        setComposerVariant(null);
+        answersQuery.refetch();
+      },
+      onError: (error) => {
+        addToast({
+          title: 'Failed to submit counter claim',
+          description: error.message,
+          color: 'danger',
+        });
+      },
+    });
+  const createCommentMutation =
+    trpc.projectDiscussionInteraction.createComment.useMutation({
+      onSuccess: () => {
+        addToast({
+          title: 'Comment posted',
+          description: 'Your discussion is now visible.',
+          color: 'success',
+        });
+        setCommentDraft('');
+        setCommentError(null);
+        setComposerVariant(null);
+        setCommentContext(null);
+        setCommentTarget(null);
+        commentsQuery.refetch();
+      },
+      onError: (error) => {
+        addToast({
+          title: 'Failed to post comment',
+          description: error.message,
+          color: 'danger',
+        });
+      },
+    });
 
   const sortByParam = sortOption === 'top' ? 'votes' : 'recent';
 
@@ -153,6 +224,25 @@ export function ScamThreadDetailPage({
     return answers.map((answer) => {
       const sentiment = summarizeSentiments(answer.sentiments);
       const label = sentiment.dominantKey ?? 'recommend';
+      const mappedComments = (answer.comments ?? []).map((comment) => {
+        const numericId = comment.id;
+        const rootId =
+          comment.commentId ??
+          (typeof numericId === 'number' ? numericId : undefined);
+        return {
+          id: `answer-${answer.id}-comment-${comment.id}`,
+          numericId,
+          answerId: answer.id,
+          commentId: rootId,
+          parentCommentId: comment.parentCommentId ?? undefined,
+          author: comment.creator?.name ?? 'Anonymous',
+          role: 'Community Member',
+          createdAt: formatTimeAgo(comment.createdAt),
+          body: comment.content,
+          sentimentLabel: 'recommend',
+          children: [],
+        };
+      });
 
       return {
         id: String(answer.id),
@@ -165,8 +255,8 @@ export function ScamThreadDetailPage({
         cpTarget: undefined,
         sentimentLabel: label,
         sentimentVotes: sentiment.totalVotes,
-        commentsCount: answer.comments.length,
-        comments: [],
+        commentsCount: mappedComments.length,
+        comments: mappedComments,
         viewerSentiment: undefined,
         viewerHasSupported: Boolean(answer.viewerHasSupported),
       } satisfies AnswerItem;
@@ -381,6 +471,103 @@ export function ScamThreadDetailPage({
     }
   };
 
+  const handleSubmitCounterClaim = async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    const { html, plain } = parseEditorValue(counterDraft);
+    if (!plain) {
+      setCounterError('Content is required');
+      return;
+    }
+    if (plain.length > EDITOR_MAX_CHARACTERS) {
+      setCounterError('Content exceeds the character limit');
+      return;
+    }
+    setCounterError(null);
+    try {
+      await createCounterClaimMutation.mutateAsync({
+        threadId: numericThreadId,
+        content: html,
+      });
+    } catch (error: any) {
+      setCounterError(error?.message ?? 'Failed to submit');
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    const { html, plain } = parseEditorValue(commentDraft);
+    if (!plain) {
+      setCommentError('Content is required');
+      return;
+    }
+    if (plain.length > EDITOR_MAX_CHARACTERS) {
+      setCommentError('Content exceeds the character limit');
+      return;
+    }
+    setCommentError(null);
+    try {
+      const target = commentTarget ?? { threadId: numericThreadId };
+      await createCommentMutation.mutateAsync({
+        threadId: target.threadId,
+        parentCommentId: target.parentCommentId,
+        commentId: target.commentId,
+        answerId: target.answerId,
+        content: html,
+      });
+    } catch (error: any) {
+      setCommentError(error?.message ?? 'Failed to post comment');
+    }
+  };
+
+  const handleCloseComposer = () => {
+    if (composerVariant === 'counter' && createCounterClaimMutation.isPending) {
+      return;
+    }
+    if (composerVariant === 'comment' && createCommentMutation.isPending) {
+      return;
+    }
+    setComposerVariant(null);
+    setCounterError(null);
+    setCommentError(null);
+    setCommentContext(null);
+    setCommentTarget(null);
+  };
+
+  const openCounterComposer = () => {
+    if (!requireAuth()) return;
+    setComposerVariant('counter');
+  };
+
+  const openCommentComposer = (options?: {
+    title?: string;
+    context?: ComposerContext | null;
+    target?: {
+      threadId: number;
+      parentCommentId?: number;
+      commentId?: number;
+      answerId?: number;
+    };
+  }) => {
+    if (!requireAuth()) return;
+    const mergedTarget =
+      options?.target ?? options?.context?.target ?? { threadId: numericThreadId };
+    setCommentComposerTitle(options?.title);
+    setCommentTarget(mergedTarget);
+    setCommentContext(
+      options?.context
+        ? {
+            ...options.context,
+            target: mergedTarget,
+          }
+        : null,
+    );
+    setComposerVariant('comment');
+  };
+
   const tabItems = [
     {
       key: 'discussion' as const,
@@ -478,12 +665,22 @@ export function ScamThreadDetailPage({
               </span>
             </Button>
             <div className="mt-[20px] flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
-              {/* TODO：跟 create answer 是一样的，创建一条新的 claim */}
-              <Button className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85">
+              <Button
+                className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85"
+                onPress={openCounterComposer}
+                isLoading={createCounterClaimMutation.isPending}
+              >
                 Counter This Claim
               </Button>
-              {/* TODO: create comment */}
-              <Button className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80">
+              <Button
+                className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80"
+                onPress={() =>
+                  openCommentComposer({
+                    target: { threadId: numericThreadId },
+                  })
+                }
+                isLoading={createCommentMutation.isPending}
+              >
                 Post Comment
               </Button>
             </div>
@@ -521,20 +718,35 @@ export function ScamThreadDetailPage({
           />
 
           <div className="space-y-4">
-            {activeTab === 'counter' ? (
-              filteredCounterClaims.length ? (
+          {activeTab === 'counter' ? (
+            filteredCounterClaims.length ? (
                 filteredCounterClaims.map((claim) => (
                   <CounterClaimCard
                     key={claim.id}
                     claim={claim}
                     cpTarget={hydratedThread.cpProgress.target}
+                    threadId={numericThreadId}
                     onSupport={handleSupportClaim}
                     onWithdraw={handleWithdrawClaim}
                     supportPending={supportingClaimId === claim.numericId}
                     withdrawPending={withdrawingClaimId === claim.numericId}
-                  />
-                ))
-              ) : (
+                    onPostComment={(context) =>
+                    openCommentComposer({
+                      title: 'Commenting to Counter Claim:',
+                      context: {
+                        title: 'Commenting to:',
+                        author: context.author,
+                        excerpt: context.excerpt,
+                        timestamp: context.timestamp,
+                        isOp: context.isOp,
+                        target: context.target,
+                      },
+                      target: context.target,
+                    })
+                  }
+                />
+              ))
+            ) : (
                 <ScamEmptyState
                   title="No counter claims yet"
                   description="Create a counter claim to contest this alert and gather CP support."
@@ -576,6 +788,40 @@ export function ScamThreadDetailPage({
           <ParticipateCard />
         </aside>
       </div>
+
+      {composerVariant ? (
+        <ThreadComposerModal
+          isOpen
+          variant={composerVariant === 'counter' ? 'answer' : 'comment'}
+          value={composerVariant === 'counter' ? counterDraft : commentDraft}
+          onChange={(value) =>
+            composerVariant === 'counter'
+              ? setCounterDraft(value)
+              : setCommentDraft(value)
+          }
+          onSubmit={
+            composerVariant === 'counter'
+              ? handleSubmitCounterClaim
+              : handleSubmitComment
+          }
+          onClose={handleCloseComposer}
+          isSubmitting={
+            composerVariant === 'counter'
+              ? createCounterClaimMutation.isPending
+              : createCommentMutation.isPending
+          }
+          error={composerVariant === 'counter' ? counterError : commentError}
+          threadTitle={hydratedThread.title}
+          threadCategory={hydratedThread.categories?.[0]}
+          isScam
+          contextCard={
+            composerVariant === 'comment' ? commentContext ?? undefined : undefined
+          }
+          titleOverride={
+            composerVariant === 'comment' ? commentComposerTitle : undefined
+          }
+        />
+      ) : null}
     </div>
   );
 }
@@ -639,19 +885,42 @@ function SupportBar({ current, target, label }: SupportBarProps) {
 type CounterClaimCardProps = {
   claim: AnswerItem;
   cpTarget?: number;
+  threadId: number;
   onSupport: (answerId: number) => void;
   onWithdraw: (answerId: number) => void;
   supportPending?: boolean;
   withdrawPending?: boolean;
+  onPostComment: (context: {
+    author: string;
+    isOp?: boolean;
+    timestamp?: string;
+    excerpt: string;
+    target: {
+      threadId: number;
+      answerId?: number;
+      parentCommentId?: number;
+      commentId?: number;
+    };
+  }) => void;
+};
+
+type CounterCommentNode = CommentItem & {
+  numericId: number;
+  commentId?: number;
+  parentCommentId?: number;
+  children?: CounterCommentNode[];
+  answerId?: number;
 };
 
 function CounterClaimCard({
   claim,
   cpTarget,
+  threadId,
   onSupport,
   onWithdraw,
   supportPending = false,
   withdrawPending = false,
+  onPostComment,
 }: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
   const progress =
@@ -670,6 +939,14 @@ function CounterClaimCard({
     : claim.viewerHasSupported
       ? 'text-black/30'
       : 'text-black/10';
+  const commentTree = buildCounterCommentTree(
+    (claim.comments ?? []).map((comment) => ({
+      ...comment,
+      numericId: Number(
+        (comment as any).numericId ?? (comment as any).id ?? 0,
+      ),
+    })),
+  );
 
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
@@ -730,35 +1007,55 @@ function CounterClaimCard({
                 {String(commentsCount).padStart(2, '0')}
               </span>
             </div>
-            <Button className="h-[30px] rounded-[5px] border border-black/10 px-[10px] text-[12px] font-semibold text-black/80">
+            <Button
+              className="h-[30px] rounded-[5px] border border-black/10 px-[10px] text-[12px] font-semibold text-black/80"
+              onPress={() =>
+                onPostComment({
+                  author: claim.author,
+                  timestamp: claim.createdAt,
+                  excerpt: formatExcerpt(claim.body),
+                  target: {
+                    threadId,
+                    answerId: claim.numericId,
+                    commentId: undefined,
+                  },
+                })
+              }
+            >
               Post Comment
             </Button>
           </div>
+          <div className="space-y-[10px]">
+            {commentTree.length ? (
+              commentTree.map((comment, index) => (
+                <CounterCommentTree
+                  key={comment.id}
+                  node={comment}
+                  depth={0}
+                  isFirst={index === 0}
+                  hasSiblings={commentTree.length > 1}
+                  onReply={(payload) =>
+                    onPostComment({
+                      author: payload.author,
+                      isOp: payload.isOp,
+                      timestamp: payload.timestamp,
+                      excerpt: payload.excerpt,
+                      target: {
+                        threadId,
+                        answerId: claim.numericId,
+                        parentCommentId: payload.parentCommentId,
+                        commentId: payload.commentId,
+                      },
+                    })
+                  }
+                />
+              ))
+            ) : (
+              <p className="text-[13px] text-black/60">No comments yet.</p>
+            )}
+          </div>
         </div>
       </div>
-
-      {claim.comments?.length ? (
-        <div className="mt-3 space-y-2 rounded-[8px] border border-black/10 bg-[#f7f7f7] p-[10px]">
-          {claim.comments.slice(0, 1).map((comment) => (
-            <div key={comment.id} className="space-y-1">
-              <p className="text-[13px] font-semibold text-black">
-                {comment.author}
-              </p>
-              <p className="text-[13px] text-black/70">{comment.body}</p>
-              <span className="text-[12px] text-black/50">
-                {comment.createdAt}
-              </span>
-            </div>
-          ))}
-          {commentsCount > claim.comments.length ? (
-            <div className="flex justify-start">
-              <Button className="h-[30px] rounded-[5px] border border-black/10 px-[10px] text-[12px] font-semibold text-black/80">
-                View All Comments
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -787,6 +1084,118 @@ function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
       </div>
     </article>
   );
+}
+
+function buildCounterCommentTree(
+  comments: CounterCommentNode[],
+): CounterCommentNode[] {
+  if (!comments.length) return [];
+  const map = new Map<number, CounterCommentNode>();
+  const roots: CounterCommentNode[] = [];
+
+  comments.forEach((comment) => {
+    const rootId = comment.commentId ?? comment.numericId;
+    map.set(comment.numericId, { ...comment, commentId: rootId, children: [] });
+  });
+
+  comments.forEach((comment) => {
+    const node = map.get(comment.numericId)!;
+    if (comment.parentCommentId && map.has(comment.parentCommentId)) {
+      const parent = map.get(comment.parentCommentId)!;
+      node.commentId = parent.commentId ?? parent.numericId;
+      parent.children!.push(node);
+    } else if (
+      comment.commentId &&
+      comment.commentId !== comment.numericId &&
+      map.has(comment.commentId)
+    ) {
+      const parent = map.get(comment.commentId)!;
+      node.commentId = parent.commentId ?? parent.numericId;
+      parent.children!.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+}
+
+function CounterCommentTree({
+  node,
+  depth,
+  isFirst,
+  hasSiblings,
+  onReply,
+}: {
+  node: CounterCommentNode;
+  depth: number;
+  isFirst: boolean;
+  hasSiblings: boolean;
+  onReply: (payload: {
+    author: string;
+    excerpt: string;
+    timestamp: string;
+    isOp: boolean;
+    parentCommentId?: number;
+    commentId?: number;
+  }) => void;
+}) {
+  const handleReply = () => {
+    onReply({
+      author: node.author,
+      excerpt: formatExcerpt(node.body),
+      timestamp: node.createdAt,
+      isOp: false,
+      parentCommentId: node.numericId,
+      commentId: node.commentId ?? node.numericId,
+    });
+  };
+
+  return (
+    <div className="space-y-2" style={{ marginLeft: depth ? depth * 16 : 0 }}>
+      <div className="flex gap-2">
+        <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9]" />
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[14px] font-semibold text-black">
+              {node.author}
+            </span>
+            <span className="text-[12px] text-black/60">{node.createdAt}</span>
+          </div>
+          <div
+            className="prose prose-sm max-w-none text-black/80"
+            dangerouslySetInnerHTML={{ __html: node.body }}
+          />
+          <div className="flex items-center gap-3 text-[12px] text-black/70">
+            <Button
+              className="h-[24px] min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80"
+              onPress={handleReply}
+            >
+              Reply
+            </Button>
+          </div>
+        </div>
+      </div>
+      {node.children?.length
+        ? node.children.map((child, index) => (
+            <CounterCommentTree
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              isFirst={index === 0}
+              hasSiblings={node.children!.length > 1}
+              onReply={onReply}
+            />
+          ))
+        : null}
+    </div>
+  );
+}
+
+function formatExcerpt(text: string, maxLength = 160) {
+  const normalized = stripHtmlToPlainText(text).replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1)}…`;
 }
 
 function ScamEmptyState({
