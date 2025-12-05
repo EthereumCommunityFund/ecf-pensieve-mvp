@@ -13,6 +13,8 @@ import {
   ModalFooter,
 } from '@/components/base/modal';
 
+import { EDITOR_MAX_CHARACTERS, parseEditorValue } from '../utils/editorValue';
+
 type ThreadComposerModalProps = {
   isOpen: boolean;
   variant: 'answer' | 'comment';
@@ -46,8 +48,6 @@ const VARIANT_CONFIG = {
   },
 } as const;
 
-const MAX_CHARACTERS = 4000;
-
 export type ComposerContext = {
   title: string;
   author: string;
@@ -72,8 +72,12 @@ export function ThreadComposerModal({
   titleOverride,
 }: ThreadComposerModalProps) {
   const config = VARIANT_CONFIG[variant];
-  const charactersUsed = value.length;
-  const charactersRemaining = Math.max(0, MAX_CHARACTERS - charactersUsed);
+  const plainText = useMemo(() => parseEditorValue(value).plain, [value]);
+  const charactersUsed = plainText.length;
+  const charactersRemaining = Math.max(
+    0,
+    EDITOR_MAX_CHARACTERS - charactersUsed,
+  );
   const [includeSentiment, setIncludeSentiment] = useState(false);
   const showSentimentToggle = true;
   const modalTitle = titleOverride || config.title;
@@ -81,8 +85,7 @@ export function ThreadComposerModal({
     contextCard?.isOp && !contextCard.author.toLowerCase().includes('(op)');
 
   const handleEditorChange = (nextValue: string) => {
-    const limited = nextValue.slice(0, MAX_CHARACTERS);
-    onChange(limited);
+    onChange(nextValue);
   };
 
   const badgeLabel = useMemo(() => {
@@ -92,7 +95,10 @@ export function ThreadComposerModal({
     return config.badge;
   }, [config.badge, isScam, variant]);
 
-  const canSubmit = Boolean(value.trim()) && !isSubmitting;
+  const canSubmit =
+    Boolean(plainText.trim()) &&
+    plainText.length <= EDITOR_MAX_CHARACTERS &&
+    !isSubmitting;
 
   const handleClose = () => {
     if (isSubmitting) return;

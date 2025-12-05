@@ -17,6 +17,7 @@ import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
 import { SentimentKey } from '../common/sentiment/sentimentConfig';
+import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
 import {
   AnswerItem,
@@ -25,13 +26,13 @@ import {
   ThreadDetailRecord,
 } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
+import { EDITOR_MAX_CHARACTERS, parseEditorValue } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
   summarizeSentiments,
   type ThreadSentimentRecord,
 } from '../utils/threadTransforms';
-import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
@@ -236,16 +237,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
-    const trimmed = answerDraft.trim();
-    if (!trimmed) {
+    const { html, plain: plainText } = parseEditorValue(answerDraft);
+    if (!plainText) {
       setAnswerError('Answer content is required');
+      return;
+    }
+    if (plainText.length > EDITOR_MAX_CHARACTERS) {
+      setAnswerError('Answer exceeds the character limit');
       return;
     }
     setAnswerError(null);
     try {
       await createAnswerMutation.mutateAsync({
         threadId: numericThreadId,
-        content: trimmed,
+        content: html,
       });
       setComposerVariant(null);
     } catch (error: any) {
@@ -257,16 +262,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
-    const trimmed = commentDraft.trim();
-    if (!trimmed) {
+    const { html, plain: plainText } = parseEditorValue(commentDraft);
+    if (!plainText) {
       setCommentError('Comment content is required');
+      return;
+    }
+    if (plainText.length > EDITOR_MAX_CHARACTERS) {
+      setCommentError('Comment exceeds the character limit');
       return;
     }
     setCommentError(null);
     try {
       await createCommentMutation.mutateAsync({
         threadId: numericThreadId,
-        content: trimmed,
+        content: html,
       });
       setComposerVariant(null);
     } catch (error: any) {
