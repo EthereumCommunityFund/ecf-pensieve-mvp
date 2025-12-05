@@ -42,6 +42,9 @@ export function TopbarFilters({
         {statusTabs.map((tab) => {
           const normalizedTab = tab.toLowerCase();
           const isActive = normalizedTab === activeStatus?.toLowerCase();
+          const statusLabel = renderStatusLabel
+            ? renderStatusLabel(tab)
+            : tabLabel(tab);
           return (
             <button
               key={tab}
@@ -52,7 +55,9 @@ export function TopbarFilters({
                 isActive ? 'text-black' : 'text-black/50 hover:text-black/80',
               )}
             >
-              {renderStatusLabel ? renderStatusLabel(tab) : tabLabel(tab)}
+              <span className={cn(isActive ? 'font-semibold' : 'font-normal')}>
+                {statusLabel}
+              </span>
               <span
                 className={cn(
                   'pointer-events-none absolute inset-x-0 bottom-0 h-[2px] rounded-full transition-colors duration-150',

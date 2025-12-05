@@ -1,37 +1,31 @@
 'use client';
 
 import {
-  ArrowSquareOut,
-  BookBookmark,
   CaretCircleUp,
-  CaretDown,
+  CaretCircleUp as CaretCircleUpIcon,
   ChartBar,
-  Lightning,
   ShieldWarning,
-  UserCircle,
 } from '@phosphor-icons/react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
+import { SentimentKey } from '@/components/pages/discourse/common/sentiment/sentimentConfig';
+import { SentimentSummaryPanel } from '@/components/pages/discourse/common/sentiment/SentimentModal';
+import { TopbarFilters } from '@/components/pages/discourse/common/TopbarFilters';
+import BackHeader from '@/components/pages/project/BackHeader';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
 
-import {
-  sentimentDefinitions,
-  SentimentKey,
-} from '../common/sentiment/sentimentConfig';
-import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
+import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import {
   AnswerItem,
   CommentItem,
-  QuickAction,
   scamThread,
   threadDataset,
   ThreadDetailRecord,
 } from '../common/threadData';
-import { DiscoursePageLayout } from '../list/DiscoursePageLayout';
 import {
   stripHtmlToPlainText,
   summarizeSentiments,
@@ -46,7 +40,6 @@ const sentimentFilterOptions: Array<'all' | SentimentKey> = [
   'disagree',
 ];
 
-type ThreadRecord = RouterOutputs['projectDiscussionThread']['getThreadById'];
 type AnswerRecord =
   RouterOutputs['projectDiscussionInteraction']['listAnswers']['items'][0];
 type ThreadCommentRecord =
@@ -61,7 +54,6 @@ export function ScamThreadDetailPage({
   threadId,
   fallbackThread,
 }: ScamThreadDetailPageProps) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
     'counter',
   );
@@ -258,132 +250,129 @@ export function ScamThreadDetailPage({
   ];
 
   return (
-    <DiscoursePageLayout
-      title={hydratedThread.title}
-      description={hydratedThread.summary}
-      breadcrumbs={[
-        { label: 'Back', href: '/discourse' },
-        { label: 'Discourse', href: '/discourse' },
-        { label: 'Scam Thread' },
-      ]}
-      actions={
-        <Button
-          className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
-          onPress={() => router.push('/discourse/create')}
-        >
-          Create Alert
-        </Button>
-      }
-      sidebar={
-        <div className="space-y-5">
-          <ContributionVotesCard
-            current={fallback.cpProgress.current}
-            target={fallback.cpProgress.target}
-            label={fallback.cpProgress.label}
-            helper={fallback.cpProgress.helper}
-            status={hydratedThread.status}
-            isScam={hydratedThread.isScam}
-          />
-          <SentimentSummaryPanel
-            title="User Sentiment for this post"
-            sentiments={sentimentSummary.metrics.map((metric) => ({
-              key: metric.key,
-              percentage: metric.percentage,
-            }))}
-            totalVotes={sentimentSummary.totalVotes}
-          />
-          <ParticipationCard
-            supportSteps={fallback.participation.supportSteps}
-            counterSteps={fallback.participation.counterSteps}
-            isScam={hydratedThread.isScam}
-          />
-          <QuickActionsCard actions={fallback.quickActions} />
-        </div>
-      }
-    >
-      <section className="space-y-6">
-        <ScamThreadHeader thread={hydratedThread} />
+    <div className="flex justify-center px-[20px] pb-16 pt-4">
+      <div className="flex w-full max-w-[1200px] gap-[40px]">
+        <section className="w-[700px] space-y-[20px]">
+          <BackHeader className="px-0">
+            <Link href="/discourse" className="text-[14px] text-black/70">
+              Discourse
+            </Link>
+            <span className="text-black/25">/</span>
+            <span className="text-[14px] text-black/70">Crumb</span>
+          </BackHeader>
 
-        <section className="rounded-[14px] border border-[#e4e0d7] bg-white p-0 shadow-[0px_15px_35px_rgba(15,23,42,0.05)]">
-          <div className="flex flex-col gap-4 border-b border-black/10 px-6 pb-4 pt-5 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-wrap gap-6 text-sm font-semibold text-black">
-              {tabItems.map((tab) => (
-                <Button
-                  key={tab.key}
-                  type="button"
-                  className={`flex items-center gap-2 pb-1 transition ${
-                    activeTab === tab.key
-                      ? 'border-b-2 border-black text-black'
-                      : 'text-black/45'
-                  }`}
-                  onClick={() => setActiveTab(tab.key)}
+          <article className="space-y-[12px]">
+            <div className="inline-flex items-center gap-[6px] rounded-[4px] border border-[rgba(0,0,0,0.1)] bg-[#ebebeb] px-[8px] py-[4px]">
+              <ShieldWarning
+                size={18}
+                weight="fill"
+                className="text-black/70"
+              />
+              <span className="text-[13px] font-semibold text-black/80">
+                Scam &amp; Fraud
+              </span>
+            </div>
+            <h1 className="text-[20px] font-medium leading-[22px] text-black">
+              {hydratedThread.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-[10px] text-[12px] text-black">
+              <span className="text-black/50">BY:</span>
+              <div className="flex items-center gap-[5px]">
+                <span className="size-[24px] rounded-full bg-[#D9D9D9]" />
+                <span className="text-[14px]">
+                  {hydratedThread.author.name}
+                </span>
+              </div>
+              <span className="text-black/60">
+                {hydratedThread.author.postedAt}
+              </span>
+            </div>
+            <p className="text-[16px] leading-[20px] text-black/80">
+              {renderSummaryWithLinks(hydratedThread.summary)}
+            </p>
+            <div className="flex flex-wrap items-center gap-[10px] text-[14px] text-black/60">
+              <span className="font-semibold text-black/50">Tags:</span>
+              {hydratedThread.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-[6px] bg-black/5 px-[10px] py-[5px] text-xs font-[600] text-black"
                 >
-                  {tab.label}
-                  <span
-                    className={`rounded-[4px] px-2 py-0.5 text-[11px] font-bold ${
-                      activeTab === tab.key
-                        ? 'bg-black text-white'
-                        : 'bg-black/5 text-black/50'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                </Button>
+                  {tag}
+                </span>
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-black/60">
-              <div className="inline-flex items-center rounded-[6px] border border-black/15">
-                {(['top', 'new'] as const).map((option) => (
-                  <Button
-                    key={option}
-                    type="button"
-                    className={`rounded-[6px] px-4 py-1.5 text-sm font-semibold ${
-                      sortOption === option
-                        ? 'bg-black text-white'
-                        : 'text-black'
-                    }`}
-                    onClick={() => setSortOption(option)}
-                  >
-                    {option === 'top' ? 'Top' : 'New'}
-                  </Button>
-                ))}
+            <div className="flex gap-[8px]">
+              <div className="inline-flex items-center gap-[6px] rounded-[8px] bg-[#ebebeb] px-[8px] py-[4px]">
+                <ChartBar size={22} weight="fill" className="text-black/40" />
+                <span className="text-[12px] font-semibold text-black/60">
+                  {hydratedThread.attachmentsCount ?? 4}
+                </span>
               </div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-black">
-                <div className="relative">
-                  <select
-                    className="appearance-none rounded-[6px] border border-black/15 bg-white py-1.5 pl-9 pr-6 text-sm font-semibold text-black"
-                    value={sentimentFilter}
-                    onChange={(event) =>
-                      setSentimentFilter(
-                        event.target.value as 'all' | SentimentKey,
-                      )
-                    }
-                  >
-                    {sentimentFilterOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option === 'all'
-                          ? 'All Sentiment'
-                          : sentimentDefinitions[option].label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChartBar
-                    size={18}
-                    className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-black/60"
-                  />
-                  <CaretDown
-                    size={16}
-                    className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-black/60"
-                  />
-                </div>
-              </label>
             </div>
-          </div>
-          <div className="space-y-4 p-6">
+            <Button className="h-[38px] w-full gap-[10px] rounded-[8px] bg-[#EBEBEB]">
+              <CaretCircleUp
+                size={30}
+                weight="fill"
+                className="text-black/30"
+              />
+              <span className="font-inter leading-1 text-[14px] font-[500] text-black/60">
+                Support This Claim
+              </span>
+              <span className="leading-1 text-[12px] font-[400] text-black/60">
+                {hydratedThread.cpProgress.current} /{' '}
+                {hydratedThread.cpProgress.target}
+              </span>
+            </Button>
+            <div className="mt-[20px] flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
+              <Button className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85">
+                Counter This Claim
+              </Button>
+              <Button className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80">
+                Post Comment
+              </Button>
+            </div>
+          </article>
+
+          <TopbarFilters
+            statusTabs={tabItems.map((tab) => tab.key)}
+            activeStatus={activeTab}
+            onStatusChange={(value) =>
+              setActiveTab(value === 'discussion' ? 'discussion' : 'counter')
+            }
+            sortOptions={['top', 'new']}
+            activeSort={sortOption}
+            onSortChange={(value) =>
+              setSortOption(value === 'new' ? 'new' : 'top')
+            }
+            sentimentOptions={sentimentFilterOptions}
+            selectedSentiment={sentimentFilter}
+            onSentimentChange={(value) =>
+              setSentimentFilter((value as 'all' | SentimentKey) ?? 'all')
+            }
+            renderStatusLabel={(value) => {
+              const tab = tabItems.find((item) => item.key === value);
+              return (
+                <span className="flex items-center gap-2">
+                  <span className="text-[14px]  text-black">
+                    {tab?.label ?? value}
+                  </span>
+                  <span className="rounded-[4px] px-1 text-[11px] text-black/60">
+                    {tab?.count ?? 0}
+                  </span>
+                </span>
+              );
+            }}
+          />
+
+          <div className="space-y-4">
             {activeTab === 'counter' ? (
               filteredCounterClaims.length ? (
                 filteredCounterClaims.map((claim) => (
-                  <CounterClaimCard key={claim.id} claim={claim} />
+                  <CounterClaimCard
+                    key={claim.id}
+                    claim={claim}
+                    cpTarget={hydratedThread.cpProgress.target}
+                  />
                 ))
               ) : (
                 <ScamEmptyState
@@ -403,128 +392,200 @@ export function ScamThreadDetailPage({
             )}
           </div>
         </section>
-      </section>
-    </DiscoursePageLayout>
+
+        <aside className="w-[300px] space-y-[20px]">
+          <ContributionVotesCompact
+            current={hydratedThread.cpProgress.current}
+            label="Contribution Point Votes"
+          />
+
+          <SentimentSummaryPanel
+            sentiments={sentimentSummary.metrics.map((metric) => ({
+              key: metric.key,
+              percentage: metric.percentage,
+            }))}
+            totalVotes={sentimentSummary.totalVotes}
+            customHeader={
+              <div className="flex items-center gap-[10px]">
+                <ChartBar size={20} weight="fill" />
+                <span className="text-[14px] font-[600]">User Sentiment</span>
+              </div>
+            }
+          />
+
+          <ParticipateCard />
+        </aside>
+      </div>
+    </div>
   );
 }
 
-type ScamThreadHeaderProps = {
-  thread: ThreadDetailRecord;
+function renderSummaryWithLinks(text: string) {
+  const match = text.match(/(https?:\/\/\S+)/);
+  if (!match || match.index === undefined) {
+    return text;
+  }
+
+  const link = match[0];
+  const prefixText = text.slice(0, match.index);
+  const suffix = text.slice(match.index + link.length);
+
+  return (
+    <>
+      {prefixText}
+      <a
+        href={link}
+        className="text-[#1b9573]"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {link}
+      </a>
+      {suffix}
+    </>
+  );
+}
+
+type SupportBarProps = {
+  current: number;
+  target: number;
+  label: string;
 };
 
-function ScamThreadHeader({ thread }: ScamThreadHeaderProps) {
-  const primaryParagraph = thread.body[0] ?? thread.summary;
+function SupportBar({ current, target, label }: SupportBarProps) {
+  const progress = Math.min(100, Math.round((current / target) * 100));
 
   return (
-    <article className="rounded-[16px] border border-[#e4e0d7] bg-white p-6 shadow-[0px_10px_25px_rgba(15,23,42,0.05)]">
-      <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/60">
-        <span className="inline-flex items-center gap-2 rounded-[6px] border border-[#f8cab9] bg-[#fff2ec] px-3 py-1 text-[#be5329]">
-          <ShieldWarning size={16} weight="fill" />
-          Scam & Fraud
-        </span>
-        <span className="inline-flex items-center gap-2 rounded-[6px] border border-black/10 bg-black/5 px-3 py-1 text-black">
-          {thread.status}
-        </span>
-      </div>
-      <h1 className="mt-4 text-[22px] font-semibold text-[#202023]">
-        {thread.title}
-      </h1>
-      <p className="mt-2 text-sm text-black/60">{primaryParagraph}</p>
-      <div className="mt-4 flex flex-wrap gap-2 text-xs text-black/60">
-        {thread.tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-black/5 px-3 py-1 text-black"
-          >
-            #{tag}
-          </span>
-        ))}
-      </div>
-      <div className="mt-6 grid gap-4 text-sm text-black/70 sm:grid-cols-3">
-        {thread.highlights.map((highlight) => (
+    <div className="flex items-center gap-[10px] rounded-[8px] border border-black/10 bg-[#ebebeb] px-[10px] py-[8px]">
+      <CaretCircleUpIcon size={26} weight="fill" className="text-black/30" />
+      <div className="flex-1">
+        <p className="text-center text-[14px] font-semibold text-black/70">
+          {label}
+        </p>
+        <div className="mt-[6px] h-[10px] overflow-hidden rounded-full bg-white/60">
           <div
-            key={highlight.label}
-            className="rounded-[10px] border border-dashed border-black/10 bg-black/5 px-4 py-3"
-          >
-            <p className="text-xs uppercase tracking-[0.18em] text-black/40">
-              {highlight.label}
-            </p>
-            <p className="text-lg font-semibold text-black">
-              {highlight.value}
-            </p>
-          </div>
-        ))}
+            className="h-full rounded-full bg-black/25"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
-    </article>
+      <span className="text-[12px] font-semibold text-black/60">
+        {current.toLocaleString()} / {target.toLocaleString()}
+      </span>
+    </div>
   );
 }
 
-function CounterClaimCard({ claim }: { claim: AnswerItem }) {
-  const sentimentDefinition =
-    sentimentDefinitions[claim.sentimentLabel] ??
-    sentimentDefinitions.recommend;
+type CounterClaimCardProps = {
+  claim: AnswerItem;
+  cpTarget?: number;
+};
+
+function CounterClaimCard({ claim, cpTarget }: CounterClaimCardProps) {
+  const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
+  const progress =
+    cpTarget && cpTarget > 0
+      ? Math.min(100, Math.round((claim.cpSupport / cpTarget) * 100))
+      : undefined;
 
   return (
-    <article className="rounded-[14px] border border-[#ede8df] bg-white p-6 shadow-[0px_10px_25px_rgba(15,23,42,0.05)]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[15px] font-semibold text-[#202023]">
-            {claim.author}
+    <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
+      <div className="flex gap-3">
+        {/* TODO user avatar */}
+
+        <div className="flex-1 space-y-3">
+          <div className="flex flex-wrap items-center  gap-2">
+            <div className="flex size-[32px] items-center justify-center rounded-full bg-[#d9d9d9]" />
+            <p className="text-[15px] font-semibold text-black">
+              {claim.author}
+            </p>
+            <SentimentIndicator />
+          </div>
+          {/* TODO 用 MdEditor */}
+          <p className="text-[14px] leading-[20px] text-black/80">
+            {claim.body}
           </p>
-          <p className="text-xs uppercase tracking-[0.18em] text-black/50">
-            {claim.role}
-          </p>
-          <p className="text-xs text-black/60">{claim.createdAt}</p>
-        </div>
-        <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0ee] px-3 py-1 text-xs font-semibold text-[#b53c1d]">
-          Counter Claim
+
+          <p className="text-[12px] text-black/60">{claim.createdAt}</p>
+
+          <Button className="h-[38px] w-full gap-3 rounded-[8px] bg-[#f5f5f5] px-[10px]">
+            <CaretCircleUpIcon
+              weight="fill"
+              size={30}
+              className="text-[#64C0A5]"
+            />
+            <div className="font-mona flex gap-[5px] text-[13px] font-[500] text-black/50">
+              <span className="text-[13px] font-semibold text-[#1b9573]">
+                {claim.cpSupport.toLocaleString()}
+              </span>
+              <span>/</span>
+              {/* TODO 用 threshold variable */}
+              <span>9000</span>
+            </div>
+          </Button>
+
+          <div className="flex items-center justify-between border-t border-black/10 pt-[10px] text-[13px] font-semibold text-black/80">
+            <div className="flex items-center gap-2">
+              <span>Comments</span>
+              <span className="text-black/50">
+                {String(commentsCount).padStart(2, '0')}
+              </span>
+            </div>
+            <Button className="h-[30px] rounded-[5px] border border-black/10 px-[10px] text-[12px] font-semibold text-black/80">
+              Post Comment
+            </Button>
+          </div>
         </div>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-black/80">{claim.body}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-black/60">
-        <span className="inline-flex items-center gap-2 font-semibold text-black">
-          <sentimentDefinition.Icon
-            size={18}
-            weight="fill"
-            style={{ color: sentimentDefinition.color }}
-          />
-          {sentimentDefinition.label}
-          <span className="text-black/60">({claim.sentimentVotes} votes)</span>
-        </span>
-        <div className="ml-auto flex items-center gap-2 text-sm font-semibold text-black">
-          <CaretCircleUp size={22} />
-          <span>{claim.cpSupport.toLocaleString()} CP</span>
+
+      {claim.comments?.length ? (
+        <div className="mt-3 space-y-2 rounded-[8px] border border-black/10 bg-[#f7f7f7] p-[10px]">
+          {claim.comments.slice(0, 1).map((comment) => (
+            <div key={comment.id} className="space-y-1">
+              <p className="text-[13px] font-semibold text-black">
+                {comment.author}
+              </p>
+              <p className="text-[13px] text-black/70">{comment.body}</p>
+              <span className="text-[12px] text-black/50">
+                {comment.createdAt}
+              </span>
+            </div>
+          ))}
+          {commentsCount > claim.comments.length ? (
+            <div className="flex justify-start">
+              <Button className="h-[30px] rounded-[5px] border border-black/10 px-[10px] text-[12px] font-semibold text-black/80">
+                View All Comments
+              </Button>
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
     </article>
   );
 }
 
 function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
-  const sentimentDefinition =
-    sentimentDefinitions[comment.sentimentLabel] ??
-    sentimentDefinitions.recommend;
-
   return (
-    <article className="rounded-[14px] border border-[#ede8df] bg-white p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[15px] font-semibold text-black">
-            {comment.author}
+    <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
+      <div className="flex gap-3">
+        <div className="flex size-[28px] items-center justify-center rounded-full bg-[#d9d9d9]" />
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[14px] font-semibold text-black">
+                {comment.author}
+              </span>
+              <span className="text-[12px] text-black/60">
+                {comment.createdAt}
+              </span>
+            </div>
+            <SentimentIndicator />
+          </div>
+          <p className="text-[14px] leading-[20px] text-black/80">
+            {comment.body}
           </p>
-          <p className="text-xs uppercase tracking-[0.18em] text-black/50">
-            {comment.role}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-black/60">
-          <span>{comment.createdAt}</span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-1 text-black/70">
-            <sentimentDefinition.Icon size={14} weight="fill" />
-            {sentimentDefinition.label}
-          </span>
         </div>
       </div>
-      <p className="mt-3 text-sm text-black/80">{comment.body}</p>
     </article>
   );
 }
@@ -537,124 +598,75 @@ function ScamEmptyState({
   description: string;
 }) {
   return (
-    <div className="rounded-[16px] border border-dashed border-black/15 bg-white px-6 py-10 text-center text-black/60">
-      <CaretCircleUp size={28} className="mx-auto text-black/30" />
-      <p className="mt-3 text-sm font-semibold text-black">{title}</p>
-      <p className="mt-1 text-sm text-black/60">{description}</p>
+    <div className="rounded-[10px] border border-dashed border-black/15 bg-white px-6 py-8 text-center text-black/60">
+      <CaretCircleUp size={24} className="mx-auto text-black/30" />
+      <p className="mt-3 text-[13px] font-semibold text-black">{title}</p>
+      <p className="mt-1 text-[13px] text-black/60">{description}</p>
     </div>
   );
 }
 
-type ContributionVotesCardProps = {
+type ContributionVotesCompactProps = {
   current: number;
-  target: number;
   label: string;
-  helper: string;
-  status: string;
-  isScam: boolean;
 };
 
-function ContributionVotesCard({
+function ContributionVotesCompact({
   current,
-  target,
   label,
-  helper,
-  status,
-  isScam,
-}: ContributionVotesCardProps) {
-  const percentage = Math.min(100, Math.round((current / target) * 100));
-
+}: ContributionVotesCompactProps) {
   return (
-    <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between text-sm font-semibold text-black/70">
-        <span>{label}</span>
-        <span>{status}</span>
-      </div>
-      <div className="mt-3 h-3 rounded-full bg-black/5">
-        <div
-          className={`h-full rounded-full ${
-            isScam ? 'bg-[#c64b13]' : 'bg-black'
-          }`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <div className="mt-2 flex items-center justify-between text-sm font-semibold text-black">
-        <span>{current.toLocaleString()} CP</span>
-        <span>{target.toLocaleString()} CP</span>
-      </div>
-      <p className="mt-1 text-xs text-black/60">{helper}</p>
-    </div>
-  );
-}
-
-type ParticipationCardProps = {
-  supportSteps: string[];
-  counterSteps: string[];
-  isScam: boolean;
-};
-
-function ParticipationCard({
-  supportSteps,
-  counterSteps,
-  isScam,
-}: ParticipationCardProps) {
-  return (
-    <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-black/70">How to participate</p>
-      <div className="mt-4 space-y-4">
-        <div>
-          <div className="flex items-center gap-2 text-[13px] font-semibold text-black">
-            <Lightning size={18} weight="fill" className="text-[#f78f1e]" />
-            {isScam ? 'Support Main Claim' : 'Support Answer'}
-          </div>
-          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-black/70">
-            {supportSteps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="border-t border-dashed border-black/10 pt-4">
-          <div className="flex items-center gap-2 text-[13px] font-semibold text-black">
-            <BookBookmark size={18} weight="fill" className="text-[#4c6ef5]" />
-            {isScam ? 'Create Counter Claim' : 'Join Discussion'}
-          </div>
-          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-black/70">
-            {counterSteps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type QuickActionsCardProps = {
-  actions: QuickAction[];
-};
-
-function QuickActionsCard({ actions }: QuickActionsCardProps) {
-  if (!actions?.length) return null;
-  return (
-    <div className="rounded-[16px] border border-[#e6dfd5] bg-white p-5 shadow-sm">
-      <p className="text-sm彩票天天 font-semibold text-black/70">
-        Quick actions
+    <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
+      <header className="flex items-center gap-[10px] text-[14px] font-semibold text-black/80">
+        <CaretCircleUpIcon size={20} weight="fill" className="text-black/60" />
+        <span className="leading-[1.2]">{label}</span>
+      </header>
+      <p className="mt-[6px] text-[18px] font-semibold leading-none text-black/60">
+        {current.toLocaleString()}
       </p>
-      <div className="mt-4 space-y-3">
-        {actions.map((action) => (
-          <Button
-            key={action.label}
-            className="flex w-full items-center gap-3 rounded-[12px] border border-black/10 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:bg-black/5"
-          >
-            <UserCircle size={20} className="text-black/60" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-black">{action.label}</p>
-              <p className="text-xs text-black/60">{action.helper}</p>
-            </div>
-            <ArrowSquareOut size={16} className="text-black/40" />
+    </section>
+  );
+}
+
+function ParticipateCard() {
+  return (
+    <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
+      <h3 className="text-[14px] font-semibold text-black">
+        How to participate?
+      </h3>
+      <div className="mt-[10px] space-y-[10px] text-[13px] leading-[1.35] text-black/60">
+        <div className="space-y-[6px]">
+          <p className="text-[12px] font-semibold text-black/80">
+            Support Main Claim:
+          </p>
+          <p>
+            You can support this post as a scam by voting with your Contribution
+            Points (CP) under this post. Once the Scam Acceptance Threshold is
+            reached, it will display a label on the project page.
+          </p>
+          <div className="flex flex-col gap-[6px]">
+            <Button className="h-[30px] rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
+              Support Claim
+            </Button>
+            <Button className="h-[30px] rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
+              Post a Comment
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-[6px]">
+          <p className="text-[12px] font-semibold text-black/80">
+            Counter Claim:
+          </p>
+          <p>
+            If you disagree with this post, you can either create a counter
+            claim and gather support from the community or you can vote for any
+            existing counter claims
+          </p>
+          <Button className="h-[30px] w-full rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
+            Challenge Claim
           </Button>
-        ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
