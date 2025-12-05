@@ -25,11 +25,13 @@ const MAX_BAR_HEIGHT = 22;
 type SentimentIndicatorProps = {
   sentiments?: SentimentMetric[];
   onClick?: () => void;
+  size?: 'normal' | 'small';
 };
 
 export function SentimentIndicator({
   sentiments = [],
   onClick,
+  size = 'normal',
 }: SentimentIndicatorProps) {
   const bars = useMemo(() => {
     const map = sentiments.reduce<Record<SentimentKey, number>>(
@@ -66,9 +68,9 @@ export function SentimentIndicator({
       type="button"
       onClick={handleClick}
       aria-label="View sentiment breakdown"
-      className="inline-flex h-[30px] items-center rounded-[4px] border border-black/10 p-[4px] transition hover:-translate-y-0.5"
+      className="inline-flex h-[30px] min-w-0 items-center rounded-[4px] border border-black/10 p-[4px]"
     >
-      <div className="flex h-[20px] items-end gap-[3px]">
+      <div className="flex h-[20px] items-end gap-[2px]">
         {bars.map((bar) => (
           <span
             key={bar.key}

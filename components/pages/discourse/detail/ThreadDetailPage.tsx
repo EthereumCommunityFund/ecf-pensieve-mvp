@@ -2,6 +2,7 @@
 
 import {
   ArrowBendUpLeft,
+  CaretCircleUpIcon,
   ChartBar as ChartBarGlyph,
   ChartBarIcon,
   ThumbsDown,
@@ -9,7 +10,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { Button } from '@/components/base';
+import { Button, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -30,11 +31,12 @@ import {
   summarizeSentiments,
   type ThreadSentimentRecord,
 } from '../utils/threadTransforms';
+import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
 import { mockThreadAnswers, mockThreadComments } from './mockDiscussionData';
-import PostDetailCard from './PostDetailCard';
+import PostDetailCard, { serializeEditorValue } from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
 import { ComposerContext, ThreadComposerModal } from './ThreadComposerModal';
 
@@ -94,6 +96,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     showAuthPrompt();
     return false;
   };
+  const isAnswerComposer = useMemo(
+    () => composerVariant === 'answer',
+    [composerVariant],
+  );
 
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
@@ -269,10 +275,14 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   };
 
   const handleCloseComposer = () => {
-    if (composerVariant === 'answer' && createAnswerMutation.isPending) {
+    if (isAnswerComposer && createAnswerMutation.isPending) {
       return;
     }
-    if (composerVariant === 'comment' && createCommentMutation.isPending) {
+    if (
+      !isAnswerComposer &&
+      composerVariant &&
+      createCommentMutation.isPending
+    ) {
       return;
     }
     setComposerVariant(null);
@@ -420,7 +430,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       return null;
     }
     const paragraphs = extractParagraphs(baseThread.post);
-    const cpTarget = baseThread.isScam ? 9000 : 2000;
+    const cpTarget = 2000;
     const cpCurrent = answersFromApi.reduce(
       (max, answer) => Math.max(max, answer.cpSupport),
       0,
@@ -430,9 +440,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       id: String(baseThread.id),
       title: baseThread.title,
       summary: stripHtmlToPlainText(baseThread.post),
-      badge: baseThread.isScam ? '⚠️ Scam & Fraud' : 'Complaint Topic',
-      status: baseThread.isScam ? 'Alert' : 'Open',
-      isScam: baseThread.isScam,
+      badge: 'Complaint Topic',
+      status: 'Open',
+      isScam: false,
       categories: baseThread.category ?? [],
       tags: baseThread.tags ?? [],
       highlights: [
@@ -446,17 +456,13 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       cpProgress: {
         current: cpCurrent,
         target: cpTarget,
-        label: baseThread.isScam
-          ? 'Contribution Points supporting this claim'
-          : 'Contribution Points supporting the leading answer',
-        helper: baseThread.isScam
-          ? 'Reaching the threshold surfaces Scam Alerts across the ecosystem.'
-          : 'Reaching the threshold signals community confidence in this answer.',
+        label: 'Contribution Points supporting the leading answer',
+        helper:
+          'Reaching the threshold signals community confidence in this answer.',
       },
       sentiment: sentimentSummary.metrics,
       totalSentimentVotes: sentimentSummary.totalVotes,
-      answers: baseThread.isScam ? [] : answersFromApi,
-      counterClaims: baseThread.isScam ? answersFromApi : undefined,
+      answers: answersFromApi,
       comments: commentsFromApi,
       author: {
         name: baseThread.creator?.name ?? 'Anonymous',
@@ -464,7 +470,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           ? `@${baseThread.creator.userId.slice(0, 8)}`
           : '@anonymous',
         avatarFallback: baseThread.creator?.name?.[0]?.toUpperCase() ?? 'U',
-        role: baseThread.isScam ? 'Claim Owner' : 'Community Member',
+        role: 'Community Member',
         postedAt: formatTimeAgo(baseThread.createdAt),
         editedAt: undefined,
       },
@@ -510,27 +516,16 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     baseThread?.post ??
     thread.body.map((paragraph) => `<p>${paragraph}</p>`).join('');
 
-  const answersToRender = thread.isScam
-    ? (thread.counterClaims ?? [])
-    : thread.answers;
+  const answersToRender = thread.answers;
 
-  const tabOptions = thread.isScam
-    ? [
-        {
-          key: 'answers',
-          label: 'Counter Claims',
-          count: answersToRender.length,
-        },
-        { key: 'comments', label: 'Discussion', count: thread.comments.length },
-      ]
-    : [
-        {
-          key: 'answers',
-          label: 'Answers',
-          count: answersToRender.length,
-        },
-        { key: 'comments', label: 'Discuss', count: thread.comments.length },
-      ];
+  const tabOptions = [
+    {
+      key: 'answers',
+      label: 'Answers',
+      count: answersToRender.length,
+    },
+    { key: 'comments', label: 'Discuss', count: thread.comments.length },
+  ];
 
   const filteredAnswers =
     sentimentFilter === 'all'
@@ -547,17 +542,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         );
 
   const isAnswersTab = activeTab === 'answers';
-  const answerEmptyState = thread.isScam
-    ? {
-        title: 'No counter claims yet',
-        description:
-          'Share evidence or remediation updates to challenge this claim.',
-      }
-    : {
-        title: 'No answers yet',
-        description:
-          'Be the first to propose accountable steps for resolution.',
-      };
+  const answerEmptyState = {
+    title: 'No answers yet',
+    description: 'Be the first to propose accountable steps for resolution.',
+  };
   const discussionEmptyState = {
     title: 'No discussion yet',
     description:
@@ -573,10 +561,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             timeAgo={thread.author.postedAt}
             contentHtml={threadContentHtml}
             tags={thread.tags}
-            categoryLabel={
-              thread.categories[0] ??
-              (thread.isScam ? 'Scam & Fraud' : 'General')
-            }
+            categoryLabel={thread.categories[0] ?? 'General'}
             onAnswer={() => openAnswerComposer()}
             onComment={() => openCommentComposer()}
           />
@@ -609,19 +594,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                 );
               }}
             />
-            {/* Answer & discussion lists, aligned to Figma spec */}
             <div className="space-y-4 pt-5">
               {isAnswersTab ? (
                 <>
-                  <div className="flex justify-end">
-                    <Button
-                      color="primary"
-                      className="rounded-[8px] px-4 py-2 text-sm font-semibold"
-                      onPress={() => openAnswerComposer()}
-                    >
-                      Post Answer
-                    </Button>
-                  </div>
                   {isAnswersInitialLoading ? (
                     <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
                       Loading answers…
@@ -632,7 +607,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                         <AnswerDetailCard
                           key={answer.id}
                           answer={answer}
-                          isScam={thread.isScam}
                           onSupport={handleSupportAnswer}
                           onWithdraw={handleWithdrawSupport}
                           onPostComment={(context) =>
@@ -663,25 +637,16 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                         onPress={() => answersQuery.fetchNextPage()}
                         isLoading={answersQuery.isFetchingNextPage}
                       >
-                        Load more {thread.isScam ? 'counter claims' : 'answers'}
+                        Load more answers
                       </Button>
                     </div>
                   ) : null}
                 </>
               ) : (
                 <>
-                  <div className="flex items-center justify-between rounded-[10px] border border-black/10 bg-white px-4 py-3">
-                    <div className="flex flex-col">
-                      <span className="text-[14px] font-semibold text-black">
-                        Discussion
-                      </span>
-                      <span className="text-xs text-black/60">
-                        Post a comment
-                      </span>
-                    </div>
+                  <div className="">
                     <Button
-                      color="primary"
-                      className="rounded-[8px] px-4 py-2 text-sm font-semibold"
+                      className="w-full rounded-[5px] p-[10px] text-[13px] font-semibold text-black/80"
                       onPress={() => openCommentComposer()}
                     >
                       Post Comment
@@ -739,7 +704,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             label={thread.cpProgress.label}
             helper={thread.cpProgress.helper}
             status={thread.status}
-            isScam={thread.isScam}
+            isScam={false}
           />
 
           <SentimentSummaryPanel
@@ -766,37 +731,24 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         <ThreadComposerModal
           variant={composerVariant}
           isOpen
-          value={composerVariant === 'answer' ? answerDraft : commentDraft}
+          value={isAnswerComposer ? answerDraft : commentDraft}
           onChange={(value) =>
-            composerVariant === 'answer'
-              ? setAnswerDraft(value)
-              : setCommentDraft(value)
+            isAnswerComposer ? setAnswerDraft(value) : setCommentDraft(value)
           }
-          onSubmit={
-            composerVariant === 'answer'
-              ? handleSubmitAnswer
-              : handleSubmitComment
-          }
+          onSubmit={isAnswerComposer ? handleSubmitAnswer : handleSubmitComment}
           onClose={handleCloseComposer}
           isSubmitting={
-            composerVariant === 'answer'
+            isAnswerComposer
               ? createAnswerMutation.isPending
               : createCommentMutation.isPending
           }
-          error={composerVariant === 'answer' ? answerError : commentError}
+          error={isAnswerComposer ? answerError : commentError}
           threadTitle={thread.title}
-          threadCategory={
-            thread.categories[0] ?? (thread.isScam ? 'Scam & Fraud' : undefined)
-          }
-          isScam={thread.isScam}
+          threadCategory={thread.categories[0] ?? undefined}
           contextCard={
-            composerVariant === 'comment'
-              ? (commentContext ?? undefined)
-              : undefined
+            !isAnswerComposer ? (commentContext ?? undefined) : undefined
           }
-          titleOverride={
-            composerVariant === 'comment' ? commentComposerTitle : undefined
-          }
+          titleOverride={!isAnswerComposer ? commentComposerTitle : undefined}
         />
       ) : null}
     </>
@@ -805,7 +757,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
 type AnswerDetailCardProps = {
   answer: AnswerItem;
-  isScam: boolean;
   onSupport: (answerId: number) => void;
   onWithdraw: (answerId: number) => void;
   onPostComment: (context?: ComposerContext) => void;
@@ -816,7 +767,6 @@ type AnswerDetailCardProps = {
 
 function AnswerDetailCard({
   answer,
-  isScam,
   onSupport,
   onWithdraw,
   onPostComment,
@@ -833,7 +783,7 @@ function AnswerDetailCard({
   const isOp = answer.author === threadAuthorName;
 
   return (
-    <article className="rounded-[10px] border border-black/10 bg-white p-4 shadow-[0_12px_36px_rgba(15,23,42,0.08)]">
+    <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
       <div className="flex gap-3">
         <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9] text-sm font-semibold text-black/70">
           {answer.author?.[0]?.toUpperCase()}
@@ -854,35 +804,35 @@ function AnswerDetailCard({
                   {secondaryTag}
                 </span>
               ) : null}
-              {isScam ? (
-                <span className="rounded-[4px] border border-[#d14343] bg-[#fff0ee] px-2 py-1 text-[12px] font-semibold text-[#b53c1d]">
-                  Counter Claim
-                </span>
-              ) : null}
             </div>
             <div className="flex items-center gap-2 text-[12px] text-black/70">
-              <div className="inline-flex items-center gap-2 rounded-[6px] border border-black/10 bg-[#f4f4f4] px-2 py-1">
-                <ChartBarGlyph
-                  size={16}
-                  weight="fill"
-                  className="text-[#64c0a5]"
-                />
-                <span className="text-[13px] font-semibold text-black">
-                  {cpLabel}
-                </span>
-              </div>
-              <div className="inline-flex items-center gap-[3px] rounded-[6px] border border-black/10 bg-white px-[6px] py-[3px]">
-                <span className="block size-[8px] rounded-sm bg-[#24d3aa]" />
-                <span className="block size-[8px] rounded-sm bg-[#4ea5ff]" />
-                <span className="block size-[8px] rounded-sm bg-[#8f85ff]" />
-                <span className="block size-[8px] rounded-sm bg-[#f7b500]" />
-                <span className="block size-[8px] rounded-sm bg-[#f86c6b]" />
-              </div>
+              <SentimentIndicator />
             </div>
           </div>
 
-          <div className="whitespace-pre-line text-[14px] leading-[20px] text-black/80">
-            {answer.body}
+          <div className="flex items-start gap-[10px]">
+            <MdEditor
+              value={serializeEditorValue(answer.body)}
+              mode="readonly"
+              hideMenuBar
+              className={{
+                base: 'h-fit border-none bg-transparent p-0',
+                editorWrapper: 'p-0',
+                editor:
+                  'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
+              }}
+            />
+
+            <Button className="min-w-0 shrink-0 gap-[5px] rounded-[8px] border-none bg-[#F5F5F5] px-[8px] py-[4px]">
+              <span className="font-mona text-[13px] leading-[19px] text-[#64C0A5]">
+                2.5k
+              </span>
+              <CaretCircleUpIcon
+                weight="fill"
+                size={30}
+                className="text-[#64C0A5]"
+              />
+            </Button>
           </div>
 
           <div className="flex items-center gap-2 text-xs text-black/60">
@@ -899,25 +849,8 @@ function AnswerDetailCard({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-sm text-black/70">
-            <Button
-              className="rounded-[5px] border border-black/15 bg-white px-4 py-2 text-[13px] font-semibold text-black"
-              onPress={() => onSupport(answer.numericId)}
-              isDisabled={answer.viewerHasSupported || supportPending}
-            >
-              {supportPending ? 'Supporting…' : 'Support'}
-            </Button>
-            <Button
-              className="rounded-[5px] border border-black/15 bg-white px-4 py-2 text-[13px] font-semibold text-black"
-              onPress={() => onWithdraw(answer.numericId)}
-              isDisabled={!answer.viewerHasSupported || withdrawPending}
-            >
-              {withdrawPending ? 'Withdrawing…' : 'Withdraw'}
-            </Button>
-          </div>
-
-          <div className="mt-2 border-t border-black/10 pt-3">
-            <div className="flex items-center justify-between text-[14px] font-semibold text-black">
+          <div className="flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
+            <div className="flex items-center justify-between text-[14px] font-semibold text-black/80">
               <div className="flex items-center gap-2">
                 <span>Comments</span>
                 <span className="text-black/50">
@@ -925,7 +858,7 @@ function AnswerDetailCard({
                 </span>
               </div>
               <Button
-                className="rounded-[5px] border border-black/15 bg-white px-3 py-1 text-[12px] font-semibold text-black"
+                className="h-[32px] rounded-[5px] border border-black/10 bg-[#F5F5F5] px-[10px] text-[13px] font-semibold text-black/80"
                 onPress={() =>
                   onPostComment({
                     title: 'Commenting to Answer:',
@@ -939,7 +872,7 @@ function AnswerDetailCard({
                 Post Comment
               </Button>
             </div>
-            <div className="mt-3 space-y-3">
+            <div className="space-y-[10px]">
               {answer.comments?.length ? (
                 answer.comments.map((comment) => (
                   <AnswerCommentRow key={comment.id} comment={comment} />
@@ -977,15 +910,23 @@ function AnswerCommentRow({ comment }: { comment: CommentItem }) {
           ) : null}
           <span className="text-[12px] text-black/60">{comment.createdAt}</span>
         </div>
-        <p className="text-[14px] leading-[20px] text-black/80">
-          {comment.body}
-        </p>
+        <MdEditor
+          value={serializeEditorValue(comment.body)}
+          mode="readonly"
+          hideMenuBar
+          className={{
+            base: 'border-none bg-transparent p-0',
+            editorWrapper: 'p-0',
+            editor:
+              'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
+          }}
+        />
         <div className="flex items-center gap-3 text-[12px] text-black/70">
-          <span className="inline-flex items-center gap-1 rounded-[6px] border border-black/10 bg-[#f2f2f2] px-2 py-1">
-            <ChartBarGlyph size={14} className="text-black/40" />
-            <span className="font-semibold text-black/80">{badgeNumber}</span>
-          </span>
-          <Button className="rounded-[6px] border border-black/15 bg-[#f2f2f2] px-3 py-1 text-[12px] font-semibold text-black">
+          <Button className="inline-flex h-[24px] min-w-0 items-center gap-[5px] rounded-[5px] border-none bg-black/5 px-[8px]">
+            <ChartBarIcon size={20} weight="fill" className="opacity-30" />
+            <span className="text-[12px] font-semibold text-black">4</span>
+          </Button>
+          <Button className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80">
             Reply
           </Button>
         </div>
@@ -1029,6 +970,7 @@ function CommentThreadItem({
             <span className="text-[14px] font-semibold text-black">
               {comment.author}
             </span>
+            {/* TODO sentiment icon */}
             {isOp ? (
               <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
                 OP
@@ -1038,26 +980,28 @@ function CommentThreadItem({
               {comment.createdAt}
             </span>
           </div>
-          <div className="inline-flex items-center gap-[3px] rounded-[6px] border border-black/10 bg-white px-[6px] py-[3px]">
-            <span className="block size-[8px] rounded-sm bg-[#24d3aa]" />
-            <span className="block size-[8px] rounded-sm bg-[#4ea5ff]" />
-            <span className="block size-[8px] rounded-sm bg-[#8f85ff]" />
-            <span className="block size-[8px] rounded-sm bg-[#f7b500]" />
-            <span className="block size-[8px] rounded-sm bg-[#f86c6b]" />
-          </div>
+          <SentimentIndicator />
         </div>
 
-        <p className="text-[14px] leading-[20px] text-black/80">
-          {comment.body}
-        </p>
+        <MdEditor
+          value={serializeEditorValue(comment.body)}
+          mode="readonly"
+          hideMenuBar
+          className={{
+            base: 'h-fit border-none bg-transparent p-0',
+            editorWrapper: 'p-0',
+            editor:
+              'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
+          }}
+        />
 
         <div className="flex items-center gap-3 text-[12px] text-black/70">
-          <span className="inline-flex items-center gap-1 rounded-[6px] border border-black/10 bg-[#efefef] px-2 py-1">
-            <ChartBarGlyph size={14} className="text-black/50" />
-            <span className="font-semibold text-black/80">4</span>
-          </span>
+          <Button className="inline-flex h-[24px] min-w-0 items-center gap-[5px] rounded-[5px] border-none bg-black/5 px-[8px]">
+            <ChartBarIcon size={20} weight="fill" className="opacity-30" />
+            <span className="text-[12px] font-semibold text-black">4</span>
+          </Button>
           <Button
-            className="rounded-[6px] border border-black/15 bg-[#efefef] px-3 py-1 text-[12px] font-semibold text-black"
+            className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80"
             onPress={() =>
               onReply({
                 title: 'Replying to:',

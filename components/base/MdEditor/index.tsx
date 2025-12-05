@@ -470,7 +470,7 @@ const MdEditor = ({
   const shouldShowToolbar = isEditable && !hideMenuBar;
 
   return (
-    <div className="md-editor-root size-full">
+    <div className="md-editor-root w-full">
       <div
         className={cn(
           'md-editor-container relative flex flex-col rounded-lg bg-white/[0.02]',

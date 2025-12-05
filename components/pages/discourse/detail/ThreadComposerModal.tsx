@@ -75,7 +75,7 @@ export function ThreadComposerModal({
   const charactersUsed = value.length;
   const charactersRemaining = Math.max(0, MAX_CHARACTERS - charactersUsed);
   const [includeSentiment, setIncludeSentiment] = useState(false);
-  const showSentimentToggle = variant !== 'answer';
+  const showSentimentToggle = true;
   const modalTitle = titleOverride || config.title;
   const showOpBadge =
     contextCard?.isOp && !contextCard.author.toLowerCase().includes('(op)');
@@ -110,9 +110,7 @@ export function ThreadComposerModal({
       isOpen={isOpen}
       onClose={handleClose}
       classNames={{
-        base: 'w-[780px] tablet:max-w-[720px] mobile:max-w-[calc(100vw-24px)] bg-transparent border-none p-0 shadow-none',
-        wrapper: 'z-[1200]',
-        backdrop: 'bg-black/70 backdrop-blur-[2px]',
+        base: 'w-[700px] max-w-auto tablet:max-w-[calc(80vw)] mobile:max-w-[calc(100vw-24px)] bg-transparent border-none p-0 shadow-none',
         body: 'p-0',
         header: 'p-0',
         footer: 'p-0',
@@ -163,7 +161,7 @@ export function ThreadComposerModal({
             value={value}
             onChange={handleEditorChange}
             placeholder={config.placeholder}
-            hideMenuBar
+            hideMenuBar={false}
             debounceMs={150}
             className={{
               base: `min-h-[320px] rounded-[8px] border bg-white ${

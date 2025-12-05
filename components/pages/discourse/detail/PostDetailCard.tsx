@@ -17,7 +17,7 @@ export type PostDetailCardProps = {
   onComment?: () => void;
 };
 
-const serializeEditorValue = (html: string) =>
+export const serializeEditorValue = (html: string) =>
   JSON.stringify({ content: html, type: 'doc', isEmpty: !html.trim() });
 
 export default function PostDetailCard({
