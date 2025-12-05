@@ -3,6 +3,7 @@ import { and, asc, desc, eq, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
+  profiles,
   projectDiscussionAnswerVotes,
   projectDiscussionAnswers,
   projectDiscussionComments,
@@ -124,7 +125,7 @@ export const listDiscussionAnswers = async ({
   const orderBy =
     input.sortBy === 'votes'
       ? [
-          desc(projectDiscussionAnswers.voteCount),
+          desc(projectDiscussionAnswers.support),
           desc(projectDiscussionAnswers.createdAt),
           desc(projectDiscussionAnswers.id),
         ]
@@ -185,7 +186,16 @@ export const voteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  await ensureAnswerAvailable(db, answerId);
+  const { threadId } = await ensureAnswerAvailable(db, answerId);
+
+  const user = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
+    columns: {
+      weight: true,
+    },
+  });
+
+  const weight = user?.weight ?? 0;
 
   const updated = await db.transaction(async (tx) => {
     const insertedVotes = await tx
@@ -193,6 +203,8 @@ export const voteDiscussionAnswer = async ({
       .values({
         answerId,
         voter: userId,
+        weight,
+        threadId,
       })
       .onConflictDoNothing()
       .returning({
@@ -202,19 +214,19 @@ export const voteDiscussionAnswer = async ({
     if (insertedVotes.length === 0) {
       throw new TRPCError({
         code: 'CONFLICT',
-        message: 'User has already voted for this answer',
+        message: 'User has already voted',
       });
     }
 
     const [answer] = await tx
       .update(projectDiscussionAnswers)
       .set({
-        voteCount: sql`${projectDiscussionAnswers.voteCount} + 1`,
+        support: sql`${projectDiscussionAnswers.support} + ${weight}`,
       })
       .where(eq(projectDiscussionAnswers.id, answerId))
       .returning({
         id: projectDiscussionAnswers.id,
-        voteCount: projectDiscussionAnswers.voteCount,
+        support: projectDiscussionAnswers.support,
       });
 
     return answer;
@@ -245,6 +257,7 @@ export const unvoteDiscussionAnswer = async ({
       )
       .returning({
         id: projectDiscussionAnswerVotes.id,
+        weight: projectDiscussionAnswerVotes.weight,
       });
 
     if (deletedVotes.length === 0) {
@@ -254,15 +267,17 @@ export const unvoteDiscussionAnswer = async ({
       });
     }
 
+    const weight = deletedVotes[0]?.weight ?? 0;
+
     const [answer] = await tx
       .update(projectDiscussionAnswers)
       .set({
-        voteCount: sql`GREATEST(${projectDiscussionAnswers.voteCount} - 1, 0)`,
+        support: sql`GREATEST(${projectDiscussionAnswers.support} - ${weight}, 0)`,
       })
       .where(eq(projectDiscussionAnswers.id, answerId))
       .returning({
         id: projectDiscussionAnswers.id,
-        voteCount: projectDiscussionAnswers.voteCount,
+        support: projectDiscussionAnswers.support,
       });
 
     return answer;

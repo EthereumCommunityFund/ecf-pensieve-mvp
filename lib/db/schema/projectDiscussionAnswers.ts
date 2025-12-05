@@ -3,8 +3,8 @@ import {
   bigint,
   bigserial,
   boolean,
+  doublePrecision,
   index,
-  integer,
   pgTable,
   text,
   timestamp,
@@ -34,7 +34,7 @@ export const projectDiscussionAnswers = pgTable(
     content: text('content').notNull(),
     isDeleted: boolean('is_deleted').notNull().default(false),
     deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-    voteCount: integer('vote_count').notNull().default(0),
+    support: doublePrecision('support').notNull().default(0),
   },
   (table) => ({
     threadCreatedAtIdx: index(
