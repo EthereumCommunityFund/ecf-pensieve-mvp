@@ -99,6 +99,7 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
 
   return {
     id: String(thread.id),
+    numericId: Number(thread.id),
     title: thread.title,
     excerpt,
     author: thread.creator?.name || 'Unknown',
@@ -107,7 +108,9 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     status: thread.isScam ? 'Alert' : undefined,
     tag: thread.category?.[0],
     sentiment: dominantSentiment,
-    votes: summary.totalVotes,
+    votes: thread.support ?? 0,
+    viewerHasSupported:
+      (thread as { viewerHasSupported?: boolean }).viewerHasSupported ?? false,
     sentimentBreakdown: summary.metrics,
     totalSentimentVotes: summary.totalVotes,
   };

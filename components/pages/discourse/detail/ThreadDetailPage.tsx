@@ -8,7 +8,7 @@ import {
   ThumbsDown,
 } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
@@ -40,6 +40,7 @@ import { mockThreadAnswers, mockThreadComments } from './mockDiscussionData';
 import PostDetailCard, { serializeEditorValue } from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
 import { ComposerContext, ThreadComposerModal } from './ThreadComposerModal';
+import { cn } from '@heroui/react';
 
 type ThreadDetailPageProps = {
   threadId: string;
@@ -110,6 +111,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [withdrawingAnswerId, setWithdrawingAnswerId] = useState<number | null>(
     null,
   );
+  const [threadSupportPending, setThreadSupportPending] = useState(false);
+  const [threadWithdrawPending, setThreadWithdrawPending] = useState(false);
+  const [hasSupportedThread, setHasSupportedThread] = useState(false);
   const requireAuth = () => {
     if (isAuthenticated) {
       return true;
@@ -170,6 +174,14 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   );
 
   const baseThread = threadQuery.data;
+
+  useEffect(() => {
+    if (!baseThread) return;
+    const viewerHasSupported =
+      (baseThread as { viewerHasSupported?: boolean }).viewerHasSupported ??
+      false;
+    setHasSupportedThread(viewerHasSupported);
+  }, [baseThread]);
 
   const createAnswerMutation =
     trpc.projectDiscussionInteraction.createAnswer.useMutation({
@@ -251,6 +263,47 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           color: 'success',
         });
         answersQuery.refetch();
+      },
+      onError: (error) => {
+        addToast({
+          title: 'Unable to withdraw support',
+          description: error.message,
+          color: 'danger',
+        });
+      },
+    });
+
+  const voteThreadMutation = trpc.projectDiscussionThread.voteThread.useMutation(
+    {
+      onSuccess: () => {
+        addToast({
+          title: 'Supported thread',
+          description: 'CP support registered for this thread.',
+          color: 'success',
+        });
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
+      },
+      onError: (error) => {
+        addToast({
+          title: 'Unable to support thread',
+          description: error.message,
+          color: 'danger',
+        });
+      },
+    },
+  );
+
+  const unvoteThreadMutation =
+    trpc.projectDiscussionThread.unvoteThread.useMutation({
+      onSuccess: () => {
+        addToast({
+          title: 'Support withdrawn',
+          description: 'Your CP support was withdrawn.',
+          color: 'success',
+        });
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
       },
       onError: (error) => {
         addToast({
@@ -385,6 +438,26 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!requireAuth()) {
       return;
     }
+    const existingSupported = answersFromApi.find(
+      (answer) => answer.viewerHasSupported,
+    );
+    if (existingSupported?.numericId === answerId) {
+      await handleWithdrawSupport(answerId);
+      return;
+    }
+    if (existingSupported && existingSupported.numericId !== answerId) {
+      setWithdrawingAnswerId(existingSupported.numericId ?? null);
+      try {
+        await unvoteAnswerMutation.mutateAsync({
+          answerId: existingSupported.numericId!,
+        });
+      } catch {
+        setWithdrawingAnswerId(null);
+        return;
+      } finally {
+        setWithdrawingAnswerId(null);
+      }
+    }
     setSupportingAnswerId(answerId);
     try {
       await voteAnswerMutation.mutateAsync({ answerId });
@@ -410,6 +483,36 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       setWithdrawingAnswerId((current) =>
         current === answerId ? null : current,
       );
+    }
+  };
+
+  const handleSupportThread = async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    setThreadSupportPending(true);
+    try {
+      await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
+      setHasSupportedThread(true);
+    } catch {
+      // handled via mutation callbacks
+    } finally {
+      setThreadSupportPending(false);
+    }
+  };
+
+  const handleWithdrawThread = async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    setThreadWithdrawPending(true);
+    try {
+      await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
+      setHasSupportedThread(false);
+    } catch {
+      // handled via mutation callbacks
+    } finally {
+      setThreadWithdrawPending(false);
     }
   };
 
@@ -453,7 +556,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         role: 'Community Member',
         createdAt: formatTimeAgo(answer.createdAt),
         body: answer.content,
-        cpSupport: answer.voteCount ?? 0,
+        cpSupport: (answer as { support?: number }).support ?? 0,
         cpTarget: undefined,
         sentimentLabel: sentimentKey,
         sentimentVotes: sentiment.totalVotes,
@@ -676,6 +779,12 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             contentHtml={threadContentHtml}
             tags={thread.tags}
             categoryLabel={thread.categories[0] ?? 'General'}
+            supportCount={baseThread?.support ?? 0}
+            hasSupported={hasSupportedThread}
+            supportPending={threadSupportPending}
+            withdrawPending={threadWithdrawPending}
+            onSupportThread={handleSupportThread}
+            onWithdrawThread={handleWithdrawThread}
             onAnswer={() => openAnswerComposer()}
             onComment={() =>
               openCommentComposer({
@@ -929,6 +1038,18 @@ function AnswerDetailCard({
     answer.statusTag ||
     (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
   const cpLabel = formatCompactNumber(answer.cpSupport);
+  const CP_SUPPORT_THRESHOLD = 9000;
+  const meetsThreshold = answer.cpSupport >= CP_SUPPORT_THRESHOLD;
+  const cpTextColor = meetsThreshold
+    ? 'text-[#64C0A5]'
+    : answer.viewerHasSupported
+      ? 'text-black'
+      : 'text-black/60';
+  const cpIconColor = meetsThreshold
+    ? 'text-[#64C0A5]'
+    : answer.viewerHasSupported
+      ? 'text-black/80'
+      : 'text-black/10';
   const isOp = answer.author === threadAuthorName;
 
   const commentTree = useMemo<AnswerCommentNode[]>(() => {
@@ -1008,21 +1129,36 @@ function AnswerDetailCard({
               }}
             />
 
-            <Button className="min-w-0 shrink-0 gap-[5px] rounded-[8px] border-none bg-[#F5F5F5] px-[8px] py-[4px]">
-              <span className="font-mona text-[13px] leading-[19px] text-[#64C0A5]">
-                2.5k
+            <Button
+              className={`min-w-0 shrink-0 gap-[5px] rounded-[8px] border-none px-[8px] py-[4px] bg-[#F5F5F5]`}
+              isDisabled={supportPending || withdrawPending}
+              isLoading={supportPending || withdrawPending}
+              onPress={() =>
+                answer.viewerHasSupported
+                  ? onWithdraw(answer.numericId)
+                  : onSupport(answer.numericId)
+              }
+            >
+              <span
+                className={cn(
+                  'font-mona text-[13px] leading-[19px]',
+                  meetsThreshold ? 'text-[#64C0A5]' : cpTextColor,
+                )}
+              >
+                {formatCompactNumber(answer.cpSupport)}
               </span>
               <CaretCircleUpIcon
                 weight="fill"
                 size={30}
-                className="text-[#64C0A5]"
+                className={cn(cpIconColor)}
               />
             </Button>
           </div>
 
           <div className="flex items-center gap-2 text-xs text-black/60">
             <span>{answer.createdAt}</span>
-            <div className="inline-flex items-center gap-2 rounded-[8px] bg-[#f2f2f2] px-2 py-1">
+            {/* TODO:Answer 维度的情绪投票 */}
+            <Button className="h-[24px] border-none min-w-0 gap-2 rounded-[5px] bg-[#f2f2f2] px-2 py-1">
               <ChartBarGlyph
                 size={16}
                 weight="fill"
@@ -1031,7 +1167,7 @@ function AnswerDetailCard({
               <span className="text-[12px] font-semibold text-black/70">
                 {commentCount?.toString() || '0'}
               </span>
-            </div>
+            </Button>
           </div>
 
           <div className="flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
@@ -1143,6 +1279,7 @@ function AnswerCommentRow({
           }}
         />
         <div className="flex items-center gap-3 text-[12px] text-black/70">
+        {/* TODO: comment 维度的情绪投票，暂不做 */}
           <Button className="inline-flex h-[24px] min-w-0 items-center gap-[5px] rounded-[5px] border-none bg-black/5 px-[8px]">
             <ChartBarIcon size={20} weight="fill" className="opacity-30" />
             <span className="text-[12px] font-semibold text-black">4</span>
@@ -1371,7 +1508,7 @@ function AnswerCommentTree({
               node={child}
               depth={depth + 1}
               isFirst={index === 0}
-              hasSiblings={node.children.length > 1}
+              hasSiblings={!!node.children && node.children.length > 1}
               onReply={onReply}
               threadAuthorName={threadAuthorName}
               threadId={threadId}

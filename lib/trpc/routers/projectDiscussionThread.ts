@@ -83,6 +83,7 @@ export const projectDiscussionThreadRouter = router({
           sortBy: input.sortBy ?? 'recent',
           tab: input.tab ?? 'all',
         },
+        viewerId: ctx.user?.id ?? null,
       });
     }),
 
@@ -92,6 +93,7 @@ export const projectDiscussionThreadRouter = router({
       return getDiscussionThreadById({
         db: ctx.db,
         threadId: input.threadId,
+        viewerId: ctx.user?.id ?? null,
       });
     }),
 

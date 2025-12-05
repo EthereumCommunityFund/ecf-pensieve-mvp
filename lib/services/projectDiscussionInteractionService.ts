@@ -258,6 +258,44 @@ export const voteDiscussionAnswer = async ({
         })
       )?.support ?? 0;
 
+    const existingAnswerVote =
+      await tx.query.projectDiscussionAnswerVotes.findFirst({
+        columns: {
+          id: true,
+          answerId: true,
+        },
+        where: and(
+          eq(projectDiscussionAnswerVotes.answerId, answerId),
+          eq(projectDiscussionAnswerVotes.voter, userId),
+        ),
+      });
+
+    if (existingAnswerVote) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'User has already voted for this answer',
+      });
+    }
+
+    const existingThreadVote =
+      await tx.query.projectDiscussionAnswerVotes.findFirst({
+        columns: {
+          id: true,
+          answerId: true,
+        },
+        where: and(
+          eq(projectDiscussionAnswerVotes.voter, userId),
+          eq(projectDiscussionAnswerVotes.threadId, threadId),
+        ),
+      });
+
+    if (existingThreadVote) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'User has already supported another answer in this thread',
+      });
+    }
+
     const insertedVotes = await tx
       .insert(projectDiscussionAnswerVotes)
       .values({

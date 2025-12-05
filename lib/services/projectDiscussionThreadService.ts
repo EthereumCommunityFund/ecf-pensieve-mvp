@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
@@ -39,9 +39,11 @@ const ensureDiscussionThreadAvailable = async (
 export const getDiscussionThreadById = async ({
   db,
   threadId,
+  viewerId,
 }: {
   db: Database;
   threadId: number;
+  viewerId?: string | null;
 }) => {
   const thread = await db.query.projectDiscussionThreads.findFirst({
     where: eq(projectDiscussionThreads.id, threadId),
@@ -63,7 +65,27 @@ export const getDiscussionThreadById = async ({
 
   await ensurePublishedProject(db, thread.projectId);
 
-  return thread;
+  if (!viewerId) {
+    return thread;
+  }
+
+  const viewerVote = await db
+    .select({
+      threadId: projectDiscussionVotes.threadId,
+    })
+    .from(projectDiscussionVotes)
+    .where(
+      and(
+        eq(projectDiscussionVotes.threadId, threadId),
+        eq(projectDiscussionVotes.voter, viewerId),
+      ),
+    )
+    .limit(1);
+
+  return {
+    ...thread,
+    viewerHasSupported: viewerVote.length > 0,
+  };
 };
 
 export const createDiscussionThread = async ({
@@ -107,9 +129,11 @@ type ListThreadsInput = {
 export const listDiscussionThreads = async ({
   db,
   input,
+  viewerId,
 }: {
   db: Database;
   input: ListThreadsInput;
+  viewerId?: string | null;
 }) => {
   if (input.projectId !== undefined) {
     await ensurePublishedProject(db, input.projectId);
@@ -183,10 +207,34 @@ export const listDiscussionThreads = async ({
 
   const hasNextPage = results.length > input.limit;
   const items = hasNextPage ? results.slice(0, input.limit) : results;
+
+  let viewerVotes = new Set<number>();
+  if (viewerId && items.length) {
+    const voteRows = await db
+      .select({
+        threadId: projectDiscussionVotes.threadId,
+      })
+      .from(projectDiscussionVotes)
+      .where(
+        and(
+          eq(projectDiscussionVotes.voter, viewerId),
+          inArray(
+            projectDiscussionVotes.threadId,
+            items.map((item) => item.id),
+          ),
+        ),
+      );
+    viewerVotes = new Set(voteRows.map((row) => row.threadId));
+  }
+
+  const hydratedItems = items.map((item) => ({
+    ...item,
+    viewerHasSupported: viewerVotes.has(item.id),
+  }));
   const nextCursor = hasNextPage ? (items[items.length - 1]?.id ?? null) : null;
 
   return {
-    items,
+    items: hydratedItems,
     nextCursor,
     hasNextPage,
   };

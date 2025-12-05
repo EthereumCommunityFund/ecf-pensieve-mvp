@@ -15,6 +15,12 @@ export type PostDetailCardProps = {
   categoryLabel: string;
   onAnswer?: () => void;
   onComment?: () => void;
+  supportCount?: number;
+  hasSupported?: boolean;
+  supportPending?: boolean;
+  withdrawPending?: boolean;
+  onSupportThread?: () => void;
+  onWithdrawThread?: () => void;
 };
 
 export const serializeEditorValue = (html: string) =>
@@ -30,6 +36,12 @@ export default function PostDetailCard({
   categoryLabel,
   onAnswer,
   onComment,
+  supportCount = 0,
+  hasSupported = false,
+  supportPending = false,
+  withdrawPending = false,
+  onSupportThread,
+  onWithdrawThread,
 }: PostDetailCardProps) {
   return (
     <article className="flex flex-col gap-[20px] rounded-[16px]">
@@ -70,14 +82,42 @@ export default function PostDetailCard({
         ))}
       </div>
       <div className="flex gap-[10px] border-t border-black/10 pt-4 ">
-        <div className="inline-flex items-center gap-[10px] rounded-[8px] bg-[#EBEBEB] px-[8px] py-[4px]">
+        {/*  TODO：Thread 维度的情绪投票组件 */}
+        <Button className="h-[38px] border-none gap-[10px] rounded-[8px] bg-[#EBEBEB] px-[8px] py-[4px]">
           <ChartBarIcon weight="fill" size={30} className="opacity-30" />
           <span className="text-[12px] font-semibold text-black/60">000</span>
-        </div>
-        <div className="inline-flex items-center gap-[10px] rounded-[8px] bg-[#EBEBEB] px-[8px] py-[4px]">
-          <CaretCircleUpIcon weight="fill" size={30} className="opacity-30" />
-          <span className="text-[12px] font-semibold text-black/60">000</span>
-        </div>
+        </Button>
+        <Button
+          className={`h-[38px] gap-[10px] rounded-[8px] px-[10px] py-[6px] border-none ${
+            hasSupported ? 'bg-black text-white hover:bg-black/80' : 'bg-[#EBEBEB] text-black'
+          }`}
+          isDisabled={
+            isPreviewMode ||
+            supportPending ||
+            withdrawPending ||
+            (!hasSupported && !onSupportThread) ||
+            (hasSupported && !onWithdrawThread)
+          }
+          isLoading={supportPending || withdrawPending}
+          onPress={() => {
+            const action = hasSupported ? onWithdrawThread : onSupportThread;
+            action?.();
+          }}
+        >
+          <CaretCircleUpIcon
+            weight="fill"
+            size={30}
+            className={hasSupported ? 'opacity-100' : 'opacity-30'}
+          />
+
+          <span
+            className={`text-[13px] font-semibold ${
+              hasSupported ? 'text-white' : 'text-black/80'
+            }`}
+          >
+            {supportCount.toLocaleString()}
+          </span>
+        </Button>
       </div>
       {/* TODO 非 preview 模式，未登录的情况下展示登录按钮，不显示 action 按钮 */}
       <div className="flex flex-col gap-3">

@@ -7,13 +7,15 @@ import {
   ShieldWarning,
 } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
+import { addToast } from '@/components/base/toast';
 import { SentimentKey } from '@/components/pages/discourse/common/sentiment/sentimentConfig';
 import { SentimentSummaryPanel } from '@/components/pages/discourse/common/sentiment/SentimentModal';
 import { TopbarFilters } from '@/components/pages/discourse/common/TopbarFilters';
 import BackHeader from '@/components/pages/project/BackHeader';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
@@ -54,12 +56,22 @@ export function ScamThreadDetailPage({
   threadId,
   fallbackThread,
 }: ScamThreadDetailPageProps) {
+  const { isAuthenticated, showAuthPrompt } = useAuth();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
     'counter',
   );
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
   const [sentimentFilter, setSentimentFilter] = useState<'all' | SentimentKey>(
     'all',
+  );
+  const [hasSupportedThread, setHasSupportedThread] = useState(false);
+  const [threadSupportPending, setThreadSupportPending] = useState(false);
+  const [threadWithdrawPending, setThreadWithdrawPending] = useState(false);
+  const [supportingClaimId, setSupportingClaimId] = useState<number | null>(
+    null,
+  );
+  const [withdrawingClaimId, setWithdrawingClaimId] = useState<number | null>(
+    null,
   );
 
   const numericThreadId = Number(threadId);
@@ -74,6 +86,15 @@ export function ScamThreadDetailPage({
     { threadId: numericThreadId },
     { enabled: isValidThreadId },
   );
+  const utils = trpc.useUtils();
+  const voteThreadMutation =
+    trpc.projectDiscussionThread.voteThread.useMutation();
+  const unvoteThreadMutation =
+    trpc.projectDiscussionThread.unvoteThread.useMutation();
+  const voteAnswerMutation =
+    trpc.projectDiscussionInteraction.voteAnswer.useMutation();
+  const unvoteAnswerMutation =
+    trpc.projectDiscussionInteraction.unvoteAnswer.useMutation();
 
   const sortByParam = sortOption === 'top' ? 'votes' : 'recent';
 
@@ -108,6 +129,18 @@ export function ScamThreadDetailPage({
     if (!answersQuery.data?.pages.length) return [];
     return answersQuery.data.pages.flatMap((page) => page.items);
   }, [answersQuery.data]);
+  useEffect(() => {
+    const viewerHasSupported = (
+      threadQuery.data as { viewerHasSupported?: boolean }
+    )?.viewerHasSupported;
+    setHasSupportedThread(Boolean(viewerHasSupported));
+  }, [threadQuery.data]);
+
+  const requireAuth = () => {
+    if (isAuthenticated) return true;
+    showAuthPrompt();
+    return false;
+  };
 
   const comments = useMemo<ThreadCommentRecord[]>(() => {
     if (!commentsQuery.data?.pages.length) return [];
@@ -128,14 +161,14 @@ export function ScamThreadDetailPage({
         role: fallback.author.role,
         createdAt: formatTimeAgo(answer.createdAt),
         body: answer.content,
-        cpSupport: answer.voteCount ?? 0,
+        cpSupport: (answer as { support?: number }).support ?? 0,
         cpTarget: undefined,
         sentimentLabel: label,
         sentimentVotes: sentiment.totalVotes,
         commentsCount: answer.comments.length,
         comments: [],
         viewerSentiment: undefined,
-        viewerHasSupported: false,
+        viewerHasSupported: Boolean(answer.viewerHasSupported),
       } satisfies AnswerItem;
     });
   }, [answers, fallback]);
@@ -192,6 +225,10 @@ export function ScamThreadDetailPage({
       id: String(remoteThread.id),
       title: remoteThread.title,
       summary: stripHtmlToPlainText(remoteThread.post) || fallback.summary,
+      cpProgress: {
+        ...fallback.cpProgress,
+        current: remoteThread.support ?? fallback.cpProgress.current,
+      },
       categories:
         remoteThread.category && remoteThread.category.length
           ? remoteThread.category
@@ -235,6 +272,114 @@ export function ScamThreadDetailPage({
       (comment) => comment.sentimentLabel === sentimentFilter,
     );
   }, [hydratedThread.comments, sentimentFilter]);
+
+  const handleToggleThreadSupport = async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    const action = hasSupportedThread ? 'withdraw' : 'support';
+    hasSupportedThread
+      ? setThreadWithdrawPending(true)
+      : setThreadSupportPending(true);
+    try {
+      if (hasSupportedThread) {
+        await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
+        setHasSupportedThread(false);
+        addToast({
+          title: 'Support withdrawn',
+          description: 'Your CP support was withdrawn.',
+          color: 'success',
+        });
+      } else {
+        await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
+        setHasSupportedThread(true);
+        addToast({
+          title: 'Supported claim',
+          description: 'CP support registered for this scam claim.',
+          color: 'success',
+        });
+      }
+      threadQuery.refetch();
+      utils.projectDiscussionThread.listThreads.invalidate();
+    } catch (error: any) {
+      addToast({
+        title: 'Unable to update support',
+        description: error?.message ?? 'Please try again.',
+        color: 'danger',
+      });
+    } finally {
+      if (action === 'support') {
+        setThreadSupportPending(false);
+      } else {
+        setThreadWithdrawPending(false);
+      }
+    }
+  };
+
+  const handleSupportClaim = async (answerId: number) => {
+    if (!requireAuth()) return;
+
+    const existing = answers.find((item) => item.viewerHasSupported);
+    if (existing?.id === answerId) {
+      await handleWithdrawClaim(answerId);
+      return;
+    }
+
+    if (existing && existing.id !== answerId) {
+      setWithdrawingClaimId(existing.id);
+      try {
+        await unvoteAnswerMutation.mutateAsync({ answerId: existing.id });
+      } catch {
+        setWithdrawingClaimId(null);
+        return;
+      }
+      setWithdrawingClaimId(null);
+    }
+
+    setSupportingClaimId(answerId);
+    try {
+      await voteAnswerMutation.mutateAsync({ answerId });
+      addToast({
+        title: 'Supported counter claim',
+        description: 'CP support registered successfully.',
+        color: 'success',
+      });
+      answersQuery.refetch();
+    } catch (error: any) {
+      addToast({
+        title: 'Unable to support',
+        description: error?.message ?? 'Please try again.',
+        color: 'danger',
+      });
+    } finally {
+      setSupportingClaimId(null);
+      utils.projectDiscussionThread.listThreads.invalidate();
+    }
+  };
+
+  const handleWithdrawClaim = async (answerId: number) => {
+    if (!requireAuth()) return;
+
+    setWithdrawingClaimId(answerId);
+    try {
+      await unvoteAnswerMutation.mutateAsync({ answerId });
+      addToast({
+        title: 'Support withdrawn',
+        description: 'Your CP support was withdrawn.',
+        color: 'success',
+      });
+      answersQuery.refetch();
+    } catch (error: any) {
+      addToast({
+        title: 'Unable to withdraw',
+        description: error?.message ?? 'Please try again.',
+        color: 'danger',
+      });
+    } finally {
+      setWithdrawingClaimId(null);
+      utils.projectDiscussionThread.listThreads.invalidate();
+    }
+  };
 
   const tabItems = [
     {
@@ -309,24 +454,35 @@ export function ScamThreadDetailPage({
                 </span>
               </div>
             </div>
-            <Button className="h-[38px] w-full gap-[10px] rounded-[8px] bg-[#EBEBEB]">
+            <Button
+              className={`h-[38px] w-full border-none gap-[10px] rounded-[8px] bg-[#EBEBEB] text-black`}
+              isDisabled={threadSupportPending || threadWithdrawPending}
+              isLoading={threadSupportPending || threadWithdrawPending}
+              onPress={handleToggleThreadSupport}
+            >
               <CaretCircleUp
                 size={30}
                 weight="fill"
-                className="text-black/30"
+                className={hasSupportedThread ? 'text-black/30' : 'text-black/10'}
               />
-              <span className="font-inter leading-1 text-[14px] font-[500] text-black/60">
+              <span
+                className={`font-inter leading-1 text-[14px] font-[500] `}
+              >
                 Support This Claim
               </span>
-              <span className="leading-1 text-[12px] font-[400] text-black/60">
+              <span
+                className={`leading-1 text-[12px] font-[400] `}
+              >
                 {hydratedThread.cpProgress.current} /{' '}
                 {hydratedThread.cpProgress.target}
               </span>
             </Button>
             <div className="mt-[20px] flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
+              {/* TODO：跟 create answer 是一样的，创建一条新的 claim */}
               <Button className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85">
                 Counter This Claim
               </Button>
+              {/* TODO: create comment */}
               <Button className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80">
                 Post Comment
               </Button>
@@ -372,6 +528,10 @@ export function ScamThreadDetailPage({
                     key={claim.id}
                     claim={claim}
                     cpTarget={hydratedThread.cpProgress.target}
+                    onSupport={handleSupportClaim}
+                    onWithdraw={handleWithdrawClaim}
+                    supportPending={supportingClaimId === claim.numericId}
+                    withdrawPending={withdrawingClaimId === claim.numericId}
                   />
                 ))
               ) : (
@@ -479,14 +639,37 @@ function SupportBar({ current, target, label }: SupportBarProps) {
 type CounterClaimCardProps = {
   claim: AnswerItem;
   cpTarget?: number;
+  onSupport: (answerId: number) => void;
+  onWithdraw: (answerId: number) => void;
+  supportPending?: boolean;
+  withdrawPending?: boolean;
 };
 
-function CounterClaimCard({ claim, cpTarget }: CounterClaimCardProps) {
+function CounterClaimCard({
+  claim,
+  cpTarget,
+  onSupport,
+  onWithdraw,
+  supportPending = false,
+  withdrawPending = false,
+}: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
   const progress =
     cpTarget && cpTarget > 0
       ? Math.min(100, Math.round((claim.cpSupport / cpTarget) * 100))
       : undefined;
+  const CP_SUPPORT_THRESHOLD = cpTarget ?? 9000;
+  const meetsThreshold = claim.cpSupport >= CP_SUPPORT_THRESHOLD;
+  const textColor = meetsThreshold
+    ? 'text-[#64C0A5]'
+    : claim.viewerHasSupported
+      ? 'text-black'
+      : 'text-black/60';
+  const iconColor = meetsThreshold
+    ? 'text-[#64C0A5]'
+    : claim.viewerHasSupported
+      ? 'text-black/30'
+      : 'text-black/10';
 
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
@@ -508,19 +691,35 @@ function CounterClaimCard({ claim, cpTarget }: CounterClaimCardProps) {
 
           <p className="text-[12px] text-black/60">{claim.createdAt}</p>
 
-          <Button className="h-[38px] w-full gap-3 rounded-[8px] bg-[#f5f5f5] px-[10px]">
+          <Button
+            className={`h-[38px] w-full gap-3 rounded-[8px] px-[10px] ${
+              meetsThreshold
+                ? 'bg-[#F0FFF9]'
+                : claim.viewerHasSupported
+                  ? 'bg-black text-white'
+                  : 'bg-[#f5f5f5]'
+            }`}
+            isDisabled={supportPending || withdrawPending}
+            isLoading={supportPending || withdrawPending}
+            onPress={() =>
+              claim.viewerHasSupported
+                ? onWithdraw(claim.numericId)
+                : onSupport(claim.numericId)
+            }
+          >
             <CaretCircleUpIcon
               weight="fill"
               size={30}
-              className="text-[#64C0A5]"
+              className={iconColor}
             />
             <div className="font-mona flex gap-[5px] text-[13px] font-[500] text-black/50">
-              <span className="text-[13px] font-semibold text-[#1b9573]">
+              <span
+                className={`text-[13px] font-semibold ${textColor}`}
+              >
                 {claim.cpSupport.toLocaleString()}
               </span>
               <span>/</span>
-              {/* TODO 用 threshold variable */}
-              <span>9000</span>
+              <span>{cpTarget ?? 0}</span>
             </div>
           </Button>
 
