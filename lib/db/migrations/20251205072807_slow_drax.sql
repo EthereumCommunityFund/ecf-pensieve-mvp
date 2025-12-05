@@ -1,0 +1,2 @@
+ALTER TABLE "project_discussion_threads" ADD COLUMN "answer_count" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "project_discussion_threads" ADD COLUMN "redressed_answer_count" integer DEFAULT 0 NOT NULL;
