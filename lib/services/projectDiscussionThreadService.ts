@@ -36,6 +36,36 @@ const ensureDiscussionThreadAvailable = async (
   return thread;
 };
 
+export const getDiscussionThreadById = async ({
+  db,
+  threadId,
+}: {
+  db: Database;
+  threadId: number;
+}) => {
+  const thread = await db.query.projectDiscussionThreads.findFirst({
+    where: eq(projectDiscussionThreads.id, threadId),
+    with: {
+      creator: {
+        columns: {
+          userId: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+      sentiments: true,
+    },
+  });
+
+  if (!thread) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Thread not found' });
+  }
+
+  await ensurePublishedProject(db, thread.projectId);
+
+  return thread;
+};
+
 export const createDiscussionThread = async ({
   db,
   userId,
@@ -64,7 +94,7 @@ export const createDiscussionThread = async ({
 };
 
 type ListThreadsInput = {
-  projectId: number;
+  projectId?: number;
   category: string[];
   tags: string[];
   isScam?: boolean;
@@ -81,9 +111,13 @@ export const listDiscussionThreads = async ({
   db: Database;
   input: ListThreadsInput;
 }) => {
-  await ensurePublishedProject(db, input.projectId);
+  if (input.projectId !== undefined) {
+    await ensurePublishedProject(db, input.projectId);
+  }
 
-  const conditions = [eq(projectDiscussionThreads.projectId, input.projectId)];
+  const conditions = input.projectId
+    ? [eq(projectDiscussionThreads.projectId, input.projectId)]
+    : [];
 
   if (input.cursor) {
     conditions.push(lt(projectDiscussionThreads.id, input.cursor));
@@ -117,7 +151,7 @@ export const listDiscussionThreads = async ({
     conditions.push(gt(projectDiscussionThreads.redressedAnswerCount, 0));
   }
 
-  const whereCondition = and(...conditions);
+  const whereCondition = conditions.length ? and(...conditions) : undefined;
 
   const orderBy =
     input.sortBy === 'votes'
