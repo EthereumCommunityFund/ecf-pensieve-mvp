@@ -15,6 +15,7 @@ export * from './projectDiscussionAnswerVotes';
 export * from './projectDiscussionComments';
 export * from './projectDiscussionSentiments';
 export * from './projectDiscussionThreads';
+export * from './projectDiscussionVotes';
 export * from './projectLogs';
 export * from './projectNotificationSettings';
 export * from './projectRelations';

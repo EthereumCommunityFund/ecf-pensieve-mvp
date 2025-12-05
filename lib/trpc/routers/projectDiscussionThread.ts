@@ -3,6 +3,8 @@ import { z } from 'zod';
 import {
   createDiscussionThread,
   listDiscussionThreads,
+  unvoteDiscussionThread,
+  voteDiscussionThread,
 } from '@/lib/services/projectDiscussionThreadService';
 import { normalizeStringArray } from '@/lib/utils';
 
@@ -76,6 +78,34 @@ export const projectDiscussionThreadRouter = router({
           cursor: input.cursor,
           limit,
         },
+      });
+    }),
+
+  voteThread: protectedProcedure
+    .input(
+      z.object({
+        threadId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return voteDiscussionThread({
+        db: ctx.db,
+        userId: ctx.user.id,
+        threadId: input.threadId,
+      });
+    }),
+
+  unvoteThread: protectedProcedure
+    .input(
+      z.object({
+        threadId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return unvoteDiscussionThread({
+        db: ctx.db,
+        userId: ctx.user.id,
+        threadId: input.threadId,
       });
     }),
 });

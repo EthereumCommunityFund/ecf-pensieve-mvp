@@ -14,6 +14,7 @@ import { projectDiscussionAnswerVotes } from './projectDiscussionAnswerVotes';
 import { projectDiscussionComments } from './projectDiscussionComments';
 import { projectDiscussionSentiments } from './projectDiscussionSentiments';
 import { projectDiscussionThreads } from './projectDiscussionThreads';
+import { projectDiscussionVotes } from './projectDiscussionVotes';
 import { projectLogs } from './projectLogs';
 import { projectNotificationSettings } from './projectNotificationSettings';
 import { projects } from './projects';
@@ -384,3 +385,17 @@ export const sieveFollowsRelations = relations(sieveFollows, ({ one }) => ({
     references: [profiles.userId],
   }),
 }));
+
+export const projectDiscussionVotesRelations = relations(
+  projectDiscussionVotes,
+  ({ one }) => ({
+    thread: one(projectDiscussionThreads, {
+      fields: [projectDiscussionVotes.threadId],
+      references: [projectDiscussionThreads.id],
+    }),
+    voter: one(profiles, {
+      fields: [projectDiscussionVotes.voter],
+      references: [profiles.userId],
+    }),
+  }),
+);
