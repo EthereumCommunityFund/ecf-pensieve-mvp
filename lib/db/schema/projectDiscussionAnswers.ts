@@ -35,6 +35,9 @@ export const projectDiscussionAnswers = pgTable(
     isDeleted: boolean('is_deleted').notNull().default(false),
     deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
     support: doublePrecision('support').notNull().default(0),
+    isThreadAuthorVoted: boolean('is_thread_author_voted')
+      .notNull()
+      .default(false),
   },
   (table) => ({
     threadCreatedAtIdx: index(

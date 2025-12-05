@@ -34,7 +34,7 @@ const ensureAnswerAvailable = async (db: Database, answerId: number) => {
     columns: {
       id: true,
       threadId: true,
-      isDeleted: true,
+      creator: true,
     },
     where: and(
       eq(projectDiscussionAnswers.id, answerId),
@@ -200,7 +200,9 @@ export const voteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  const { threadId } = await ensureAnswerAvailable(db, answerId);
+  const { threadId, creator } = await ensureAnswerAvailable(db, answerId);
+
+  const isThreadAuthor = creator === userId;
 
   const user = await db.query.profiles.findFirst({
     where: eq(profiles.userId, userId),
@@ -242,15 +244,25 @@ export const voteDiscussionAnswer = async ({
       });
     }
 
+    const updatePayload: {
+      support: SQL<unknown>;
+      isThreadAuthorVoted?: boolean;
+    } = {
+      support: sql`${projectDiscussionAnswers.support} + ${weight}`,
+    };
+
+    if (isThreadAuthor) {
+      updatePayload.isThreadAuthorVoted = true;
+    }
+
     const [answer] = await tx
       .update(projectDiscussionAnswers)
-      .set({
-        support: sql`${projectDiscussionAnswers.support} + ${weight}`,
-      })
+      .set(updatePayload)
       .where(eq(projectDiscussionAnswers.id, answerId))
       .returning({
         id: projectDiscussionAnswers.id,
         support: projectDiscussionAnswers.support,
+        isThreadAuthorVoted: projectDiscussionAnswers.isThreadAuthorVoted,
       });
 
     const crossedToRedressed =
@@ -281,7 +293,9 @@ export const unvoteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  const { threadId } = await ensureAnswerAvailable(db, answerId);
+  const { threadId, creator } = await ensureAnswerAvailable(db, answerId);
+
+  const isThreadAuthor = creator === userId;
 
   const updated = await db.transaction(async (tx) => {
     const existingSupport =
@@ -316,15 +330,25 @@ export const unvoteDiscussionAnswer = async ({
 
     const weight = deletedVotes[0]?.weight ?? 0;
 
+    const updatePayload: {
+      support: SQL<unknown>;
+      isThreadAuthorVoted?: boolean;
+    } = {
+      support: sql`GREATEST(${projectDiscussionAnswers.support} - ${weight}, 0)`,
+    };
+
+    if (isThreadAuthor) {
+      updatePayload.isThreadAuthorVoted = false;
+    }
+
     const [answer] = await tx
       .update(projectDiscussionAnswers)
-      .set({
-        support: sql`GREATEST(${projectDiscussionAnswers.support} - ${weight}, 0)`,
-      })
+      .set(updatePayload)
       .where(eq(projectDiscussionAnswers.id, answerId))
       .returning({
         id: projectDiscussionAnswers.id,
         support: projectDiscussionAnswers.support,
+        isThreadAuthorVoted: projectDiscussionAnswers.isThreadAuthorVoted,
       });
 
     const crossedBelowThreshold =
