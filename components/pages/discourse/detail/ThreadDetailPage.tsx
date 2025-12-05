@@ -45,6 +45,23 @@ type ThreadDetailPageProps = {
   threadId: string;
 };
 
+type CommentTarget = {
+  threadId: number;
+  answerId?: number;
+  parentCommentId?: number;
+  commentId?: number;
+};
+
+type ThreadCommentNode = CommentItem & {
+  commentId?: number;
+  children?: ThreadCommentNode[];
+};
+
+type AnswerCommentNode = CommentItem & {
+  commentId?: number;
+  children?: AnswerCommentNode[];
+};
+
 const DEFAULT_PARTICIPATION = {
   supportSteps: [
     'Share evidence or updates that confirm the complaint.',
@@ -78,6 +95,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     string | undefined
   >(undefined);
   const [commentContext, setCommentContext] = useState<ComposerContext | null>(
+    null,
+  );
+  const [commentTarget, setCommentTarget] = useState<CommentTarget | null>(
     null,
   );
   const [answerDraft, setAnswerDraft] = useState('');
@@ -175,7 +195,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
   const createCommentMutation =
     trpc.projectDiscussionInteraction.createComment.useMutation({
-      onSuccess: () => {
+      onSuccess: (_, variables) => {
         addToast({
           title: 'Comment posted',
           description: 'Your discussion is now visible to everyone.',
@@ -184,7 +204,15 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         setCommentDraft('');
         setCommentError(null);
         setComposerVariant(null);
-        commentsQuery.refetch();
+        setCommentContext(null);
+        setCommentTarget(null);
+        setCommentComposerTitle(undefined);
+
+        if (variables?.answerId) {
+          answersQuery.refetch();
+        } else {
+          commentsQuery.refetch();
+        }
       },
       onError: (error) => {
         addToast({
@@ -273,11 +301,17 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     }
     setCommentError(null);
     try {
+      const target: CommentTarget = commentTarget ??
+        commentContext?.target ?? {
+          threadId: numericThreadId,
+        };
+
       await createCommentMutation.mutateAsync({
-        threadId: numericThreadId,
+        threadId: target.threadId,
+        answerId: target.answerId,
+        parentCommentId: target.parentCommentId,
         content: html,
       });
-      setComposerVariant(null);
     } catch (error: any) {
       setCommentError(error.message ?? 'Failed to post comment');
     }
@@ -299,14 +333,45 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     setCommentError(null);
     setCommentComposerTitle(undefined);
     setCommentContext(null);
+    setCommentTarget(null);
   };
 
   const openCommentComposer = (options?: {
     title?: string;
     context?: ComposerContext | null;
+    target?: CommentTarget;
   }) => {
+    const mergedTarget =
+      options?.target || options?.context?.target
+        ? {
+            threadId:
+              options?.target?.threadId ??
+              options?.context?.target?.threadId ??
+              numericThreadId,
+            answerId:
+              options?.target?.answerId ?? options?.context?.target?.answerId,
+            parentCommentId:
+              options?.target?.parentCommentId ??
+              options?.context?.target?.parentCommentId,
+            commentId:
+              options?.target?.commentId ?? options?.context?.target?.commentId,
+          }
+        : null;
+
     setCommentComposerTitle(options?.title);
-    setCommentContext(options?.context ?? null);
+    setCommentTarget(mergedTarget);
+    setCommentContext(
+      options?.context || mergedTarget
+        ? {
+            title: options?.context?.title ?? options?.title ?? 'Post Comment',
+            author: options?.context?.author ?? '',
+            timestamp: options?.context?.timestamp,
+            excerpt: options?.context?.excerpt ?? '',
+            isOp: options?.context?.isOp,
+            target: mergedTarget ?? undefined,
+          }
+        : null,
+    );
     setComposerVariant('comment');
   };
 
@@ -360,17 +425,25 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       const sentiment = summarizeSentiments(answer.sentiments);
       const sentimentKey = sentiment.dominantKey ?? 'recommend';
       const viewerSentiment = findUserSentiment(answer.sentiments, user?.id);
-      const mappedComments: CommentItem[] = (answer.comments ?? []).map(
-        (comment) => ({
-          id: `answer-${answer.id}-comment-${comment.id}`,
-          numericId: comment.id,
-          answerId: answer.id,
-          author: comment.creator?.name ?? 'Anonymous',
-          role: 'Community Member',
-          createdAt: formatTimeAgo(comment.createdAt),
-          body: comment.content,
-          sentimentLabel: 'recommend',
-        }),
+      const mappedComments: AnswerCommentNode[] = (answer.comments ?? []).map(
+        (comment) => {
+          const numericId = comment.id;
+          const rootId =
+            comment.commentId ??
+            (typeof numericId === 'number' ? numericId : undefined);
+          return {
+            id: `answer-${answer.id}-comment-${comment.id}`,
+            numericId,
+            answerId: answer.id,
+            commentId: rootId,
+            parentCommentId: comment.parentCommentId ?? undefined,
+            author: comment.creator?.name ?? 'Anonymous',
+            role: 'Community Member',
+            createdAt: formatTimeAgo(comment.createdAt),
+            body: comment.content,
+            sentimentLabel: 'recommend',
+          };
+        },
       );
 
       return {
@@ -392,7 +465,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     });
   }, [answersQuery.data, fallbackAnswerRecords, user?.id]);
 
-  const commentsFromApi = useMemo<CommentItem[]>(() => {
+  const commentsFromApi = useMemo<ThreadCommentNode[]>(() => {
     const remoteItems = commentsQuery.data?.pages?.length
       ? commentsQuery.data.pages.flatMap((page) => page.items)
       : [];
@@ -404,13 +477,45 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       id: `comment-${comment.id}`,
       numericId: comment.id,
       answerId: comment.answerId ?? undefined,
+      commentId: comment.commentId ?? comment.id ?? undefined,
+      parentCommentId: comment.parentCommentId ?? undefined,
       author: comment.creator?.name ?? 'Anonymous',
       role: 'Community Member',
       createdAt: formatTimeAgo(comment.createdAt),
       body: comment.content,
       sentimentLabel: 'recommend',
-    }));
+    })) as ThreadCommentNode[];
   }, [commentsQuery.data, fallbackCommentRecords]);
+
+  const discussionTree = useMemo<ThreadCommentNode[]>(() => {
+    const threadComments = commentsFromApi.filter(
+      (comment) => !comment.answerId,
+    );
+    const map = new Map<number, ThreadCommentNode>();
+    const roots: ThreadCommentNode[] = [];
+
+    threadComments.forEach((comment) => {
+      const rootId = comment.commentId ?? comment.numericId;
+      map.set(comment.numericId, {
+        ...comment,
+        commentId: rootId,
+        children: [],
+      });
+    });
+
+    threadComments.forEach((comment) => {
+      const node = map.get(comment.numericId)!;
+      if (comment.parentCommentId && map.has(comment.parentCommentId)) {
+        const parent = map.get(comment.parentCommentId)!;
+        node.commentId = parent.commentId ?? parent.numericId;
+        parent.children!.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  }, [commentsFromApi]);
 
   const isAnswersInitialLoading =
     answersQuery.isLoading && !answersFromApi.length;
@@ -543,10 +648,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           (answer) => answer.sentimentLabel === sentimentFilter,
         );
 
-  const filteredComments =
+  const filteredComments: ThreadCommentNode[] =
     sentimentFilter === 'all'
-      ? thread.comments
-      : thread.comments.filter(
+      ? discussionTree
+      : discussionTree.filter(
           (comment) => comment.sentimentLabel === sentimentFilter,
         );
 
@@ -572,7 +677,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             tags={thread.tags}
             categoryLabel={thread.categories[0] ?? 'General'}
             onAnswer={() => openAnswerComposer()}
-            onComment={() => openCommentComposer()}
+            onComment={() =>
+              openCommentComposer({
+                target: { threadId: numericThreadId },
+              })
+            }
           />
 
           <div className="pb-[40px]">
@@ -616,12 +725,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                         <AnswerDetailCard
                           key={answer.id}
                           answer={answer}
+                          threadId={numericThreadId}
                           onSupport={handleSupportAnswer}
                           onWithdraw={handleWithdrawSupport}
                           onPostComment={(context) =>
                             openCommentComposer({
-                              title: 'Post Comment',
+                              title: context?.title ?? 'Post Comment',
                               context,
+                              target:
+                                context?.target ??
+                                ({
+                                  threadId: numericThreadId,
+                                  answerId: answer.numericId,
+                                  commentId: undefined,
+                                } as CommentTarget),
                             })
                           }
                           threadAuthorName={thread.author.name}
@@ -656,7 +773,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                   <div className="">
                     <Button
                       className="w-full rounded-[5px] p-[10px] text-[13px] font-semibold text-black/80"
-                      onPress={() => openCommentComposer()}
+                      onPress={() =>
+                        openCommentComposer({
+                          target: { threadId: numericThreadId },
+                        })
+                      }
                     >
                       Post Comment
                     </Button>
@@ -668,19 +789,36 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                   ) : null}
                   {filteredComments.length
                     ? filteredComments.map((comment, index) => (
-                        <CommentThreadItem
+                        <ThreadCommentTree
                           key={comment.id}
-                          comment={comment}
-                          showConnector={
-                            index === 0 && filteredComments.length > 1
-                          }
-                          onReply={(context) =>
+                          node={comment}
+                          depth={0}
+                          isFirst={index === 0}
+                          hasSiblings={filteredComments.length > 1}
+                          onReply={(payload) =>
                             openCommentComposer({
                               title: 'Post Reply',
-                              context,
+                              context: {
+                                title: 'Replying to:',
+                                author: payload.author,
+                                isOp: payload.isOp,
+                                timestamp: payload.timestamp,
+                                excerpt: payload.excerpt,
+                                target: {
+                                  threadId: numericThreadId,
+                                  parentCommentId: payload.parentCommentId,
+                                  commentId: payload.commentId,
+                                },
+                              },
+                              target: {
+                                threadId: numericThreadId,
+                                parentCommentId: payload.parentCommentId,
+                                commentId: payload.commentId,
+                              },
                             })
                           }
                           threadAuthorName={thread.author.name}
+                          threadId={numericThreadId}
                         />
                       ))
                     : !isCommentsInitialLoading && (
@@ -770,6 +908,7 @@ type AnswerDetailCardProps = {
   onWithdraw: (answerId: number) => void;
   onPostComment: (context?: ComposerContext) => void;
   threadAuthorName: string;
+  threadId: number;
   supportPending?: boolean;
   withdrawPending?: boolean;
 };
@@ -780,6 +919,7 @@ function AnswerDetailCard({
   onWithdraw,
   onPostComment,
   threadAuthorName,
+  threadId,
   supportPending = false,
   withdrawPending = false,
 }: AnswerDetailCardProps) {
@@ -790,6 +930,42 @@ function AnswerDetailCard({
     (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
   const cpLabel = formatCompactNumber(answer.cpSupport);
   const isOp = answer.author === threadAuthorName;
+
+  const commentTree = useMemo<AnswerCommentNode[]>(() => {
+    const map = new Map<number, AnswerCommentNode>();
+    const roots: AnswerCommentNode[] = [];
+    const comments = answer.comments ?? [];
+
+    comments.forEach((comment) => {
+      const rootId = comment.commentId ?? comment.numericId;
+      map.set(comment.numericId, {
+        ...comment,
+        commentId: rootId,
+        children: [],
+      });
+    });
+
+    comments.forEach((comment) => {
+      const node = map.get(comment.numericId)!;
+      if (comment.parentCommentId && map.has(comment.parentCommentId)) {
+        const parent = map.get(comment.parentCommentId)!;
+        node.commentId = parent.commentId ?? parent.numericId;
+        parent.children!.push(node);
+      } else if (
+        comment.commentId &&
+        comment.commentId !== comment.numericId &&
+        map.has(comment.commentId)
+      ) {
+        const parent = map.get(comment.commentId)!;
+        node.commentId = parent.commentId ?? parent.numericId;
+        parent.children!.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  }, [answer.comments]);
 
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
@@ -875,6 +1051,11 @@ function AnswerDetailCard({
                     isOp,
                     timestamp: answer.createdAt,
                     excerpt: formatExcerpt(answer.body),
+                    target: {
+                      threadId,
+                      answerId: answer.numericId,
+                      commentId: undefined,
+                    },
                   })
                 }
               >
@@ -882,9 +1063,32 @@ function AnswerDetailCard({
               </Button>
             </div>
             <div className="space-y-[10px]">
-              {answer.comments?.length ? (
-                answer.comments.map((comment) => (
-                  <AnswerCommentRow key={comment.id} comment={comment} />
+              {commentTree.length ? (
+                commentTree.map((comment, index) => (
+                  <AnswerCommentTree
+                    key={comment.id}
+                    node={comment}
+                    depth={0}
+                    isFirst={index === 0}
+                    hasSiblings={commentTree.length > 1}
+                    threadId={threadId}
+                    onReply={(payload) =>
+                      onPostComment({
+                        title: 'Replying to:',
+                        author: payload.author,
+                        isOp: payload.isOp,
+                        timestamp: payload.timestamp,
+                        excerpt: payload.excerpt,
+                        target: {
+                          threadId,
+                          answerId: answer.numericId,
+                          parentCommentId: payload.parentCommentId,
+                          commentId: payload.commentId,
+                        },
+                      })
+                    }
+                    threadAuthorName={threadAuthorName}
+                  />
                 ))
               ) : (
                 <p className="text-[13px] text-black/60">No comments yet.</p>
@@ -897,7 +1101,15 @@ function AnswerDetailCard({
   );
 }
 
-function AnswerCommentRow({ comment }: { comment: CommentItem }) {
+function AnswerCommentRow({
+  comment,
+  onReply,
+  depth = 0,
+}: {
+  comment: CommentItem;
+  onReply: () => void;
+  depth?: number;
+}) {
   const isOp = comment.author?.toLowerCase().includes('(op)');
   const badgeNumber =
     typeof comment.numericId === 'number'
@@ -905,7 +1117,7 @@ function AnswerCommentRow({ comment }: { comment: CommentItem }) {
       : 4;
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3" style={{ marginLeft: depth ? depth * 16 : 0 }}>
       <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9]" />
       <div className="flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -935,7 +1147,10 @@ function AnswerCommentRow({ comment }: { comment: CommentItem }) {
             <ChartBarIcon size={20} weight="fill" className="opacity-30" />
             <span className="text-[12px] font-semibold text-black">4</span>
           </Button>
-          <Button className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80">
+          <Button
+            className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80"
+            onPress={onReply}
+          >
             Reply
           </Button>
         </div>
@@ -944,23 +1159,30 @@ function AnswerCommentRow({ comment }: { comment: CommentItem }) {
   );
 }
 
+type CommentThreadItemProps = {
+  comment: CommentItem;
+  showConnector?: boolean;
+  onReply: (context?: ComposerContext) => void;
+  threadAuthorName: string;
+  depth?: number;
+};
+
 function CommentThreadItem({
   comment,
   showConnector = false,
   onReply,
   threadAuthorName,
-}: {
-  comment: CommentItem;
-  showConnector?: boolean;
-  onReply: (context?: ComposerContext) => void;
-  threadAuthorName: string;
-}) {
+  depth = 0,
+}: CommentThreadItemProps) {
   const isOp =
     comment.author?.toLowerCase().includes('(op)') ||
     comment.author === threadAuthorName;
 
   return (
-    <div className="relative flex gap-3 rounded-[10px] bg-[#f7f7f7] p-3">
+    <div
+      className="relative flex gap-3 rounded-[10px] bg-[#f7f7f7] p-3"
+      style={{ marginLeft: depth ? depth * 20 : 0 }}
+    >
       {showConnector ? (
         <div className="absolute left-[24px] top-[38px] h-[calc(100%-38px)] w-px bg-black/10" />
       ) : null}
@@ -1025,6 +1247,137 @@ function CommentThreadItem({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+type ThreadCommentTreeProps = {
+  node: ThreadCommentNode;
+  depth: number;
+  isFirst: boolean;
+  hasSiblings: boolean;
+  onReply: (
+    target: CommentTarget & {
+      author: string;
+      excerpt: string;
+      timestamp: string;
+      isOp: boolean;
+    },
+  ) => void;
+  threadAuthorName: string;
+  threadId: number;
+};
+
+function ThreadCommentTree({
+  node,
+  depth,
+  isFirst,
+  hasSiblings,
+  onReply,
+  threadAuthorName,
+  threadId,
+}: ThreadCommentTreeProps) {
+  const handleReply = () => {
+    onReply({
+      threadId,
+      parentCommentId: node.numericId,
+      commentId: node.commentId ?? node.numericId,
+      answerId: undefined,
+      author: node.author,
+      excerpt: formatExcerpt(node.body),
+      timestamp: node.createdAt,
+      isOp:
+        node.author === threadAuthorName ||
+        node.author?.toLowerCase().includes('(op)'),
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <CommentThreadItem
+        comment={node}
+        depth={depth}
+        showConnector={hasSiblings && isFirst}
+        onReply={handleReply}
+        threadAuthorName={threadAuthorName}
+      />
+      {node.children?.length
+        ? node.children.map((child, index) => (
+            <ThreadCommentTree
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              isFirst={index === 0}
+              hasSiblings={node.children.length > 1}
+              onReply={onReply}
+              threadAuthorName={threadAuthorName}
+              threadId={threadId}
+            />
+          ))
+        : null}
+    </div>
+  );
+}
+
+type AnswerCommentTreeProps = {
+  node: AnswerCommentNode;
+  depth: number;
+  isFirst: boolean;
+  hasSiblings: boolean;
+  onReply: (
+    target: CommentTarget & {
+      author: string;
+      excerpt: string;
+      timestamp: string;
+      isOp: boolean;
+    },
+  ) => void;
+  threadAuthorName: string;
+  threadId: number;
+};
+
+function AnswerCommentTree({
+  node,
+  depth,
+  isFirst,
+  hasSiblings,
+  onReply,
+  threadAuthorName,
+  threadId,
+}: AnswerCommentTreeProps) {
+  const handleReply = () => {
+    const rootId = node.commentId ?? node.numericId;
+    onReply({
+      threadId,
+      answerId: node.answerId,
+      parentCommentId: node.numericId ?? rootId,
+      commentId: rootId,
+      author: node.author,
+      excerpt: formatExcerpt(node.body),
+      timestamp: node.createdAt,
+      isOp:
+        node.author === threadAuthorName ||
+        node.author?.toLowerCase().includes('(op)'),
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <AnswerCommentRow comment={node} onReply={handleReply} depth={depth} />
+      {node.children?.length
+        ? node.children.map((child, index) => (
+            <AnswerCommentTree
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              isFirst={index === 0}
+              hasSiblings={node.children.length > 1}
+              onReply={onReply}
+              threadAuthorName={threadAuthorName}
+              threadId={threadId}
+            />
+          ))
+        : null}
     </div>
   );
 }

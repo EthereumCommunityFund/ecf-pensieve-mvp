@@ -30,6 +30,7 @@ export type CommentItem = {
   numericId: number;
   answerId?: number;
   parentCommentId?: number;
+  commentId?: number;
   author: string;
   role: string;
   createdAt: string;

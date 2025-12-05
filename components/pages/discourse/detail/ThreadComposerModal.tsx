@@ -54,6 +54,12 @@ export type ComposerContext = {
   timestamp?: string;
   excerpt: string;
   isOp?: boolean;
+  target?: {
+    threadId: number;
+    answerId?: number;
+    parentCommentId?: number;
+    commentId?: number;
+  };
 };
 
 export function ThreadComposerModal({

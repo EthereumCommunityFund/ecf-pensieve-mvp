@@ -333,21 +333,30 @@ export const createDiscussionComment = async ({
     });
   }
 
+  let resolvedThreadId = threadId ?? null;
+  let resolvedAnswerId = answerId ?? null;
+  let resolvedCommentId = commentId ?? null;
+
   if (parentCommentId) {
     const parent = await ensureCommentAvailable(db, parentCommentId);
-    if (!commentId && !answerId) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Comment ID or answer ID is required',
-      });
-    }
-    if (commentId && commentId !== parent.commentId) {
+    const parentRootId = parent.commentId ?? parent.id;
+
+    // Inherit thread/answer from parent when not provided
+    resolvedThreadId = resolvedThreadId ?? parent.threadId ?? null;
+    resolvedAnswerId = resolvedAnswerId ?? parent.answerId ?? null;
+    resolvedCommentId = resolvedCommentId ?? parentRootId;
+
+    if (resolvedCommentId !== parentRootId) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         message: 'Comment ID does not match parent comment',
       });
     }
-    if (answerId && answerId !== parent.answerId) {
+    if (
+      resolvedAnswerId !== null &&
+      parent.answerId !== null &&
+      resolvedAnswerId !== parent.answerId
+    ) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         message: 'Answer ID does not match parent comment',
@@ -355,11 +364,11 @@ export const createDiscussionComment = async ({
     }
   }
 
-  if (answerId) {
-    await ensureAnswerAvailable(db, answerId);
+  if (resolvedAnswerId) {
+    await ensureAnswerAvailable(db, resolvedAnswerId);
   }
-  if (threadId) {
-    await ensureThreadAvailable(db, threadId);
+  if (resolvedThreadId) {
+    await ensureThreadAvailable(db, resolvedThreadId);
   }
 
   const comment = await db.transaction(async (tx) => {
@@ -369,11 +378,21 @@ export const createDiscussionComment = async ({
         creator: userId,
         content,
         parentCommentId: parentCommentId ?? null,
-        answerId: answerId ?? null,
-        threadId: threadId ?? null,
-        commentId: commentId ?? null,
+        answerId: resolvedAnswerId,
+        threadId: resolvedThreadId ?? null,
+        commentId: resolvedCommentId,
       })
       .returning();
+
+    // For root comments lacking an explicit commentId, set it to self id for future replies.
+    if (!parentCommentId && !resolvedCommentId) {
+      const [updated] = await tx
+        .update(projectDiscussionComments)
+        .set({ commentId: inserted.id })
+        .where(eq(projectDiscussionComments.id, inserted.id))
+        .returning();
+      return updated;
+    }
 
     return inserted;
   });
