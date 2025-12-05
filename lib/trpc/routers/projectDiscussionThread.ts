@@ -4,6 +4,8 @@ import {
   createDiscussionThread,
   getDiscussionThreadById,
   listDiscussionThreads,
+  unvoteDiscussionThread,
+  voteDiscussionThread,
 } from '@/lib/services/projectDiscussionThreadService';
 import { normalizeStringArray } from '@/lib/utils';
 
@@ -36,6 +38,8 @@ const listThreadsInput = z.object({
   isScam: z.boolean().optional(),
   cursor: z.number().optional(),
   limit: z.number().min(1).max(50).default(20),
+  sortBy: z.enum(['recent', 'votes']).optional(),
+  tab: z.enum(['all', 'redressed', 'unanswered']).optional().default('all'),
 });
 
 export const projectDiscussionThreadRouter = router({
@@ -76,6 +80,8 @@ export const projectDiscussionThreadRouter = router({
           isScam: input.isScam,
           cursor: input.cursor,
           limit,
+          sortBy: input.sortBy ?? 'recent',
+          tab: input.tab ?? 'all',
         },
       });
     }),
@@ -85,6 +91,34 @@ export const projectDiscussionThreadRouter = router({
     .query(async ({ ctx, input }) => {
       return getDiscussionThreadById({
         db: ctx.db,
+        threadId: input.threadId,
+      });
+    }),
+
+  voteThread: protectedProcedure
+    .input(
+      z.object({
+        threadId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return voteDiscussionThread({
+        db: ctx.db,
+        userId: ctx.user.id,
+        threadId: input.threadId,
+      });
+    }),
+
+  unvoteThread: protectedProcedure
+    .input(
+      z.object({
+        threadId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return unvoteDiscussionThread({
+        db: ctx.db,
+        userId: ctx.user.id,
         threadId: input.threadId,
       });
     }),

@@ -14,12 +14,15 @@ import {
 
 import type { Database } from '@/lib/db';
 import {
+  profiles,
   projectDiscussionAnswerVotes,
   projectDiscussionAnswers,
   projectDiscussionComments,
   projectDiscussionSentiments,
   projectDiscussionThreads,
 } from '@/lib/db/schema';
+
+const REDRESSED_SUPPORT_THRESHOLD = 9000;
 
 const ensureThreadAvailable = async (db: Database, threadId: number) => {
   const thread = await db.query.projectDiscussionThreads.findFirst({
@@ -93,18 +96,30 @@ export const createDiscussionAnswer = async ({
   userId: string;
   input: CreateAnswerInput;
 }) => {
-  await ensureThreadAvailable(db, input.threadId);
+  const { threadId, content } = input;
+  await ensureThreadAvailable(db, threadId);
 
-  const [answer] = await db
-    .insert(projectDiscussionAnswers)
-    .values({
-      threadId: input.threadId,
-      creator: userId,
-      content: input.content,
-    })
-    .returning();
+  const updated = await db.transaction(async (tx) => {
+    const [answer] = await tx
+      .insert(projectDiscussionAnswers)
+      .values({
+        threadId,
+        creator: userId,
+        content,
+      })
+      .returning();
 
-  return answer;
+    await tx
+      .update(projectDiscussionThreads)
+      .set({
+        answerCount: sql`${projectDiscussionThreads.answerCount} + 1`,
+      })
+      .where(eq(projectDiscussionThreads.id, threadId));
+
+    return answer;
+  });
+
+  return updated;
 };
 
 type ListAnswersInput = {
@@ -136,7 +151,7 @@ export const listDiscussionAnswers = async ({
   const orderBy =
     input.sortBy === 'votes'
       ? [
-          desc(projectDiscussionAnswers.voteCount),
+          desc(projectDiscussionAnswers.support),
           desc(projectDiscussionAnswers.createdAt),
           desc(projectDiscussionAnswers.id),
         ]
@@ -221,14 +236,35 @@ export const voteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  await ensureAnswerAvailable(db, answerId);
+  const { threadId } = await ensureAnswerAvailable(db, answerId);
+
+  const user = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
+    columns: {
+      weight: true,
+    },
+  });
+
+  const weight = user?.weight ?? 0;
 
   const updated = await db.transaction(async (tx) => {
+    const existingSupport =
+      (
+        await tx.query.projectDiscussionAnswers.findFirst({
+          columns: {
+            support: true,
+          },
+          where: eq(projectDiscussionAnswers.id, answerId),
+        })
+      )?.support ?? 0;
+
     const insertedVotes = await tx
       .insert(projectDiscussionAnswerVotes)
       .values({
         answerId,
         voter: userId,
+        weight,
+        threadId,
       })
       .onConflictDoNothing()
       .returning({
@@ -238,20 +274,33 @@ export const voteDiscussionAnswer = async ({
     if (insertedVotes.length === 0) {
       throw new TRPCError({
         code: 'CONFLICT',
-        message: 'User has already voted for this answer',
+        message: 'User has already voted',
       });
     }
 
     const [answer] = await tx
       .update(projectDiscussionAnswers)
       .set({
-        voteCount: sql`${projectDiscussionAnswers.voteCount} + 1`,
+        support: sql`${projectDiscussionAnswers.support} + ${weight}`,
       })
       .where(eq(projectDiscussionAnswers.id, answerId))
       .returning({
         id: projectDiscussionAnswers.id,
-        voteCount: projectDiscussionAnswers.voteCount,
+        support: projectDiscussionAnswers.support,
       });
+
+    const crossedToRedressed =
+      existingSupport <= REDRESSED_SUPPORT_THRESHOLD &&
+      answer.support > REDRESSED_SUPPORT_THRESHOLD;
+
+    if (crossedToRedressed) {
+      await tx
+        .update(projectDiscussionThreads)
+        .set({
+          redressedAnswerCount: sql`${projectDiscussionThreads.redressedAnswerCount} + 1`,
+        })
+        .where(eq(projectDiscussionThreads.id, threadId));
+    }
 
     return answer;
   });
@@ -268,9 +317,19 @@ export const unvoteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  await ensureAnswerAvailable(db, answerId);
+  const { threadId } = await ensureAnswerAvailable(db, answerId);
 
   const updated = await db.transaction(async (tx) => {
+    const existingSupport =
+      (
+        await tx.query.projectDiscussionAnswers.findFirst({
+          columns: {
+            support: true,
+          },
+          where: eq(projectDiscussionAnswers.id, answerId),
+        })
+      )?.support ?? 0;
+
     const deletedVotes = await tx
       .delete(projectDiscussionAnswerVotes)
       .where(
@@ -281,6 +340,7 @@ export const unvoteDiscussionAnswer = async ({
       )
       .returning({
         id: projectDiscussionAnswerVotes.id,
+        weight: projectDiscussionAnswerVotes.weight,
       });
 
     if (deletedVotes.length === 0) {
@@ -290,16 +350,31 @@ export const unvoteDiscussionAnswer = async ({
       });
     }
 
+    const weight = deletedVotes[0]?.weight ?? 0;
+
     const [answer] = await tx
       .update(projectDiscussionAnswers)
       .set({
-        voteCount: sql`GREATEST(${projectDiscussionAnswers.voteCount} - 1, 0)`,
+        support: sql`GREATEST(${projectDiscussionAnswers.support} - ${weight}, 0)`,
       })
       .where(eq(projectDiscussionAnswers.id, answerId))
       .returning({
         id: projectDiscussionAnswers.id,
-        voteCount: projectDiscussionAnswers.voteCount,
+        support: projectDiscussionAnswers.support,
       });
+
+    const crossedBelowThreshold =
+      existingSupport > REDRESSED_SUPPORT_THRESHOLD &&
+      answer.support <= REDRESSED_SUPPORT_THRESHOLD;
+
+    if (crossedBelowThreshold) {
+      await tx
+        .update(projectDiscussionThreads)
+        .set({
+          redressedAnswerCount: sql`GREATEST(${projectDiscussionThreads.redressedAnswerCount} - 1, 0)`,
+        })
+        .where(eq(projectDiscussionThreads.id, threadId));
+    }
 
     return answer;
   });

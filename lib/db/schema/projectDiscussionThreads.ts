@@ -3,7 +3,9 @@ import {
   bigint,
   bigserial,
   boolean,
+  doublePrecision,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -35,6 +37,11 @@ export const projectDiscussionThreads = pgTable(
     category: text('category').array().notNull().default([]),
     tags: text('tags').array().notNull().default([]),
     isScam: boolean('is_scam').notNull().default(false),
+    support: doublePrecision('support').notNull().default(0),
+    answerCount: integer('answer_count').notNull().default(0),
+    redressedAnswerCount: integer('redressed_answer_count')
+      .notNull()
+      .default(0),
   },
   (table) => ({
     projectCreatedAtIdx: index(
@@ -52,6 +59,9 @@ export const projectDiscussionThreads = pgTable(
       table.projectId,
       table.isScam,
     ),
+    projectSupportIdx: index(
+      'project_discussion_threads_project_support_idx',
+    ).on(table.projectId, table.support.desc()),
   }),
 );
 

@@ -1,8 +1,12 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
-import { projectDiscussionThreads } from '@/lib/db/schema';
+import {
+  profiles,
+  projectDiscussionThreads,
+  projectDiscussionVotes,
+} from '@/lib/db/schema';
 import { ensurePublishedProject } from '@/lib/services/projectGuards';
 
 type CreateThreadInput = {
@@ -12,6 +16,24 @@ type CreateThreadInput = {
   category: string[];
   tags: string[];
   isScam: boolean;
+};
+
+const ensureDiscussionThreadAvailable = async (
+  db: Database,
+  threadId: number,
+) => {
+  const thread = await db.query.projectDiscussionThreads.findFirst({
+    columns: {
+      id: true,
+    },
+    where: eq(projectDiscussionThreads.id, threadId),
+  });
+
+  if (!thread) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Thread not found' });
+  }
+
+  return thread;
 };
 
 export const createDiscussionThread = async ({
@@ -42,12 +64,14 @@ export const createDiscussionThread = async ({
 };
 
 type ListThreadsInput = {
-  projectId?: number;
+  projectId: number;
   category: string[];
   tags: string[];
   isScam?: boolean;
   cursor?: number;
   limit: number;
+  sortBy: 'recent' | 'votes';
+  tab: 'all' | 'redressed' | 'unanswered';
 };
 
 export const listDiscussionThreads = async ({
@@ -57,12 +81,9 @@ export const listDiscussionThreads = async ({
   db: Database;
   input: ListThreadsInput;
 }) => {
-  const conditions: SQL<unknown>[] = [];
+  await ensurePublishedProject(db, input.projectId);
 
-  if (input.projectId) {
-    await ensurePublishedProject(db, input.projectId);
-    conditions.push(eq(projectDiscussionThreads.projectId, input.projectId));
-  }
+  const conditions = [eq(projectDiscussionThreads.projectId, input.projectId)];
 
   if (input.cursor) {
     conditions.push(lt(projectDiscussionThreads.id, input.cursor));
@@ -90,14 +111,29 @@ export const listDiscussionThreads = async ({
     );
   }
 
-  const whereCondition = conditions.length ? and(...conditions) : undefined;
+  if (input.tab === 'unanswered') {
+    conditions.push(eq(projectDiscussionThreads.answerCount, 0));
+  } else if (input.tab === 'redressed') {
+    conditions.push(gt(projectDiscussionThreads.redressedAnswerCount, 0));
+  }
+
+  const whereCondition = and(...conditions);
+
+  const orderBy =
+    input.sortBy === 'votes'
+      ? [
+          desc(projectDiscussionThreads.support),
+          desc(projectDiscussionThreads.createdAt),
+          desc(projectDiscussionThreads.id),
+        ]
+      : [
+          desc(projectDiscussionThreads.createdAt),
+          desc(projectDiscussionThreads.id),
+        ];
 
   const results = await db.query.projectDiscussionThreads.findMany({
     where: whereCondition,
-    orderBy: [
-      desc(projectDiscussionThreads.createdAt),
-      desc(projectDiscussionThreads.id),
-    ],
+    orderBy,
     limit: input.limit + 1,
     with: {
       creator: {
@@ -122,30 +158,108 @@ export const listDiscussionThreads = async ({
   };
 };
 
-export const getDiscussionThreadById = async ({
+export const voteDiscussionThread = async ({
   db,
+  userId,
   threadId,
 }: {
   db: Database;
+  userId: string;
   threadId: number;
 }) => {
-  const thread = await db.query.projectDiscussionThreads.findFirst({
-    where: eq(projectDiscussionThreads.id, threadId),
-    with: {
-      creator: {
-        columns: {
-          userId: true,
-          name: true,
-          avatarUrl: true,
-        },
-      },
-      sentiments: true,
+  await ensureDiscussionThreadAvailable(db, threadId);
+
+  const user = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, userId),
+    columns: {
+      weight: true,
     },
   });
 
-  if (!thread) {
-    throw new TRPCError({ code: 'NOT_FOUND', message: 'Thread not found' });
-  }
+  const updated = await db.transaction(async (tx) => {
+    const insertedVotes = await tx
+      .insert(projectDiscussionVotes)
+      .values({
+        threadId,
+        voter: userId,
+        weight: user?.weight ?? 0,
+      })
+      .onConflictDoNothing()
+      .returning({
+        id: projectDiscussionVotes.id,
+      });
 
-  return thread;
+    if (insertedVotes.length === 0) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'User has already voted for this thread',
+      });
+    }
+
+    const [thread] = await tx
+      .update(projectDiscussionThreads)
+      .set({
+        support: sql`${projectDiscussionThreads.support} + ${user?.weight ?? 0}`,
+      })
+      .where(eq(projectDiscussionThreads.id, threadId))
+      .returning({
+        id: projectDiscussionThreads.id,
+        support: projectDiscussionThreads.support,
+      });
+
+    return thread;
+  });
+
+  return updated;
+};
+
+export const unvoteDiscussionThread = async ({
+  db,
+  userId,
+  threadId,
+}: {
+  db: Database;
+  userId: string;
+  threadId: number;
+}) => {
+  await ensureDiscussionThreadAvailable(db, threadId);
+
+  const updated = await db.transaction(async (tx) => {
+    const deletedVotes = await tx
+      .delete(projectDiscussionVotes)
+      .where(
+        and(
+          eq(projectDiscussionVotes.threadId, threadId),
+          eq(projectDiscussionVotes.voter, userId),
+        ),
+      )
+      .returning({
+        id: projectDiscussionVotes.id,
+        weight: projectDiscussionVotes.weight,
+      });
+
+    if (deletedVotes.length === 0) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User has not voted for this thread',
+      });
+    }
+
+    const weight = deletedVotes[0]?.weight ?? 0;
+
+    const [thread] = await tx
+      .update(projectDiscussionThreads)
+      .set({
+        support: sql`${projectDiscussionThreads.support} - ${weight}`,
+      })
+      .where(eq(projectDiscussionThreads.id, threadId))
+      .returning({
+        id: projectDiscussionThreads.id,
+        support: projectDiscussionThreads.support,
+      });
+
+    return thread;
+  });
+
+  return updated;
 };
