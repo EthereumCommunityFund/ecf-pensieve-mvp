@@ -1,5 +1,5 @@
-import { and, desc, eq, lt, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
+import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
@@ -70,6 +70,8 @@ type ListThreadsInput = {
   isScam?: boolean;
   cursor?: number;
   limit: number;
+  sortBy: 'recent' | 'votes';
+  tab: 'all' | 'redressed' | 'unanswered';
 };
 
 export const listDiscussionThreads = async ({
@@ -109,14 +111,29 @@ export const listDiscussionThreads = async ({
     );
   }
 
+  if (input.tab === 'unanswered') {
+    conditions.push(eq(projectDiscussionThreads.answerCount, 0));
+  } else if (input.tab === 'redressed') {
+    conditions.push(gt(projectDiscussionThreads.redressedAnswerCount, 0));
+  }
+
   const whereCondition = and(...conditions);
+
+  const orderBy =
+    input.sortBy === 'votes'
+      ? [
+          desc(projectDiscussionThreads.support),
+          desc(projectDiscussionThreads.createdAt),
+          desc(projectDiscussionThreads.id),
+        ]
+      : [
+          desc(projectDiscussionThreads.createdAt),
+          desc(projectDiscussionThreads.id),
+        ];
 
   const results = await db.query.projectDiscussionThreads.findMany({
     where: whereCondition,
-    orderBy: [
-      desc(projectDiscussionThreads.createdAt),
-      desc(projectDiscussionThreads.id),
-    ],
+    orderBy,
     limit: input.limit + 1,
     with: {
       creator: {

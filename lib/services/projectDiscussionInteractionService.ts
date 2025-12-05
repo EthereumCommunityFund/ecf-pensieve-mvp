@@ -83,18 +83,30 @@ export const createDiscussionAnswer = async ({
   userId: string;
   input: CreateAnswerInput;
 }) => {
-  await ensureThreadAvailable(db, input.threadId);
+  const { threadId, content } = input;
+  await ensureThreadAvailable(db, threadId);
 
-  const [answer] = await db
-    .insert(projectDiscussionAnswers)
-    .values({
-      threadId: input.threadId,
-      creator: userId,
-      content: input.content,
-    })
-    .returning();
+  const updated = await db.transaction(async (tx) => {
+    const [answer] = await tx
+      .insert(projectDiscussionAnswers)
+      .values({
+        threadId,
+        creator: userId,
+        content,
+      })
+      .returning();
 
-  return answer;
+    await tx
+      .update(projectDiscussionThreads)
+      .set({
+        answerCount: sql`${projectDiscussionThreads.answerCount} + 1`,
+      })
+      .where(eq(projectDiscussionThreads.id, threadId));
+
+    return answer;
+  });
+
+  return updated;
 };
 
 type ListAnswersInput = {

@@ -37,6 +37,8 @@ const listThreadsInput = z.object({
   isScam: z.boolean().optional(),
   cursor: z.number().optional(),
   limit: z.number().min(1).max(50).default(20),
+  sortBy: z.enum(['recent', 'votes']).optional(),
+  tab: z.enum(['all', 'redressed', 'unanswered']).optional().default('all'),
 });
 
 export const projectDiscussionThreadRouter = router({
@@ -77,6 +79,8 @@ export const projectDiscussionThreadRouter = router({
           isScam: input.isScam,
           cursor: input.cursor,
           limit,
+          sortBy: input.sortBy ?? 'recent',
+          tab: input.tab ?? 'all',
         },
       });
     }),
