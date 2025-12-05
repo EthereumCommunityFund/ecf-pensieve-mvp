@@ -1,0 +1,1 @@
+ALTER TABLE "project_discussion_answers" ADD COLUMN "is_thread_author_voted" boolean DEFAULT false NOT NULL;
