@@ -11,6 +11,8 @@ import {
   projectDiscussionThreads,
 } from '@/lib/db/schema';
 
+const REDRESSED_SUPPORT_THRESHOLD = 9000;
+
 const ensureThreadAvailable = async (db: Database, threadId: number) => {
   const thread = await db.query.projectDiscussionThreads.findFirst({
     columns: {
@@ -210,6 +212,16 @@ export const voteDiscussionAnswer = async ({
   const weight = user?.weight ?? 0;
 
   const updated = await db.transaction(async (tx) => {
+    const existingSupport =
+      (
+        await tx.query.projectDiscussionAnswers.findFirst({
+          columns: {
+            support: true,
+          },
+          where: eq(projectDiscussionAnswers.id, answerId),
+        })
+      )?.support ?? 0;
+
     const insertedVotes = await tx
       .insert(projectDiscussionAnswerVotes)
       .values({
@@ -241,6 +253,19 @@ export const voteDiscussionAnswer = async ({
         support: projectDiscussionAnswers.support,
       });
 
+    const crossedToRedressed =
+      existingSupport <= REDRESSED_SUPPORT_THRESHOLD &&
+      answer.support > REDRESSED_SUPPORT_THRESHOLD;
+
+    if (crossedToRedressed) {
+      await tx
+        .update(projectDiscussionThreads)
+        .set({
+          redressedAnswerCount: sql`${projectDiscussionThreads.redressedAnswerCount} + 1`,
+        })
+        .where(eq(projectDiscussionThreads.id, threadId));
+    }
+
     return answer;
   });
 
@@ -256,9 +281,19 @@ export const unvoteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  await ensureAnswerAvailable(db, answerId);
+  const { threadId } = await ensureAnswerAvailable(db, answerId);
 
   const updated = await db.transaction(async (tx) => {
+    const existingSupport =
+      (
+        await tx.query.projectDiscussionAnswers.findFirst({
+          columns: {
+            support: true,
+          },
+          where: eq(projectDiscussionAnswers.id, answerId),
+        })
+      )?.support ?? 0;
+
     const deletedVotes = await tx
       .delete(projectDiscussionAnswerVotes)
       .where(
@@ -291,6 +326,19 @@ export const unvoteDiscussionAnswer = async ({
         id: projectDiscussionAnswers.id,
         support: projectDiscussionAnswers.support,
       });
+
+    const crossedBelowThreshold =
+      existingSupport > REDRESSED_SUPPORT_THRESHOLD &&
+      answer.support <= REDRESSED_SUPPORT_THRESHOLD;
+
+    if (crossedBelowThreshold) {
+      await tx
+        .update(projectDiscussionThreads)
+        .set({
+          redressedAnswerCount: sql`GREATEST(${projectDiscussionThreads.redressedAnswerCount} - 1, 0)`,
+        })
+        .where(eq(projectDiscussionThreads.id, threadId));
+    }
 
     return answer;
   });
