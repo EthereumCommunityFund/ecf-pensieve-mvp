@@ -37,6 +37,8 @@ export default function GlobalDiscoursePage() {
     fetchNextPage,
   } = useDiscussionThreads({
     categories: selectedTopics,
+    sort: activeSort === 'top' ? 'top' : 'new',
+    status: activeStatus as 'all' | 'redressed' | 'unanswered',
   });
 
   const toggleTopic = (topic: string, selected: boolean) => {

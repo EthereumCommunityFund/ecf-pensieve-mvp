@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { CircleXIcon, FunnelSimpleIcon, SearchIcon } from '@/components/icons';
@@ -30,11 +31,22 @@ export function TopicsSidebar({
   footer,
 }: TopicsSidebarProps) {
   const hasSelectedTopics = selectedTopics.length > 0;
+  const [search, setSearch] = useState('');
   const webkitScrollbarClass = 'custom-scrollbar';
   const scrollbarStyles = {
     scrollbarWidth: 'thin' as const,
     scrollbarColor: '#E1E1E1 transparent',
   };
+
+  const filteredTopics = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return topics;
+    return topics.filter(
+      (topic) =>
+        topic.label.toLowerCase().includes(keyword) ||
+        topic.value.toLowerCase().includes(keyword),
+    );
+  }, [search, topics]);
 
   return (
     <div className="flex w-full flex-col gap-4 rounded-[10px] px-[10px]">
@@ -46,6 +58,8 @@ export function TopicsSidebar({
         />
         <input
           placeholder={searchPlaceholder}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
           className="size-full rounded-[8px] bg-black/5 pl-9 pr-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:ring-1 focus:ring-black/20"
         />
       </div>
@@ -90,7 +104,7 @@ export function TopicsSidebar({
             className={`max-h-[420px] space-y-[5px] overflow-y-auto pr-2 ${webkitScrollbarClass}`}
             style={scrollbarStyles}
           >
-            {topics.map((topic) => {
+            {filteredTopics.map((topic) => {
               const isSelected = selectedTopics.includes(topic.value);
               return (
                 <Button

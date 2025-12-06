@@ -14,7 +14,7 @@ import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
 
-const projectSortOptions = ['top', 'new', 'agreed'];
+const projectSortOptions = ['top', 'new'];
 const statusTabs = ['all', 'redressed', 'unanswered'];
 const sentimentOptions = [
   'recommend',
@@ -63,6 +63,8 @@ export default function ProjectDiscoursePage({
     projectId: numericProjectId,
     categories: selectedTopics,
     enabled: isValidProjectId,
+    sort: activeSort === 'top' ? 'top' : 'new',
+    status: activeStatus as 'all' | 'redressed' | 'unanswered',
   });
 
   const createThreadHref = `/discourse/create?projectId=${projectId}`;

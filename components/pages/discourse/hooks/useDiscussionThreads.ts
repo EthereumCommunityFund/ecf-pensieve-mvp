@@ -14,6 +14,8 @@ export type UseDiscussionThreadsParams = {
   tags?: string[];
   limit?: number;
   enabled?: boolean;
+  sort?: 'top' | 'new';
+  status?: 'all' | 'redressed' | 'unanswered';
 };
 
 export const useDiscussionThreads = ({
@@ -22,9 +24,12 @@ export const useDiscussionThreads = ({
   tags = [],
   limit = 20,
   enabled = true,
+  sort = 'new',
+  status = 'all',
 }: UseDiscussionThreadsParams) => {
   const normalizedCategories = categories.filter(Boolean);
   const normalizedTags = tags.filter(Boolean);
+  const sortBy = sort === 'top' ? 'votes' : 'recent';
 
   const listQuery = trpc.projectDiscussionThread.listThreads.useInfiniteQuery(
     {
@@ -33,6 +38,8 @@ export const useDiscussionThreads = ({
         normalizedCategories.length > 0 ? normalizedCategories : undefined,
       tags: normalizedTags.length > 0 ? normalizedTags : undefined,
       limit,
+      sortBy,
+      tab: status,
     },
     {
       enabled: enabled && (projectId ? Number.isFinite(projectId) : true),
