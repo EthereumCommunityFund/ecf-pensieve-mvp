@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { ArrowUpIcon } from '@phosphor-icons/react';
+
+import { Button } from '@/components/base';
 
 import BackHeader from '../../project/BackHeader';
 
@@ -32,6 +35,23 @@ export function DiscoursePageLayout({
   children,
 }: DiscoursePageLayoutProps) {
   const [backCrumb, ...crumbTrail] = breadcrumbs;
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window === 'undefined') return;
+      setShowBackToTop(window.scrollY > window.innerHeight);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToTop = () => {
+    if (typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen w-full">
@@ -98,6 +118,16 @@ export function DiscoursePageLayout({
           ) : null}
         </div>
       </section>
+      {showBackToTop ? (
+        <Button
+          type="button"
+          aria-label="Back to top"
+          className="fixed bottom-[100px] right-6 z-20 flex size-12 min-w-0 items-center justify-center rounded-full border border-black/15 bg-white text-black shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+          onClick={handleScrollToTop}
+        >
+          <ArrowUpIcon size={32} />
+        </Button>
+      ) : null}
     </div>
   );
 }
