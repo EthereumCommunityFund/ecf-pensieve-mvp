@@ -93,7 +93,7 @@ export function ScamThreadSkeleton() {
             <Skeleton className="h-[38px] w-[160px] rounded-[8px]" />
             <Skeleton className="h-[38px] w-[160px] rounded-[8px]" />
           </div>
-          <div className="rounded-[10px] border border-black/10 bg-white px-[14px] py-[10px]">
+          <div className="rounded-[10px]  px-[14px] py-[10px]">
             <div className="flex flex-wrap items-center gap-3">
               <Skeleton className="h-[30px] w-[90px] rounded-[8px]" />
               <Skeleton className="h-[30px] w-[90px] rounded-[8px]" />

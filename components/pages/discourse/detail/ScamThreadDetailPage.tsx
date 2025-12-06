@@ -45,7 +45,7 @@ type ScamThreadDetailPageProps = {
 };
 
 export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
-  const { isAuthenticated, showAuthPrompt } = useAuth();
+  const { isAuthenticated, showAuthPrompt, user } = useAuth();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
     'counter',
   );
@@ -182,6 +182,10 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     if (!requireAuth()) return;
     openCommentComposer(options);
   };
+  const openThreadCommentComposer = () =>
+    guardedOpenCommentComposer({
+      target: { threadId: numericThreadId },
+    });
 
   const sortByParam = sortOption === 'top' ? 'votes' : 'recent';
 
@@ -218,6 +222,15 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     )?.viewerHasSupported;
     setHasSupportedThread(Boolean(viewerHasSupported));
   }, [threadQuery.data]);
+
+  const isThreadOwner = useMemo(() => {
+    const creatorId = threadQuery.data?.creator?.userId;
+    if (!creatorId || !user?.id) return false;
+    return creatorId === user.id;
+  }, [threadQuery.data?.creator?.userId, user?.id]);
+
+  const [isThreadRetracted, setIsThreadRetracted] = useState(false);
+  const canRetractThread = isThreadOwner && !isThreadRetracted;
 
   const {
     answers: counterClaims,
@@ -325,12 +338,20 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         counterSteps: [],
       },
       quickActions: [],
-      canRetract: false,
+      canRetract: canRetractThread,
     };
-  }, [counterClaims, discussionComments, threadQuery.data]);
+  }, [canRetractThread, counterClaims, discussionComments, threadQuery.data]);
 
   const handleToggleThreadSupport = async () => {
     if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    if (isThreadRetracted) {
+      addToast({
+        title: 'Claim already retracted',
+        description: 'This claim can no longer receive support.',
+        color: 'warning',
+      });
       return;
     }
     const action = hasSupportedThread ? 'withdraw' : 'support';
@@ -372,6 +393,19 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         setThreadWithdrawPending(false);
       }
     }
+  };
+
+  const handleRetractClaim = async () => {
+    if (!isValidThreadId || !requireAuth() || !canRetractThread) {
+      return;
+    }
+    // TODO: hook up backend retract API once available
+    // setIsThreadRetracted(true);
+    addToast({
+      title: 'This feature is coming soon',
+      description: 'Retracting claims will be available in a future update.',
+      color: 'warning',
+    });
   };
 
   const tabItems = [
@@ -469,16 +503,18 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             </div>
             <Button
               className="h-[38px] w-full gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] text-black"
-              isDisabled={threadSupportPending || threadWithdrawPending}
+              isDisabled={
+                threadSupportPending ||
+                threadWithdrawPending ||
+                isThreadRetracted
+              }
               isLoading={threadSupportPending || threadWithdrawPending}
               onPress={handleToggleThreadSupport}
             >
               <CaretCircleUp
                 size={30}
                 weight="fill"
-                className={
-                  hasSupportedThread ? 'text-black/30' : 'text-black/10'
-                }
+                className={hasSupportedThread ? 'text-black' : 'text-black/10'}
               />
               <span className="font-inter text-[14px] font-[500]">
                 Support This Claim
@@ -489,24 +525,57 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
               </span>
             </Button>
             <div className="mt-[20px] flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
-              <Button
-                className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85"
-                onPress={guardedOpenCounterComposer}
-                isLoading={createCounterClaimMutation.isPending}
-              >
-                Counter This Claim
-              </Button>
-              <Button
-                className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80"
-                onPress={() =>
-                  guardedOpenCommentComposer({
-                    target: { threadId: numericThreadId },
-                  })
-                }
-                isLoading={createCommentMutation.isPending}
-              >
-                Post Comment
-              </Button>
+              {isThreadOwner ? (
+                <Button
+                  className="h-[38px] rounded-[5px] bg-[#51A0C5] text-[13px] font-semibold text-white hover:bg-[#4c90ac]"
+                  onPress={handleRetractClaim}
+                  isDisabled={!canRetractThread}
+                  isLoading={false}
+                >
+                  Retract Your Claim
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85"
+                    onPress={() => {
+                      if (isThreadRetracted) {
+                        addToast({
+                          title: 'Claim already retracted',
+                          description:
+                            'Counter claims are disabled for retracted alerts.',
+                          color: 'warning',
+                        });
+                        return;
+                      }
+                      guardedOpenCounterComposer();
+                    }}
+                    isDisabled={isThreadRetracted}
+                    isLoading={createCounterClaimMutation.isPending}
+                  >
+                    Counter This Claim
+                  </Button>
+                  <Button
+                    className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80"
+                    onPress={() => {
+                      if (isThreadRetracted) {
+                        addToast({
+                          title: 'Claim already retracted',
+                          description:
+                            'Comments are disabled for retracted alerts.',
+                          color: 'warning',
+                        });
+                        return;
+                      }
+                      openThreadCommentComposer();
+                    }}
+                    isDisabled={isThreadRetracted}
+                    isLoading={createCommentMutation.isPending}
+                  >
+                    Post Comment
+                  </Button>
+                </>
+              )}
             </div>
           </article>
 
@@ -590,9 +659,21 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         </section>
 
         <aside className="w-[300px] space-y-[20px]">
+          {isThreadOwner ? (
+            <Button
+              className="h-[38px] w-full rounded-[5px] bg-[#51A0C5] text-[13px] font-semibold text-white hover:bg-[#4c90ac]"
+              onPress={handleRetractClaim}
+              isDisabled={!canRetractThread}
+              isLoading={false}
+            >
+              Retract Your Claim
+            </Button>
+          ) : null}
+
           <ContributionVotesCompact
             current={hydratedThread.cpProgress.current}
             label="Contribution Point Votes"
+            isScam={true}
           />
 
           <SentimentSummaryPanel
@@ -609,7 +690,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             }
           />
 
-          <ParticipateCard />
+          <ParticipateCard isOwner={isThreadOwner} />
         </aside>
       </div>
 

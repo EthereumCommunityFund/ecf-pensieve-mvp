@@ -57,7 +57,7 @@ export function CounterClaimCard({
   const iconColor = meetsThreshold
     ? 'text-[#64C0A5]'
     : claim.viewerHasSupported
-      ? 'text-black/30'
+      ? 'text-black'
       : 'text-black/10';
   const commentTree = buildCommentTree<CounterCommentNode>(
     (claim.comments ?? []) as CounterCommentNode[],
@@ -84,13 +84,7 @@ export function CounterClaimCard({
           <p className="text-[12px] text-black/60">{claim.createdAt}</p>
 
           <Button
-            className={`h-[38px] w-full gap-3 rounded-[8px] px-[10px] ${
-              meetsThreshold
-                ? 'bg-[#F0FFF9]'
-                : claim.viewerHasSupported
-                  ? 'bg-black text-white'
-                  : 'bg-[#f5f5f5]'
-            }`}
+            className={`h-[38px] w-full gap-3 rounded-[8px] bg-[#f5f5f5] px-[10px]`}
             isDisabled={supportPending || withdrawPending}
             isLoading={supportPending || withdrawPending}
             onPress={() =>
@@ -288,24 +282,46 @@ export function ScamEmptyState({
 export function ContributionVotesCompact({
   current,
   label,
+  isScam,
 }: {
   current: number;
   label: string;
+  isScam?: boolean;
 }) {
   return (
-    <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
-      <header className="flex items-center gap-[10px] text-[14px] font-semibold text-black/80">
+    <section className="flex flex-col gap-[14px] rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
+      <header className="flex items-center gap-[10px] ">
         <CaretCircleUpIcon size={20} weight="fill" className="text-black/60" />
-        <span className="leading-[1.2]">{label}</span>
+        <span className="text-[14px] font-semibold leading-none text-black">
+          {label}
+        </span>
       </header>
-      <p className="mt-[6px] text-[18px] font-semibold leading-none text-black/60">
+      <p className="text-[18px] font-semibold leading-none text-black/60">
         {current.toLocaleString()}
       </p>
+
+      {isScam && (
+        <div className="flex flex-col gap-[5px] border-t border-black/10 pt-[10px] text-black">
+          <p className="text-[14px] font-semibold leading-[1.2] text-black/80">
+            Scam Acceptance Threshold:
+          </p>
+          <p className="text-[12px] font-[500] leading-[1.2] text-black/60">
+            this is desc
+          </p>
+          <p className="font-inter text-[14px] font-semibold leading-[1.2] text-black/80">
+            9000 <span className="text-[10px]">CP</span>
+          </p>
+        </div>
+      )}
     </section>
   );
 }
 
-export function ParticipateCard() {
+interface IParticipateCardProps {
+  isOwner?: boolean;
+}
+
+export function ParticipateCard({ isOwner }: IParticipateCardProps) {
   return (
     <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
       <h3 className="text-[14px] font-semibold text-black">
@@ -321,14 +337,16 @@ export function ParticipateCard() {
             Points (CP) under this post. Once the Scam Acceptance Threshold is
             reached, it will display a label on the project page.
           </p>
-          <div className="flex flex-col gap-[6px]">
-            <Button className="h-[30px] rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
-              Support Claim
-            </Button>
-            <Button className="h-[30px] rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
-              Post a Comment
-            </Button>
-          </div>
+          {!isOwner && (
+            <div className="flex flex-col gap-[6px]">
+              <Button className="h-[30px] rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
+                Support Claim
+              </Button>
+              <Button className="h-[30px] rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
+                Post a Comment
+              </Button>
+            </div>
+          )}
         </div>
         <div className="space-y-[6px]">
           <p className="text-[12px] font-semibold text-black/80">
@@ -339,9 +357,11 @@ export function ParticipateCard() {
             claim and gather support from the community or you can vote for any
             existing counter claims
           </p>
-          <Button className="h-[30px] w-full rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
-            Challenge Claim
-          </Button>
+          {!isOwner && (
+            <Button className="h-[30px] w-full rounded-[5px] border border-black/10 text-[13px] font-normal text-[#222222]">
+              Challenge Claim
+            </Button>
+          )}
         </div>
       </div>
     </section>
