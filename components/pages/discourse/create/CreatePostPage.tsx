@@ -9,10 +9,10 @@ import MdEditor from '@/components/base/MdEditor';
 import { addToast } from '@/components/base/toast';
 import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
 import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/tiptap-utils';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
-import { cn } from '@/lib/tiptap-utils';
 
 import { CategorySelector } from '../common/CategorySelector';
 import {
@@ -80,6 +80,7 @@ type CreatePostFormProps = {
   onBack: () => void;
   onDiscard?: () => void;
   isPublishDisabled: boolean;
+  isPublishing: boolean;
   isScamCategory: boolean;
   scamRequirement: number;
   userContributionPoints?: number;
@@ -116,6 +117,7 @@ function CreatePostForm({
   onBack,
   onDiscard,
   isPublishDisabled,
+  isPublishing,
   isScamCategory,
   scamRequirement,
   userContributionPoints,
@@ -371,6 +373,7 @@ function CreatePostForm({
             <Button
               onPress={onPublish}
               isDisabled={isPublishDisabled}
+              isLoading={isPublishing}
               className={`rounded-[8px] px-6 py-2 text-sm font-semibold text-white ${
                 isPublishDisabled ? 'bg-black/30' : 'bg-black hover:bg-black/80'
               }`}
@@ -435,6 +438,8 @@ export function CreatePost() {
       },
     });
 
+  const isPublishing = createThreadMutation.isPending;
+
   useEffect(() => {
     if (!presetProjectData) return;
     setSelectedProject((current) => {
@@ -460,7 +465,7 @@ export function CreatePost() {
     !tags.length ||
     !selectedProject ||
     (isScamCategorySelected && !meetsScamRequirement) ||
-    createThreadMutation.isPending;
+    isPublishing;
 
   const clearError = (field: keyof CreatePostErrors) => {
     setErrors((prev) => {
@@ -574,6 +579,8 @@ export function CreatePost() {
       return;
     }
 
+    if (isPublishing) return;
+
     try {
       await createThreadMutation.mutateAsync({
         projectId: selectedProject.id,
@@ -611,6 +618,7 @@ export function CreatePost() {
                 <Button
                   onPress={handlePublish}
                   isDisabled={isPublishDisabled}
+                  isLoading={isPublishing}
                   className={`rounded-[8px] px-6 py-2 text-sm font-semibold text-white ${
                     isPublishDisabled ? 'bg-black/30' : 'bg-black'
                   }`}
@@ -658,6 +666,7 @@ export function CreatePost() {
             meetsScamRequirement={meetsScamRequirement}
             isAuthenticated={isAuthenticated}
             onRequireAuth={() => showAuthPrompt('invalidAction')}
+            isPublishing={isPublishing}
           />
         )}
       </div>
