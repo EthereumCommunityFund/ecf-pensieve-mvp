@@ -18,6 +18,7 @@ import { trpc } from '@/lib/trpc/client';
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import { SentimentModal } from '../common/sentiment/SentimentModal';
 import { TopicTag } from '../common/TopicTag';
+import { UserAvatar } from '../common/UserAvatar';
 import { ThreadMeta } from '../utils/threadTransforms';
 
 type ThreadListProps = {
@@ -145,10 +146,14 @@ function ThreadItem({
             <div className="flex flex-wrap items-center gap-3 text-[12px] tracking-[0.12em] text-black/50">
               <span>BY:</span>
               <span className="flex items-center gap-2 text-[13px] tracking-normal text-black">
-                <span className="inline-flex size-6 items-center justify-center rounded-full bg-black/10 text-[11px] font-semibold text-black/50">
-                  {authorInitial}
-                </span>
-                {thread.author}
+                <UserAvatar
+                  name={thread.author}
+                  src={thread.authorAvatar}
+                  size={24}
+                  className="bg-black/10"
+                  fallbackClassName="text-[11px] font-semibold"
+                />
+                <span className="text-[13px]">{thread.author}</span>
               </span>
               <span className="tracking-normal text-black/60">
                 {thread.timeAgo}

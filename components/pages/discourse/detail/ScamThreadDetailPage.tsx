@@ -20,6 +20,7 @@ import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
+import { UserAvatar } from '../common/UserAvatar';
 
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import { useDiscussionComposer } from './hooks/useDiscussionComposer';
@@ -470,7 +471,11 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             <div className="flex flex-wrap items-center gap-[10px] text-[12px] text-black">
               <span className="text-black/50">BY:</span>
               <div className="flex items-center gap-[5px]">
-                <span className="size-[24px] rounded-full bg-[#D9D9D9]" />
+                <UserAvatar
+                  name={hydratedThread.author.name}
+                  src={hydratedThread.author.avatarUrl}
+                  size={24}
+                />
                 <span className="text-[14px]">
                   {hydratedThread.author.name}
                 </span>

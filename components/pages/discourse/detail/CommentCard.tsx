@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/base';
 
+import { UserAvatar } from '../common/UserAvatar';
 import {
   defaultSentimentDisplay,
   sentimentDefinitions,
@@ -20,9 +21,13 @@ export function CommentCard({ comment }: CommentCardProps) {
     <article className="rounded-[16px] border border-black/10 bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-black/5 text-sm font-semibold text-black/70">
-            {comment.author[0]}
-          </div>
+          <UserAvatar
+            name={comment.author}
+            src={comment.authorAvatar}
+            size={40}
+            className="bg-black/5"
+            fallbackClassName="text-sm font-semibold text-black/70"
+          />
           <div>
             <p className="text-[15px] font-semibold text-black">
               {comment.author}

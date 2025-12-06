@@ -1,10 +1,14 @@
-import { ArrowBendUpLeft, ThumbsDown } from '@phosphor-icons/react';
-import { ChartBarIcon } from '@phosphor-icons/react';
+import {
+  ArrowBendUpLeft,
+  ChartBarIcon,
+  ThumbsDown,
+} from '@phosphor-icons/react';
 
 import { Button, MdEditor } from '@/components/base';
 
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { CommentItem } from '../common/threadData';
+import { UserAvatar } from '../common/UserAvatar';
 
 import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
@@ -109,7 +113,12 @@ function CommentThreadItem({
         <div className="absolute left-[24px] top-[38px] h-[calc(100%-38px)] w-px bg-black/10" />
       ) : null}
       <div className="flex flex-col items-center gap-1">
-        <div className="flex size-[30px] items-center justify-center rounded-full bg-[#d9d9d9]" />
+        <UserAvatar
+          name={comment.author}
+          src={comment.authorAvatar}
+          size={30}
+          className="bg-[#d9d9d9]"
+        />
         {isOp ? (
           <div className="flex flex-col items-center gap-1 text-black/50">
             <ArrowBendUpLeft size={14} />

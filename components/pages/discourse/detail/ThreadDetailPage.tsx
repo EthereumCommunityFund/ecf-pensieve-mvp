@@ -437,6 +437,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           ? `@${baseThread.creator.userId.slice(0, 8)}`
           : '@anonymous',
         avatarFallback: baseThread.creator?.name?.[0]?.toUpperCase() ?? 'U',
+        avatarUrl: baseThread.creator?.avatarUrl ?? null,
         role: 'Community Member',
         postedAt: formatTimeAgo(baseThread.createdAt),
         editedAt: undefined,
@@ -521,6 +522,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           <PostDetailCard
             title={thread.title}
             author={thread.author.name}
+            authorAvatar={thread.author.avatarUrl}
             timeAgo={thread.author.postedAt}
             contentHtml={threadContentHtml}
             tags={thread.tags}

@@ -4,6 +4,7 @@ import { Button } from '@/components/base';
 
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { AnswerItem, CommentItem } from '../common/threadData';
+import { UserAvatar } from '../common/UserAvatar';
 
 import type { CommentNode } from './utils/discussionMappers';
 import { buildCommentTree, formatExcerpt } from './utils/discussionMappers';
@@ -66,11 +67,14 @@ export function CounterClaimCard({
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
       <div className="flex gap-3">
-        {/* TODO user avatar */}
-
         <div className="flex-1 space-y-3">
           <div className="flex flex-wrap items-center  gap-2">
-            <div className="flex size-[32px] items-center justify-center rounded-full bg-[#d9d9d9]" />
+            <UserAvatar
+              name={claim.author}
+              src={claim.authorAvatar}
+              size={32}
+              className="bg-[#d9d9d9]"
+            />
             <p className="text-[15px] font-semibold text-black">
               {claim.author}
             </p>
@@ -167,7 +171,12 @@ export function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
       <div className="flex gap-3">
-        <div className="flex size-[28px] items-center justify-center rounded-full bg-[#d9d9d9]" />
+        <UserAvatar
+          name={comment.author}
+          src={comment.authorAvatar}
+          size={28}
+          className="bg-[#d9d9d9]"
+        />
         <div className="flex-1 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -225,7 +234,12 @@ function CounterCommentTree({
   return (
     <div className="space-y-2" style={{ marginLeft: depth ? depth * 16 : 0 }}>
       <div className="flex gap-2">
-        <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9]" />
+        <UserAvatar
+          name={node.author}
+          src={node.authorAvatar}
+          size={28}
+          className="bg-[#d9d9d9]"
+        />
         <div className="flex-1 space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-[14px] font-semibold text-black">

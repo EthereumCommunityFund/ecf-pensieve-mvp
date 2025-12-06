@@ -18,6 +18,8 @@ export type ThreadSentimentRecord = NonNullable<
 
 export type ThreadMeta = ThreadListItem & {
   author: string;
+  authorAvatar?: string | null;
+  authorInitial?: string;
   excerpt: string;
   timeAgo: string;
   badge?: string;
@@ -109,6 +111,7 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     ? formatTimeAgo(thread.createdAt)
     : '–';
   const summary = summarizeSentiments(thread.sentiments);
+  const authorName = thread.creator?.name || 'Unknown';
 
   const dominantSentiment = summary.dominantKey
     ? sentimentDefinitions[summary.dominantKey]?.label
@@ -117,7 +120,9 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
   return {
     ...thread,
     excerpt,
-    author: thread.creator?.name || 'Unknown',
+    author: authorName,
+    authorAvatar: thread.creator?.avatarUrl ?? null,
+    authorInitial: authorName[0]?.toUpperCase() ?? 'U',
     timeAgo: createdAtLabel,
     badge: thread.isScam ? '⚠️ Scam Claim' : 'Complaint Topic',
     status: thread.isScam ? 'Alert Displayed on Page' : undefined,

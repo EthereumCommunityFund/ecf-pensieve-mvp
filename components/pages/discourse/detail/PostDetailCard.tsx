@@ -4,11 +4,13 @@ import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
 import { TopicTag } from '../common/TopicTag';
+import { UserAvatar } from '../common/UserAvatar';
 
 export type PostDetailCardProps = {
   isPreviewMode?: boolean;
   title: string;
   author: string;
+  authorAvatar?: string | null;
   timeAgo: string;
   contentHtml: string;
   tags: string[];
@@ -42,6 +44,7 @@ export default function PostDetailCard({
   withdrawPending = false,
   onSupportThread,
   onWithdrawThread,
+  authorAvatar,
 }: PostDetailCardProps) {
   return (
     <article className="flex flex-col gap-[20px] rounded-[16px]">
@@ -54,7 +57,7 @@ export default function PostDetailCard({
         <div className=" flex items-center gap-[10px] text-[12px] text-black">
           <span className="text-black/50">BY:</span>
           <div className="flex items-center gap-[5px]">
-            <span className="size-[24px] rounded-full bg-[#D9D9D9]"></span>
+            <UserAvatar name={author} src={authorAvatar} size={24} />
             <span className="text-[14px]">{author}</span>
           </div>
           <span className=" text-black/60">{timeAgo}</span>
@@ -83,13 +86,15 @@ export default function PostDetailCard({
       </div>
       <div className="flex gap-[10px] border-t border-black/10 pt-4 ">
         {/*  TODO：Thread 维度的情绪投票组件 */}
-        <Button className="h-[38px] border-none gap-[10px] rounded-[8px] bg-[#EBEBEB] px-[8px] py-[4px]">
+        <Button className="h-[38px] gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] px-[8px] py-[4px]">
           <ChartBarIcon weight="fill" size={30} className="opacity-30" />
           <span className="text-[12px] font-semibold text-black/60">000</span>
         </Button>
         <Button
-          className={`h-[38px] gap-[10px] rounded-[8px] px-[10px] py-[6px] border-none ${
-            hasSupported ? 'bg-black text-white hover:bg-black/80' : 'bg-[#EBEBEB] text-black'
+          className={`h-[38px] gap-[10px] rounded-[8px] border-none px-[10px] py-[6px] ${
+            hasSupported
+              ? 'bg-black text-white hover:bg-black/80'
+              : 'bg-[#EBEBEB] text-black'
           }`}
           isDisabled={
             isPreviewMode ||

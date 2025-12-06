@@ -10,6 +10,7 @@ export type AnswerItem = {
   id: string;
   numericId: number;
   author: string;
+  authorAvatar?: string | null;
   role: string;
   createdAt: string;
   body: string;
@@ -32,6 +33,7 @@ export type CommentItem = {
   parentCommentId?: number;
   commentId?: number;
   author: string;
+  authorAvatar?: string | null;
   role: string;
   createdAt: string;
   body: string;
@@ -75,6 +77,7 @@ export type ThreadDetailRecord = {
     name: string;
     handle: string;
     avatarFallback: string;
+    avatarUrl?: string | null;
     role: string;
     postedAt: string;
     editedAt?: string;

@@ -1,19 +1,20 @@
+import { cn } from '@heroui/react';
 import {
   CaretCircleUpIcon,
   ChartBar as ChartBarGlyph,
   ChartBarIcon,
 } from '@phosphor-icons/react';
 import { useMemo } from 'react';
-import { cn } from '@heroui/react';
 
 import { Button, MdEditor } from '@/components/base';
 import { SentimentIndicator } from '@/components/pages/discourse/common/sentiment/SentimentIndicator';
+import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
 
 import type { AnswerItem, CommentItem } from '../common/threadData';
 
+import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
 import type { ComposerContext } from './ThreadComposerModal';
-import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { buildCommentTree, formatExcerpt } from './utils/discussionMappers';
 
 type AnswerCommentNode = CommentItem & {
@@ -73,9 +74,7 @@ export function AnswerDetailCard({
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
       <div className="flex gap-3">
-        <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9] text-sm font-semibold text-black/70">
-          {answer.author?.[0]?.toUpperCase()}
-        </div>
+        <UserAvatar name={answer.author} src={answer.authorAvatar} size={32} />
         <div className="flex-1 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -232,7 +231,7 @@ function AnswerCommentRow({
 
   return (
     <div className="flex gap-3" style={{ marginLeft: depth ? depth * 16 : 0 }}>
-      <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9]" />
+      <UserAvatar name={comment.author} src={comment.authorAvatar} size={32} />
       <div className="flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[14px] font-semibold text-black">

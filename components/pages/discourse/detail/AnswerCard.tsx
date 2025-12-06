@@ -4,6 +4,7 @@ import { CheckCircle } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 
+import { UserAvatar } from '../common/UserAvatar';
 import { SentimentSelector } from '../common/sentiment/SentimentSelector';
 import {
   defaultSentimentDisplay,
@@ -42,9 +43,13 @@ export function AnswerCard({
     <article className="rounded-[16px] border border-black/10 bg-white p-5 shadow-[0_12px_25px_rgba(15,23,42,0.05)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-black/5 text-sm font-semibold text-black/70">
-            {answer.author[0]}
-          </div>
+          <UserAvatar
+            name={answer.author}
+            src={answer.authorAvatar}
+            size={40}
+            className="bg-black/5"
+            fallbackClassName="text-sm font-semibold text-black/70"
+          />
           <div>
             <p className="text-[15px] font-semibold text-black">
               {answer.author}
