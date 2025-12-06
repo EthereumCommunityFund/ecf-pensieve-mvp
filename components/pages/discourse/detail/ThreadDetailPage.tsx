@@ -1,46 +1,45 @@
 'use client';
 
-import {
-  ArrowBendUpLeft,
-  CaretCircleUpIcon,
-  ChartBar as ChartBarGlyph,
-  ChartBarIcon,
-  ThumbsDown,
-} from '@phosphor-icons/react';
-import { useRouter } from 'next/navigation';
+import { ChartBarIcon } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
 
-import { Button, MdEditor } from '@/components/base';
+import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
 import { SentimentKey } from '../common/sentiment/sentimentConfig';
-import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
 import {
-  AnswerItem,
   CommentItem,
   QuickAction,
   ThreadDetailRecord,
 } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
-import { EDITOR_MAX_CHARACTERS, parseEditorValue } from '../utils/editorValue';
+import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
-  summarizeSentiments,
-  type ThreadSentimentRecord,
 } from '../utils/threadTransforms';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
+import { useAnswerSupport } from './hooks/useAnswerSupport';
+import { useDiscussionComposer } from './hooks/useDiscussionComposer';
+import { useDiscussionLists } from './hooks/useDiscussionLists';
 import { mockThreadAnswers, mockThreadComments } from './mockDiscussionData';
-import PostDetailCard, { serializeEditorValue } from './PostDetailCard';
+import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
-import { ComposerContext, ThreadComposerModal } from './ThreadComposerModal';
-import { cn } from '@heroui/react';
+import { AnswerDetailCard } from './ThreadAnswerCard';
+import { ThreadCommentTree } from './ThreadCommentTree';
+import { ThreadComposerModal } from './ThreadComposerModal';
+import { ThreadDetailSkeleton } from './ThreadDetailSkeleton';
+import {
+  buildSentimentSummary,
+  CommentNode,
+  extractParagraphs,
+} from './utils/discussionMappers';
 
 type ThreadDetailPageProps = {
   threadId: string;
@@ -53,15 +52,8 @@ type CommentTarget = {
   commentId?: number;
 };
 
-type ThreadCommentNode = CommentItem & {
-  commentId?: number;
-  children?: ThreadCommentNode[];
-};
-
-type AnswerCommentNode = CommentItem & {
-  commentId?: number;
-  children?: AnswerCommentNode[];
-};
+type ThreadCommentNode = CommentNode<CommentItem>;
+type AnswerCommentNode = CommentNode<CommentItem>;
 
 const DEFAULT_PARTICIPATION = {
   supportSteps: [
@@ -83,34 +75,11 @@ const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
 ];
 
 export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
-  const router = useRouter();
   const { user, isAuthenticated, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState<'answers' | 'comments'>('answers');
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
   const [sentimentFilter, setSentimentFilter] = useState<string>('all');
-  const [composerVariant, setComposerVariant] = useState<
-    'answer' | 'comment' | null
-  >(null);
-  const [commentComposerTitle, setCommentComposerTitle] = useState<
-    string | undefined
-  >(undefined);
-  const [commentContext, setCommentContext] = useState<ComposerContext | null>(
-    null,
-  );
-  const [commentTarget, setCommentTarget] = useState<CommentTarget | null>(
-    null,
-  );
-  const [answerDraft, setAnswerDraft] = useState('');
-  const [commentDraft, setCommentDraft] = useState('');
-  const [answerError, setAnswerError] = useState<string | null>(null);
-  const [commentError, setCommentError] = useState<string | null>(null);
-  const [supportingAnswerId, setSupportingAnswerId] = useState<number | null>(
-    null,
-  );
-  const [withdrawingAnswerId, setWithdrawingAnswerId] = useState<number | null>(
-    null,
-  );
   const [threadSupportPending, setThreadSupportPending] = useState(false);
   const [threadWithdrawPending, setThreadWithdrawPending] = useState(false);
   const [hasSupportedThread, setHasSupportedThread] = useState(false);
@@ -121,10 +90,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     showAuthPrompt();
     return false;
   };
-  const isAnswerComposer = useMemo(
-    () => composerVariant === 'answer',
-    [composerVariant],
-  );
+  // const isAnswerComposer = useMemo(
+  //   () => composerVariant === 'answer',
+  //   [composerVariant],
+  // );
 
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
@@ -191,9 +160,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           description: 'Your contribution is now visible to the community.',
           color: 'success',
         });
-        setAnswerDraft('');
-        setAnswerError(null);
-        setComposerVariant(null);
         answersQuery.refetch();
       },
       onError: (error) => {
@@ -213,13 +179,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           description: 'Your discussion is now visible to everyone.',
           color: 'success',
         });
-        setCommentDraft('');
-        setCommentError(null);
-        setComposerVariant(null);
-        setCommentContext(null);
-        setCommentTarget(null);
-        setCommentComposerTitle(undefined);
-
         if (variables?.answerId) {
           answersQuery.refetch();
         } else {
@@ -273,8 +232,8 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       },
     });
 
-  const voteThreadMutation = trpc.projectDiscussionThread.voteThread.useMutation(
-    {
+  const voteThreadMutation =
+    trpc.projectDiscussionThread.voteThread.useMutation({
       onSuccess: () => {
         addToast({
           title: 'Supported thread',
@@ -291,8 +250,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           color: 'danger',
         });
       },
-    },
-  );
+    });
 
   const unvoteThreadMutation =
     trpc.projectDiscussionThread.unvoteThread.useMutation({
@@ -314,177 +272,60 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       },
     });
 
-  const handleSubmitAnswer = async () => {
-    if (!isValidThreadId || !requireAuth()) {
-      return;
-    }
-    const { html, plain: plainText } = parseEditorValue(answerDraft);
-    if (!plainText) {
-      setAnswerError('Answer content is required');
-      return;
-    }
-    if (plainText.length > EDITOR_MAX_CHARACTERS) {
-      setAnswerError('Answer exceeds the character limit');
-      return;
-    }
-    setAnswerError(null);
-    try {
+  const {
+    composerVariant,
+    modalVariant,
+    isPrimaryComposer: isAnswerComposer,
+    primaryDraft: answerDraft,
+    commentDraft,
+    primaryError: answerError,
+    commentError,
+    commentComposerTitle,
+    commentContext,
+    openPrimaryComposer: openAnswerComposer,
+    openCommentComposer,
+    closeComposer: handleCloseComposer,
+    handleSubmitPrimary: handleSubmitAnswer,
+    handleSubmitComment,
+    setPrimaryDraft: setAnswerDraft,
+    setCommentDraft,
+  } = useDiscussionComposer({
+    primaryVariant: 'answer',
+    threadId: numericThreadId,
+    maxCharacters: EDITOR_MAX_CHARACTERS,
+    requireAuth,
+    defaultCommentTarget: { threadId: numericThreadId },
+    messages: {
+      primary: {
+        required: 'Answer content is required',
+        exceed: 'Answer exceeds the character limit',
+        failed: 'Failed to submit answer',
+      },
+      comment: {
+        required: 'Comment content is required',
+        exceed: 'Comment exceeds the character limit',
+        failed: 'Failed to post comment',
+      },
+    },
+    primarySubmit: async ({ html }) => {
+      if (!isValidThreadId) return;
       await createAnswerMutation.mutateAsync({
         threadId: numericThreadId,
         content: html,
       });
-      setComposerVariant(null);
-    } catch (error: any) {
-      setAnswerError(error.message ?? 'Failed to submit answer');
-    }
-  };
-
-  const handleSubmitComment = async () => {
-    if (!isValidThreadId || !requireAuth()) {
-      return;
-    }
-    const { html, plain: plainText } = parseEditorValue(commentDraft);
-    if (!plainText) {
-      setCommentError('Comment content is required');
-      return;
-    }
-    if (plainText.length > EDITOR_MAX_CHARACTERS) {
-      setCommentError('Comment exceeds the character limit');
-      return;
-    }
-    setCommentError(null);
-    try {
-      const target: CommentTarget = commentTarget ??
-        commentContext?.target ?? {
-          threadId: numericThreadId,
-        };
-
+    },
+    commentSubmit: async ({ html, target }) => {
+      if (!isValidThreadId) return;
       await createCommentMutation.mutateAsync({
         threadId: target.threadId,
         answerId: target.answerId,
         parentCommentId: target.parentCommentId,
         content: html,
       });
-    } catch (error: any) {
-      setCommentError(error.message ?? 'Failed to post comment');
-    }
-  };
-
-  const handleCloseComposer = () => {
-    if (isAnswerComposer && createAnswerMutation.isPending) {
-      return;
-    }
-    if (
-      !isAnswerComposer &&
-      composerVariant &&
-      createCommentMutation.isPending
-    ) {
-      return;
-    }
-    setComposerVariant(null);
-    setAnswerError(null);
-    setCommentError(null);
-    setCommentComposerTitle(undefined);
-    setCommentContext(null);
-    setCommentTarget(null);
-  };
-
-  const openCommentComposer = (options?: {
-    title?: string;
-    context?: ComposerContext | null;
-    target?: CommentTarget;
-  }) => {
-    const mergedTarget =
-      options?.target || options?.context?.target
-        ? {
-            threadId:
-              options?.target?.threadId ??
-              options?.context?.target?.threadId ??
-              numericThreadId,
-            answerId:
-              options?.target?.answerId ?? options?.context?.target?.answerId,
-            parentCommentId:
-              options?.target?.parentCommentId ??
-              options?.context?.target?.parentCommentId,
-            commentId:
-              options?.target?.commentId ?? options?.context?.target?.commentId,
-          }
-        : null;
-
-    setCommentComposerTitle(options?.title);
-    setCommentTarget(mergedTarget);
-    setCommentContext(
-      options?.context || mergedTarget
-        ? {
-            title: options?.context?.title ?? options?.title ?? 'Post Comment',
-            author: options?.context?.author ?? '',
-            timestamp: options?.context?.timestamp,
-            excerpt: options?.context?.excerpt ?? '',
-            isOp: options?.context?.isOp,
-            target: mergedTarget ?? undefined,
-          }
-        : null,
-    );
-    setComposerVariant('comment');
-  };
-
-  const openAnswerComposer = () => {
-    setComposerVariant('answer');
-    setCommentComposerTitle(undefined);
-    setCommentContext(null);
-  };
-
-  const handleSupportAnswer = async (answerId: number) => {
-    if (!requireAuth()) {
-      return;
-    }
-    const existingSupported = answersFromApi.find(
-      (answer) => answer.viewerHasSupported,
-    );
-    if (existingSupported?.numericId === answerId) {
-      await handleWithdrawSupport(answerId);
-      return;
-    }
-    if (existingSupported && existingSupported.numericId !== answerId) {
-      setWithdrawingAnswerId(existingSupported.numericId ?? null);
-      try {
-        await unvoteAnswerMutation.mutateAsync({
-          answerId: existingSupported.numericId!,
-        });
-      } catch {
-        setWithdrawingAnswerId(null);
-        return;
-      } finally {
-        setWithdrawingAnswerId(null);
-      }
-    }
-    setSupportingAnswerId(answerId);
-    try {
-      await voteAnswerMutation.mutateAsync({ answerId });
-    } catch {
-      // handled via mutation callbacks
-    } finally {
-      setSupportingAnswerId((current) =>
-        current === answerId ? null : current,
-      );
-    }
-  };
-
-  const handleWithdrawSupport = async (answerId: number) => {
-    if (!requireAuth()) {
-      return;
-    }
-    setWithdrawingAnswerId(answerId);
-    try {
-      await unvoteAnswerMutation.mutateAsync({ answerId });
-    } catch {
-      // handled globally
-    } finally {
-      setWithdrawingAnswerId((current) =>
-        current === answerId ? null : current,
-      );
-    }
-  };
+    },
+    primarySubmitting: createAnswerMutation.isPending,
+    commentSubmitting: createCommentMutation.isPending,
+  });
 
   const handleSupportThread = async () => {
     if (!isValidThreadId || !requireAuth()) {
@@ -516,131 +357,40 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     }
   };
 
-  const answersFromApi = useMemo<AnswerItem[]>(() => {
-    const remoteItems = answersQuery.data?.pages?.length
-      ? answersQuery.data.pages.flatMap((page) => page.items)
-      : [];
-    const sourceItems =
-      remoteItems.length > 0 ? remoteItems : fallbackAnswerRecords;
-    if (!sourceItems.length) return [];
+  const {
+    answers: answersFromApi,
+    comments: commentsFromApi,
+    discussionTree,
+    filteredAnswers,
+    filteredComments,
+    isAnswersInitialLoading,
+    isCommentsInitialLoading,
+  } = useDiscussionLists({
+    answersQuery,
+    commentsQuery,
+    fallbackAnswers: fallbackAnswerRecords,
+    fallbackComments: fallbackCommentRecords,
+    viewerId: user?.id ?? null,
+    sentimentFilter: sentimentFilter as 'all' | SentimentKey,
+    buildThreadTree: true,
+  });
 
-    return sourceItems.map((answer) => {
-      const sentiment = summarizeSentiments(answer.sentiments);
-      const sentimentKey = sentiment.dominantKey ?? 'recommend';
-      const viewerSentiment = findUserSentiment(answer.sentiments, user?.id);
-      const mappedComments: AnswerCommentNode[] = (answer.comments ?? []).map(
-        (comment) => {
-          const numericId = comment.id;
-          const rootId =
-            comment.commentId ??
-            (typeof numericId === 'number' ? numericId : undefined);
-          return {
-            id: `answer-${answer.id}-comment-${comment.id}`,
-            numericId,
-            answerId: answer.id,
-            commentId: rootId,
-            parentCommentId: comment.parentCommentId ?? undefined,
-            author: comment.creator?.name ?? 'Anonymous',
-            role: 'Community Member',
-            createdAt: formatTimeAgo(comment.createdAt),
-            body: comment.content,
-            sentimentLabel: 'recommend',
-          };
-        },
-      );
+  const {
+    handleSupport: handleSupportAnswer,
+    handleWithdraw: handleWithdrawSupport,
+    supportingId: supportingAnswerId,
+    withdrawingId: withdrawingAnswerId,
+  } = useAnswerSupport({
+    requireAuth,
+    answers: answersFromApi,
+    voteAnswer: (answerId) => voteAnswerMutation.mutateAsync({ answerId }),
+    unvoteAnswer: (answerId) => unvoteAnswerMutation.mutateAsync({ answerId }),
+  });
 
-      return {
-        id: `answer-${answer.id}`,
-        numericId: answer.id,
-        author: answer.creator?.name ?? 'Anonymous',
-        role: 'Community Member',
-        createdAt: formatTimeAgo(answer.createdAt),
-        body: answer.content,
-        cpSupport: (answer as { support?: number }).support ?? 0,
-        cpTarget: undefined,
-        sentimentLabel: sentimentKey,
-        sentimentVotes: sentiment.totalVotes,
-        commentsCount: mappedComments.length,
-        comments: mappedComments,
-        viewerSentiment: viewerSentiment ?? undefined,
-        viewerHasSupported: Boolean(answer.viewerHasSupported),
-      } satisfies AnswerItem;
-    });
-  }, [answersQuery.data, fallbackAnswerRecords, user?.id]);
-
-  const commentsFromApi = useMemo<ThreadCommentNode[]>(() => {
-    const remoteItems = commentsQuery.data?.pages?.length
-      ? commentsQuery.data.pages.flatMap((page) => page.items)
-      : [];
-    const sourceItems =
-      remoteItems.length > 0 ? remoteItems : fallbackCommentRecords;
-    if (!sourceItems.length) return [];
-
-    return sourceItems.map((comment) => ({
-      id: `comment-${comment.id}`,
-      numericId: comment.id,
-      answerId: comment.answerId ?? undefined,
-      commentId: comment.commentId ?? comment.id ?? undefined,
-      parentCommentId: comment.parentCommentId ?? undefined,
-      author: comment.creator?.name ?? 'Anonymous',
-      role: 'Community Member',
-      createdAt: formatTimeAgo(comment.createdAt),
-      body: comment.content,
-      sentimentLabel: 'recommend',
-    })) as ThreadCommentNode[];
-  }, [commentsQuery.data, fallbackCommentRecords]);
-
-  const discussionTree = useMemo<ThreadCommentNode[]>(() => {
-    const threadComments = commentsFromApi.filter(
-      (comment) => !comment.answerId,
-    );
-    const map = new Map<number, ThreadCommentNode>();
-    const roots: ThreadCommentNode[] = [];
-
-    threadComments.forEach((comment) => {
-      const rootId = comment.commentId ?? comment.numericId;
-      map.set(comment.numericId, {
-        ...comment,
-        commentId: rootId,
-        children: [],
-      });
-    });
-
-    threadComments.forEach((comment) => {
-      const node = map.get(comment.numericId)!;
-      if (comment.parentCommentId && map.has(comment.parentCommentId)) {
-        const parent = map.get(comment.parentCommentId)!;
-        node.commentId = parent.commentId ?? parent.numericId;
-        parent.children!.push(node);
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
-  }, [commentsFromApi]);
-
-  const isAnswersInitialLoading =
-    answersQuery.isLoading && !answersFromApi.length;
-  const isCommentsInitialLoading =
-    commentsQuery.isLoading && !commentsFromApi.length;
-
-  const sentimentSummary = useMemo(() => {
-    if (!baseThread) {
-      return { metrics: [], totalVotes: 0 };
-    }
-    const summary = summarizeSentiments(baseThread.sentiments);
-    return {
-      metrics: summary.metrics.map((metric) => ({
-        key: metric.key,
-        percentage: metric.percentage,
-        votes: Math.round(
-          (metric.percentage / 100) * (summary.totalVotes || 0),
-        ),
-      })),
-      totalVotes: summary.totalVotes,
-    };
-  }, [baseThread]);
+  const sentimentSummary = useMemo(
+    () => buildSentimentSummary(baseThread?.sentiments),
+    [baseThread?.sentiments],
+  );
 
   const thread = useMemo<ThreadDetailRecord | null>(() => {
     if (!baseThread) {
@@ -714,11 +464,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   }
 
   if (threadQuery.isLoading) {
-    return (
-      <div className="p-10 text-center text-sm text-black/60">
-        Loading thread…
-      </div>
-    );
+    return <ThreadDetailSkeleton />;
   }
 
   if (!thread) {
@@ -744,19 +490,19 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     { key: 'comments', label: 'Discuss', count: thread.comments.length },
   ];
 
-  const filteredAnswers =
-    sentimentFilter === 'all'
-      ? answersToRender
-      : answersToRender.filter(
-          (answer) => answer.sentimentLabel === sentimentFilter,
-        );
+  // const filteredAnswers =
+  //   sentimentFilter === 'all'
+  //     ? answersToRender
+  //     : answersToRender.filter(
+  //         (answer) => answer.sentimentLabel === sentimentFilter,
+  //       );
 
-  const filteredComments: ThreadCommentNode[] =
-    sentimentFilter === 'all'
-      ? discussionTree
-      : discussionTree.filter(
-          (comment) => comment.sentimentLabel === sentimentFilter,
-        );
+  // const filteredComments: ThreadCommentNode[] =
+  //   sentimentFilter === 'all'
+  //     ? discussionTree
+  //     : discussionTree.filter(
+  //         (comment) => comment.sentimentLabel === sentimentFilter,
+  //       );
 
   const isAnswersTab = activeTab === 'answers';
   const answerEmptyState = {
@@ -985,7 +731,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
       {composerVariant ? (
         <ThreadComposerModal
-          variant={composerVariant}
+          variant={modalVariant}
           isOpen
           value={isAnswerComposer ? answerDraft : commentDraft}
           onChange={(value) =>
@@ -1009,552 +755,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       ) : null}
     </>
   );
-}
-
-type AnswerDetailCardProps = {
-  answer: AnswerItem;
-  onSupport: (answerId: number) => void;
-  onWithdraw: (answerId: number) => void;
-  onPostComment: (context?: ComposerContext) => void;
-  threadAuthorName: string;
-  threadId: number;
-  supportPending?: boolean;
-  withdrawPending?: boolean;
-};
-
-function AnswerDetailCard({
-  answer,
-  onSupport,
-  onWithdraw,
-  onPostComment,
-  threadAuthorName,
-  threadId,
-  supportPending = false,
-  withdrawPending = false,
-}: AnswerDetailCardProps) {
-  const commentCount = answer.comments?.length ?? answer.commentsCount;
-  const primaryTag = answer.isAccepted ? 'Highest voted answer' : undefined;
-  const secondaryTag =
-    answer.statusTag ||
-    (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
-  const cpLabel = formatCompactNumber(answer.cpSupport);
-  const CP_SUPPORT_THRESHOLD = 9000;
-  const meetsThreshold = answer.cpSupport >= CP_SUPPORT_THRESHOLD;
-  const cpTextColor = meetsThreshold
-    ? 'text-[#64C0A5]'
-    : answer.viewerHasSupported
-      ? 'text-black'
-      : 'text-black/60';
-  const cpIconColor = meetsThreshold
-    ? 'text-[#64C0A5]'
-    : answer.viewerHasSupported
-      ? 'text-black/80'
-      : 'text-black/10';
-  const isOp = answer.author === threadAuthorName;
-
-  const commentTree = useMemo<AnswerCommentNode[]>(() => {
-    const map = new Map<number, AnswerCommentNode>();
-    const roots: AnswerCommentNode[] = [];
-    const comments = answer.comments ?? [];
-
-    comments.forEach((comment) => {
-      const rootId = comment.commentId ?? comment.numericId;
-      map.set(comment.numericId, {
-        ...comment,
-        commentId: rootId,
-        children: [],
-      });
-    });
-
-    comments.forEach((comment) => {
-      const node = map.get(comment.numericId)!;
-      if (comment.parentCommentId && map.has(comment.parentCommentId)) {
-        const parent = map.get(comment.parentCommentId)!;
-        node.commentId = parent.commentId ?? parent.numericId;
-        parent.children!.push(node);
-      } else if (
-        comment.commentId &&
-        comment.commentId !== comment.numericId &&
-        map.has(comment.commentId)
-      ) {
-        const parent = map.get(comment.commentId)!;
-        node.commentId = parent.commentId ?? parent.numericId;
-        parent.children!.push(node);
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
-  }, [answer.comments]);
-
-  return (
-    <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
-      <div className="flex gap-3">
-        <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9] text-sm font-semibold text-black/70">
-          {answer.author?.[0]?.toUpperCase()}
-        </div>
-        <div className="flex-1 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[15px] font-semibold text-black">
-                {answer.author}
-              </span>
-              {primaryTag ? (
-                <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
-                  {primaryTag}
-                </span>
-              ) : null}
-              {secondaryTag ? (
-                <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
-                  {secondaryTag}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex items-center gap-2 text-[12px] text-black/70">
-              <SentimentIndicator />
-            </div>
-          </div>
-
-          <div className="flex items-start gap-[10px]">
-            <MdEditor
-              value={serializeEditorValue(answer.body)}
-              mode="readonly"
-              hideMenuBar
-              className={{
-                base: 'h-fit border-none bg-transparent p-0',
-                editorWrapper: 'p-0',
-                editor:
-                  'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
-              }}
-            />
-
-            <Button
-              className={`min-w-0 shrink-0 gap-[5px] rounded-[8px] border-none px-[8px] py-[4px] bg-[#F5F5F5]`}
-              isDisabled={supportPending || withdrawPending}
-              isLoading={supportPending || withdrawPending}
-              onPress={() =>
-                answer.viewerHasSupported
-                  ? onWithdraw(answer.numericId)
-                  : onSupport(answer.numericId)
-              }
-            >
-              <span
-                className={cn(
-                  'font-mona text-[13px] leading-[19px]',
-                  meetsThreshold ? 'text-[#64C0A5]' : cpTextColor,
-                )}
-              >
-                {formatCompactNumber(answer.cpSupport)}
-              </span>
-              <CaretCircleUpIcon
-                weight="fill"
-                size={30}
-                className={cn(cpIconColor)}
-              />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-black/60">
-            <span>{answer.createdAt}</span>
-            {/* TODO:Answer 维度的情绪投票 */}
-            <Button className="h-[24px] border-none min-w-0 gap-2 rounded-[5px] bg-[#f2f2f2] px-2 py-1">
-              <ChartBarGlyph
-                size={16}
-                weight="fill"
-                className="text-black/40"
-              />
-              <span className="text-[12px] font-semibold text-black/70">
-                {commentCount?.toString() || '0'}
-              </span>
-            </Button>
-          </div>
-
-          <div className="flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
-            <div className="flex items-center justify-between text-[14px] font-semibold text-black/80">
-              <div className="flex items-center gap-2">
-                <span>Comments</span>
-                <span className="text-black/50">
-                  {String(commentCount ?? 0).padStart(2, '0')}
-                </span>
-              </div>
-              <Button
-                className="h-[32px] rounded-[5px] border border-black/10 bg-[#F5F5F5] px-[10px] text-[13px] font-semibold text-black/80"
-                onPress={() =>
-                  onPostComment({
-                    title: 'Commenting to Answer:',
-                    author: answer.author,
-                    isOp,
-                    timestamp: answer.createdAt,
-                    excerpt: formatExcerpt(answer.body),
-                    target: {
-                      threadId,
-                      answerId: answer.numericId,
-                      commentId: undefined,
-                    },
-                  })
-                }
-              >
-                Post Comment
-              </Button>
-            </div>
-            <div className="space-y-[10px]">
-              {commentTree.length ? (
-                commentTree.map((comment, index) => (
-                  <AnswerCommentTree
-                    key={comment.id}
-                    node={comment}
-                    depth={0}
-                    isFirst={index === 0}
-                    hasSiblings={commentTree.length > 1}
-                    threadId={threadId}
-                    onReply={(payload) =>
-                      onPostComment({
-                        title: 'Replying to:',
-                        author: payload.author,
-                        isOp: payload.isOp,
-                        timestamp: payload.timestamp,
-                        excerpt: payload.excerpt,
-                        target: {
-                          threadId,
-                          answerId: answer.numericId,
-                          parentCommentId: payload.parentCommentId,
-                          commentId: payload.commentId,
-                        },
-                      })
-                    }
-                    threadAuthorName={threadAuthorName}
-                  />
-                ))
-              ) : (
-                <p className="text-[13px] text-black/60">No comments yet.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function AnswerCommentRow({
-  comment,
-  onReply,
-  depth = 0,
-}: {
-  comment: CommentItem;
-  onReply: () => void;
-  depth?: number;
-}) {
-  const isOp = comment.author?.toLowerCase().includes('(op)');
-  const badgeNumber =
-    typeof comment.numericId === 'number'
-      ? Math.max(1, comment.numericId % 10)
-      : 4;
-
-  return (
-    <div className="flex gap-3" style={{ marginLeft: depth ? depth * 16 : 0 }}>
-      <div className="flex size-8 items-center justify-center rounded-full bg-[#d9d9d9]" />
-      <div className="flex-1 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[14px] font-semibold text-black">
-            {comment.author}
-          </span>
-          {isOp ? (
-            <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
-              OP
-            </span>
-          ) : null}
-          <span className="text-[12px] text-black/60">{comment.createdAt}</span>
-        </div>
-        <MdEditor
-          value={serializeEditorValue(comment.body)}
-          mode="readonly"
-          hideMenuBar
-          className={{
-            base: 'border-none bg-transparent p-0',
-            editorWrapper: 'p-0',
-            editor:
-              'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
-          }}
-        />
-        <div className="flex items-center gap-3 text-[12px] text-black/70">
-        {/* TODO: comment 维度的情绪投票，暂不做 */}
-          <Button className="inline-flex h-[24px] min-w-0 items-center gap-[5px] rounded-[5px] border-none bg-black/5 px-[8px]">
-            <ChartBarIcon size={20} weight="fill" className="opacity-30" />
-            <span className="text-[12px] font-semibold text-black">4</span>
-          </Button>
-          <Button
-            className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80"
-            onPress={onReply}
-          >
-            Reply
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type CommentThreadItemProps = {
-  comment: CommentItem;
-  showConnector?: boolean;
-  onReply: (context?: ComposerContext) => void;
-  threadAuthorName: string;
-  depth?: number;
-};
-
-function CommentThreadItem({
-  comment,
-  showConnector = false,
-  onReply,
-  threadAuthorName,
-  depth = 0,
-}: CommentThreadItemProps) {
-  const isOp =
-    comment.author?.toLowerCase().includes('(op)') ||
-    comment.author === threadAuthorName;
-
-  return (
-    <div
-      className="relative flex gap-3 rounded-[10px] bg-[#f7f7f7] p-3"
-      style={{ marginLeft: depth ? depth * 20 : 0 }}
-    >
-      {showConnector ? (
-        <div className="absolute left-[24px] top-[38px] h-[calc(100%-38px)] w-px bg-black/10" />
-      ) : null}
-      <div className="flex flex-col items-center gap-1">
-        <div className="flex size-[30px] items-center justify-center rounded-full bg-[#d9d9d9]" />
-        {isOp ? (
-          <div className="flex flex-col items-center gap-1 text-black/50">
-            <ArrowBendUpLeft size={14} />
-            <ThumbsDown size={18} weight="fill" />
-          </div>
-        ) : null}
-      </div>
-      <div className="flex-1 space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[14px] font-semibold text-black">
-              {comment.author}
-            </span>
-            {/* TODO sentiment icon */}
-            {isOp ? (
-              <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
-                OP
-              </span>
-            ) : null}
-            <span className="text-[12px] text-black/60">
-              {comment.createdAt}
-            </span>
-          </div>
-          <SentimentIndicator />
-        </div>
-
-        <MdEditor
-          value={serializeEditorValue(comment.body)}
-          mode="readonly"
-          hideMenuBar
-          className={{
-            base: 'h-fit border-none bg-transparent p-0',
-            editorWrapper: 'p-0',
-            editor:
-              'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
-          }}
-        />
-
-        <div className="flex items-center gap-3 text-[12px] text-black/70">
-          <Button className="inline-flex h-[24px] min-w-0 items-center gap-[5px] rounded-[5px] border-none bg-black/5 px-[8px]">
-            <ChartBarIcon size={20} weight="fill" className="opacity-30" />
-            <span className="text-[12px] font-semibold text-black">4</span>
-          </Button>
-          <Button
-            className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80"
-            onPress={() =>
-              onReply({
-                title: 'Replying to:',
-                author: comment.author,
-                isOp,
-                timestamp: comment.createdAt,
-                excerpt: formatExcerpt(comment.body),
-              })
-            }
-          >
-            Reply
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type ThreadCommentTreeProps = {
-  node: ThreadCommentNode;
-  depth: number;
-  isFirst: boolean;
-  hasSiblings: boolean;
-  onReply: (
-    target: CommentTarget & {
-      author: string;
-      excerpt: string;
-      timestamp: string;
-      isOp: boolean;
-    },
-  ) => void;
-  threadAuthorName: string;
-  threadId: number;
-};
-
-function ThreadCommentTree({
-  node,
-  depth,
-  isFirst,
-  hasSiblings,
-  onReply,
-  threadAuthorName,
-  threadId,
-}: ThreadCommentTreeProps) {
-  const handleReply = () => {
-    onReply({
-      threadId,
-      parentCommentId: node.numericId,
-      commentId: node.commentId ?? node.numericId,
-      answerId: undefined,
-      author: node.author,
-      excerpt: formatExcerpt(node.body),
-      timestamp: node.createdAt,
-      isOp:
-        node.author === threadAuthorName ||
-        node.author?.toLowerCase().includes('(op)'),
-    });
-  };
-
-  return (
-    <div className="space-y-3">
-      <CommentThreadItem
-        comment={node}
-        depth={depth}
-        showConnector={hasSiblings && isFirst}
-        onReply={handleReply}
-        threadAuthorName={threadAuthorName}
-      />
-      {node.children?.length
-        ? node.children.map((child, index) => (
-            <ThreadCommentTree
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              isFirst={index === 0}
-              hasSiblings={node.children.length > 1}
-              onReply={onReply}
-              threadAuthorName={threadAuthorName}
-              threadId={threadId}
-            />
-          ))
-        : null}
-    </div>
-  );
-}
-
-type AnswerCommentTreeProps = {
-  node: AnswerCommentNode;
-  depth: number;
-  isFirst: boolean;
-  hasSiblings: boolean;
-  onReply: (
-    target: CommentTarget & {
-      author: string;
-      excerpt: string;
-      timestamp: string;
-      isOp: boolean;
-    },
-  ) => void;
-  threadAuthorName: string;
-  threadId: number;
-};
-
-function AnswerCommentTree({
-  node,
-  depth,
-  isFirst,
-  hasSiblings,
-  onReply,
-  threadAuthorName,
-  threadId,
-}: AnswerCommentTreeProps) {
-  const handleReply = () => {
-    const rootId = node.commentId ?? node.numericId;
-    onReply({
-      threadId,
-      answerId: node.answerId,
-      parentCommentId: node.numericId ?? rootId,
-      commentId: rootId,
-      author: node.author,
-      excerpt: formatExcerpt(node.body),
-      timestamp: node.createdAt,
-      isOp:
-        node.author === threadAuthorName ||
-        node.author?.toLowerCase().includes('(op)'),
-    });
-  };
-
-  return (
-    <div className="space-y-3">
-      <AnswerCommentRow comment={node} onReply={handleReply} depth={depth} />
-      {node.children?.length
-        ? node.children.map((child, index) => (
-            <AnswerCommentTree
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              isFirst={index === 0}
-              hasSiblings={!!node.children && node.children.length > 1}
-              onReply={onReply}
-              threadAuthorName={threadAuthorName}
-              threadId={threadId}
-            />
-          ))
-        : null}
-    </div>
-  );
-}
-
-function formatCompactNumber(value: number) {
-  return new Intl.NumberFormat('en', {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-function formatExcerpt(text: string, maxLength = 180) {
-  const normalized = text.replace(/\s+/g, ' ').trim();
-  if (normalized.length <= maxLength) return normalized;
-  return `${normalized.slice(0, maxLength - 1)}…`;
-}
-
-function extractParagraphs(raw?: string) {
-  if (!raw) return [];
-  const text = stripHtmlToPlainText(raw).trim();
-  if (!text) return [];
-  return text
-    .split(/\n+/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-}
-
-function findUserSentiment(
-  sentiments?: ThreadSentimentRecord[] | null,
-  userId?: string | null,
-): SentimentKey | null {
-  if (!sentiments || !userId) {
-    return null;
-  }
-  const record = sentiments.find((item) => item.creator === userId);
-  if (!record?.type) {
-    return null;
-  }
-  const normalized = record.type.toLowerCase() as SentimentKey;
-  return SENTIMENT_KEYS.includes(normalized) ? normalized : null;
 }
 
 export { SentimentSummaryPanel };

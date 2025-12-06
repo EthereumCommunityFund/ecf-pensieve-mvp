@@ -62,11 +62,12 @@ const defaultAnswerFixtures: AnswerRecord[] = [
     content:
       'We published a funding ledger that groups every disbursement by KPI and epoch. The ledger is mirrored on Arweave and refreshed every Friday. ' +
       'Community members can now trace any wallet payout back to the original proposal along with reviewer comments.',
-    voteCount: 1280,
+    support: 1280,
     createdAt: makeDate('2024-11-18T12:00:00.000Z'),
     updatedAt: makeDate('2024-11-18T12:00:00.000Z'),
     isDeleted: false,
     deletedAt: null,
+    isThreadAuthorVoted: false,
     comments: [
       {
         id: 92001,
@@ -110,11 +111,12 @@ const defaultAnswerFixtures: AnswerRecord[] = [
     content:
       'Created an open dashboard that tracks whether milestones were delivered before CP unlocks. ' +
       'If milestones slip by more than 30 days, the dashboard pings the moderators and posts an auto-comment here.',
-    voteCount: 740,
+    support: 740,
     createdAt: makeDate('2024-11-19T09:20:00.000Z'),
     updatedAt: makeDate('2024-11-19T09:20:00.000Z'),
     isDeleted: false,
     deletedAt: null,
+    isThreadAuthorVoted: false,
     comments: [
       {
         id: 92002,
