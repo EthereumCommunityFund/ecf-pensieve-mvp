@@ -9,7 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
-import { SentimentKey } from '../common/sentiment/sentimentConfig';
+import {
+  SentimentKey,
+  SentimentMetric,
+} from '../common/sentiment/sentimentConfig';
 import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
 import { QuickAction, ThreadDetailRecord } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
@@ -19,6 +22,7 @@ import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
+import { SentimentModal } from '../common/sentiment/SentimentModal';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
@@ -34,6 +38,7 @@ import { ThreadDetailSkeleton } from './ThreadDetailSkeleton';
 import {
   buildSentimentSummary,
   extractParagraphs,
+  findUserSentiment,
 } from './utils/discussionMappers';
 
 type ThreadDetailPageProps = {
@@ -75,6 +80,15 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [threadSupportPending, setThreadSupportPending] = useState(false);
   const [threadWithdrawPending, setThreadWithdrawPending] = useState(false);
   const [hasSupportedThread, setHasSupportedThread] = useState(false);
+  const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
+    number | null
+  >(null);
+  const [activeSentimentModal, setActiveSentimentModal] = useState<{
+    title: string;
+    excerpt: string;
+    sentiments?: SentimentMetric[];
+    totalVotes?: number;
+  } | null>(null);
   const requireAuth = () => {
     if (isAuthenticated) {
       return true;
@@ -133,6 +147,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       false;
     setHasSupportedThread(viewerHasSupported);
   }, [baseThread]);
+
+  const viewerSentiment = useMemo(
+    () => findUserSentiment(baseThread?.sentiments, user?.id ?? null),
+    [baseThread?.sentiments, user?.id],
+  );
 
   const createAnswerMutation =
     trpc.projectDiscussionInteraction.createAnswer.useMutation({
@@ -254,6 +273,45 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       },
     });
 
+  const setThreadSentimentMutation =
+    trpc.projectDiscussionInteraction.setSentiment.useMutation({
+      onSuccess: () => {
+        addToast({
+          title: 'Sentiment recorded',
+          description: 'Your view has been captured for this thread.',
+          color: 'success',
+        });
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
+      },
+      onError: (error) => {
+        addToast({
+          title: 'Unable to submit sentiment',
+          description: error.message,
+          color: 'danger',
+        });
+      },
+    });
+
+  const setAnswerSentimentMutation =
+    trpc.projectDiscussionInteraction.setSentiment.useMutation({
+      onSuccess: () => {
+        addToast({
+          title: 'Sentiment recorded',
+          description: 'Your view has been captured for this answer.',
+          color: 'success',
+        });
+        answersQuery.refetch();
+      },
+      onError: (error) => {
+        addToast({
+          title: 'Unable to submit sentiment',
+          description: error.message,
+          color: 'danger',
+        });
+      },
+    });
+
   const {
     composerVariant,
     modalVariant,
@@ -336,6 +394,34 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       // handled via mutation callbacks
     } finally {
       setThreadWithdrawPending(false);
+    }
+  };
+
+  const handleSetThreadSentiment = async (sentiment: SentimentKey) => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    await setThreadSentimentMutation.mutateAsync({
+      threadId: numericThreadId,
+      type: sentiment,
+    });
+  };
+
+  const handleSetAnswerSentiment = async (
+    answerId: number,
+    sentiment: SentimentKey,
+  ) => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    setAnswerSentimentPendingId(answerId);
+    try {
+      await setAnswerSentimentMutation.mutateAsync({
+        answerId,
+        type: sentiment,
+      });
+    } finally {
+      setAnswerSentimentPendingId(null);
     }
   };
 
@@ -520,6 +606,19 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             hasSupported={hasSupportedThread}
             supportPending={threadSupportPending}
             withdrawPending={threadWithdrawPending}
+            sentimentVotes={thread.totalSentimentVotes}
+            viewerSentiment={viewerSentiment}
+            sentimentPending={setThreadSentimentMutation.isPending}
+            onSelectSentiment={handleSetThreadSentiment}
+            requireAuth={requireAuth}
+            onShowSentimentDetail={() =>
+              setActiveSentimentModal({
+                title: thread.title,
+                excerpt: thread.summary,
+                sentiments: thread.sentiment,
+                totalVotes: thread.totalSentimentVotes,
+              })
+            }
             onSupportThread={handleSupportThread}
             onWithdrawThread={handleWithdrawThread}
             onAnswer={() => openAnswerComposer()}
@@ -574,6 +673,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                           threadId={numericThreadId}
                           onSupport={handleSupportAnswer}
                           onWithdraw={handleWithdrawSupport}
+                          onSelectSentiment={handleSetAnswerSentiment}
+                          onShowSentimentDetail={(payload) =>
+                            setActiveSentimentModal(payload)
+                          }
                           onPostComment={(context) =>
                             openCommentComposer({
                               title: context?.title ?? 'Post Comment',
@@ -594,6 +697,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                           withdrawPending={
                             withdrawingAnswerId === answer.numericId
                           }
+                          sentimentPendingId={answerSentimentPendingId}
                         />
                       ))
                     : !isAnswersInitialLoading && (
@@ -744,6 +848,15 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           titleOverride={!isAnswerComposer ? commentComposerTitle : undefined}
         />
       ) : null}
+
+      <SentimentModal
+        open={Boolean(activeSentimentModal)}
+        onClose={() => setActiveSentimentModal(null)}
+        title={activeSentimentModal?.title ?? ''}
+        excerpt={activeSentimentModal?.excerpt ?? ''}
+        sentiments={activeSentimentModal?.sentiments}
+        totalVotes={activeSentimentModal?.totalVotes}
+      />
     </>
   );
 }

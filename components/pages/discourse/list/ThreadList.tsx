@@ -1,7 +1,7 @@
 'use client';
 
 import { cn, Skeleton } from '@heroui/react';
-import { CaretCircleUp, CheckSquare } from '@phosphor-icons/react';
+import { CaretCircleUpIcon, CheckSquare } from '@phosphor-icons/react';
 import {
   KeyboardEvent,
   useCallback,
@@ -87,8 +87,8 @@ function ThreadItem({
       }`}
       {...clickableProps}
     >
-      <div>
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="space-y-[8px]">
+        <div className="flex flex-wrap items-start justify-between gap-[10px]">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-black/70">
             {thread.tag ? (
               <TopicTag
@@ -135,10 +135,11 @@ function ThreadItem({
         </div>
 
         <div className="flex gap-3 sm:flex-row sm:items-start">
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-[8px]">
             <h2 className="text-[18px] font-semibold text-[#202023]">
               {thread.title}
             </h2>
+            {/* TODO use MdEditor */}
             <p className="text-[14px] leading-5 text-black/70">
               {thread.excerpt}
             </p>
@@ -160,18 +161,19 @@ function ThreadItem({
             </div>
           </div>
 
-          <div className="flex items-center gap-6 sm:ml-auto">
-            <div className="flex flex-col items-center gap-1 text-sm text-black">
+          {/* Upvote */}
+          <div className="flex items-center">
+            <div className="flex flex-col items-center gap-[10px] text-sm text-black">
               <Button
                 isIconOnly
                 type="button"
                 aria-label="Upvote"
-                className="min-w-0 rounded-full border-none bg-transparent p-0 transition-transform hover:bg-transparent"
+                className="h-[36px] min-w-0 rounded-full border-none bg-transparent p-0 transition-transform hover:bg-transparent"
                 isDisabled={isVoting}
                 isLoading={isVoting && pendingThreadId === numericId}
                 onPress={() => onToggleVote?.(thread, !!hasSupported)}
               >
-                <CaretCircleUp
+                <CaretCircleUpIcon
                   size={36}
                   weight="fill"
                   className={cn(

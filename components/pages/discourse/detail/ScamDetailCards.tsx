@@ -1,7 +1,10 @@
 import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button, MdEditor } from '@/components/base';
+import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 
+import type { SentimentKey } from '../common/sentiment/sentimentConfig';
+import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
@@ -19,6 +22,20 @@ type CounterClaimCardProps = {
   onWithdraw: (answerId: number) => void;
   supportPending?: boolean;
   withdrawPending?: boolean;
+  sentimentPendingId?: number | null;
+  onSelectSentiment: (answerId: number, sentiment: SentimentKey) => void;
+  onShowSentimentDetail: (payload: {
+    title: string;
+    excerpt: string;
+    sentiments?: AnswerItem['sentimentBreakdown'];
+    totalVotes?: number;
+  }) => void;
+  onShowSentimentIndicator?: (payload: {
+    title: string;
+    excerpt: string;
+    sentiments?: AnswerItem['sentimentBreakdown'];
+    totalVotes?: number;
+  }) => void;
   onPostComment: (context: {
     author: string;
     isOp?: boolean;
@@ -41,6 +58,10 @@ export function CounterClaimCard({
   onWithdraw,
   supportPending = false,
   withdrawPending = false,
+  sentimentPendingId = null,
+  onSelectSentiment,
+  onShowSentimentDetail,
+  onShowSentimentIndicator,
   onPostComment,
 }: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
@@ -64,7 +85,7 @@ export function CounterClaimCard({
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
       <div className="flex gap-3">
         <div className="flex-1 space-y-3">
-          <div className="flex flex-wrap items-center  gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <UserAvatar
               name={claim.author}
               src={claim.authorAvatar}
@@ -74,6 +95,17 @@ export function CounterClaimCard({
             <p className="text-[15px] font-semibold text-black">
               {claim.author}
             </p>
+            <SentimentIndicator
+              sentiments={claim.sentimentBreakdown}
+              onClick={() =>
+                onShowSentimentIndicator?.({
+                  title: `Sentiment for ${claim.author}'s counter claim`,
+                  excerpt: formatExcerpt(claim.body),
+                  sentiments: claim.sentimentBreakdown,
+                  totalVotes: claim.sentimentVotes,
+                })
+              }
+            />
           </div>
           <MdEditor
             value={serializeEditorValue(claim.body)}
@@ -88,6 +120,17 @@ export function CounterClaimCard({
           />
 
           <p className="text-[12px] text-black/60">{claim.createdAt}</p>
+          <div className="flex items-center gap-2 text-xs text-black/60">
+            <SentimentVoteButton
+              totalVotes={claim.sentimentVotes}
+              value={claim.viewerSentiment ?? null}
+              isLoading={sentimentPendingId === claim.numericId}
+              size="small"
+              onSelect={(sentiment) =>
+                onSelectSentiment(claim.numericId, sentiment)
+              }
+            />
+          </div>
 
           <Button
             className={`h-[38px] w-full gap-3 rounded-[8px] bg-[#f5f5f5] px-[10px]`}

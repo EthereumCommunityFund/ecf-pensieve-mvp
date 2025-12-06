@@ -1,10 +1,11 @@
 import {
-  ChartBar,
-  ChatCircle,
-  Eye,
-  Star,
-  ThumbsDown,
-  ThumbsUp,
+  ChartBarIcon,
+  ChatCircleIcon,
+  EyeIcon,
+  StarIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+  type Icon,
 } from '@phosphor-icons/react';
 
 export const DEFAULT_SENTIMENT_VALUE = 'all';
@@ -19,21 +20,21 @@ export type SentimentKey =
 export type SentimentDefinition = {
   label: string;
   color: string;
-  Icon: typeof ChartBar;
+  Icon: Icon;
 };
 
 export const sentimentDefinitions: Record<SentimentKey, SentimentDefinition> = {
-  recommend: { label: 'Recommend', color: '#3ec8a1', Icon: Star },
-  agree: { label: 'Agree', color: '#5ca7ff', Icon: ThumbsUp },
-  insightful: { label: 'Insightful', color: '#7058d6', Icon: Eye },
-  provocative: { label: 'Provocative', color: '#eca048', Icon: ChatCircle },
-  disagree: { label: 'Disagree', color: '#f26c6c', Icon: ThumbsDown },
+  recommend: { label: 'Recommend', color: '#3ec8a1', Icon: StarIcon },
+  agree: { label: 'Agree', color: '#5ca7ff', Icon: ThumbsUpIcon },
+  insightful: { label: 'Insightful', color: '#7058d6', Icon: EyeIcon },
+  provocative: { label: 'Provocative', color: '#eca048', Icon: ChatCircleIcon },
+  disagree: { label: 'Disagree', color: '#f26c6c', Icon: ThumbsDownIcon },
 };
 
 export const defaultSentimentDisplay: SentimentDefinition = {
   label: 'Sentiment',
-  color: '#7a7a7a',
-  Icon: ChartBar,
+  color: '#000',
+  Icon: ChartBarIcon,
 };
 
 export type SentimentMetric = {

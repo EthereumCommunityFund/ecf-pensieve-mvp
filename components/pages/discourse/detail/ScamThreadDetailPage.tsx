@@ -6,8 +6,15 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
-import { SentimentKey } from '@/components/pages/discourse/common/sentiment/sentimentConfig';
-import { SentimentSummaryPanel } from '@/components/pages/discourse/common/sentiment/SentimentModal';
+import {
+  SentimentKey,
+  SentimentMetric,
+} from '@/components/pages/discourse/common/sentiment/sentimentConfig';
+import {
+  SentimentModal,
+  SentimentSummaryPanel,
+} from '@/components/pages/discourse/common/sentiment/SentimentModal';
+import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { TopbarFilters } from '@/components/pages/discourse/common/TopbarFilters';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { useAuth } from '@/context/AuthContext';
@@ -36,7 +43,10 @@ import {
 } from './ScamDetailCards';
 import { ThreadComposerModal } from './ThreadComposerModal';
 import { ScamThreadSkeleton } from './ThreadDetailSkeleton';
-import { buildSentimentSummary } from './utils/discussionMappers';
+import {
+  buildSentimentSummary,
+  findUserSentiment,
+} from './utils/discussionMappers';
 
 const sentimentFilterOptions: Array<'all' | SentimentKey> = [
   'all',
@@ -73,6 +83,21 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     { threadId: numericThreadId },
     { enabled: isValidThreadId },
   );
+  const [activeSentimentModal, setActiveSentimentModal] = useState<{
+    title: string;
+    excerpt: string;
+    sentiments?: SentimentMetric[];
+    totalVotes?: number;
+  } | null>(null);
+  const [threadSentimentPending, setThreadSentimentPending] = useState(false);
+  const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
+    number | null
+  >(null);
+  const viewerSentiment = useMemo(
+    () =>
+      findUserSentiment(threadQuery.data?.sentiments, user?.id ?? null) ?? null,
+    [threadQuery.data?.sentiments, user?.id],
+  );
   const utils = trpc.useUtils();
   const voteThreadMutation =
     trpc.projectDiscussionThread.voteThread.useMutation();
@@ -82,6 +107,8 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     trpc.projectDiscussionInteraction.voteAnswer.useMutation();
   const unvoteAnswerMutation =
     trpc.projectDiscussionInteraction.unvoteAnswer.useMutation();
+  const setSentimentMutation =
+    trpc.projectDiscussionInteraction.setSentiment.useMutation();
   const createCounterClaimMutation =
     trpc.projectDiscussionInteraction.createAnswer.useMutation({
       onSuccess: () => {
@@ -102,13 +129,17 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     });
   const createCommentMutation =
     trpc.projectDiscussionInteraction.createComment.useMutation({
-      onSuccess: () => {
+      onSuccess: (_, variables) => {
         addToast({
           title: 'Comment posted',
           description: 'Your discussion is now visible.',
           color: 'success',
         });
-        commentsQuery.refetch();
+        if (variables?.answerId) {
+          answersQuery.refetch();
+        } else {
+          commentsQuery.refetch();
+        }
       },
       onError: (error) => {
         addToast({
@@ -400,6 +431,49 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     }
   };
 
+  const handleSetThreadSentiment = async (sentiment: SentimentKey) => {
+    if (!isValidThreadId || !requireAuth()) return;
+    setThreadSentimentPending(true);
+    try {
+      await setSentimentMutation.mutateAsync({
+        threadId: numericThreadId,
+        type: sentiment,
+      });
+      threadQuery.refetch();
+    } catch (error: any) {
+      addToast({
+        title: 'Unable to submit sentiment',
+        description: error?.message ?? 'Please try again.',
+        color: 'danger',
+      });
+    } finally {
+      setThreadSentimentPending(false);
+    }
+  };
+
+  const handleSetAnswerSentiment = async (
+    answerId: number,
+    sentiment: SentimentKey,
+  ) => {
+    if (!isValidThreadId || !requireAuth()) return;
+    setAnswerSentimentPendingId(answerId);
+    try {
+      await setSentimentMutation.mutateAsync({
+        answerId,
+        type: sentiment,
+      });
+      answersQuery.refetch();
+    } catch (error: any) {
+      addToast({
+        title: 'Unable to submit sentiment',
+        description: error?.message ?? 'Please try again.',
+        color: 'danger',
+      });
+    } finally {
+      setAnswerSentimentPendingId(null);
+    }
+  };
+
   const handleRetractClaim = async () => {
     if (!isValidThreadId || !requireAuth() || !canRetractThread) {
       return;
@@ -511,12 +585,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
               ))}
             </div>
             <div className="flex gap-[8px]">
-              <div className="inline-flex items-center gap-[6px] rounded-[8px] bg-[#ebebeb] px-[8px] py-[4px]">
-                <ChartBar size={22} weight="fill" className="text-black/40" />
-                <span className="text-[12px] font-semibold text-black/60">
-                  {hydratedThread.attachmentsCount ?? 4}
-                </span>
-              </div>
+              <SentimentVoteButton
+                totalVotes={hydratedThread.totalSentimentVotes}
+                value={viewerSentiment}
+                isLoading={threadSentimentPending}
+                onSelect={handleSetThreadSentiment}
+              />
             </div>
             <Button
               className="h-[38px] w-full gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] text-black"
@@ -640,6 +714,14 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     onWithdraw={handleWithdrawClaim}
                     supportPending={supportingClaimId === claim.numericId}
                     withdrawPending={withdrawingClaimId === claim.numericId}
+                    sentimentPendingId={answerSentimentPendingId}
+                    onSelectSentiment={handleSetAnswerSentiment}
+                    onShowSentimentDetail={(payload) =>
+                      setActiveSentimentModal(payload)
+                    }
+                    onShowSentimentIndicator={(payload) =>
+                      setActiveSentimentModal(payload)
+                    }
                     onPostComment={(context) =>
                       guardedOpenCommentComposer({
                         title: 'Commenting to Counter Claim:',
@@ -738,6 +820,15 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           titleOverride={!isPrimaryComposer ? commentComposerTitle : undefined}
         />
       ) : null}
+
+      <SentimentModal
+        open={Boolean(activeSentimentModal)}
+        onClose={() => setActiveSentimentModal(null)}
+        title={activeSentimentModal?.title ?? ''}
+        excerpt={activeSentimentModal?.excerpt ?? ''}
+        sentiments={activeSentimentModal?.sentiments}
+        totalVotes={activeSentimentModal?.totalVotes}
+      />
     </div>
   );
 }

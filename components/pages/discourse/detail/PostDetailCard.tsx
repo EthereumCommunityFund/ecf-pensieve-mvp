@@ -1,8 +1,10 @@
-import { CaretCircleUpIcon, ChartBarIcon } from '@phosphor-icons/react';
+import { CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
+import { SentimentKey } from '../common/sentiment/sentimentConfig';
+import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
 import { TopicTag } from '../common/TopicTag';
 import { UserAvatar } from '../common/UserAvatar';
 
@@ -23,6 +25,11 @@ export type PostDetailCardProps = {
   withdrawPending?: boolean;
   onSupportThread?: () => void;
   onWithdrawThread?: () => void;
+  sentimentVotes?: number;
+  viewerSentiment?: SentimentKey | null;
+  sentimentPending?: boolean;
+  onSelectSentiment?: (value: SentimentKey) => Promise<void> | void;
+  requireAuth?: () => boolean;
 };
 
 export const serializeEditorValue = (html: string) =>
@@ -45,6 +52,11 @@ export default function PostDetailCard({
   onSupportThread,
   onWithdrawThread,
   authorAvatar,
+  sentimentVotes = 0,
+  viewerSentiment = null,
+  sentimentPending = false,
+  onSelectSentiment,
+  requireAuth,
 }: PostDetailCardProps) {
   return (
     <article className="flex flex-col gap-[20px] rounded-[16px]">
@@ -85,17 +97,16 @@ export default function PostDetailCard({
         ))}
       </div>
       <div className="flex gap-[10px] border-t border-black/10 pt-4 ">
-        {/*  TODO：Thread 维度的情绪投票组件 */}
-        <Button className="h-[38px] gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] px-[8px] py-[4px]">
-          <ChartBarIcon weight="fill" size={30} className="opacity-30" />
-          <span className="text-[12px] font-semibold text-black/60">000</span>
-        </Button>
+        <SentimentVoteButton
+          totalVotes={sentimentVotes}
+          value={viewerSentiment ?? undefined}
+          isLoading={sentimentPending}
+          disabled={isPreviewMode || !onSelectSentiment}
+          onSelect={(value) => onSelectSentiment?.(value)}
+          requireAuth={requireAuth}
+        />
         <Button
-          className={`h-[38px] gap-[10px] rounded-[8px] border-none px-[10px] py-[6px] ${
-            hasSupported
-              ? 'bg-black text-white hover:bg-black/80'
-              : 'bg-[#EBEBEB] text-black'
-          }`}
+          className={`h-[38px] min-w-0 gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] px-[8px] py-[4px] hover:bg-[#D7D7D7]`}
           isDisabled={
             isPreviewMode ||
             supportPending ||
@@ -115,11 +126,7 @@ export default function PostDetailCard({
             className={hasSupported ? 'opacity-100' : 'opacity-30'}
           />
 
-          <span
-            className={`text-[13px] font-semibold ${
-              hasSupported ? 'text-white' : 'text-black/80'
-            }`}
-          >
+          <span className={`text-[13px] font-semibold text-black/80`}>
             {supportCount.toLocaleString()}
           </span>
         </Button>

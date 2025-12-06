@@ -102,6 +102,7 @@ export const normalizeAnswer = (
         answer.comments?.length ??
         0,
       sentimentLabel: answer.sentimentLabel ?? defaultSentiment,
+      sentimentBreakdown: answer.sentimentBreakdown,
     };
   }
 
@@ -127,6 +128,7 @@ export const normalizeAnswer = (
     cpTarget: undefined,
     sentimentLabel: sentiment.dominantKey ?? defaultSentiment,
     sentimentVotes: sentiment.totalVotes,
+    sentimentBreakdown: sentiment.metrics,
     commentsCount: mappedComments.length,
     comments: mappedComments,
     viewerSentiment:

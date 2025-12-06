@@ -1,15 +1,16 @@
 import { cn } from '@heroui/react';
-import {
-  CaretCircleUpIcon,
-  ChartBar as ChartBarGlyph,
-  ChartBarIcon,
-} from '@phosphor-icons/react';
+import { CaretCircleUpIcon } from '@phosphor-icons/react';
 import { useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 import { SentimentIndicator } from '@/components/pages/discourse/common/sentiment/SentimentIndicator';
+import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
 
+import type {
+  SentimentKey,
+  SentimentMetric,
+} from '../common/sentiment/sentimentConfig';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 
@@ -28,10 +29,18 @@ type AnswerDetailCardProps = {
   onSupport: (answerId: number) => void;
   onWithdraw: (answerId: number) => void;
   onPostComment: (context?: ComposerContext) => void;
+  onSelectSentiment: (answerId: number, sentiment: SentimentKey) => void;
+  onShowSentimentDetail: (params: {
+    title: string;
+    excerpt: string;
+    sentiments?: SentimentMetric[];
+    totalVotes?: number;
+  }) => void;
   threadAuthorName: string;
   threadId: number;
   supportPending?: boolean;
   withdrawPending?: boolean;
+  sentimentPendingId?: number | null;
 };
 
 export function AnswerDetailCard({
@@ -39,10 +48,13 @@ export function AnswerDetailCard({
   onSupport,
   onWithdraw,
   onPostComment,
+  onSelectSentiment,
+  onShowSentimentDetail,
   threadAuthorName,
   threadId,
   supportPending = false,
   withdrawPending = false,
+  sentimentPendingId = null,
 }: AnswerDetailCardProps) {
   const commentCount = answer.comments?.length ?? answer.commentsCount;
   const primaryTag = answer.isAccepted ? 'Highest voted answer' : undefined;
@@ -93,7 +105,17 @@ export function AnswerDetailCard({
               ) : null}
             </div>
             <div className="flex items-center gap-2 text-[12px] text-black/70">
-              <SentimentIndicator />
+              <SentimentIndicator
+                sentiments={answer.sentimentBreakdown}
+                onClick={() =>
+                  onShowSentimentDetail({
+                    title: `Sentiment for answer by ${answer.author}`,
+                    excerpt: formatExcerpt(answer.body),
+                    sentiments: answer.sentimentBreakdown,
+                    totalVotes: answer.sentimentVotes,
+                  })
+                }
+              />
             </div>
           </div>
 
@@ -138,17 +160,16 @@ export function AnswerDetailCard({
 
           <div className="flex items-center gap-2 text-xs text-black/60">
             <span>{answer.createdAt}</span>
-            {/* TODO:Answer 维度的情绪投票 */}
-            <Button className="h-[24px] min-w-0 gap-2 rounded-[5px] border-none bg-[#f2f2f2] px-2 py-1">
-              <ChartBarGlyph
-                size={16}
-                weight="fill"
-                className="text-black/40"
-              />
-              <span className="text-[12px] font-semibold text-black/70">
-                {commentCount?.toString() || '0'}
-              </span>
-            </Button>
+            <SentimentVoteButton
+              totalVotes={answer.sentimentVotes}
+              value={answer.viewerSentiment ?? null}
+              isLoading={sentimentPendingId === answer.numericId}
+              disabled={supportPending || withdrawPending}
+              size="small"
+              onSelect={(sentiment) =>
+                onSelectSentiment(answer.numericId, sentiment)
+              }
+            />
           </div>
 
           <div className="flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
@@ -257,10 +278,6 @@ function AnswerCommentRow({
         />
         <div className="flex items-center gap-3 text-[12px] text-black/70">
           {/* TODO: comment 维度的情绪投票，暂不做 */}
-          <Button className="inline-flex h-[24px] min-w-0 items-center gap-[5px] rounded-[5px] border-none bg-black/5 px-[8px]">
-            <ChartBarIcon size={20} weight="fill" className="opacity-30" />
-            <span className="text-[12px] font-semibold text-black">4</span>
-          </Button>
           <Button
             className="h-[24px]  min-w-0 rounded-[5px] border-none bg-black/5 px-[8px] py-[4px] font-sans text-[12px] font-semibold text-black/80"
             onPress={onReply}
