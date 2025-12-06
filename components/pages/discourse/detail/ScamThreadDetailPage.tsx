@@ -268,7 +268,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
 
   const {
     answers: counterClaims,
-    comments: discussionComments,
+    threadComments,
     filteredAnswers: filteredCounterClaims,
     filteredComments,
   } = useDiscussionLists({
@@ -360,7 +360,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       totalSentimentVotes: summary.totalVotes,
       answers: [], // scam view drives on counterClaims
       counterClaims,
-      comments: discussionComments,
+      comments: threadComments,
       author: {
         name: authorName,
         handle: authorHandle,
@@ -376,7 +376,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       quickActions: [],
       canRetract: canRetractThread,
     };
-  }, [canRetractThread, counterClaims, discussionComments, threadQuery.data]);
+  }, [canRetractThread, counterClaims, threadComments, threadQuery.data]);
 
   const handleToggleThreadSupport = async () => {
     if (!isValidThreadId || !requireAuth()) {
@@ -487,16 +487,22 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     });
   };
 
+  const counterClaimCount = Math.max(
+    threadQuery.data?.answerCount ?? 0,
+    counterClaims.length ?? 0,
+  );
+  const threadCommentCount = threadComments.length;
+
   const tabItems = [
     {
       key: 'discussion' as const,
       label: 'Discussion',
-      count: hydratedThread?.comments.length ?? 0,
+      count: threadCommentCount,
     },
     {
       key: 'counter' as const,
       label: 'Counter Claims',
-      count: hydratedThread?.counterClaims?.length ?? 0,
+      count: counterClaimCount,
     },
   ];
 

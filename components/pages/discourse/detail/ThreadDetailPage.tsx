@@ -13,7 +13,10 @@ import {
   SentimentKey,
   SentimentMetric,
 } from '../common/sentiment/sentimentConfig';
-import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
+import {
+  SentimentModal,
+  SentimentSummaryPanel,
+} from '../common/sentiment/SentimentModal';
 import { QuickAction, ThreadDetailRecord } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
 import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
@@ -22,7 +25,6 @@ import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
-import { SentimentModal } from '../common/sentiment/SentimentModal';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
@@ -427,7 +429,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
   const {
     answers: answersFromApi,
-    comments: commentsFromApi,
+    threadComments,
     filteredAnswers,
     filteredComments,
     isAnswersInitialLoading,
@@ -467,7 +469,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       (max, answer) => Math.max(max, answer.cpSupport),
       0,
     );
-    const answerTotalCount = baseThread.answerCount ?? answersFromApi.length;
+    const answerTotalCount = Math.max(
+      baseThread.answerCount ?? 0,
+      answersFromApi.length,
+    );
+    const threadCommentCount = threadComments.length;
     const hasRedressedAnswer = (baseThread.redressedAnswerCount ?? 0) > 0;
     const status = hasRedressedAnswer
       ? 'Redressed'
@@ -486,7 +492,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       tags: baseThread.tags ?? [],
       highlights: [
         { label: 'Answers', value: `${answerTotalCount}` },
-        { label: 'Comments', value: `${commentsFromApi.length}` },
+        { label: 'Comments', value: `${threadCommentCount}` },
         { label: 'Views', value: '—' },
       ],
       body: paragraphs.length
@@ -502,7 +508,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       sentiment: sentimentSummary.metrics,
       totalSentimentVotes: sentimentSummary.totalVotes,
       answers: answersFromApi,
-      comments: commentsFromApi,
+      comments: threadComments,
       author: {
         name: baseThread.creator?.name ?? 'Anonymous',
         handle: baseThread.creator?.userId
@@ -523,9 +529,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   }, [
     answersFromApi,
     baseThread,
-    commentsFromApi,
     sentimentSummary.metrics,
     sentimentSummary.totalVotes,
+    threadComments,
   ]);
 
   if (!isValidThreadId) {
@@ -553,9 +559,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     thread.body.map((paragraph) => `<p>${paragraph}</p>`).join('');
 
   const answersToRender = thread.answers;
-  const totalAnswerCount =
-    baseThread?.answerCount ?? answersToRender.length ?? 0;
-  const totalCommentCount = thread.comments.length;
+  const totalAnswerCount = Math.max(
+    baseThread?.answerCount ?? 0,
+    answersToRender.length ?? 0,
+  );
+  const totalCommentCount = threadComments.length;
 
   const tabOptions = [
     {

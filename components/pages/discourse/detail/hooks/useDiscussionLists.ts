@@ -61,11 +61,20 @@ export const useDiscussionLists = <A, C>({
     );
   }, [commentsQuery?.data, defaultRole]);
 
+  const threadComments = useMemo(
+    () => comments.filter((comment) => !comment.answerId),
+    [comments],
+  );
+
+  const answerComments = useMemo(
+    () => comments.filter((comment) => Boolean(comment.answerId)),
+    [comments],
+  );
+
   const discussionTree = useMemo<CommentNode<CommentItem>[] | undefined>(() => {
     if (!buildThreadTree) return undefined;
-    const threadComments = comments.filter((comment) => !comment.answerId);
     return buildCommentTree(threadComments);
-  }, [buildThreadTree, comments]);
+  }, [buildThreadTree, threadComments]);
 
   const filteredAnswers = useMemo(() => {
     if (sentimentFilter === 'all') return answers;
@@ -77,9 +86,9 @@ export const useDiscussionLists = <A, C>({
   const filteredComments = useMemo(() => {
     const baseComments = buildThreadTree
       ? (discussionTree ?? [])
-      : (comments as CommentNode<CommentItem>[]);
+      : (threadComments as CommentNode<CommentItem>[]);
     return baseComments;
-  }, [buildThreadTree, comments, discussionTree]);
+  }, [buildThreadTree, discussionTree, threadComments]);
 
   const isAnswersInitialLoading =
     Boolean(answersQuery?.isLoading) && !answers.length;
@@ -89,6 +98,8 @@ export const useDiscussionLists = <A, C>({
   return {
     answers,
     comments,
+    threadComments,
+    answerComments,
     discussionTree,
     filteredAnswers,
     filteredComments,
