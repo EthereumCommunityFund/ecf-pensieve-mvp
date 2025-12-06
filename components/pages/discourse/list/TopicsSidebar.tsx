@@ -101,7 +101,7 @@ export function TopicsSidebar({
 
         <div className="relative">
           <div
-            className={`max-h-[420px] space-y-[5px] overflow-y-auto pr-2 ${webkitScrollbarClass}`}
+            className={`space-y-[5px] overflow-y-auto pr-2 ${webkitScrollbarClass}`}
             style={scrollbarStyles}
           >
             {filteredTopics.map((topic) => {

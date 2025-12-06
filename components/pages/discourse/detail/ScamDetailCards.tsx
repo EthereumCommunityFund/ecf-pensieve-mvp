@@ -178,33 +178,31 @@ export function CounterClaimCard({
             </Button>
           </div>
           <div className="space-y-[10px]">
-            {commentTree.length ? (
-              commentTree.map((comment, index) => (
-                <CounterCommentTree
-                  key={comment.id}
-                  node={comment}
-                  depth={0}
-                  isFirst={index === 0}
-                  hasSiblings={commentTree.length > 1}
-                  onReply={(payload) =>
-                    onPostComment({
-                      author: payload.author,
-                      isOp: payload.isOp,
-                      timestamp: payload.timestamp,
-                      excerpt: payload.excerpt,
-                      target: {
-                        threadId,
-                        answerId: claim.numericId,
-                        parentCommentId: payload.parentCommentId,
-                        commentId: payload.commentId,
-                      },
-                    })
-                  }
-                />
-              ))
-            ) : (
-              <p className="text-[13px] text-black/60">No comments yet.</p>
-            )}
+            {commentTree.length
+              ? commentTree.map((comment, index) => (
+                  <CounterCommentTree
+                    key={comment.id}
+                    node={comment}
+                    depth={0}
+                    isFirst={index === 0}
+                    hasSiblings={commentTree.length > 1}
+                    onReply={(payload) =>
+                      onPostComment({
+                        author: payload.author,
+                        isOp: payload.isOp,
+                        timestamp: payload.timestamp,
+                        excerpt: payload.excerpt,
+                        target: {
+                          threadId,
+                          answerId: claim.numericId,
+                          parentCommentId: payload.parentCommentId,
+                          commentId: payload.commentId,
+                        },
+                      })
+                    }
+                  />
+                ))
+              : null}
           </div>
         </div>
       </div>

@@ -84,10 +84,11 @@ export function AnswerDetailCard({
   );
 
   return (
-    <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
-      <div className="flex gap-3">
+    <article className="space-y-[10px] rounded-[10px] bg-white p-[10px]">
+      <div className="flex gap-[10px]">
         <UserAvatar name={answer.author} src={answer.authorAvatar} size={32} />
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-[10px]">
+          {/* author + sentiment indicator */}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[15px] font-semibold text-black">
@@ -119,19 +120,21 @@ export function AnswerDetailCard({
             </div>
           </div>
 
+          {/* content + upvote */}
           <div className="flex items-start gap-[10px]">
             <MdEditor
               value={serializeEditorValue(answer.body)}
               mode="readonly"
               hideMenuBar
               className={{
-                base: 'h-fit border-none bg-transparent p-0',
+                base: 'border-none bg-transparent p-0',
                 editorWrapper: 'p-0',
                 editor:
                   'prose prose-base max-w-none text-[16px] leading-6 text-black/80',
               }}
             />
 
+            {/* upvote button */}
             <Button
               className="min-w-0 shrink-0 gap-[5px] rounded-[8px] border-none bg-[#F5F5F5] px-[8px] py-[4px]"
               isDisabled={supportPending || withdrawPending}
@@ -158,7 +161,8 @@ export function AnswerDetailCard({
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-black/60">
+          {/* time and sentiment */}
+          <div className="flex flex-col gap-[10px] text-xs text-black/60">
             <span>{answer.createdAt}</span>
             <SentimentVoteButton
               totalVotes={answer.sentimentVotes}
@@ -171,68 +175,71 @@ export function AnswerDetailCard({
               }
             />
           </div>
-
-          <div className="flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
-            <div className="flex items-center justify-between text-[14px] font-semibold text-black/80">
-              <div className="flex items-center gap-2">
-                <span>Comments</span>
-                <span className="text-black/50">
-                  {String(commentCount ?? 0).padStart(2, '0')}
-                </span>
-              </div>
-              <Button
-                className="h-[32px] rounded-[5px] border border-black/10 bg-[#F5F5F5] px-[10px] text-[13px] font-semibold text-black/80"
-                onPress={() =>
-                  onPostComment({
-                    title: 'Commenting to Answer:',
-                    author: answer.author,
-                    isOp,
-                    timestamp: answer.createdAt,
-                    excerpt: formatExcerpt(answer.body),
-                    target: {
-                      threadId,
-                      answerId: answer.numericId,
-                      commentId: undefined,
-                    },
-                  })
-                }
-              >
-                Post Comment
-              </Button>
-            </div>
-            <div className="space-y-[10px]">
-              {commentTree.length ? (
-                commentTree.map((comment, index) => (
-                  <AnswerCommentTree
-                    key={comment.id}
-                    node={comment}
-                    depth={0}
-                    isFirst={index === 0}
-                    hasSiblings={commentTree.length > 1}
-                    threadId={threadId}
-                    onReply={(payload) =>
-                      onPostComment({
-                        title: 'Replying to:',
-                        author: payload.author,
-                        isOp: payload.isOp,
-                        timestamp: payload.timestamp,
-                        excerpt: payload.excerpt,
-                        target: {
-                          threadId,
-                          answerId: answer.numericId,
-                          parentCommentId: payload.parentCommentId,
-                          commentId: payload.commentId,
-                        },
-                      })
-                    }
-                    threadAuthorName={threadAuthorName}
-                  />
-                ))
-              ) : (
-                <p className="text-[13px] text-black/60">No comments yet.</p>
-              )}
-            </div>
+        </div>
+      </div>
+      {/* comment module */}
+      <div className="flex flex-col gap-[10px] border-t border-black/10 pt-[10px]">
+        {/* comment header */}
+        <div className="flex items-center justify-between text-[14px] font-semibold text-black/80">
+          <div className="flex items-center gap-2">
+            <span>Comments</span>
+            <span className="text-black/50">
+              {String(commentCount ?? 0).padStart(2, '0')}
+            </span>
           </div>
+          {/* TODO opt: useCallback  */}
+          <Button
+            className="h-[32px] rounded-[5px] border border-black/10 bg-[#F5F5F5] px-[10px] text-[13px] font-semibold text-black/80"
+            onPress={() =>
+              onPostComment({
+                title: 'Commenting to Answer:',
+                author: answer.author,
+                isOp,
+                timestamp: answer.createdAt,
+                excerpt: formatExcerpt(answer.body),
+                target: {
+                  threadId,
+                  answerId: answer.numericId,
+                  commentId: undefined,
+                },
+              })
+            }
+          >
+            Post Comment
+          </Button>
+        </div>
+
+        {/* comment tree */}
+        <div className="space-y-[10px]">
+          {commentTree.length
+            ? commentTree.map((comment, index) => (
+                <AnswerCommentTree
+                  key={comment.id}
+                  node={comment}
+                  depth={0}
+                  isFirst={index === 0}
+                  hasSiblings={commentTree.length > 1}
+                  threadId={threadId}
+                  // TODO opt: useCallback
+                  onReply={(payload) =>
+                    onPostComment({
+                      title: 'Replying to:',
+                      author: payload.author,
+                      isOp: payload.isOp,
+                      timestamp: payload.timestamp,
+                      excerpt: payload.excerpt,
+                      target: {
+                        threadId,
+                        answerId: answer.numericId,
+                        parentCommentId: payload.parentCommentId,
+                        commentId: payload.commentId,
+                      },
+                    })
+                  }
+                  threadAuthorName={threadAuthorName}
+                />
+              ))
+            : null}
         </div>
       </div>
     </article>
@@ -251,9 +258,12 @@ function AnswerCommentRow({
   const isOp = comment.author?.toLowerCase().includes('(op)');
 
   return (
-    <div className="flex gap-3" style={{ marginLeft: depth ? depth * 16 : 0 }}>
+    <div
+      className="flex gap-[10px]"
+      style={{ marginLeft: depth ? depth * 16 : 0 }}
+    >
       <UserAvatar name={comment.author} src={comment.authorAvatar} size={32} />
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-[10px]">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[14px] font-semibold text-black">
             {comment.author}
