@@ -29,6 +29,21 @@ export function CategorySelector({
     [options, value],
   );
 
+  const formatRequirement = (cp?: number) =>
+    typeof cp === 'number' ? `${cp.toLocaleString()} CP` : undefined;
+
+  const renderSelectedValue = (items: { textValue?: string }[]) => {
+    if (!items.length || !currentOption) return null;
+    return (
+      <div className="flex items-center gap-2 text-[15px] text-black">
+        {currentOption.icon}
+        <span className="truncate">
+          {items[0]?.textValue || currentOption.label}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div className="flex w-full flex-col gap-2">
       <div>
@@ -52,17 +67,22 @@ export function CategorySelector({
             'flex h-10 w-full items-center justify-between rounded-[8px] border border-[#d9d5cc] bg-black/5 px-4 text-left text-[14px] text-black/80',
         }}
         selectorIcon={<CaretDown size={16} className="text-black/60" />}
+        renderValue={renderSelectedValue}
       >
         {options.map((option) => (
-          <SelectItem key={option.value} textValue={option.label}>
+          <SelectItem
+            key={option.value}
+            textValue={option.label}
+            className="hover:bg-[#F5F5F5]"
+          >
             <div className="flex items-center justify-between gap-2 text-[15px] text-black">
               <span className="flex items-center gap-2">
                 {option.icon}
                 {option.label}
               </span>
-              {option.cpRequirement ? (
-                <span className="rounded-[4px] bg-black/[0.05] px-2 py-0.5 text-xs text-black/70">
-                  CP Requirement: {option.cpRequirement}
+              {option.cpRequirement !== undefined ? (
+                <span className="rounded-[5px] bg-[#F5F5F5] px-[4px] py-[2px] text-[13px] text-black/80">
+                  CP Requirement: {formatRequirement(option.cpRequirement)}
                 </span>
               ) : null}
             </div>

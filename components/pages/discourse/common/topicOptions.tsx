@@ -17,8 +17,10 @@ export type DiscourseTopicOption = {
   value: string;
   label: string;
   icon: ReactNode;
-  cpRequirement?: string;
+  cpRequirement?: number;
 };
+
+export const SCAM_CP_REQUIREMENT = 9000;
 
 export const discourseTopicOptions: DiscourseTopicOption[] = [
   {
@@ -35,7 +37,7 @@ export const discourseTopicOptions: DiscourseTopicOption[] = [
     value: 'scam',
     label: 'Scam & Fraud Concerns',
     icon: <Warning size={20} weight="fill" className="opacity-50" />,
-    cpRequirement: '0000 CP',
+    cpRequirement: SCAM_CP_REQUIREMENT,
   },
   {
     value: 'governance',

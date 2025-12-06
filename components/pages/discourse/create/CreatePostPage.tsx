@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, WarningCircle } from '@phosphor-icons/react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 
@@ -8,12 +8,16 @@ import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 import { addToast } from '@/components/base/toast';
 import ProjectSearchSelector from '@/components/biz/FormAndTable/ProjectSearch/ProjectSearchSelector';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
 
 import { CategorySelector } from '../common/CategorySelector';
-import { DiscourseTopicOption } from '../common/topicOptions';
+import {
+  DiscourseTopicOption,
+  SCAM_CP_REQUIREMENT,
+} from '../common/topicOptions';
 
 import { PreviewPost } from './PreviewPost';
 
@@ -56,7 +60,6 @@ type CreatePostFormProps = {
   selectedCategory?: DiscourseTopicOption;
   tags: string[];
   tagInput: string;
-  isScam: boolean;
   errors?: CreatePostErrors;
   projectName?: string;
   selectedProjectId?: string | number;
@@ -71,12 +74,17 @@ type CreatePostFormProps = {
   onCategoryChange: (category?: DiscourseTopicOption) => void;
   onTagsChange: Dispatch<SetStateAction<string[]>>;
   onTagInputChange: (value: string) => void;
-  onIsScamChange: (value: boolean) => void;
   onPreview: () => void;
   onPublish: () => void;
   onBack: () => void;
   onDiscard?: () => void;
   isPublishDisabled: boolean;
+  isScamCategory: boolean;
+  scamRequirement: number;
+  userContributionPoints?: number;
+  meetsScamRequirement: boolean;
+  isAuthenticated: boolean;
+  onRequireAuth?: () => void;
 };
 
 type ProjectOption = {
@@ -91,7 +99,6 @@ function CreatePostForm({
   selectedCategory,
   tags,
   tagInput,
-  isScam,
   errors,
   projectName,
   selectedProjectId,
@@ -103,12 +110,17 @@ function CreatePostForm({
   onCategoryChange,
   onTagsChange,
   onTagInputChange,
-  onIsScamChange,
   onPreview,
   onPublish,
   onBack,
   onDiscard,
   isPublishDisabled,
+  isScamCategory,
+  scamRequirement,
+  userContributionPoints,
+  meetsScamRequirement,
+  isAuthenticated,
+  onRequireAuth,
 }: CreatePostFormProps) {
   const remainingTitle = MAX_TITLE - title.length;
   const remainingBody = useMemo(
@@ -129,7 +141,10 @@ function CreatePostForm({
     onTagsChange((prev) => prev.filter((item) => item !== tag));
   };
 
-  const toggleScam = () => onIsScamChange(!isScam);
+  const formatCp = (value?: number) =>
+    typeof value === 'number'
+      ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
+      : '0';
 
   return (
     <div className="flex flex-col items-center gap-[20px]">
@@ -148,7 +163,7 @@ function CreatePostForm({
         <span className="font-semibold text-black">Create Post</span>
       </div>
 
-      <div className="tablet:max-a-auto mobile:max-w-auto flex w-full max-w-[700px] flex-col gap-8 rounded-[20px] px-10 py-8">
+      <div className="tablet:max-a-auto mobile:max-w-auto flex w-full max-w-[700px] flex-col gap-[20px] rounded-[20px] px-10 py-8">
         <div className="rounded-[12px] ">
           <div className="flex flex-col gap-1">
             <p className="text-base font-semibold text-black">
@@ -241,25 +256,38 @@ function CreatePostForm({
           error={errors?.category}
         />
 
-        <div className="flex items-center justify-between rounded-[8px] border border-black/10 px-4 py-3">
-          <div className="flex items-center gap-3 text-sm text-black">
-            <WarningCircle size={20} />
-            <span className="font-semibold">Post as Scam Alert?</span>
+        {isScamCategory ? (
+          <div className="flex flex-col gap-[10px] rounded-[5px] border border-[rgba(186,110,22,0.40)] bg-[rgba(236,160,72,0.20)] p-[10px] text-black">
+            <div className="flex items-center justify-between gap-[5px] text-[14px] text-black/80">
+              <span className="font-[500]">CP Requirement to post:</span>
+              <span className="font-[600]">{formatCp(scamRequirement)} CP</span>
+            </div>
+            <p className="text-[13px] text-black/80">
+              {meetsScamRequirement
+                ? 'You meet the Contribution Points (CP) requirement to post in this category.'
+                : 'You do not have enough Contribution Points (CP) to post in this category.'}
+            </p>
+            <div className="text-[12px] text-black/50">
+              <p>
+                Your current Contribution Points:{' '}
+                <span>
+                  {isAuthenticated
+                    ? `${formatCp(userContributionPoints)} CP`
+                    : '--'}
+                </span>
+              </p>
+              {!isAuthenticated && onRequireAuth ? (
+                <button
+                  type="button"
+                  onClick={onRequireAuth}
+                  className="text-[13px] font-semibold text-black underline underline-offset-2"
+                >
+                  Sign in to view
+                </button>
+              ) : null}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={toggleScam}
-            className={`flex h-6 w-12 items-center rounded-full border border-black/10 px-1 transition ${
-              isScam ? 'bg-black' : 'bg-black/10'
-            }`}
-          >
-            <span
-              className={`size-4 rounded-full bg-white transition ${
-                isScam ? 'translate-x-6' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
+        ) : null}
 
         <div className="flex flex-col gap-2">
           <div>
@@ -347,6 +375,7 @@ function CreatePostForm({
 export function CreatePost() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { profile, showAuthPrompt, isAuthenticated } = useAuth();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<
@@ -354,7 +383,6 @@ export function CreatePost() {
   >();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [isScam, setIsScam] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState<CreatePostErrors>({});
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(
@@ -367,6 +395,11 @@ export function CreatePost() {
   const shouldLoadPresetProject =
     typeof presetProjectId === 'number' && Number.isFinite(presetProjectId);
   const utils = trpc.useUtils();
+
+  const userContributionPoints = profile?.weight ?? 0;
+  const isScamCategorySelected = selectedCategory?.value === 'scam';
+  const meetsScamRequirement =
+    !isScamCategorySelected || userContributionPoints >= SCAM_CP_REQUIREMENT;
 
   const { data: presetProjectData } = trpc.project.getProjectById.useQuery(
     { id: presetProjectId as number },
@@ -414,6 +447,7 @@ export function CreatePost() {
     !selectedCategory ||
     !tags.length ||
     !selectedProject ||
+    (isScamCategorySelected && !meetsScamRequirement) ||
     createThreadMutation.isPending;
 
   const clearError = (field: keyof CreatePostErrors) => {
@@ -515,6 +549,18 @@ export function CreatePost() {
   const handlePublish = async () => {
     if (!validateForm()) return;
     if (!selectedProject || !selectedCategory) return;
+    if (isScamCategorySelected && !meetsScamRequirement) {
+      addToast({
+        title: 'Not enough CP',
+        description:
+          'You need more Contribution Points (CP) before posting a scam alert.',
+        color: 'warning',
+      });
+      if (!isAuthenticated) {
+        showAuthPrompt('invalidAction');
+      }
+      return;
+    }
 
     try {
       await createThreadMutation.mutateAsync({
@@ -523,7 +569,7 @@ export function CreatePost() {
         post: bodyHtml,
         category: [selectedCategory.value],
         tags,
-        isScam,
+        isScam: isScamCategorySelected,
       });
     } catch (error) {
       console.error('Failed to publish thread', error);
@@ -570,7 +616,6 @@ export function CreatePost() {
             selectedCategory={selectedCategory}
             tags={tags}
             tagInput={tagInput}
-            isScam={isScam}
             errors={errors}
             projectName={selectedProject?.name}
             selectedProjectId={selectedProject?.id}
@@ -582,7 +627,6 @@ export function CreatePost() {
             onCategoryChange={handleCategoryChange}
             onTagsChange={handleTagsChange}
             onTagInputChange={(value) => setTagInput(value)}
-            onIsScamChange={(value) => setIsScam(value)}
             onPreview={handlePreview}
             onPublish={handlePublish}
             onBack={() => router.back()}
@@ -596,6 +640,12 @@ export function CreatePost() {
               setSelectedProject(null);
             }}
             isPublishDisabled={isPublishDisabled}
+            isScamCategory={isScamCategorySelected}
+            scamRequirement={SCAM_CP_REQUIREMENT}
+            userContributionPoints={userContributionPoints}
+            meetsScamRequirement={meetsScamRequirement}
+            isAuthenticated={isAuthenticated}
+            onRequireAuth={() => showAuthPrompt('invalidAction')}
           />
         )}
       </div>
