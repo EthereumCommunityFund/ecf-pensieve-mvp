@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { IProject } from '@/types';
 import { IPocItemKey } from '@/types/item';
+import { cn } from '@/lib/tiptap-utils';
 
 import { CategorySelector } from '../common/CategorySelector';
 import {
@@ -171,7 +172,14 @@ function CreatePostForm({
             </p>
           </div>
           <div className="mt-3 space-y-2">
-            <div className="flex h-[40px] items-center rounded-[10px] border border-black/10">
+            <div
+              className={cn(
+                'flex h-[40px] items-center rounded-[10px] border bg-black/5',
+                projectError
+                  ? 'border-[#d14343] focus:border-[#d14343]'
+                  : 'border-black/10 focus:border-black/40',
+              )}
+            >
               <ProjectSearchSelector
                 value={selectedProjectId}
                 onChange={onProjectChange}
@@ -181,10 +189,11 @@ function CreatePostForm({
                 columnName="Project"
                 searchModalTitle="Select project"
                 itemKey={PROJECT_SELECTOR_ITEM_KEY}
-                error={projectError}
               />
             </div>
-            {hasSelectedProject ? (
+            {projectError ? (
+              <p className="text-xs text-[#d14343]">{projectError}</p>
+            ) : hasSelectedProject ? (
               <button
                 type="button"
                 onClick={() => onProjectClear?.()}
@@ -228,12 +237,15 @@ function CreatePostForm({
             value={body}
             onChange={(value) => onBodyChange(value)}
             debounceMs={500}
+            hideMenuBar={true}
+            placeholder="Write about your issue"
             className={{
-              base: `min-h-[280px] rounded-[12px] border bg-black/5 ${
+              base: `rounded-[12px] border bg-black/5 ${
                 errors?.body ? 'border-[#d14343]' : 'border-black/10'
               }`,
               editorWrapper: 'p-0',
-              editor: 'prose prose-sm max-w-none text-[#1b1b1f]',
+              editor:
+                'prose prose-sm min-h-[260px] max-w-none bg-black/5 p-[10px] text-[#1b1b1f]',
             }}
           />
           {errors?.body ? (
