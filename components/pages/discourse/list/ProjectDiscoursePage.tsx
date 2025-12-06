@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 import { Button } from '@/components/base';
 
@@ -10,6 +9,7 @@ import { TopbarFilters } from '../common/TopbarFilters';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
 
+import { useThreadListControls } from './useThreadListControls';
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
@@ -47,10 +47,20 @@ export default function ProjectDiscoursePage({
   const redressedCount = projectMeta?.redressedCount ?? 0;
   const scamAlertCount = projectMeta?.scamAlertCount ?? 0;
 
-  const [activeStatus, setActiveStatus] = useState(statusTabs[0]);
-  const [activeSort, setActiveSort] = useState(projectSortOptions[0]);
-  const [activeSentiment, setActiveSentiment] = useState<string>('all');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const {
+    activeSentiment,
+    activeSort,
+    activeStatus,
+    clearTopics,
+    selectedTopics,
+    setActiveSentiment,
+    setActiveSort,
+    setActiveStatus,
+    toggleTopic,
+  } = useThreadListControls({
+    statusTabs,
+    sortOptions: projectSortOptions,
+  });
 
   const {
     threads,
@@ -68,15 +78,6 @@ export default function ProjectDiscoursePage({
   });
 
   const createThreadHref = `/discourse/create?projectId=${projectId}`;
-
-  const toggleTopic = (topic: string, selected: boolean) => {
-    setSelectedTopics((prev) => {
-      if (selected) {
-        return prev.includes(topic) ? prev : [...prev, topic];
-      }
-      return prev.filter((item) => item !== topic);
-    });
-  };
 
   const projectInitial = project?.name?.[0]?.toUpperCase() ?? 'P';
   const projectAvatar = project?.logoUrl ? (
@@ -144,7 +145,7 @@ export default function ProjectDiscoursePage({
           topics={discourseTopicOptions}
           selectedTopics={selectedTopics}
           onTopicToggle={toggleTopic}
-          onClear={() => setSelectedTopics([])}
+          onClear={clearTopics}
           onCreateThread={() => router.push(createThreadHref)}
         />
       }

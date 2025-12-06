@@ -23,7 +23,6 @@ type NormalizeAnswerOptions = {
 
 type NormalizeCommentOptions = {
   defaultRole?: string;
-  defaultSentiment?: SentimentKey;
 };
 
 export type CommentNode<T extends CommentItem = CommentItem> = T & {
@@ -40,8 +39,7 @@ export const normalizeComment = (
   comment: CommentRecord | CommentItem | (CommentRecord & { comments?: any[] }),
   options: NormalizeCommentOptions = {},
 ): CommentItem => {
-  const { defaultRole = 'Community Member', defaultSentiment = 'recommend' } =
-    options;
+  const { defaultRole = 'Community Member' } = options;
   if (isNormalizedComment(comment)) {
     return {
       ...comment,
@@ -61,7 +59,7 @@ export const normalizeComment = (
     role: defaultRole,
     createdAt: formatTimeAgo(comment.createdAt),
     body: comment.content,
-    sentimentLabel: defaultSentiment,
+    sentimentLabel: undefined,
   };
 };
 

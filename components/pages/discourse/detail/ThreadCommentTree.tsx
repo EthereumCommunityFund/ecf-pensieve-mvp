@@ -6,7 +6,6 @@ import {
 
 import { Button, MdEditor } from '@/components/base';
 
-import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
@@ -132,7 +131,6 @@ function CommentThreadItem({
             <span className="text-[14px] font-semibold text-black">
               {comment.author}
             </span>
-            {/* TODO sentiment icon */}
             {isOp ? (
               <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
                 OP
@@ -142,7 +140,6 @@ function CommentThreadItem({
               {comment.createdAt}
             </span>
           </div>
-          <SentimentIndicator />
         </div>
 
         <MdEditor

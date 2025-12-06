@@ -11,6 +11,7 @@ import { SentimentIndicator } from '@/components/pages/discourse/common/sentimen
 import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
 
 import type { AnswerItem, CommentItem } from '../common/threadData';
+import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 
 import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
@@ -49,8 +50,7 @@ export function AnswerDetailCard({
     answer.statusTag ||
     (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
   const cpLabel = formatCompactNumber(answer.cpSupport);
-  const CP_SUPPORT_THRESHOLD = 9000;
-  const meetsThreshold = answer.cpSupport >= CP_SUPPORT_THRESHOLD;
+  const meetsThreshold = answer.cpSupport >= REDRESSED_SUPPORT_THRESHOLD;
   const cpTextColor = meetsThreshold
     ? 'text-[#64C0A5]'
     : answer.viewerHasSupported

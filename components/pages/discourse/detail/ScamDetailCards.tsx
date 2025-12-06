@@ -2,7 +2,6 @@ import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button, MdEditor } from '@/components/base';
 
-import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
@@ -45,10 +44,6 @@ export function CounterClaimCard({
   onPostComment,
 }: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
-  const progress =
-    cpTarget && cpTarget > 0
-      ? Math.min(100, Math.round((claim.cpSupport / cpTarget) * 100))
-      : undefined;
   const CP_SUPPORT_THRESHOLD = cpTarget ?? 9000;
   const meetsThreshold = claim.cpSupport >= CP_SUPPORT_THRESHOLD;
   const textColor = meetsThreshold
@@ -79,7 +74,6 @@ export function CounterClaimCard({
             <p className="text-[15px] font-semibold text-black">
               {claim.author}
             </p>
-            <SentimentIndicator />
           </div>
           <MdEditor
             value={serializeEditorValue(claim.body)}
@@ -195,7 +189,6 @@ export function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
                 {comment.createdAt}
               </span>
             </div>
-            <SentimentIndicator />
           </div>
           <MdEditor
             value={serializeEditorValue(comment.body)}

@@ -15,8 +15,8 @@ import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
 import { ThreadDetailRecord } from '../common/threadData';
-import { SCAM_CP_REQUIREMENT } from '../common/topicOptions';
 import { UserAvatar } from '../common/UserAvatar';
+import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,
@@ -320,7 +320,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       attachmentsCount: 0,
       cpProgress: {
         current: remoteThread.support ?? 0,
-        target: SCAM_CP_REQUIREMENT,
+        target: REDRESSED_SUPPORT_THRESHOLD,
         label: 'Contribution Points supporting the main claim',
         helper:
           'Cross the threshold to pin the alert across the project surfaces.',

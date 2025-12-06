@@ -11,12 +11,9 @@ import { formatTimeAgo } from '@/lib/utils';
 
 import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentSummaryPanel } from '../common/sentiment/SentimentModal';
-import {
-  CommentItem,
-  QuickAction,
-  ThreadDetailRecord,
-} from '../common/threadData';
+import { QuickAction, ThreadDetailRecord } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
+import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,
@@ -28,7 +25,6 @@ import { EmptyState } from './EmptyState';
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import { useDiscussionComposer } from './hooks/useDiscussionComposer';
 import { useDiscussionLists } from './hooks/useDiscussionLists';
-import { mockThreadAnswers, mockThreadComments } from './mockDiscussionData';
 import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
 import { AnswerDetailCard } from './ThreadAnswerCard';
@@ -37,7 +33,6 @@ import { ThreadComposerModal } from './ThreadComposerModal';
 import { ThreadDetailSkeleton } from './ThreadDetailSkeleton';
 import {
   buildSentimentSummary,
-  CommentNode,
   extractParagraphs,
 } from './utils/discussionMappers';
 
@@ -51,9 +46,6 @@ type CommentTarget = {
   parentCommentId?: number;
   commentId?: number;
 };
-
-type ThreadCommentNode = CommentNode<CommentItem>;
-type AnswerCommentNode = CommentNode<CommentItem>;
 
 const DEFAULT_PARTICIPATION = {
   supportSteps: [
@@ -131,16 +123,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         refetchOnWindowFocus: false,
       },
     );
-
-  const fallbackAnswerRecords = useMemo(
-    () => mockThreadAnswers[threadId] ?? mockThreadAnswers.default ?? [],
-    [threadId],
-  );
-
-  const fallbackCommentRecords = useMemo(
-    () => mockThreadComments[threadId] ?? mockThreadComments.default ?? [],
-    [threadId],
-  );
 
   const baseThread = threadQuery.data;
 
@@ -360,7 +342,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const {
     answers: answersFromApi,
     comments: commentsFromApi,
-    discussionTree,
     filteredAnswers,
     filteredComments,
     isAnswersInitialLoading,
@@ -368,8 +349,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   } = useDiscussionLists({
     answersQuery,
     commentsQuery,
-    fallbackAnswers: fallbackAnswerRecords,
-    fallbackComments: fallbackCommentRecords,
     viewerId: user?.id ?? null,
     sentimentFilter: sentimentFilter as 'all' | SentimentKey,
     buildThreadTree: true,
@@ -397,23 +376,30 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       return null;
     }
     const paragraphs = extractParagraphs(baseThread.post);
-    const cpTarget = 2000;
+    const cpTarget = REDRESSED_SUPPORT_THRESHOLD;
     const cpCurrent = answersFromApi.reduce(
       (max, answer) => Math.max(max, answer.cpSupport),
       0,
     );
+    const answerTotalCount = baseThread.answerCount ?? answersFromApi.length;
+    const hasRedressedAnswer = (baseThread.redressedAnswerCount ?? 0) > 0;
+    const status = hasRedressedAnswer
+      ? 'Redressed'
+      : answerTotalCount === 0
+        ? 'Unanswered'
+        : 'Open';
 
     const baseRecord: ThreadDetailRecord = {
       id: String(baseThread.id),
       title: baseThread.title,
       summary: stripHtmlToPlainText(baseThread.post),
       badge: 'Complaint Topic',
-      status: 'Open',
+      status,
       isScam: false,
       categories: baseThread.category ?? [],
       tags: baseThread.tags ?? [],
       highlights: [
-        { label: 'Answers', value: `${answersFromApi.length}` },
+        { label: 'Answers', value: `${answerTotalCount}` },
         { label: 'Comments', value: `${commentsFromApi.length}` },
         { label: 'Views', value: '—' },
       ],
@@ -481,14 +467,17 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     thread.body.map((paragraph) => `<p>${paragraph}</p>`).join('');
 
   const answersToRender = thread.answers;
+  const totalAnswerCount =
+    baseThread?.answerCount ?? answersToRender.length ?? 0;
+  const totalCommentCount = thread.comments.length;
 
   const tabOptions = [
     {
       key: 'answers',
       label: 'Answers',
-      count: answersToRender.length,
+      count: totalAnswerCount,
     },
-    { key: 'comments', label: 'Discuss', count: thread.comments.length },
+    { key: 'comments', label: 'Discuss', count: totalCommentCount },
   ];
 
   // const filteredAnswers =

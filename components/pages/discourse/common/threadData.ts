@@ -37,7 +37,7 @@ export type CommentItem = {
   role: string;
   createdAt: string;
   body: string;
-  sentimentLabel: SentimentKey;
+  sentimentLabel?: SentimentKey;
 };
 
 export type ThreadHighlight = {

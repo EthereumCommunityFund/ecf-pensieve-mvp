@@ -22,8 +22,6 @@ type InfiniteQuery<T> = {
 type DiscussionListsOptions<A, C> = {
   answersQuery?: InfiniteQuery<A>;
   commentsQuery?: InfiniteQuery<C>;
-  fallbackAnswers?: A[];
-  fallbackComments?: C[];
   viewerId?: string | null;
   defaultRole?: string;
   sentimentFilter?: 'all' | SentimentKey;
@@ -33,8 +31,6 @@ type DiscussionListsOptions<A, C> = {
 export const useDiscussionLists = <A, C>({
   answersQuery,
   commentsQuery,
-  fallbackAnswers = [],
-  fallbackComments = [],
   viewerId,
   defaultRole = 'Community Member',
   sentimentFilter = 'all',
@@ -44,30 +40,26 @@ export const useDiscussionLists = <A, C>({
     const remoteItems = answersQuery?.data?.pages?.length
       ? answersQuery.data.pages.flatMap((page) => page.items)
       : [];
-    const sourceItems =
-      remoteItems && remoteItems.length > 0 ? remoteItems : fallbackAnswers;
-    if (!sourceItems.length) return [];
+    if (!remoteItems.length) return [];
 
-    return sourceItems.map((answer) =>
+    return remoteItems.map((answer) =>
       normalizeAnswer(answer as any, {
         defaultRole,
         viewerId,
       }),
     );
-  }, [answersQuery?.data, defaultRole, fallbackAnswers, viewerId]);
+  }, [answersQuery?.data, defaultRole, viewerId]);
 
   const comments = useMemo<CommentItem[]>(() => {
     const remoteItems = commentsQuery?.data?.pages?.length
       ? commentsQuery.data.pages.flatMap((page) => page.items)
       : [];
-    const sourceItems =
-      remoteItems && remoteItems.length > 0 ? remoteItems : fallbackComments;
-    if (!sourceItems.length) return [];
+    if (!remoteItems.length) return [];
 
-    return sourceItems.map((comment) =>
+    return remoteItems.map((comment) =>
       normalizeComment(comment as any, { defaultRole }),
     );
-  }, [commentsQuery?.data, defaultRole, fallbackComments]);
+  }, [commentsQuery?.data, defaultRole]);
 
   const discussionTree = useMemo<CommentNode<CommentItem>[] | undefined>(() => {
     if (!buildThreadTree) return undefined;
@@ -86,11 +78,8 @@ export const useDiscussionLists = <A, C>({
     const baseComments = buildThreadTree
       ? (discussionTree ?? [])
       : (comments as CommentNode<CommentItem>[]);
-    if (sentimentFilter === 'all') return baseComments;
-    return baseComments.filter(
-      (comment) => comment.sentimentLabel === sentimentFilter,
-    );
-  }, [buildThreadTree, comments, discussionTree, sentimentFilter]);
+    return baseComments;
+  }, [buildThreadTree, comments, discussionTree]);
 
   const isAnswersInitialLoading =
     Boolean(answersQuery?.isLoading) && !answers.length;

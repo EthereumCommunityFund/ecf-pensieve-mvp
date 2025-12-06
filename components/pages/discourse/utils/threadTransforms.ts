@@ -112,10 +112,20 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     : '–';
   const summary = summarizeSentiments(thread.sentiments);
   const authorName = thread.creator?.name || 'Unknown';
+  const primaryCategory = thread.category?.[0];
+  const primaryTag = primaryCategory || thread.tags?.[0];
+  const hasRedressedAnswer = (thread.redressedAnswerCount ?? 0) > 0;
+  const hasAnswers = (thread.answerCount ?? 0) > 0;
 
   const dominantSentiment = summary.dominantKey
     ? sentimentDefinitions[summary.dominantKey]?.label
     : undefined;
+
+  const status = thread.isScam
+    ? 'Scam Claim'
+    : hasRedressedAnswer
+      ? 'Redressed'
+      : undefined;
 
   return {
     ...thread,
@@ -125,8 +135,8 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     authorInitial: authorName[0]?.toUpperCase() ?? 'U',
     timeAgo: createdAtLabel,
     badge: thread.isScam ? '⚠️ Scam Claim' : 'Complaint Topic',
-    status: thread.isScam ? 'Alert Displayed on Page' : undefined,
-    tag: thread.category?.[0],
+    status,
+    tag: primaryTag,
     sentiment: dominantSentiment,
     votes: thread.support ?? 0,
     answeredCount: thread.answerCount,

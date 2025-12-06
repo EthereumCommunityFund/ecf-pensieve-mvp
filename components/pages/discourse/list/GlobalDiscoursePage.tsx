@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 import { Button } from '@/components/base';
 
@@ -9,6 +8,7 @@ import { TopbarFilters } from '../common/TopbarFilters';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
 
+import { useThreadListControls } from './useThreadListControls';
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
@@ -24,10 +24,20 @@ const sentimentOptions = [
 ];
 export default function GlobalDiscoursePage() {
   const router = useRouter();
-  const [activeStatus, setActiveStatus] = useState(statusTabs[0]);
-  const [activeSort, setActiveSort] = useState(sortOptions[0]);
-  const [activeSentiment, setActiveSentiment] = useState<string>('all');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const {
+    activeSentiment,
+    activeSort,
+    activeStatus,
+    clearTopics,
+    selectedTopics,
+    setActiveSentiment,
+    setActiveSort,
+    setActiveStatus,
+    toggleTopic,
+  } = useThreadListControls({
+    statusTabs,
+    sortOptions,
+  });
   const {
     threads,
     isFetched,
@@ -40,15 +50,6 @@ export default function GlobalDiscoursePage() {
     sort: activeSort === 'top' ? 'top' : 'new',
     status: activeStatus as 'all' | 'redressed' | 'unanswered',
   });
-
-  const toggleTopic = (topic: string, selected: boolean) => {
-    setSelectedTopics((prev) => {
-      if (selected) {
-        return prev.includes(topic) ? prev : [...prev, topic];
-      }
-      return prev.filter((item) => item !== topic);
-    });
-  };
 
   return (
     <DiscoursePageLayout
@@ -73,7 +74,7 @@ export default function GlobalDiscoursePage() {
           topics={discourseTopicOptions}
           selectedTopics={selectedTopics}
           onTopicToggle={toggleTopic}
-          onClear={() => setSelectedTopics([])}
+          onClear={clearTopics}
           onCreateThread={() => router.push('/discourse/create')}
         />
       }

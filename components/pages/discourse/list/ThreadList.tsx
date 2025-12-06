@@ -1,7 +1,7 @@
 'use client';
 
 import { cn, Skeleton } from '@heroui/react';
-import { CaretCircleUp, CheckCircle, CheckSquare } from '@phosphor-icons/react';
+import { CaretCircleUp, CheckSquare } from '@phosphor-icons/react';
 import {
   KeyboardEvent,
   useCallback,
@@ -90,7 +90,6 @@ function ThreadItem({
       <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-black/70">
-            {/* TODO confirm use tag or category */}
             {thread.tag ? (
               <TopicTag
                 label={thread.tag}
@@ -98,7 +97,7 @@ function ThreadItem({
                 iconClassName="opacity-100"
               />
             ) : null}
-            {hasStatus ? (
+            {/* {hasStatus ? (
               <span
                 className={cn(
                   'inline-flex items-center gap-1 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold',
@@ -117,7 +116,7 @@ function ThreadItem({
                 />
                 {thread.status}
               </span>
-            ) : null}
+            ) : null} */}
             {hasAnswers ? (
               <span className="inline-flex items-center gap-1 text-[13px] font-semibold ">
                 <CheckSquare size={32} className="text-[#43bd9b]" />
