@@ -7,6 +7,8 @@ import type { ReactNode } from 'react';
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
 
+import { serializeEditorValue } from '../detail/PostDetailCard';
+
 import { MetricPill, type IconComponent } from './MetricPill';
 
 export type HeroMetric = {
@@ -95,7 +97,7 @@ export function DiscourseCrumbHero({
           <HeroAuthorMeta author={author} />
         </header>
         <MdEditor
-          value={body}
+          value={serializeEditorValue(body)}
           mode="readonly"
           hideMenuBar
           className={{

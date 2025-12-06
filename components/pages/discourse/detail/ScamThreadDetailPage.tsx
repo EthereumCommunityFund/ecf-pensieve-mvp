@@ -4,7 +4,7 @@ import { CaretCircleUp, ChartBar, ShieldWarning } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@/components/base';
+import { Button, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { SentimentKey } from '@/components/pages/discourse/common/sentiment/sentimentConfig';
 import { SentimentSummaryPanel } from '@/components/pages/discourse/common/sentiment/SentimentModal';
@@ -15,16 +15,18 @@ import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
 
 import { ThreadDetailRecord } from '../common/threadData';
+import { SCAM_CP_REQUIREMENT } from '../common/topicOptions';
+import { UserAvatar } from '../common/UserAvatar';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
-import { UserAvatar } from '../common/UserAvatar';
 
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import { useDiscussionComposer } from './hooks/useDiscussionComposer';
 import { useDiscussionLists } from './hooks/useDiscussionLists';
+import { serializeEditorValue } from './PostDetailCard';
 import {
   ContributionVotesCompact,
   CounterClaimCard,
@@ -300,10 +302,13 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     }
 
     const summary = buildSentimentSummary(remoteThread.sentiments);
+    const authorName = remoteThread.creator?.name ?? 'Anonymous';
+    const authorHandle = remoteThread.creator?.userId
+      ? `@${remoteThread.creator.userId.slice(0, 8)}`
+      : '@anonymous';
 
     return {
-      id: String(remoteThread.id),
-      title: remoteThread.title,
+      ...remoteThread,
       summary: stripHtmlToPlainText(remoteThread.post),
       badge: 'Scam & Fraud',
       status: 'Open',
@@ -315,7 +320,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       attachmentsCount: 0,
       cpProgress: {
         current: remoteThread.support ?? 0,
-        target: 9000,
+        target: SCAM_CP_REQUIREMENT,
         label: 'Contribution Points supporting the main claim',
         helper:
           'Cross the threshold to pin the alert across the project surfaces.',
@@ -326,11 +331,10 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       counterClaims,
       comments: discussionComments,
       author: {
-        name: remoteThread.creator?.name ?? 'Anonymous',
-        handle: remoteThread.creator?.userId
-          ? `@${remoteThread.creator.userId.slice(0, 8)}`
-          : '@anonymous',
-        avatarFallback: remoteThread.creator?.name?.[0]?.toUpperCase() ?? 'U',
+        name: authorName,
+        handle: authorHandle,
+        avatarFallback: authorName[0]?.toUpperCase() ?? 'U',
+        avatarUrl: remoteThread.creator?.avatarUrl ?? null,
         role: 'Community Member',
         postedAt: formatTimeAgo(remoteThread.createdAt),
       },
@@ -484,9 +488,17 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                 {hydratedThread.author.postedAt}
               </span>
             </div>
-            <p className="text-[16px] leading-[20px] text-black/80">
-              {renderSummaryWithLinks(hydratedThread.summary)}
-            </p>
+            <MdEditor
+              value={serializeEditorValue(hydratedThread.post)}
+              mode="readonly"
+              hideMenuBar
+              className={{
+                base: 'border-none bg-transparent p-0',
+                editorWrapper: 'p-0',
+                editor:
+                  'prose prose-base max-w-none text-[16px] leading-[20px] text-black/80',
+              }}
+            />
             <div className="flex flex-wrap items-center gap-[10px] text-[14px] text-black/60">
               <span className="font-semibold text-black/50">Tags:</span>
               {hydratedThread.tags.map((tag) => (

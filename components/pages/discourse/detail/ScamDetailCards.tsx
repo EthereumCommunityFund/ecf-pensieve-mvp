@@ -1,11 +1,12 @@
 import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
 
-import { Button } from '@/components/base';
+import { Button, MdEditor } from '@/components/base';
 
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
+import { serializeEditorValue } from './PostDetailCard';
 import type { CommentNode } from './utils/discussionMappers';
 import { buildCommentTree, formatExcerpt } from './utils/discussionMappers';
 
@@ -80,10 +81,17 @@ export function CounterClaimCard({
             </p>
             <SentimentIndicator />
           </div>
-          {/* TODO 用 MdEditor */}
-          <p className="text-[14px] leading-[20px] text-black/80">
-            {claim.body}
-          </p>
+          <MdEditor
+            value={serializeEditorValue(claim.body)}
+            mode="readonly"
+            hideMenuBar
+            className={{
+              base: 'border-none bg-transparent p-0',
+              editorWrapper: 'p-0',
+              editor:
+                'prose prose-base max-w-none text-[14px] leading-[20px] text-black/80',
+            }}
+          />
 
           <p className="text-[12px] text-black/60">{claim.createdAt}</p>
 
@@ -189,9 +197,17 @@ export function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
             </div>
             <SentimentIndicator />
           </div>
-          <p className="text-[14px] leading-[20px] text-black/80">
-            {comment.body}
-          </p>
+          <MdEditor
+            value={serializeEditorValue(comment.body)}
+            mode="readonly"
+            hideMenuBar
+            className={{
+              base: 'border-none bg-transparent p-0',
+              editorWrapper: 'p-0',
+              editor:
+                'prose prose-base max-w-none text-[14px] leading-[20px] text-black/80',
+            }}
+          />
         </div>
       </div>
     </article>
