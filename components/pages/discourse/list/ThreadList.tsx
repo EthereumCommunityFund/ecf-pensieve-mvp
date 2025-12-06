@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, Skeleton } from '@heroui/react';
 import { CaretCircleUp, CheckCircle, CheckSquare } from '@phosphor-icons/react';
 import { KeyboardEvent, useEffect, useMemo, useState } from 'react';
 
@@ -35,8 +35,10 @@ export type ThreadMeta = {
 type ThreadListProps = {
   isLoading: boolean;
   isFetched: boolean;
+  isFetchingNextPage?: boolean;
   threads: ThreadMeta[];
   emptyMessage?: string;
+  skeletonCount?: number;
   onThreadSelect?: (thread: ThreadMeta) => void;
 };
 
@@ -73,8 +75,9 @@ function ThreadItem({
   const voteCount =
     voteOverrides?.[numericId] !== undefined
       ? voteOverrides[numericId]
-      : thread.votes ?? 0;
-  const hasSupported = supportedMap?.has(numericId) || thread.viewerHasSupported;
+      : (thread.votes ?? 0);
+  const hasSupported =
+    supportedMap?.has(numericId) || thread.viewerHasSupported;
   const clickableProps = onSelect
     ? {
         role: 'button' as const,
@@ -169,7 +172,7 @@ function ThreadItem({
                 isIconOnly
                 type="button"
                 aria-label="Upvote"
-                className="min-w-0 border-none bg-transparent p-0 rounded-full transition-transform hover:bg-transparent"
+                className="min-w-0 rounded-full border-none bg-transparent p-0 transition-transform hover:bg-transparent"
                 isDisabled={isVoting}
                 isLoading={isVoting && pendingThreadId === numericId}
                 onPress={() => onToggleVote?.(thread, !!hasSupported)}
@@ -178,7 +181,9 @@ function ThreadItem({
                   size={36}
                   weight="fill"
                   className={cn(
-                    hasSupported ? 'text-black hover:text-black/80' : 'text-black/10 hover:text-black/30',
+                    hasSupported
+                      ? 'text-black hover:text-black/80'
+                      : 'text-black/10 hover:text-black/30',
                     'opacity-100',
                   )}
                 />
@@ -198,10 +203,13 @@ export function ThreadList({
   onThreadSelect,
   isLoading,
   isFetched,
+  isFetchingNextPage,
+  skeletonCount = 4,
 }: ThreadListProps) {
   const { isAuthenticated, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
-  const voteThreadMutation = trpc.projectDiscussionThread.voteThread.useMutation();
+  const voteThreadMutation =
+    trpc.projectDiscussionThread.voteThread.useMutation();
   const unvoteThreadMutation =
     trpc.projectDiscussionThread.unvoteThread.useMutation();
   const [activeSentimentThread, setActiveSentimentThread] =
@@ -279,56 +287,59 @@ export function ThreadList({
         color: 'danger',
       });
     } finally {
-      setPendingThreadId((current) =>
-        current === numericId ? null : current,
-      );
+      setPendingThreadId((current) => (current === numericId ? null : current));
       onSettled?.();
     }
   };
 
-  const renderedThreads = useMemo(() => {
-    if (!isFetched && !threads.length) {
-      return null;
-    }
+  const renderedThreads = useMemo(
+    () =>
+      threads.map((thread) => (
+        <div
+          key={thread.id}
+          className="border-b border-black/10 pb-[10px] last:border-0"
+        >
+          <ThreadItem
+            thread={thread}
+            onSentimentClick={setActiveSentimentThread}
+            onSelect={onThreadSelect}
+            onToggleVote={toggleThreadVote}
+            isVoting={
+              pendingThreadId === (thread.numericId ?? Number(thread.id))
+            }
+            supportedMap={supportedThreads}
+            voteOverrides={voteOverrides}
+            pendingThreadId={pendingThreadId}
+          />
+        </div>
+      )),
+    [
+      threads,
+      onThreadSelect,
+      supportedThreads,
+      pendingThreadId,
+      voteOverrides,
+      toggleThreadVote,
+    ],
+  );
 
-    // TODO 展示骨架屏
-    return threads.map((thread) => (
-      <div
-        key={thread.id}
-        className="border-b border-black/10 pb-[10px] last:border-0"
-      >
-        <ThreadItem
-          thread={thread}
-          onSentimentClick={setActiveSentimentThread}
-          onSelect={onThreadSelect}
-          onToggleVote={toggleThreadVote}
-          isVoting={pendingThreadId === (thread.numericId ?? Number(thread.id))}
-          supportedMap={supportedThreads}
-          voteOverrides={voteOverrides}
-          pendingThreadId={pendingThreadId}
-        />
-      </div>
-    ));
-  }, [
-    threads,
-    onThreadSelect,
-    supportedThreads,
-    pendingThreadId,
-    voteOverrides,
-    toggleThreadVote,
-  ]);
-
-  if (!renderedThreads) {
-    return (
-      <div className="rounded-[10px] border border-black/10 bg-white p-10 text-center text-sm text-gray-500">
-        {emptyMessage || 'No threads yet.'}
-      </div>
-    );
-  }
+  const showInitialSkeleton = (!isFetched || isLoading) && !threads.length;
+  const showEmptyState = isFetched && !threads.length && !isLoading;
 
   return (
-    <div className="">
-      <div className="flex flex-col gap-[10px]">{renderedThreads}</div>
+    <div>
+      {showInitialSkeleton ? (
+        <ThreadListSkeleton count={skeletonCount} />
+      ) : showEmptyState ? (
+        <div className="rounded-[10px] border border-black/10 bg-white p-10 text-center text-sm text-gray-500">
+          {emptyMessage || 'No threads yet.'}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-[10px]">
+          {renderedThreads}
+          {isFetchingNextPage ? <ThreadListSkeleton count={2} /> : null}
+        </div>
+      )}
 
       <SentimentModal
         open={Boolean(activeSentimentThread)}
@@ -338,6 +349,54 @@ export function ThreadList({
         totalVotes={activeSentimentThread?.totalSentimentVotes}
         sentiments={activeSentimentThread?.sentimentBreakdown}
       />
+    </div>
+  );
+}
+
+function ThreadItemSkeleton() {
+  return (
+    <article className="flex flex-col gap-4 rounded-[10px] bg-white px-5 py-[10px]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-[24px] w-[70px] rounded-[6px]" />
+          <Skeleton className="h-[24px] w-[80px] rounded-[6px]" />
+          <Skeleton className="h-[24px] w-[60px] rounded-[6px]" />
+        </div>
+        <Skeleton className="h-[28px] w-[140px] rounded-[8px]" />
+      </div>
+
+      <div className="flex gap-3 sm:flex-row sm:items-start">
+        <div className="flex-1 space-y-3">
+          <Skeleton className="h-[20px] w-3/5 rounded-[6px]" />
+          <Skeleton className="h-[14px] w-full rounded-[4px]" />
+          <Skeleton className="h-[14px] w-4/5 rounded-[4px]" />
+          <div className="flex flex-wrap items-center gap-3">
+            <Skeleton className="size-6 rounded-full" />
+            <Skeleton className="h-[12px] w-[120px] rounded-[4px]" />
+            <Skeleton className="h-[12px] w-[90px] rounded-[4px]" />
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-2 sm:ml-auto">
+          <Skeleton className="size-9 rounded-full" />
+          <Skeleton className="h-[14px] w-[28px] rounded-[4px]" />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ThreadListSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="flex flex-col gap-[10px]">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="border-b border-black/10 pb-[10px] last:border-0"
+        >
+          <ThreadItemSkeleton />
+        </div>
+      ))}
     </div>
   );
 }

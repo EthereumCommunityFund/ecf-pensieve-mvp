@@ -6,9 +6,9 @@ import { useState } from 'react';
 import { Button } from '@/components/base';
 
 import { useProjectDetailContext } from '../../project/context/projectDetailContext';
+import { TopbarFilters } from '../common/TopbarFilters';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
-import { TopbarFilters } from '../common/TopbarFilters';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadList } from './ThreadList';
@@ -166,14 +166,10 @@ export default function ProjectDiscoursePage({
           </Button>
         }
       />
-      {isLoading && !threads.length ? (
-        <div className="rounded-2xl border border-dashed border-black/15 bg-white p-6 text-center text-sm text-black/60">
-          Loading complaints…
-        </div>
-      ) : null}
       <ThreadList
         isLoading={isLoading}
         isFetched={isFetched}
+        isFetchingNextPage={isFetchingNextPage}
         threads={threads}
         emptyMessage={
           isValidProjectId

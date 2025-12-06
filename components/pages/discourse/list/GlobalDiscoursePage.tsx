@@ -5,9 +5,9 @@ import { useState } from 'react';
 
 import { Button } from '@/components/base';
 
+import { TopbarFilters } from '../common/TopbarFilters';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
-import { TopbarFilters } from '../common/TopbarFilters';
 
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadList } from './ThreadList';
@@ -87,14 +87,10 @@ export default function GlobalDiscoursePage() {
         selectedSentiment={activeSentiment}
         onSentimentChange={(value) => setActiveSentiment(value)}
       />
-      {isLoading && !threads.length ? (
-        <div className="rounded-2xl border border-dashed border-black/10 bg-white p-6 text-center text-sm text-black/60">
-          Loading threads…
-        </div>
-      ) : null}
       <ThreadList
         isFetched={isFetched}
         isLoading={isLoading}
+        isFetchingNextPage={isFetchingNextPage}
         threads={threads}
         emptyMessage="No complaints found for the current filters."
         onThreadSelect={(thread) => router.push(`/discourse/${thread.id}`)}
