@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
 
-import type { ThreadMeta } from '../list/ThreadList';
 import {
   mapThreadToMeta,
   type ThreadListItem,
+  type ThreadMeta,
 } from '../utils/threadTransforms';
 
 export type UseDiscussionThreadsParams = {

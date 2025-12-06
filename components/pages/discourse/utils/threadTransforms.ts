@@ -6,13 +6,30 @@ import {
   type SentimentKey,
   type SentimentMetric,
 } from '../common/sentiment/sentimentConfig';
-import type { ThreadMeta } from '../list/ThreadList';
 
-export type ThreadListItem =
+type ThreadListItemBase =
   RouterOutputs['projectDiscussionThread']['listThreads']['items'][0];
+export type ThreadListItem = ThreadListItemBase & {
+  viewerHasSupported?: boolean;
+};
 export type ThreadSentimentRecord = NonNullable<
   ThreadListItem['sentiments'][number]
 >;
+
+export type ThreadMeta = ThreadListItem & {
+  author: string;
+  excerpt: string;
+  timeAgo: string;
+  badge?: string;
+  status?: string;
+  sentiment?: string;
+  sentimentBreakdown: SentimentMetric[];
+  totalSentimentVotes: number;
+  dominantSentimentKey?: SentimentKey;
+  tag?: string;
+  votes: number;
+  answeredCount?: number;
+};
 
 export const SENTIMENT_KEYS: SentimentKey[] = [
   'recommend',
@@ -98,21 +115,20 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     : undefined;
 
   return {
-    id: String(thread.id),
-    numericId: Number(thread.id),
-    title: thread.title,
+    ...thread,
     excerpt,
     author: thread.creator?.name || 'Unknown',
     timeAgo: createdAtLabel,
     badge: thread.isScam ? '⚠️ Scam Claim' : 'Complaint Topic',
-    status: thread.isScam ? 'Alert' : undefined,
+    status: thread.isScam ? 'Alert Displayed on Page' : undefined,
     tag: thread.category?.[0],
     sentiment: dominantSentiment,
     votes: thread.support ?? 0,
-    viewerHasSupported:
-      (thread as { viewerHasSupported?: boolean }).viewerHasSupported ?? false,
+    answeredCount: thread.answerCount,
+    viewerHasSupported: thread.viewerHasSupported ?? false,
     sentimentBreakdown: summary.metrics,
     totalSentimentVotes: summary.totalVotes,
+    dominantSentimentKey: summary.dominantKey,
   };
 };
 

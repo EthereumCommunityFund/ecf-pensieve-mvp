@@ -2,35 +2,23 @@
 
 import { cn, Skeleton } from '@heroui/react';
 import { CaretCircleUp, CheckCircle, CheckSquare } from '@phosphor-icons/react';
-import { KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import {
+  KeyboardEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
-import { SentimentMetric } from '../common/sentiment/sentimentConfig';
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import { SentimentModal } from '../common/sentiment/SentimentModal';
 import { TopicTag } from '../common/TopicTag';
-
-export type ThreadMeta = {
-  id: string;
-  numericId?: number;
-  title: string;
-  excerpt: string;
-  author: string;
-  timeAgo: string;
-  votes?: number;
-  viewerHasSupported?: boolean;
-  badge?: string;
-  status?: string;
-  tag?: string;
-  sentiment?: string;
-  answeredCount?: number;
-  sentimentBreakdown?: SentimentMetric[];
-  totalSentimentVotes?: number;
-};
+import { ThreadMeta } from '../utils/threadTransforms';
 
 type ThreadListProps = {
   isLoading: boolean;
@@ -68,10 +56,9 @@ function ThreadItem({
   pendingThreadId,
 }: ThreadItemProps) {
   const authorInitial = thread.author?.[0]?.toUpperCase() ?? '?';
-  const hasAnswers = typeof thread.answeredCount === 'number';
-  const isScamThread = thread.tag?.toLowerCase().includes('scam') ?? false;
+  const hasAnswers = !!thread.answeredCount;
   const hasStatus = Boolean(thread.status);
-  const numericId = thread.numericId ?? Number(thread.id);
+  const numericId = Number(thread.id);
   const voteCount =
     voteOverrides?.[numericId] !== undefined
       ? voteOverrides[numericId]
@@ -102,14 +89,19 @@ function ThreadItem({
       <div>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-black/70">
+            {/* TODO confirm use tag or category */}
             {thread.tag ? (
-              <TopicTag label={thread.tag} isScam={isScamThread} />
+              <TopicTag
+                label={thread.tag}
+                isScam={thread.isScam}
+                iconClassName="opacity-100"
+              />
             ) : null}
             {hasStatus ? (
               <span
                 className={cn(
                   'inline-flex items-center gap-1 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold',
-                  isScamThread
+                  thread.isScam
                     ? 'border-[#bb5d00]/40 bg-[#fff2e5] text-[#bb5d00]'
                     : 'border-black/10 bg-[#f5f5f5] text-black/80',
                 )}
@@ -119,20 +111,18 @@ function ThreadItem({
                   weight="fill"
                   className={cn(
                     'text-black/60',
-                    isScamThread ? 'text-[#bb5d00]' : 'text-black/50',
+                    thread.isScam ? 'text-[#bb5d00]' : 'text-black/50',
                   )}
                 />
                 {thread.status}
               </span>
             ) : null}
             {hasAnswers ? (
-              <span className="inline-flex items-center gap-1 rounded-[4px] border border-[#cfe8dd] bg-[#f4fcf8] px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#43bd9b]">
-                <CheckSquare
-                  size={16}
-                  weight="fill"
-                  className="text-[#43bd9b]"
-                />
-                {thread.answeredCount}
+              <span className="inline-flex items-center gap-1 text-[13px] font-semibold ">
+                <CheckSquare size={32} className="text-[#43bd9b]" />
+                <span className="text-[#43BD9B] opacity-80">
+                  {thread.answeredCount}
+                </span>
               </span>
             ) : null}
           </div>
@@ -225,72 +215,82 @@ export function ThreadList({
   useEffect(() => {
     const supported = threads
       .filter((thread) => thread.viewerHasSupported)
-      .map((thread) => thread.numericId ?? Number(thread.id))
+      .map((thread) => Number(thread.id))
       .filter((id) => Number.isFinite(id));
     setSupportedThreads(new Set(supported));
   }, [threads]);
 
-  const requireAuth = () => {
+  const requireAuth = useCallback(() => {
     if (isAuthenticated) return true;
     showAuthPrompt();
     return false;
-  };
+  }, [isAuthenticated, showAuthPrompt]);
 
-  const toggleThreadVote = async (
-    thread: ThreadMeta,
-    hasSupported: boolean,
-    onSettled?: () => void,
-  ) => {
-    const numericId = thread.numericId ?? Number(thread.id);
-    if (!Number.isFinite(numericId)) return;
-    if (!requireAuth()) return;
-    setPendingThreadId(numericId);
-    try {
-      if (hasSupported) {
-        const result = await unvoteThreadMutation.mutateAsync({
-          threadId: numericId,
-        });
-        setSupportedThreads((prev) => {
-          const next = new Set(prev);
-          next.delete(numericId);
-          return next;
-        });
-        setVoteOverrides((prev) => ({
-          ...prev,
-          [numericId]: result.support ?? thread.votes ?? 0,
-        }));
+  const toggleThreadVote = useCallback(
+    async (
+      thread: ThreadMeta,
+      hasSupported: boolean,
+      onSettled?: () => void,
+    ) => {
+      const numericId = Number(thread.id);
+      if (!Number.isFinite(numericId)) return;
+      if (!requireAuth()) return;
+      setPendingThreadId(numericId);
+      try {
+        if (hasSupported) {
+          const result = await unvoteThreadMutation.mutateAsync({
+            threadId: numericId,
+          });
+          setSupportedThreads((prev) => {
+            const next = new Set(prev);
+            next.delete(numericId);
+            return next;
+          });
+          setVoteOverrides((prev) => ({
+            ...prev,
+            [numericId]: result.support ?? thread.votes ?? 0,
+          }));
+          addToast({
+            title: 'Support withdrawn',
+            description: 'Your CP support was withdrawn.',
+            color: 'success',
+          });
+        } else {
+          const result = await voteThreadMutation.mutateAsync({
+            threadId: numericId,
+          });
+          setSupportedThreads((prev) => new Set(prev).add(numericId));
+          setVoteOverrides((prev) => ({
+            ...prev,
+            [numericId]: result.support ?? (thread.votes ?? 0) + 1,
+          }));
+          addToast({
+            title: 'Supported thread',
+            description: 'CP support registered for this thread.',
+            color: 'success',
+          });
+        }
+        utils.projectDiscussionThread.listThreads.invalidate();
+      } catch (error: any) {
         addToast({
-          title: 'Support withdrawn',
-          description: 'Your CP support was withdrawn.',
-          color: 'success',
+          title: 'Unable to update vote',
+          description: error?.message ?? 'Please try again.',
+          color: 'danger',
         });
-      } else {
-        const result = await voteThreadMutation.mutateAsync({
-          threadId: numericId,
-        });
-        setSupportedThreads((prev) => new Set(prev).add(numericId));
-        setVoteOverrides((prev) => ({
-          ...prev,
-          [numericId]: result.support ?? (thread.votes ?? 0) + 1,
-        }));
-        addToast({
-          title: 'Supported thread',
-          description: 'CP support registered for this thread.',
-          color: 'success',
-        });
+      } finally {
+        setPendingThreadId((current) =>
+          current === numericId ? null : current,
+        );
+        onSettled?.();
       }
-      utils.projectDiscussionThread.listThreads.invalidate();
-    } catch (error: any) {
-      addToast({
-        title: 'Unable to update vote',
-        description: error?.message ?? 'Please try again.',
-        color: 'danger',
-      });
-    } finally {
-      setPendingThreadId((current) => (current === numericId ? null : current));
-      onSettled?.();
-    }
-  };
+    },
+    [
+      requireAuth,
+      unvoteThreadMutation,
+      voteThreadMutation,
+      utils.projectDiscussionThread.listThreads,
+    ],
+  );
 
   const renderedThreads = useMemo(
     () =>
