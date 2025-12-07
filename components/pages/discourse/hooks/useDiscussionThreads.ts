@@ -59,9 +59,18 @@ export const useDiscussionThreads = ({
     return threads.map((thread) => mapThreadToMeta(thread));
   }, [threads]);
 
+  const filteredThreads = useMemo<ThreadMeta[]>(() => {
+    if (status === 'redressed') {
+      return mappedThreads.filter(
+        (thread) => thread.isScam && thread.isClaimRedressed,
+      );
+    }
+    return mappedThreads;
+  }, [mappedThreads, status]);
+
   return {
     ...listQuery,
-    threads: mappedThreads,
+    threads: filteredThreads,
     rawThreads: threads,
   };
 };
