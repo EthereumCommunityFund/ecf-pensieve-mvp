@@ -2,7 +2,7 @@
 
 import { CaretCircleUp, ChartBar, ShieldWarning } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
@@ -17,10 +17,10 @@ import {
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { TopbarFilters } from '@/components/pages/discourse/common/TopbarFilters';
 import BackHeader from '@/components/pages/project/BackHeader';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
-import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 import { ThreadDetailRecord } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
@@ -66,18 +66,15 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const [sentimentFilter, setSentimentFilter] = useState<'all' | SentimentKey>(
     'all',
   );
-  const [hasSupportedThread, setHasSupportedThread] = useState(false);
-  const [threadSupportPending, setThreadSupportPending] = useState(false);
-  const [threadWithdrawPending, setThreadWithdrawPending] = useState(false);
 
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
 
-  const requireAuth = () => {
+  const requireAuth = useCallback(() => {
     if (isAuthenticated) return true;
     showAuthPrompt();
     return false;
-  };
+  }, [isAuthenticated, showAuthPrompt]);
 
   const threadQuery = trpc.projectDiscussionThread.getThreadById.useQuery(
     { threadId: numericThreadId },
@@ -89,7 +86,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     sentiments?: SentimentMetric[];
     totalVotes?: number;
   } | null>(null);
-  const [threadSentimentPending, setThreadSentimentPending] = useState(false);
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
     number | null
   >(null);
@@ -107,7 +103,9 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     trpc.projectDiscussionInteraction.voteAnswer.useMutation();
   const unvoteAnswerMutation =
     trpc.projectDiscussionInteraction.unvoteAnswer.useMutation();
-  const setSentimentMutation =
+  const setThreadSentimentMutation =
+    trpc.projectDiscussionInteraction.setSentiment.useMutation();
+  const setAnswerSentimentMutation =
     trpc.projectDiscussionInteraction.setSentiment.useMutation();
   const createCounterClaimMutation =
     trpc.projectDiscussionInteraction.createAnswer.useMutation({
@@ -205,21 +203,26 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     commentSubmitting: createCommentMutation.isPending,
   });
 
-  const guardedOpenCounterComposer = () => {
+  const guardedOpenCounterComposer = useCallback(() => {
     if (!requireAuth()) return;
     openCounterComposer();
-  };
+  }, [openCounterComposer, requireAuth]);
 
-  const guardedOpenCommentComposer = (
-    options?: Parameters<typeof openCommentComposer>[0],
-  ) => {
-    if (!requireAuth()) return;
-    openCommentComposer(options);
-  };
-  const openThreadCommentComposer = () =>
-    guardedOpenCommentComposer({
-      target: { threadId: numericThreadId },
-    });
+  const guardedOpenCommentComposer = useCallback(
+    (options?: Parameters<typeof openCommentComposer>[0]) => {
+      if (!requireAuth()) return;
+      openCommentComposer(options);
+    },
+    [openCommentComposer, requireAuth],
+  );
+
+  const openThreadCommentComposer = useCallback(
+    () =>
+      guardedOpenCommentComposer({
+        target: { threadId: numericThreadId },
+      }),
+    [guardedOpenCommentComposer, numericThreadId],
+  );
 
   const sortByParam = sortOption === 'top' ? 'votes' : 'recent';
 
@@ -250,12 +253,33 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       },
     );
 
-  useEffect(() => {
-    const viewerHasSupported = (
-      threadQuery.data as { viewerHasSupported?: boolean }
-    )?.viewerHasSupported;
-    setHasSupportedThread(Boolean(viewerHasSupported));
-  }, [threadQuery.data]);
+  const viewerHasSupportedThread = useMemo(
+    () =>
+      Boolean(
+        (threadQuery.data as { viewerHasSupported?: boolean } | undefined)
+          ?.viewerHasSupported,
+      ),
+    [threadQuery.data],
+  );
+
+  const threadSupportPending = voteThreadMutation.isPending;
+  const threadWithdrawPending = unvoteThreadMutation.isPending;
+
+  const hasSupportedThread = useMemo(() => {
+    if (voteThreadMutation.isPending || voteThreadMutation.isSuccess) {
+      return true;
+    }
+    if (unvoteThreadMutation.isPending || unvoteThreadMutation.isSuccess) {
+      return false;
+    }
+    return viewerHasSupportedThread;
+  }, [
+    unvoteThreadMutation.isPending,
+    unvoteThreadMutation.isSuccess,
+    viewerHasSupportedThread,
+    voteThreadMutation.isPending,
+    voteThreadMutation.isSuccess,
+  ]);
 
   const isThreadOwner = useMemo(() => {
     const creatorId = threadQuery.data?.creator?.userId;
@@ -340,10 +364,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
 
     return {
       ...remoteThread,
+      id: String(remoteThread.id),
       summary: stripHtmlToPlainText(remoteThread.post),
       badge: 'Scam & Fraud',
       status: 'Open',
       isScam: true,
+      post: remoteThread.post,
       categories: remoteThread.category ?? [],
       tags: remoteThread.tags ?? [],
       highlights: [],
@@ -378,6 +404,33 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     };
   }, [canRetractThread, counterClaims, threadComments, threadQuery.data]);
 
+  const handleStatusChange = useCallback(
+    (value: string) =>
+      setActiveTab(value === 'discussion' ? 'discussion' : 'counter'),
+    [],
+  );
+
+  const handleSortChange = useCallback(
+    (value: string) => setSortOption(value === 'new' ? 'new' : 'top'),
+    [],
+  );
+
+  const handleSentimentChange = useCallback(
+    (value: string) =>
+      setSentimentFilter((value as 'all' | SentimentKey) ?? 'all'),
+    [],
+  );
+
+  const handleShowAnswerSentimentDetail = useCallback(
+    (payload: {
+      title: string;
+      excerpt: string;
+      sentiments?: SentimentMetric[];
+      totalVotes?: number;
+    }) => setActiveSentimentModal(payload),
+    [],
+  );
+
   const handleToggleThreadSupport = async () => {
     if (!isValidThreadId || !requireAuth()) {
       return;
@@ -390,16 +443,9 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       });
       return;
     }
-    const action = hasSupportedThread ? 'withdraw' : 'support';
-    if (hasSupportedThread) {
-      setThreadWithdrawPending(true);
-    } else {
-      setThreadSupportPending(true);
-    }
     try {
       if (hasSupportedThread) {
         await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
-        setHasSupportedThread(false);
         addToast({
           title: 'Support withdrawn',
           description: 'Your CP support was withdrawn.',
@@ -407,7 +453,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         });
       } else {
         await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
-        setHasSupportedThread(true);
         addToast({
           title: 'Supported claim',
           description: 'CP support registered for this scam claim.',
@@ -422,20 +467,74 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         description: error?.message ?? 'Please try again.',
         color: 'danger',
       });
-    } finally {
-      if (action === 'support') {
-        setThreadSupportPending(false);
-      } else {
-        setThreadWithdrawPending(false);
-      }
     }
   };
 
+  const handleOpenCounterClaimComposer = useCallback(() => {
+    if (isThreadRetracted) {
+      addToast({
+        title: 'Claim already retracted',
+        description: 'Counter claims are disabled for retracted alerts.',
+        color: 'warning',
+      });
+      return;
+    }
+    guardedOpenCounterComposer();
+  }, [guardedOpenCounterComposer, isThreadRetracted]);
+
+  const handleOpenThreadCommentClick = useCallback(() => {
+    if (isThreadRetracted) {
+      addToast({
+        title: 'Claim already retracted',
+        description: 'Comments are disabled for retracted alerts.',
+        color: 'warning',
+      });
+      return;
+    }
+    openThreadCommentComposer();
+  }, [isThreadRetracted, openThreadCommentComposer]);
+
+  const handlePostCounterComment = useCallback(
+    (context: {
+      author?: string;
+      excerpt?: string;
+      timestamp?: string;
+      isOp?: boolean;
+      target: {
+        threadId: number;
+        answerId?: number;
+        parentCommentId?: number;
+        commentId?: number;
+      };
+    }) => {
+      if (isThreadRetracted) {
+        addToast({
+          title: 'Claim already retracted',
+          description: 'Comments are disabled for retracted alerts.',
+          color: 'warning',
+        });
+        return;
+      }
+      guardedOpenCommentComposer({
+        title: 'Commenting to Counter Claim:',
+        context: {
+          title: 'Commenting to:',
+          author: context.author ?? '',
+          excerpt: context.excerpt ?? '',
+          timestamp: context.timestamp,
+          isOp: context.isOp,
+          target: context.target,
+        },
+        target: context.target,
+      });
+    },
+    [guardedOpenCommentComposer, isThreadRetracted],
+  );
+
   const handleSetThreadSentiment = async (sentiment: SentimentKey) => {
     if (!isValidThreadId || !requireAuth()) return;
-    setThreadSentimentPending(true);
     try {
-      await setSentimentMutation.mutateAsync({
+      await setThreadSentimentMutation.mutateAsync({
         threadId: numericThreadId,
         type: sentiment,
       });
@@ -446,8 +545,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         description: error?.message ?? 'Please try again.',
         color: 'danger',
       });
-    } finally {
-      setThreadSentimentPending(false);
     }
   };
 
@@ -458,7 +555,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     if (!isValidThreadId || !requireAuth()) return;
     setAnswerSentimentPendingId(answerId);
     try {
-      await setSentimentMutation.mutateAsync({
+      await setAnswerSentimentMutation.mutateAsync({
         answerId,
         type: sentiment,
       });
@@ -594,7 +691,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
               <SentimentVoteButton
                 totalVotes={hydratedThread.totalSentimentVotes}
                 value={viewerSentiment}
-                isLoading={threadSentimentPending}
+                isLoading={setThreadSentimentMutation.isPending}
                 onSelect={handleSetThreadSentiment}
               />
             </div>
@@ -635,18 +732,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                 <>
                   <Button
                     className="h-[38px] rounded-[5px] bg-[#222222] text-[13px] font-semibold text-white hover:bg-black/85"
-                    onPress={() => {
-                      if (isThreadRetracted) {
-                        addToast({
-                          title: 'Claim already retracted',
-                          description:
-                            'Counter claims are disabled for retracted alerts.',
-                          color: 'warning',
-                        });
-                        return;
-                      }
-                      guardedOpenCounterComposer();
-                    }}
+                    onPress={handleOpenCounterClaimComposer}
                     isDisabled={isThreadRetracted}
                     isLoading={createCounterClaimMutation.isPending}
                   >
@@ -654,18 +740,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                   </Button>
                   <Button
                     className="h-[38px] rounded-[5px] border border-black/10 text-[13px] font-semibold text-black/80"
-                    onPress={() => {
-                      if (isThreadRetracted) {
-                        addToast({
-                          title: 'Claim already retracted',
-                          description:
-                            'Comments are disabled for retracted alerts.',
-                          color: 'warning',
-                        });
-                        return;
-                      }
-                      openThreadCommentComposer();
-                    }}
+                    onPress={handleOpenThreadCommentClick}
                     isDisabled={isThreadRetracted}
                     isLoading={createCommentMutation.isPending}
                   >
@@ -679,19 +754,13 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           <TopbarFilters
             statusTabs={tabItems.map((tab) => tab.key)}
             activeStatus={activeTab}
-            onStatusChange={(value) =>
-              setActiveTab(value === 'discussion' ? 'discussion' : 'counter')
-            }
+            onStatusChange={handleStatusChange}
             sortOptions={['top', 'new']}
             activeSort={sortOption}
-            onSortChange={(value) =>
-              setSortOption(value === 'new' ? 'new' : 'top')
-            }
+            onSortChange={handleSortChange}
             sentimentOptions={sentimentFilterOptions}
             selectedSentiment={sentimentFilter}
-            onSentimentChange={(value) =>
-              setSentimentFilter((value as 'all' | SentimentKey) ?? 'all')
-            }
+            onSentimentChange={handleSentimentChange}
             renderStatusLabel={(value) => {
               const tab = tabItems.find((item) => item.key === value);
               return (
@@ -722,26 +791,9 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     withdrawPending={withdrawingClaimId === claim.numericId}
                     sentimentPendingId={answerSentimentPendingId}
                     onSelectSentiment={handleSetAnswerSentiment}
-                    onShowSentimentDetail={(payload) =>
-                      setActiveSentimentModal(payload)
-                    }
-                    onShowSentimentIndicator={(payload) =>
-                      setActiveSentimentModal(payload)
-                    }
-                    onPostComment={(context) =>
-                      guardedOpenCommentComposer({
-                        title: 'Commenting to Counter Claim:',
-                        context: {
-                          title: 'Commenting to:',
-                          author: context.author,
-                          excerpt: context.excerpt,
-                          timestamp: context.timestamp,
-                          isOp: context.isOp,
-                          target: context.target,
-                        },
-                        target: context.target,
-                      })
-                    }
+                    onShowSentimentDetail={handleShowAnswerSentimentDetail}
+                    onShowSentimentIndicator={handleShowAnswerSentimentDetail}
+                    onPostComment={handlePostCounterComment}
                   />
                 ))
               ) : (

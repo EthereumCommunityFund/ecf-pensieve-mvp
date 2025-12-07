@@ -15,7 +15,9 @@ type CommentCardProps = {
 
 export function CommentCard({ comment }: CommentCardProps) {
   const sentimentDefinition =
-    sentimentDefinitions[comment.sentimentLabel] || defaultSentimentDisplay;
+    (comment.sentimentLabel
+      ? sentimentDefinitions[comment.sentimentLabel]
+      : null) || defaultSentimentDisplay;
 
   return (
     <article className="rounded-[16px] border border-black/10 bg-white p-5">

@@ -17,6 +17,7 @@ export type ThreadSentimentRecord = NonNullable<
 >;
 
 export type ThreadMeta = ThreadListItem & {
+  numericId?: number;
   author: string;
   authorAvatar?: string | null;
   authorInitial?: string;
@@ -129,6 +130,7 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
 
   return {
     ...thread,
+    numericId: Number(thread.id),
     excerpt,
     author: authorName,
     authorAvatar: thread.creator?.avatarUrl ?? null,

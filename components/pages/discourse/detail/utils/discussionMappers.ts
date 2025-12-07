@@ -23,6 +23,7 @@ type NormalizeAnswerOptions = {
 
 type NormalizeCommentOptions = {
   defaultRole?: string;
+  defaultSentiment?: SentimentKey;
 };
 
 export type CommentNode<T extends CommentItem = CommentItem> = T & {
@@ -59,7 +60,7 @@ export const normalizeComment = (
     role: defaultRole,
     createdAt: formatTimeAgo(comment.createdAt),
     body: comment.content,
-    sentimentLabel: undefined,
+    sentimentLabel: options?.defaultSentiment,
   };
 };
 

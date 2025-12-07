@@ -1,4 +1,7 @@
-import { SentimentKey } from './sentiment/sentimentConfig';
+import {
+  SentimentKey,
+  type SentimentMetric,
+} from './sentiment/sentimentConfig';
 
 export type DetailedSentimentMetric = {
   key: SentimentKey;
@@ -62,6 +65,7 @@ export type ThreadDetailRecord = {
   tags: string[];
   highlights: ThreadHighlight[];
   body: string[];
+  post: string;
   attachmentsCount?: number;
   cpProgress: {
     current: number;

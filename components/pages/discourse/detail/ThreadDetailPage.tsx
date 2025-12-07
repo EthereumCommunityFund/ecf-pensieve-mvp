@@ -1,14 +1,14 @@
 'use client';
 
 import { ChartBarIcon } from '@phosphor-icons/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import { addToast } from '@/components/base/toast';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
-import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 import {
   SentimentKey,
@@ -35,6 +35,7 @@ import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
 import { AnswerDetailCard } from './ThreadAnswerCard';
 import { ThreadCommentTree } from './ThreadCommentTree';
+import type { ComposerContext } from './ThreadComposerModal';
 import { ThreadComposerModal } from './ThreadComposerModal';
 import { ThreadDetailSkeleton } from './ThreadDetailSkeleton';
 import {
@@ -79,9 +80,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [activeTab, setActiveTab] = useState<'answers' | 'comments'>('answers');
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
   const [sentimentFilter, setSentimentFilter] = useState<string>('all');
-  const [threadSupportPending, setThreadSupportPending] = useState(false);
-  const [threadWithdrawPending, setThreadWithdrawPending] = useState(false);
-  const [hasSupportedThread, setHasSupportedThread] = useState(false);
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
     number | null
   >(null);
@@ -91,13 +89,13 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     sentiments?: SentimentMetric[];
     totalVotes?: number;
   } | null>(null);
-  const requireAuth = () => {
+  const requireAuth = useCallback(() => {
     if (isAuthenticated) {
       return true;
     }
     showAuthPrompt();
     return false;
-  };
+  }, [isAuthenticated, showAuthPrompt]);
   // const isAnswerComposer = useMemo(
   //   () => composerVariant === 'answer',
   //   [composerVariant],
@@ -141,14 +139,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     );
 
   const baseThread = threadQuery.data;
-
-  useEffect(() => {
-    if (!baseThread) return;
-    const viewerHasSupported =
-      (baseThread as { viewerHasSupported?: boolean }).viewerHasSupported ??
-      false;
-    setHasSupportedThread(viewerHasSupported);
-  }, [baseThread]);
 
   const viewerSentiment = useMemo(
     () => findUserSentiment(baseThread?.sentiments, user?.id ?? null),
@@ -275,6 +265,34 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       },
     });
 
+  const viewerHasSupportedThread = useMemo(
+    () =>
+      Boolean(
+        (baseThread as { viewerHasSupported?: boolean } | undefined)
+          ?.viewerHasSupported,
+      ),
+    [baseThread],
+  );
+
+  const threadSupportPending = voteThreadMutation.isPending;
+  const threadWithdrawPending = unvoteThreadMutation.isPending;
+
+  const hasSupportedThread = useMemo(() => {
+    if (voteThreadMutation.isPending || voteThreadMutation.isSuccess) {
+      return true;
+    }
+    if (unvoteThreadMutation.isPending || unvoteThreadMutation.isSuccess) {
+      return false;
+    }
+    return viewerHasSupportedThread;
+  }, [
+    unvoteThreadMutation.isPending,
+    unvoteThreadMutation.isSuccess,
+    viewerHasSupportedThread,
+    voteThreadMutation.isPending,
+    voteThreadMutation.isSuccess,
+  ]);
+
   const setThreadSentimentMutation =
     trpc.projectDiscussionInteraction.setSentiment.useMutation({
       onSuccess: () => {
@@ -369,18 +387,16 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     commentSubmitting: createCommentMutation.isPending,
   });
 
+  type CommentComposerContext = ComposerContext | null | undefined;
+
   const handleSupportThread = async () => {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
-    setThreadSupportPending(true);
     try {
       await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
-      setHasSupportedThread(true);
     } catch {
       // handled via mutation callbacks
-    } finally {
-      setThreadSupportPending(false);
     }
   };
 
@@ -388,14 +404,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
-    setThreadWithdrawPending(true);
     try {
       await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
-      setHasSupportedThread(false);
     } catch {
       // handled via mutation callbacks
-    } finally {
-      setThreadWithdrawPending(false);
     }
   };
 
@@ -488,6 +500,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       badge: 'Complaint Topic',
       status,
       isScam: false,
+      post: baseThread.post,
       categories: baseThread.category ?? [],
       tags: baseThread.tags ?? [],
       highlights: [
@@ -533,6 +546,103 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     sentimentSummary.totalVotes,
     threadComments,
   ]);
+
+  const handleOpenAnswerComposer = useCallback(
+    () => openAnswerComposer(),
+    [openAnswerComposer],
+  );
+
+  const handleOpenThreadComment = useCallback(
+    () =>
+      openCommentComposer({
+        target: { threadId: numericThreadId },
+      }),
+    [numericThreadId, openCommentComposer],
+  );
+
+  const handleStatusChange = useCallback(
+    (value: string) =>
+      setActiveTab(value === 'comments' ? 'comments' : 'answers'),
+    [],
+  );
+
+  const handleSortChange = useCallback(
+    (value: string) => setSortOption(value === 'new' ? 'new' : 'top'),
+    [],
+  );
+
+  const handleSentimentChange = useCallback(
+    (value: string) => setSentimentFilter(value),
+    [],
+  );
+
+  const handleShowAnswerSentimentDetail = useCallback(
+    (payload: {
+      title: string;
+      excerpt: string;
+      sentiments?: SentimentMetric[];
+      totalVotes?: number;
+    }) => setActiveSentimentModal(payload),
+    [],
+  );
+
+  const makeOnPostComment = useCallback(
+    (answerId: number) => (context?: CommentComposerContext) =>
+      openCommentComposer({
+        title: context?.title ?? 'Post Comment',
+        context: context ?? null,
+        target:
+          context?.target ??
+          ({
+            threadId: numericThreadId,
+            answerId,
+            commentId: undefined,
+          } as CommentTarget),
+      }),
+    [numericThreadId, openCommentComposer],
+  );
+
+  const handleReplyToComment = useCallback(
+    (payload: {
+      parentCommentId?: number;
+      commentId?: number;
+      author?: string;
+      isOp?: boolean;
+      timestamp?: string;
+      excerpt?: string;
+    }) =>
+      openCommentComposer({
+        title: 'Post Reply',
+        context: {
+          title: 'Replying to:',
+          author: payload.author ?? '',
+          isOp: payload.isOp,
+          timestamp: payload.timestamp,
+          excerpt: payload.excerpt ?? '',
+          target: {
+            threadId: numericThreadId,
+            parentCommentId: payload.parentCommentId,
+            commentId: payload.commentId,
+          },
+        },
+        target: {
+          threadId: numericThreadId,
+          parentCommentId: payload.parentCommentId,
+          commentId: payload.commentId,
+        },
+      }),
+    [numericThreadId, openCommentComposer],
+  );
+
+  const handleLoadMoreAnswers = useCallback(
+    () => answersQuery.fetchNextPage(),
+    [answersQuery],
+  );
+
+  const handleLoadMoreComments = useCallback(
+    () => commentsQuery.fetchNextPage(),
+    [commentsQuery],
+  );
 
   if (!isValidThreadId) {
     return (
@@ -605,39 +715,23 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             sentimentPending={setThreadSentimentMutation.isPending}
             onSelectSentiment={handleSetThreadSentiment}
             requireAuth={requireAuth}
-            onShowSentimentDetail={() =>
-              setActiveSentimentModal({
-                title: thread.title,
-                excerpt: thread.summary,
-                sentiments: thread.sentiment,
-                totalVotes: thread.totalSentimentVotes,
-              })
-            }
             onSupportThread={handleSupportThread}
             onWithdrawThread={handleWithdrawThread}
-            onAnswer={() => openAnswerComposer()}
-            onComment={() =>
-              openCommentComposer({
-                target: { threadId: numericThreadId },
-              })
-            }
+            onAnswer={handleOpenAnswerComposer}
+            onComment={handleOpenThreadComment}
           />
 
           <div className="pb-[40px]">
             <TopbarFilters
               statusTabs={tabOptions.map((tab) => tab.key)}
               activeStatus={activeTab}
-              onStatusChange={(value) =>
-                setActiveTab(value === 'comments' ? 'comments' : 'answers')
-              }
+              onStatusChange={handleStatusChange}
               sortOptions={['top', 'new']}
               activeSort={sortOption}
-              onSortChange={(value) =>
-                setSortOption(value === 'new' ? 'new' : 'top')
-              }
+              onSortChange={handleSortChange}
               sentimentOptions={SENTIMENT_KEYS}
               selectedSentiment={sentimentFilter}
-              onSentimentChange={(value) => setSentimentFilter(value)}
+              onSentimentChange={handleSentimentChange}
               renderStatusLabel={(value) => {
                 const tab = tabOptions.find((item) => item.key === value);
                 if (!tab) return value;
@@ -668,22 +762,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                           onSupport={handleSupportAnswer}
                           onWithdraw={handleWithdrawSupport}
                           onSelectSentiment={handleSetAnswerSentiment}
-                          onShowSentimentDetail={(payload) =>
-                            setActiveSentimentModal(payload)
+                          onShowSentimentDetail={
+                            handleShowAnswerSentimentDetail
                           }
-                          onPostComment={(context) =>
-                            openCommentComposer({
-                              title: context?.title ?? 'Post Comment',
-                              context,
-                              target:
-                                context?.target ??
-                                ({
-                                  threadId: numericThreadId,
-                                  answerId: answer.numericId,
-                                  commentId: undefined,
-                                } as CommentTarget),
-                            })
-                          }
+                          onPostComment={makeOnPostComment(answer.numericId)}
                           threadAuthorName={thread.author.name}
                           supportPending={
                             supportingAnswerId === answer.numericId
@@ -704,7 +786,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                     <div className="flex justify-center">
                       <Button
                         className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
-                        onPress={() => answersQuery.fetchNextPage()}
+                        onPress={handleLoadMoreAnswers}
                         isLoading={answersQuery.isFetchingNextPage}
                       >
                         Load more answers
@@ -717,11 +799,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                   <div className="">
                     <Button
                       className="w-full rounded-[5px] p-[10px] text-[13px] font-semibold text-black/80"
-                      onPress={() =>
-                        openCommentComposer({
-                          target: { threadId: numericThreadId },
-                        })
-                      }
+                      onPress={handleOpenThreadComment}
                     >
                       Post Comment
                     </Button>
@@ -739,28 +817,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                           depth={0}
                           isFirst={index === 0}
                           hasSiblings={filteredComments.length > 1}
-                          onReply={(payload) =>
-                            openCommentComposer({
-                              title: 'Post Reply',
-                              context: {
-                                title: 'Replying to:',
-                                author: payload.author,
-                                isOp: payload.isOp,
-                                timestamp: payload.timestamp,
-                                excerpt: payload.excerpt,
-                                target: {
-                                  threadId: numericThreadId,
-                                  parentCommentId: payload.parentCommentId,
-                                  commentId: payload.commentId,
-                                },
-                              },
-                              target: {
-                                threadId: numericThreadId,
-                                parentCommentId: payload.parentCommentId,
-                                commentId: payload.commentId,
-                              },
-                            })
-                          }
+                          onReply={handleReplyToComment}
                           threadAuthorName={thread.author.name}
                           threadId={numericThreadId}
                         />
@@ -775,7 +832,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                     <div className="flex justify-center">
                       <Button
                         className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
-                        onPress={() => commentsQuery.fetchNextPage()}
+                        onPress={handleLoadMoreComments}
                         isLoading={commentsQuery.isFetchingNextPage}
                       >
                         Load more comments
