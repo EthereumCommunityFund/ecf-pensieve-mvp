@@ -694,35 +694,38 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const statusTheme = getStatusTheme(hydratedThread.status);
 
   return (
-    <div className="flex justify-center px-[20px] pb-16 pt-4">
+    <div className="flex flex-col items-center space-y-[20px] px-[20px] pb-16 pt-4">
+      <BackHeader className="w-full px-0">
+        <Link href="/discourse" className="text-[14px] text-black/70">
+          Discourse
+        </Link>
+        <span className="text-black/25">/</span>
+        <span className="text-[14px] text-black/70">Crumb</span>
+      </BackHeader>
+
       <div className="flex w-full max-w-[1200px] gap-[40px]">
         <section className="w-[700px] space-y-[20px]">
-          <BackHeader className="px-0">
-            <Link href="/discourse" className="text-[14px] text-black/70">
-              Discourse
-            </Link>
-            <span className="text-black/25">/</span>
-            <span className="text-[14px] text-black/70">Crumb</span>
-          </BackHeader>
-
           <article className="space-y-[12px]">
-            <div className="inline-flex items-center gap-[6px] rounded-[4px] border border-[rgba(0,0,0,0.1)] bg-[#ebebeb] px-[8px] py-[4px]">
-              <ShieldWarning
-                size={18}
-                weight="fill"
-                className="text-black/70"
-              />
-              <span className="text-[13px] font-semibold text-black/80">
-                Scam &amp; Fraud
-              </span>
+            <div className="flex items-center gap-[10px]">
+              <div className="inline-flex items-center gap-[6px] rounded-[4px] border border-[rgba(0,0,0,0.1)] bg-[#ebebeb] px-[8px] py-[4px]">
+                <ShieldWarning
+                  size={18}
+                  weight="fill"
+                  className="text-black/70"
+                />
+                <span className="text-[13px] font-semibold text-black/80">
+                  Scam &amp; Fraud
+                </span>
+              </div>
+              {hydratedThread.status ? (
+                <span
+                  className={`inline-flex w-fit items-center gap-2 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold ${statusTheme?.border ?? ''} ${statusTheme?.bg ?? ''} ${statusTheme?.text ?? ''}`}
+                >
+                  {hydratedThread.status}
+                </span>
+              ) : null}
             </div>
-            {hydratedThread.status ? (
-              <span
-                className={`inline-flex w-fit items-center gap-2 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold ${statusTheme?.border ?? ''} ${statusTheme?.bg ?? ''} ${statusTheme?.text ?? ''}`}
-              >
-                {hydratedThread.status}
-              </span>
-            ) : null}
+
             <h1 className="text-[20px] font-medium leading-[22px] text-black">
               {hydratedThread.title}
             </h1>

@@ -1,10 +1,12 @@
 'use client';
 
 import { ChartBarIcon } from '@phosphor-icons/react';
+import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 
 import { Button, ConfirmModal } from '@/components/base';
 import { addToast } from '@/components/base/toast';
+import BackHeader from '@/components/pages/project/BackHeader';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -714,183 +716,194 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   };
   return (
     <>
-      <div className="flex items-start justify-center gap-[40px] pt-[20px]">
-        <section className="w-[700px] space-y-6">
-          <PostDetailCard
-            title={thread.title}
-            author={thread.author.name}
-            authorAvatar={thread.author.avatarUrl}
-            timeAgo={thread.author.postedAt}
-            contentHtml={threadContentHtml}
-            tags={thread.tags}
-            categoryLabel={thread.categories[0] ?? 'General'}
-            supportCount={baseThread?.support ?? 0}
-            hasSupported={hasSupportedThread}
-            supportPending={threadSupportPending}
-            withdrawPending={threadWithdrawPending}
-            sentimentVotes={thread.totalSentimentVotes}
-            viewerSentiment={viewerSentiment}
-            sentimentPending={setThreadSentimentMutation.isPending}
-            onSelectSentiment={handleSetThreadSentiment}
-            requireAuth={requireAuth}
-            onSupportThread={handleSupportThread}
-            onWithdrawThread={handleWithdrawThread}
-            onAnswer={handleOpenAnswerComposer}
-            onComment={handleOpenThreadComment}
-          />
-
-          <div className="pb-[40px]">
-            <TopbarFilters
-              statusTabs={tabOptions.map((tab) => tab.key)}
-              activeStatus={activeTab}
-              onStatusChange={handleStatusChange}
-              sortOptions={['top', 'new']}
-              activeSort={sortOption}
-              onSortChange={handleSortChange}
-              sentimentOptions={SENTIMENT_KEYS}
-              selectedSentiment={sentimentFilter}
-              onSentimentChange={handleSentimentChange}
-              renderStatusLabel={(value) => {
-                const tab = tabOptions.find((item) => item.key === value);
-                if (!tab) return value;
-                return (
-                  <span className="flex items-center gap-2">
-                    <span>{tab.label}</span>
-                    <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
-                      {tab.count}
-                    </span>
-                  </span>
-                );
-              }}
+      <BackHeader className="pt-[20px]">
+        <Link href="/discourse" className="text-[14px] text-black/70">
+          Discourse
+        </Link>
+        <span className="text-black/25">/</span>
+        <span className="text-[14px] text-black/70">
+          {thread.categories[0] ?? 'Thread'}
+        </span>
+      </BackHeader>
+      <div className="flex justify-center px-[20px] pb-16 pt-4">
+        <div className="flex w-full max-w-[1200px] items-start gap-[40px]">
+          <section className="w-[700px] space-y-6">
+            <PostDetailCard
+              title={thread.title}
+              author={thread.author.name}
+              authorAvatar={thread.author.avatarUrl}
+              timeAgo={thread.author.postedAt}
+              contentHtml={threadContentHtml}
+              tags={thread.tags}
+              categoryLabel={thread.categories[0] ?? 'General'}
+              supportCount={baseThread?.support ?? 0}
+              hasSupported={hasSupportedThread}
+              supportPending={threadSupportPending}
+              withdrawPending={threadWithdrawPending}
+              sentimentVotes={thread.totalSentimentVotes}
+              viewerSentiment={viewerSentiment}
+              sentimentPending={setThreadSentimentMutation.isPending}
+              onSelectSentiment={handleSetThreadSentiment}
+              requireAuth={requireAuth}
+              onSupportThread={handleSupportThread}
+              onWithdrawThread={handleWithdrawThread}
+              onAnswer={handleOpenAnswerComposer}
+              onComment={handleOpenThreadComment}
             />
-            <div className="space-y-4 pt-5">
-              {isAnswersTab ? (
-                <>
-                  {isAnswersInitialLoading ? (
-                    <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                      Loading answers…
-                    </div>
-                  ) : null}
-                  {filteredAnswers.length
-                    ? filteredAnswers.map((answer) => (
-                        <AnswerDetailCard
-                          key={answer.id}
-                          answer={answer}
-                          threadId={numericThreadId}
-                          onSupport={handleSupportAnswer}
-                          onWithdraw={handleWithdrawSupport}
-                          onSelectSentiment={handleSetAnswerSentiment}
-                          onShowSentimentDetail={
-                            handleShowAnswerSentimentDetail
-                          }
-                          onPostComment={makeOnPostComment(answer.numericId)}
-                          threadAuthorName={thread.author.name}
-                          supportPending={
-                            supportingAnswerId === answer.numericId
-                          }
-                          withdrawPending={
-                            withdrawingAnswerId === answer.numericId
-                          }
-                          sentimentPendingId={answerSentimentPendingId}
-                          isTopSupport={isAnswerTopSupport(answer.cpSupport)}
-                        />
-                      ))
-                    : !isAnswersInitialLoading && (
-                        <EmptyState
-                          title={answerEmptyState.title}
-                          description={answerEmptyState.description}
-                        />
-                      )}
-                  {answersQuery.hasNextPage ? (
-                    <div className="flex justify-center">
+
+            <div className="pb-[40px]">
+              <TopbarFilters
+                statusTabs={tabOptions.map((tab) => tab.key)}
+                activeStatus={activeTab}
+                onStatusChange={handleStatusChange}
+                sortOptions={['top', 'new']}
+                activeSort={sortOption}
+                onSortChange={handleSortChange}
+                sentimentOptions={SENTIMENT_KEYS}
+                selectedSentiment={sentimentFilter}
+                onSentimentChange={handleSentimentChange}
+                renderStatusLabel={(value) => {
+                  const tab = tabOptions.find((item) => item.key === value);
+                  if (!tab) return value;
+                  return (
+                    <span className="flex items-center gap-2">
+                      <span>{tab.label}</span>
+                      <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
+                        {tab.count}
+                      </span>
+                    </span>
+                  );
+                }}
+              />
+              <div className="space-y-4 pt-5">
+                {isAnswersTab ? (
+                  <>
+                    {isAnswersInitialLoading ? (
+                      <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                        Loading answers…
+                      </div>
+                    ) : null}
+                    {filteredAnswers.length
+                      ? filteredAnswers.map((answer) => (
+                          <AnswerDetailCard
+                            key={answer.id}
+                            answer={answer}
+                            threadId={numericThreadId}
+                            onSupport={handleSupportAnswer}
+                            onWithdraw={handleWithdrawSupport}
+                            onSelectSentiment={handleSetAnswerSentiment}
+                            onShowSentimentDetail={
+                              handleShowAnswerSentimentDetail
+                            }
+                            onPostComment={makeOnPostComment(answer.numericId)}
+                            threadAuthorName={thread.author.name}
+                            supportPending={
+                              supportingAnswerId === answer.numericId
+                            }
+                            withdrawPending={
+                              withdrawingAnswerId === answer.numericId
+                            }
+                            sentimentPendingId={answerSentimentPendingId}
+                            isTopSupport={isAnswerTopSupport(answer.cpSupport)}
+                          />
+                        ))
+                      : !isAnswersInitialLoading && (
+                          <EmptyState
+                            title={answerEmptyState.title}
+                            description={answerEmptyState.description}
+                          />
+                        )}
+                    {answersQuery.hasNextPage ? (
+                      <div className="flex justify-center">
+                        <Button
+                          className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
+                          onPress={handleLoadMoreAnswers}
+                          isLoading={answersQuery.isFetchingNextPage}
+                        >
+                          Load more answers
+                        </Button>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <div className="">
                       <Button
-                        className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
-                        onPress={handleLoadMoreAnswers}
-                        isLoading={answersQuery.isFetchingNextPage}
+                        className="w-full rounded-[5px] p-[10px] text-[13px] font-semibold text-black/80"
+                        onPress={handleOpenThreadComment}
                       >
-                        Load more answers
+                        Post Comment
                       </Button>
                     </div>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  <div className="">
-                    <Button
-                      className="w-full rounded-[5px] p-[10px] text-[13px] font-semibold text-black/80"
-                      onPress={handleOpenThreadComment}
-                    >
-                      Post Comment
-                    </Button>
-                  </div>
-                  {isCommentsInitialLoading ? (
-                    <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                      Loading discussion…
-                    </div>
-                  ) : null}
-                  {filteredComments.length
-                    ? filteredComments.map((comment, index) => (
-                        <ThreadCommentTree
-                          key={comment.id}
-                          node={comment}
-                          depth={0}
-                          isFirst={index === 0}
-                          hasSiblings={filteredComments.length > 1}
-                          onReply={handleReplyToComment}
-                          threadAuthorName={thread.author.name}
-                          threadId={numericThreadId}
-                        />
-                      ))
-                    : !isCommentsInitialLoading && (
-                        <EmptyState
-                          title={discussionEmptyState.title}
-                          description={discussionEmptyState.description}
-                        />
-                      )}
-                  {commentsQuery.hasNextPage ? (
-                    <div className="flex justify-center">
-                      <Button
-                        className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
-                        onPress={handleLoadMoreComments}
-                        isLoading={commentsQuery.isFetchingNextPage}
-                      >
-                        Load more comments
-                      </Button>
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <div className="w-[300px] space-y-[20px]">
-          <ContributionVotesCard
-            current={thread.cpProgress.current}
-            target={thread.cpProgress.target}
-            label={thread.cpProgress.label}
-            helper={thread.cpProgress.helper}
-            status={thread.status}
-            isScam={false}
-          />
-
-          <SentimentSummaryPanel
-            sentiments={thread.sentiment.map((item) => ({
-              key: item.key,
-              percentage: item.percentage,
-            }))}
-            totalVotes={thread.totalSentimentVotes}
-            customHeader={
-              <div className="flex items-center gap-[10px]">
-                <ChartBarIcon size={20} weight="fill" />
-                <span className="text-[14px] font-[600]">
-                  User sentiment for this post
-                </span>
+                    {isCommentsInitialLoading ? (
+                      <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                        Loading discussion…
+                      </div>
+                    ) : null}
+                    {filteredComments.length
+                      ? filteredComments.map((comment, index) => (
+                          <ThreadCommentTree
+                            key={comment.id}
+                            node={comment}
+                            depth={0}
+                            isFirst={index === 0}
+                            hasSiblings={filteredComments.length > 1}
+                            onReply={handleReplyToComment}
+                            threadAuthorName={thread.author.name}
+                            threadId={numericThreadId}
+                          />
+                        ))
+                      : !isCommentsInitialLoading && (
+                          <EmptyState
+                            title={discussionEmptyState.title}
+                            description={discussionEmptyState.description}
+                          />
+                        )}
+                    {commentsQuery.hasNextPage ? (
+                      <div className="flex justify-center">
+                        <Button
+                          className="rounded-full border border-black/10 px-6 py-2 text-sm font-semibold text-black"
+                          onPress={handleLoadMoreComments}
+                          isLoading={commentsQuery.isFetchingNextPage}
+                        >
+                          Load more comments
+                        </Button>
+                      </div>
+                    ) : null}
+                  </>
+                )}
               </div>
-            }
-          />
+            </div>
+          </section>
 
-          <QuickActionsCard actions={thread.quickActions} />
+          <div className="w-[300px] space-y-[20px]">
+            <ContributionVotesCard
+              current={thread.cpProgress.current}
+              target={thread.cpProgress.target}
+              label={thread.cpProgress.label}
+              helper={thread.cpProgress.helper}
+              status={thread.status}
+              isScam={false}
+            />
+
+            <SentimentSummaryPanel
+              sentiments={thread.sentiment.map((item) => ({
+                key: item.key,
+                percentage: item.percentage,
+              }))}
+              totalVotes={thread.totalSentimentVotes}
+              customHeader={
+                <div className="flex items-center gap-[10px]">
+                  <ChartBarIcon size={20} weight="fill" />
+                  <span className="text-[14px] font-[600]">
+                    User sentiment for this post
+                  </span>
+                </div>
+              }
+            />
+
+            <QuickActionsCard actions={thread.quickActions} />
+          </div>
         </div>
       </div>
 
