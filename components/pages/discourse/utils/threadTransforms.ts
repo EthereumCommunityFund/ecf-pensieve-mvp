@@ -26,6 +26,9 @@ export type ThreadMeta = ThreadListItem & {
   timeAgo: string;
   badge?: string;
   status?: string;
+  statusLabel?: 'Alert Displayed on Page' | 'Claim Redressed' | undefined;
+  isAlertDisplayed?: boolean;
+  isClaimRedressed?: boolean;
   sentiment?: string;
   sentimentBreakdown: SentimentMetric[];
   totalSentimentVotes: number;
@@ -125,13 +128,14 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     ? sentimentDefinitions[summary.dominantKey]?.label
     : undefined;
 
-  const status = thread.isScam
-    ? support >= REDRESSED_SUPPORT_THRESHOLD
-      ? 'Alert Displayed on Page'
-      : hasRedressedAnswer
-        ? 'Claim Redressed'
-        : undefined
-    : undefined;
+  const isAlertDisplayed =
+    !!thread.isScam && support >= REDRESSED_SUPPORT_THRESHOLD;
+  const isClaimRedressed = !!thread.isScam && hasRedressedAnswer;
+  const statusLabel = isAlertDisplayed
+    ? 'Alert Displayed on Page'
+    : isClaimRedressed
+      ? 'Claim Redressed'
+      : undefined;
 
   return {
     ...thread,
@@ -142,7 +146,10 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     authorInitial: authorName[0]?.toUpperCase() ?? 'U',
     timeAgo: createdAtLabel,
     badge: thread.isScam ? '⚠️ Scam Claim' : 'Complaint Topic',
-    status,
+    status: statusLabel,
+    statusLabel,
+    isAlertDisplayed,
+    isClaimRedressed,
     tag: primaryTag,
     sentiment: dominantSentiment,
     votes: thread.support ?? 0,

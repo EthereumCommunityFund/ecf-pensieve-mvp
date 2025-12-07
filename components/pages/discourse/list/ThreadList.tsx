@@ -3,7 +3,7 @@
 import { cn, Skeleton } from '@heroui/react';
 import {
   CaretCircleUpIcon,
-  CheckCircle,
+  CheckIcon,
   CheckSquare,
 } from '@phosphor-icons/react';
 import {
@@ -60,31 +60,29 @@ function ThreadItem({
   voteOverrides = {},
   pendingThreadId,
 }: ThreadItemProps) {
-  const authorInitial = thread.author?.[0]?.toUpperCase() ?? '?';
   const hasAnswers = !!thread.answeredCount;
-  const hasStatus = Boolean(thread.status);
+  const hasStatus = Boolean(thread.statusLabel ?? thread.status);
   const numericId = Number(thread.id);
-  const statusTheme =
-    thread.status === 'Alert Displayed on Page'
+  const statusTheme = thread.isAlertDisplayed
+    ? {
+        border: 'border-[rgba(187,93,0,0.40)]',
+        bg: 'bg-[rgba(187,93,0,0.20)]',
+        text: 'text-[#BB5D00]',
+        icon: 'text-[#bb5d00]',
+      }
+    : thread.isClaimRedressed
       ? {
-          border: 'border-[#bb5d00]/40',
-          bg: 'bg-[#fff2e5]',
-          text: 'text-[#bb5d00]',
-          icon: 'text-[#bb5d00]',
+          border: 'border-[rgba(67,189,155,0.6)]',
+          bg: 'bg-[rgba(67,189,155,0.1)]',
+          text: 'text-[#1b9573]',
+          icon: 'text-[#1b9573]',
         }
-      : thread.status === 'Claim Redressed' || thread.status === 'Redressed'
-        ? {
-            border: 'border-[rgba(67,189,155,0.6)]',
-            bg: 'bg-[rgba(67,189,155,0.1)]',
-            text: 'text-[#1b9573]',
-            icon: 'text-[#1b9573]',
-          }
-        : {
-            border: 'border-black/10',
-            bg: 'bg-[#f5f5f5]',
-            text: 'text-black/80',
-            icon: 'text-black/60',
-          };
+      : {
+          border: 'border-black/10',
+          bg: 'bg-[#f5f5f5]',
+          text: 'text-black/80',
+          icon: 'text-black/60',
+        };
   const voteCount =
     voteOverrides?.[numericId] !== undefined
       ? voteOverrides[numericId]
@@ -131,12 +129,12 @@ function ThreadItem({
                   statusTheme.text,
                 )}
               >
-                <CheckCircle
+                <CheckIcon
                   size={16}
-                  weight="fill"
-                  className={cn('text-black/60', statusTheme.icon)}
+                  weight="bold"
+                  className={cn('', statusTheme.icon)}
                 />
-                {thread.status}
+                {thread.statusLabel ?? thread.status}
               </span>
             ) : null}
             {hasAnswers ? (
