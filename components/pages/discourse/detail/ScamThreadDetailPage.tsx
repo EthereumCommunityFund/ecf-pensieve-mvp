@@ -20,10 +20,10 @@ import BackHeader from '@/components/pages/project/BackHeader';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 import { ThreadDetailRecord } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
-import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,

@@ -8,6 +8,7 @@ import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 import { formatTimeAgo } from '@/lib/utils';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 import {
   SentimentKey,
@@ -19,7 +20,6 @@ import {
 } from '../common/sentiment/SentimentModal';
 import { QuickAction, ThreadDetailRecord } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
-import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
 import {
   SENTIMENT_KEYS,
@@ -573,20 +573,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     },
     { key: 'comments', label: 'Discuss', count: totalCommentCount },
   ];
-
-  // const filteredAnswers =
-  //   sentimentFilter === 'all'
-  //     ? answersToRender
-  //     : answersToRender.filter(
-  //         (answer) => answer.sentimentLabel === sentimentFilter,
-  //       );
-
-  // const filteredComments: ThreadCommentNode[] =
-  //   sentimentFilter === 'all'
-  //     ? discussionTree
-  //     : discussionTree.filter(
-  //         (comment) => comment.sentimentLabel === sentimentFilter,
-  //       );
 
   const isAnswersTab = activeTab === 'answers';
   const answerEmptyState = {

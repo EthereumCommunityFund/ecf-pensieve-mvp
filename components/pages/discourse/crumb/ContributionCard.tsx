@@ -2,6 +2,8 @@
 
 import { CaretCircleUp } from '@phosphor-icons/react';
 
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
+
 type ContributionCardProps = {
   voteCount: number;
 };
@@ -19,7 +21,7 @@ export function ContributionCard({ voteCount }: ContributionCardProps) {
           Redressed Threshold:
         </p>
         <div className="mt-1 flex items-baseline gap-1 font-semibold text-black/80">
-          <span className="text-[14px]">9000</span>
+          <span className="text-[14px]">{REDRESSED_SUPPORT_THRESHOLD}</span>
           <span className="text-[10px] uppercase tracking-[0.08em]">CP</span>
         </div>
         <p className="mt-2 text-[11px] font-medium text-black/50">

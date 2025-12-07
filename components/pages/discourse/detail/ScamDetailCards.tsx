@@ -2,6 +2,7 @@ import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button, MdEditor } from '@/components/base';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 import type { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
@@ -65,7 +66,7 @@ export function CounterClaimCard({
   onPostComment,
 }: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
-  const CP_SUPPORT_THRESHOLD = cpTarget ?? 9000;
+  const CP_SUPPORT_THRESHOLD = cpTarget ?? REDRESSED_SUPPORT_THRESHOLD;
   const meetsThreshold = claim.cpSupport >= CP_SUPPORT_THRESHOLD;
   const textColor = meetsThreshold
     ? 'text-[#64C0A5]'

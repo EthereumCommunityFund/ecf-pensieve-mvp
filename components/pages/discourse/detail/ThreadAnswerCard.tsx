@@ -6,13 +6,13 @@ import { Button, MdEditor } from '@/components/base';
 import { SentimentIndicator } from '@/components/pages/discourse/common/sentiment/SentimentIndicator';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 import type {
   SentimentKey,
   SentimentMetric,
 } from '../common/sentiment/sentimentConfig';
 import type { AnswerItem, CommentItem } from '../common/threadData';
-import { REDRESSED_SUPPORT_THRESHOLD } from '../utils/constants';
 
 import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';

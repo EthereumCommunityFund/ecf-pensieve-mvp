@@ -12,6 +12,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import type { Database } from '@/lib/db';
 import {
   profiles,
@@ -21,8 +22,6 @@ import {
   projectDiscussionSentiments,
   projectDiscussionThreads,
 } from '@/lib/db/schema';
-
-const REDRESSED_SUPPORT_THRESHOLD = 9000;
 
 const ensureThreadAvailable = async (db: Database, threadId: number) => {
   const thread = await db.query.projectDiscussionThreads.findFirst({
