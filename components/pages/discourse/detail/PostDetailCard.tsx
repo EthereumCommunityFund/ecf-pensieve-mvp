@@ -1,3 +1,4 @@
+import { Skeleton } from '@heroui/react';
 import { CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
@@ -147,6 +148,39 @@ export default function PostDetailCard({
         >
           Post Comment
         </Button>
+      </div>
+    </article>
+  );
+}
+
+export function PostDetailCardSkeleton() {
+  return (
+    <article className="flex flex-col gap-[20px] rounded-[16px]">
+      <Skeleton className="h-[20px] w-[120px] rounded-[6px]" />
+      <div className="flex flex-col gap-[10px]">
+        <Skeleton className="h-[26px] w-3/4 rounded-[6px]" />
+        <div className="flex items-center gap-[10px]">
+          <Skeleton className="h-[24px] w-[120px] rounded-[6px]" />
+          <Skeleton className="h-[20px] w-[80px] rounded-[6px]" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-[16px] w-full rounded-[4px]" />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-[8px]">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={index} className="h-[24px] w-[70px] rounded-[6px]" />
+        ))}
+      </div>
+      <div className="flex gap-[10px] border-t border-black/10 pt-4">
+        <Skeleton className="h-[38px] w-[150px] rounded-[8px]" />
+        <Skeleton className="h-[38px] w-[90px] rounded-[8px]" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-[42px] w-full rounded-[6px]" />
+        <Skeleton className="h-[42px] w-full rounded-[6px]" />
       </div>
     </article>
   );

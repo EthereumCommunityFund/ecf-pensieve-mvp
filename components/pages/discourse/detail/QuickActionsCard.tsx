@@ -1,5 +1,7 @@
 'use client';
 
+import { Skeleton } from '@heroui/react';
+
 import { Button } from '@/components/base';
 
 import { QuickAction } from '../common/threadData';
@@ -57,6 +59,34 @@ export function QuickActionsCard({
           <Button onPress={onAnswerComplaint} className="h-[30px] font-[400]">
             Answer Complaint
           </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function QuickActionsCardSkeleton() {
+  return (
+    <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
+      <Skeleton className="h-[16px] w-[160px] rounded-[6px]" />
+
+      <div className="mt-[12px] space-y-[14px]">
+        <div className="space-y-[6px]">
+          <Skeleton className="h-[14px] w-[140px] rounded-[6px]" />
+          <Skeleton className="h-[13px] w-full rounded-[6px]" />
+          <Skeleton className="h-[13px] w-4/5 rounded-[6px]" />
+          <div className="mt-[6px] flex flex-col gap-[6px]">
+            <Skeleton className="h-[30px] w-full rounded-[6px]" />
+            <Skeleton className="h-[30px] w-full rounded-[6px]" />
+            <Skeleton className="h-[30px] w-full rounded-[6px]" />
+          </div>
+        </div>
+
+        <div className="space-y-[6px]">
+          <Skeleton className="h-[14px] w-[120px] rounded-[6px]" />
+          <Skeleton className="h-[13px] w-full rounded-[6px]" />
+          <Skeleton className="h-[13px] w-4/5 rounded-[6px]" />
+          <Skeleton className="h-[30px] w-full rounded-[6px]" />
         </div>
       </div>
     </section>

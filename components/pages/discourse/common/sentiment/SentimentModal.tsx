@@ -1,6 +1,7 @@
 'use client';
 
 import { XCircleIcon } from '@phosphor-icons/react';
+import { Skeleton } from '@heroui/react';
 
 import { Button } from '@/components/base';
 import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
@@ -111,6 +112,34 @@ export function SentimentSummaryPanel({
       <div className="text-right text-[13px] font-[500] text-black/50">
         What is User Sentiment?
       </div>
+    </div>
+  );
+}
+
+export function SentimentSummaryPanelSkeleton() {
+  return (
+    <div className="relative flex flex-col gap-[14px] rounded-[16px] border border-black/10 bg-white p-[14px]">
+      <div className="flex flex-col gap-[10px] pr-6">
+        <div className="flex flex-col gap-[6px]">
+          <Skeleton className="h-[16px] w-[150px] rounded-[6px]" />
+          <Skeleton className="h-[14px] w-[100px] rounded-[6px]" />
+        </div>
+      </div>
+      <div className="space-y-[8px]">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between gap-2 rounded-[6px] border border-black/5 px-[8px] py-[6px]"
+          >
+            <div className="flex items-center gap-2">
+              <Skeleton className="size-[16px] rounded-full" />
+              <Skeleton className="h-[14px] w-[90px] rounded-[4px]" />
+            </div>
+            <Skeleton className="h-[12px] w-[40px] rounded-[4px]" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-[14px] w-[140px] self-end rounded-[6px]" />
     </div>
   );
 }

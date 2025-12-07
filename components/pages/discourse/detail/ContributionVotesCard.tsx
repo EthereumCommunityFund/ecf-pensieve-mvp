@@ -1,5 +1,6 @@
 'use client';
 
+import { Skeleton } from '@heroui/react';
 import { CaretCircleUpIcon } from '@phosphor-icons/react';
 
 type ContributionVotesCardProps = {
@@ -47,6 +48,23 @@ export function ContributionVotesCard({
             CP
           </span>
         </p>
+      </div>
+    </section>
+  );
+}
+
+export function ContributionVotesCardSkeleton() {
+  return (
+    <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
+      <div className="flex items-center gap-[10px]">
+        <Skeleton className="size-[20px] rounded-full" />
+        <Skeleton className="h-[16px] w-[180px] rounded-[6px]" />
+      </div>
+      <Skeleton className="mt-[10px] h-[24px] w-[120px] rounded-[6px]" />
+      <div className="mt-[10px] space-y-[6px] border-t border-black/10 pt-[10px]">
+        <Skeleton className="h-[16px] w-[140px] rounded-[6px]" />
+        <Skeleton className="h-[14px] w-[220px] rounded-[4px]" />
+        <Skeleton className="h-[18px] w-[100px] rounded-[6px]" />
       </div>
     </section>
   );

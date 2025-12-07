@@ -1,4 +1,4 @@
-import { cn } from '@heroui/react';
+import { cn, Skeleton } from '@heroui/react';
 import { CaretCircleUpIcon } from '@phosphor-icons/react';
 import { useMemo } from 'react';
 
@@ -239,6 +239,43 @@ export function AnswerDetailCard({
                 />
               ))
             : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export function AnswerDetailCardSkeleton() {
+  return (
+    <article className="space-y-[10px] rounded-[10px] bg-white p-[10px]">
+      <div className="flex gap-[10px]">
+        <Skeleton className="size-8 rounded-full" />
+        <div className="flex-1 space-y-[10px]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Skeleton className="h-[18px] w-[120px] rounded-[4px]" />
+              <Skeleton className="h-[18px] w-[60px] rounded-[4px]" />
+              <Skeleton className="h-[18px] w-[90px] rounded-[4px]" />
+            </div>
+            <Skeleton className="h-[20px] w-[80px] rounded-[4px]" />
+          </div>
+
+          <div className="flex items-start gap-[10px]">
+            <div className="flex-1 space-y-2">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-[16px] w-full rounded-[4px]"
+                />
+              ))}
+            </div>
+            <Skeleton className="h-[50px] w-[70px] rounded-[8px]" />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-sm text-black/70">
+            <Skeleton className="h-[20px] w-[80px] rounded-[4px]" />
+            <Skeleton className="h-[20px] w-[50px] rounded-[4px]" />
+          </div>
         </div>
       </div>
     </article>
