@@ -1,3 +1,4 @@
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
 
@@ -25,6 +26,7 @@ type NormalizeAnswerOptions = {
   defaultRole?: string;
   viewerId?: string | null;
   defaultSentiment?: SentimentKey;
+  cpTarget?: number;
 };
 
 type NormalizeCommentOptions = {
@@ -91,6 +93,7 @@ export const normalizeAnswer = (
     defaultRole = 'Community Member',
     viewerId = null,
     defaultSentiment = 'recommend',
+    cpTarget = REDRESSED_SUPPORT_THRESHOLD,
   } = options;
 
   if (isNormalizedAnswer(answer)) {
@@ -110,6 +113,9 @@ export const normalizeAnswer = (
         0,
       sentimentLabel: answer.sentimentLabel ?? defaultSentiment,
       sentimentBreakdown: answer.sentimentBreakdown,
+      isAccepted:
+        (answer as AnswerItem).isAccepted ??
+        (answer.cpSupport ?? 0) >= cpTarget,
     };
   }
 
@@ -122,6 +128,7 @@ export const normalizeAnswer = (
     (answer as { support?: number }).support ??
     (answer as { voteCount?: number }).voteCount ??
     0;
+  const isAccepted = supportCount >= cpTarget;
 
   return {
     id: `answer-${answer.id}`,
@@ -133,6 +140,7 @@ export const normalizeAnswer = (
     body: answer.content,
     cpSupport: supportCount,
     cpTarget: undefined,
+    isAccepted,
     sentimentLabel: sentiment.dominantKey ?? defaultSentiment,
     sentimentVotes: sentiment.totalVotes,
     sentimentBreakdown: sentiment.metrics,
@@ -143,6 +151,8 @@ export const normalizeAnswer = (
     viewerHasSupported: Boolean(
       (answer as { viewerHasSupported?: boolean }).viewerHasSupported,
     ),
+    isAccepted:
+      (answer as AnswerItem).isAccepted ?? (answer.cpSupport ?? 0) >= cpTarget,
   };
 };
 
@@ -237,6 +247,7 @@ type NormalizeThreadDetailOptions = {
   cpTarget: number;
   cpLabel: string;
   cpHelper: string;
+  cpCurrentOverride?: number;
   participation: ThreadDetailRecord['participation'];
   quickActions: ThreadDetailRecord['quickActions'];
   statusOverride?: string;
@@ -256,6 +267,7 @@ export const normalizeThreadDetailRecord = ({
   cpTarget,
   cpLabel,
   cpHelper,
+  cpCurrentOverride,
   participation,
   quickActions,
   statusOverride,
@@ -296,7 +308,7 @@ export const normalizeThreadDetailRecord = ({
     ],
     body: paragraphs.length ? paragraphs : [stripHtmlToPlainText(thread.post)],
     cpProgress: {
-      current: thread.support ?? 0,
+      current: cpCurrentOverride ?? thread.support ?? 0,
       target: cpTarget,
       label: cpLabel,
       helper: cpHelper,

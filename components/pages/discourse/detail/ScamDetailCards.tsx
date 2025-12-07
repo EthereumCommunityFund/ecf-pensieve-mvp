@@ -4,6 +4,7 @@ import { Button, MdEditor } from '@/components/base';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
+import { OpTag } from '../common/OpTag';
 import type { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import type { AnswerItem, CommentItem } from '../common/threadData';
@@ -19,6 +20,7 @@ type CounterClaimCardProps = {
   claim: AnswerItem;
   cpTarget?: number;
   threadId: number;
+  threadAuthorName: string;
   onSupport: (answerId: number) => void;
   onWithdraw: (answerId: number) => void;
   supportPending?: boolean;
@@ -55,6 +57,7 @@ export function CounterClaimCard({
   claim,
   cpTarget,
   threadId,
+  threadAuthorName,
   onSupport,
   onWithdraw,
   supportPending = false,
@@ -78,6 +81,7 @@ export function CounterClaimCard({
     : claim.viewerHasSupported
       ? 'text-black'
       : 'text-black/10';
+  const isOp = claim.author === threadAuthorName;
   const commentTree = buildCommentTree<CounterCommentNode>(
     (claim.comments ?? []) as CounterCommentNode[],
   );
@@ -96,6 +100,7 @@ export function CounterClaimCard({
             <p className="text-[15px] font-semibold text-black">
               {claim.author}
             </p>
+            {isOp ? <OpTag /> : null}
             <SentimentIndicator
               sentiments={claim.sentimentBreakdown}
               onClick={() =>
@@ -201,6 +206,7 @@ export function CounterClaimCard({
                         },
                       })
                     }
+                    threadAuthorName={threadAuthorName}
                   />
                 ))
               : null}
@@ -211,7 +217,16 @@ export function CounterClaimCard({
   );
 }
 
-export function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
+export function DiscussionCommentCard({
+  comment,
+  threadAuthorName,
+}: {
+  comment: CommentItem;
+  threadAuthorName: string;
+}) {
+  const isOpTag =
+    comment.author === threadAuthorName ||
+    comment.author?.toLowerCase().includes('(op)');
   return (
     <article className="rounded-[10px] border border-black/10 bg-white p-[10px]">
       <div className="flex gap-3">
@@ -227,6 +242,7 @@ export function DiscussionCommentCard({ comment }: { comment: CommentItem }) {
               <span className="text-[14px] font-semibold text-black">
                 {comment.author}
               </span>
+              {isOpTag ? <OpTag /> : null}
               <span className="text-[12px] text-black/60">
                 {comment.createdAt}
               </span>
@@ -262,6 +278,7 @@ type CounterCommentTreeProps = {
     parentCommentId?: number;
     commentId?: number;
   }) => void;
+  threadAuthorName: string;
 };
 
 function CounterCommentTree({
@@ -270,17 +287,24 @@ function CounterCommentTree({
   isFirst,
   hasSiblings,
   onReply,
+  threadAuthorName,
 }: CounterCommentTreeProps) {
   const handleReply = () => {
     onReply({
       author: node.author,
       excerpt: formatExcerpt(node.body),
       timestamp: node.createdAt,
-      isOp: false,
+      isOp:
+        node.author === threadAuthorName ||
+        node.author?.toLowerCase().includes('(op)'),
       parentCommentId: node.numericId,
       commentId: node.commentId ?? node.numericId,
     });
   };
+
+  const isOpTag =
+    node.author === threadAuthorName ||
+    node.author?.toLowerCase().includes('(op)');
 
   return (
     <div className="space-y-2" style={{ marginLeft: depth ? depth * 16 : 0 }}>
@@ -296,6 +320,7 @@ function CounterCommentTree({
             <span className="text-[14px] font-semibold text-black">
               {node.author}
             </span>
+            {isOpTag ? <OpTag /> : null}
             <span className="text-[12px] text-black/60">{node.createdAt}</span>
           </div>
           <div

@@ -454,6 +454,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     viewerId: user?.id ?? null,
     sentimentFilter: sentimentFilter as 'all' | SentimentKey,
     buildThreadTree: true,
+    cpTarget: REDRESSED_SUPPORT_THRESHOLD,
   });
 
   const {
@@ -477,6 +478,17 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!baseThread) {
       return null;
     }
+    const acceptedAnswerCount = Math.max(
+      baseThread.redressedAnswerCount ?? 0,
+      answersFromApi.filter((answer) => answer.isAccepted).length,
+    );
+    const leadingAnswerCp =
+      answersFromApi.reduce(
+        (max, answer) => Math.max(max, answer.cpSupport),
+        0,
+      ) ||
+      baseThread.support ||
+      0;
     return normalizeThreadDetailRecord({
       thread: baseThread,
       answers: answersFromApi,
@@ -484,13 +496,34 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       sentimentSummary,
       badge: 'Complaint Topic',
       cpTarget: REDRESSED_SUPPORT_THRESHOLD,
-      cpLabel: 'Contribution Points supporting this thread',
+      cpLabel: 'Contribution Points supporting the leading answer',
       cpHelper:
-        'Reaching the threshold signals community confidence in this complaint.',
+        'Reaching the threshold signals community confidence in this answer.',
       participation: DEFAULT_PARTICIPATION,
       quickActions: DEFAULT_QUICK_ACTIONS,
+      statusOverride:
+        acceptedAnswerCount > 0
+          ? 'Redressed'
+          : (baseThread.answerCount ?? 0) === 0
+            ? 'Unanswered'
+            : undefined,
+      highlightsOverride: [
+        { label: 'Redressed', value: `${acceptedAnswerCount}` },
+        {
+          label: 'Comments',
+          value: `${threadComments.length}`,
+        },
+        { label: 'Views', value: '—' },
+      ],
+      cpCurrentOverride: leadingAnswerCp,
     });
-  }, [answersFromApi, baseThread, sentimentSummary, threadComments]);
+  }, [
+    answersFromApi,
+    baseThread,
+    threadComments.length,
+    sentimentSummary,
+    threadComments,
+  ]);
 
   const handleOpenAnswerComposer = useCallback(
     () => openAnswerComposer(),

@@ -8,6 +8,7 @@ import { SentimentVoteButton } from '@/components/pages/discourse/common/sentime
 import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
+import { OpTag } from '../common/OpTag';
 import type {
   SentimentKey,
   SentimentMetric,
@@ -61,6 +62,8 @@ export function AnswerDetailCard({
   const secondaryTag =
     answer.statusTag ||
     (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
+  const isOp = answer.author === threadAuthorName;
+  const opTag = isOp ? 'OP' : undefined;
   const cpLabel = formatCompactNumber(answer.cpSupport);
   const meetsThreshold = answer.cpSupport >= REDRESSED_SUPPORT_THRESHOLD;
   const cpTextColor = meetsThreshold
@@ -73,7 +76,6 @@ export function AnswerDetailCard({
     : answer.viewerHasSupported
       ? 'text-black/80'
       : 'text-black/10';
-  const isOp = answer.author === threadAuthorName;
 
   const commentTree = useMemo<AnswerCommentNode[]>(
     () =>
@@ -94,6 +96,7 @@ export function AnswerDetailCard({
               <span className="text-[15px] font-semibold text-black">
                 {answer.author}
               </span>
+              {opTag ? <OpTag label={opTag} /> : null}
               {primaryTag ? (
                 <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
                   {primaryTag}
@@ -250,12 +253,16 @@ function AnswerCommentRow({
   comment,
   onReply,
   depth = 0,
+  threadAuthorName,
 }: {
   comment: CommentItem;
   onReply: () => void;
   depth?: number;
+  threadAuthorName: string;
 }) {
-  const isOp = comment.author?.toLowerCase().includes('(op)');
+  const isOp =
+    comment.author === threadAuthorName ||
+    comment.author?.toLowerCase().includes('(op)');
 
   return (
     <div
@@ -268,11 +275,7 @@ function AnswerCommentRow({
           <span className="text-[14px] font-semibold text-black">
             {comment.author}
           </span>
-          {isOp ? (
-            <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
-              OP
-            </span>
-          ) : null}
+          {isOp ? <OpTag className="px-2 py-[2px]" /> : null}
           <span className="text-[12px] text-black/60">{comment.createdAt}</span>
         </div>
         <MdEditor
@@ -344,7 +347,12 @@ function AnswerCommentTree({
 
   return (
     <div className="space-y-3">
-      <AnswerCommentRow comment={node} onReply={handleReply} depth={depth} />
+      <AnswerCommentRow
+        comment={node}
+        onReply={handleReply}
+        depth={depth}
+        threadAuthorName={threadAuthorName}
+      />
       {node.children?.length
         ? node.children.map((child, index) => (
             <AnswerCommentTree

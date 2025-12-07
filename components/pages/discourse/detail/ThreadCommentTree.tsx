@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 
+import { OpTag } from '../common/OpTag';
 import type { CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
@@ -138,11 +139,7 @@ function CommentThreadItem({
             <span className="text-[14px] font-semibold text-black">
               {comment.author}
             </span>
-            {isOp ? (
-              <span className="rounded-[4px] border border-white bg-[rgba(67,189,155,0.2)] px-2 py-[2px] text-[11px] font-semibold text-[#1b9573]">
-                OP
-              </span>
-            ) : null}
+            {isOp ? <OpTag className="px-2 py-[2px]" /> : null}
             <span className="text-[12px] text-black/60">
               {comment.createdAt}
             </span>

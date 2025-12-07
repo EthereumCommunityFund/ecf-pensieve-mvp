@@ -11,6 +11,7 @@ import {
   normalizeAnswer,
   normalizeComment,
 } from '@/components/pages/discourse/detail/utils/discussionMappers';
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
 type InfiniteQuery<T> = {
   data?: {
@@ -26,6 +27,7 @@ type DiscussionListsOptions<A, C> = {
   defaultRole?: string;
   sentimentFilter?: 'all' | SentimentKey;
   buildThreadTree?: boolean;
+  cpTarget?: number;
 };
 
 export const useDiscussionLists = <A, C>({
@@ -35,6 +37,7 @@ export const useDiscussionLists = <A, C>({
   defaultRole = 'Community Member',
   sentimentFilter = 'all',
   buildThreadTree = false,
+  cpTarget = REDRESSED_SUPPORT_THRESHOLD,
 }: DiscussionListsOptions<A, C>) => {
   const answers = useMemo<AnswerItem[]>(() => {
     const remoteItems = answersQuery?.data?.pages?.length
@@ -46,9 +49,10 @@ export const useDiscussionLists = <A, C>({
       normalizeAnswer(answer as any, {
         defaultRole,
         viewerId,
+        cpTarget,
       }),
     );
-  }, [answersQuery?.data, defaultRole, viewerId]);
+  }, [answersQuery?.data, cpTarget, defaultRole, viewerId]);
 
   const comments = useMemo<CommentItem[]>(() => {
     const remoteItems = commentsQuery?.data?.pages?.length

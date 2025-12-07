@@ -1,7 +1,11 @@
 'use client';
 
 import { cn, Skeleton } from '@heroui/react';
-import { CaretCircleUpIcon, CheckSquare } from '@phosphor-icons/react';
+import {
+  CaretCircleUpIcon,
+  CheckCircle,
+  CheckSquare,
+} from '@phosphor-icons/react';
 import {
   KeyboardEvent,
   useCallback,
@@ -60,6 +64,27 @@ function ThreadItem({
   const hasAnswers = !!thread.answeredCount;
   const hasStatus = Boolean(thread.status);
   const numericId = Number(thread.id);
+  const statusTheme =
+    thread.status === 'Alert Displayed on Page'
+      ? {
+          border: 'border-[#bb5d00]/40',
+          bg: 'bg-[#fff2e5]',
+          text: 'text-[#bb5d00]',
+          icon: 'text-[#bb5d00]',
+        }
+      : thread.status === 'Claim Redressed' || thread.status === 'Redressed'
+        ? {
+            border: 'border-[rgba(67,189,155,0.6)]',
+            bg: 'bg-[rgba(67,189,155,0.1)]',
+            text: 'text-[#1b9573]',
+            icon: 'text-[#1b9573]',
+          }
+        : {
+            border: 'border-black/10',
+            bg: 'bg-[#f5f5f5]',
+            text: 'text-black/80',
+            icon: 'text-black/60',
+          };
   const voteCount =
     voteOverrides?.[numericId] !== undefined
       ? voteOverrides[numericId]
@@ -97,26 +122,23 @@ function ThreadItem({
                 iconClassName="opacity-100"
               />
             ) : null}
-            {/* {hasStatus ? (
+            {hasStatus ? (
               <span
                 className={cn(
                   'inline-flex items-center gap-1 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold',
-                  thread.isScam
-                    ? 'border-[#bb5d00]/40 bg-[#fff2e5] text-[#bb5d00]'
-                    : 'border-black/10 bg-[#f5f5f5] text-black/80',
+                  statusTheme.border,
+                  statusTheme.bg,
+                  statusTheme.text,
                 )}
               >
                 <CheckCircle
                   size={16}
                   weight="fill"
-                  className={cn(
-                    'text-black/60',
-                    thread.isScam ? 'text-[#bb5d00]' : 'text-black/50',
-                  )}
+                  className={cn('text-black/60', statusTheme.icon)}
                 />
                 {thread.status}
               </span>
-            ) : null} */}
+            ) : null}
             {hasAnswers ? (
               <span className="inline-flex items-center gap-1 text-[13px] font-semibold ">
                 <CheckSquare size={32} className="text-[#43bd9b]" />

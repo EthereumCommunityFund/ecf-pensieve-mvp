@@ -48,6 +48,38 @@ import {
   normalizeThreadDetailRecord,
 } from './utils/discussionMappers';
 
+const STATUS_THEMES: Record<
+  string,
+  { border: string; bg: string; text: string }
+> = {
+  'Alert Displayed on Page': {
+    border: 'border-[#bb5d00]/40',
+    bg: 'bg-[#fff2e5]',
+    text: 'text-[#bb5d00]',
+  },
+  'Claim Redressed': {
+    border: 'border-[rgba(67,189,155,0.6)]',
+    bg: 'bg-[rgba(67,189,155,0.1)]',
+    text: 'text-[#1b9573]',
+  },
+  Redressed: {
+    border: 'border-[rgba(67,189,155,0.6)]',
+    bg: 'bg-[rgba(67,189,155,0.1)]',
+    text: 'text-[#1b9573]',
+  },
+};
+
+const getStatusTheme = (status?: string) => {
+  if (!status) return null;
+  return (
+    STATUS_THEMES[status] ?? {
+      border: 'border-black/10',
+      bg: 'bg-[#f5f5f5]',
+      text: 'text-black/80',
+    }
+  );
+};
+
 const sentimentFilterOptions: Array<'all' | SentimentKey> = [
   'all',
   ...SENTIMENT_KEYS,
@@ -300,6 +332,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     commentsQuery,
     defaultRole: 'Community Member',
     sentimentFilter,
+    cpTarget: REDRESSED_SUPPORT_THRESHOLD,
   });
 
   const {
@@ -356,6 +389,17 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       return null;
     }
 
+    const counterRedressedCount = counterClaims.filter(
+      (claim) => claim.isAccepted,
+    ).length;
+    const threadSupport = remoteThread.support ?? 0;
+    const hasAlert = threadSupport >= REDRESSED_SUPPORT_THRESHOLD;
+    const statusOverride = hasAlert
+      ? 'Alert Displayed on Page'
+      : counterRedressedCount > 0
+        ? 'Claim Redressed'
+        : 'Open';
+
     return normalizeThreadDetailRecord({
       thread: remoteThread,
       answers: [],
@@ -373,14 +417,19 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       },
       quickActions: [],
       isScam: true,
-      statusOverride: 'Open',
+      statusOverride,
       bodyOverride: [stripHtmlToPlainText(remoteThread.post)],
-      highlightsOverride: [],
+      highlightsOverride: [
+        { label: 'Counter Claims', value: `${counterClaims.length}` },
+        { label: 'Redressed', value: `${counterRedressedCount}` },
+      ],
       canRetract: canRetractThread,
     });
   }, [
     canRetractThread,
     counterClaims,
+    counterClaims.length,
+    threadComments.length,
     sentimentSummary,
     threadComments,
     threadQuery.data,
@@ -605,6 +654,8 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     );
   }
 
+  const statusTheme = getStatusTheme(hydratedThread.status);
+
   return (
     <div className="flex justify-center px-[20px] pb-16 pt-4">
       <div className="flex w-full max-w-[1200px] gap-[40px]">
@@ -628,6 +679,13 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                 Scam &amp; Fraud
               </span>
             </div>
+            {hydratedThread.status ? (
+              <span
+                className={`inline-flex w-fit items-center gap-2 rounded-[4px] border px-[8px] py-[4px] text-[13px] font-semibold ${statusTheme?.border ?? ''} ${statusTheme?.bg ?? ''} ${statusTheme?.text ?? ''}`}
+              >
+                {hydratedThread.status}
+              </span>
+            ) : null}
             <h1 className="text-[20px] font-medium leading-[22px] text-black">
               {hydratedThread.title}
             </h1>
@@ -767,6 +825,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     claim={claim}
                     cpTarget={hydratedThread.cpProgress.target}
                     threadId={numericThreadId}
+                    threadAuthorName={hydratedThread.author.name}
                     onSupport={handleSupportClaim}
                     onWithdraw={handleWithdrawClaim}
                     supportPending={supportingClaimId === claim.numericId}
@@ -786,7 +845,11 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
               )
             ) : filteredComments.length ? (
               filteredComments.map((comment) => (
-                <DiscussionCommentCard key={comment.id} comment={comment} />
+                <DiscussionCommentCard
+                  key={comment.id}
+                  comment={comment}
+                  threadAuthorName={hydratedThread.author.name}
+                />
               ))
             ) : (
               <ScamEmptyState

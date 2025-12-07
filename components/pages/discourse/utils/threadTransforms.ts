@@ -1,3 +1,4 @@
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
 
@@ -115,18 +116,22 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
   const authorName = thread.creator?.name || 'Unknown';
   const primaryCategory = thread.category?.[0];
   const primaryTag = primaryCategory || thread.tags?.[0];
-  const hasRedressedAnswer = (thread.redressedAnswerCount ?? 0) > 0;
-  const hasAnswers = (thread.answerCount ?? 0) > 0;
+  const redressedCount = thread.redressedAnswerCount ?? 0;
+  const hasRedressedAnswer = redressedCount > 0;
+  const hasAnswers = redressedCount > 0;
+  const support = thread.support ?? 0;
 
   const dominantSentiment = summary.dominantKey
     ? sentimentDefinitions[summary.dominantKey]?.label
     : undefined;
 
   const status = thread.isScam
-    ? 'Scam Claim'
-    : hasRedressedAnswer
-      ? 'Redressed'
-      : undefined;
+    ? support >= REDRESSED_SUPPORT_THRESHOLD
+      ? 'Alert Displayed on Page'
+      : hasRedressedAnswer
+        ? 'Claim Redressed'
+        : undefined
+    : undefined;
 
   return {
     ...thread,
@@ -141,7 +146,7 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     tag: primaryTag,
     sentiment: dominantSentiment,
     votes: thread.support ?? 0,
-    answeredCount: thread.answerCount,
+    answeredCount: redressedCount,
     viewerHasSupported: thread.viewerHasSupported ?? false,
     sentimentBreakdown: summary.metrics,
     totalSentimentVotes: summary.totalVotes,
