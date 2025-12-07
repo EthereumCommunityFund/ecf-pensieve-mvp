@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { AnswerItem } from '@/components/pages/discourse/common/threadData';
 
@@ -27,22 +27,29 @@ export function useAnswerSupport({
 }: UseAnswerSupportOptions) {
   const [supportingId, setSupportingId] = useState<number | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    | { type: 'switch'; currentId: number; targetId: number }
+    | { type: 'unvote'; currentId: number }
+    | null
+  >(null);
+
+  const pendingIds = useMemo(() => {
+    if (!pendingAction) return null;
+    if (pendingAction.type === 'switch') {
+      return {
+        withdrawing: pendingAction.currentId,
+        supporting: pendingAction.targetId,
+      };
+    }
+    return { withdrawing: pendingAction.currentId };
+  }, [pendingAction]);
 
   const handleWithdraw = useCallback(
     async (answerId: number) => {
       if (!requireAuth()) return;
-      setWithdrawingId(answerId);
-      try {
-        await unvoteAnswer(answerId);
-        onWithdrawSuccess?.();
-      } catch (error) {
-        onWithdrawError?.(error);
-      } finally {
-        setWithdrawingId((current) => (current === answerId ? null : current));
-        onFinally?.();
-      }
+      setPendingAction({ type: 'unvote', currentId: answerId });
     },
-    [onFinally, onWithdrawError, onWithdrawSuccess, requireAuth, unvoteAnswer],
+    [requireAuth],
   );
 
   const handleSupport = useCallback(
@@ -53,21 +60,17 @@ export function useAnswerSupport({
       );
 
       if (existingSupported?.numericId === answerId) {
-        await handleWithdraw(answerId);
+        setPendingAction({ type: 'unvote', currentId: answerId });
         return;
       }
 
       if (existingSupported && existingSupported.numericId !== answerId) {
-        setWithdrawingId(existingSupported.numericId);
-        try {
-          await unvoteAnswer(existingSupported.numericId);
-        } catch (error) {
-          onWithdrawError?.(error);
-          setWithdrawingId(null);
-          return;
-        } finally {
-          setWithdrawingId(null);
-        }
+        setPendingAction({
+          type: 'switch',
+          currentId: existingSupported.numericId,
+          targetId: answerId,
+        });
+        return;
       }
 
       setSupportingId(answerId);
@@ -94,10 +97,81 @@ export function useAnswerSupport({
     ],
   );
 
+  const confirmAction = useCallback(async () => {
+    if (!pendingAction || !requireAuth()) return;
+
+    if (pendingAction.type === 'unvote') {
+      const { currentId } = pendingAction;
+      setWithdrawingId(currentId);
+      try {
+        await unvoteAnswer(currentId);
+        onWithdrawSuccess?.();
+      } catch (error) {
+        onWithdrawError?.(error);
+        return;
+      } finally {
+        setWithdrawingId((current) => (current === currentId ? null : current));
+        setPendingAction(null);
+        onFinally?.();
+      }
+      return;
+    }
+
+    if (pendingAction.type === 'switch') {
+      const { currentId, targetId } = pendingAction;
+      setWithdrawingId(currentId);
+      let unvoteSucceeded = false;
+
+      try {
+        await unvoteAnswer(currentId);
+        onWithdrawSuccess?.();
+        unvoteSucceeded = true;
+      } catch (error) {
+        onWithdrawError?.(error);
+      } finally {
+        setWithdrawingId((current) => (current === currentId ? null : current));
+      }
+
+      if (!unvoteSucceeded) {
+        setPendingAction(null);
+        onFinally?.();
+        return;
+      }
+
+      setSupportingId(targetId);
+      try {
+        await voteAnswer(targetId);
+        onSupportSuccess?.();
+      } catch (error) {
+        onSupportError?.(error);
+      } finally {
+        setSupportingId((current) => (current === targetId ? null : current));
+        setPendingAction(null);
+        onFinally?.();
+      }
+    }
+  }, [
+    onFinally,
+    onSupportError,
+    onSupportSuccess,
+    onWithdrawError,
+    onWithdrawSuccess,
+    pendingAction,
+    requireAuth,
+    unvoteAnswer,
+    voteAnswer,
+  ]);
+
+  const cancelAction = useCallback(() => setPendingAction(null), []);
+
   return {
     supportingId,
     withdrawingId,
     handleSupport,
     handleWithdraw,
+    pendingAction,
+    pendingIds,
+    confirmAction,
+    cancelAction,
   };
 }

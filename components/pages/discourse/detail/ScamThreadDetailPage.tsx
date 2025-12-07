@@ -4,7 +4,7 @@ import { CaretCircleUp, ChartBar, ShieldWarning } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Button, MdEditor } from '@/components/base';
+import { Button, ConfirmModal, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import {
   SentimentKey,
@@ -345,6 +345,10 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     handleWithdraw: handleWithdrawClaim,
     supportingId: supportingClaimId,
     withdrawingId: withdrawingClaimId,
+    pendingAction,
+    pendingIds,
+    confirmAction,
+    cancelAction,
   } = useAnswerSupport({
     requireAuth,
     answers: counterClaims,
@@ -382,6 +386,34 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       utils.projectDiscussionThread.listThreads.invalidate();
     },
   });
+
+  const pendingActionLoading = useMemo(() => {
+    if (!pendingIds) return false;
+    return (
+      pendingIds.supporting === supportingClaimId ||
+      pendingIds.withdrawing === withdrawingClaimId
+    );
+  }, [pendingIds, supportingClaimId, withdrawingClaimId]);
+
+  const pendingModalCopy = useMemo(() => {
+    if (!pendingAction) return null;
+    if (pendingAction.type === 'switch') {
+      return {
+        title: 'Switch support?',
+        description:
+          "You can support only one counter claim per thread. We'll withdraw your current support before switching.",
+        confirmText: 'Switch support',
+        cancelText: 'Keep current vote',
+      } as const;
+    }
+    return {
+      title: 'Withdraw support?',
+      description:
+        'You will remove your support from this counter claim. This cannot be undone without re-voting.',
+      confirmText: 'Withdraw',
+      cancelText: 'Keep support',
+    } as const;
+  }, [pendingAction]);
 
   const sentimentSummary = useMemo(
     () => buildSentimentSummary(threadQuery.data?.sentiments),
@@ -904,6 +936,17 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           <ParticipateCard isOwner={isThreadOwner} />
         </aside>
       </div>
+
+      <ConfirmModal
+        open={Boolean(pendingAction)}
+        title={pendingModalCopy?.title ?? ''}
+        description={pendingModalCopy?.description ?? ''}
+        confirmText={pendingModalCopy?.confirmText}
+        cancelText={pendingModalCopy?.cancelText}
+        isLoading={pendingActionLoading}
+        onConfirm={confirmAction}
+        onCancel={cancelAction}
+      />
 
       {composerVariant ? (
         <ThreadComposerModal

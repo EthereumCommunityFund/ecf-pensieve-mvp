@@ -1,6 +1,7 @@
 export * from './AddressDisplay';
 export { default as Autocomplete } from './Autocomplete';
 export * from './button';
+export * from './ConfirmModal';
 export * from './datePicker';
 export { default as ExternalLinkModal } from './ExternalLinkModal';
 export * from './input';

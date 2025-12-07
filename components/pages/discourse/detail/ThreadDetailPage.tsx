@@ -3,7 +3,7 @@
 import { ChartBarIcon } from '@phosphor-icons/react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Button } from '@/components/base';
+import { Button, ConfirmModal } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
@@ -462,12 +462,44 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     handleWithdraw: handleWithdrawSupport,
     supportingId: supportingAnswerId,
     withdrawingId: withdrawingAnswerId,
+    pendingAction,
+    pendingIds,
+    confirmAction,
+    cancelAction,
   } = useAnswerSupport({
     requireAuth,
     answers: answersFromApi,
     voteAnswer: (answerId) => voteAnswerMutation.mutateAsync({ answerId }),
     unvoteAnswer: (answerId) => unvoteAnswerMutation.mutateAsync({ answerId }),
   });
+
+  const pendingActionLoading = useMemo(() => {
+    if (!pendingIds) return false;
+    return (
+      pendingIds.supporting === supportingAnswerId ||
+      pendingIds.withdrawing === withdrawingAnswerId
+    );
+  }, [pendingIds, supportingAnswerId, withdrawingAnswerId]);
+
+  const pendingModalCopy = useMemo(() => {
+    if (!pendingAction) return null;
+    if (pendingAction.type === 'switch') {
+      return {
+        title: 'Switch support?',
+        description:
+          "You can support only one answer per thread. We'll withdraw your current support before switching.",
+        confirmText: 'Switch support',
+        cancelText: 'Keep current vote',
+      } as const;
+    }
+    return {
+      title: 'Unvote support?',
+      description:
+        'You will remove your vote from this answer. This cannot be undone without re-voting.',
+      confirmText: 'Unvote',
+      cancelText: 'Keep support',
+    } as const;
+  }, [pendingAction]);
 
   const sentimentSummary = useMemo(
     () => buildSentimentSummary(baseThread?.sentiments),
@@ -861,6 +893,17 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           <QuickActionsCard actions={thread.quickActions} />
         </div>
       </div>
+
+      <ConfirmModal
+        open={Boolean(pendingAction)}
+        title={pendingModalCopy?.title ?? ''}
+        description={pendingModalCopy?.description ?? ''}
+        confirmText={pendingModalCopy?.confirmText}
+        cancelText={pendingModalCopy?.cancelText}
+        isLoading={pendingActionLoading}
+        onConfirm={confirmAction}
+        onCancel={cancelAction}
+      />
 
       {composerVariant ? (
         <ThreadComposerModal
