@@ -334,6 +334,11 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     sentimentFilter,
     cpTarget: REDRESSED_SUPPORT_THRESHOLD,
   });
+  const topCounterSupport = useMemo(
+    () =>
+      counterClaims.reduce((max, claim) => Math.max(max, claim.cpSupport), 0),
+    [counterClaims],
+  );
 
   const {
     handleSupport: handleSupportClaim,
@@ -826,6 +831,10 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     cpTarget={hydratedThread.cpProgress.target}
                     threadId={numericThreadId}
                     threadAuthorName={hydratedThread.author.name}
+                    isTopSupport={
+                      topCounterSupport > 0 &&
+                      claim.cpSupport === topCounterSupport
+                    }
                     onSupport={handleSupportClaim}
                     onWithdraw={handleWithdrawClaim}
                     supportPending={supportingClaimId === claim.numericId}

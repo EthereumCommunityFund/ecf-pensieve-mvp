@@ -474,6 +474,14 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     [baseThread?.sentiments],
   );
 
+  const topAnswerSupport = useMemo(() => {
+    if (!answersFromApi.length) return 0;
+    return answersFromApi.reduce(
+      (max, answer) => Math.max(max, answer.cpSupport),
+      0,
+    );
+  }, [answersFromApi]);
+
   const thread = useMemo<ThreadDetailRecord | null>(() => {
     if (!baseThread) {
       return null;
@@ -482,13 +490,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       baseThread.redressedAnswerCount ?? 0,
       answersFromApi.filter((answer) => answer.isAccepted).length,
     );
-    const leadingAnswerCp =
-      answersFromApi.reduce(
-        (max, answer) => Math.max(max, answer.cpSupport),
-        0,
-      ) ||
-      baseThread.support ||
-      0;
+    const leadingAnswerCp = topAnswerSupport || baseThread.support || 0;
     return normalizeThreadDetailRecord({
       thread: baseThread,
       answers: answersFromApi,
@@ -523,7 +525,13 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     threadComments.length,
     sentimentSummary,
     threadComments,
+    topAnswerSupport,
   ]);
+  const isAnswerTopSupport = useCallback(
+    (cpSupport: number) =>
+      topAnswerSupport > 0 && cpSupport === topAnswerSupport,
+    [topAnswerSupport],
+  );
 
   const handleOpenAnswerComposer = useCallback(
     () => openAnswerComposer(),
@@ -752,6 +760,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                             withdrawingAnswerId === answer.numericId
                           }
                           sentimentPendingId={answerSentimentPendingId}
+                          isTopSupport={isAnswerTopSupport(answer.cpSupport)}
                         />
                       ))
                     : !isAnswersInitialLoading && (

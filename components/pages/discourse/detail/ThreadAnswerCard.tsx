@@ -13,6 +13,7 @@ import type {
   SentimentKey,
   SentimentMetric,
 } from '../common/sentiment/sentimentConfig';
+import { TagPill } from '../common/TagPill';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 
 import type { CommentTarget } from './hooks/useDiscussionComposer';
@@ -37,6 +38,7 @@ type AnswerDetailCardProps = {
     sentiments?: SentimentMetric[];
     totalVotes?: number;
   }) => void;
+  isTopSupport?: boolean;
   threadAuthorName: string;
   threadId: number;
   supportPending?: boolean;
@@ -51,6 +53,7 @@ export function AnswerDetailCard({
   onPostComment,
   onSelectSentiment,
   onShowSentimentDetail,
+  isTopSupport = false,
   threadAuthorName,
   threadId,
   supportPending = false,
@@ -58,10 +61,11 @@ export function AnswerDetailCard({
   sentimentPendingId = null,
 }: AnswerDetailCardProps) {
   const commentCount = answer.comments?.length ?? answer.commentsCount;
-  const primaryTag = answer.isAccepted ? 'Highest voted answer' : undefined;
-  const secondaryTag =
+  const acceptedBadge =
+    isTopSupport && answer.cpSupport > 0 ? 'Highest voted answer' : undefined;
+  const opVoteBadge =
     answer.statusTag ||
-    (answer.viewerHasSupported ? 'Voted by Original Poster' : undefined);
+    (answer.threadAuthorSupported ? 'Voted by Original Poster' : undefined);
   const isOp = answer.author === threadAuthorName;
   const opTag = isOp ? 'OP' : undefined;
   const cpLabel = formatCompactNumber(answer.cpSupport);
@@ -97,16 +101,8 @@ export function AnswerDetailCard({
                 {answer.author}
               </span>
               {opTag ? <OpTag label={opTag} /> : null}
-              {primaryTag ? (
-                <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
-                  {primaryTag}
-                </span>
-              ) : null}
-              {secondaryTag ? (
-                <span className="rounded-[4px] border border-[rgba(67,189,155,0.6)] bg-[rgba(67,189,155,0.1)] px-2 py-1 text-[12px] font-semibold text-[#1b9573]">
-                  {secondaryTag}
-                </span>
-              ) : null}
+              {acceptedBadge ? <TagPill>{acceptedBadge}</TagPill> : null}
+              {opVoteBadge ? <TagPill>{opVoteBadge}</TagPill> : null}
             </div>
             <div className="flex items-center gap-2 text-[12px] text-black/70">
               <SentimentIndicator

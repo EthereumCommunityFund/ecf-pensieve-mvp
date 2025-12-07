@@ -26,6 +26,7 @@ export type AnswerItem = {
   comments?: CommentItem[];
   viewerSentiment?: SentimentKey | null;
   viewerHasSupported?: boolean;
+  threadAuthorSupported?: boolean;
   isAccepted?: boolean;
   statusTag?: string;
 };

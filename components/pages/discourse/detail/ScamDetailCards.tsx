@@ -7,6 +7,7 @@ import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { OpTag } from '../common/OpTag';
 import type { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
+import { TagPill } from '../common/TagPill';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
@@ -21,6 +22,7 @@ type CounterClaimCardProps = {
   cpTarget?: number;
   threadId: number;
   threadAuthorName: string;
+  isTopSupport?: boolean;
   onSupport: (answerId: number) => void;
   onWithdraw: (answerId: number) => void;
   supportPending?: boolean;
@@ -58,6 +60,7 @@ export function CounterClaimCard({
   cpTarget,
   threadId,
   threadAuthorName,
+  isTopSupport = false,
   onSupport,
   onWithdraw,
   supportPending = false,
@@ -82,6 +85,11 @@ export function CounterClaimCard({
       ? 'text-black'
       : 'text-black/10';
   const isOp = claim.author === threadAuthorName;
+  const acceptedBadge =
+    isTopSupport && claim.cpSupport > 0 ? 'Highest voted answer' : undefined;
+  const opVoteBadge = claim.threadAuthorSupported
+    ? 'Voted by Original Poster'
+    : undefined;
   const commentTree = buildCommentTree<CounterCommentNode>(
     (claim.comments ?? []) as CounterCommentNode[],
   );
@@ -101,6 +109,8 @@ export function CounterClaimCard({
               {claim.author}
             </p>
             {isOp ? <OpTag /> : null}
+            {acceptedBadge ? <TagPill>{acceptedBadge}</TagPill> : null}
+            {opVoteBadge ? <TagPill>{opVoteBadge}</TagPill> : null}
             <SentimentIndicator
               sentiments={claim.sentimentBreakdown}
               onClick={() =>

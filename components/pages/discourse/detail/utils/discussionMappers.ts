@@ -116,6 +116,9 @@ export const normalizeAnswer = (
       isAccepted:
         (answer as AnswerItem).isAccepted ??
         (answer.cpSupport ?? 0) >= cpTarget,
+      threadAuthorSupported: Boolean(
+        (answer as { isThreadAuthorVoted?: boolean }).isThreadAuthorVoted,
+      ),
     };
   }
 
@@ -151,8 +154,9 @@ export const normalizeAnswer = (
     viewerHasSupported: Boolean(
       (answer as { viewerHasSupported?: boolean }).viewerHasSupported,
     ),
-    isAccepted:
-      (answer as AnswerItem).isAccepted ?? (answer.cpSupport ?? 0) >= cpTarget,
+    threadAuthorSupported: Boolean(
+      (answer as { isThreadAuthorVoted?: boolean }).isThreadAuthorVoted,
+    ),
   };
 };
 
