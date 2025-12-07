@@ -1,8 +1,8 @@
 'use client';
 
+import { ArrowUpIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { ReactNode, useEffect, useState } from 'react';
-import { ArrowUpIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 

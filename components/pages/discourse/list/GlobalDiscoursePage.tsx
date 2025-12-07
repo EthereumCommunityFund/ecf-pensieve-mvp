@@ -8,10 +8,10 @@ import { TopbarFilters } from '../common/TopbarFilters';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
 
-import { useThreadListControls } from './useThreadListControls';
 import { DiscoursePageLayout } from './DiscoursePageLayout';
 import { ThreadList } from './ThreadList';
 import { TopicsSidebar } from './TopicsSidebar';
+import { useThreadListControls } from './useThreadListControls';
 
 const statusTabs = ['all', 'redressed', 'unanswered'];
 const sortOptions = ['top', 'new'];
