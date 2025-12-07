@@ -19,6 +19,7 @@ import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
+import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentIndicator } from '../common/sentiment/SentimentIndicator';
 import { SentimentModal } from '../common/sentiment/SentimentModal';
 import { TopicTag } from '../common/TopicTag';
@@ -33,6 +34,7 @@ type ThreadListProps = {
   emptyMessage?: string;
   skeletonCount?: number;
   onThreadSelect?: (thread: ThreadMeta) => void;
+  sentimentSortKey?: SentimentKey | 'all';
 };
 
 type ThreadItemProps = {
@@ -221,6 +223,7 @@ export function ThreadList({
   isFetched,
   isFetchingNextPage,
   skeletonCount = 4,
+  sentimentSortKey = 'all',
 }: ThreadListProps) {
   const { isAuthenticated, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
@@ -318,9 +321,29 @@ export function ThreadList({
     ],
   );
 
+  const sortedThreads = useMemo(() => {
+    if (!sentimentSortKey || sentimentSortKey === 'all') {
+      return threads;
+    }
+    const sortKey = sentimentSortKey;
+    return [...threads]
+      .map((thread, index) => ({
+        thread,
+        index,
+        sentimentCount: thread.sentimentCounts?.[sortKey] ?? 0,
+      }))
+      .sort((a, b) => {
+        if (b.sentimentCount !== a.sentimentCount) {
+          return b.sentimentCount - a.sentimentCount;
+        }
+        return a.index - b.index;
+      })
+      .map((item) => item.thread);
+  }, [threads, sentimentSortKey]);
+
   const renderedThreads = useMemo(
     () =>
-      threads.map((thread) => (
+      sortedThreads.map((thread) => (
         <div
           key={thread.id}
           className="border-b border-black/10 pb-[10px] last:border-0"
@@ -340,7 +363,7 @@ export function ThreadList({
         </div>
       )),
     [
-      threads,
+      sortedThreads,
       onThreadSelect,
       supportedThreads,
       pendingThreadId,

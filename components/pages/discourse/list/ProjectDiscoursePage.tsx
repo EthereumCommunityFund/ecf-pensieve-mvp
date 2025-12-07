@@ -6,6 +6,7 @@ import { Button } from '@/components/base';
 
 import { useProjectDetailContext } from '../../project/context/projectDetailContext';
 import { TopbarFilters } from '../common/TopbarFilters';
+import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
 
@@ -179,6 +180,7 @@ export default function ProjectDiscoursePage({
             ? 'No complaints yet for this project.'
             : 'Unable to load complaints for this project.'
         }
+        sentimentSortKey={activeSentiment as SentimentKey | 'all'}
         onThreadSelect={(thread) => router.push(`/discourse/${thread.id}`)}
       />
       {hasNextPage ? (

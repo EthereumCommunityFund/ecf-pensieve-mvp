@@ -33,6 +33,7 @@ export type ThreadMeta = ThreadListItem & {
   sentimentBreakdown: SentimentMetric[];
   totalSentimentVotes: number;
   dominantSentimentKey?: SentimentKey;
+  sentimentCounts?: Record<SentimentKey, number>;
   tag?: string;
   votes: number;
   answeredCount?: number;
@@ -69,6 +70,13 @@ export const summarizeSentiments = (sentiments?: ThreadSentimentRecord[]) => {
       metrics: [] as SentimentMetric[],
       totalVotes: 0,
       dominantKey: undefined as SentimentKey | undefined,
+      counts: {
+        recommend: 0,
+        agree: 0,
+        insightful: 0,
+        provocative: 0,
+        disagree: 0,
+      } as Record<SentimentKey, number>,
     };
   }
 
@@ -106,6 +114,7 @@ export const summarizeSentiments = (sentiments?: ThreadSentimentRecord[]) => {
     metrics,
     totalVotes,
     dominantKey,
+    counts,
   };
 };
 
@@ -158,6 +167,7 @@ export const mapThreadToMeta = (thread: ThreadListItem): ThreadMeta => {
     sentimentBreakdown: summary.metrics,
     totalSentimentVotes: summary.totalVotes,
     dominantSentimentKey: summary.dominantKey,
+    sentimentCounts: summary.counts,
   };
 };
 

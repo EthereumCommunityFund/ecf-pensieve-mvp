@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/base';
 
 import { TopbarFilters } from '../common/TopbarFilters';
+import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { discourseTopicOptions } from '../common/topicOptions';
 import { useDiscussionThreads } from '../hooks/useDiscussionThreads';
 
@@ -96,6 +97,7 @@ export default function GlobalDiscoursePage() {
         isFetchingNextPage={isFetchingNextPage}
         threads={threads}
         emptyMessage="No complaints found for the current filters."
+        sentimentSortKey={activeSentiment as SentimentKey | 'all'}
         onThreadSelect={(thread) => router.push(`/discourse/${thread.id}`)}
       />
       {hasNextPage ? (
