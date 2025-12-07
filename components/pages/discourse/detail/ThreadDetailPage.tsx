@@ -8,7 +8,7 @@ import { addToast } from '@/components/base/toast';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-import { formatTimeAgo } from '@/lib/utils';
+import type { RouterOutputs } from '@/types';
 
 import {
   SentimentKey,
@@ -21,10 +21,7 @@ import {
 import { QuickAction, ThreadDetailRecord } from '../common/threadData';
 import { TopbarFilters } from '../common/TopbarFilters';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
-import {
-  SENTIMENT_KEYS,
-  stripHtmlToPlainText,
-} from '../utils/threadTransforms';
+import { SENTIMENT_KEYS } from '../utils/threadTransforms';
 
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
@@ -40,8 +37,8 @@ import { ThreadComposerModal } from './ThreadComposerModal';
 import { ThreadDetailSkeleton } from './ThreadDetailSkeleton';
 import {
   buildSentimentSummary,
-  extractParagraphs,
   findUserSentiment,
+  normalizeThreadDetailRecord,
 } from './utils/discussionMappers';
 
 type ThreadDetailPageProps = {
@@ -268,8 +265,13 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const viewerHasSupportedThread = useMemo(
     () =>
       Boolean(
-        (baseThread as { viewerHasSupported?: boolean } | undefined)
-          ?.viewerHasSupported,
+        (
+          baseThread as
+            | (RouterOutputs['projectDiscussionThread']['getThreadById'] & {
+                viewerHasSupported?: boolean;
+              })
+            | undefined
+        )?.viewerHasSupported,
       ),
     [baseThread],
   );
@@ -475,77 +477,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!baseThread) {
       return null;
     }
-    const paragraphs = extractParagraphs(baseThread.post);
-    const cpTarget = REDRESSED_SUPPORT_THRESHOLD;
-    const cpCurrent = answersFromApi.reduce(
-      (max, answer) => Math.max(max, answer.cpSupport),
-      0,
-    );
-    const answerTotalCount = Math.max(
-      baseThread.answerCount ?? 0,
-      answersFromApi.length,
-    );
-    const threadCommentCount = threadComments.length;
-    const hasRedressedAnswer = (baseThread.redressedAnswerCount ?? 0) > 0;
-    const status = hasRedressedAnswer
-      ? 'Redressed'
-      : answerTotalCount === 0
-        ? 'Unanswered'
-        : 'Open';
-
-    const baseRecord: ThreadDetailRecord = {
-      id: String(baseThread.id),
-      title: baseThread.title,
-      summary: stripHtmlToPlainText(baseThread.post),
-      badge: 'Complaint Topic',
-      status,
-      isScam: false,
-      post: baseThread.post,
-      categories: baseThread.category ?? [],
-      tags: baseThread.tags ?? [],
-      highlights: [
-        { label: 'Answers', value: `${answerTotalCount}` },
-        { label: 'Comments', value: `${threadCommentCount}` },
-        { label: 'Views', value: '—' },
-      ],
-      body: paragraphs.length
-        ? paragraphs
-        : [stripHtmlToPlainText(baseThread.post)],
-      cpProgress: {
-        current: cpCurrent,
-        target: cpTarget,
-        label: 'Contribution Points supporting the leading answer',
-        helper:
-          'Reaching the threshold signals community confidence in this answer.',
-      },
-      sentiment: sentimentSummary.metrics,
-      totalSentimentVotes: sentimentSummary.totalVotes,
+    return normalizeThreadDetailRecord({
+      thread: baseThread,
       answers: answersFromApi,
       comments: threadComments,
-      author: {
-        name: baseThread.creator?.name ?? 'Anonymous',
-        handle: baseThread.creator?.userId
-          ? `@${baseThread.creator.userId.slice(0, 8)}`
-          : '@anonymous',
-        avatarFallback: baseThread.creator?.name?.[0]?.toUpperCase() ?? 'U',
-        avatarUrl: baseThread.creator?.avatarUrl ?? null,
-        role: 'Community Member',
-        postedAt: formatTimeAgo(baseThread.createdAt),
-        editedAt: undefined,
-      },
+      sentimentSummary,
+      badge: 'Complaint Topic',
+      cpTarget: REDRESSED_SUPPORT_THRESHOLD,
+      cpLabel: 'Contribution Points supporting this thread',
+      cpHelper:
+        'Reaching the threshold signals community confidence in this complaint.',
       participation: DEFAULT_PARTICIPATION,
       quickActions: DEFAULT_QUICK_ACTIONS,
-      canRetract: false,
-    };
-
-    return baseRecord;
-  }, [
-    answersFromApi,
-    baseThread,
-    sentimentSummary.metrics,
-    sentimentSummary.totalVotes,
-    threadComments,
-  ]);
+    });
+  }, [answersFromApi, baseThread, sentimentSummary, threadComments]);
 
   const handleOpenAnswerComposer = useCallback(
     () => openAnswerComposer(),

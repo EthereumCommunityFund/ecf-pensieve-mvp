@@ -20,7 +20,6 @@ import BackHeader from '@/components/pages/project/BackHeader';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
-import { formatTimeAgo } from '@/lib/utils';
 
 import { ThreadDetailRecord } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
@@ -46,6 +45,7 @@ import { ScamThreadSkeleton } from './ThreadDetailSkeleton';
 import {
   buildSentimentSummary,
   findUserSentiment,
+  normalizeThreadDetailRecord,
 } from './utils/discussionMappers';
 
 const sentimentFilterOptions: Array<'all' | SentimentKey> = [
@@ -356,53 +356,35 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       return null;
     }
 
-    const summary = buildSentimentSummary(remoteThread.sentiments);
-    const authorName = remoteThread.creator?.name ?? 'Anonymous';
-    const authorHandle = remoteThread.creator?.userId
-      ? `@${remoteThread.creator.userId.slice(0, 8)}`
-      : '@anonymous';
-
-    return {
-      ...remoteThread,
-      id: String(remoteThread.id),
-      summary: stripHtmlToPlainText(remoteThread.post),
-      badge: 'Scam & Fraud',
-      status: 'Open',
-      isScam: true,
-      post: remoteThread.post,
-      categories: remoteThread.category ?? [],
-      tags: remoteThread.tags ?? [],
-      highlights: [],
-      body: [stripHtmlToPlainText(remoteThread.post)],
-      attachmentsCount: 0,
-      cpProgress: {
-        current: remoteThread.support ?? 0,
-        target: REDRESSED_SUPPORT_THRESHOLD,
-        label: 'Contribution Points supporting the main claim',
-        helper:
-          'Cross the threshold to pin the alert across the project surfaces.',
-      },
-      sentiment: summary.metrics,
-      totalSentimentVotes: summary.totalVotes,
-      answers: [], // scam view drives on counterClaims
+    return normalizeThreadDetailRecord({
+      thread: remoteThread,
+      answers: [],
       counterClaims,
       comments: threadComments,
-      author: {
-        name: authorName,
-        handle: authorHandle,
-        avatarFallback: authorName[0]?.toUpperCase() ?? 'U',
-        avatarUrl: remoteThread.creator?.avatarUrl ?? null,
-        role: 'Community Member',
-        postedAt: formatTimeAgo(remoteThread.createdAt),
-      },
+      sentimentSummary,
+      badge: 'Scam & Fraud',
+      cpTarget: REDRESSED_SUPPORT_THRESHOLD,
+      cpLabel: 'Contribution Points supporting the main claim',
+      cpHelper:
+        'Cross the threshold to pin the alert across the project surfaces.',
       participation: {
         supportSteps: [],
         counterSteps: [],
       },
       quickActions: [],
+      isScam: true,
+      statusOverride: 'Open',
+      bodyOverride: [stripHtmlToPlainText(remoteThread.post)],
+      highlightsOverride: [],
       canRetract: canRetractThread,
-    };
-  }, [canRetractThread, counterClaims, threadComments, threadQuery.data]);
+    });
+  }, [
+    canRetractThread,
+    counterClaims,
+    sentimentSummary,
+    threadComments,
+    threadQuery.data,
+  ]);
 
   const handleStatusChange = useCallback(
     (value: string) =>
@@ -888,31 +870,5 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         totalVotes={activeSentimentModal?.totalVotes}
       />
     </div>
-  );
-}
-
-function renderSummaryWithLinks(text: string) {
-  const match = text.match(/(https?:\/\/\S+)/);
-  if (!match || match.index === undefined) {
-    return text;
-  }
-
-  const link = match[0];
-  const prefixText = text.slice(0, match.index);
-  const suffix = text.slice(match.index + link.length);
-
-  return (
-    <>
-      {prefixText}
-      <a
-        href={link}
-        className="text-[#1b9573]"
-        target="_blank"
-        rel="noreferrer"
-      >
-        {link}
-      </a>
-      {suffix}
-    </>
   );
 }

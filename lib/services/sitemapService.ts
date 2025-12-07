@@ -1,5 +1,4 @@
-import { sql } from 'drizzle-orm';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { db, profiles, projects, proposals } from '@/lib/db';
 

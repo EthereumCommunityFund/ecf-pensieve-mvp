@@ -2,7 +2,11 @@ import { formatTimeAgo } from '@/lib/utils';
 import type { RouterOutputs } from '@/types';
 
 import { SentimentKey } from '../../common/sentiment/sentimentConfig';
-import { AnswerItem, CommentItem } from '../../common/threadData';
+import {
+  AnswerItem,
+  CommentItem,
+  ThreadDetailRecord,
+} from '../../common/threadData';
 import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
@@ -14,6 +18,8 @@ type AnswerRecord =
   RouterOutputs['projectDiscussionInteraction']['listAnswers']['items'][0];
 type CommentRecord =
   RouterOutputs['projectDiscussionInteraction']['listComments']['items'][0];
+export type ThreadDetailEntity =
+  RouterOutputs['projectDiscussionThread']['getThreadById'];
 
 type NormalizeAnswerOptions = {
   defaultRole?: string;
@@ -221,3 +227,96 @@ export function findUserSentiment(
   const normalized = record.type.toLowerCase() as SentimentKey;
   return SENTIMENT_KEYS.includes(normalized) ? normalized : null;
 }
+
+type NormalizeThreadDetailOptions = {
+  thread: ThreadDetailEntity & { viewerHasSupported?: boolean };
+  answers: AnswerItem[];
+  comments: CommentItem[];
+  sentimentSummary: ReturnType<typeof buildSentimentSummary>;
+  badge: string;
+  cpTarget: number;
+  cpLabel: string;
+  cpHelper: string;
+  participation: ThreadDetailRecord['participation'];
+  quickActions: ThreadDetailRecord['quickActions'];
+  statusOverride?: string;
+  isScam?: boolean;
+  bodyOverride?: string[];
+  highlightsOverride?: ThreadDetailRecord['highlights'];
+  counterClaims?: AnswerItem[];
+  canRetract?: boolean;
+};
+
+export const normalizeThreadDetailRecord = ({
+  thread,
+  answers,
+  comments,
+  sentimentSummary,
+  badge,
+  cpTarget,
+  cpLabel,
+  cpHelper,
+  participation,
+  quickActions,
+  statusOverride,
+  isScam,
+  bodyOverride,
+  highlightsOverride,
+  counterClaims,
+  canRetract,
+}: NormalizeThreadDetailOptions): ThreadDetailRecord => {
+  const paragraphs = bodyOverride ?? extractParagraphs(thread.post);
+  const answerTotalCount = Math.max(thread.answerCount ?? 0, answers.length);
+  const threadStatus =
+    statusOverride ??
+    ((thread.redressedAnswerCount ?? 0) > 0
+      ? 'Redressed'
+      : answerTotalCount === 0
+        ? 'Unanswered'
+        : 'Open');
+  const authorName = thread.creator?.name ?? 'Anonymous';
+  const authorHandle = thread.creator?.userId
+    ? `@${thread.creator.userId.slice(0, 8)}`
+    : '@anonymous';
+
+  return {
+    id: String(thread.id),
+    title: thread.title,
+    summary: stripHtmlToPlainText(thread.post),
+    badge,
+    status: threadStatus,
+    isScam: isScam ?? Boolean(thread.isScam),
+    post: thread.post,
+    categories: thread.category ?? [],
+    tags: thread.tags ?? [],
+    highlights: highlightsOverride ?? [
+      { label: 'Answers', value: `${answerTotalCount}` },
+      { label: 'Comments', value: `${comments.length}` },
+      { label: 'Views', value: '—' },
+    ],
+    body: paragraphs.length ? paragraphs : [stripHtmlToPlainText(thread.post)],
+    cpProgress: {
+      current: thread.support ?? 0,
+      target: cpTarget,
+      label: cpLabel,
+      helper: cpHelper,
+    },
+    sentiment: sentimentSummary.metrics,
+    totalSentimentVotes: sentimentSummary.totalVotes,
+    answers,
+    counterClaims,
+    comments,
+    author: {
+      name: authorName,
+      handle: authorHandle,
+      avatarFallback: authorName[0]?.toUpperCase() ?? 'U',
+      avatarUrl: thread.creator?.avatarUrl ?? null,
+      role: 'Community Member',
+      postedAt: formatTimeAgo(thread.createdAt),
+      editedAt: undefined,
+    },
+    participation,
+    quickActions,
+    canRetract,
+  };
+};
