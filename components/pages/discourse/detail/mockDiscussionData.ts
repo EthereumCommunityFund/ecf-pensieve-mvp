@@ -170,7 +170,7 @@ const defaultDiscussionFixtures: ThreadCommentRecord[] = [
     updatedAt: makeDate('2024-11-20T08:00:00.000Z'),
     isDeleted: false,
     deletedAt: null,
-    comments: [
+    childrenComments: [
       {
         id: 94002,
         threadId: 1,
@@ -200,7 +200,7 @@ const defaultDiscussionFixtures: ThreadCommentRecord[] = [
     updatedAt: makeDate('2024-11-21T10:30:00.000Z'),
     isDeleted: false,
     deletedAt: null,
-    comments: [],
+    childrenComments: [],
   },
 ];
 

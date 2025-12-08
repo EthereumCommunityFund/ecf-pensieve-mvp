@@ -231,15 +231,11 @@ export function AnswerDetailCard({
                       target: {
                         targetType: payload.targetType ?? 'comment',
                         targetId:
-                          payload.targetId ??
-                          payload.parentCommentId ??
-                          payload.commentId ??
-                          payload.rootCommentId ??
-                          0,
-                        threadId,
-                        answerId: answer.numericId,
+                          payload.targetId ?? payload.rootCommentId ?? 0,
+                        threadId: payload.threadId ?? threadId,
+                        answerId: payload.answerId ?? answer.numericId,
                         rootCommentId:
-                          payload.rootCommentId ?? payload.commentId,
+                          payload.rootCommentId ?? payload.targetId,
                       },
                     })
                   }

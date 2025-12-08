@@ -612,18 +612,15 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     [guardedOpenCommentComposer, isThreadRetracted, numericThreadId],
   );
 
+  type ThreadReplyPayload = CommentTarget & {
+    author: string;
+    excerpt: string;
+    timestamp: string;
+    isOp: boolean;
+  };
+
   const handleReplyToThreadComment = useCallback(
-    (payload: {
-      threadId: number;
-      parentCommentId?: number;
-      commentId?: number;
-      targetId?: number;
-      rootCommentId?: number;
-      author: string;
-      excerpt: string;
-      timestamp: string;
-      isOp: boolean;
-    }) => {
+    (payload: ThreadReplyPayload) => {
       if (isThreadRetracted) {
         addToast({
           title: 'Claim already retracted',
@@ -632,6 +629,10 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         });
         return;
       }
+      const targetId =
+        payload.targetId ?? payload.rootCommentId ?? numericThreadId;
+      const targetThreadId = payload.threadId ?? numericThreadId;
+      const rootCommentId = payload.rootCommentId ?? payload.targetId;
       guardedOpenCommentComposer({
         title: 'Replying to:',
         context: {
@@ -641,31 +642,21 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           timestamp: payload.timestamp,
           isOp: payload.isOp,
           target: {
-            targetType: 'comment',
-            targetId:
-              payload.targetId ??
-              payload.parentCommentId ??
-              payload.commentId ??
-              payload.rootCommentId ??
-              0,
-            threadId: payload.threadId,
-            rootCommentId: payload.commentId ?? payload.rootCommentId,
+            targetType: payload.targetType ?? 'comment',
+            targetId,
+            threadId: targetThreadId,
+            rootCommentId,
           },
         },
         target: {
-          targetType: 'comment',
-          targetId:
-            payload.targetId ??
-            payload.parentCommentId ??
-            payload.commentId ??
-            payload.rootCommentId ??
-            0,
-          threadId: payload.threadId,
-          rootCommentId: payload.commentId ?? payload.rootCommentId,
+          targetType: payload.targetType ?? 'comment',
+          targetId,
+          threadId: targetThreadId,
+          rootCommentId,
         },
       });
     },
-    [guardedOpenCommentComposer, isThreadRetracted],
+    [guardedOpenCommentComposer, isThreadRetracted, numericThreadId],
   );
 
   const handleSetThreadSentiment = async (sentiment: SentimentKey) => {

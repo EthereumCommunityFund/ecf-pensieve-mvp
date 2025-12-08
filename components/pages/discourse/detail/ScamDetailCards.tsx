@@ -357,6 +357,7 @@ function CounterCommentTree({
               isFirst={index === 0}
               hasSiblings={node.children!.length > 1}
               onReply={onReply}
+              threadAuthorName={threadAuthorName}
             />
           ))
         : null}
