@@ -44,10 +44,12 @@ export function SentimentSelector({
     ? (value as string)
     : DEFAULT_SENTIMENT_VALUE;
 
-  const selectedKeys = useMemo(
-    () => new Set<string>([normalizedValue]),
-    [normalizedValue],
-  );
+  const selectedKeys = useMemo(() => {
+    if (normalizedValue === DEFAULT_SENTIMENT_VALUE) {
+      return new Set<string>();
+    }
+    return new Set<string>([normalizedValue]);
+  }, [normalizedValue]);
 
   const selectedDisplay = useMemo(
     () => getSentimentDisplay(normalizedValue),
@@ -93,9 +95,15 @@ export function SentimentSelector({
     (selection: Selection) => {
       if (selection === 'all') return;
       const keys = Array.from(selection);
-      if (!keys.length) return;
+      if (!keys.length) {
+        onChange?.(DEFAULT_SENTIMENT_VALUE);
+        return;
+      }
       const selectedKey = String(keys[0]);
-      if (selectedKey === normalizedValue) return;
+      if (selectedKey === normalizedValue) {
+        onChange?.(DEFAULT_SENTIMENT_VALUE);
+        return;
+      }
       onChange?.(selectedKey);
     },
     [normalizedValue, onChange],
