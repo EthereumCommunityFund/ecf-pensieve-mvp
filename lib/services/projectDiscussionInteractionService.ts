@@ -7,7 +7,6 @@ import {
   inArray,
   isNull,
   lt,
-  or,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -175,7 +174,7 @@ export const listDiscussionAnswers = async ({
         where: eq(projectDiscussionComments.isDeleted, false),
         orderBy: [
           asc(projectDiscussionComments.createdAt),
-          desc(projectDiscussionComments.id),
+          asc(projectDiscussionComments.id),
         ],
         with: {
           creator: {
@@ -444,12 +443,21 @@ export const unvoteDiscussionAnswer = async ({
 };
 
 type CreateCommentInput = {
-  commentId?: number;
-  threadId?: number;
-  answerId?: number;
-  parentCommentId?: number;
   content: string;
-};
+} & (
+  | {
+      targetType: 'thread';
+      targetId: number;
+    }
+  | {
+      targetType: 'answer';
+      targetId: number;
+    }
+  | {
+      targetType: 'comment';
+      targetId: number;
+    }
+);
 
 export const createDiscussionComment = async ({
   db,
@@ -460,52 +468,52 @@ export const createDiscussionComment = async ({
   userId: string;
   input: CreateCommentInput;
 }) => {
-  const { threadId, answerId, parentCommentId, content, commentId } = input;
+  const { targetType, targetId, content } = input;
 
-  if (!threadId && !answerId && !parentCommentId) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Thread, answer, or parent comment is required',
-    });
-  }
+  const derived = await (async () => {
+    if (targetType === 'thread') {
+      await ensureThreadAvailable(db, targetId);
+      return {
+        threadId: targetId,
+        answerId: null,
+        parentId: null,
+        rootCommentId: null,
+      };
+    }
 
-  let resolvedThreadId = threadId ?? null;
-  let resolvedAnswerId = answerId ?? null;
-  let resolvedCommentId = commentId ?? null;
+    if (targetType === 'answer') {
+      const answer = await ensureAnswerAvailable(db, targetId);
 
-  if (parentCommentId) {
-    const parent = await ensureCommentAvailable(db, parentCommentId);
-    const parentRootId = parent.commentId ?? parent.id;
+      return {
+        threadId: answer.threadId,
+        answerId: answer.id,
+        parentId: null,
+        rootCommentId: null,
+      };
+    }
 
-    // Inherit thread/answer from parent when not provided
-    resolvedThreadId = resolvedThreadId ?? parent.threadId ?? null;
-    resolvedAnswerId = resolvedAnswerId ?? parent.answerId ?? null;
-    resolvedCommentId = resolvedCommentId ?? parentRootId;
+    const parent = await ensureCommentAvailable(db, targetId);
 
-    if (resolvedCommentId !== parentRootId) {
+    const parentThreadId =
+      parent.threadId ??
+      (parent.answerId
+        ? (await ensureAnswerAvailable(db, parent.answerId)).threadId
+        : null);
+
+    if (!parentThreadId) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
-        message: 'Comment ID does not match parent comment',
+        message: 'Parent comment is missing thread context',
       });
     }
-    if (
-      resolvedAnswerId !== null &&
-      parent.answerId !== null &&
-      resolvedAnswerId !== parent.answerId
-    ) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Answer ID does not match parent comment',
-      });
-    }
-  }
 
-  if (resolvedAnswerId) {
-    await ensureAnswerAvailable(db, resolvedAnswerId);
-  }
-  if (resolvedThreadId) {
-    await ensureThreadAvailable(db, resolvedThreadId);
-  }
+    return {
+      threadId: parentThreadId,
+      answerId: parent.answerId ?? null,
+      parentId: targetId,
+      rootCommentId: parent.commentId ?? parent.id,
+    };
+  })();
 
   const comment = await db.transaction(async (tx) => {
     const [inserted] = await tx
@@ -513,22 +521,12 @@ export const createDiscussionComment = async ({
       .values({
         creator: userId,
         content,
-        parentCommentId: parentCommentId ?? null,
-        answerId: resolvedAnswerId,
-        threadId: resolvedThreadId ?? null,
-        commentId: resolvedCommentId,
+        parentCommentId: derived.parentId,
+        answerId: derived.answerId,
+        threadId: derived.threadId,
+        commentId: derived.rootCommentId,
       })
       .returning();
-
-    // For root comments lacking an explicit commentId, set it to self id for future replies.
-    if (!parentCommentId && !resolvedCommentId) {
-      const [updated] = await tx
-        .update(projectDiscussionComments)
-        .set({ commentId: inserted.id })
-        .where(eq(projectDiscussionComments.id, inserted.id))
-        .returning();
-      return updated;
-    }
 
     return inserted;
   });
@@ -537,9 +535,7 @@ export const createDiscussionComment = async ({
 };
 
 type ListCommentsInput = {
-  threadId?: number;
-  answerId?: number;
-  parentCommentId?: number;
+  threadId: number;
   cursor?: number;
   limit: number;
 };
@@ -551,57 +547,23 @@ export const listDiscussionComments = async ({
   db: Database;
   input: ListCommentsInput;
 }) => {
-  const { threadId, answerId, parentCommentId, cursor, limit } = input;
-  if (!threadId && !answerId && !parentCommentId) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Thread, answer, or parent comment is required',
-    });
-  }
+  const { threadId, cursor, limit } = input;
+  await ensureThreadAvailable(db, threadId);
 
   const conditions: SQL<unknown>[] = [
     eq(projectDiscussionComments.isDeleted, false),
+    eq(projectDiscussionComments.threadId, threadId),
+    isNull(projectDiscussionComments.parentCommentId),
+    isNull(projectDiscussionComments.answerId),
   ];
 
-  if (threadId) {
-    await ensureThreadAvailable(db, threadId);
-    conditions.push(eq(projectDiscussionComments.threadId, threadId));
-  }
-
-  if (answerId) {
-    await ensureAnswerAvailable(db, answerId);
-    conditions.push(eq(projectDiscussionComments.answerId, answerId));
-  }
-
-  if (parentCommentId) {
-    await ensureCommentAvailable(db, parentCommentId);
-    conditions.push(
-      eq(projectDiscussionComments.parentCommentId, parentCommentId),
-    );
-  }
-
-  if (parentCommentId !== undefined) {
-    const rootParentCondition = and(
-      eq(projectDiscussionComments.id, parentCommentId),
-      isNull(projectDiscussionComments.parentCommentId),
-    )!;
-
-    const parentCondition = or(
-      eq(projectDiscussionComments.parentCommentId, parentCommentId),
-      rootParentCondition,
-    )!;
-
-    conditions.push(parentCondition);
-  }
-
-  if (cursor) {
+  if (cursor !== undefined) {
     conditions.push(lt(projectDiscussionComments.id, cursor));
   }
 
-  const results = await db.query.projectDiscussionComments.findMany({
+  const rootComments = await db.query.projectDiscussionComments.findMany({
     where: and(...conditions),
     orderBy: [
-      asc(projectDiscussionComments.parentCommentId),
       desc(projectDiscussionComments.createdAt),
       desc(projectDiscussionComments.id),
     ],
@@ -614,11 +576,11 @@ export const listDiscussionComments = async ({
           avatarUrl: true,
         },
       },
-      comments: {
+      childrenComments: {
         where: eq(projectDiscussionComments.isDeleted, false),
         orderBy: [
           asc(projectDiscussionComments.createdAt),
-          desc(projectDiscussionComments.id),
+          asc(projectDiscussionComments.id),
         ],
         with: {
           creator: {
@@ -633,8 +595,8 @@ export const listDiscussionComments = async ({
     },
   });
 
-  const hasNextPage = results.length > input.limit;
-  const items = hasNextPage ? results.slice(0, input.limit) : results;
+  const hasNextPage = rootComments.length > limit;
+  const items = hasNextPage ? rootComments.slice(0, limit) : rootComments;
   const nextCursor = hasNextPage ? (items[items.length - 1]?.id ?? null) : null;
 
   return {

@@ -278,8 +278,16 @@ export const projectDiscussionCommentsRelations = relations(
       references: [projectDiscussionComments.id],
       relationName: 'parentComment',
     }),
-    comments: many(projectDiscussionComments, {
+    replies: many(projectDiscussionComments, {
       relationName: 'parentComment',
+    }),
+    rootComment: one(projectDiscussionComments, {
+      fields: [projectDiscussionComments.commentId],
+      references: [projectDiscussionComments.id],
+      relationName: 'rootComment',
+    }),
+    childrenComments: many(projectDiscussionComments, {
+      relationName: 'rootComment',
     }),
   }),
 );

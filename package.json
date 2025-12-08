@@ -95,7 +95,7 @@
     "lru-cache": "^10.4.3",
     "markdown-it": "^14.1.0",
     "nanoid": "^5.1.6",
-    "next": "15.2.3",
+    "next": "15.2.6",
     "postgres": "^3.4.7",
     "prosemirror-markdown": "^1.13.2",
     "prosemirror-model": "^1.25.4",
