@@ -2,10 +2,10 @@
 
 import { Skeleton } from '@heroui/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
 import ProjectTabs from '@/components/base/ProjectTabs';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import ProjectTopBannerAd from '@/components/pages/ad-management/HtaxAd/ProjectTopBannerAd';
@@ -21,6 +21,7 @@ import TransparentScore from '@/components/pages/project/detail/TransparentScore
 import Ecosystem from '@/components/pages/project/ecosystem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
 
 // Animation variants for tab content
@@ -58,6 +59,8 @@ type ProjectComplaintsMeta = {
 
 const ProjectPage = () => {
   const { id: projectId } = useParams();
+  const numericProjectId = Number(projectId);
+  const isValidProjectId = Number.isFinite(numericProjectId);
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -85,8 +88,15 @@ const ProjectPage = () => {
   } = useProjectDetailContext();
 
   const projectWithMeta = project as typeof project & ProjectComplaintsMeta;
-  const complaintsCount = projectWithMeta?.complaintsCount ?? 0;
-  const scamAlertCount = projectWithMeta?.scamAlertCount ?? 0;
+  const threadStatsQuery =
+    trpc.projectDiscussionThread.getProjectStats.useQuery(
+      { projectId: numericProjectId },
+      { enabled: isValidProjectId },
+    );
+  const complaintsCount =
+    threadStatsQuery.data?.total ?? projectWithMeta?.complaintsCount ?? 0;
+  const scamAlertCount =
+    threadStatsQuery.data?.scamAlerts ?? projectWithMeta?.scamAlertCount ?? 0;
 
   const tabs = useMemo(
     () => [
@@ -98,7 +108,7 @@ const ProjectPage = () => {
         label: (
           <span className="flex items-center gap-2">
             Complaints
-            <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs font-semibold text-black">
+            <span className="inline-flex h-[22px] items-center rounded-[2px] bg-[#CDCDCD] px-[4px] text-[13px] font-semibold text-black">
               {complaintsCount}
             </span>
           </span>
@@ -252,21 +262,27 @@ const ProjectPage = () => {
       />
 
       <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
-        <div className="flex flex-wrap items-center gap-[12px]">
+        <div className="flex flex-wrap items-center gap-[12px] border-b border-black/10">
           <ProjectTabs
             tabs={tabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
           />
-          <Link
-            href={`/project/${projectId}/complaints`}
-            className="flex items-center gap-2 rounded-full border border-[#c46a1d] bg-[#fff6ee] px-3 py-1 text-sm font-semibold text-[#c46a1d] transition hover:bg-[#ffe7d6]"
-          >
-            View Scam Alerts
-            <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs font-bold">
-              {scamAlertCount}
-            </span>
-          </Link>
+          {scamAlertCount > 0 ? (
+            <div className="pb-[12px]">
+              <Button
+                className="h-[26px] rounded-[5px] border border-[#BB5D00] bg-[rgba(187,93,0,0.10)] px-[8px] text-[13px] font-semibold text-[#BB5D00] hover:bg-[#ecb47d]"
+                onPress={() =>
+                  router.push(
+                    `/project/${projectId}/complaints?isScam=true&alertOnly=true&status=all`,
+                  )
+                }
+              >
+                View Scam Alerts
+                <span>{scamAlertCount}</span>
+              </Button>
+            </div>
+          ) : null}
         </div>
         <TransparentScore
           isDataFetched={isProjectFetched}

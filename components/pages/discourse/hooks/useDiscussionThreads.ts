@@ -16,6 +16,8 @@ export type UseDiscussionThreadsParams = {
   enabled?: boolean;
   sort?: 'top' | 'new';
   status?: 'all' | 'redressed' | 'unanswered';
+  isScam?: boolean;
+  alertOnly?: boolean;
 };
 
 export const useDiscussionThreads = ({
@@ -26,10 +28,13 @@ export const useDiscussionThreads = ({
   enabled = true,
   sort = 'new',
   status = 'all',
+  isScam,
+  alertOnly = false,
 }: UseDiscussionThreadsParams) => {
   const normalizedCategories = categories.filter(Boolean);
   const normalizedTags = tags.filter(Boolean);
   const sortBy = sort === 'top' ? 'votes' : 'recent';
+  const scamFilter = isScam ? true : undefined;
 
   const listQuery = trpc.projectDiscussionThread.listThreads.useInfiniteQuery(
     {
@@ -40,6 +45,7 @@ export const useDiscussionThreads = ({
       limit,
       sortBy,
       tab: status,
+      isScam: scamFilter,
     },
     {
       enabled: enabled && (projectId ? Number.isFinite(projectId) : true),
@@ -60,13 +66,20 @@ export const useDiscussionThreads = ({
   }, [threads]);
 
   const filteredThreads = useMemo<ThreadMeta[]>(() => {
+    let results = mappedThreads;
     if (status === 'redressed') {
-      return mappedThreads.filter(
+      results = results.filter(
         (thread) => thread.isScam && thread.isClaimRedressed,
       );
     }
-    return mappedThreads;
-  }, [mappedThreads, status]);
+    if (alertOnly) {
+      results = results.filter(
+        (thread) => thread.isScam && thread.isAlertDisplayed,
+      );
+    }
+    // If no alert filter, but upstream still passed isScam=true, do not drop non-scam results.
+    return results;
+  }, [mappedThreads, status, alertOnly]);
 
   return {
     ...listQuery,

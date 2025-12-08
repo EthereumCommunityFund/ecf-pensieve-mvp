@@ -11,6 +11,8 @@ type ThreadListControlsOptions = {
   initialStatus?: string;
   initialSort?: string;
   initialSentiment?: string;
+  initialIsScam?: boolean;
+  initialAlertOnly?: boolean;
 };
 
 const SENTIMENT_OPTIONS = [
@@ -28,6 +30,8 @@ export const useThreadListControls = ({
   initialStatus,
   initialSort,
   initialSentiment,
+  initialIsScam,
+  initialAlertOnly,
 }: ThreadListControlsOptions) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -36,6 +40,8 @@ export const useThreadListControls = ({
   const defaultStatus = initialStatus ?? statusTabs[0];
   const defaultSort = initialSort ?? sortOptions[0];
   const defaultSentiment = initialSentiment ?? DEFAULT_SENTIMENT_VALUE;
+  const defaultIsScam = initialIsScam ?? false;
+  const defaultAlertOnly = initialAlertOnly ?? false;
 
   const normalizeParam = useCallback(
     (value: string | null, allowed: string[], fallback: string) => {
@@ -81,9 +87,28 @@ export const useThreadListControls = ({
       defaultSentiment,
     );
     const topics = parseTopicsFromParams();
+    const isScamParam = normalizeParam(
+      searchParams?.get('isScam'),
+      ['true', 'false'],
+      defaultIsScam ? 'true' : 'false',
+    );
+    const alertOnlyParam = normalizeParam(
+      searchParams?.get('alertOnly'),
+      ['true', 'false'],
+      defaultAlertOnly ? 'true' : 'false',
+    );
 
-    return { status, sort, sentiment, topics };
+    return {
+      status,
+      sort,
+      sentiment,
+      topics,
+      isScam: isScamParam === 'true',
+      alertOnly: alertOnlyParam === 'true',
+    };
   }, [
+    defaultAlertOnly,
+    defaultIsScam,
     defaultSentiment,
     defaultSort,
     defaultStatus,
@@ -102,6 +127,12 @@ export const useThreadListControls = ({
   const [selectedTopics, setSelectedTopics] = useState<string[]>(
     initialState.topics,
   );
+  const [isScamFilter, setIsScamFilter] = useState<boolean>(
+    initialState.isScam,
+  );
+  const [alertOnlyFilter, setAlertOnlyFilter] = useState<boolean>(
+    initialState.alertOnly,
+  );
 
   const syncToUrl = useCallback(
     (
@@ -110,6 +141,8 @@ export const useThreadListControls = ({
         sort: string;
         sentiment: string;
         topics: string[];
+        isScam: boolean;
+        alertOnly: boolean;
       }>,
     ) => {
       const params = new URLSearchParams(searchParams?.toString() ?? '');
@@ -118,6 +151,10 @@ export const useThreadListControls = ({
       const nextSentiment =
         overrides?.sentiment ?? activeSentiment ?? defaultSentiment;
       const nextTopics = overrides?.topics ?? selectedTopics;
+      const nextIsScam =
+        overrides?.isScam ?? isScamFilter ?? defaultIsScam ?? false;
+      const nextAlertOnly =
+        overrides?.alertOnly ?? alertOnlyFilter ?? defaultAlertOnly ?? false;
 
       if (nextStatus) params.set('status', nextStatus);
       if (nextSort) params.set('sort', nextSort);
@@ -128,6 +165,18 @@ export const useThreadListControls = ({
         params.delete('topics');
         params.delete('topic');
       }
+      const shouldPersistScam =
+        nextAlertOnly || nextIsScam || overrides?.alertOnly === true;
+      if (shouldPersistScam) {
+        params.set('isScam', 'true');
+      } else {
+        params.delete('isScam');
+      }
+      if (nextAlertOnly) {
+        params.set('alertOnly', 'true');
+      } else {
+        params.delete('alertOnly');
+      }
 
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname);
@@ -136,9 +185,13 @@ export const useThreadListControls = ({
       activeSentiment,
       activeSort,
       activeStatus,
+      alertOnlyFilter,
+      defaultAlertOnly,
+      defaultIsScam,
       defaultSentiment,
       defaultSort,
       defaultStatus,
+      isScamFilter,
       pathname,
       router,
       searchParams,
@@ -169,7 +222,13 @@ export const useThreadListControls = ({
   const handleSetStatus = useCallback(
     (value: string) => {
       setActiveStatus(value);
-      syncToUrl({ status: value });
+      setIsScamFilter(false);
+      setAlertOnlyFilter(false);
+      syncToUrl({
+        status: value,
+        alertOnly: false,
+        isScam: false,
+      });
     },
     [syncToUrl],
   );
@@ -177,7 +236,13 @@ export const useThreadListControls = ({
   const handleSetSort = useCallback(
     (value: string) => {
       setActiveSort(value);
-      syncToUrl({ sort: value });
+      setIsScamFilter(false);
+      setAlertOnlyFilter(false);
+      syncToUrl({
+        sort: value,
+        alertOnly: false,
+        isScam: false,
+      });
     },
     [syncToUrl],
   );
@@ -185,9 +250,34 @@ export const useThreadListControls = ({
   const handleSetSentiment = useCallback(
     (value: string) => {
       setActiveSentiment(value);
-      syncToUrl({ sentiment: value });
+      setIsScamFilter(false);
+      setAlertOnlyFilter(false);
+      syncToUrl({
+        sentiment: value,
+        alertOnly: false,
+        isScam: false,
+      });
     },
     [syncToUrl],
+  );
+
+  const handleSetIsScam = useCallback(
+    (value: boolean) => {
+      setIsScamFilter(value);
+      if (!value) {
+        setAlertOnlyFilter(false);
+      }
+      syncToUrl({ isScam: value, alertOnly: false });
+    },
+    [syncToUrl],
+  );
+
+  const handleSetAlertOnly = useCallback(
+    (value: boolean) => {
+      setAlertOnlyFilter(value);
+      syncToUrl({ alertOnly: value, isScam: value || isScamFilter });
+    },
+    [syncToUrl, isScamFilter],
   );
 
   useEffect(() => {
@@ -207,6 +297,18 @@ export const useThreadListControls = ({
       defaultSentiment,
     );
     const topics = parseTopicsFromParams();
+    const isScamParam = normalizeParam(
+      searchParams?.get('isScam'),
+      ['true', 'false'],
+      defaultIsScam ? 'true' : 'false',
+    );
+    const alertOnlyParam = normalizeParam(
+      searchParams?.get('alertOnly'),
+      ['true', 'false'],
+      defaultAlertOnly ? 'true' : 'false',
+    );
+    const isScam = isScamParam === 'true';
+    const alertOnly = alertOnlyParam === 'true';
 
     if (status !== activeStatus) setActiveStatus(status);
     if (sort !== activeSort) setActiveSort(sort);
@@ -214,13 +316,19 @@ export const useThreadListControls = ({
     if (topics.join(',') !== selectedTopics.join(',')) {
       setSelectedTopics(topics);
     }
+    if (isScam !== isScamFilter) setIsScamFilter(isScam);
+    if (alertOnly !== alertOnlyFilter) setAlertOnlyFilter(alertOnly);
   }, [
     activeSentiment,
     activeSort,
     activeStatus,
+    alertOnlyFilter,
+    defaultAlertOnly,
+    defaultIsScam,
     defaultSentiment,
     defaultSort,
     defaultStatus,
+    isScamFilter,
     normalizeParam,
     parseTopicsFromParams,
     searchParams,
@@ -239,5 +347,9 @@ export const useThreadListControls = ({
     selectedTopics,
     toggleTopic,
     clearTopics,
+    isScamFilter,
+    setIsScamFilter: handleSetIsScam,
+    alertOnlyFilter,
+    setAlertOnlyFilter: handleSetAlertOnly,
   };
 };

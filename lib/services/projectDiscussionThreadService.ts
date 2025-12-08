@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 
+import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import type { Database } from '@/lib/db';
 import {
   profiles,
@@ -293,6 +294,41 @@ export const voteDiscussionThread = async ({
   });
 
   return updated;
+};
+
+export const getDiscussionThreadStats = async ({
+  db,
+  projectId,
+}: {
+  db: Database;
+  projectId: number;
+}) => {
+  await ensurePublishedProject(db, projectId);
+
+  const [totalRow] = await db
+    .select({
+      count: count(),
+    })
+    .from(projectDiscussionThreads)
+    .where(eq(projectDiscussionThreads.projectId, projectId));
+
+  const [alertRow] = await db
+    .select({
+      count: count(),
+    })
+    .from(projectDiscussionThreads)
+    .where(
+      and(
+        eq(projectDiscussionThreads.projectId, projectId),
+        eq(projectDiscussionThreads.isScam, true),
+        sql`${projectDiscussionThreads.support} >= ${REDRESSED_SUPPORT_THRESHOLD}`,
+      ),
+    );
+
+  return {
+    total: Number(totalRow?.count ?? 0),
+    scamAlerts: Number(alertRow?.count ?? 0),
+  };
 };
 
 export const unvoteDiscussionThread = async ({

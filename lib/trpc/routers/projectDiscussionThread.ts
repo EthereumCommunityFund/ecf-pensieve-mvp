@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   createDiscussionThread,
   getDiscussionThreadById,
+  getDiscussionThreadStats,
   listDiscussionThreads,
   unvoteDiscussionThread,
   voteDiscussionThread,
@@ -84,6 +85,15 @@ export const projectDiscussionThreadRouter = router({
           tab: input.tab ?? 'all',
         },
         viewerId: ctx.user?.id ?? null,
+      });
+    }),
+
+  getProjectStats: publicProcedure
+    .input(z.object({ projectId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return getDiscussionThreadStats({
+        db: ctx.db,
+        projectId: input.projectId,
       });
     }),
 

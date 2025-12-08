@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/base';
+import { trpc } from '@/lib/trpc/client';
 
 import { useProjectDetailContext } from '../../project/context/projectDetailContext';
 import { TopbarFilters } from '../common/TopbarFilters';
@@ -44,9 +45,17 @@ export default function ProjectDiscoursePage({
   const numericProjectId = Number(projectId);
   const isValidProjectId = Number.isFinite(numericProjectId);
 
-  const complaintsCount = projectMeta?.complaintsCount ?? 0;
+  const threadStatsQuery =
+    trpc.projectDiscussionThread.getProjectStats.useQuery(
+      { projectId: numericProjectId },
+      { enabled: isValidProjectId },
+    );
+
+  const complaintsCount =
+    threadStatsQuery.data?.total ?? projectMeta?.complaintsCount ?? 0;
   const redressedCount = projectMeta?.redressedCount ?? 0;
-  const scamAlertCount = projectMeta?.scamAlertCount ?? 0;
+  const scamAlertCount =
+    threadStatsQuery.data?.scamAlerts ?? projectMeta?.scamAlertCount ?? 0;
 
   const {
     activeSentiment,
@@ -58,6 +67,8 @@ export default function ProjectDiscoursePage({
     setActiveSort,
     setActiveStatus,
     toggleTopic,
+    isScamFilter,
+    alertOnlyFilter,
   } = useThreadListControls({
     statusTabs,
     sortOptions: projectSortOptions,
@@ -76,6 +87,8 @@ export default function ProjectDiscoursePage({
     enabled: isValidProjectId,
     sort: activeSort === 'top' ? 'top' : 'new',
     status: activeStatus as 'all' | 'redressed' | 'unanswered',
+    isScam: isScamFilter || alertOnlyFilter ? true : undefined,
+    alertOnly: alertOnlyFilter,
   });
 
   const createThreadHref = `/discourse/create?projectId=${projectId}`;
@@ -109,12 +122,11 @@ export default function ProjectDiscoursePage({
         { label: 'Complaints' },
       ]}
       meta={
-        <div className="rounded-[10px] bg-black/5 px-4 py-2 text-sm text-black/70">
+        <div className="flex gap-[10px] rounded-[10px] bg-black/5 px-4 py-2 text-sm font-[400] text-black/70">
           <span>
             Complaints:{' '}
             <span className="font-semibold text-black">{complaintsCount}</span>
           </span>
-          <span className="mx-3 inline-block size-1 rounded-full bg-black/30 align-middle" />
           <span>
             Redressed:{' '}
             <span className="font-semibold text-black">{redressedCount}</span>
@@ -132,12 +144,19 @@ export default function ProjectDiscoursePage({
           <Button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
             Leaderboard
           </Button>
-          <Button className="h-10 rounded-[5px] border border-[#c46a1d] bg-[#fff6ee] px-5 text-[13px] font-semibold text-[#c46a1d]">
-            View Scam Alerts
-            <span className="ml-2 rounded-full bg-white/80 px-2 py-0.5 text-xs font-bold">
-              {scamAlertCount}
-            </span>
-          </Button>
+          {scamAlertCount > 0 ? (
+            <Button
+              className="h-10 rounded-[5px] border border-[#BB5D00] bg-[rgba(187,93,0,0.10)] px-[10px] text-[13px] font-semibold text-[#BB5D00] hover:bg-[#ecb47d]"
+              onPress={() =>
+                router.push(
+                  `/project/${projectId}/complaints?isScam=true&alertOnly=true&status=all`,
+                )
+              }
+            >
+              View Scam Alerts
+              <span>{scamAlertCount}</span>
+            </Button>
+          ) : null}
         </>
       }
       sidebar={
@@ -161,14 +180,6 @@ export default function ProjectDiscoursePage({
         sentimentOptions={sentimentOptions}
         selectedSentiment={activeSentiment}
         onSentimentChange={(value) => setActiveSentiment(value)}
-        secondaryAction={
-          <Button
-            className="inline-flex h-9 items-center rounded-[6px] bg-black px-4 text-[13px] font-semibold text-white hover:bg-black/80"
-            onPress={() => router.push(createThreadHref)}
-          >
-            Create a Thread
-          </Button>
-        }
       />
       <ThreadList
         isLoading={isLoading}
