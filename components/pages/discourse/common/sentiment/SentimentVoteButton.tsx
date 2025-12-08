@@ -30,6 +30,16 @@ export type SentimentVoteButtonProps = {
   size?: 'normal' | 'small';
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  classNames?: {
+    root?: string;
+    trigger?: string;
+    closeButton?: string;
+    option?: string;
+    optionActive?: string;
+    openPanel?: string;
+    voteLabel?: string;
+    icon?: string;
+  };
 };
 
 export function SentimentVoteButton({
@@ -42,6 +52,7 @@ export function SentimentVoteButton({
   size = 'normal',
   defaultOpen = false,
   onOpenChange,
+  classNames,
 }: SentimentVoteButtonProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [optimisticValue, setOptimisticValue] = useState<
@@ -128,10 +139,28 @@ export function SentimentVoteButton({
           optionActive: '',
         };
 
+  const mergedClasses = {
+    root: cn('flex items-center gap-[10px]', classNames?.root),
+    trigger: cn(
+      sizeStyles.trigger,
+      sizeStyles.triggerHover,
+      classNames?.trigger,
+    ),
+    closeButton: cn(sizeStyles.closeButton, classNames?.closeButton),
+    option: cn(sizeStyles.option, sizeStyles.optionHover, classNames?.option),
+    optionActive: cn(sizeStyles.optionActive, classNames?.optionActive),
+    openPanel: cn(
+      'flex items-center gap-[10px] rounded-[12px]',
+      classNames?.openPanel,
+    ),
+    voteLabel: cn('text-black/60', classNames?.voteLabel),
+    icon: cn('opacity-30', classNames?.icon),
+  };
+
   return (
-    <div className="flex items-center gap-[10px]">
+    <div className={mergedClasses.root}>
       <Button
-        className={cn(sizeStyles.trigger, sizeStyles.triggerHover)}
+        className={mergedClasses.trigger}
         isDisabled={disabled}
         isLoading={isLoading}
         onPress={handleToggle}
@@ -139,7 +168,7 @@ export function SentimentVoteButton({
         aria-expanded={open}
       >
         {open ? (
-          <div className="flex items-center gap-[10px] rounded-[12px]">
+          <div className={mergedClasses.openPanel}>
             <Tooltip
               content="Close"
               closeDelay={0}
@@ -150,7 +179,7 @@ export function SentimentVoteButton({
               }}
             >
               <Button
-                className={sizeStyles.closeButton}
+                className={mergedClasses.closeButton}
                 onPress={() => updateOpen(false)}
                 isDisabled={isLoading}
               >
@@ -182,9 +211,8 @@ export function SentimentVoteButton({
                       onPress={() => handleSelect(option)}
                       isDisabled={isLoading}
                       className={cn(
-                        sizeStyles.option,
-                        sizeStyles.optionHover,
-                        isActive && sizeStyles.optionActive,
+                        mergedClasses.option,
+                        isActive && mergedClasses.optionActive,
                         isLoading && 'opacity-60 cursor-not-allowed',
                       )}
                       aria-pressed={isActive}
@@ -207,11 +235,11 @@ export function SentimentVoteButton({
             <display.Icon
               size={sizeStyles.iconSize}
               weight={'fill'}
-              className={'opacity-30'}
+              className={mergedClasses.icon}
               style={activeValue ? { color: display.color } : undefined}
               aria-hidden
             />
-            <span className="text-black/60">{voteLabel}</span>
+            <span className={mergedClasses.voteLabel}>{voteLabel}</span>
           </>
         )}
       </Button>

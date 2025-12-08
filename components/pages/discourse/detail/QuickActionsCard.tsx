@@ -109,6 +109,10 @@ export function QuickActionsCard({
                   requireAuth={requireAuth}
                   defaultOpen
                   onOpenChange={handleSentimentOpenChange}
+                  classNames={{
+                    root: 'h-full w-full',
+                    trigger: 'h-full w-full font-[400]',
+                  }}
                 />
               </div>
             ) : (
