@@ -141,8 +141,11 @@ export default function ProjectDiscoursePage({
           >
             Create a Thread
           </Button>
-          <Button className="h-10 rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black hover:bg-black/5">
-            Leaderboard
+          <Button
+            disabled={true}
+            className="h-10 cursor-not-allowed rounded-[5px] border border-black/80 bg-white px-5 text-[13px] font-semibold text-black"
+          >
+            Leaderboard (coming soon)
           </Button>
           {scamAlertCount > 0 ? (
             <Button

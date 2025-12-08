@@ -65,8 +65,11 @@ export default function GlobalDiscoursePage() {
           >
             Create a Thread
           </Button>
-          <Button className="h-10 border border-[#222] bg-white px-[10px] font-semibold text-black hover:bg-black/20">
-            Leaderboard
+          <Button
+            disabled={true}
+            className="h-10 cursor-not-allowed border border-[#222] bg-white px-[10px] font-semibold text-black"
+          >
+            Leaderboard (coming soon)
           </Button>
         </>
       }
