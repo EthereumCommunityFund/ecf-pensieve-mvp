@@ -1,5 +1,11 @@
+import { Suspense } from 'react';
+
 import { CreatePost } from '@/components/pages/discourse/create/CreatePostPage';
 
 export default function DiscourseCreatePage() {
-  return <CreatePost />;
+  return (
+    <Suspense fallback={null}>
+      <CreatePost />
+    </Suspense>
+  );
 }
