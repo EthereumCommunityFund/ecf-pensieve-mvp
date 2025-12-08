@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, lt, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
@@ -481,10 +481,8 @@ export const listDiscussionComments = async ({
   const conditions: SQL<unknown>[] = [
     eq(projectDiscussionComments.isDeleted, false),
     eq(projectDiscussionComments.threadId, threadId),
-    or(
-      isNull(projectDiscussionComments.parentCommentId),
-      isNull(projectDiscussionComments.answerId),
-    )!,
+    isNull(projectDiscussionComments.parentCommentId),
+    isNull(projectDiscussionComments.answerId),
   ];
 
   if (cursor !== undefined) {
@@ -506,7 +504,7 @@ export const listDiscussionComments = async ({
           avatarUrl: true,
         },
       },
-      replies: {
+      childrenComments: {
         where: eq(projectDiscussionComments.isDeleted, false),
         orderBy: [
           asc(projectDiscussionComments.createdAt),
