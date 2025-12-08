@@ -1,8 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 import { Button } from '@/components/base';
+import { useAuth } from '@/context/AuthContext';
 
 import { TopbarFilters } from '../common/TopbarFilters';
 import { SentimentKey } from '../common/sentiment/sentimentConfig';
@@ -25,6 +27,7 @@ const sentimentOptions = [
 ];
 export default function GlobalDiscoursePage() {
   const router = useRouter();
+  const { profile, showAuthPrompt } = useAuth();
   const {
     activeSentiment,
     activeSort,
@@ -52,6 +55,14 @@ export default function GlobalDiscoursePage() {
     status: activeStatus as 'all' | 'redressed' | 'unanswered',
   });
 
+  const handleCreateThread = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push('/discourse/create');
+  }, [profile, router, showAuthPrompt]);
+
   return (
     <DiscoursePageLayout
       title="Ethereum Community Discourse"
@@ -61,7 +72,7 @@ export default function GlobalDiscoursePage() {
         <>
           <Button
             className="h-10 bg-black px-[10px] text-white hover:bg-black/80"
-            onPress={() => router.push('/discourse/create')}
+            onPress={handleCreateThread}
           >
             Create a Thread
           </Button>
@@ -79,7 +90,7 @@ export default function GlobalDiscoursePage() {
           selectedTopics={selectedTopics}
           onTopicToggle={toggleTopic}
           onClear={clearTopics}
-          onCreateThread={() => router.push('/discourse/create')}
+          onCreateThread={handleCreateThread}
         />
       }
     >

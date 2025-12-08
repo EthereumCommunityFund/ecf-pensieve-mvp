@@ -1,8 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 import { Button } from '@/components/base';
+import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
 import { useProjectDetailContext } from '../../project/context/projectDetailContext';
@@ -40,6 +42,7 @@ export default function ProjectDiscoursePage({
   projectId,
 }: ProjectComplaintsPageProps) {
   const router = useRouter();
+  const { profile, showAuthPrompt } = useAuth();
   const { project, isProjectFetched } = useProjectDetailContext();
   const projectMeta = project as typeof project & ProjectComplaintsMeta;
   const numericProjectId = Number(projectId);
@@ -92,6 +95,13 @@ export default function ProjectDiscoursePage({
   });
 
   const createThreadHref = `/discourse/create?projectId=${projectId}`;
+  const handleCreateThread = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return;
+    }
+    router.push(createThreadHref);
+  }, [createThreadHref, profile, router, showAuthPrompt]);
 
   const projectInitial = project?.name?.[0]?.toUpperCase() ?? 'P';
   const projectAvatar = project?.logoUrl ? (
@@ -137,7 +147,7 @@ export default function ProjectDiscoursePage({
         <>
           <Button
             className="h-10 rounded-[5px] bg-black px-5 text-[13px] font-semibold text-white hover:bg-black/85"
-            onPress={() => router.push(createThreadHref)}
+            onPress={handleCreateThread}
           >
             Create a Thread
           </Button>
@@ -169,7 +179,7 @@ export default function ProjectDiscoursePage({
           selectedTopics={selectedTopics}
           onTopicToggle={toggleTopic}
           onClear={clearTopics}
-          onCreateThread={() => router.push(createThreadHref)}
+          onCreateThread={handleCreateThread}
         />
       }
     >

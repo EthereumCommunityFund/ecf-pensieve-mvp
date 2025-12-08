@@ -2,7 +2,14 @@
 
 import { ArrowLeft } from '@phosphor-icons/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
@@ -476,6 +483,14 @@ export function CreatePost() {
     });
   };
 
+  const requireAuth = useCallback(() => {
+    if (!profile) {
+      showAuthPrompt();
+      return false;
+    }
+    return true;
+  }, [profile, showAuthPrompt]);
+
   const handleTitleChange = (value: string) => {
     clearError('title');
     setTitle(value);
@@ -559,11 +574,13 @@ export function CreatePost() {
   };
 
   const handlePreview = () => {
+    if (!requireAuth()) return;
     if (!validateForm()) return;
     setShowPreview(true);
   };
 
   const handlePublish = async () => {
+    if (!requireAuth()) return;
     if (!validateForm()) return;
     if (!selectedProject || !selectedCategory) return;
     if (isScamCategorySelected && !meetsScamRequirement) {

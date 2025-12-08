@@ -95,7 +95,7 @@ type ScamThreadDetailPageProps = {
 };
 
 export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
-  const { isAuthenticated, showAuthPrompt, user } = useAuth();
+  const { profile, showAuthPrompt, user } = useAuth();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
     'counter',
   );
@@ -108,10 +108,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const isValidThreadId = Number.isFinite(numericThreadId);
 
   const requireAuth = useCallback(() => {
-    if (isAuthenticated) return true;
-    showAuthPrompt();
-    return false;
-  }, [isAuthenticated, showAuthPrompt]);
+    if (!profile) {
+      showAuthPrompt();
+      return false;
+    }
+    return true;
+  }, [profile, showAuthPrompt]);
 
   const threadQuery = trpc.projectDiscussionThread.getThreadById.useQuery(
     { threadId: numericThreadId },

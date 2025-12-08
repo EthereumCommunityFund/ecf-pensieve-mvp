@@ -71,7 +71,7 @@ const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
 ];
 
 export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
-  const { user, isAuthenticated, showAuthPrompt } = useAuth();
+  const { user, profile, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState<'answers' | 'comments'>('answers');
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
@@ -86,12 +86,12 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     totalVotes?: number;
   } | null>(null);
   const requireAuth = useCallback(() => {
-    if (isAuthenticated) {
-      return true;
+    if (!profile) {
+      showAuthPrompt();
+      return false;
     }
-    showAuthPrompt();
-    return false;
-  }, [isAuthenticated, showAuthPrompt]);
+    return true;
+  }, [profile, showAuthPrompt]);
   // const isAnswerComposer = useMemo(
   //   () => composerVariant === 'answer',
   //   [composerVariant],
@@ -566,22 +566,25 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     [topAnswerSupport],
   );
 
-  const handleOpenAnswerComposer = useCallback(
-    () => openAnswerComposer(),
-    [openAnswerComposer],
-  );
+  const handleOpenAnswerComposer = useCallback(() => {
+    if (!requireAuth()) {
+      return;
+    }
+    openAnswerComposer();
+  }, [openAnswerComposer, requireAuth]);
 
-  const handleOpenThreadComment = useCallback(
-    () =>
-      openCommentComposer({
-        target: {
-          targetType: 'thread',
-          targetId: numericThreadId,
-          threadId: numericThreadId,
-        },
-      }),
-    [numericThreadId, openCommentComposer],
-  );
+  const handleOpenThreadComment = useCallback(() => {
+    if (!requireAuth()) {
+      return;
+    }
+    openCommentComposer({
+      target: {
+        targetType: 'thread',
+        targetId: numericThreadId,
+        threadId: numericThreadId,
+      },
+    });
+  }, [numericThreadId, openCommentComposer, requireAuth]);
 
   const handleStatusChange = useCallback(
     (value: string) =>
@@ -610,7 +613,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   );
 
   const makeOnPostComment = useCallback(
-    (answerId: number) => (context?: CommentComposerContext) =>
+    (answerId: number) => (context?: CommentComposerContext) => {
+      if (!requireAuth()) {
+        return;
+      }
       openCommentComposer({
         title: context?.title ?? 'Post Comment',
         context: context ?? null,
@@ -622,8 +628,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             threadId: numericThreadId,
             answerId,
           } as CommentTarget),
-      }),
-    [numericThreadId, openCommentComposer],
+      });
+    },
+    [numericThreadId, openCommentComposer, requireAuth],
   );
 
   const handleReplyToComment = useCallback(
@@ -636,7 +643,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       isOp?: boolean;
       timestamp?: string;
       excerpt?: string;
-    }) =>
+    }) => {
+      if (!requireAuth()) {
+        return;
+      }
       openCommentComposer({
         title: 'Post Reply',
         context: {
@@ -668,8 +678,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           threadId: numericThreadId,
           rootCommentId: payload.commentId ?? payload.rootCommentId,
         },
-      }),
-    [numericThreadId, openCommentComposer],
+      });
+    },
+    [numericThreadId, openCommentComposer, requireAuth],
   );
 
   const handleLoadMoreAnswers = useCallback(
