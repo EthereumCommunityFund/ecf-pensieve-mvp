@@ -42,9 +42,11 @@ import {
   CounterClaimCard,
   ScamEmptyState,
 } from './ScamDetailCards';
+import { AnswerDetailCardSkeleton } from './ThreadAnswerCard';
+import { ThreadCommentSkeleton } from './ThreadCommentSkeleton';
 import { ThreadCommentTree } from './ThreadCommentTree';
 import { ThreadComposerModal } from './ThreadComposerModal';
-import { ScamThreadSkeleton } from './ThreadDetailSkeleton';
+import { ThreadDetailSkeleton } from './ThreadDetailSkeleton';
 import {
   buildSentimentSummary,
   findUserSentiment,
@@ -337,6 +339,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     threadComments,
     filteredAnswers: filteredCounterClaims,
     filteredComments,
+    isAnswersInitialLoading,
     isCommentsInitialLoading,
   } = useDiscussionLists({
     answersQuery,
@@ -367,8 +370,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     voteAnswer: async (answerId) => {
       await voteAnswerMutation.mutateAsync({ answerId });
       addToast({
-        title: 'Supported counter claim',
-        description: 'CP support registered successfully.',
+        title: 'Voted successfully',
         color: 'success',
       });
       await answersQuery.refetch();
@@ -376,8 +378,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     unvoteAnswer: async (answerId) => {
       await unvoteAnswerMutation.mutateAsync({ answerId });
       addToast({
-        title: 'Support withdrawn',
-        description: 'Your CP support was withdrawn.',
+        title: 'Unvote successfully',
         color: 'success',
       });
       await answersQuery.refetch();
@@ -390,7 +391,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       }),
     onWithdrawError: (error) =>
       addToast({
-        title: 'Unable to withdraw',
+        title: 'Unable to unvote',
         description: (error as Error)?.message ?? 'Please try again.',
         color: 'danger',
       }),
@@ -748,7 +749,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   }
 
   if (threadQuery.isLoading) {
-    return <ScamThreadSkeleton />;
+    return <ThreadDetailSkeleton />;
   }
 
   if (!hydratedThread) {
@@ -949,6 +950,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     onPostComment={handlePostCounterComment}
                   />
                 ))
+              ) : isAnswersInitialLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <AnswerDetailCardSkeleton key={index} />
+                  ))}
+                </div>
               ) : (
                 <ScamEmptyState
                   title="No counter claims yet"
@@ -958,8 +965,10 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             ) : (
               <>
                 {isCommentsInitialLoading ? (
-                  <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                    Loading discussion…
+                  <div className="space-y-4 rounded-[12px] border border-black/10 bg-white p-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <ThreadCommentSkeleton key={index} />
+                    ))}
                   </div>
                 ) : null}
                 {filteredComments.length ? (

@@ -35,7 +35,8 @@ import {
 import { useDiscussionLists } from './hooks/useDiscussionLists';
 import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
-import { AnswerDetailCard } from './ThreadAnswerCard';
+import { AnswerDetailCard, AnswerDetailCardSkeleton } from './ThreadAnswerCard';
+import { ThreadCommentSkeleton } from './ThreadCommentSkeleton';
 import { ThreadCommentTree } from './ThreadCommentTree';
 import type { ComposerContext } from './ThreadComposerModal';
 import { ThreadComposerModal } from './ThreadComposerModal';
@@ -796,8 +797,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                 {isAnswersTab ? (
                   <>
                     {isAnswersInitialLoading ? (
-                      <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                        Loading answers…
+                      <div className="space-y-4">
+                        {Array.from({ length: 2 }).map((_, index) => (
+                          <AnswerDetailCardSkeleton key={index} />
+                        ))}
                       </div>
                     ) : null}
                     {filteredAnswers.length
@@ -853,8 +856,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                       </Button>
                     </div>
                     {isCommentsInitialLoading ? (
-                      <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
-                        Loading discussion…
+                      <div className="space-y-4 rounded-[12px] border border-black/10 bg-white p-4">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <ThreadCommentSkeleton key={index} />
+                        ))}
                       </div>
                     ) : null}
                     {filteredComments.length
