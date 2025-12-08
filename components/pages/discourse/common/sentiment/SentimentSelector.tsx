@@ -67,7 +67,7 @@ export function SentimentSelector({
     <div ref={selectorRef} className="relative">
       <Button
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onPress={() => setOpen((prev) => !prev)}
         className="inline-flex h-[32px] items-center gap-2 rounded-[6px] border border-black/10 bg-white px-3 text-sm font-semibold"
       >
         <sentimentDisplay.Icon
@@ -94,7 +94,7 @@ export function SentimentSelector({
               return (
                 <Button
                   key={option}
-                  onClick={() => handleSelect(option)}
+                  onPress={() => handleSelect(option)}
                   className={`flex h-[30px] w-full items-center justify-start gap-3 rounded-[6px] border-none px-[6px] py-[4px] text-left text-sm font-semibold ${
                     isActive ? 'bg-black/5' : 'hover:bg-black/5'
                   }`}
