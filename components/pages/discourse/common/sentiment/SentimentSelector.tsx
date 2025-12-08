@@ -44,7 +44,10 @@ export function SentimentSelector({
     ? (value as string)
     : DEFAULT_SENTIMENT_VALUE;
 
-  const selectedKeys = new Set<string>([normalizedValue]);
+  const selectedKeys = useMemo(
+    () => new Set<string>([normalizedValue]),
+    [normalizedValue],
+  );
 
   const selectedDisplay = useMemo(
     () => getSentimentDisplay(normalizedValue),
