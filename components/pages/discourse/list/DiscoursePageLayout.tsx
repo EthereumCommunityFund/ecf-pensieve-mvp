@@ -55,7 +55,7 @@ export function DiscoursePageLayout({
 
   return (
     <div className="min-h-screen w-full">
-      <section className="tablet:px-[20px] mobile:px-[10px] mx-auto flex w-full max-w-[1200px] flex-col gap-5 pb-16 pt-6 ">
+      <section className="tablet:px-[14px] mobile:px-[10px] mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-[20px] pb-16">
         <nav className="flex flex-wrap items-center gap-3 text-sm">
           <BackHeader className="px-0" />
           {crumbTrail.length ? (
@@ -109,12 +109,10 @@ export function DiscoursePageLayout({
           </div>
         </header>
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="tablet:gap-[20px] mobile:gap-[20px] flex items-start gap-[40px]">
           <div className="flex-1 space-y-5">{children}</div>
           {sidebar ? (
-            <aside className="w-full max-w-[320px] shrink-0 lg:sticky lg:top-10">
-              {sidebar}
-            </aside>
+            <aside className="w-full max-w-[300px] shrink-0">{sidebar}</aside>
           ) : null}
         </div>
       </section>

@@ -37,8 +37,8 @@ export function TopbarFilters({
     label.charAt(0).toUpperCase() + label.slice(1);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-black/10">
-      <div className="flex min-h-[40px] min-w-0 flex-1 flex-wrap items-center gap-2">
+    <div className="flex flex-nowrap items-center gap-3 overflow-x-auto border-b border-black/10">
+      <div className="flex min-h-[40px] w-fit shrink-0 flex-nowrap items-center gap-2">
         {statusTabs.map((tab) => {
           const normalizedTab = tab.toLowerCase();
           const isActive = normalizedTab === activeStatus?.toLowerCase();
@@ -69,7 +69,7 @@ export function TopbarFilters({
         })}
       </div>
 
-      <div className="ml-auto flex flex-wrap items-center gap-3">
+      <div className="ml-auto flex flex-nowrap items-center gap-3">
         <div className="inline-flex items-center gap-[2px] rounded-[5px] border border-black/10 bg-white p-[2px]">
           {sortOptions.map((option) => {
             const isActive = option === activeSort;

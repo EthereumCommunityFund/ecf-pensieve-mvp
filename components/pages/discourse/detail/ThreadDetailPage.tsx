@@ -725,9 +725,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           {thread.categories[0] ?? 'Thread'}
         </span>
       </BackHeader>
-      <div className="flex justify-center px-[20px] pb-16 pt-4">
-        <div className="flex w-full max-w-[1200px] items-start gap-[40px]">
-          <section className="w-[700px] space-y-6">
+      <div className="flex justify-center px-[20px] pb-16 pt-[20px]">
+        <div className="mobile:flex-col tablet:gap-[20px] flex w-full max-w-[1200px] items-start justify-center gap-[40px]">
+          <section className="mobile:w-full w-[700px] space-y-6">
             <PostDetailCard
               title={thread.title}
               author={thread.author.name}
@@ -876,7 +876,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
             </div>
           </section>
 
-          <div className="w-[300px] space-y-[20px]">
+          <div className="mobile:w-full w-[300px] space-y-[20px]">
             <ContributionVotesCard
               current={thread.cpProgress.current}
               target={thread.cpProgress.target}

@@ -694,7 +694,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const statusTheme = getStatusTheme(hydratedThread.status);
 
   return (
-    <div className="flex flex-col items-center space-y-[20px] px-[20px] pb-16 pt-4">
+    <div className="flex flex-col items-center space-y-[20px] px-[20px] pb-16 pt-[20px]">
       <BackHeader className="w-full px-0">
         <Link href="/discourse" className="text-[14px] text-black/70">
           Discourse
@@ -703,8 +703,8 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         <span className="text-[14px] text-black/70">Crumb</span>
       </BackHeader>
 
-      <div className="flex w-full max-w-[1200px] gap-[40px]">
-        <section className="w-[700px] space-y-[20px]">
+      <div className="mobile:flex-col tablet:gap-[20px] flex w-full max-w-[1200px] justify-center gap-[40px]">
+        <section className="mobile:w-full w-[700px] space-y-[20px]">
           <article className="space-y-[12px]">
             <div className="flex items-center gap-[10px]">
               <div className="inline-flex items-center gap-[6px] rounded-[4px] border border-[rgba(0,0,0,0.1)] bg-[#ebebeb] px-[8px] py-[4px]">
@@ -904,7 +904,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           </div>
         </section>
 
-        <aside className="w-[300px] space-y-[20px]">
+        <aside className="mobile:w-full w-[300px] space-y-[20px]">
           {isThreadOwner ? (
             <Button
               className="h-[38px] w-full rounded-[5px] bg-[#51A0C5] text-[13px] font-semibold text-white hover:bg-[#4c90ac]"

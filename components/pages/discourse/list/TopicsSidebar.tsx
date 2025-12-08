@@ -112,9 +112,11 @@ export function TopicsSidebar({
                   onPress={() => onTopicToggle?.(topic.value, !isSelected)}
                   className="flex h-[34px] w-full items-center justify-between rounded-[5px] border-none px-2 text-left hover:bg-[#EBEBEB]/60"
                 >
-                  <span className="flex items-center gap-3 text-[14px] text-black/70">
-                    {topic.icon ?? null}
-                    {topic.label}
+                  <span className="inline-flex flex-1 items-center gap-3 ">
+                    <span className="shrink-0">{topic.icon ?? null}</span>
+                    <span className="flex-1 truncate text-[14px] font-[400] text-black/80">
+                      {topic.label}
+                    </span>
                   </span>
                   <CustomCheckbox checked={isSelected} size={20} />
                 </Button>
