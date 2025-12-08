@@ -258,6 +258,11 @@
   color: var(--placeholder-color);
 }
 
+[data-has-content='true'] .is-empty[data-placeholder]::before {
+  display: none;
+  content: '';
+}
+
 /* =====================
      DROPCURSOR
      ===================== */

@@ -302,6 +302,13 @@ const MdEditor = ({
   const isMobile = useIsBreakpoint();
   const contentRef = useRef<HTMLDivElement>(null);
   const [canCollapse, setCanCollapse] = useState(false);
+  const [hasUserInput, setHasUserInput] = useState(false);
+
+  const computeHasUserInput = useCallback((instance: Editor | null) => {
+    if (!instance) return false;
+    const textContent = instance.getText();
+    return !instance.isEmpty || textContent.length > 0;
+  }, []);
 
   useEffect(() => {
     if (!isMobile && mobileView !== 'main') {
@@ -416,6 +423,7 @@ const MdEditor = ({
       if (!isEditable || !isInitialized) return;
       const html = instance.getHTML();
       debouncedOnChange(html);
+      setHasUserInput(computeHasUserInput(instance));
     },
     immediatelyRender: false,
   });
@@ -437,13 +445,19 @@ const MdEditor = ({
 
       editor.commands.setContent(htmlContent || '<p></p>');
     }
-  }, [editor, editorValue.content]);
+    setHasUserInput(computeHasUserInput(editor));
+  }, [computeHasUserInput, editor, editorValue.content]);
 
   useEffect(() => {
     if (editor) {
       setIsInitialized(true);
     }
   }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    setHasUserInput(computeHasUserInput(editor));
+  }, [computeHasUserInput, editor]);
 
   useEffect(() => {
     if (editor) {
@@ -519,6 +533,7 @@ const MdEditor = ({
             isEditable && 'min-h-[20px]',
             className?.editorWrapper,
           )}
+          data-has-content={hasUserInput ? 'true' : 'false'}
           onClick={(event) => {
             event.stopPropagation();
             editor?.commands.focus();
