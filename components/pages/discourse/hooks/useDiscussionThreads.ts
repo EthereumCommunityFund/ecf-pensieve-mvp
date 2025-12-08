@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { trpc } from '@/lib/trpc/client';
 
@@ -35,6 +35,32 @@ export const useDiscussionThreads = ({
   const normalizedTags = tags.filter(Boolean);
   const sortBy = sort === 'top' ? 'votes' : 'recent';
   const scamFilter = isScam ? true : undefined;
+  const paramsSignature = useMemo(
+    () =>
+      JSON.stringify({
+        projectId,
+        categories: normalizedCategories,
+        tags: normalizedTags,
+        limit,
+        sort,
+        status,
+        isScam: scamFilter,
+        alertOnly,
+      }),
+    [
+      alertOnly,
+      normalizedCategories,
+      normalizedTags,
+      limit,
+      projectId,
+      scamFilter,
+      sort,
+      status,
+    ],
+  );
+  const lastParamsSignatureRef = useRef<string>(paramsSignature);
+  const [isTransitioningParams, setIsTransitioningParams] =
+    useState<boolean>(false);
 
   const listQuery = trpc.projectDiscussionThread.listThreads.useInfiniteQuery(
     {
@@ -53,6 +79,28 @@ export const useDiscussionThreads = ({
       refetchOnWindowFocus: false,
     },
   );
+
+  useEffect(() => {
+    if (paramsSignature !== lastParamsSignatureRef.current) {
+      lastParamsSignatureRef.current = paramsSignature;
+      setIsTransitioningParams(true);
+    }
+  }, [paramsSignature]);
+
+  useEffect(() => {
+    if (!isTransitioningParams) return;
+    if (
+      listQuery.status === 'error' ||
+      (listQuery.isFetched && !listQuery.isFetching)
+    ) {
+      setIsTransitioningParams(false);
+    }
+  }, [
+    isTransitioningParams,
+    listQuery.isFetched,
+    listQuery.isFetching,
+    listQuery.status,
+  ]);
 
   const threads = useMemo<ThreadListItem[]>(() => {
     if (!listQuery.data?.pages.length) {
@@ -81,9 +129,15 @@ export const useDiscussionThreads = ({
     return results;
   }, [mappedThreads, status, alertOnly]);
 
+  const displayThreads = isTransitioningParams ? [] : filteredThreads;
+
+  const isLoading = listQuery.isLoading || isTransitioningParams;
+
   return {
     ...listQuery,
-    threads: filteredThreads,
+    isLoading,
+    isTransitioningParams,
+    threads: displayThreads,
     rawThreads: threads,
   };
 };
