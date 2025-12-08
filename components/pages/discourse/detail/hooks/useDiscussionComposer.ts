@@ -5,10 +5,11 @@ import { parseEditorValue } from '@/components/pages/discourse/utils/editorValue
 import type { ComposerContext, ComposerVariant } from '../ThreadComposerModal';
 
 export type CommentTarget = {
-  threadId: number;
+  targetType: 'thread' | 'answer' | 'comment';
+  targetId: number;
+  threadId?: number;
   answerId?: number;
-  parentCommentId?: number;
-  commentId?: number;
+  rootCommentId?: number;
 };
 
 type OpenCommentOptions = {
@@ -93,11 +94,7 @@ export function useDiscussionComposer({
         options?.target ?? options?.context?.target ?? defaultCommentTarget;
       const hasReplyTarget =
         Boolean(options?.context) ||
-        Boolean(
-          mergedTarget?.answerId ||
-            mergedTarget?.parentCommentId ||
-            mergedTarget?.commentId,
-        );
+        Boolean(mergedTarget && mergedTarget.targetType !== 'thread');
 
       setCommentComposerTitle(options?.title);
       setCommentTarget(mergedTarget ?? null);
@@ -191,6 +188,8 @@ export function useDiscussionComposer({
     }
     const target: CommentTarget = commentTarget ??
       commentContext?.target ?? {
+        targetType: 'thread',
+        targetId: threadId,
         threadId,
       };
     setCommentError(null);

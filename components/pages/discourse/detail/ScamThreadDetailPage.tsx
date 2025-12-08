@@ -30,7 +30,10 @@ import {
 } from '../utils/threadTransforms';
 
 import { useAnswerSupport } from './hooks/useAnswerSupport';
-import { useDiscussionComposer } from './hooks/useDiscussionComposer';
+import {
+  useDiscussionComposer,
+  type CommentTarget,
+} from './hooks/useDiscussionComposer';
 import { useDiscussionLists } from './hooks/useDiscussionLists';
 import { ParticipationCard } from './ParticipationCard';
 import { serializeEditorValue } from './PostDetailCard';
@@ -159,17 +162,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     });
   const createCommentMutation =
     trpc.projectDiscussionInteraction.createComment.useMutation({
-      onSuccess: (_, variables) => {
+      onSuccess: () => {
         addToast({
           title: 'Comment posted',
           description: 'Your discussion is now visible.',
           color: 'success',
         });
-        if (variables?.answerId) {
-          answersQuery.refetch();
-        } else {
-          commentsQuery.refetch();
-        }
       },
       onError: (error) => {
         addToast({
@@ -202,7 +200,11 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     threadId: numericThreadId,
     maxCharacters: EDITOR_MAX_CHARACTERS,
     requireAuth,
-    defaultCommentTarget: { threadId: numericThreadId },
+    defaultCommentTarget: {
+      targetType: 'thread',
+      targetId: numericThreadId,
+      threadId: numericThreadId,
+    },
     messages: {
       primary: {
         required: 'Content is required',
@@ -224,12 +226,18 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     },
     commentSubmit: async ({ html, target }) => {
       if (!isValidThreadId) return;
+      const scope =
+        target.targetType === 'answer' || target.answerId ? 'answer' : 'thread';
       await createCommentMutation.mutateAsync({
-        threadId: target.threadId,
-        parentCommentId: target.parentCommentId,
-        answerId: target.answerId,
+        targetType: target.targetType,
+        targetId: target.targetId,
         content: html,
       });
+      if (scope === 'answer') {
+        answersQuery.refetch();
+      } else {
+        commentsQuery.refetch();
+      }
     },
     primarySubmitting: createCounterClaimMutation.isPending,
     commentSubmitting: createCommentMutation.isPending,
@@ -251,7 +259,11 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const openThreadCommentComposer = useCallback(
     () =>
       guardedOpenCommentComposer({
-        target: { threadId: numericThreadId },
+        target: {
+          targetType: 'thread',
+          targetId: numericThreadId,
+          threadId: numericThreadId,
+        },
       }),
     [guardedOpenCommentComposer, numericThreadId],
   );
@@ -570,12 +582,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       excerpt?: string;
       timestamp?: string;
       isOp?: boolean;
-      target: {
-        threadId: number;
-        answerId?: number;
-        parentCommentId?: number;
-        commentId?: number;
-      };
+      target: CommentTarget;
     }) => {
       if (isThreadRetracted) {
         addToast({
@@ -585,6 +592,11 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         });
         return;
       }
+      const target: CommentTarget = context.target ?? {
+        targetType: 'thread',
+        targetId: numericThreadId,
+        threadId: numericThreadId,
+      };
       guardedOpenCommentComposer({
         title: 'Commenting to Counter Claim:',
         context: {
@@ -593,12 +605,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           excerpt: context.excerpt ?? '',
           timestamp: context.timestamp,
           isOp: context.isOp,
-          target: context.target,
+          target,
         },
-        target: context.target,
+        target,
       });
     },
-    [guardedOpenCommentComposer, isThreadRetracted],
+    [guardedOpenCommentComposer, isThreadRetracted, numericThreadId],
   );
 
   const handleReplyToThreadComment = useCallback(
@@ -606,6 +618,8 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       threadId: number;
       parentCommentId?: number;
       commentId?: number;
+      targetId?: number;
+      rootCommentId?: number;
       author: string;
       excerpt: string;
       timestamp: string;
@@ -628,15 +642,27 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           timestamp: payload.timestamp,
           isOp: payload.isOp,
           target: {
+            targetType: 'comment',
+            targetId:
+              payload.targetId ??
+              payload.parentCommentId ??
+              payload.commentId ??
+              payload.rootCommentId ??
+              0,
             threadId: payload.threadId,
-            parentCommentId: payload.parentCommentId,
-            commentId: payload.commentId,
+            rootCommentId: payload.commentId ?? payload.rootCommentId,
           },
         },
         target: {
+          targetType: 'comment',
+          targetId:
+            payload.targetId ??
+            payload.parentCommentId ??
+            payload.commentId ??
+            payload.rootCommentId ??
+            0,
           threadId: payload.threadId,
-          parentCommentId: payload.parentCommentId,
-          commentId: payload.commentId,
+          rootCommentId: payload.commentId ?? payload.rootCommentId,
         },
       });
     },

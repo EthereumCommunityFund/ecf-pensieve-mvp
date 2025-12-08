@@ -86,7 +86,29 @@ export const normalizeComments = (
   options?: NormalizeCommentOptions,
 ): CommentItem[] => {
   if (!comments?.length) return [];
-  return comments.map((comment) => normalizeComment(comment, options));
+  const flattened: Array<CommentRecord | CommentItem> = [];
+
+  const walk = (
+    comment:
+      | CommentRecord
+      | CommentItem
+      | (CommentRecord & { comments?: any[] }),
+  ) => {
+    flattened.push(comment as CommentRecord);
+    const children =
+      (comment as any).childrenComments ??
+      (comment as any).replies ??
+      (comment as any).comments ??
+      (comment as any).children ??
+      [];
+    if (Array.isArray(children)) {
+      children.forEach(walk);
+    }
+  };
+
+  comments.forEach(walk);
+
+  return flattened.map((comment) => normalizeComment(comment, options));
 };
 
 export const normalizeAnswer = (

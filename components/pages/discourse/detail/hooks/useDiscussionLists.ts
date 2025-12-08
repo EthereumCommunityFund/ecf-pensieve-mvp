@@ -39,6 +39,26 @@ export const useDiscussionLists = <A, C>({
   buildThreadTree = false,
   cpTarget = REDRESSED_SUPPORT_THRESHOLD,
 }: DiscussionListsOptions<A, C>) => {
+  const flattenComments = (items: any[]): any[] => {
+    if (!items?.length) return [];
+    const result: any[] = [];
+    const walk = (node: any) => {
+      if (!node) return;
+      result.push(node);
+      const children =
+        node.childrenComments ??
+        node.replies ??
+        node.comments ??
+        node.children ??
+        [];
+      if (Array.isArray(children)) {
+        children.forEach(walk);
+      }
+    };
+    items.forEach(walk);
+    return result;
+  };
+
   const answers = useMemo<AnswerItem[]>(() => {
     const remoteItems = answersQuery?.data?.pages?.length
       ? answersQuery.data.pages.flatMap((page) => page.items)
@@ -60,7 +80,9 @@ export const useDiscussionLists = <A, C>({
       : [];
     if (!remoteItems.length) return [];
 
-    return remoteItems.map((comment) =>
+    const flattened = flattenComments(remoteItems);
+
+    return flattened.map((comment) =>
       normalizeComment(comment as any, { defaultRole }),
     );
   }, [commentsQuery?.data, defaultRole]);

@@ -16,6 +16,8 @@ import {
 
 import { EDITOR_MAX_CHARACTERS, parseEditorValue } from '../utils/editorValue';
 
+import type { CommentTarget } from './hooks/useDiscussionComposer';
+
 export type ComposerVariant = 'answer' | 'comment' | 'counter';
 
 type ThreadComposerModalProps = {
@@ -72,12 +74,7 @@ export type ComposerContext = {
   timestamp?: string;
   excerpt: string;
   isOp?: boolean;
-  target?: {
-    threadId: number;
-    answerId?: number;
-    parentCommentId?: number;
-    commentId?: number;
-  };
+  target?: CommentTarget;
 };
 
 export function ThreadComposerModal({

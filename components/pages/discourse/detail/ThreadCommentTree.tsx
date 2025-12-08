@@ -45,10 +45,10 @@ export function ThreadCommentTree({
 
   const handleReply = () => {
     onReply({
+      targetType: 'comment',
+      targetId: node.numericId,
       threadId,
-      parentCommentId: node.numericId,
-      commentId: node.commentId ?? node.numericId,
-      answerId: undefined,
+      rootCommentId: node.commentId ?? node.numericId,
       author: node.author,
       excerpt: formatExcerpt(node.body),
       timestamp: node.createdAt,

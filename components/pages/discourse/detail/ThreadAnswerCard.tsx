@@ -197,9 +197,10 @@ export function AnswerDetailCard({
                 timestamp: answer.createdAt,
                 excerpt: formatExcerpt(answer.body),
                 target: {
+                  targetType: 'answer',
+                  targetId: answer.numericId,
                   threadId,
                   answerId: answer.numericId,
-                  commentId: undefined,
                 },
               })
             }
@@ -228,10 +229,17 @@ export function AnswerDetailCard({
                       timestamp: payload.timestamp,
                       excerpt: payload.excerpt,
                       target: {
+                        targetType: payload.targetType ?? 'comment',
+                        targetId:
+                          payload.targetId ??
+                          payload.parentCommentId ??
+                          payload.commentId ??
+                          payload.rootCommentId ??
+                          0,
                         threadId,
                         answerId: answer.numericId,
-                        parentCommentId: payload.parentCommentId,
-                        commentId: payload.commentId,
+                        rootCommentId:
+                          payload.rootCommentId ?? payload.commentId,
                       },
                     })
                   }
@@ -365,10 +373,11 @@ function AnswerCommentTree({
   const handleReply = () => {
     const rootId = node.commentId ?? node.numericId;
     onReply({
+      targetType: 'comment',
+      targetId: node.numericId ?? rootId,
       threadId,
-      answerId: node.answerId,
-      parentCommentId: node.numericId ?? rootId,
-      commentId: rootId,
+      answerId: node.answerId ?? undefined,
+      rootCommentId: rootId,
       author: node.author,
       excerpt: formatExcerpt(node.body),
       timestamp: node.createdAt,

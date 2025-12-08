@@ -11,6 +11,7 @@ import { TagPill } from '../common/TagPill';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
+import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
 import type { CommentNode } from './utils/discussionMappers';
 import { buildCommentTree, formatExcerpt } from './utils/discussionMappers';
@@ -46,12 +47,7 @@ type CounterClaimCardProps = {
     isOp?: boolean;
     timestamp?: string;
     excerpt: string;
-    target: {
-      threadId: number;
-      answerId?: number;
-      parentCommentId?: number;
-      commentId?: number;
-    };
+    target: CommentTarget;
   }) => void;
 };
 
@@ -183,9 +179,10 @@ export function CounterClaimCard({
                   timestamp: claim.createdAt,
                   excerpt: formatExcerpt(claim.body),
                   target: {
+                    targetType: 'answer',
+                    targetId: claim.numericId,
                     threadId,
                     answerId: claim.numericId,
-                    commentId: undefined,
                   },
                 })
               }
@@ -209,10 +206,12 @@ export function CounterClaimCard({
                         timestamp: payload.timestamp,
                         excerpt: payload.excerpt,
                         target: {
+                          targetType: 'comment',
+                          targetId:
+                            payload.targetId ?? payload.rootCommentId ?? 0,
                           threadId,
                           answerId: claim.numericId,
-                          parentCommentId: payload.parentCommentId,
-                          commentId: payload.commentId,
+                          rootCommentId: payload.rootCommentId,
                         },
                       })
                     }
@@ -280,14 +279,14 @@ type CounterCommentTreeProps = {
   depth: number;
   isFirst: boolean;
   hasSiblings: boolean;
-  onReply: (payload: {
-    author: string;
-    excerpt: string;
-    timestamp: string;
-    isOp: boolean;
-    parentCommentId?: number;
-    commentId?: number;
-  }) => void;
+  onReply: (
+    payload: CommentTarget & {
+      author: string;
+      excerpt: string;
+      timestamp: string;
+      isOp: boolean;
+    },
+  ) => void;
   threadAuthorName: string;
 };
 
@@ -300,15 +299,17 @@ function CounterCommentTree({
   threadAuthorName,
 }: CounterCommentTreeProps) {
   const handleReply = () => {
+    const rootId = node.commentId ?? node.numericId;
     onReply({
+      targetType: 'comment',
+      targetId: node.numericId,
+      rootCommentId: rootId,
       author: node.author,
       excerpt: formatExcerpt(node.body),
       timestamp: node.createdAt,
       isOp:
         node.author === threadAuthorName ||
         node.author?.toLowerCase().includes('(op)'),
-      parentCommentId: node.numericId,
-      commentId: node.commentId ?? node.numericId,
     });
   };
 

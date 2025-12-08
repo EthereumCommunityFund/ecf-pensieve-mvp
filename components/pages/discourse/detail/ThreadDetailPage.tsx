@@ -28,7 +28,10 @@ import { SENTIMENT_KEYS } from '../utils/threadTransforms';
 import { ContributionVotesCard } from './ContributionVotesCard';
 import { EmptyState } from './EmptyState';
 import { useAnswerSupport } from './hooks/useAnswerSupport';
-import { useDiscussionComposer } from './hooks/useDiscussionComposer';
+import {
+  useDiscussionComposer,
+  type CommentTarget,
+} from './hooks/useDiscussionComposer';
 import { useDiscussionLists } from './hooks/useDiscussionLists';
 import PostDetailCard from './PostDetailCard';
 import { QuickActionsCard } from './QuickActionsCard';
@@ -45,13 +48,6 @@ import {
 
 type ThreadDetailPageProps = {
   threadId: string;
-};
-
-type CommentTarget = {
-  threadId: number;
-  answerId?: number;
-  parentCommentId?: number;
-  commentId?: number;
 };
 
 const DEFAULT_PARTICIPATION = {
@@ -165,17 +161,12 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
   const createCommentMutation =
     trpc.projectDiscussionInteraction.createComment.useMutation({
-      onSuccess: (_, variables) => {
+      onSuccess: () => {
         addToast({
           title: 'Comment posted',
           description: 'Your discussion is now visible to everyone.',
           color: 'success',
         });
-        if (variables?.answerId) {
-          answersQuery.refetch();
-        } else {
-          commentsQuery.refetch();
-        }
       },
       onError: (error) => {
         addToast({
@@ -358,7 +349,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     threadId: numericThreadId,
     maxCharacters: EDITOR_MAX_CHARACTERS,
     requireAuth,
-    defaultCommentTarget: { threadId: numericThreadId },
+    defaultCommentTarget: {
+      targetType: 'thread',
+      targetId: numericThreadId,
+      threadId: numericThreadId,
+    },
     messages: {
       primary: {
         required: 'Answer content is required',
@@ -380,12 +375,18 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     },
     commentSubmit: async ({ html, target }) => {
       if (!isValidThreadId) return;
+      const scope =
+        target.targetType === 'answer' || target.answerId ? 'answer' : 'thread';
       await createCommentMutation.mutateAsync({
-        threadId: target.threadId,
-        answerId: target.answerId,
-        parentCommentId: target.parentCommentId,
+        targetType: target.targetType,
+        targetId: target.targetId,
         content: html,
       });
+      if (scope === 'answer') {
+        answersQuery.refetch();
+      } else {
+        commentsQuery.refetch();
+      }
     },
     primarySubmitting: createAnswerMutation.isPending,
     commentSubmitting: createCommentMutation.isPending,
@@ -578,7 +579,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const handleOpenThreadComment = useCallback(
     () =>
       openCommentComposer({
-        target: { threadId: numericThreadId },
+        target: {
+          targetType: 'thread',
+          targetId: numericThreadId,
+          threadId: numericThreadId,
+        },
       }),
     [numericThreadId, openCommentComposer],
   );
@@ -617,9 +622,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         target:
           context?.target ??
           ({
+            targetType: 'answer',
+            targetId: answerId,
             threadId: numericThreadId,
             answerId,
-            commentId: undefined,
           } as CommentTarget),
       }),
     [numericThreadId, openCommentComposer],
@@ -629,6 +635,8 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     (payload: {
       parentCommentId?: number;
       commentId?: number;
+      targetId?: number;
+      rootCommentId?: number;
       author?: string;
       isOp?: boolean;
       timestamp?: string;
@@ -643,15 +651,27 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           timestamp: payload.timestamp,
           excerpt: payload.excerpt ?? '',
           target: {
+            targetType: 'comment',
+            targetId:
+              payload.targetId ??
+              payload.parentCommentId ??
+              payload.commentId ??
+              payload.rootCommentId ??
+              0,
             threadId: numericThreadId,
-            parentCommentId: payload.parentCommentId,
-            commentId: payload.commentId,
+            rootCommentId: payload.commentId ?? payload.rootCommentId,
           },
         },
         target: {
+          targetType: 'comment',
+          targetId:
+            payload.targetId ??
+            payload.parentCommentId ??
+            payload.commentId ??
+            payload.rootCommentId ??
+            0,
           threadId: numericThreadId,
-          parentCommentId: payload.parentCommentId,
-          commentId: payload.commentId,
+          rootCommentId: payload.commentId ?? payload.rootCommentId,
         },
       }),
     [numericThreadId, openCommentComposer],
