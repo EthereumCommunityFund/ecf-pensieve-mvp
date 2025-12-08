@@ -1,25 +1,76 @@
 'use client';
 
 import { Skeleton } from '@heroui/react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 
-import { QuickAction } from '../common/threadData';
+import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
+import { SentimentKey } from '../common/sentiment/sentimentConfig';
 
 type QuickActionsCardProps = {
-  actions?: QuickAction[];
   onUpvotePost?: () => void;
   onLeaveComment?: () => void;
-  onLeaveSentiment?: () => void;
   onAnswerComplaint?: () => void;
+  onSelectSentiment?: (value: SentimentKey) => Promise<void> | void;
+  sentimentVotes?: number;
+  sentimentValue?: SentimentKey | null;
+  sentimentPending?: boolean;
+  requireAuth?: () => boolean;
+  disableUpvote?: boolean;
+  upvoteLoading?: boolean;
 };
 
 export function QuickActionsCard({
   onUpvotePost,
   onLeaveComment,
-  onLeaveSentiment,
   onAnswerComplaint,
+  onSelectSentiment,
+  sentimentVotes = 0,
+  sentimentValue,
+  sentimentPending = false,
+  requireAuth,
+  disableUpvote = false,
+  upvoteLoading = false,
 }: QuickActionsCardProps) {
+  const [sentimentOpen, setSentimentOpen] = useState(false);
+
+  const sentimentValueProp = useMemo(
+    () => sentimentValue ?? undefined,
+    [sentimentValue],
+  );
+
+  const handleUpvote = useCallback(() => {
+    if (disableUpvote) return;
+    onUpvotePost?.();
+  }, [disableUpvote, onUpvotePost]);
+
+  const handleOpenComment = useCallback(() => {
+    onLeaveComment?.();
+  }, [onLeaveComment]);
+
+  const handleOpenSentiment = useCallback(() => {
+    if (requireAuth && !requireAuth()) return;
+    setSentimentOpen(true);
+  }, [requireAuth]);
+
+  const handleSentimentSelect = useCallback(
+    async (value: SentimentKey) => {
+      await onSelectSentiment?.(value);
+    },
+    [onSelectSentiment],
+  );
+
+  const handleSentimentOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setSentimentOpen(false);
+    }
+  }, []);
+
+  const handleAnswerComplaint = useCallback(() => {
+    onAnswerComplaint?.();
+  }, [onAnswerComplaint]);
+
   return (
     <section className="rounded-[10px] border border-black/10 bg-white p-[14px] shadow-sm">
       <h3 className="text-[14px] font-semibold text-black">
@@ -36,15 +87,39 @@ export function QuickActionsCard({
             that help gear the conversation toward a beneficial result.
           </p>
           <div className="mt-[6px] flex flex-col gap-[6px]">
-            <Button onPress={onUpvotePost} className="h-[30px] font-[400]">
+            <Button
+              onPress={handleUpvote}
+              className="h-[30px] font-[400]"
+              isDisabled={disableUpvote}
+              isLoading={upvoteLoading}
+            >
               Upvote Post
             </Button>
-            <Button onPress={onLeaveComment} className="h-[30px] font-[400]">
+            <Button onPress={handleOpenComment} className="h-[30px] font-[400]">
               Leave a Comment
             </Button>
-            <Button onPress={onLeaveSentiment} className="h-[30px] font-[400]">
-              Leave Your Sentiment
-            </Button>
+            {sentimentOpen ? (
+              <div className="flex h-[30px] w-full justify-center">
+                <SentimentVoteButton
+                  totalVotes={sentimentVotes}
+                  value={sentimentValueProp}
+                  isLoading={sentimentPending}
+                  disabled={!onSelectSentiment}
+                  onSelect={handleSentimentSelect}
+                  requireAuth={requireAuth}
+                  defaultOpen
+                  onOpenChange={handleSentimentOpenChange}
+                />
+              </div>
+            ) : (
+              <Button
+                onPress={handleOpenSentiment}
+                className="h-[30px] font-[400]"
+                isDisabled={!onSelectSentiment}
+              >
+                Leave Your Sentiment
+              </Button>
+            )}
           </div>
         </div>
 
@@ -56,7 +131,10 @@ export function QuickActionsCard({
             If you have an answer that remedies or provides sufficient
             information to the original poster, you can leave an answer.
           </p>
-          <Button onPress={onAnswerComplaint} className="h-[30px] font-[400]">
+          <Button
+            onPress={handleAnswerComplaint}
+            className="h-[30px] font-[400]"
+          >
             Answer Complaint
           </Button>
         </div>

@@ -2,7 +2,7 @@
 
 import { Tooltip, cn } from '@heroui/react';
 import { X } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/base';
 
@@ -28,6 +28,8 @@ export type SentimentVoteButtonProps = {
   onSelect: (value: SentimentKey) => Promise<void> | void;
   requireAuth?: () => boolean;
   size?: 'normal' | 'small';
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function SentimentVoteButton({
@@ -38,8 +40,10 @@ export function SentimentVoteButton({
   onSelect,
   requireAuth,
   size = 'normal',
+  defaultOpen = false,
+  onOpenChange,
 }: SentimentVoteButtonProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [optimisticValue, setOptimisticValue] = useState<
     SentimentKey | null | undefined
   >(undefined);
@@ -52,9 +56,21 @@ export function SentimentVoteButton({
   //   : defaultSentimentDisplay;
   const display = defaultSentimentDisplay;
 
+  const updateOpen = useCallback(
+    (nextOpen: boolean) => {
+      setOpen(nextOpen);
+      onOpenChange?.(nextOpen);
+    },
+    [onOpenChange],
+  );
+
   useEffect(() => {
     setOptimisticValue(undefined);
   }, [value]);
+
+  useEffect(() => {
+    updateOpen(defaultOpen);
+  }, [defaultOpen, updateOpen]);
 
   const ensureAuth = () => {
     if (!requireAuth) return true;
@@ -64,7 +80,11 @@ export function SentimentVoteButton({
   const handleToggle = () => {
     if (disabled || isLoading) return;
     if (!open && !ensureAuth()) return;
-    setOpen((prev) => !prev);
+    setOpen((prev) => {
+      const next = !prev;
+      onOpenChange?.(next);
+      return next;
+    });
   };
 
   const handleSelect = async (sentiment: SentimentKey) => {
@@ -73,7 +93,7 @@ export function SentimentVoteButton({
     setOptimisticValue(sentiment);
     try {
       await onSelect(sentiment);
-      setOpen(false);
+      updateOpen(false);
     } catch {
       // keep popover open to allow retry on error
       setOptimisticValue(undefined);
@@ -131,7 +151,7 @@ export function SentimentVoteButton({
             >
               <Button
                 className={sizeStyles.closeButton}
-                onPress={() => setOpen(false)}
+                onPress={() => updateOpen(false)}
                 isDisabled={isLoading}
               >
                 <X

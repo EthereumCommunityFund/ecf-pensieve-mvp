@@ -393,7 +393,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
   type CommentComposerContext = ComposerContext | null | undefined;
 
-  const handleSupportThread = async () => {
+  const handleSupportThread = useCallback(async () => {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
@@ -402,9 +402,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     } catch {
       // handled via mutation callbacks
     }
-  };
+  }, [isValidThreadId, numericThreadId, requireAuth, voteThreadMutation]);
 
-  const handleWithdrawThread = async () => {
+  const handleWithdrawThread = useCallback(async () => {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
@@ -413,17 +413,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     } catch {
       // handled via mutation callbacks
     }
-  };
+  }, [isValidThreadId, numericThreadId, requireAuth, unvoteThreadMutation]);
 
-  const handleSetThreadSentiment = async (sentiment: SentimentKey) => {
-    if (!isValidThreadId || !requireAuth()) {
-      return;
-    }
-    await setThreadSentimentMutation.mutateAsync({
-      threadId: numericThreadId,
-      type: sentiment,
-    });
-  };
+  const handleSetThreadSentiment = useCallback(
+    async (sentiment: SentimentKey) => {
+      if (!isValidThreadId || !requireAuth()) {
+        return;
+      }
+      await setThreadSentimentMutation.mutateAsync({
+        threadId: numericThreadId,
+        type: sentiment,
+      });
+    },
+    [isValidThreadId, numericThreadId, requireAuth, setThreadSentimentMutation],
+  );
 
   const handleSetAnswerSentiment = async (
     answerId: number,
@@ -902,7 +905,22 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
               }
             />
 
-            <QuickActionsCard actions={thread.quickActions} />
+            <QuickActionsCard
+              onUpvotePost={handleSupportThread}
+              disableUpvote={
+                hasSupportedThread ||
+                threadSupportPending ||
+                threadWithdrawPending
+              }
+              upvoteLoading={threadSupportPending}
+              onLeaveComment={handleOpenThreadComment}
+              onSelectSentiment={handleSetThreadSentiment}
+              sentimentVotes={thread.totalSentimentVotes}
+              sentimentValue={viewerSentiment}
+              sentimentPending={setThreadSentimentMutation.isPending}
+              requireAuth={requireAuth}
+              onAnswerComplaint={handleOpenAnswerComposer}
+            />
           </div>
         </div>
       </div>

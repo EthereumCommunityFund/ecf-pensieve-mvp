@@ -14,7 +14,6 @@ import {
   SentimentModal,
   SentimentSummaryPanel,
 } from '@/components/pages/discourse/common/sentiment/SentimentModal';
-import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { TopbarFilters } from '@/components/pages/discourse/common/TopbarFilters';
 import BackHeader from '@/components/pages/project/BackHeader';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
@@ -28,6 +27,8 @@ import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
+import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
+import { ParticipationCard } from '../crumb/ParticipationCard';
 
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import { useDiscussionComposer } from './hooks/useDiscussionComposer';
@@ -37,7 +38,6 @@ import {
   ContributionVotesCompact,
   CounterClaimCard,
   DiscussionCommentCard,
-  ParticipateCard,
   ScamEmptyState,
 } from './ScamDetailCards';
 import { ThreadComposerModal } from './ThreadComposerModal';
@@ -936,7 +936,22 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             }
           />
 
-          <ParticipateCard isOwner={isThreadOwner} />
+          <ParticipationCard
+            onSupportClaim={handleToggleThreadSupport}
+            supportDisabled={
+              isThreadRetracted ||
+              hasSupportedThread ||
+              threadSupportPending ||
+              threadWithdrawPending
+            }
+            supportLoading={threadSupportPending}
+            onPostComment={handleOpenThreadCommentClick}
+            commentDisabled={isThreadRetracted}
+            commentLoading={createCommentMutation.isPending}
+            onChallengeClaim={handleOpenCounterClaimComposer}
+            challengeDisabled={isThreadRetracted}
+            challengeLoading={createCounterClaimMutation.isPending}
+          />
         </aside>
       </div>
 

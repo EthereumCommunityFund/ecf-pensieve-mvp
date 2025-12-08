@@ -54,12 +54,6 @@ const participationSteps: ParticipationStep[] = [
       'Comment, reply, and vote on answers that help the conversation progress toward a useful outcome.',
     actions: ['Upvote Post', 'Leave a Comment', 'Leave Your Sentiment'],
   },
-  {
-    title: 'Give Answers',
-    description:
-      'Share answers that resolve the complaint or provide enough context for the original poster to move forward.',
-    actions: ['Answer Complaint'],
-  },
 ];
 
 export default function DiscourseCrumbPage() {
