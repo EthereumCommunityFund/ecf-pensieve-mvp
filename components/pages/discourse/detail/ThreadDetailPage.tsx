@@ -181,8 +181,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     trpc.projectDiscussionInteraction.voteAnswer.useMutation({
       onSuccess: () => {
         addToast({
-          title: 'Supported answer',
-          description: 'CP support registered successfully.',
+          title: 'Support successfully.',
           color: 'success',
         });
         answersQuery.refetch();
@@ -200,8 +199,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     trpc.projectDiscussionInteraction.unvoteAnswer.useMutation({
       onSuccess: () => {
         addToast({
-          title: 'Support withdrawn',
-          description: 'Your CP support was withdrawn.',
+          title: 'Unvote successfully',
           color: 'success',
         });
         answersQuery.refetch();
@@ -219,8 +217,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     trpc.projectDiscussionThread.voteThread.useMutation({
       onSuccess: () => {
         addToast({
-          title: 'Supported thread',
-          description: 'CP support registered for this thread.',
+          title: 'Support successfully.',
           color: 'success',
         });
         threadQuery.refetch();
@@ -239,8 +236,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     trpc.projectDiscussionThread.unvoteThread.useMutation({
       onSuccess: () => {
         addToast({
-          title: 'Support withdrawn',
-          description: 'Your CP support was withdrawn.',
+          title: 'Unvote withdrawn',
           color: 'success',
         });
         threadQuery.refetch();
@@ -292,8 +288,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     trpc.projectDiscussionInteraction.setSentiment.useMutation({
       onSuccess: () => {
         addToast({
-          title: 'Sentiment recorded',
-          description: 'Your view has been captured for this thread.',
+          title: 'Sentiment vote recorded',
           color: 'success',
         });
         threadQuery.refetch();
@@ -312,8 +307,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     trpc.projectDiscussionInteraction.setSentiment.useMutation({
       onSuccess: () => {
         addToast({
-          title: 'Sentiment recorded',
-          description: 'Your view has been captured for this answer.',
+          title: 'Sentiment vote recorded',
           color: 'success',
         });
         answersQuery.refetch();

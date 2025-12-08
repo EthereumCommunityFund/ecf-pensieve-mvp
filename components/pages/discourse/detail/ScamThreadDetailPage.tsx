@@ -147,7 +147,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       onSuccess: () => {
         addToast({
           title: 'Counter claim submitted',
-          description: 'Your counter claim is now visible.',
           color: 'success',
         });
         answersQuery.refetch();
@@ -165,7 +164,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       onSuccess: () => {
         addToast({
           title: 'Comment posted',
-          description: 'Your discussion is now visible.',
           color: 'success',
         });
       },
