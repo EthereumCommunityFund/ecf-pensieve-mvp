@@ -2,9 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { parseEditorValue } from '@/components/pages/discourse/utils/editorValue';
 
-import type { ComposerContext } from '../ThreadComposerModal';
-
-export type ComposerVariant = 'answer' | 'comment' | 'counter';
+import type { ComposerContext, ComposerVariant } from '../ThreadComposerModal';
 
 export type CommentTarget = {
   threadId: number;
@@ -93,11 +91,18 @@ export function useDiscussionComposer({
     (options?: OpenCommentOptions) => {
       const mergedTarget =
         options?.target ?? options?.context?.target ?? defaultCommentTarget;
+      const hasReplyTarget =
+        Boolean(options?.context) ||
+        Boolean(
+          mergedTarget?.answerId ||
+            mergedTarget?.parentCommentId ||
+            mergedTarget?.commentId,
+        );
 
       setCommentComposerTitle(options?.title);
       setCommentTarget(mergedTarget ?? null);
       setCommentContext(
-        options?.context || mergedTarget
+        hasReplyTarget
           ? {
               title:
                 options?.context?.title ?? options?.title ?? 'Post Comment',
@@ -216,10 +221,11 @@ export function useDiscussionComposer({
     threadId,
   ]);
 
-  const modalVariant = useMemo<'comment' | 'answer'>(
-    () => (composerVariant === 'comment' ? 'comment' : 'answer'),
-    [composerVariant],
-  );
+  const modalVariant = useMemo<ComposerVariant>(() => {
+    if (composerVariant === 'comment') return 'comment';
+    if (composerVariant === 'counter') return 'counter';
+    return 'answer';
+  }, [composerVariant]);
 
   return {
     composerVariant,

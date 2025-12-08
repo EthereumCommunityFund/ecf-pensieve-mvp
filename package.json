@@ -68,6 +68,7 @@
     "@tiptap/extension-image": "^3.11.0",
     "@tiptap/extension-link": "^3.11.0",
     "@tiptap/extension-list": "^3.11.0",
+    "@tiptap/extension-placeholder": "^3.13.0",
     "@tiptap/extension-subscript": "^3.11.0",
     "@tiptap/extension-superscript": "^3.11.0",
     "@tiptap/extension-text-align": "^3.11.0",

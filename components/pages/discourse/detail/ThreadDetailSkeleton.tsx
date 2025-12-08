@@ -29,7 +29,7 @@ export function ThreadDetailSkeleton() {
     <>
       <BackHeaderSkeleton className="px-0" />
       <div className="flex justify-center px-[20px] pb-16 pt-4">
-        <div className="flex w-full max-w-[1200px] items-start gap-[40px]">
+        <div className="flex w-full max-w-[1200px] items-start justify-center gap-[40px]">
           <section className="w-[700px] space-y-6">
             <PostDetailCardSkeleton />
 
@@ -56,7 +56,7 @@ export function ThreadDetailSkeleton() {
 export function ScamThreadSkeleton() {
   return (
     <div className="flex justify-center px-[20px] pb-16 pt-4">
-      <div className="flex w-full max-w-[1200px] gap-[40px]">
+      <div className="flex w-full max-w-[1200px] justify-center gap-[40px]">
         <section className="w-[700px] space-y-6">
           <BackHeaderSkeleton className="px-0" />
           <PostDetailCardSkeleton />

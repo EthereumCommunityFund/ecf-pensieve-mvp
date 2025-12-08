@@ -1,6 +1,7 @@
 'use client';
 
-import { ChartBar, Info, PaperPlaneRight } from '@phosphor-icons/react';
+import { Switch } from '@heroui/react';
+import { ChartBar, Info } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
@@ -15,9 +16,11 @@ import {
 
 import { EDITOR_MAX_CHARACTERS, parseEditorValue } from '../utils/editorValue';
 
+export type ComposerVariant = 'answer' | 'comment' | 'counter';
+
 type ThreadComposerModalProps = {
   isOpen: boolean;
-  variant: 'answer' | 'comment';
+  variant: ComposerVariant;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -31,6 +34,14 @@ type ThreadComposerModalProps = {
   titleOverride?: string;
 };
 
+type VariantCopy = {
+  title: string;
+  placeholder: string;
+  helper: string;
+  primaryLabel: string;
+  badge: string;
+};
+
 const VARIANT_CONFIG = {
   answer: {
     title: 'Post Answer',
@@ -39,14 +50,21 @@ const VARIANT_CONFIG = {
     primaryLabel: 'Publish Answer',
     badge: 'Answer',
   },
+  counter: {
+    title: 'Post Counter Claim',
+    placeholder: 'Share evidence or remediation steps to dispute this alert',
+    helper: 'Markdown supported.',
+    primaryLabel: 'Publish Counter Claim',
+    badge: 'Counter Claim',
+  },
   comment: {
     title: 'Post Comment',
     placeholder: 'Write about your issue',
     helper: 'Markdown supported.',
-    primaryLabel: 'Publish Post',
+    primaryLabel: 'Publish Comment',
     badge: 'Discussion',
   },
-} as const;
+} satisfies Record<ComposerVariant, VariantCopy>;
 
 export type ComposerContext = {
   title: string;
@@ -84,8 +102,8 @@ export function ThreadComposerModal({
     0,
     EDITOR_MAX_CHARACTERS - charactersUsed,
   );
+  const showSentimentToggle = false;
   const [includeSentiment, setIncludeSentiment] = useState(false);
-  const showSentimentToggle = true;
   const modalTitle = titleOverride || config.title;
   const showOpBadge =
     contextCard?.isOp && !contextCard.author.toLowerCase().includes('(op)');
@@ -125,7 +143,7 @@ export function ThreadComposerModal({
         base: 'w-[700px] max-w-auto tablet:max-w-[calc(80vw)] mobile:max-w-[calc(100vw-24px)] bg-transparent border-none p-0 shadow-none',
         body: 'p-0',
         header: 'p-0',
-        footer: 'p-0',
+        footer: 'p-0 mt-0',
       }}
     >
       <ModalContent className="overflow-hidden rounded-[10px] border border-black/10 bg-white p-0 shadow-[0_24px_80px_rgba(0,0,0,0.16)]">
@@ -173,15 +191,15 @@ export function ThreadComposerModal({
             value={value}
             onChange={handleEditorChange}
             placeholder={config.placeholder}
-            hideMenuBar={false}
+            hideMenuBar={true}
             debounceMs={150}
             className={{
-              base: `min-h-[320px] rounded-[8px] border bg-white ${
+              base: `rounded-[8px] border  ${
                 error ? 'border-[#d14343]' : 'border-black/10'
               }`,
-              editorWrapper: 'p-3',
+              editorWrapper: 'bg-black/5 p-3',
               editor:
-                'min-h-[260px] text-[14px] leading-[20px] text-black/80 placeholder:text-black/40',
+                'min-h-[320px] text-[14px] leading-[20px] text-black/80 placeholder:text-black/40',
             }}
             isEdit={!isSubmitting}
           />
@@ -207,47 +225,39 @@ export function ThreadComposerModal({
                 </span>
                 <Info size={16} className="text-black/40" />
               </div>
-              <button
-                type="button"
-                aria-pressed={includeSentiment}
-                disabled={isSubmitting}
-                onClick={() => setIncludeSentiment((current) => !current)}
-                className={`flex h-6 w-11 items-center rounded-full border border-black/15 px-[4px] transition ${
-                  includeSentiment ? 'bg-black' : 'bg-black/10'
-                } ${
-                  isSubmitting
-                    ? 'cursor-not-allowed opacity-60'
-                    : 'cursor-pointer'
-                }`}
-              >
-                <span
-                  className={`size-[18px] rounded-full bg-white shadow-sm transition ${
-                    includeSentiment ? 'translate-x-[14px]' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+              <Switch
+                isSelected={includeSentiment}
+                isDisabled={isSubmitting}
+                onValueChange={setIncludeSentiment}
+                color="default"
+                classNames={{
+                  base: 'h-6',
+                  wrapper:
+                    'group-data-[selected=true]:!bg-black group-data-[selected=true]:!bg-black',
+                  thumb: '',
+                }}
+              />
             </div>
           ) : null}
         </ModalBody>
 
-        <ModalFooter className="flex items-center justify-end gap-3 border-t border-black/10 bg-[rgba(0,0,0,0.02)] px-6 pb-5 pt-4">
+        <ModalFooter className="flex items-center justify-end gap-3 px-6 pb-5">
           <Button
-            variant="light"
-            className="rounded-[5px] border border-black/15 bg-white px-[20px] py-[10px] text-[14px] font-semibold text-black"
+            color={'secondary'}
+            className="rounded-[5px] px-[20px] py-[10px] text-[14px]"
             onPress={handleClose}
             isDisabled={isSubmitting}
           >
             Discard Draft
           </Button>
           <Button
-            color="secondary"
+            color={'primary'}
             onPress={onSubmit}
             isDisabled={!canSubmit}
             isLoading={isSubmitting}
-            className="rounded-[5px] bg-[#d4d4d4] px-[24px] py-[10px] text-[14px] font-semibold text-black hover:bg-[#c0c0c0] disabled:bg-[#e6e6e6]"
+            className="rounded-[5px] px-[24px] py-[10px] text-[14px]"
           >
             {config.primaryLabel}
-            <PaperPlaneRight size={16} weight="fill" />
           </Button>
         </ModalFooter>
       </ModalContent>

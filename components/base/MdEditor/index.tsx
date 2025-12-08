@@ -4,6 +4,7 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Image } from '@tiptap/extension-image';
 import TiptapLink from '@tiptap/extension-link';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
+import Placeholder from '@tiptap/extension-placeholder';
 import { Subscript } from '@tiptap/extension-subscript';
 import { Superscript } from '@tiptap/extension-superscript';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -371,6 +372,11 @@ const MdEditor = ({
       Superscript,
       Subscript,
       Selection,
+      Placeholder.configure({
+        placeholder,
+        includeChildren: true,
+        emptyNodeClass: 'is-empty',
+      }),
       ImageUploadNode.configure({
         accept: 'image/*',
         maxSize: MAX_FILE_SIZE,
@@ -380,7 +386,7 @@ const MdEditor = ({
       }),
       MarkdownPastePlugin,
     ],
-    [handleImageUpload],
+    [handleImageUpload, placeholder],
   );
 
   const editor = useEditor({
