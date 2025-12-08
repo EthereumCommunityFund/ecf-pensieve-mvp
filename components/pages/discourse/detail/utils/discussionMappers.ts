@@ -34,6 +34,10 @@ type NormalizeCommentOptions = {
   defaultSentiment?: SentimentKey;
 };
 
+const resolveAvatarUrl = (
+  creator?: { avatarUrl?: string | null; avatar_url?: string | null } | null,
+) => creator?.avatarUrl ?? creator?.avatar_url ?? null;
+
 export type CommentNode<T extends CommentItem = CommentItem> = T & {
   children?: CommentNode<T>[];
 };
@@ -64,7 +68,7 @@ export const normalizeComment = (
     parentCommentId: comment.parentCommentId ?? undefined,
     commentId: comment.commentId ?? numericId,
     author: comment.creator?.name ?? 'Anonymous',
-    authorAvatar: comment.creator?.avatarUrl ?? null,
+    authorAvatar: resolveAvatarUrl(comment.creator),
     role: defaultRole,
     createdAt: formatTimeAgo(comment.createdAt),
     body: comment.content,
@@ -137,7 +141,7 @@ export const normalizeAnswer = (
     id: `answer-${answer.id}`,
     numericId: answer.id,
     author: answer.creator?.name ?? 'Anonymous',
-    authorAvatar: answer.creator?.avatarUrl ?? null,
+    authorAvatar: resolveAvatarUrl(answer.creator),
     role: defaultRole,
     createdAt: formatTimeAgo(answer.createdAt),
     body: answer.content,
@@ -326,7 +330,7 @@ export const normalizeThreadDetailRecord = ({
       name: authorName,
       handle: authorHandle,
       avatarFallback: authorName[0]?.toUpperCase() ?? 'U',
-      avatarUrl: thread.creator?.avatarUrl ?? null,
+      avatarUrl: resolveAvatarUrl(thread.creator),
       role: 'Community Member',
       postedAt: formatTimeAgo(thread.createdAt),
       editedAt: undefined,

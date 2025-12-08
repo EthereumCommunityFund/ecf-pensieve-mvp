@@ -29,17 +29,17 @@ import {
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
 
-import { ParticipationCard } from './ParticipationCard';
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import { useDiscussionComposer } from './hooks/useDiscussionComposer';
 import { useDiscussionLists } from './hooks/useDiscussionLists';
+import { ParticipationCard } from './ParticipationCard';
 import { serializeEditorValue } from './PostDetailCard';
 import {
   ContributionVotesCompact,
   CounterClaimCard,
-  DiscussionCommentCard,
   ScamEmptyState,
 } from './ScamDetailCards';
+import { ThreadCommentTree } from './ThreadCommentTree';
 import { ThreadComposerModal } from './ThreadComposerModal';
 import { ScamThreadSkeleton } from './ThreadDetailSkeleton';
 import {
@@ -327,12 +327,14 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     threadComments,
     filteredAnswers: filteredCounterClaims,
     filteredComments,
+    isCommentsInitialLoading,
   } = useDiscussionLists({
     answersQuery,
     commentsQuery,
     defaultRole: 'Community Member',
     sentimentFilter,
     cpTarget: REDRESSED_SUPPORT_THRESHOLD,
+    buildThreadTree: true,
   });
   const topCounterSupport = useMemo(
     () =>
@@ -594,6 +596,48 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           target: context.target,
         },
         target: context.target,
+      });
+    },
+    [guardedOpenCommentComposer, isThreadRetracted],
+  );
+
+  const handleReplyToThreadComment = useCallback(
+    (payload: {
+      threadId: number;
+      parentCommentId?: number;
+      commentId?: number;
+      author: string;
+      excerpt: string;
+      timestamp: string;
+      isOp: boolean;
+    }) => {
+      if (isThreadRetracted) {
+        addToast({
+          title: 'Claim already retracted',
+          description: 'Comments are disabled for retracted alerts.',
+          color: 'warning',
+        });
+        return;
+      }
+      guardedOpenCommentComposer({
+        title: 'Replying to:',
+        context: {
+          title: 'Replying to:',
+          author: payload.author,
+          excerpt: payload.excerpt,
+          timestamp: payload.timestamp,
+          isOp: payload.isOp,
+          target: {
+            threadId: payload.threadId,
+            parentCommentId: payload.parentCommentId,
+            commentId: payload.commentId,
+          },
+        },
+        target: {
+          threadId: payload.threadId,
+          parentCommentId: payload.parentCommentId,
+          commentId: payload.commentId,
+        },
       });
     },
     [guardedOpenCommentComposer, isThreadRetracted],
@@ -887,19 +931,33 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                   description="Create a counter claim to contest this alert and gather CP support."
                 />
               )
-            ) : filteredComments.length ? (
-              filteredComments.map((comment) => (
-                <DiscussionCommentCard
-                  key={comment.id}
-                  comment={comment}
-                  threadAuthorName={hydratedThread.author.name}
-                />
-              ))
             ) : (
-              <ScamEmptyState
-                title="No comments yet"
-                description="Start a discussion to add evidence or confirm remediation."
-              />
+              <>
+                {isCommentsInitialLoading ? (
+                  <div className="rounded-[12px] border border-dashed border-black/15 bg-white/80 px-4 py-6 text-center text-sm text-black/60">
+                    Loading discussion…
+                  </div>
+                ) : null}
+                {filteredComments.length ? (
+                  filteredComments.map((comment, index) => (
+                    <ThreadCommentTree
+                      key={comment.id}
+                      node={comment}
+                      depth={0}
+                      isFirst={index === 0}
+                      hasSiblings={filteredComments.length > 1}
+                      onReply={handleReplyToThreadComment}
+                      threadAuthorName={hydratedThread.author.name}
+                      threadId={numericThreadId}
+                    />
+                  ))
+                ) : !isCommentsInitialLoading ? (
+                  <ScamEmptyState
+                    title="No comments yet"
+                    description="Start a discussion to add evidence or confirm remediation."
+                  />
+                ) : null}
+              </>
             )}
           </div>
         </section>
