@@ -1,9 +1,9 @@
 'use client';
 
-import { CaretDown } from '@phosphor-icons/react';
-import { useEffect, useRef, useState } from 'react';
+import { SelectedItems, Selection } from '@heroui/react';
+import { useMemo } from 'react';
 
-import { Button } from '@/components/base';
+import { Select, SelectItem } from '@/components/base';
 
 import {
   DEFAULT_SENTIMENT_VALUE,
@@ -17,7 +17,6 @@ export type SentimentSelectorProps = {
   options: string[];
   value?: string;
   onChange?: (value: string) => void;
-  defaultValue?: string;
 };
 
 const getSentimentDisplay = (value: string): SentimentDefinition =>
@@ -27,90 +26,129 @@ export function SentimentSelector({
   options,
   value,
   onChange,
-  defaultValue = DEFAULT_SENTIMENT_VALUE,
 }: SentimentSelectorProps) {
-  const [open, setOpen] = useState(false);
-  const selectorRef = useRef<HTMLDivElement>(null);
+  const sentimentOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          options
+            .filter(Boolean)
+            .map((item) => item.trim())
+            .filter(Boolean),
+        ),
+      ),
+    [options],
+  );
 
-  const normalizedValue = value || defaultValue;
-  const isDefaultValue = normalizedValue === defaultValue;
-  const activeSentiment = !isDefaultValue
-    ? sentimentDefinitions[normalizedValue as SentimentKey]
-    : undefined;
-  const sentimentDisplay = activeSentiment || defaultSentimentDisplay;
+  const normalizedValue = sentimentOptions.includes(value ?? '')
+    ? (value as string)
+    : DEFAULT_SENTIMENT_VALUE;
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        selectorRef.current &&
-        !selectorRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
+  const selectedKeys =
+    normalizedValue === DEFAULT_SENTIMENT_VALUE
+      ? new Set<string>()
+      : new Set<string>([normalizedValue]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const renderValue = (selectedItems: SelectedItems) => {
+    const selectedKey = selectedItems?.[0]?.key;
+    const display =
+      selectedKey !== undefined && selectedKey !== null
+        ? getSentimentDisplay(String(selectedKey))
+        : defaultSentimentDisplay;
 
-  const handleSelect = (selectedOption: string) => {
+    return (
+      <div className="flex items-center gap-2">
+        <display.Icon
+          size={18}
+          weight={'fill'}
+          style={{ color: display.color }}
+        />
+        <span
+          className="text-sm font-semibold"
+          style={{ color: display.color }}
+        >
+          {display.label}
+        </span>
+      </div>
+    );
+  };
+
+  const placeholder = (
+    <div className="flex items-center gap-2">
+      <defaultSentimentDisplay.Icon
+        size={18}
+        weight="fill"
+        style={{ color: defaultSentimentDisplay.color }}
+        className="opacity-30"
+      />
+      <span
+        className="text-sm font-semibold"
+        style={{ color: defaultSentimentDisplay.color }}
+      >
+        {defaultSentimentDisplay.label}
+      </span>
+    </div>
+  );
+
+  const handleSelectionChange = (selection: Selection) => {
+    if (selection === 'all') {
+      onChange?.(DEFAULT_SENTIMENT_VALUE);
+      return;
+    }
+    const keys = Array.from(selection);
+    if (!keys.length) {
+      onChange?.(DEFAULT_SENTIMENT_VALUE);
+      return;
+    }
+
+    const selectedKey = String(keys[0]);
     const nextValue =
-      selectedOption === normalizedValue ? defaultValue : selectedOption;
-
+      selectedKey === normalizedValue ? DEFAULT_SENTIMENT_VALUE : selectedKey;
     onChange?.(nextValue);
-    setOpen(false);
   };
 
   return (
-    <div ref={selectorRef} className="relative">
-      <Button
-        type="button"
-        onPress={() => setOpen((prev) => !prev)}
-        className="inline-flex h-[32px] items-center gap-2 rounded-[6px] border border-black/10 bg-white px-3 text-sm font-semibold"
-      >
-        <sentimentDisplay.Icon
-          size={18}
-          weight={activeSentiment ? 'fill' : 'regular'}
-          style={{ color: sentimentDisplay.color }}
-        />
-        <span style={{ color: sentimentDisplay.color }}>
-          {sentimentDisplay.label}
-        </span>
-        <CaretDown
-          size={16}
-          style={{ color: sentimentDisplay.color }}
-          className={`transition ${open ? 'rotate-180' : ''}`}
-        />
-      </Button>
-      {open ? (
-        <div className="absolute right-0 top-[calc(100%+6px)] z-10 w-[200px] rounded-[8px] border border-[#d7d3cc] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.12)]">
-          <div className="flex flex-col gap-[5px] p-[8px]">
-            {options.map((option) => {
-              const display = getSentimentDisplay(option);
-              const isActive = option === normalizedValue;
-
-              return (
-                <Button
-                  key={option}
-                  onPress={() => handleSelect(option)}
-                  className={`flex h-[30px] w-full items-center justify-start gap-3 rounded-[6px] border-none px-[6px] py-[4px] text-left text-sm font-semibold ${
-                    isActive ? 'bg-black/5' : 'hover:bg-black/5'
-                  }`}
-                >
-                  <display.Icon
-                    size={18}
-                    weight={isActive ? 'fill' : 'regular'}
-                    style={{ color: display.color }}
-                  />
-                  <span style={{ color: display.color }}>{display.label}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-    </div>
+    <Select
+      aria-label="Select sentiment filter"
+      selectionMode="single"
+      size="sm"
+      disallowEmptySelection={false}
+      selectedKeys={selectedKeys}
+      onSelectionChange={handleSelectionChange}
+      className="min-w-[160px]"
+      classNames={{
+        trigger:
+          'h-[32px] border border-black/10 rounded-[6px] px-3 bg-white text-black',
+        value: 'flex-1 text-left',
+        selectorIcon: 'text-black/60',
+      }}
+      placeholder={placeholder as unknown as string}
+      renderValue={renderValue}
+      listboxProps={{
+        itemClasses: {
+          base: 'text-sm font-semibold',
+        },
+      }}
+    >
+      {sentimentOptions.map((option) => {
+        const display = getSentimentDisplay(option);
+        return (
+          <SelectItem
+            key={option}
+            startContent={
+              <display.Icon
+                size={18}
+                weight={'fill'}
+                style={{ color: display.color }}
+              />
+            }
+            textValue={display.label}
+            className="gap-2"
+          >
+            <span style={{ color: display.color }}>{display.label}</span>
+          </SelectItem>
+        );
+      })}
+    </Select>
   );
 }

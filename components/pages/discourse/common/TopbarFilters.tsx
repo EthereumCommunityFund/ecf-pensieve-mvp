@@ -97,7 +97,6 @@ export function TopbarFilters({
           options={sentimentOptions}
           value={selectedSentiment}
           onChange={onSentimentChange}
-          defaultValue={DEFAULT_SENTIMENT_VALUE}
         />
       </div>
     </div>

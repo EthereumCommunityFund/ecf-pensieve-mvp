@@ -33,7 +33,7 @@ export const sentimentDefinitions: Record<SentimentKey, SentimentDefinition> = {
 
 export const defaultSentimentDisplay: SentimentDefinition = {
   label: 'Sentiment',
-  color: '#000',
+  color: 'rgba(0,0,0,0.6)',
   Icon: ChartBarIcon,
 };
 
