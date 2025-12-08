@@ -298,6 +298,7 @@ const MdEditor = ({
   const isEditable = mode ? mode === 'edit' : isEdit;
   const [mobileView, setMobileView] = useState<MobileViewMode>('main');
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastEmittedValueRef = useRef<string | null>(null);
   const isMobile = useIsBreakpoint();
   const contentRef = useRef<HTMLDivElement>(null);
   const [canCollapse, setCanCollapse] = useState(false);
@@ -321,6 +322,7 @@ const MdEditor = ({
           type: 'doc',
           isEmpty: contentIsEmpty,
         };
+        lastEmittedValueRef.current = html;
         onChange?.(JSON.stringify(payload));
       }, debounceMs);
     },
@@ -374,7 +376,7 @@ const MdEditor = ({
       Selection,
       Placeholder.configure({
         placeholder,
-        includeChildren: true,
+        includeChildren: false,
         emptyNodeClass: 'is-empty',
       }),
       ImageUploadNode.configure({
@@ -419,7 +421,9 @@ const MdEditor = ({
   });
 
   useEffect(() => {
-    if (editorValue.content === editor?.getHTML() || !editor) return;
+    if (!editor) return;
+    if (editorValue.content === editor.getHTML()) return;
+    if (lastEmittedValueRef.current === editorValue.content) return;
 
     if (/<[^>]+>/.test(editorValue.content)) {
       editor.commands.setContent(editorValue.content);
