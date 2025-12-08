@@ -17,17 +17,35 @@ const SENTIMENT_MAX_LENGTH = 50;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
 
-const commentTargetSchema = z
-  .object({
-    threadId: z.number().optional(),
-    answerId: z.number().optional(),
-    parentCommentId: z.number().optional(),
-  })
-  .refine(
-    (value) =>
-      Boolean(value.threadId || value.answerId || value.parentCommentId),
-    { message: 'Thread, answer, or parent comment is required' },
-  );
+const createCommentInputSchema = z.discriminatedUnion('targetType', [
+  z.object({
+    targetType: z.literal('thread'),
+    targetId: z.number(),
+    content: z
+      .string()
+      .trim()
+      .min(1, 'Content is required')
+      .max(TEXT_MAX_LENGTH),
+  }),
+  z.object({
+    targetType: z.literal('answer'),
+    targetId: z.number(),
+    content: z
+      .string()
+      .trim()
+      .min(1, 'Content is required')
+      .max(TEXT_MAX_LENGTH),
+  }),
+  z.object({
+    targetType: z.literal('comment'),
+    targetId: z.number(),
+    content: z
+      .string()
+      .trim()
+      .min(1, 'Content is required')
+      .max(TEXT_MAX_LENGTH),
+  }),
+]);
 
 export const projectDiscussionInteractionRouter = router({
   createAnswer: protectedProcedure
@@ -99,17 +117,7 @@ export const projectDiscussionInteractionRouter = router({
     }),
 
   createComment: protectedProcedure
-    .input(
-      z
-        .object({
-          content: z
-            .string()
-            .trim()
-            .min(1, 'Content is required')
-            .max(TEXT_MAX_LENGTH),
-        })
-        .and(commentTargetSchema),
-    )
+    .input(createCommentInputSchema)
     .mutation(async ({ ctx, input }) => {
       return createDiscussionComment({
         db: ctx.db,

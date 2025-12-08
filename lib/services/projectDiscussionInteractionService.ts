@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
@@ -371,12 +371,21 @@ export const unvoteDiscussionAnswer = async ({
 };
 
 type CreateCommentInput = {
-  commentId?: number;
-  threadId?: number;
-  answerId?: number;
-  parentCommentId?: number;
   content: string;
-};
+} & (
+  | {
+      targetType: 'thread';
+      targetId: number;
+    }
+  | {
+      targetType: 'answer';
+      targetId: number;
+    }
+  | {
+      targetType: 'comment';
+      targetId: number;
+    }
+);
 
 export const createDiscussionComment = async ({
   db,
@@ -387,43 +396,52 @@ export const createDiscussionComment = async ({
   userId: string;
   input: CreateCommentInput;
 }) => {
-  const { threadId, answerId, parentCommentId, content, commentId } = input;
+  const { targetType, targetId, content } = input;
 
-  if (!threadId && !answerId && !parentCommentId) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Thread, answer, or parent comment is required',
-    });
-  }
+  const derived = await (async () => {
+    if (targetType === 'thread') {
+      await ensureThreadAvailable(db, targetId);
+      return {
+        threadId: targetId,
+        answerId: null,
+        parentId: null,
+        rootCommentId: null,
+      };
+    }
 
-  if (parentCommentId) {
-    const parent = await ensureCommentAvailable(db, parentCommentId);
-    if (!commentId && !answerId) {
+    if (targetType === 'answer') {
+      const answer = await ensureAnswerAvailable(db, targetId);
+
+      return {
+        threadId: answer.threadId,
+        answerId: answer.id,
+        parentId: null,
+        rootCommentId: null,
+      };
+    }
+
+    const parent = await ensureCommentAvailable(db, targetId);
+
+    const parentThreadId =
+      parent.threadId ??
+      (parent.answerId
+        ? (await ensureAnswerAvailable(db, parent.answerId)).threadId
+        : null);
+
+    if (!parentThreadId) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
-        message: 'Comment ID or answer ID is required',
+        message: 'Parent comment is missing thread context',
       });
     }
-    if (commentId && commentId !== parent.commentId) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Comment ID does not match parent comment',
-      });
-    }
-    if (answerId && answerId !== parent.answerId) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Answer ID does not match parent comment',
-      });
-    }
-  }
 
-  if (answerId) {
-    await ensureAnswerAvailable(db, answerId);
-  }
-  if (threadId) {
-    await ensureThreadAvailable(db, threadId);
-  }
+    return {
+      threadId: parentThreadId,
+      answerId: parent.answerId ?? null,
+      parentId: targetId,
+      rootCommentId: parent.commentId ?? parent.id,
+    };
+  })();
 
   const comment = await db.transaction(async (tx) => {
     const [inserted] = await tx
@@ -431,10 +449,10 @@ export const createDiscussionComment = async ({
       .values({
         creator: userId,
         content,
-        parentCommentId: parentCommentId ?? null,
-        answerId: answerId ?? null,
-        threadId: threadId ?? null,
-        commentId: commentId ?? null,
+        parentCommentId: derived.parentId,
+        answerId: derived.answerId,
+        threadId: derived.threadId,
+        commentId: derived.rootCommentId,
       })
       .returning();
 
@@ -463,13 +481,17 @@ export const listDiscussionComments = async ({
   const conditions: SQL<unknown>[] = [
     eq(projectDiscussionComments.isDeleted, false),
     eq(projectDiscussionComments.threadId, threadId),
+    or(
+      isNull(projectDiscussionComments.parentCommentId),
+      isNull(projectDiscussionComments.answerId),
+    )!,
   ];
 
-  if (cursor) {
+  if (cursor !== undefined) {
     conditions.push(lt(projectDiscussionComments.id, cursor));
   }
 
-  const results = await db.query.projectDiscussionComments.findMany({
+  const rootComments = await db.query.projectDiscussionComments.findMany({
     where: and(...conditions),
     orderBy: [
       desc(projectDiscussionComments.createdAt),
@@ -484,11 +506,11 @@ export const listDiscussionComments = async ({
           avatarUrl: true,
         },
       },
-      comments: {
+      replies: {
         where: eq(projectDiscussionComments.isDeleted, false),
         orderBy: [
           asc(projectDiscussionComments.createdAt),
-          desc(projectDiscussionComments.id),
+          asc(projectDiscussionComments.id),
         ],
         with: {
           creator: {
@@ -503,8 +525,8 @@ export const listDiscussionComments = async ({
     },
   });
 
-  const hasNextPage = results.length > input.limit;
-  const items = hasNextPage ? results.slice(0, input.limit) : results;
+  const hasNextPage = rootComments.length > limit;
+  const items = hasNextPage ? rootComments.slice(0, limit) : rootComments;
   const nextCursor = hasNextPage ? (items[items.length - 1]?.id ?? null) : null;
 
   return {
