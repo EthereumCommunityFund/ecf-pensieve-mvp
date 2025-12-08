@@ -310,29 +310,21 @@ export const useThreadListControls = ({
     const isScam = isScamParam === 'true';
     const alertOnly = alertOnlyParam === 'true';
 
-    if (status !== activeStatus) setActiveStatus(status);
-    if (sort !== activeSort) setActiveSort(sort);
-    if (sentiment !== activeSentiment) setActiveSentiment(sentiment);
-    if (topics.join(',') !== selectedTopics.join(',')) {
-      setSelectedTopics(topics);
-    }
-    if (isScam !== isScamFilter) setIsScamFilter(isScam);
-    if (alertOnly !== alertOnlyFilter) setAlertOnlyFilter(alertOnly);
+    setActiveStatus(status);
+    setActiveSort(sort);
+    setActiveSentiment(sentiment);
+    setSelectedTopics(topics);
+    setIsScamFilter(isScam);
+    setAlertOnlyFilter(alertOnly);
   }, [
-    activeSentiment,
-    activeSort,
-    activeStatus,
-    alertOnlyFilter,
     defaultAlertOnly,
     defaultIsScam,
     defaultSentiment,
     defaultSort,
     defaultStatus,
-    isScamFilter,
     normalizeParam,
     parseTopicsFromParams,
     searchParams,
-    selectedTopics,
     sortOptions,
     statusTabs,
   ]);
