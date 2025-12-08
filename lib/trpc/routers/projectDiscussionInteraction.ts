@@ -120,24 +120,17 @@ export const projectDiscussionInteractionRouter = router({
 
   listComments: publicProcedure
     .input(
-      z
-        .object({
-          cursor: z.number().optional(),
-          limit: z
-            .number()
-            .min(1)
-            .max(MAX_PAGE_SIZE)
-            .default(DEFAULT_PAGE_SIZE),
-        })
-        .and(commentTargetSchema),
+      z.object({
+        cursor: z.number().optional(),
+        limit: z.number().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+        threadId: z.number(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       return listDiscussionComments({
         db: ctx.db,
         input: {
           threadId: input.threadId,
-          answerId: input.answerId,
-          parentCommentId: input.parentCommentId,
           cursor: input.cursor,
           limit: input.limit ?? DEFAULT_PAGE_SIZE,
         },

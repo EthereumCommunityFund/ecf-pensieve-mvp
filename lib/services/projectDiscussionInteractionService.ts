@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '@/lib/db';
 import {
@@ -445,9 +445,7 @@ export const createDiscussionComment = async ({
 };
 
 type ListCommentsInput = {
-  threadId?: number;
-  answerId?: number;
-  parentCommentId?: number;
+  threadId: number;
   cursor?: number;
   limit: number;
 };
@@ -459,48 +457,13 @@ export const listDiscussionComments = async ({
   db: Database;
   input: ListCommentsInput;
 }) => {
-  const { threadId, answerId, parentCommentId, cursor, limit } = input;
-  if (!threadId && !answerId && !parentCommentId) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Thread, answer, or parent comment is required',
-    });
-  }
+  const { threadId, cursor, limit } = input;
+  await ensureThreadAvailable(db, threadId);
 
   const conditions: SQL<unknown>[] = [
     eq(projectDiscussionComments.isDeleted, false),
+    eq(projectDiscussionComments.threadId, threadId),
   ];
-
-  if (threadId) {
-    await ensureThreadAvailable(db, threadId);
-    conditions.push(eq(projectDiscussionComments.threadId, threadId));
-  }
-
-  if (answerId) {
-    await ensureAnswerAvailable(db, answerId);
-    conditions.push(eq(projectDiscussionComments.answerId, answerId));
-  }
-
-  if (parentCommentId) {
-    await ensureCommentAvailable(db, parentCommentId);
-    conditions.push(
-      eq(projectDiscussionComments.parentCommentId, parentCommentId),
-    );
-  }
-
-  if (parentCommentId !== undefined) {
-    const rootParentCondition = and(
-      eq(projectDiscussionComments.id, parentCommentId),
-      isNull(projectDiscussionComments.parentCommentId),
-    )!;
-
-    const parentCondition = or(
-      eq(projectDiscussionComments.parentCommentId, parentCommentId),
-      rootParentCondition,
-    )!;
-
-    conditions.push(parentCondition);
-  }
 
   if (cursor) {
     conditions.push(lt(projectDiscussionComments.id, cursor));
@@ -509,7 +472,6 @@ export const listDiscussionComments = async ({
   const results = await db.query.projectDiscussionComments.findMany({
     where: and(...conditions),
     orderBy: [
-      asc(projectDiscussionComments.parentCommentId),
       desc(projectDiscussionComments.createdAt),
       desc(projectDiscussionComments.id),
     ],
