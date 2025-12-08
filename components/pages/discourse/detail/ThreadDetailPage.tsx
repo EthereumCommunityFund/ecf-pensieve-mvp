@@ -682,6 +682,65 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     [commentsQuery],
   );
 
+  const threadContentHtml = useMemo(
+    () =>
+      baseThread?.post ??
+      thread?.body.map((paragraph) => `<p>${paragraph}</p>`).join(''),
+    [baseThread?.post, thread?.body],
+  );
+
+  const answersToRender = thread?.answers || [];
+
+  const totalAnswerCount = useMemo(
+    () => Math.max(baseThread?.answerCount ?? 0, answersToRender.length ?? 0),
+    [answersToRender.length, baseThread?.answerCount],
+  );
+  const totalCommentCount = threadComments.length;
+
+  const tabOptions = useMemo(
+    () => [
+      {
+        key: 'answers' as const,
+        label: 'Answers',
+        count: totalAnswerCount,
+      },
+      { key: 'comments' as const, label: 'Discuss', count: totalCommentCount },
+    ],
+    [totalAnswerCount, totalCommentCount],
+  );
+
+  const statusTabs = useMemo(
+    () => tabOptions.map((tab) => tab.key),
+    [tabOptions],
+  );
+
+  const renderStatusLabel = useCallback(
+    (value: string) => {
+      const tab = tabOptions.find((item) => item.key === value);
+      if (!tab) return value;
+      return (
+        <span className="flex items-center gap-2">
+          <span>{tab.label}</span>
+          <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
+            {tab.count}
+          </span>
+        </span>
+      );
+    },
+    [tabOptions],
+  );
+
+  const isAnswersTab = activeTab === 'answers';
+  const answerEmptyState = {
+    title: 'No answers yet',
+    description: 'Be the first to propose accountable steps for resolution.',
+  };
+  const discussionEmptyState = {
+    title: 'No discussion yet',
+    description:
+      'Ask clarifying questions or share context to help the community respond.',
+  };
+
   if (!isValidThreadId) {
     return (
       <div className="p-10 text-center text-sm text-black/60">
@@ -702,36 +761,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     );
   }
 
-  const threadContentHtml =
-    baseThread?.post ??
-    thread.body.map((paragraph) => `<p>${paragraph}</p>`).join('');
-
-  const answersToRender = thread.answers;
-  const totalAnswerCount = Math.max(
-    baseThread?.answerCount ?? 0,
-    answersToRender.length ?? 0,
-  );
-  const totalCommentCount = threadComments.length;
-
-  const tabOptions = [
-    {
-      key: 'answers',
-      label: 'Answers',
-      count: totalAnswerCount,
-    },
-    { key: 'comments', label: 'Discuss', count: totalCommentCount },
-  ];
-
-  const isAnswersTab = activeTab === 'answers';
-  const answerEmptyState = {
-    title: 'No answers yet',
-    description: 'Be the first to propose accountable steps for resolution.',
-  };
-  const discussionEmptyState = {
-    title: 'No discussion yet',
-    description:
-      'Ask clarifying questions or share context to help the community respond.',
-  };
   return (
     <>
       <BackHeader className="pt-[20px]">
@@ -744,14 +773,14 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         </span>
       </BackHeader>
       <div className="flex justify-center px-[20px] pb-16 pt-[20px]">
-        <div className="mobile:flex-col tablet:gap-[20px] flex w-full max-w-[1200px] items-start justify-center gap-[40px]">
+        <div className="tablet:gap-[20px] mobile:flex-col flex w-full max-w-[1200px] items-start justify-center gap-[40px]">
           <section className="mobile:w-full w-[700px] space-y-6">
             <PostDetailCard
               title={thread.title}
               author={thread.author.name}
               authorAvatar={thread.author.avatarUrl}
               timeAgo={thread.author.postedAt}
-              contentHtml={threadContentHtml}
+              contentHtml={threadContentHtml ?? ''}
               tags={thread.tags}
               categoryLabel={thread.categories[0] ?? 'General'}
               supportCount={baseThread?.support ?? 0}
@@ -771,7 +800,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
             <div className="pb-[40px]">
               <TopbarFilters
-                statusTabs={tabOptions.map((tab) => tab.key)}
+                statusTabs={statusTabs}
                 activeStatus={activeTab}
                 onStatusChange={handleStatusChange}
                 sortOptions={['top', 'new']}
@@ -780,18 +809,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                 sentimentOptions={SENTIMENT_KEYS}
                 selectedSentiment={sentimentFilter}
                 onSentimentChange={handleSentimentChange}
-                renderStatusLabel={(value) => {
-                  const tab = tabOptions.find((item) => item.key === value);
-                  if (!tab) return value;
-                  return (
-                    <span className="flex items-center gap-2">
-                      <span>{tab.label}</span>
-                      <span className="rounded-md bg-black/10 px-1 text-[12px] font-semibold text-black/60">
-                        {tab.count}
-                      </span>
-                    </span>
-                  );
-                }}
+                renderStatusLabel={renderStatusLabel}
               />
               <div className="space-y-4 pt-5">
                 {isAnswersTab ? (

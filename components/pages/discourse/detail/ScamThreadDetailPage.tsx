@@ -718,18 +718,38 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   );
   const threadCommentCount = threadComments.length;
 
-  const tabItems = [
-    {
-      key: 'discussion' as const,
-      label: 'Discussion',
-      count: threadCommentCount,
+  const tabItems = useMemo(
+    () => [
+      {
+        key: 'discussion' as const,
+        label: 'Discussion',
+        count: threadCommentCount,
+      },
+      {
+        key: 'counter' as const,
+        label: 'Counter Claims',
+        count: counterClaimCount,
+      },
+    ],
+    [counterClaimCount, threadCommentCount],
+  );
+
+  const statusTabs = useMemo(() => tabItems.map((tab) => tab.key), [tabItems]);
+
+  const renderStatusLabel = useCallback(
+    (value: string) => {
+      const tab = tabItems.find((item) => item.key === value);
+      return (
+        <span className="flex items-center gap-2">
+          <span className="text-[14px]  text-black">{tab?.label ?? value}</span>
+          <span className="rounded-[4px] px-1 text-[11px] text-black/60">
+            {tab?.count ?? 0}
+          </span>
+        </span>
+      );
     },
-    {
-      key: 'counter' as const,
-      label: 'Counter Claims',
-      count: counterClaimCount,
-    },
-  ];
+    [tabItems],
+  );
 
   if (!isValidThreadId) {
     return (
@@ -892,7 +912,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           </article>
 
           <TopbarFilters
-            statusTabs={tabItems.map((tab) => tab.key)}
+            statusTabs={statusTabs}
             activeStatus={activeTab}
             onStatusChange={handleStatusChange}
             sortOptions={['top', 'new']}
@@ -901,19 +921,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             sentimentOptions={sentimentFilterOptions}
             selectedSentiment={sentimentFilter}
             onSentimentChange={handleSentimentChange}
-            renderStatusLabel={(value) => {
-              const tab = tabItems.find((item) => item.key === value);
-              return (
-                <span className="flex items-center gap-2">
-                  <span className="text-[14px]  text-black">
-                    {tab?.label ?? value}
-                  </span>
-                  <span className="rounded-[4px] px-1 text-[11px] text-black/60">
-                    {tab?.count ?? 0}
-                  </span>
-                </span>
-              );
-            }}
+            renderStatusLabel={renderStatusLabel}
           />
 
           <div className="space-y-4">

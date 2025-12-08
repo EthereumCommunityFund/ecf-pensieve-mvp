@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { ReactNode } from 'react';
+import { memo, ReactNode } from 'react';
 
 import { DEFAULT_SENTIMENT_VALUE } from './sentiment/sentimentConfig';
 import { SentimentSelector } from './sentiment/SentimentSelector';
@@ -20,7 +20,7 @@ type TopbarFiltersProps = {
   renderStatusLabel?: (value: string) => ReactNode;
 };
 
-export function TopbarFilters({
+export const TopbarFilters = memo(function TopbarFilters({
   statusTabs,
   activeStatus = statusTabs[0],
   onStatusChange,
@@ -101,4 +101,4 @@ export function TopbarFilters({
       </div>
     </div>
   );
-}
+});
