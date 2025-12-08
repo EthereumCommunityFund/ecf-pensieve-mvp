@@ -164,7 +164,7 @@ export const listDiscussionAnswers = async ({
         where: eq(projectDiscussionComments.isDeleted, false),
         orderBy: [
           asc(projectDiscussionComments.createdAt),
-          desc(projectDiscussionComments.id),
+          asc(projectDiscussionComments.id),
         ],
         with: {
           creator: {
