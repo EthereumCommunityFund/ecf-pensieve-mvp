@@ -1,7 +1,7 @@
 'use client';
 
-import { SelectedItems, Selection } from '@heroui/react';
-import { useMemo } from 'react';
+import { Selection } from '@heroui/react';
+import { useCallback, useMemo } from 'react';
 
 import { Select, SelectItem } from '@/components/base';
 
@@ -44,30 +44,26 @@ export function SentimentSelector({
     ? (value as string)
     : DEFAULT_SENTIMENT_VALUE;
 
-  const selectedKeys =
-    normalizedValue === DEFAULT_SENTIMENT_VALUE
-      ? new Set<string>()
-      : new Set<string>([normalizedValue]);
+  const selectedKeys = new Set<string>([normalizedValue]);
 
-  const renderValue = (selectedItems: SelectedItems) => {
-    const selectedKey = selectedItems?.[0]?.key;
-    const display =
-      selectedKey !== undefined && selectedKey !== null
-        ? getSentimentDisplay(String(selectedKey))
-        : defaultSentimentDisplay;
+  const selectedDisplay = useMemo(
+    () => getSentimentDisplay(normalizedValue),
+    [normalizedValue],
+  );
 
+  const renderValue = () => {
     return (
       <div className="flex items-center gap-2">
-        <display.Icon
+        <selectedDisplay.Icon
           size={18}
           weight={'fill'}
-          style={{ color: display.color }}
+          style={{ color: selectedDisplay.color }}
         />
         <span
           className="text-sm font-semibold"
-          style={{ color: display.color }}
+          style={{ color: selectedDisplay.color }}
         >
-          {display.label}
+          {selectedDisplay.label}
         </span>
       </div>
     );
@@ -90,22 +86,17 @@ export function SentimentSelector({
     </div>
   );
 
-  const handleSelectionChange = (selection: Selection) => {
-    if (selection === 'all') {
-      onChange?.(DEFAULT_SENTIMENT_VALUE);
-      return;
-    }
-    const keys = Array.from(selection);
-    if (!keys.length) {
-      onChange?.(DEFAULT_SENTIMENT_VALUE);
-      return;
-    }
-
-    const selectedKey = String(keys[0]);
-    const nextValue =
-      selectedKey === normalizedValue ? DEFAULT_SENTIMENT_VALUE : selectedKey;
-    onChange?.(nextValue);
-  };
+  const handleSelectionChange = useCallback(
+    (selection: Selection) => {
+      if (selection === 'all') return;
+      const keys = Array.from(selection);
+      if (!keys.length) return;
+      const selectedKey = String(keys[0]);
+      if (selectedKey === normalizedValue) return;
+      onChange?.(selectedKey);
+    },
+    [normalizedValue, onChange],
+  );
 
   return (
     <Select
