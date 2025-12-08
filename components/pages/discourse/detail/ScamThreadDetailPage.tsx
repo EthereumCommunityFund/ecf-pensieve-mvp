@@ -20,6 +20,7 @@ import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
 
+import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
 import { ThreadDetailRecord } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 import { EDITOR_MAX_CHARACTERS } from '../utils/editorValue';
@@ -27,9 +28,8 @@ import {
   SENTIMENT_KEYS,
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
-import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
-import { ParticipationCard } from '../crumb/ParticipationCard';
 
+import { ParticipationCard } from './ParticipationCard';
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import { useDiscussionComposer } from './hooks/useDiscussionComposer';
 import { useDiscussionLists } from './hooks/useDiscussionLists';
@@ -703,7 +703,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         <span className="text-[14px] text-black/70">Crumb</span>
       </BackHeader>
 
-      <div className="mobile:flex-col tablet:gap-[20px] flex w-full max-w-[1200px] justify-center gap-[40px]">
+      <div className="tablet:gap-[20px] mobile:flex-col flex w-full max-w-[1200px] justify-center gap-[40px]">
         <section className="mobile:w-full w-[700px] space-y-[20px]">
           <article className="space-y-[12px]">
             <div className="flex items-center gap-[10px]">
