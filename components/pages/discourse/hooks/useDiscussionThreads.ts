@@ -61,6 +61,7 @@ export const useDiscussionThreads = ({
   const lastParamsSignatureRef = useRef<string>(paramsSignature);
   const [isTransitioningParams, setIsTransitioningParams] =
     useState<boolean>(false);
+  const hasParamChanged = paramsSignature !== lastParamsSignatureRef.current;
 
   const listQuery = trpc.projectDiscussionThread.listThreads.useInfiniteQuery(
     {
@@ -81,11 +82,10 @@ export const useDiscussionThreads = ({
   );
 
   useEffect(() => {
-    if (paramsSignature !== lastParamsSignatureRef.current) {
-      lastParamsSignatureRef.current = paramsSignature;
-      setIsTransitioningParams(true);
-    }
-  }, [paramsSignature]);
+    if (!hasParamChanged) return;
+    lastParamsSignatureRef.current = paramsSignature;
+    setIsTransitioningParams(true);
+  }, [hasParamChanged, paramsSignature]);
 
   useEffect(() => {
     if (!isTransitioningParams) return;
@@ -129,9 +129,10 @@ export const useDiscussionThreads = ({
     return results;
   }, [mappedThreads, status, alertOnly]);
 
-  const displayThreads = isTransitioningParams ? [] : filteredThreads;
+  const hideList = hasParamChanged || isTransitioningParams;
+  const displayThreads = hideList ? [] : filteredThreads;
 
-  const isLoading = listQuery.isLoading || isTransitioningParams;
+  const isLoading = listQuery.isLoading || hideList;
 
   return {
     ...listQuery,
