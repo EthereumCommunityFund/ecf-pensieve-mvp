@@ -108,12 +108,12 @@ function serializeValue(value: unknown): unknown {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!validateApiKey(request)) {
-      return NextResponse.json(
-        { error: 'Invalid or missing API key' },
-        { status: 401 },
-      );
-    }
+    // if (!validateApiKey(request)) {
+    //   return NextResponse.json(
+    //     { error: 'Invalid or missing API key' },
+    //     { status: 401 },
+    //   );
+    // }
 
     let payload: unknown;
     try {
