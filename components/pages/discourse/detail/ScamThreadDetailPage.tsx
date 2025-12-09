@@ -920,6 +920,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
             sortOptions={['top', 'new']}
             activeSort={sortOption}
             onSortChange={handleSortChange}
+            showSortOptions={activeTab !== 'discussion'}
             sentimentOptions={sentimentFilterOptions}
             selectedSentiment={sentimentFilter}
             onSentimentChange={handleSentimentChange}

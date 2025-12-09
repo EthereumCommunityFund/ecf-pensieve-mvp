@@ -4,7 +4,6 @@ import { cn } from '@heroui/react';
 import { memo, ReactNode } from 'react';
 
 import { DEFAULT_SENTIMENT_VALUE } from './sentiment/sentimentConfig';
-import { SentimentSelector } from './sentiment/SentimentSelector';
 
 type TopbarFiltersProps = {
   statusTabs: string[];
@@ -18,6 +17,7 @@ type TopbarFiltersProps = {
   onSentimentChange?: (value: string) => void;
   secondaryAction?: ReactNode;
   renderStatusLabel?: (value: string) => ReactNode;
+  showSortOptions?: boolean;
 };
 
 export const TopbarFilters = memo(function TopbarFilters({
@@ -32,9 +32,13 @@ export const TopbarFilters = memo(function TopbarFilters({
   onSentimentChange,
   secondaryAction,
   renderStatusLabel,
+  showSortOptions = true,
 }: TopbarFiltersProps) {
   const tabLabel = (label: string) =>
     label.charAt(0).toUpperCase() + label.slice(1);
+  const shouldRenderSortOptions = showSortOptions && sortOptions.length > 0;
+  const shouldRenderRightSection =
+    shouldRenderSortOptions || Boolean(secondaryAction);
 
   return (
     <div className="flex flex-nowrap items-center gap-3 overflow-x-auto border-b border-black/10">
@@ -69,36 +73,41 @@ export const TopbarFilters = memo(function TopbarFilters({
         })}
       </div>
 
-      <div className="ml-auto flex flex-nowrap items-center gap-3">
-        <div className="inline-flex items-center gap-[2px] rounded-[5px] border border-black/10 bg-white p-[2px]">
-          {sortOptions.map((option) => {
-            const isActive = option === activeSort;
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onSortChange?.(option)}
-                className={cn(
-                  'flex h-[26px] min-w-[60px] items-center justify-center rounded-[4px] px-3 text-[14px] font-semibold capitalize transition-colors duration-150',
-                  isActive
-                    ? 'bg-[#3d3d3d] text-white'
-                    : 'text-black/55 hover:text-black',
-                )}
-              >
-                {tabLabel(option)}
-              </button>
-            );
-          })}
+      {shouldRenderRightSection ? (
+        <div className="ml-auto flex flex-nowrap items-center gap-3">
+          {shouldRenderSortOptions ? (
+            <div className="inline-flex items-center gap-[2px] rounded-[5px] border border-black/10 bg-white p-[2px]">
+              {sortOptions.map((option) => {
+                const isActive = option === activeSort;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onSortChange?.(option)}
+                    className={cn(
+                      'flex h-[26px] min-w-[60px] items-center justify-center rounded-[4px] px-3 text-[14px] font-semibold capitalize transition-colors duration-150',
+                      isActive
+                        ? 'bg-[#3d3d3d] text-white'
+                        : 'text-black/55 hover:text-black',
+                    )}
+                  >
+                    {tabLabel(option)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {secondaryAction}
+
+          {/* 2025.12.09 hide SentimentSelector temporarily */}
+          {/* <SentimentSelector
+            options={sentimentOptions}
+            value={selectedSentiment}
+            onChange={onSentimentChange}
+          /> */}
         </div>
-
-        {secondaryAction}
-
-        <SentimentSelector
-          options={sentimentOptions}
-          value={selectedSentiment}
-          onChange={onSentimentChange}
-        />
-      </div>
+      ) : null}
     </div>
   );
 });

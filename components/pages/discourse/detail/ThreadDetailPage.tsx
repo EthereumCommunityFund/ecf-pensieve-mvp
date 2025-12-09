@@ -817,6 +817,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                 sortOptions={['top', 'new']}
                 activeSort={sortOption}
                 onSortChange={handleSortChange}
+                showSortOptions={activeTab !== 'comments'}
                 sentimentOptions={SENTIMENT_KEYS}
                 selectedSentiment={sentimentFilter}
                 onSentimentChange={handleSentimentChange}
