@@ -519,7 +519,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       cpTarget: REDRESSED_SUPPORT_THRESHOLD,
       cpLabel: 'Contribution Points supporting the main claim',
       cpHelper:
-        'Cross the threshold to pin the alert across the project surfaces.',
+        'Required amount of CP support for to an answer for a complaint to be considered redressed',
       participation: {
         supportSteps: [],
         counterSteps: [],

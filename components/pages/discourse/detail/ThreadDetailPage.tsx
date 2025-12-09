@@ -548,7 +548,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       baseThread.redressedAnswerCount ?? 0,
       answersFromApi.filter((answer) => answer.isAccepted).length,
     );
-    const leadingAnswerCp = topAnswerSupport || baseThread.support || 0;
     return normalizeThreadDetailRecord({
       thread: baseThread,
       answers: answersFromApi,
@@ -556,9 +555,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       sentimentSummary,
       badge: 'Complaint Topic',
       cpTarget: REDRESSED_SUPPORT_THRESHOLD,
-      cpLabel: 'Contribution Points supporting the leading answer',
+      cpLabel: 'Contribution Points supporting this thread',
       cpHelper:
-        'Reaching the threshold signals community confidence in this answer.',
+        'Reaching the threshold highlights this complaint for faster response.',
       participation: DEFAULT_PARTICIPATION,
       quickActions: DEFAULT_QUICK_ACTIONS,
       statusOverride:
@@ -575,7 +574,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
         },
         { label: 'Views', value: '—' },
       ],
-      cpCurrentOverride: leadingAnswerCp,
     });
   }, [
     answersFromApi,
@@ -583,7 +581,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     threadComments.length,
     sentimentSummary,
     threadComments,
-    topAnswerSupport,
   ]);
   const isAnswerTopSupport = useCallback(
     (cpSupport: number) =>
