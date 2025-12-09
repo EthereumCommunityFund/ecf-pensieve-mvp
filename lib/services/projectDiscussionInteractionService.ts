@@ -55,7 +55,19 @@ const ensureAnswerAvailable = async (db: Database, answerId: number) => {
     throw new TRPCError({ code: 'NOT_FOUND', message: 'Answer not found' });
   }
 
-  return answer;
+  const thread = await db.query.projectDiscussionThreads.findFirst({
+    columns: {
+      id: true,
+      creator: true,
+    },
+    where: eq(projectDiscussionThreads.id, answer.threadId),
+  });
+
+  if (!thread) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Thread not found' });
+  }
+
+  return { ...answer, threadCreator: thread.creator };
 };
 
 const ensureCommentAvailable = async (db: Database, commentId: number) => {
@@ -234,9 +246,9 @@ export const voteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  const { threadId, creator } = await ensureAnswerAvailable(db, answerId);
+  const { threadId, threadCreator } = await ensureAnswerAvailable(db, answerId);
 
-  const isThreadAuthor = creator === userId;
+  const isThreadAuthor = threadCreator === userId;
 
   const user = await db.query.profiles.findFirst({
     where: eq(profiles.userId, userId),
@@ -365,9 +377,9 @@ export const unvoteDiscussionAnswer = async ({
   userId: string;
   answerId: number;
 }) => {
-  const { threadId, creator } = await ensureAnswerAvailable(db, answerId);
+  const { threadId, threadCreator } = await ensureAnswerAvailable(db, answerId);
 
-  const isThreadAuthor = creator === userId;
+  const isThreadAuthor = threadCreator === userId;
 
   const updated = await db.transaction(async (tx) => {
     const existingSupport =
