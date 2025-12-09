@@ -47,7 +47,7 @@ type VariantCopy = {
 const VARIANT_CONFIG = {
   answer: {
     title: 'Post Answer',
-    placeholder: 'Write about your issue',
+    placeholder: 'Write your answer',
     helper: 'Markdown supported.',
     primaryLabel: 'Publish Answer',
     badge: 'Answer',
@@ -61,7 +61,7 @@ const VARIANT_CONFIG = {
   },
   comment: {
     title: 'Post Comment',
-    placeholder: 'Write about your issue',
+    placeholder: 'write your comment',
     helper: 'Markdown supported.',
     primaryLabel: 'Publish Comment',
     badge: 'Discussion',
