@@ -181,6 +181,13 @@ export default function ClaimSlotModal({
   const slotMetadataDisplayName =
     slot?.slotDisplayName ?? slot?.slotName ?? '—';
 
+  const isValuationBelowMinimum = Boolean(
+    slot &&
+      parsedValuationWei &&
+      parsedValuationWei < slot.minValuationWei &&
+      valuationInput.trim().length > 0,
+  );
+
   const isStepOneValid = Boolean(
     slot &&
       parsedValuationWei &&
@@ -430,6 +437,11 @@ export default function ClaimSlotModal({
                   <span className="text-[13px] text-black/80">
                     Min: {valuationMinimumLabel}
                   </span>
+                  {isValuationBelowMinimum ? (
+                    <span className="text-[13px] font-medium text-[#B91C1C]">
+                      Enter at least the minimum valuation before continuing.
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-col">
