@@ -816,7 +816,7 @@ export const getProjectPublicationStatus = unstable_cache(
       return project ?? null;
     } catch (error) {
       console.error('Failed to fetch project publication status:', error);
-      return null;
+      throw error;
     }
   },
   ['project-publication-status'],
