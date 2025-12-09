@@ -2,6 +2,7 @@ import { router } from '../server';
 
 import { activeRouter } from './active';
 import { adminWhitelistRouter } from './adminWhitelist';
+import { aiRouter } from './ai';
 import { authRouter } from './auth';
 import { fileRouter } from './file';
 import { itemProposalRouter } from './itemProposal';
@@ -22,6 +23,7 @@ import { userActionLogRouter } from './userActionLog';
 import { voteRouter } from './vote';
 
 export const appRouter = router({
+  ai: aiRouter,
   user: userRouter,
   auth: authRouter,
   file: fileRouter,
