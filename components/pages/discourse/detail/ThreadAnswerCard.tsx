@@ -150,10 +150,10 @@ export function AnswerDetailCard({
     }) =>
       onPostComment({
         title: 'Replying to:',
-        author: payload.author,
+        author: payload.author || '',
         isOp: payload.isOp,
         timestamp: payload.timestamp,
-        excerpt: payload.excerpt,
+        excerpt: payload.excerpt || '',
         target: {
           targetType: payload.targetType ?? 'comment',
           targetId: payload.targetId ?? payload.rootCommentId ?? 0,
