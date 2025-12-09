@@ -79,6 +79,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
     number | null
   >(null);
+  const [confirmThreadUnvote, setConfirmThreadUnvote] = useState(false);
   const [activeSentimentModal, setActiveSentimentModal] = useState<{
     title: string;
     excerpt: string;
@@ -423,10 +424,18 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     }
   }, [isValidThreadId, numericThreadId, requireAuth, voteThreadMutation]);
 
-  const handleWithdrawThread = useCallback(async () => {
+  const handleWithdrawThread = useCallback(() => {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
+    setConfirmThreadUnvote(true);
+  }, [isValidThreadId, requireAuth]);
+
+  const handleConfirmThreadUnvote = useCallback(async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    setConfirmThreadUnvote(false);
     setLastSupportAction('unvote');
     try {
       await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
@@ -1001,6 +1010,17 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmThreadUnvote}
+        title="Unvote this thread?"
+        description="This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime."
+        confirmText="Unvote"
+        cancelText="Keep supporting"
+        isLoading={threadWithdrawPending}
+        onConfirm={handleConfirmThreadUnvote}
+        onCancel={() => setConfirmThreadUnvote(false)}
+      />
 
       <ConfirmModal
         open={Boolean(pendingAction)}

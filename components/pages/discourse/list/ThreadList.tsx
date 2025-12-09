@@ -14,7 +14,7 @@ import {
   useState,
 } from 'react';
 
-import { Button } from '@/components/base';
+import { Button, ConfirmModal } from '@/components/base';
 import { addToast } from '@/components/base/toast';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
@@ -240,6 +240,8 @@ export function ThreadList({
     {},
   );
   const [pendingThreadId, setPendingThreadId] = useState<number | null>(null);
+  const [unvoteConfirmThread, setUnvoteConfirmThread] =
+    useState<ThreadMeta | null>(null);
 
   useEffect(() => {
     const supported = threads
@@ -260,10 +262,15 @@ export function ThreadList({
       thread: ThreadMeta,
       hasSupported: boolean,
       onSettled?: () => void,
+      skipConfirm?: boolean,
     ) => {
       const numericId = Number(thread.id);
       if (!Number.isFinite(numericId)) return;
       if (!requireAuth()) return;
+      if (hasSupported && !skipConfirm) {
+        setUnvoteConfirmThread(thread);
+        return;
+      }
       setPendingThreadId(numericId);
       try {
         if (hasSupported) {
@@ -321,6 +328,13 @@ export function ThreadList({
     ],
   );
 
+  const confirmUnvote = useCallback(async () => {
+    if (!unvoteConfirmThread) return;
+    const thread = unvoteConfirmThread;
+    setUnvoteConfirmThread(null);
+    await toggleThreadVote(thread, true, undefined, true);
+  }, [toggleThreadVote, unvoteConfirmThread]);
+
   const sortedThreads = useMemo(() => {
     if (!sentimentSortKey || sentimentSortKey === 'all') {
       return threads;
@@ -377,6 +391,17 @@ export function ThreadList({
 
   return (
     <div>
+      <ConfirmModal
+        open={Boolean(unvoteConfirmThread)}
+        title="Unvote this thread?"
+        description="This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime."
+        confirmText="Unvote"
+        cancelText="Keep supporting"
+        isLoading={pendingThreadId === Number(unvoteConfirmThread?.id)}
+        onConfirm={confirmUnvote}
+        onCancel={() => setUnvoteConfirmThread(null)}
+      />
+
       {showInitialSkeleton ? (
         <ThreadListSkeleton count={skeletonCount} />
       ) : showEmptyState ? (
