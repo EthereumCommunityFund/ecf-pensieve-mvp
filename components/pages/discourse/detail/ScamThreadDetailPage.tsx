@@ -128,6 +128,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const [lastSupportAction, setLastSupportAction] = useState<
     'vote' | 'unvote' | null
   >(null);
+  const [pendingSwitchAction, setPendingSwitchAction] = useState<
+    | { type: 'threadToClaim'; targetId: number }
+    | { type: 'claimToThread'; claimId: number }
+    | null
+  >(null);
+  const [switchingSupport, setSwitchingSupport] = useState(false);
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
     number | null
   >(null);
@@ -382,7 +388,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       counterClaims.reduce((max, claim) => Math.max(max, claim.cpSupport), 0),
     [counterClaims],
   );
-
   const {
     handleSupport: handleSupportClaim,
     handleWithdraw: handleWithdrawClaim,
@@ -427,6 +432,13 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     },
   });
 
+  const supportedCounterClaimId = useMemo(() => {
+    const supported = counterClaims.find((claim) =>
+      getOptimisticSupportState(claim.numericId, claim.viewerHasSupported),
+    );
+    return supported?.numericId ?? null;
+  }, [counterClaims, getOptimisticSupportState]);
+
   const pendingActionLoading = useMemo(() => {
     if (!pendingIds) return false;
     return (
@@ -447,13 +459,33 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       } as const;
     }
     return {
-      title: 'Withdraw support?',
+      title: 'Cancel support?',
       description:
         'You will remove your support from this counter claim. This cannot be undone without re-voting.',
-      confirmText: 'Withdraw',
+      confirmText: 'Unvote',
       cancelText: 'Keep support',
     } as const;
   }, [pendingAction]);
+
+  const pendingSwitchCopy = useMemo(() => {
+    if (!pendingSwitchAction) return null;
+    if (pendingSwitchAction.type === 'threadToClaim') {
+      return {
+        title: 'Switch support to counter claim?',
+        description:
+          "You currently support the scam alert. We'll withdraw that vote before supporting this counter claim.",
+        confirmText: 'Switch support',
+        cancelText: 'Keep current vote',
+      } as const;
+    }
+    return {
+      title: 'Switch support to scam alert?',
+      description:
+        "You currently support a counter claim. We'll withdraw that vote before supporting the main scam alert.",
+      confirmText: 'Switch support',
+      cancelText: 'Keep current vote',
+    } as const;
+  }, [pendingSwitchAction]);
 
   const sentimentSummary = useMemo(
     () => buildSentimentSummary(threadQuery.data?.sentiments),
@@ -540,7 +572,14 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   );
 
   const handleToggleThreadSupport = async () => {
-    if (!isValidThreadId || !requireAuth()) {
+    if (!isValidThreadId || !requireAuth() || switchingSupport) {
+      return;
+    }
+    if (!hasSupportedThread && supportedCounterClaimId) {
+      setPendingSwitchAction({
+        type: 'claimToThread',
+        claimId: supportedCounterClaimId,
+      });
       return;
     }
     if (isThreadRetracted) {
@@ -575,6 +614,99 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       });
     }
   };
+
+  const handleSupportCounterClaim = useCallback(
+    (answerId: number) => {
+      if (!requireAuth() || switchingSupport) return;
+      if (hasSupportedThread) {
+        setPendingSwitchAction({ type: 'threadToClaim', targetId: answerId });
+        return;
+      }
+      handleSupportClaim(answerId);
+    },
+    [handleSupportClaim, hasSupportedThread, requireAuth, switchingSupport],
+  );
+
+  const handleConfirmSwitch = useCallback(async () => {
+    if (
+      !pendingSwitchAction ||
+      !isValidThreadId ||
+      !requireAuth() ||
+      switchingSupport
+    ) {
+      return;
+    }
+    setSwitchingSupport(true);
+    try {
+      if (pendingSwitchAction.type === 'threadToClaim') {
+        setLastSupportAction('unvote');
+        await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
+        await voteAnswerMutation.mutateAsync({
+          answerId: pendingSwitchAction.targetId,
+        });
+      } else {
+        const claimId =
+          pendingSwitchAction.claimId ?? supportedCounterClaimId ?? null;
+        if (!claimId) {
+          throw new Error('No supported counter claim found to switch from.');
+        }
+        await unvoteAnswerMutation.mutateAsync({ answerId: claimId });
+        setLastSupportAction('vote');
+        await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
+      }
+    } catch (error: any) {
+      addToast({
+        title: 'Unable to switch support',
+        description: error?.message ?? 'Please try again.',
+        color: 'danger',
+      });
+    } finally {
+      setSwitchingSupport(false);
+      setPendingSwitchAction(null);
+    }
+  }, [
+    hasSupportedThread,
+    isValidThreadId,
+    numericThreadId,
+    pendingSwitchAction,
+    requireAuth,
+    supportedCounterClaimId,
+    switchingSupport,
+    unvoteAnswerMutation,
+    unvoteThreadMutation,
+    voteAnswerMutation,
+    voteThreadMutation,
+  ]);
+
+  const handleCancelSwitch = useCallback(
+    () => setPendingSwitchAction(null),
+    [],
+  );
+
+  const confirmModalState = useMemo(() => {
+    const copy = pendingSwitchCopy ?? pendingModalCopy;
+    return {
+      open: Boolean(pendingAction) || Boolean(pendingSwitchAction),
+      title: copy?.title ?? '',
+      description: copy?.description ?? '',
+      confirmText: copy?.confirmText,
+      cancelText: copy?.cancelText,
+      isLoading: pendingSwitchAction ? switchingSupport : pendingActionLoading,
+      onConfirm: pendingSwitchAction ? handleConfirmSwitch : confirmAction,
+      onCancel: pendingSwitchAction ? handleCancelSwitch : cancelAction,
+    };
+  }, [
+    cancelAction,
+    confirmAction,
+    handleCancelSwitch,
+    handleConfirmSwitch,
+    pendingAction,
+    pendingActionLoading,
+    pendingModalCopy,
+    pendingSwitchAction,
+    pendingSwitchCopy,
+    switchingSupport,
+  ]);
 
   useEffect(() => {
     if (!threadQuery.isFetching) {
@@ -891,9 +1023,15 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
               isDisabled={
                 threadSupportPending ||
                 threadWithdrawPending ||
-                isThreadRetracted
+                isThreadRetracted ||
+                switchingSupport ||
+                Boolean(pendingSwitchAction)
               }
-              isLoading={threadSupportPending || threadWithdrawPending}
+              isLoading={
+                threadSupportPending ||
+                threadWithdrawPending ||
+                switchingSupport
+              }
               onPress={handleToggleThreadSupport}
             >
               <CaretCircleUp
@@ -976,10 +1114,18 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                       topCounterSupport > 0 &&
                       claim.cpSupport === topCounterSupport
                     }
-                    onSupport={handleSupportClaim}
+                    onSupport={handleSupportCounterClaim}
                     onWithdraw={handleWithdrawClaim}
-                    supportPending={supportingClaimId === claim.numericId}
-                    withdrawPending={withdrawingClaimId === claim.numericId}
+                    supportPending={
+                      switchingSupport ||
+                      supportingClaimId === claim.numericId ||
+                      Boolean(pendingSwitchAction)
+                    }
+                    withdrawPending={
+                      switchingSupport ||
+                      withdrawingClaimId === claim.numericId ||
+                      Boolean(pendingSwitchAction)
+                    }
                     sentimentPendingId={answerSentimentPendingId}
                     onSelectSentiment={handleSetAnswerSentiment}
                     onShowSentimentDetail={handleShowAnswerSentimentDetail}
@@ -1084,14 +1230,14 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       </div>
 
       <ConfirmModal
-        open={Boolean(pendingAction)}
-        title={pendingModalCopy?.title ?? ''}
-        description={pendingModalCopy?.description ?? ''}
-        confirmText={pendingModalCopy?.confirmText}
-        cancelText={pendingModalCopy?.cancelText}
-        isLoading={pendingActionLoading}
-        onConfirm={confirmAction}
-        onCancel={cancelAction}
+        open={confirmModalState.open}
+        title={confirmModalState.title}
+        description={confirmModalState.description}
+        confirmText={confirmModalState.confirmText}
+        cancelText={confirmModalState.cancelText}
+        isLoading={confirmModalState.isLoading}
+        onConfirm={confirmModalState.onConfirm}
+        onCancel={confirmModalState.onCancel}
       />
 
       {composerVariant ? (
