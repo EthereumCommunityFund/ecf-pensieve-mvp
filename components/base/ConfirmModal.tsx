@@ -57,7 +57,7 @@ export function ConfirmModal({
             {cancelText}
           </Button>
           <Button
-            className="flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white"
+            className="flex-1 rounded-[8px] bg-black text-[14px] font-semibold text-white hover:bg-black/80"
             onPress={onConfirm}
             isLoading={isLoading}
           >

@@ -144,6 +144,7 @@ export function CounterClaimCard({
             />
           </div>
 
+          {/* upvote button */}
           <Button
             className={`h-[38px] w-full gap-3 rounded-[8px] bg-[#f5f5f5] px-[10px]`}
             isDisabled={supportPending || withdrawPending}

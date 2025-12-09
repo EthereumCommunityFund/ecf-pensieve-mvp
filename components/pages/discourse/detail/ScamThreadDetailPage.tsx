@@ -2,7 +2,7 @@
 
 import { CaretCircleUp, ChartBar, ShieldWarning } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, ConfirmModal, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
@@ -125,6 +125,9 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     sentiments?: SentimentMetric[];
     totalVotes?: number;
   } | null>(null);
+  const [lastSupportAction, setLastSupportAction] = useState<
+    'vote' | 'unvote' | null
+  >(null);
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
     number | null
   >(null);
@@ -135,13 +138,35 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   );
   const utils = trpc.useUtils();
   const voteThreadMutation =
-    trpc.projectDiscussionThread.voteThread.useMutation();
+    trpc.projectDiscussionThread.voteThread.useMutation({
+      onSettled: () => {
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
+      },
+    });
   const unvoteThreadMutation =
-    trpc.projectDiscussionThread.unvoteThread.useMutation();
+    trpc.projectDiscussionThread.unvoteThread.useMutation({
+      onSettled: () => {
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
+      },
+    });
   const voteAnswerMutation =
-    trpc.projectDiscussionInteraction.voteAnswer.useMutation();
+    trpc.projectDiscussionInteraction.voteAnswer.useMutation({
+      onSettled: () => {
+        answersQuery.refetch();
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
+      },
+    });
   const unvoteAnswerMutation =
-    trpc.projectDiscussionInteraction.unvoteAnswer.useMutation();
+    trpc.projectDiscussionInteraction.unvoteAnswer.useMutation({
+      onSettled: () => {
+        answersQuery.refetch();
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
+      },
+    });
   const setThreadSentimentMutation =
     trpc.projectDiscussionInteraction.setSentiment.useMutation();
   const setAnswerSentimentMutation =
@@ -311,21 +336,22 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const threadSupportPending = voteThreadMutation.isPending;
   const threadWithdrawPending = unvoteThreadMutation.isPending;
 
-  const hasSupportedThread = useMemo(() => {
-    if (voteThreadMutation.isPending || voteThreadMutation.isSuccess) {
-      return true;
+  const optimisticHasSupportedThread = useMemo(() => {
+    if (voteThreadMutation.isPending) return true; // optimistic while voting
+    if (unvoteThreadMutation.isPending) return false; // optimistic while unvoting
+    if (threadQuery.isFetching && lastSupportAction) {
+      return lastSupportAction === 'vote';
     }
-    if (unvoteThreadMutation.isPending || unvoteThreadMutation.isSuccess) {
-      return false;
-    }
-    return viewerHasSupportedThread;
+    return null;
   }, [
+    lastSupportAction,
+    threadQuery.isFetching,
     unvoteThreadMutation.isPending,
-    unvoteThreadMutation.isSuccess,
-    viewerHasSupportedThread,
     voteThreadMutation.isPending,
-    voteThreadMutation.isSuccess,
   ]);
+
+  const hasSupportedThread =
+    optimisticHasSupportedThread ?? viewerHasSupportedThread;
 
   const isThreadOwner = useMemo(() => {
     const creatorId = threadQuery.data?.creator?.userId;
@@ -366,6 +392,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     pendingIds,
     confirmAction,
     cancelAction,
+    getOptimisticSupportState,
   } = useAnswerSupport({
     requireAuth,
     answers: counterClaims,
@@ -375,7 +402,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         title: 'Voted successfully',
         color: 'success',
       });
-      await answersQuery.refetch();
     },
     unvoteAnswer: async (answerId) => {
       await unvoteAnswerMutation.mutateAsync({ answerId });
@@ -383,7 +409,6 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         title: 'Unvote successfully',
         color: 'success',
       });
-      await answersQuery.refetch();
     },
     onSupportError: (error) =>
       addToast({
@@ -528,22 +553,20 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     }
     try {
       if (hasSupportedThread) {
+        setLastSupportAction('unvote');
         await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
         addToast({
-          title: 'Support withdrawn',
-          description: 'Your CP support was withdrawn.',
+          title: 'Cancel support successfully',
           color: 'success',
         });
       } else {
+        setLastSupportAction('vote');
         await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
         addToast({
-          title: 'Supported claim',
-          description: 'CP support registered for this scam claim.',
+          title: 'Support successfully',
           color: 'success',
         });
       }
-      threadQuery.refetch();
-      utils.projectDiscussionThread.listThreads.invalidate();
     } catch (error: any) {
       addToast({
         title: 'Unable to update support',
@@ -552,6 +575,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       });
     }
   };
+
+  useEffect(() => {
+    if (!threadQuery.isFetching) {
+      setLastSupportAction(null);
+    }
+  }, [threadQuery.isFetching]);
 
   const handleOpenCounterClaimComposer = useCallback(() => {
     if (isThreadRetracted) {
@@ -933,7 +962,13 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                 filteredCounterClaims.map((claim) => (
                   <CounterClaimCard
                     key={claim.id}
-                    claim={claim}
+                    claim={{
+                      ...claim,
+                      viewerHasSupported: getOptimisticSupportState(
+                        claim.numericId,
+                        claim.viewerHasSupported,
+                      ),
+                    }}
                     cpTarget={hydratedThread.cpProgress.target}
                     threadId={numericThreadId}
                     threadAuthorName={hydratedThread.author.name}

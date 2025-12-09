@@ -2,7 +2,7 @@
 
 import { ChartBarIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, ConfirmModal } from '@/components/base';
 import { addToast } from '@/components/base/toast';
@@ -85,6 +85,9 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     sentiments?: SentimentMetric[];
     totalVotes?: number;
   } | null>(null);
+  const [lastSupportAction, setLastSupportAction] = useState<
+    'vote' | 'unvote' | null
+  >(null);
   const requireAuth = useCallback(() => {
     if (!profile) {
       showAuthPrompt();
@@ -185,7 +188,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           title: 'Support successfully.',
           color: 'success',
         });
-        answersQuery.refetch();
       },
       onError: (error) => {
         addToast({
@@ -193,6 +195,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           description: error.message,
           color: 'danger',
         });
+      },
+      onSettled: () => {
+        answersQuery.refetch();
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
       },
     });
 
@@ -203,7 +210,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           title: 'Unvote successfully',
           color: 'success',
         });
-        answersQuery.refetch();
       },
       onError: (error) => {
         addToast({
@@ -211,6 +217,11 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           description: error.message,
           color: 'danger',
         });
+      },
+      onSettled: () => {
+        answersQuery.refetch();
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
       },
     });
 
@@ -221,8 +232,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           title: 'Support successfully.',
           color: 'success',
         });
-        threadQuery.refetch();
-        utils.projectDiscussionThread.listThreads.invalidate();
       },
       onError: (error) => {
         addToast({
@@ -230,6 +239,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           description: error.message,
           color: 'danger',
         });
+      },
+      onSettled: () => {
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
       },
     });
 
@@ -240,8 +253,6 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           title: 'Unvote withdrawn',
           color: 'success',
         });
-        threadQuery.refetch();
-        utils.projectDiscussionThread.listThreads.invalidate();
       },
       onError: (error) => {
         addToast({
@@ -249,6 +260,10 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
           description: error.message,
           color: 'danger',
         });
+      },
+      onSettled: () => {
+        threadQuery.refetch();
+        utils.projectDiscussionThread.listThreads.invalidate();
       },
     });
 
@@ -269,21 +284,28 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const threadSupportPending = voteThreadMutation.isPending;
   const threadWithdrawPending = unvoteThreadMutation.isPending;
 
-  const hasSupportedThread = useMemo(() => {
-    if (voteThreadMutation.isPending || voteThreadMutation.isSuccess) {
-      return true;
+  const optimisticHasSupportedThread = useMemo(() => {
+    if (voteThreadMutation.isPending) return true; // optimistic while voting
+    if (unvoteThreadMutation.isPending) return false; // optimistic while unvoting
+    if (threadQuery.isFetching && lastSupportAction) {
+      return lastSupportAction === 'vote';
     }
-    if (unvoteThreadMutation.isPending || unvoteThreadMutation.isSuccess) {
-      return false;
-    }
-    return viewerHasSupportedThread;
+    return null;
   }, [
+    lastSupportAction,
+    threadQuery.isFetching,
     unvoteThreadMutation.isPending,
-    unvoteThreadMutation.isSuccess,
-    viewerHasSupportedThread,
     voteThreadMutation.isPending,
-    voteThreadMutation.isSuccess,
   ]);
+
+  const hasSupportedThread =
+    optimisticHasSupportedThread ?? viewerHasSupportedThread;
+
+  useEffect(() => {
+    if (!threadQuery.isFetching) {
+      setLastSupportAction(null);
+    }
+  }, [threadQuery.isFetching]);
 
   const setThreadSentimentMutation =
     trpc.projectDiscussionInteraction.setSentiment.useMutation({
@@ -393,6 +415,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
+    setLastSupportAction('vote');
     try {
       await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
     } catch {
@@ -404,6 +427,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
+    setLastSupportAction('unvote');
     try {
       await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
     } catch {
@@ -467,6 +491,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     pendingIds,
     confirmAction,
     cancelAction,
+    getOptimisticSupportState,
   } = useAnswerSupport({
     requireAuth,
     answers: answersFromApi,
@@ -837,7 +862,13 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                       ? filteredAnswers.map((answer) => (
                           <AnswerDetailCard
                             key={answer.id}
-                            answer={answer}
+                            answer={{
+                              ...answer,
+                              viewerHasSupported: getOptimisticSupportState(
+                                answer.numericId,
+                                answer.viewerHasSupported,
+                              ),
+                            }}
                             threadId={numericThreadId}
                             onSupport={handleSupportAnswer}
                             onWithdraw={handleWithdrawSupport}

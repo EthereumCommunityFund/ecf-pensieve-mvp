@@ -164,6 +164,24 @@ export function useAnswerSupport({
 
   const cancelAction = useCallback(() => setPendingAction(null), []);
 
+  const getOptimisticSupportState = useCallback(
+    (answerId: number, viewerHasSupported: boolean | null | undefined) => {
+      if (supportingId === answerId) return true;
+      if (withdrawingId === answerId) return false;
+      if (
+        pendingAction?.type === 'unvote' &&
+        pendingAction.currentId === answerId
+      )
+        return false;
+      if (pendingAction?.type === 'switch') {
+        if (pendingAction.currentId === answerId) return false;
+        if (pendingAction.targetId === answerId) return true;
+      }
+      return Boolean(viewerHasSupported);
+    },
+    [pendingAction, supportingId, withdrawingId],
+  );
+
   return {
     supportingId,
     withdrawingId,
@@ -173,5 +191,6 @@ export function useAnswerSupport({
     pendingIds,
     confirmAction,
     cancelAction,
+    getOptimisticSupportState,
   };
 }
