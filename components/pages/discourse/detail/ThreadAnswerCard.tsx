@@ -205,7 +205,7 @@ export function AnswerDetailCard({
               })
             }
           >
-            Post Comment
+            Post Comment In Answer
           </Button>
         </div>
 

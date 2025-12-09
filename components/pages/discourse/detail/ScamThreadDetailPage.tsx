@@ -906,7 +906,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                     isDisabled={isThreadRetracted}
                     isLoading={createCommentMutation.isPending}
                   >
-                    Post Comment
+                    Post Comment In Discussion
                   </Button>
                 </>
               )}

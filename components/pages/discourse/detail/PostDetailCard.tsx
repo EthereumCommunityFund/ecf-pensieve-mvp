@@ -146,7 +146,7 @@ export default function PostDetailCard({
           isDisabled={isPreviewMode}
           onPress={onComment}
         >
-          Post Comment
+          Post Comment In Discussion
         </Button>
       </div>
     </article>

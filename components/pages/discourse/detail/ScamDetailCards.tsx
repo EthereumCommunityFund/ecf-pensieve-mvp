@@ -187,7 +187,7 @@ export function CounterClaimCard({
                 })
               }
             >
-              Post Comment
+              Post Comment In Counter Claim
             </Button>
           </div>
           <div className="space-y-[10px]">
