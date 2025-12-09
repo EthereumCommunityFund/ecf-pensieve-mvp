@@ -20,7 +20,7 @@ export type DiscourseTopicOption = {
   cpRequirement?: number;
 };
 
-export const SCAM_CP_REQUIREMENT = 1000;
+export const SCAM_CP_REQUIREMENT = 290;
 
 export const discourseTopicOptions: DiscourseTopicOption[] = [
   {
