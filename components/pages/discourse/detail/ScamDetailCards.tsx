@@ -1,4 +1,5 @@
 import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
+import { useCallback, useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
@@ -86,8 +87,87 @@ export function CounterClaimCard({
   const opVoteBadge = claim.threadAuthorSupported
     ? 'Voted by Original Poster'
     : undefined;
-  const commentTree = buildCommentTree<CounterCommentNode>(
-    (claim.comments ?? []) as CounterCommentNode[],
+  const commentTree = useMemo(
+    () =>
+      buildCommentTree<CounterCommentNode>(
+        (claim.comments ?? []) as CounterCommentNode[],
+      ),
+    [claim.comments],
+  );
+
+  const handleToggleSupport = useCallback(() => {
+    if (claim.viewerHasSupported) {
+      onWithdraw(claim.numericId);
+    } else {
+      onSupport(claim.numericId);
+    }
+  }, [claim.numericId, claim.viewerHasSupported, onSupport, onWithdraw]);
+
+  const handleShowSentimentIndicator = useCallback(() => {
+    onShowSentimentIndicator?.({
+      title: `Sentiment for ${claim.author}'s counter claim`,
+      excerpt: formatExcerpt(claim.body),
+      sentiments: claim.sentimentBreakdown,
+      totalVotes: claim.sentimentVotes,
+    });
+  }, [
+    claim.author,
+    claim.body,
+    claim.sentimentBreakdown,
+    claim.sentimentVotes,
+    onShowSentimentIndicator,
+  ]);
+
+  const handleSelectSentiment = useCallback(
+    (sentiment: SentimentKey) => onSelectSentiment(claim.numericId, sentiment),
+    [claim.numericId, onSelectSentiment],
+  );
+
+  const handlePostComment = useCallback(() => {
+    onPostComment({
+      author: claim.author,
+      timestamp: claim.createdAt,
+      excerpt: formatExcerpt(claim.body),
+      target: {
+        targetType: 'answer',
+        targetId: claim.numericId,
+        threadId,
+        answerId: claim.numericId,
+      },
+    });
+  }, [
+    claim.author,
+    claim.body,
+    claim.createdAt,
+    claim.numericId,
+    onPostComment,
+    threadId,
+  ]);
+
+  const handleReply = useCallback(
+    (payload: {
+      author?: string;
+      isOp?: boolean;
+      timestamp?: string;
+      excerpt?: string;
+      targetId?: number;
+      rootCommentId?: number;
+      targetType?: CommentTarget['targetType'];
+    }) =>
+      onPostComment({
+        author: payload.author ?? claim.author,
+        isOp: payload.isOp,
+        timestamp: payload.timestamp,
+        excerpt: payload.excerpt ?? '',
+        target: {
+          targetType: payload.targetType ?? 'comment',
+          targetId: payload.targetId ?? payload.rootCommentId ?? 0,
+          threadId,
+          answerId: claim.numericId,
+          rootCommentId: payload.rootCommentId,
+        },
+      }),
+    [claim.author, claim.numericId, onPostComment, threadId],
   );
 
   return (
@@ -109,14 +189,7 @@ export function CounterClaimCard({
             {opVoteBadge ? <TagPill>{opVoteBadge}</TagPill> : null}
             <SentimentIndicator
               sentiments={claim.sentimentBreakdown}
-              onClick={() =>
-                onShowSentimentIndicator?.({
-                  title: `Sentiment for ${claim.author}'s counter claim`,
-                  excerpt: formatExcerpt(claim.body),
-                  sentiments: claim.sentimentBreakdown,
-                  totalVotes: claim.sentimentVotes,
-                })
-              }
+              onClick={handleShowSentimentIndicator}
             />
           </div>
           <MdEditor
@@ -138,9 +211,7 @@ export function CounterClaimCard({
               value={claim.viewerSentiment ?? null}
               isLoading={sentimentPendingId === claim.numericId}
               size="small"
-              onSelect={(sentiment) =>
-                onSelectSentiment(claim.numericId, sentiment)
-              }
+              onSelect={handleSelectSentiment}
             />
           </div>
 
@@ -149,11 +220,7 @@ export function CounterClaimCard({
             className={`h-[38px] w-full gap-3 rounded-[8px] bg-[#f5f5f5] px-[10px]`}
             isDisabled={supportPending || withdrawPending}
             isLoading={supportPending || withdrawPending}
-            onPress={() =>
-              claim.viewerHasSupported
-                ? onWithdraw(claim.numericId)
-                : onSupport(claim.numericId)
-            }
+            onPress={handleToggleSupport}
           >
             <CaretCircleUpIcon weight="fill" size={30} className={iconColor} />
             <div className="font-mona flex gap-[5px] text-[13px] font-[500] text-black/50">
@@ -174,19 +241,7 @@ export function CounterClaimCard({
             </div>
             <Button
               className="h-[30px] rounded-[5px] border border-black/10 px-[10px] text-[12px] font-semibold text-black/80"
-              onPress={() =>
-                onPostComment({
-                  author: claim.author,
-                  timestamp: claim.createdAt,
-                  excerpt: formatExcerpt(claim.body),
-                  target: {
-                    targetType: 'answer',
-                    targetId: claim.numericId,
-                    threadId,
-                    answerId: claim.numericId,
-                  },
-                })
-              }
+              onPress={handlePostComment}
             >
               Post Comment In Counter Claim
             </Button>
@@ -200,22 +255,7 @@ export function CounterClaimCard({
                     depth={0}
                     isFirst={index === 0}
                     hasSiblings={commentTree.length > 1}
-                    onReply={(payload) =>
-                      onPostComment({
-                        author: payload.author,
-                        isOp: payload.isOp,
-                        timestamp: payload.timestamp,
-                        excerpt: payload.excerpt,
-                        target: {
-                          targetType: 'comment',
-                          targetId:
-                            payload.targetId ?? payload.rootCommentId ?? 0,
-                          threadId,
-                          answerId: claim.numericId,
-                          rootCommentId: payload.rootCommentId,
-                        },
-                      })
-                    }
+                    onReply={handleReply}
                     threadAuthorName={threadAuthorName}
                   />
                 ))

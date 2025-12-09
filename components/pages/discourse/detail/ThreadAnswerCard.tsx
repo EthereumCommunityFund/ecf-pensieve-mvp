@@ -1,6 +1,6 @@
 import { cn, Skeleton } from '@heroui/react';
 import { CaretCircleUpIcon } from '@phosphor-icons/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
 import { SentimentIndicator } from '@/components/pages/discourse/common/sentiment/SentimentIndicator';
@@ -89,6 +89,87 @@ export function AnswerDetailCard({
     [answer.comments],
   );
 
+  const handleToggleSupport = useCallback(() => {
+    if (answer.viewerHasSupported) {
+      onWithdraw(answer.numericId);
+    } else {
+      onSupport(answer.numericId);
+    }
+  }, [answer.numericId, answer.viewerHasSupported, onSupport, onWithdraw]);
+
+  const handleShowSentiment = useCallback(() => {
+    onShowSentimentDetail({
+      title: `Sentiment for answer by ${answer.author}`,
+      excerpt: formatExcerpt(answer.body),
+      sentiments: answer.sentimentBreakdown,
+      totalVotes: answer.sentimentVotes,
+    });
+  }, [
+    answer.author,
+    answer.body,
+    answer.sentimentBreakdown,
+    answer.sentimentVotes,
+    onShowSentimentDetail,
+  ]);
+
+  const handlePostComment = useCallback(() => {
+    onPostComment({
+      title: 'Commenting to Answer:',
+      author: answer.author,
+      isOp,
+      timestamp: answer.createdAt,
+      excerpt: formatExcerpt(answer.body),
+      target: {
+        targetType: 'answer',
+        targetId: answer.numericId,
+        threadId,
+        answerId: answer.numericId,
+      },
+    });
+  }, [
+    answer.author,
+    answer.body,
+    answer.createdAt,
+    answer.numericId,
+    isOp,
+    onPostComment,
+    threadId,
+  ]);
+
+  const handleReply = useCallback(
+    (payload: {
+      author?: string;
+      isOp?: boolean;
+      timestamp?: string;
+      excerpt?: string;
+      targetType?: CommentTarget['targetType'];
+      targetId?: number;
+      rootCommentId?: number;
+      threadId?: number;
+      answerId?: number;
+    }) =>
+      onPostComment({
+        title: 'Replying to:',
+        author: payload.author,
+        isOp: payload.isOp,
+        timestamp: payload.timestamp,
+        excerpt: payload.excerpt,
+        target: {
+          targetType: payload.targetType ?? 'comment',
+          targetId: payload.targetId ?? payload.rootCommentId ?? 0,
+          threadId: payload.threadId ?? threadId,
+          answerId: payload.answerId ?? answer.numericId,
+          rootCommentId: payload.rootCommentId ?? payload.targetId,
+        },
+      }),
+    [answer.numericId, onPostComment, threadId],
+  );
+
+  const handleSelectSentiment = useCallback(
+    (sentiment: SentimentKey) => onSelectSentiment(answer.numericId, sentiment),
+    [answer.numericId, onSelectSentiment],
+  );
+
   return (
     <article className="space-y-[10px] rounded-[10px] bg-white p-[10px]">
       <div className="flex gap-[10px]">
@@ -107,14 +188,7 @@ export function AnswerDetailCard({
             <div className="flex items-center gap-2 text-[12px] text-black/70">
               <SentimentIndicator
                 sentiments={answer.sentimentBreakdown}
-                onClick={() =>
-                  onShowSentimentDetail({
-                    title: `Sentiment for answer by ${answer.author}`,
-                    excerpt: formatExcerpt(answer.body),
-                    sentiments: answer.sentimentBreakdown,
-                    totalVotes: answer.sentimentVotes,
-                  })
-                }
+                onClick={handleShowSentiment}
               />
             </div>
           </div>
@@ -138,11 +212,7 @@ export function AnswerDetailCard({
               className="min-w-0 shrink-0 gap-[5px] rounded-[8px] border-none bg-[#F5F5F5] px-[8px] py-[4px]"
               isDisabled={supportPending || withdrawPending}
               isLoading={supportPending || withdrawPending}
-              onPress={() =>
-                answer.viewerHasSupported
-                  ? onWithdraw(answer.numericId)
-                  : onSupport(answer.numericId)
-              }
+              onPress={handleToggleSupport}
             >
               <span
                 className={cn(
@@ -169,9 +239,7 @@ export function AnswerDetailCard({
               isLoading={sentimentPendingId === answer.numericId}
               disabled={supportPending || withdrawPending}
               size="small"
-              onSelect={(sentiment) =>
-                onSelectSentiment(answer.numericId, sentiment)
-              }
+              onSelect={handleSelectSentiment}
             />
           </div>
         </div>
@@ -186,24 +254,9 @@ export function AnswerDetailCard({
               {String(commentCount ?? 0).padStart(2, '0')}
             </span>
           </div>
-          {/* TODO opt: useCallback  */}
           <Button
             className="h-[32px] rounded-[5px] border border-black/10 bg-[#F5F5F5] px-[10px] text-[13px] font-semibold text-black/80"
-            onPress={() =>
-              onPostComment({
-                title: 'Commenting to Answer:',
-                author: answer.author,
-                isOp,
-                timestamp: answer.createdAt,
-                excerpt: formatExcerpt(answer.body),
-                target: {
-                  targetType: 'answer',
-                  targetId: answer.numericId,
-                  threadId,
-                  answerId: answer.numericId,
-                },
-              })
-            }
+            onPress={handlePostComment}
           >
             Post Comment In Answer
           </Button>
@@ -220,25 +273,7 @@ export function AnswerDetailCard({
                   isFirst={index === 0}
                   hasSiblings={commentTree.length > 1}
                   threadId={threadId}
-                  // TODO opt: useCallback
-                  onReply={(payload) =>
-                    onPostComment({
-                      title: 'Replying to:',
-                      author: payload.author,
-                      isOp: payload.isOp,
-                      timestamp: payload.timestamp,
-                      excerpt: payload.excerpt,
-                      target: {
-                        targetType: payload.targetType ?? 'comment',
-                        targetId:
-                          payload.targetId ?? payload.rootCommentId ?? 0,
-                        threadId: payload.threadId ?? threadId,
-                        answerId: payload.answerId ?? answer.numericId,
-                        rootCommentId:
-                          payload.rootCommentId ?? payload.targetId,
-                      },
-                    })
-                  }
+                  onReply={handleReply}
                   threadAuthorName={threadAuthorName}
                 />
               ))
