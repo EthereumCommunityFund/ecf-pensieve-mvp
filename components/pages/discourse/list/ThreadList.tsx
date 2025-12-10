@@ -183,7 +183,7 @@ function ThreadItem({
             </div>
           </div>
 
-          {/* Upvote */}
+          {/* Upvote Button */}
           <div className="flex items-center">
             <div className="flex flex-col items-center gap-[10px] text-sm text-black">
               <Button
@@ -225,6 +225,8 @@ export function ThreadList({
   skeletonCount = 4,
   sentimentSortKey = 'all',
 }: ThreadListProps) {
+  const CP_SUPPORT_MESSAGE =
+    "This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime.";
   const { isAuthenticated, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
   const voteThreadMutation =
@@ -240,6 +242,9 @@ export function ThreadList({
     {},
   );
   const [pendingThreadId, setPendingThreadId] = useState<number | null>(null);
+  const [voteConfirmThread, setVoteConfirmThread] = useState<ThreadMeta | null>(
+    null,
+  );
   const [unvoteConfirmThread, setUnvoteConfirmThread] =
     useState<ThreadMeta | null>(null);
 
@@ -267,8 +272,12 @@ export function ThreadList({
       const numericId = Number(thread.id);
       if (!Number.isFinite(numericId)) return;
       if (!requireAuth()) return;
-      if (hasSupported && !skipConfirm) {
-        setUnvoteConfirmThread(thread);
+      if (!skipConfirm) {
+        if (hasSupported) {
+          setUnvoteConfirmThread(thread);
+        } else {
+          setVoteConfirmThread(thread);
+        }
         return;
       }
       setPendingThreadId(numericId);
@@ -327,6 +336,13 @@ export function ThreadList({
       utils.projectDiscussionThread.listThreads,
     ],
   );
+
+  const confirmVote = useCallback(async () => {
+    if (!voteConfirmThread) return;
+    const thread = voteConfirmThread;
+    setVoteConfirmThread(null);
+    await toggleThreadVote(thread, false, undefined, true);
+  }, [toggleThreadVote, voteConfirmThread]);
 
   const confirmUnvote = useCallback(async () => {
     if (!unvoteConfirmThread) return;
@@ -392,9 +408,20 @@ export function ThreadList({
   return (
     <div>
       <ConfirmModal
+        open={Boolean(voteConfirmThread)}
+        title="Support this thread?"
+        description={CP_SUPPORT_MESSAGE}
+        confirmText="Confirm support"
+        cancelText="Cancel"
+        isLoading={pendingThreadId === Number(voteConfirmThread?.id)}
+        onConfirm={confirmVote}
+        onCancel={() => setVoteConfirmThread(null)}
+      />
+
+      <ConfirmModal
         open={Boolean(unvoteConfirmThread)}
         title="Unvote this thread?"
-        description="This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime."
+        description={CP_SUPPORT_MESSAGE}
         confirmText="Unvote"
         cancelText="Keep supporting"
         isLoading={pendingThreadId === Number(unvoteConfirmThread?.id)}

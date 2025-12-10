@@ -94,6 +94,9 @@ type ScamThreadDetailPageProps = {
   threadId: string;
 };
 
+const CP_SUPPORT_MESSAGE =
+  "This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime.";
+
 export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const { profile, showAuthPrompt, user } = useAuth();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
@@ -126,6 +129,9 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     totalVotes?: number;
   } | null>(null);
   const [lastSupportAction, setLastSupportAction] = useState<
+    'vote' | 'unvote' | null
+  >(null);
+  const [threadSupportConfirm, setThreadSupportConfirm] = useState<
     'vote' | 'unvote' | null
   >(null);
   const [pendingSwitchAction, setPendingSwitchAction] = useState<
@@ -472,16 +478,14 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     if (pendingSwitchAction.type === 'threadToClaim') {
       return {
         title: 'Switch support to counter claim?',
-        description:
-          "You currently support the scam alert. We'll withdraw that vote before supporting this counter claim.",
+        description: `You currently support the scam alert. We'll withdraw that vote before supporting this counter claim. ${CP_SUPPORT_MESSAGE}`,
         confirmText: 'Switch support',
         cancelText: 'Keep current vote',
       } as const;
     }
     return {
       title: 'Switch support to scam alert?',
-      description:
-        "You currently support a counter claim. We'll withdraw that vote before supporting the main scam alert.",
+      description: `You currently support a counter claim. We'll withdraw that vote before supporting the main scam alert. ${CP_SUPPORT_MESSAGE}`,
       confirmText: 'Switch support',
       cancelText: 'Keep current vote',
     } as const;
@@ -571,7 +575,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
     [],
   );
 
-  const handleToggleThreadSupport = async () => {
+  const handleToggleThreadSupport = () => {
     if (!isValidThreadId || !requireAuth() || switchingSupport) {
       return;
     }
@@ -590,19 +594,27 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       });
       return;
     }
+    setThreadSupportConfirm(hasSupportedThread ? 'unvote' : 'vote');
+  };
+
+  const handleConfirmThreadSupport = useCallback(async () => {
+    if (!threadSupportConfirm || !isValidThreadId || !requireAuth()) {
+      return;
+    }
+    setThreadSupportConfirm(null);
     try {
-      if (hasSupportedThread) {
-        setLastSupportAction('unvote');
-        await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
-        addToast({
-          title: 'Cancel support successfully',
-          color: 'success',
-        });
-      } else {
+      if (threadSupportConfirm === 'vote') {
         setLastSupportAction('vote');
         await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
         addToast({
           title: 'Support successfully',
+          color: 'success',
+        });
+      } else {
+        setLastSupportAction('unvote');
+        await unvoteThreadMutation.mutateAsync({ threadId: numericThreadId });
+        addToast({
+          title: 'Cancel support successfully',
           color: 'success',
         });
       }
@@ -613,7 +625,19 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
         color: 'danger',
       });
     }
-  };
+  }, [
+    isValidThreadId,
+    numericThreadId,
+    requireAuth,
+    threadSupportConfirm,
+    unvoteThreadMutation,
+    voteThreadMutation,
+  ]);
+
+  const handleCancelThreadSupport = useCallback(
+    () => setThreadSupportConfirm(null),
+    [],
+  );
 
   const handleSupportCounterClaim = useCallback(
     (answerId: number) => {
@@ -1018,6 +1042,8 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                 onSelect={handleSetThreadSentiment}
               />
             </div>
+
+            {/* Upvote Button */}
             <Button
               className="h-[38px] w-full gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] text-black"
               isDisabled={
@@ -1228,6 +1254,29 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           />
         </aside>
       </div>
+
+      <ConfirmModal
+        open={Boolean(threadSupportConfirm)}
+        title={
+          threadSupportConfirm === 'unvote'
+            ? 'Unvote this thread?'
+            : 'Support this thread?'
+        }
+        description={CP_SUPPORT_MESSAGE}
+        confirmText={
+          threadSupportConfirm === 'unvote' ? 'Unvote' : 'Confirm support'
+        }
+        cancelText={
+          threadSupportConfirm === 'unvote' ? 'Keep supporting' : 'Cancel'
+        }
+        isLoading={
+          threadSupportConfirm === 'unvote'
+            ? threadWithdrawPending
+            : threadSupportPending
+        }
+        onConfirm={handleConfirmThreadSupport}
+        onCancel={handleCancelThreadSupport}
+      />
 
       <ConfirmModal
         open={confirmModalState.open}

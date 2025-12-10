@@ -106,6 +106,8 @@ export default function PostDetailCard({
           onSelect={(value) => onSelectSentiment?.(value)}
           requireAuth={requireAuth}
         />
+
+        {/* Upvote Button */}
         <Button
           className={`h-[38px] min-w-0 gap-[10px] rounded-[8px] border-none bg-[#EBEBEB] px-[8px] py-[4px] hover:bg-[#D7D7D7]`}
           isDisabled={

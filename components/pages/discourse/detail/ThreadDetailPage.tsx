@@ -51,6 +51,9 @@ type ThreadDetailPageProps = {
   threadId: string;
 };
 
+const CP_SUPPORT_MESSAGE =
+  "This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime.";
+
 const DEFAULT_PARTICIPATION = {
   supportSteps: [
     'Share evidence or updates that confirm the complaint.',
@@ -79,6 +82,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<
     number | null
   >(null);
+  const [confirmThreadVote, setConfirmThreadVote] = useState(false);
   const [confirmThreadUnvote, setConfirmThreadUnvote] = useState(false);
   const [activeSentimentModal, setActiveSentimentModal] = useState<{
     title: string;
@@ -412,17 +416,12 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
   type CommentComposerContext = ComposerContext | null | undefined;
 
-  const handleSupportThread = useCallback(async () => {
+  const handleSupportThread = useCallback(() => {
     if (!isValidThreadId || !requireAuth()) {
       return;
     }
-    setLastSupportAction('vote');
-    try {
-      await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
-    } catch {
-      // handled via mutation callbacks
-    }
-  }, [isValidThreadId, numericThreadId, requireAuth, voteThreadMutation]);
+    setConfirmThreadVote(true);
+  }, [isValidThreadId, requireAuth]);
 
   const handleWithdrawThread = useCallback(() => {
     if (!isValidThreadId || !requireAuth()) {
@@ -443,6 +442,19 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       // handled via mutation callbacks
     }
   }, [isValidThreadId, numericThreadId, requireAuth, unvoteThreadMutation]);
+
+  const handleConfirmThreadVote = useCallback(async () => {
+    if (!isValidThreadId || !requireAuth()) {
+      return;
+    }
+    setConfirmThreadVote(false);
+    setLastSupportAction('vote');
+    try {
+      await voteThreadMutation.mutateAsync({ threadId: numericThreadId });
+    } catch {
+      // handled via mutation callbacks
+    }
+  }, [isValidThreadId, numericThreadId, requireAuth, voteThreadMutation]);
 
   const handleSetThreadSentiment = useCallback(
     async (sentiment: SentimentKey) => {
@@ -1012,9 +1024,20 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
       </div>
 
       <ConfirmModal
+        open={confirmThreadVote}
+        title="Support this thread?"
+        description={CP_SUPPORT_MESSAGE}
+        confirmText="Confirm support"
+        cancelText="Cancel"
+        isLoading={threadSupportPending}
+        onConfirm={handleConfirmThreadVote}
+        onCancel={() => setConfirmThreadVote(false)}
+      />
+
+      <ConfirmModal
         open={confirmThreadUnvote}
         title="Unvote this thread?"
-        description="This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime."
+        description={CP_SUPPORT_MESSAGE}
         confirmText="Unvote"
         cancelText="Keep supporting"
         isLoading={threadWithdrawPending}
