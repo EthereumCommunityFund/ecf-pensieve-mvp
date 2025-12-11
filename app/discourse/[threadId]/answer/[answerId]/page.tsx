@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import {
   buildAnswerMeta,
@@ -9,6 +9,8 @@ import {
 import { appRouter } from '@/lib/trpc/routers';
 import { createTRPCContext } from '@/lib/trpc/server';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
+
+import RedirectClient from './redirect.client';
 
 type AnswerDetailRouteProps = {
   params: Promise<{
@@ -117,5 +119,6 @@ export default async function AnswerDetailRoute({
     notFound();
   }
 
-  redirect(`/discourse/${threadId}?answerId=${numericAnswerId}`);
+  const target = `/discourse/${threadId}?answerId=${numericAnswerId}`;
+  return <RedirectClient targetUrl={target} />;
 }
