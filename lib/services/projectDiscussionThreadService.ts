@@ -9,6 +9,72 @@ import {
   projectDiscussionVotes,
 } from '@/lib/db/schema';
 import { ensurePublishedProject } from '@/lib/services/projectGuards';
+import type { IProposalItem } from '@/types/item';
+
+type ProjectSnapshot = {
+  name?: string | null;
+  tagline?: string | null;
+  logoUrl?: string | null;
+  categories?: string[] | null;
+  projectSnap?: {
+    items?: IProposalItem[] | null;
+    categories?: string[] | null;
+    name?: string | null;
+  } | null;
+};
+
+const buildProjectSummary = (project?: ProjectSnapshot | null) => {
+  if (!project) {
+    return null;
+  }
+
+  const snapItems = project.projectSnap?.items ?? [];
+  const snapMap = snapItems.reduce<Record<string, any>>((acc, item) => {
+    if (item?.key) {
+      acc[item.key] = item.value;
+    }
+    return acc;
+  }, {});
+
+  const getValue = (key: string) =>
+    snapMap[key] ?? (project as Record<string, any>)[key] ?? null;
+
+  const resolveArray = (value: unknown): string[] => {
+    if (Array.isArray(value)) return value as string[];
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
+  return {
+    name:
+      (snapMap['name'] as string | undefined) ??
+      project.projectSnap?.name ??
+      project.name ??
+      null,
+    tagline:
+      (snapMap['tagline'] as string | undefined) ??
+      project.tagline ??
+      project.projectSnap?.name ??
+      null,
+    logoUrl:
+      (snapMap['logoUrl'] as string | undefined) ??
+      project.logoUrl ??
+      (snapMap['logo'] as string | undefined) ??
+      null,
+    categories:
+      resolveArray(project.projectSnap?.categories) ||
+      resolveArray(snapMap['categories']) ||
+      resolveArray(project.categories) ||
+      [],
+  };
+};
 
 type CreateThreadInput = {
   projectId: number;
@@ -57,6 +123,24 @@ export const getDiscussionThreadById = async ({
         },
       },
       sentiments: true,
+      project: {
+        columns: {
+          id: true,
+          name: true,
+          tagline: true,
+          logoUrl: true,
+          categories: true,
+        },
+        with: {
+          projectSnap: {
+            columns: {
+              items: true,
+              categories: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -67,7 +151,10 @@ export const getDiscussionThreadById = async ({
   await ensurePublishedProject(db, thread.projectId);
 
   if (!viewerId) {
-    return thread;
+    return {
+      ...thread,
+      project: buildProjectSummary(thread.project),
+    };
   }
 
   const viewerVote = await db
@@ -85,6 +172,7 @@ export const getDiscussionThreadById = async ({
 
   return {
     ...thread,
+    project: buildProjectSummary(thread.project),
     viewerHasSupported: viewerVote.length > 0,
   };
 };

@@ -2,6 +2,7 @@ import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
 import { useCallback, useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
+import Copy from '@/components/biz/common/Copy';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
@@ -50,6 +51,7 @@ type CounterClaimCardProps = {
     excerpt: string;
     target: CommentTarget;
   }) => void;
+  shareUrl?: string;
 };
 
 export function CounterClaimCard({
@@ -67,6 +69,7 @@ export function CounterClaimCard({
   onShowSentimentDetail,
   onShowSentimentIndicator,
   onPostComment,
+  shareUrl,
 }: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
   const CP_SUPPORT_THRESHOLD = cpTarget ?? REDRESSED_SUPPORT_THRESHOLD;
@@ -204,8 +207,8 @@ export function CounterClaimCard({
             }}
           />
 
-          <p className="text-[12px] text-black/60">{claim.createdAt}</p>
-          <div className="flex items-center gap-2 text-xs text-black/60">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-black/60">
+            <span>{claim.createdAt}</span>
             <SentimentVoteButton
               totalVotes={claim.sentimentVotes}
               value={claim.viewerSentiment ?? null}
@@ -213,6 +216,15 @@ export function CounterClaimCard({
               size="small"
               onSelect={handleSelectSentiment}
             />
+            {shareUrl ? (
+              <Copy
+                text={shareUrl}
+                message="Answer link copied to clipboard"
+                className="h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80"
+              >
+                Share
+              </Copy>
+            ) : null}
           </div>
 
           {/* upvote button */}

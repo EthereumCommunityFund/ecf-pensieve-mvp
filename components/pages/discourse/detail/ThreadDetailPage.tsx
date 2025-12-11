@@ -2,6 +2,7 @@
 
 import { ChartBarIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, ConfirmModal } from '@/components/base';
@@ -10,6 +11,7 @@ import BackHeader from '@/components/pages/project/BackHeader';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 import type { RouterOutputs } from '@/types';
 
 import {
@@ -49,6 +51,7 @@ import {
 
 type ThreadDetailPageProps = {
   threadId: string;
+  focusAnswerId?: number;
 };
 
 const CP_SUPPORT_MESSAGE =
@@ -73,7 +76,10 @@ const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
   { label: 'Post Comment', helper: 'Discuss evidence or ask for details.' },
 ];
 
-export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
+export function ThreadDetailPage({
+  threadId,
+  focusAnswerId,
+}: ThreadDetailPageProps) {
   const { user, profile, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState<'answers' | 'comments'>('answers');
@@ -93,6 +99,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
   const [lastSupportAction, setLastSupportAction] = useState<
     'vote' | 'unvote' | null
   >(null);
+  const [hasScrolledToAnswer, setHasScrolledToAnswer] = useState(false);
   const requireAuth = useCallback(() => {
     if (!profile) {
       showAuthPrompt();
@@ -107,6 +114,12 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
 
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
+  const pathname = usePathname();
+  const origin = useMemo(() => getAppOrigin(), []);
+  const shareUrl = useMemo(
+    () => buildAbsoluteUrl(pathname ?? `/discourse/${threadId}`, origin),
+    [origin, pathname, threadId],
+  );
 
   const threadQuery = trpc.projectDiscussionThread.getThreadById.useQuery(
     { threadId: numericThreadId },
@@ -528,6 +541,21 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
     );
   }, [pendingIds, supportingAnswerId, withdrawingAnswerId]);
 
+  useEffect(() => {
+    setHasScrolledToAnswer(false);
+  }, [focusAnswerId]);
+
+  useEffect(() => {
+    if (!focusAnswerId || hasScrolledToAnswer) {
+      return;
+    }
+    const target = document.getElementById(`answer-${focusAnswerId}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setHasScrolledToAnswer(true);
+    }
+  }, [filteredAnswers.length, focusAnswerId, hasScrolledToAnswer]);
+
   const pendingModalCopy = useMemo(() => {
     if (!pendingAction) return null;
     if (pendingAction.type === 'switch') {
@@ -850,6 +878,7 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
               onWithdrawThread={handleWithdrawThread}
               onAnswer={handleOpenAnswerComposer}
               onComment={handleOpenThreadComment}
+              shareUrl={shareUrl}
             />
 
             <div className="pb-[40px]">
@@ -877,35 +906,57 @@ export function ThreadDetailPage({ threadId }: ThreadDetailPageProps) {
                       </div>
                     ) : null}
                     {filteredAnswers.length
-                      ? filteredAnswers.map((answer) => (
-                          <AnswerDetailCard
-                            key={answer.id}
-                            answer={{
-                              ...answer,
-                              viewerHasSupported: getOptimisticSupportState(
-                                answer.numericId,
-                                answer.viewerHasSupported,
-                              ),
-                            }}
-                            threadId={numericThreadId}
-                            onSupport={handleSupportAnswer}
-                            onWithdraw={handleWithdrawSupport}
-                            onSelectSentiment={handleSetAnswerSentiment}
-                            onShowSentimentDetail={
-                              handleShowAnswerSentimentDetail
-                            }
-                            onPostComment={makeOnPostComment(answer.numericId)}
-                            threadAuthorName={thread.author.name}
-                            supportPending={
-                              supportingAnswerId === answer.numericId
-                            }
-                            withdrawPending={
-                              withdrawingAnswerId === answer.numericId
-                            }
-                            sentimentPendingId={answerSentimentPendingId}
-                            isTopSupport={isAnswerTopSupport(answer.cpSupport)}
-                          />
-                        ))
+                      ? filteredAnswers.map((answer) => {
+                          const isFocusedAnswer =
+                            focusAnswerId === answer.numericId;
+                          const answerShareUrl = buildAbsoluteUrl(
+                            `/discourse/${threadId}/answer/${answer.numericId}`,
+                            origin,
+                          );
+                          return (
+                            <div
+                              key={answer.id}
+                              id={`answer-${answer.numericId}`}
+                              className={`scroll-mt-24 ${
+                                isFocusedAnswer
+                                  ? 'rounded-[12px] ring-2 ring-black/10'
+                                  : ''
+                              }`}
+                            >
+                              <AnswerDetailCard
+                                answer={{
+                                  ...answer,
+                                  viewerHasSupported: getOptimisticSupportState(
+                                    answer.numericId,
+                                    answer.viewerHasSupported,
+                                  ),
+                                }}
+                                threadId={numericThreadId}
+                                onSupport={handleSupportAnswer}
+                                onWithdraw={handleWithdrawSupport}
+                                onSelectSentiment={handleSetAnswerSentiment}
+                                onShowSentimentDetail={
+                                  handleShowAnswerSentimentDetail
+                                }
+                                shareUrl={answerShareUrl}
+                                onPostComment={makeOnPostComment(
+                                  answer.numericId,
+                                )}
+                                threadAuthorName={thread.author.name}
+                                supportPending={
+                                  supportingAnswerId === answer.numericId
+                                }
+                                withdrawPending={
+                                  withdrawingAnswerId === answer.numericId
+                                }
+                                sentimentPendingId={answerSentimentPendingId}
+                                isTopSupport={isAnswerTopSupport(
+                                  answer.cpSupport,
+                                )}
+                              />
+                            </div>
+                          );
+                        })
                       : !isAnswersInitialLoading && (
                           <EmptyState
                             title={answerEmptyState.title}

@@ -3,6 +3,7 @@ import { CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
+import Copy from '@/components/biz/common/Copy';
 
 import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
@@ -31,6 +32,7 @@ export type PostDetailCardProps = {
   sentimentPending?: boolean;
   onSelectSentiment?: (value: SentimentKey) => Promise<void> | void;
   requireAuth?: () => boolean;
+  shareUrl?: string;
 };
 
 export const serializeEditorValue = (html: string) =>
@@ -58,6 +60,7 @@ export default function PostDetailCard({
   sentimentPending = false,
   onSelectSentiment,
   requireAuth,
+  shareUrl,
 }: PostDetailCardProps) {
   return (
     <article className="flex flex-col gap-[20px] rounded-[16px]">
@@ -97,7 +100,7 @@ export default function PostDetailCard({
           </span>
         ))}
       </div>
-      <div className="flex gap-[10px] border-t border-black/10 pt-4 ">
+      <div className="flex flex-wrap items-center gap-[10px] border-t border-black/10 pt-4">
         <SentimentVoteButton
           totalVotes={sentimentVotes}
           value={viewerSentiment ?? undefined}
@@ -133,6 +136,16 @@ export default function PostDetailCard({
             {supportCount.toLocaleString()}
           </span>
         </Button>
+
+        {shareUrl ? (
+          <Copy
+            text={shareUrl}
+            message="Thread link copied to clipboard"
+            className="h-[38px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80"
+          >
+            Share
+          </Copy>
+        ) : null}
       </div>
       {/* TODO 非 preview 模式，未登录的情况下展示登录按钮，不显示 action 按钮 */}
       <div className="flex flex-col gap-3">

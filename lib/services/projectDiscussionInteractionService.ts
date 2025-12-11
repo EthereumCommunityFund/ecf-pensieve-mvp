@@ -21,6 +21,7 @@ import {
   projectDiscussionSentiments,
   projectDiscussionThreads,
 } from '@/lib/db/schema';
+import { ensurePublishedProject } from '@/lib/services/projectGuards';
 
 const ensureThreadAvailable = async (db: Database, threadId: number) => {
   const thread = await db.query.projectDiscussionThreads.findFirst({
@@ -90,6 +91,67 @@ const ensureCommentAvailable = async (db: Database, commentId: number) => {
   }
 
   return comment;
+};
+
+export const getDiscussionAnswerById = async ({
+  db,
+  answerId,
+  viewerId,
+}: {
+  db: Database;
+  answerId: number;
+  viewerId?: string | null;
+}) => {
+  const answer = await db.query.projectDiscussionAnswers.findFirst({
+    where: and(
+      eq(projectDiscussionAnswers.id, answerId),
+      eq(projectDiscussionAnswers.isDeleted, false),
+    ),
+    with: {
+      creator: {
+        columns: {
+          userId: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+      sentiments: true,
+      thread: {
+        columns: {
+          id: true,
+          projectId: true,
+        },
+      },
+    },
+  });
+
+  if (!answer) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Answer not found' });
+  }
+
+  await ensurePublishedProject(db, answer.thread.projectId);
+
+  if (!viewerId) {
+    return answer;
+  }
+
+  const viewerVote = await db
+    .select({
+      answerId: projectDiscussionAnswerVotes.answerId,
+    })
+    .from(projectDiscussionAnswerVotes)
+    .where(
+      and(
+        eq(projectDiscussionAnswerVotes.answerId, answerId),
+        eq(projectDiscussionAnswerVotes.voter, viewerId),
+      ),
+    )
+    .limit(1);
+
+  return {
+    ...answer,
+    viewerHasSupported: viewerVote.length > 0,
+  };
 };
 
 type CreateAnswerInput = {

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   createDiscussionAnswer,
   createDiscussionComment,
+  getDiscussionAnswerById,
   listDiscussionAnswers,
   listDiscussionComments,
   setDiscussionSentiment,
@@ -86,6 +87,20 @@ export const projectDiscussionInteractionRouter = router({
           sortBy: input.sortBy ?? 'recent',
           viewerId: ctx.user?.id ?? null,
         },
+      });
+    }),
+
+  getAnswerById: publicProcedure
+    .input(
+      z.object({
+        answerId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return getDiscussionAnswerById({
+        db: ctx.db,
+        answerId: input.answerId,
+        viewerId: ctx.user?.id ?? null,
       });
     }),
 

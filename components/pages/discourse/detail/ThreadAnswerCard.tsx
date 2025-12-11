@@ -3,6 +3,7 @@ import { CaretCircleUpIcon } from '@phosphor-icons/react';
 import { useCallback, useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
+import Copy from '@/components/biz/common/Copy';
 import { SentimentIndicator } from '@/components/pages/discourse/common/sentiment/SentimentIndicator';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
@@ -44,6 +45,7 @@ type AnswerDetailCardProps = {
   supportPending?: boolean;
   withdrawPending?: boolean;
   sentimentPendingId?: number | null;
+  shareUrl?: string;
 };
 
 export function AnswerDetailCard({
@@ -59,6 +61,7 @@ export function AnswerDetailCard({
   supportPending = false,
   withdrawPending = false,
   sentimentPendingId = null,
+  shareUrl,
 }: AnswerDetailCardProps) {
   const commentCount = answer.comments?.length ?? answer.commentsCount;
   const acceptedBadge =
@@ -231,7 +234,7 @@ export function AnswerDetailCard({
           </div>
 
           {/* time and sentiment */}
-          <div className="flex flex-col gap-[10px] text-xs text-black/60">
+          <div className="flex flex-wrap items-center gap-[10px] text-xs text-black/60">
             <span>{answer.createdAt}</span>
             <SentimentVoteButton
               totalVotes={answer.sentimentVotes}
@@ -241,6 +244,15 @@ export function AnswerDetailCard({
               size="small"
               onSelect={handleSelectSentiment}
             />
+            {shareUrl ? (
+              <Copy
+                text={shareUrl}
+                message="Answer link copied to clipboard"
+                className="h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80"
+              >
+                Share
+              </Copy>
+            ) : null}
           </div>
         </div>
       </div>

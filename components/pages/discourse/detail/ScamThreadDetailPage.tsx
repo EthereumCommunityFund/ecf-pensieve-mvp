@@ -2,10 +2,12 @@
 
 import { CaretCircleUp, ChartBar, ShieldWarning } from '@phosphor-icons/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, ConfirmModal, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
+import Copy from '@/components/biz/common/Copy';
 import {
   SentimentKey,
   SentimentMetric,
@@ -19,6 +21,7 @@ import BackHeader from '@/components/pages/project/BackHeader';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 import { useAuth } from '@/context/AuthContext';
 import { trpc } from '@/lib/trpc/client';
+import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
 import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
 import { ThreadDetailRecord } from '../common/threadData';
@@ -92,12 +95,16 @@ const sentimentFilterOptions: Array<'all' | SentimentKey> = [
 
 type ScamThreadDetailPageProps = {
   threadId: string;
+  focusAnswerId?: number;
 };
 
 const CP_SUPPORT_MESSAGE =
   "This uses your Contribution Point support for the thread. It doesn't spend your CP balance—you can back multiple threads and change your vote anytime.";
 
-export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
+export function ScamThreadDetailPage({
+  threadId,
+  focusAnswerId,
+}: ScamThreadDetailPageProps) {
   const { profile, showAuthPrompt, user } = useAuth();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
     'counter',
@@ -109,6 +116,12 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
 
   const numericThreadId = Number(threadId);
   const isValidThreadId = Number.isFinite(numericThreadId);
+  const pathname = usePathname();
+  const origin = useMemo(() => getAppOrigin(), []);
+  const shareUrl = useMemo(
+    () => buildAbsoluteUrl(pathname ?? `/discourse/${threadId}`, origin),
+    [origin, pathname, threadId],
+  );
 
   const requireAuth = useCallback(() => {
     if (!profile) {
@@ -134,6 +147,7 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
   const [threadSupportConfirm, setThreadSupportConfirm] = useState<
     'vote' | 'unvote' | null
   >(null);
+  const [hasScrolledToAnswer, setHasScrolledToAnswer] = useState(false);
   const [pendingSwitchAction, setPendingSwitchAction] = useState<
     | { type: 'threadToClaim'; targetId: number }
     | { type: 'claimToThread'; claimId: number }
@@ -394,6 +408,21 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
       counterClaims.reduce((max, claim) => Math.max(max, claim.cpSupport), 0),
     [counterClaims],
   );
+
+  useEffect(() => {
+    setHasScrolledToAnswer(false);
+  }, [focusAnswerId]);
+
+  useEffect(() => {
+    if (!focusAnswerId || hasScrolledToAnswer) {
+      return;
+    }
+    const target = document.getElementById(`answer-${focusAnswerId}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setHasScrolledToAnswer(true);
+    }
+  }, [filteredCounterClaims.length, focusAnswerId, hasScrolledToAnswer]);
   const {
     handleSupport: handleSupportClaim,
     handleWithdraw: handleWithdrawClaim,
@@ -1034,13 +1063,20 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
                 </span>
               ))}
             </div>
-            <div className="flex gap-[8px]">
+            <div className="flex flex-wrap items-center gap-[8px]">
               <SentimentVoteButton
                 totalVotes={hydratedThread.totalSentimentVotes}
                 value={viewerSentiment}
                 isLoading={setThreadSentimentMutation.isPending}
                 onSelect={handleSetThreadSentiment}
               />
+              <Copy
+                text={shareUrl}
+                message="Thread link copied to clipboard"
+                className="h-[38px] rounded-[6px]  border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80"
+              >
+                Share
+              </Copy>
             </div>
 
             {/* Upvote Button */}
@@ -1123,42 +1159,61 @@ export function ScamThreadDetailPage({ threadId }: ScamThreadDetailPageProps) {
           <div className="space-y-4">
             {activeTab === 'counter' ? (
               filteredCounterClaims.length ? (
-                filteredCounterClaims.map((claim) => (
-                  <CounterClaimCard
-                    key={claim.id}
-                    claim={{
-                      ...claim,
-                      viewerHasSupported: getOptimisticSupportState(
-                        claim.numericId,
-                        claim.viewerHasSupported,
-                      ),
-                    }}
-                    cpTarget={hydratedThread.cpProgress.target}
-                    threadId={numericThreadId}
-                    threadAuthorName={hydratedThread.author.name}
-                    isTopSupport={
-                      topCounterSupport > 0 &&
-                      claim.cpSupport === topCounterSupport
-                    }
-                    onSupport={handleSupportCounterClaim}
-                    onWithdraw={handleWithdrawClaim}
-                    supportPending={
-                      switchingSupport ||
-                      supportingClaimId === claim.numericId ||
-                      Boolean(pendingSwitchAction)
-                    }
-                    withdrawPending={
-                      switchingSupport ||
-                      withdrawingClaimId === claim.numericId ||
-                      Boolean(pendingSwitchAction)
-                    }
-                    sentimentPendingId={answerSentimentPendingId}
-                    onSelectSentiment={handleSetAnswerSentiment}
-                    onShowSentimentDetail={handleShowAnswerSentimentDetail}
-                    onShowSentimentIndicator={handleShowAnswerSentimentDetail}
-                    onPostComment={handlePostCounterComment}
-                  />
-                ))
+                filteredCounterClaims.map((claim) => {
+                  const isFocusedClaim = focusAnswerId === claim.numericId;
+                  const claimShareUrl = buildAbsoluteUrl(
+                    `/discourse/${threadId}/answer/${claim.numericId}`,
+                    origin,
+                  );
+                  return (
+                    <div
+                      key={claim.id}
+                      id={`answer-${claim.numericId}`}
+                      className={`scroll-mt-24 ${
+                        isFocusedClaim
+                          ? 'rounded-[12px] ring-2 ring-black/10'
+                          : ''
+                      }`}
+                    >
+                      <CounterClaimCard
+                        claim={{
+                          ...claim,
+                          viewerHasSupported: getOptimisticSupportState(
+                            claim.numericId,
+                            claim.viewerHasSupported,
+                          ),
+                        }}
+                        cpTarget={hydratedThread.cpProgress.target}
+                        threadId={numericThreadId}
+                        threadAuthorName={hydratedThread.author.name}
+                        isTopSupport={
+                          topCounterSupport > 0 &&
+                          claim.cpSupport === topCounterSupport
+                        }
+                        onSupport={handleSupportCounterClaim}
+                        onWithdraw={handleWithdrawClaim}
+                        supportPending={
+                          switchingSupport ||
+                          supportingClaimId === claim.numericId ||
+                          Boolean(pendingSwitchAction)
+                        }
+                        withdrawPending={
+                          switchingSupport ||
+                          withdrawingClaimId === claim.numericId ||
+                          Boolean(pendingSwitchAction)
+                        }
+                        sentimentPendingId={answerSentimentPendingId}
+                        onSelectSentiment={handleSetAnswerSentiment}
+                        onShowSentimentDetail={handleShowAnswerSentimentDetail}
+                        onShowSentimentIndicator={
+                          handleShowAnswerSentimentDetail
+                        }
+                        onPostComment={handlePostCounterComment}
+                        shareUrl={claimShareUrl}
+                      />
+                    </div>
+                  );
+                })
               ) : isAnswersInitialLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 2 }).map((_, index) => (
