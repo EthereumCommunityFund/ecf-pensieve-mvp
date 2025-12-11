@@ -52,6 +52,7 @@ import {
 type ThreadDetailPageProps = {
   threadId: string;
   focusAnswerId?: number;
+  initialTab?: 'answers' | 'comments';
 };
 
 const CP_SUPPORT_MESSAGE =
@@ -79,10 +80,13 @@ const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
 export function ThreadDetailPage({
   threadId,
   focusAnswerId,
+  initialTab = 'answers',
 }: ThreadDetailPageProps) {
   const { user, profile, showAuthPrompt } = useAuth();
   const utils = trpc.useUtils();
-  const [activeTab, setActiveTab] = useState<'answers' | 'comments'>('answers');
+  const [activeTab, setActiveTab] = useState<'answers' | 'comments'>(
+    initialTab,
+  );
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
   const [sentimentFilter, setSentimentFilter] = useState<string>('all');
   const [answerSentimentPendingId, setAnswerSentimentPendingId] = useState<

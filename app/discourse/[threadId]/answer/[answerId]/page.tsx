@@ -1,16 +1,14 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
-import { ScamThreadDetailPage } from '@/components/pages/discourse/detail/ScamThreadDetailPage';
-import { ThreadDetailPage } from '@/components/pages/discourse/detail/ThreadDetailPage';
 import {
   buildAnswerMeta,
   resolveTopicLabel,
 } from '@/lib/services/discourseMeta';
 import { appRouter } from '@/lib/trpc/routers';
 import { createTRPCContext } from '@/lib/trpc/server';
-import { getAppOrigin } from '@/lib/utils/url';
+import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
 type AnswerDetailRouteProps = {
   params: Promise<{
@@ -83,7 +81,28 @@ export async function generateMetadata({
       parentPath,
     });
   } catch {
-    notFound();
+    console.error(
+      '[Discourse Answer Meta] failed to load',
+      JSON.stringify({ threadId, answerId }),
+    );
+    // If metadata fetch fails, return a minimal fallback pointing to the thread.
+    const origin = getAppOrigin();
+    const parentPath = `/discourse/${numericThreadId}`;
+    const url = `${origin}${parentPath}`;
+    return {
+      title: 'Pensieve Discourse Answer',
+      alternates: { canonical: url },
+      openGraph: {
+        title: 'Pensieve Discourse Answer',
+        url,
+        images: [buildAbsoluteUrl('/images/default-project.png', origin)],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Pensieve Discourse Answer',
+        images: [buildAbsoluteUrl('/images/default-project.png', origin)],
+      },
+    } as Metadata;
   }
 }
 
@@ -98,39 +117,5 @@ export default async function AnswerDetailRoute({
     notFound();
   }
 
-  try {
-    const caller = appRouter.createCaller(
-      await createTRPCContext({ headers: new Headers(await headers()) }),
-    );
-    const [thread, answer] = await Promise.all([
-      caller.projectDiscussionThread.getThreadById({
-        threadId: numericThreadId,
-      }),
-      caller.projectDiscussionInteraction.getAnswerById({
-        answerId: numericAnswerId,
-      }),
-    ]);
-
-    if (
-      (answer.threadId && answer.threadId !== thread.id) ||
-      (answer.thread?.id && answer.thread.id !== thread.id)
-    ) {
-      notFound();
-    }
-
-    if (thread.isScam) {
-      return (
-        <ScamThreadDetailPage
-          threadId={threadId}
-          focusAnswerId={numericAnswerId}
-        />
-      );
-    }
-
-    return (
-      <ThreadDetailPage threadId={threadId} focusAnswerId={numericAnswerId} />
-    );
-  } catch {
-    notFound();
-  }
+  redirect(`/discourse/${threadId}?answerId=${numericAnswerId}`);
 }

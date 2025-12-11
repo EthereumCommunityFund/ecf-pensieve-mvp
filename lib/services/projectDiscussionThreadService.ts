@@ -52,6 +52,10 @@ const buildProjectSummary = (project?: ProjectSnapshot | null) => {
     return [];
   };
 
+  const categoriesFromSnap = resolveArray(project.projectSnap?.categories);
+  const categoriesFromItems = resolveArray(snapMap['categories']);
+  const categoriesFromProject = resolveArray(project.categories);
+
   return {
     name:
       (snapMap['name'] as string | undefined) ??
@@ -69,10 +73,11 @@ const buildProjectSummary = (project?: ProjectSnapshot | null) => {
       (snapMap['logo'] as string | undefined) ??
       null,
     categories:
-      resolveArray(project.projectSnap?.categories) ||
-      resolveArray(snapMap['categories']) ||
-      resolveArray(project.categories) ||
-      [],
+      categoriesFromSnap.length > 0
+        ? categoriesFromSnap
+        : categoriesFromItems.length > 0
+          ? categoriesFromItems
+          : categoriesFromProject,
   };
 };
 

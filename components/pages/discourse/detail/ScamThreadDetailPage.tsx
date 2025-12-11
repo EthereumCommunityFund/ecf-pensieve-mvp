@@ -96,6 +96,7 @@ const sentimentFilterOptions: Array<'all' | SentimentKey> = [
 type ScamThreadDetailPageProps = {
   threadId: string;
   focusAnswerId?: number;
+  initialTab?: 'counter' | 'discussion';
 };
 
 const CP_SUPPORT_MESSAGE =
@@ -104,10 +105,11 @@ const CP_SUPPORT_MESSAGE =
 export function ScamThreadDetailPage({
   threadId,
   focusAnswerId,
+  initialTab = 'counter',
 }: ScamThreadDetailPageProps) {
   const { profile, showAuthPrompt, user } = useAuth();
   const [activeTab, setActiveTab] = useState<'counter' | 'discussion'>(
-    'counter',
+    initialTab,
   );
   const [sortOption, setSortOption] = useState<'top' | 'new'>('top');
   const [sentimentFilter, setSentimentFilter] = useState<'all' | SentimentKey>(
