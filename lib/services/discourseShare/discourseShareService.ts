@@ -564,11 +564,15 @@ function resolveImageMeta(values: Array<Date | number | null | undefined>): {
 
 async function buildPayloadFromRecord(
   record: ShareLinkRecord,
+  options?: { cacheKeySuffix?: string | null },
 ): Promise<DiscourseSharePayload | null> {
   const entity = decodeEntityId(record.entityId);
   if (!entity) return null;
 
-  const cacheKey = `discourseShare:payload:${record.code}`;
+  const normalizedSuffix = options?.cacheKeySuffix?.trim();
+  const cacheKey = normalizedSuffix
+    ? `discourseShare:payload:${record.code}:${normalizedSuffix}`
+    : `discourseShare:payload:${record.code}`;
   return getCachedValue(cacheKey, async () => {
     const now = Date.now();
     const snapshot = parseSnapshot(record.ogSnapshot);
@@ -720,6 +724,7 @@ async function buildPayloadFromRecord(
 
 export async function getDiscourseSharePayload(
   code: string,
+  options?: { cacheKeySuffix?: string | null },
 ): Promise<DiscourseSharePayload | null> {
   const normalized = (code ?? '').trim();
   if (!normalized) return null;
@@ -735,7 +740,7 @@ export async function getDiscourseSharePayload(
     return null;
   }
 
-  return buildPayloadFromRecord(record);
+  return buildPayloadFromRecord(record, options);
 }
 
 export async function ensureDiscourseShareLink(params: {

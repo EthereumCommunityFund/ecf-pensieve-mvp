@@ -183,6 +183,17 @@ const ShareModal: FC<ShareModalProps> = ({
                   )}
                 </div>
               )}
+              {onRefresh && !error && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    className="text-[13px] font-semibold text-black/30 hover:underline"
+                  >
+                    Refresh preview
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </ModalBody>

@@ -92,22 +92,27 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
     [origin, props.previewVersion],
   );
 
-  const handleEnsure = useCallback(async () => {
-    setError(null);
-    try {
-      const result = await ensureMutation.mutateAsync(input);
-      if (result?.shareUrl) {
-        setShareUrl(result.shareUrl);
+  const handleEnsure = useCallback(
+    async (options?: { skipImage?: boolean }) => {
+      setError(null);
+      try {
+        const result = await ensureMutation.mutateAsync(input);
+        if (result?.shareUrl) {
+          setShareUrl(result.shareUrl);
+        }
+        if (result?.code) {
+          setShareCode(result.code);
+          if (!options?.skipImage) {
+            setShareImageUrl(buildPreviewImageUrl(result.code));
+          }
+        }
+      } catch (ensureError) {
+        console.error('[discourse-share] ensure failed', ensureError);
+        setError('Failed to create short link. Please retry.');
       }
-      if (result?.code) {
-        setShareCode(result.code);
-        setShareImageUrl(buildPreviewImageUrl(result.code));
-      }
-    } catch (ensureError) {
-      console.error('[discourse-share] ensure failed', ensureError);
-      setError('Failed to create short link. Please retry.');
-    }
-  }, [buildPreviewImageUrl, ensureMutation, input]);
+    },
+    [buildPreviewImageUrl, ensureMutation, input],
+  );
 
   const handleOpen = useCallback(() => {
     onOpen();
@@ -156,16 +161,20 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
         isLoading={ensureMutation.isPending}
         error={error}
         onRefresh={async () => {
-          if (shareCode) {
-            const refreshed = buildPreviewImageUrl(shareCode, {
-              forceRefresh: true,
-            });
-            if (refreshed) {
-              setShareImageUrl(refreshed);
-            }
+          if (!shareCode) {
+            return handleEnsure();
           }
 
-          return handleEnsure();
+          const refreshed = buildPreviewImageUrl(shareCode, {
+            forceRefresh: true,
+          });
+          if (refreshed) {
+            setShareImageUrl(refreshed);
+          }
+
+          if (!shareUrl) {
+            return handleEnsure({ skipImage: true });
+          }
         }}
       />
     </>

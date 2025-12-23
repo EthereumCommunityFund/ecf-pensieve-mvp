@@ -20,7 +20,10 @@ export async function GET(
     return new Response('Not Found', { status: 404 });
   }
 
-  const payload = await DiscourseShareService.getSharePayload(code);
+  const cacheKeySuffix = request.nextUrl.searchParams.get('v');
+  const payload = await DiscourseShareService.getSharePayload(code, {
+    cacheKeySuffix,
+  });
   if (!payload) {
     return new Response('Not Found', { status: 404 });
   }
