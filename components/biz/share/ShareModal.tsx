@@ -1,7 +1,7 @@
 'use client';
 
 import { addToast, Image, Skeleton } from '@heroui/react';
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button } from '@/components/base';
@@ -12,9 +12,12 @@ import {
   ModalContent,
 } from '@/components/base/modal';
 import { CopyIcon } from '@/components/icons';
+import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import type { SharePayload } from '@/lib/services/share';
 import { renderShareCard } from '@/lib/services/share/shareCardElements';
 import { getAppOrigin } from '@/lib/utils/url';
+
+const SHARE_PREVIEW_PADDING_TOP = `${(SHARE_CARD_HEIGHT / SHARE_CARD_WIDTH) * 100}%`;
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -48,6 +51,17 @@ const ShareModal: FC<ShareModalProps> = ({
   const normalizedShareUrl = useMemo(() => shareUrl.trim(), [shareUrl]);
   const canCopy = !isLoading && Boolean(normalizedShareUrl);
   const showShareUrlSkeleton = isLoading || !normalizedShareUrl;
+  const [loadedShareImageUrl, setLoadedShareImageUrl] = useState<string | null>(
+    null,
+  );
+  const [failedShareImageUrl, setFailedShareImageUrl] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setFailedShareImageUrl(null);
+  }, [isOpen]);
 
   const onCopySuccess = useCallback(() => {
     addToast({
@@ -73,6 +87,12 @@ const ShareModal: FC<ShareModalProps> = ({
         : getAppOrigin();
     return renderShareCard(payload, { origin, mode: 'preview' });
   }, [payload]);
+
+  const shouldShowShareImage = Boolean(shareImageUrl);
+  const showShareImageSkeleton =
+    shouldShowShareImage &&
+    shareImageUrl !== loadedShareImageUrl &&
+    shareImageUrl !== failedShareImageUrl;
 
   return (
     <Modal
@@ -144,11 +164,24 @@ const ShareModal: FC<ShareModalProps> = ({
               {previewCard ? (
                 <div className="flex justify-center">{previewCard}</div>
               ) : (
-                <Image
-                  src={shareImageUrl ?? ''}
-                  alt="Share preview"
-                  className="h-auto w-full rounded-[12px] border border-black/10 bg-[#F9F9F9]"
-                />
+                <div className="relative w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#F9F9F9]">
+                  <div style={{ paddingTop: SHARE_PREVIEW_PADDING_TOP }} />
+                  {showShareImageSkeleton && (
+                    <Skeleton className="absolute inset-0 size-full rounded-none" />
+                  )}
+                  {shareImageUrl && shareImageUrl !== failedShareImageUrl && (
+                    <Image
+                      key={shareImageUrl}
+                      removeWrapper
+                      disableSkeleton
+                      src={shareImageUrl}
+                      alt="Share preview"
+                      className="absolute inset-0 size-full object-contain"
+                      onLoad={() => setLoadedShareImageUrl(shareImageUrl)}
+                      onError={() => setFailedShareImageUrl(shareImageUrl)}
+                    />
+                  )}
+                </div>
               )}
             </div>
           )}
