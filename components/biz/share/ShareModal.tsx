@@ -45,6 +45,9 @@ const ShareModal: FC<ShareModalProps> = ({
   onRefresh,
   payload,
 }) => {
+  const normalizedShareUrl = useMemo(() => shareUrl.trim(), [shareUrl]);
+  const showShareUrlSkeleton = isLoading;
+
   const onCopySuccess = useCallback(() => {
     addToast({
       title: 'Success',
@@ -96,16 +99,16 @@ const ShareModal: FC<ShareModalProps> = ({
           </div>
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">
             <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
-              {isLoading ? (
+              {showShareUrlSkeleton ? (
                 <Skeleton className="h-[32px] w-full rounded-md" />
               ) : (
-                <span className="truncate">{shareUrl}</span>
+                <span className="truncate">{normalizedShareUrl}</span>
               )}
             </div>
-            <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
+            <CopyToClipboard text={normalizedShareUrl} onCopy={onCopySuccess}>
               <Button
                 isIconOnly
-                isDisabled={isLoading}
+                isDisabled={isLoading || !normalizedShareUrl}
                 className="border-none bg-transparent p-0 hover:bg-gray-200"
               >
                 <CopyIcon width={20} height={20} />

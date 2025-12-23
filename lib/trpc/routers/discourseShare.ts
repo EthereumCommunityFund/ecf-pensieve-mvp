@@ -34,11 +34,8 @@ export const discourseShareRouter = router({
         createdBy: ctx.user?.id,
       });
 
-      const payload = await DiscourseShareService.getSharePayload(ensured.code);
-
       return {
         ...ensured,
-        imageVersion: payload?.imageVersion ?? null,
       };
     }),
 });

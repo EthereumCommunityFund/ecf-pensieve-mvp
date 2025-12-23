@@ -30,6 +30,7 @@ type DiscourseShareButtonProps =
 
 export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [shareCode, setShareCode] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,26 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
     return getAppOrigin();
   }, []);
 
+  const buildPreviewImageUrl = useCallback(
+    (code: string, options?: { forceRefresh?: boolean }) => {
+      const normalized = code.trim();
+      if (!normalized) {
+        return null;
+      }
+
+      const version = options?.forceRefresh
+        ? String(Date.now())
+        : String(Math.floor(Date.now() / 30_000));
+
+      return buildDiscourseShareOgImageUrl({
+        code: normalized,
+        version,
+        origin,
+      });
+    },
+    [origin],
+  );
+
   const handleEnsure = useCallback(async () => {
     setError(null);
     try {
@@ -62,26 +83,27 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
         setShareUrl(result.shareUrl);
       }
       if (result?.code) {
-        setShareImageUrl(
-          buildDiscourseShareOgImageUrl({
-            code: result.code,
-            version: result.imageVersion ?? undefined,
-            origin,
-          }),
-        );
+        setShareCode(result.code);
+        setShareImageUrl(buildPreviewImageUrl(result.code));
       }
     } catch (ensureError) {
       console.error('[discourse-share] ensure failed', ensureError);
       setError('Failed to create short link. Please retry.');
     }
-  }, [ensureMutation, input, origin]);
+  }, [buildPreviewImageUrl, ensureMutation, input]);
 
   const handleOpen = useCallback(() => {
     onOpen();
+    if (shareCode) {
+      const refreshed = buildPreviewImageUrl(shareCode);
+      if (refreshed) {
+        setShareImageUrl(refreshed);
+      }
+    }
     if (!shareUrl) {
       void handleEnsure();
     }
-  }, [handleEnsure, onOpen, shareUrl]);
+  }, [buildPreviewImageUrl, handleEnsure, onOpen, shareCode, shareUrl]);
 
   const effectiveShareUrl = shareUrl || props.fallbackUrl;
 
@@ -112,7 +134,18 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
         shareImageUrl={shareImageUrl}
         isLoading={ensureMutation.isPending}
         error={error}
-        onRefresh={handleEnsure}
+        onRefresh={async () => {
+          if (shareCode) {
+            const refreshed = buildPreviewImageUrl(shareCode, {
+              forceRefresh: true,
+            });
+            if (refreshed) {
+              setShareImageUrl(refreshed);
+            }
+          }
+
+          return handleEnsure();
+        }}
       />
     </>
   );

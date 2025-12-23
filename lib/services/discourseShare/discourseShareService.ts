@@ -196,17 +196,38 @@ function parseSnapshot(raw: unknown): DiscourseShareSnapshot | null {
   if (!Number.isFinite(snapshotAt) || snapshotAt <= 0) return null;
   const entityRaw = record.entity;
   if (!entityRaw || typeof entityRaw !== 'object') return null;
-  const entity = entityRaw as any;
-  if (entity.kind === 'thread' && Number.isFinite(entity.threadId)) {
+
+  const stableMetaRaw = record.stableMeta;
+  if (!stableMetaRaw || typeof stableMetaRaw !== 'object') return null;
+  const stableMeta = stableMetaRaw as Record<string, unknown>;
+  if (typeof stableMeta.title !== 'string') return null;
+  if (typeof stableMeta.label !== 'string') return null;
+  if (
+    stableMeta.description != null &&
+    typeof stableMeta.description !== 'string'
+  ) {
+    return null;
+  }
+
+  const uiStableRaw = record.uiStable;
+  if (!uiStableRaw || typeof uiStableRaw !== 'object') return null;
+  const uiStable = uiStableRaw as Record<string, unknown>;
+  if (typeof uiStable.projectName !== 'string') return null;
+  if (typeof uiStable.threadTitle !== 'string') return null;
+
+  const entity = entityRaw as Record<string, unknown>;
+  const kind = entity.kind;
+  if (kind === 'thread' && Number.isFinite(Number(entity.threadId))) {
     return raw as DiscourseShareSnapshot;
   }
   if (
-    entity.kind === 'answer' &&
-    Number.isFinite(entity.threadId) &&
-    Number.isFinite(entity.answerId)
+    kind === 'answer' &&
+    Number.isFinite(Number(entity.threadId)) &&
+    Number.isFinite(Number(entity.answerId))
   ) {
     return raw as DiscourseShareSnapshot;
   }
+
   return null;
 }
 
@@ -238,11 +259,6 @@ async function ensureUniqueCode(): Promise<string> {
     return Boolean(existing);
   });
 }
-
-const discourseStableCache = new LRUCache<string, Promise<unknown>>({
-  max: 512,
-  ttl: 1000 * 60 * 10,
-});
 
 async function writeSnapshot(
   linkId: number,
@@ -302,6 +318,36 @@ async function loadThread(threadId: number) {
   return thread;
 }
 
+async function loadThreadForPayload(threadId: number) {
+  const thread = await db.query.projectDiscussionThreads.findFirst({
+    where: eq(projectDiscussionThreads.id, threadId),
+    columns: {
+      id: true,
+      projectId: true,
+      updatedAt: true,
+      title: true,
+      category: true,
+      tags: true,
+      isScam: true,
+      support: true,
+      answerCount: true,
+      redressedAnswerCount: true,
+    },
+  });
+
+  if (!thread) {
+    return null;
+  }
+
+  try {
+    await ensurePublishedProject(db, thread.projectId);
+  } catch {
+    return null;
+  }
+
+  return thread;
+}
+
 function buildProjectSummary(project?: any | null) {
   if (!project) {
     return null;
@@ -353,6 +399,76 @@ async function loadAnswer(answerId: number) {
       },
     },
   });
+}
+
+async function loadAnswerForPayload(answerId: number) {
+  return db.query.projectDiscussionAnswers.findFirst({
+    where: and(
+      eq(projectDiscussionAnswers.id, answerId),
+      eq(projectDiscussionAnswers.isDeleted, false),
+    ),
+    columns: {
+      id: true,
+      threadId: true,
+      updatedAt: true,
+    },
+  });
+}
+
+function buildStableSnapshotFromContext(params: {
+  entity: DiscourseShareEntity;
+  thread: any;
+  answer?: any | null;
+}): {
+  stableMeta: DiscourseShareSnapshot['stableMeta'];
+  uiStable: DiscourseShareSnapshot['uiStable'];
+} | null {
+  const project = buildProjectSummary(params.thread.project);
+  const label = resolveTopicLabel(
+    params.thread.category?.[0] ?? params.thread.tags?.[0],
+  );
+  const projectName = project?.name?.trim() || 'Pensieve';
+  const threadTitle = params.thread.title;
+
+  if (params.entity.kind === 'thread') {
+    const title = `[Pensieve Discourse]-[${label}]-${threadTitle}-${projectName}`;
+    const description = buildDescription(
+      params.thread.post ?? project?.tagline,
+      'Join the discussion on Pensieve.',
+    );
+    return {
+      stableMeta: { title, description, label },
+      uiStable: {
+        projectName,
+        projectLogoUrl: project?.logoUrl ?? null,
+        threadTitle,
+        authorName: params.thread.creator?.name ?? null,
+        authorAvatarUrl: params.thread.creator?.avatarUrl ?? null,
+      },
+    };
+  }
+
+  const answer = params.answer;
+  if (!answer || answer.threadId !== params.thread.id) {
+    return null;
+  }
+
+  const title = `Answer · ${threadTitle}`;
+  const description = buildDescription(
+    answer.content ?? project?.tagline,
+    'See how the community is responding on Pensieve.',
+  );
+
+  return {
+    stableMeta: { title, description, label },
+    uiStable: {
+      projectName,
+      projectLogoUrl: project?.logoUrl ?? null,
+      threadTitle,
+      authorName: answer.creator?.name ?? null,
+      authorAvatarUrl: answer.creator?.avatarUrl ?? null,
+    },
+  };
 }
 
 async function fetchThreadAggregates(threadId: number) {
@@ -422,59 +538,6 @@ async function fetchAnswerAggregates(answerId: number) {
   };
 }
 
-async function computeStableSnapshot(entity: DiscourseShareEntity) {
-  const stableKey = `discourseShare:stable:${encodeEntityId(entity)}`;
-  return getCachedValue(
-    stableKey,
-    async () => {
-      const thread = await loadThread(entity.threadId);
-      if (!thread) return null;
-
-      const project = buildProjectSummary(thread.project);
-      const label = resolveTopicLabel(thread.category?.[0] ?? thread.tags?.[0]);
-      const projectName = project?.name?.trim() || 'Pensieve';
-      const threadTitle = thread.title;
-
-      if (entity.kind === 'thread') {
-        const title = `[Pensieve Discourse]-[${label}]-${threadTitle}-${projectName}`;
-        const description = buildDescription(
-          thread.post ?? project?.tagline,
-          'Join the discussion on Pensieve.',
-        );
-        return {
-          stableMeta: { title, description, label },
-          uiStable: {
-            projectName,
-            projectLogoUrl: project?.logoUrl ?? null,
-            threadTitle,
-            authorName: thread.creator?.name ?? null,
-            authorAvatarUrl: thread.creator?.avatarUrl ?? null,
-          },
-        };
-      }
-
-      const answer = await loadAnswer(entity.answerId);
-      if (!answer || answer.threadId !== thread.id) return null;
-      const title = `Answer · ${threadTitle}`;
-      const description = buildDescription(
-        answer.content ?? project?.tagline,
-        'See how the community is responding on Pensieve.',
-      );
-      return {
-        stableMeta: { title, description, label },
-        uiStable: {
-          projectName,
-          projectLogoUrl: project?.logoUrl ?? null,
-          threadTitle,
-          authorName: answer.creator?.name ?? null,
-          authorAvatarUrl: answer.creator?.avatarUrl ?? null,
-        },
-      };
-    },
-    discourseStableCache,
-  );
-}
-
 function buildTargetUrl(entity: DiscourseShareEntity): string {
   if (entity.kind === 'thread') {
     return `/discourse/${entity.threadId}`;
@@ -513,10 +576,14 @@ async function buildPayloadFromRecord(
     const stableFromSnapshot =
       snapshot && isSnapshotValid(snapshot, entity, now) ? snapshot : null;
 
-    const thread = await loadThread(entity.threadId);
+    const thread = stableFromSnapshot
+      ? await loadThreadForPayload(entity.threadId)
+      : await loadThread(entity.threadId);
     if (!thread) return null;
-    const project = buildProjectSummary(thread.project);
     const label = resolveTopicLabel(thread.category?.[0] ?? thread.tags?.[0]);
+    const project = stableFromSnapshot
+      ? null
+      : buildProjectSummary((thread as any).project);
     const projectName =
       stableFromSnapshot?.uiStable.projectName ??
       project?.name?.trim() ??
@@ -524,10 +591,30 @@ async function buildPayloadFromRecord(
 
     let stableMeta = stableFromSnapshot?.stableMeta ?? null;
     let uiStable = stableFromSnapshot?.uiStable ?? null;
-    let answer: any | null = null;
+
+    const [threadAgg, answerAgg, answer] = await Promise.all([
+      fetchThreadAggregates(thread.id),
+      entity.kind === 'answer' ? fetchAnswerAggregates(entity.answerId) : null,
+      entity.kind === 'answer'
+        ? stableFromSnapshot
+          ? loadAnswerForPayload(entity.answerId)
+          : loadAnswer(entity.answerId)
+        : Promise.resolve(null),
+    ]);
+
+    if (entity.kind === 'answer') {
+      if (!answer || (answer as any).threadId !== thread.id) {
+        return null;
+      }
+    }
 
     if (!stableMeta || !uiStable) {
-      const computed = await computeStableSnapshot(entity);
+      const computed = buildStableSnapshotFromContext({
+        entity,
+        thread,
+        answer,
+      });
+
       if (computed) {
         stableMeta = computed.stableMeta;
         uiStable = computed.uiStable;
@@ -551,21 +638,9 @@ async function buildPayloadFromRecord(
         projectName,
         projectLogoUrl: project?.logoUrl ?? null,
         threadTitle: thread.title,
-        authorName: thread.creator?.name ?? null,
-        authorAvatarUrl: thread.creator?.avatarUrl ?? null,
+        authorName: (thread as any).creator?.name ?? null,
+        authorAvatarUrl: (thread as any).creator?.avatarUrl ?? null,
       };
-    }
-
-    const [threadAgg, answerAgg] = await Promise.all([
-      fetchThreadAggregates(thread.id),
-      entity.kind === 'answer' ? fetchAnswerAggregates(entity.answerId) : null,
-    ]);
-
-    if (entity.kind === 'answer') {
-      answer = await loadAnswer(entity.answerId);
-      if (!answer || answer.threadId !== thread.id) {
-        return null;
-      }
     }
 
     const variant = computeVariant(thread, entity);
@@ -595,7 +670,7 @@ async function buildPayloadFromRecord(
       thread.updatedAt,
       threadAgg.latestCommentAt,
       threadAgg.latestVoteAt,
-      entity.kind === 'answer' ? answer?.updatedAt : null,
+      entity.kind === 'answer' ? (answer as any)?.updatedAt : null,
       entity.kind === 'answer' ? answerAgg?.latestCommentAt : null,
       entity.kind === 'answer' ? answerAgg?.latestVoteAt : null,
       thread.id,
@@ -682,30 +757,14 @@ export async function ensureDiscourseShareLink(params: {
   }
 
   const code = await ensureUniqueCode();
-  const [inserted] = await db
-    .insert(shareLinks)
-    .values({
-      code,
-      entityType: 'discourse',
-      entityId,
-      targetUrl,
-      visibility: 'public',
-      createdBy: params.createdBy,
-    })
-    .returning();
-
-  if (inserted?.id) {
-    const stable = await computeStableSnapshot(params.entity);
-    if (stable) {
-      const snapshot: DiscourseShareSnapshot = {
-        snapshotAt: Date.now(),
-        entity: params.entity,
-        stableMeta: stable.stableMeta,
-        uiStable: stable.uiStable,
-      };
-      await writeSnapshot(inserted.id, snapshot);
-    }
-  }
+  await db.insert(shareLinks).values({
+    code,
+    entityType: 'discourse',
+    entityId,
+    targetUrl,
+    visibility: 'public',
+    createdBy: params.createdBy,
+  });
 
   discoursePayloadCache.delete(`discourseShare:payload:${code}`);
   return {
