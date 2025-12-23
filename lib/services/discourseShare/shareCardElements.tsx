@@ -252,7 +252,7 @@ function renderGeneralThreadCard(
             width: 490,
           }}
         >
-          {renderSubtitle(payload.label)}
+          {renderSubtitle(`Complaints & Discourse`)}
           {renderThreadTitle(payload.stable.threadTitle)}
         </div>
       </div>
@@ -316,7 +316,7 @@ function renderScamThreadCard(
             width: 490,
           }}
         >
-          {renderSubtitle(payload.label)}
+          {renderSubtitle(`Complaints & Discourse`)}
           {renderThreadTitle(payload.stable.threadTitle)}
         </div>
       </div>
@@ -380,7 +380,7 @@ function renderAnswerCard(
             width: 490,
           }}
         >
-          {renderSubtitle(`${payload.label} → Answer`)}
+          {renderSubtitle(`Complaints & Discourse → Answer`)}
           {renderThreadTitle(payload.stable.threadTitle)}
           {renderByline({
             origin,
@@ -442,7 +442,7 @@ function renderCounterClaimCard(
             width: 490,
           }}
         >
-          {renderSubtitle(`${payload.label} → Counter Claim`)}
+          {renderSubtitle(`Complaints & Discourse → Counter Claim`)}
           {renderThreadTitle(payload.stable.threadTitle)}
           {renderByline({
             origin,
