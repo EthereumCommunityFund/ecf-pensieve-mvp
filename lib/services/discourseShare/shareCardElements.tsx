@@ -21,44 +21,8 @@ function formatInteger(value: number): string {
 }
 
 function iconUrl(origin: string, path: string): string {
-  return buildAbsoluteUrl(path, origin);
-}
-
-function CheckSquareIcon({
-  size,
-  stroke = MUTED,
-  checkColor = MUTED,
-}: {
-  size: number;
-  stroke?: string;
-  checkColor?: string;
-}): JSX.Element {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect
-        x="3.5"
-        y="3.5"
-        width="17"
-        height="17"
-        rx="3"
-        stroke={stroke}
-        strokeWidth="1.5"
-      />
-      <path
-        d="M7.5 12.2l2.8 2.8L16.8 8.5"
-        stroke={checkColor}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  const normalizedOrigin = origin || getAppOrigin();
+  return `${normalizedOrigin}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 function renderHeader(params: {
@@ -161,31 +125,30 @@ function renderByline(params: {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 10,
         fontFamily: FONT_FAMILY,
-        fontWeight: 500,
-        fontSize: 14,
-        lineHeight: '18px',
+        fontWeight: 400,
+        fontSize: 16,
+        lineHeight: '20px',
         color: TEXT_BLACK,
-        opacity: 0.5,
       }}
     >
-      <span>{params.prefix}:</span>
+      <span style={{ opacity: 0.5 }}>{params.prefix}:</span>
       <img
         src={avatar}
-        width={16}
-        height={16}
+        width={28}
+        height={28}
         style={{ borderRadius: 9999 }}
         alt={name}
       />
-      <span style={{ color: TEXT_BLACK, opacity: 1 }}>{name}</span>
+      <span>{name}</span>
     </div>
   );
 }
 
 function StatBlock(params: {
   origin: string;
-  icon?: { kind: 'url'; url: string } | { kind: 'checkSquare' };
+  icon?: { url: string };
   value: string;
   label: string;
   iconSize?: number;
@@ -201,15 +164,13 @@ function StatBlock(params: {
         }}
       >
         <div style={{ width: 24, height: 24 }}>
-          {params.icon?.kind === 'url' ? (
+          {params.icon?.url ? (
             <img
               src={params.icon.url}
               width={params.iconSize ?? 24}
               height={params.iconSize ?? 24}
               alt=""
             />
-          ) : params.icon?.kind === 'checkSquare' ? (
-            <CheckSquareIcon size={24} />
           ) : null}
         </div>
         <div
@@ -240,7 +201,7 @@ function StatBlock(params: {
   );
 }
 
-function StatusBlock(params: { status: string }): JSX.Element {
+function StatusBlock(params: { origin: string; status: string }): JSX.Element {
   const isRedressed = params.status === 'Redressed';
   const color = isRedressed ? BRAND_GREEN : MUTED;
   return (
@@ -254,10 +215,16 @@ function StatusBlock(params: { status: string }): JSX.Element {
       }}
     >
       <div style={{ width: 32, height: 32 }}>
-        <CheckSquareIcon
-          size={32}
-          stroke={isRedressed ? BRAND_GREEN : MUTED}
-          checkColor={isRedressed ? BRAND_GREEN : MUTED}
+        <img
+          src={iconUrl(
+            params.origin,
+            isRedressed
+              ? '/images/share/CheckSquareRedressed.svg'
+              : '/images/share/CheckSquare.svg',
+          )}
+          width={32}
+          height={32}
+          alt=""
         />
       </div>
       <div
@@ -283,10 +250,11 @@ function FooterBrand(params: { origin: string }): JSX.Element {
         width: '100%',
         display: 'flex',
         justifyContent: 'flex-end',
-        opacity: 0.3,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: 0.3 }}
+      >
         <img src={logo} width={28} height={17} alt="" />
         <div
           style={{
@@ -354,7 +322,6 @@ function renderGeneralThreadCard(
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
                 url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
               }}
               value={formatInteger(payload.stats.upvotesCpTotal ?? 0)}
@@ -362,20 +329,21 @@ function renderGeneralThreadCard(
             />
             <StatBlock
               origin={origin}
-              icon={{ kind: 'checkSquare' }}
+              icon={{
+                url: iconUrl(origin, '/images/share/CheckSquare.svg'),
+              }}
               value={formatInteger(payload.stats.answersCount ?? 0)}
               label="Answers"
             />
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
                 url: iconUrl(origin, '/images/share/Users.svg'),
               }}
               value={formatInteger(payload.stats.discussionCommentsCount ?? 0)}
               label="Comments"
             />
-            <StatusBlock status={payload.status} />
+            <StatusBlock origin={origin} status={payload.status} />
           </div>
         </div>
         <FooterBrand origin={origin} />
@@ -419,28 +387,28 @@ function renderScamThreadCard(
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
-                url: iconUrl(origin, '/images/share/Users.svg'),
+                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
               }}
               value={formatInteger(payload.stats.supportersCount ?? 0)}
               label="Supporters"
             />
             <StatBlock
               origin={origin}
-              icon={{ kind: 'checkSquare' }}
+              icon={{
+                url: iconUrl(origin, '/images/share/WarningOctagon.svg'),
+              }}
               value={formatInteger(payload.stats.counterClaimsCount ?? 0)}
               label="Counter-Claims"
             />
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
                 url: iconUrl(origin, '/images/share/Users.svg'),
               }}
               value={formatInteger(payload.stats.discussionCommentsCount ?? 0)}
               label="Comments"
             />
-            <StatusBlock status={payload.status} />
+            <StatusBlock origin={origin} status={payload.status} />
           </div>
         </div>
         <FooterBrand origin={origin} />
@@ -490,8 +458,7 @@ function renderAnswerCard(
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
-                url: iconUrl(origin, '/images/share/Users.svg'),
+                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
               }}
               value={formatInteger(payload.stats.supportersCount ?? 0)}
               label="Supporters"
@@ -499,7 +466,6 @@ function renderAnswerCard(
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
                 url: iconUrl(origin, '/images/share/Users.svg'),
               }}
               value={formatInteger(payload.stats.answerCommentsCount ?? 0)}
@@ -554,8 +520,7 @@ function renderCounterClaimCard(
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
-                url: iconUrl(origin, '/images/share/Users.svg'),
+                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
               }}
               value={formatInteger(payload.stats.supportersCount ?? 0)}
               label="Supporters"
@@ -563,7 +528,6 @@ function renderCounterClaimCard(
             <StatBlock
               origin={origin}
               icon={{
-                kind: 'url',
                 url: iconUrl(origin, '/images/share/Users.svg'),
               }}
               value={formatInteger(payload.stats.answerCommentsCount ?? 0)}
