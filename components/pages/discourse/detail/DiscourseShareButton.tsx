@@ -15,6 +15,7 @@ type DiscourseShareButtonProps =
       type: 'thread';
       threadId: number;
       fallbackUrl: string;
+      previewVersion?: string | number;
       className?: string;
       children?: string;
       modalTitle?: string;
@@ -24,6 +25,7 @@ type DiscourseShareButtonProps =
       threadId: number;
       answerId: number;
       fallbackUrl: string;
+      previewVersion?: string | number;
       className?: string;
       children?: string;
       modalTitle?: string;
@@ -77,7 +79,9 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
         return null;
       }
 
-      const version = options?.forceRefresh ? String(Date.now()) : null;
+      const version = options?.forceRefresh
+        ? String(Date.now())
+        : String(props.previewVersion ?? Math.floor(Date.now() / (1000 * 60)));
 
       return buildDiscourseShareOgImageUrl({
         code: normalized,
@@ -85,7 +89,7 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
         origin,
       });
     },
-    [origin],
+    [origin, props.previewVersion],
   );
 
   const handleEnsure = useCallback(async () => {

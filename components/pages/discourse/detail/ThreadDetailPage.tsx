@@ -886,6 +886,7 @@ export function ThreadDetailPage({
                 type: 'thread',
                 threadId: numericThreadId,
                 fallbackUrl: longShareUrl,
+                previewVersion: `${totalCommentCount}-${totalAnswerCount}`,
                 modalTitle: 'Share Discourse Thread',
               }}
             />

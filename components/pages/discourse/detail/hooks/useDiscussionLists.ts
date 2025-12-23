@@ -81,10 +81,19 @@ export const useDiscussionLists = <A, C>({
     if (!remoteItems.length) return [];
 
     const flattened = flattenComments(remoteItems);
-
-    return flattened.map((comment) =>
+    const normalized = flattened.map((comment) =>
       normalizeComment(comment as any, { defaultRole }),
     );
+
+    const seen = new Set<number>();
+    const unique: CommentItem[] = [];
+    for (const item of normalized) {
+      if (seen.has(item.numericId)) continue;
+      seen.add(item.numericId);
+      unique.push(item);
+    }
+
+    return unique;
   }, [commentsQuery?.data, defaultRole]);
 
   const threadComments = useMemo(

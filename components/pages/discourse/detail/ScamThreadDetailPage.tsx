@@ -1076,6 +1076,7 @@ export function ScamThreadDetailPage({
                 type="thread"
                 threadId={numericThreadId}
                 fallbackUrl={longShareUrl}
+                previewVersion={`${threadCommentCount}-${counterClaimCount}`}
                 className="h-[38px] rounded-[6px]  border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80"
                 modalTitle="Share Discourse Thread"
               >
