@@ -1,7 +1,8 @@
 'use client';
 
 import { useDisclosure } from '@heroui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ShareFatIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import ShareModal from '@/components/biz/share/ShareModal';
@@ -36,6 +37,20 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
   const [error, setError] = useState<string | null>(null);
 
   const ensureMutation = trpc.discourseShare.ensure.useMutation();
+
+  const entityKey = useMemo(() => {
+    if (props.type === 'thread') {
+      return `thread:${props.threadId}`;
+    }
+    return `answer:${props.threadId}:${props.answerId}`;
+  }, [props]);
+
+  useEffect(() => {
+    setShareCode(null);
+    setShareUrl('');
+    setShareImageUrl(null);
+    setError(null);
+  }, [entityKey]);
 
   const input = useMemo(() => {
     if (props.type === 'thread') {
@@ -105,7 +120,7 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
     }
   }, [buildPreviewImageUrl, handleEnsure, onOpen, shareCode, shareUrl]);
 
-  const effectiveShareUrl = shareUrl || props.fallbackUrl;
+  const effectiveShareUrl = shareUrl || (error ? props.fallbackUrl : '');
 
   const subject = useMemo(() => {
     const title = props.modalTitle?.toLowerCase() ?? '';
@@ -120,7 +135,11 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
 
   return (
     <>
-      <Button className={props.className} onPress={handleOpen}>
+      <Button
+        className={props.className}
+        onPress={handleOpen}
+        startContent={<ShareFatIcon weight="fill" format="Stroke" size={20} />}
+      >
         {props.children ?? 'Share'}
       </Button>
       <ShareModal
