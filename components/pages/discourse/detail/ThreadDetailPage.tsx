@@ -886,7 +886,7 @@ export function ThreadDetailPage({
                 type: 'thread',
                 threadId: numericThreadId,
                 fallbackUrl: longShareUrl,
-                message: 'Thread link copied to clipboard',
+                modalTitle: 'Share Discourse Thread',
               }}
             />
 
@@ -952,7 +952,7 @@ export function ThreadDetailPage({
                                   threadId: numericThreadId,
                                   answerId: answer.numericId,
                                   fallbackUrl: answerShareUrl,
-                                  message: 'Answer link copied to clipboard',
+                                  modalTitle: 'Share Discourse Answer',
                                 }}
                                 onPostComment={makeOnPostComment(
                                   answer.numericId,

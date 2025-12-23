@@ -31,6 +31,10 @@ export type DiscourseShareVariant =
   | 'counterClaim';
 
 export type DiscourseShareStatus = 'Open' | 'Unanswered' | 'Redressed';
+// Scam thread uses richer statuses on the product page.
+export type DiscourseShareScamStatus =
+  | 'Alert Displayed on Page'
+  | 'Claim Redressed';
 
 export type DiscourseShareSnapshot = {
   snapshotAt: number;
@@ -57,7 +61,7 @@ export type DiscourseSharePayload = {
   variant: DiscourseShareVariant;
   label: string;
   stable: DiscourseShareSnapshot['uiStable'];
-  status: DiscourseShareStatus;
+  status: DiscourseShareStatus | DiscourseShareScamStatus;
   stats: {
     upvotesCpTotal?: number;
     supportersCount?: number;
@@ -152,11 +156,19 @@ function computeThreadStatus(thread: {
   answerCount?: number | null;
   redressedAnswerCount?: number | null;
   isScam?: boolean | null;
-}): DiscourseShareStatus {
+}): DiscourseShareStatus | DiscourseShareScamStatus {
   if (thread.isScam) {
-    return (thread.support ?? 0) >= REDRESSED_SUPPORT_THRESHOLD
-      ? 'Redressed'
-      : 'Open';
+    const hasAlert = (thread.support ?? 0) >= REDRESSED_SUPPORT_THRESHOLD;
+    if (hasAlert) {
+      return 'Alert Displayed on Page';
+    }
+
+    const counterRedressedCount = thread.redressedAnswerCount ?? 0;
+    if (counterRedressedCount > 0) {
+      return 'Claim Redressed';
+    }
+
+    return 'Open';
   }
   if ((thread.redressedAnswerCount ?? 0) > 0) {
     return 'Redressed';

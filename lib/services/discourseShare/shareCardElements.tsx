@@ -1,6 +1,10 @@
 import type { CSSProperties, JSX } from 'react';
 
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
+import {
+  MetricItem,
+  renderShareFooter,
+} from '@/lib/services/share/baseComponents';
 import { buildAbsoluteUrl, getAppOrigin } from '@/lib/utils/url';
 
 import type { DiscourseSharePayload } from './discourseShareService';
@@ -14,6 +18,7 @@ const TEXT_BLACK = '#000000';
 const BORDER = 'rgba(0,0,0,0.1)';
 const MUTED = 'rgba(0,0,0,0.5)';
 const BRAND_GREEN = '#43BD9B';
+const ALERT_ORANGE = '#BB5D00';
 
 function formatInteger(value: number): string {
   if (!Number.isFinite(value)) return '0';
@@ -79,6 +84,7 @@ function renderThreadTitle(title: string): JSX.Element {
   return (
     <div
       style={{
+        display: 'flex',
         fontFamily: FONT_FAMILY,
         fontWeight: 600,
         fontSize: 20,
@@ -96,6 +102,7 @@ function renderSubtitle(text: string): JSX.Element {
   return (
     <div
       style={{
+        display: 'flex',
         fontFamily: FONT_FAMILY,
         fontWeight: 600,
         fontSize: 18,
@@ -117,7 +124,7 @@ function renderByline(params: {
 }): JSX.Element {
   const name = params.name?.trim() || 'Anonymous';
   const avatar = buildAbsoluteUrl(
-    params.avatarUrl?.trim() || '/images/default-project.png',
+    params.avatarUrl?.trim() || '/images/user/avatar_p.png',
     params.origin,
   );
   return (
@@ -138,72 +145,37 @@ function renderByline(params: {
         src={avatar}
         width={28}
         height={28}
-        style={{ borderRadius: 9999 }}
+        style={{ borderRadius: 9999, objectFit: 'cover' }}
         alt={name}
       />
-      <span>{name}</span>
+      <span style={{ display: 'flex', opacity: 1 }}>{name}</span>
     </div>
   );
 }
 
-function StatBlock(params: {
+function StatusBlock(params: {
   origin: string;
-  icon?: { url: string };
-  value: string;
-  label: string;
-  iconSize?: number;
-}): JSX.Element {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          opacity: 0.5,
-        }}
-      >
-        <div style={{ width: 24, height: 24 }}>
-          {params.icon?.url ? (
-            <img
-              src={params.icon.url}
-              width={params.iconSize ?? 24}
-              height={params.iconSize ?? 24}
-              alt=""
-            />
-          ) : null}
-        </div>
-        <div
-          style={{
-            fontFamily: 'Mona Sans, sans-serif',
-            fontWeight: 500,
-            fontSize: 18,
-            lineHeight: '24px',
-            color: TEXT_BLACK,
-          }}
-        >
-          {params.value}
-        </div>
-      </div>
-      <div
-        style={{
-          fontFamily: 'Mona Sans, sans-serif',
-          fontWeight: 500,
-          fontSize: 14,
-          lineHeight: '18px',
-          color: TEXT_BLACK,
-          opacity: 0.5,
-        }}
-      >
-        {params.label}
-      </div>
-    </div>
-  );
-}
+  status: string;
+}): JSX.Element | null {
+  const normalizedStatus = params.status || 'Open';
+  const isClaimRedressed =
+    normalizedStatus === 'Redressed' || normalizedStatus === 'Claim Redressed';
+  const isAlertDisplayed = normalizedStatus === 'Alert Displayed on Page';
+  const displayText = isAlertDisplayed
+    ? 'Alert Displayed'
+    : normalizedStatus === 'Claim Redressed'
+      ? 'Redressed'
+      : normalizedStatus;
+  const color = isAlertDisplayed
+    ? ALERT_ORANGE
+    : isClaimRedressed
+      ? BRAND_GREEN
+      : MUTED;
 
-function StatusBlock(params: { origin: string; status: string }): JSX.Element {
-  const isRedressed = params.status === 'Redressed';
-  const color = isRedressed ? BRAND_GREEN : MUTED;
+  if (!isAlertDisplayed && !isClaimRedressed) {
+    return null;
+  }
+
   return (
     <div
       style={{
@@ -214,13 +186,15 @@ function StatusBlock(params: { origin: string; status: string }): JSX.Element {
         justifyContent: 'center',
       }}
     >
-      <div style={{ width: 32, height: 32 }}>
+      <div style={{ width: 32, height: 32, display: 'flex' }}>
         <img
           src={iconUrl(
             params.origin,
-            isRedressed
-              ? '/images/share/CheckSquareRedressed.svg'
-              : '/images/share/CheckSquare.svg',
+            isAlertDisplayed
+              ? '/images/share/CheckSquareAlert.svg'
+              : isClaimRedressed
+                ? '/images/share/CheckSquareRedressed.svg'
+                : '/images/share/CheckSquare.svg',
           )}
           width={32}
           height={32}
@@ -229,6 +203,7 @@ function StatusBlock(params: { origin: string; status: string }): JSX.Element {
       </div>
       <div
         style={{
+          display: 'flex',
           fontFamily: FONT_FAMILY,
           fontWeight: 600,
           fontSize: 13,
@@ -236,37 +211,7 @@ function StatusBlock(params: { origin: string; status: string }): JSX.Element {
           color,
         }}
       >
-        {params.status}
-      </div>
-    </div>
-  );
-}
-
-function FooterBrand(params: { origin: string }): JSX.Element {
-  const logo = iconUrl(params.origin, '/images/share/Logo.svg');
-  return (
-    <div
-      style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'flex-end',
-      }}
-    >
-      <div
-        style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: 0.3 }}
-      >
-        <img src={logo} width={28} height={17} alt="" />
-        <div
-          style={{
-            fontFamily: 'Mona Sans, sans-serif',
-            fontWeight: 800,
-            fontSize: 16,
-            lineHeight: '20px',
-            color: TEXT_BLACK,
-          }}
-        >
-          Pensieve.ecf
-        </div>
+        {displayText}
       </div>
     </div>
   );
@@ -314,39 +259,38 @@ function renderGeneralThreadCard(
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div
           style={{
+            display: 'flex',
+            flexDirection: 'column',
             borderTop: `1px solid ${BORDER}`,
             paddingTop: 20,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
-              }}
+              icon="/images/share/CaretCircleUp.svg"
               value={formatInteger(payload.stats.upvotesCpTotal ?? 0)}
               label="Upvotes"
+              styles={{ container: { rowGap: '5px' } }}
             />
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/CheckSquare.svg'),
-              }}
+              icon="/images/share/CheckSquare.svg"
               value={formatInteger(payload.stats.answersCount ?? 0)}
               label="Answers"
+              styles={{ container: { rowGap: '5px' } }}
             />
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/Users.svg'),
-              }}
+              icon="/images/share/Users.svg"
               value={formatInteger(payload.stats.discussionCommentsCount ?? 0)}
               label="Comments"
+              styles={{ container: { rowGap: '5px' } }}
             />
             <StatusBlock origin={origin} status={payload.status} />
           </div>
         </div>
-        <FooterBrand origin={origin} />
+        {renderShareFooter(origin)}
       </div>
     </div>
   );
@@ -379,39 +323,38 @@ function renderScamThreadCard(
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div
           style={{
+            display: 'flex',
+            flexDirection: 'column',
             borderTop: `1px solid ${BORDER}`,
             paddingTop: 20,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
-              }}
+              icon="/images/share/CaretCircleUp.svg"
               value={formatInteger(payload.stats.supportersCount ?? 0)}
               label="Supporters"
+              styles={{ container: { rowGap: '5px' } }}
             />
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/WarningOctagon.svg'),
-              }}
+              icon="/images/share/WarningOctagon.svg"
               value={formatInteger(payload.stats.counterClaimsCount ?? 0)}
               label="Counter-Claims"
+              styles={{ container: { rowGap: '5px' } }}
             />
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/Users.svg'),
-              }}
+              icon="/images/share/Users.svg"
               value={formatInteger(payload.stats.discussionCommentsCount ?? 0)}
               label="Comments"
+              styles={{ container: { rowGap: '5px' } }}
             />
             <StatusBlock origin={origin} status={payload.status} />
           </div>
         </div>
-        <FooterBrand origin={origin} />
+        {renderShareFooter(origin)}
       </div>
     </div>
   );
@@ -450,30 +393,30 @@ function renderAnswerCard(
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div
           style={{
+            display: 'flex',
+            flexDirection: 'column',
             borderTop: `1px solid ${BORDER}`,
             paddingTop: 20,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
-              }}
+              icon="/images/share/CaretCircleUp.svg"
               value={formatInteger(payload.stats.supportersCount ?? 0)}
               label="Supporters"
+              styles={{ container: { rowGap: '5px' } }}
             />
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/Users.svg'),
-              }}
+              icon="/images/share/Users.svg"
               value={formatInteger(payload.stats.answerCommentsCount ?? 0)}
               label="Comments"
+              styles={{ container: { rowGap: '5px' } }}
             />
           </div>
         </div>
-        <FooterBrand origin={origin} />
+        {renderShareFooter(origin)}
       </div>
     </div>
   );
@@ -512,30 +455,30 @@ function renderCounterClaimCard(
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div
           style={{
+            display: 'flex',
+            flexDirection: 'column',
             borderTop: `1px solid ${BORDER}`,
             paddingTop: 20,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/CaretCircleUp.svg'),
-              }}
+              icon="/images/share/CaretCircleUp.svg"
               value={formatInteger(payload.stats.supportersCount ?? 0)}
               label="Supporters"
+              styles={{ container: { rowGap: '5px' } }}
             />
-            <StatBlock
+            <MetricItem
               origin={origin}
-              icon={{
-                url: iconUrl(origin, '/images/share/Users.svg'),
-              }}
+              icon="/images/share/Users.svg"
               value={formatInteger(payload.stats.answerCommentsCount ?? 0)}
               label="Comments"
+              styles={{ container: { rowGap: '5px' } }}
             />
           </div>
         </div>
-        <FooterBrand origin={origin} />
+        {renderShareFooter(origin)}
       </div>
     </div>
   );

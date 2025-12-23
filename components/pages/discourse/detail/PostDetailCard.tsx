@@ -9,9 +9,7 @@ import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
 import { TopicTag } from '../common/TopicTag';
 import { UserAvatar } from '../common/UserAvatar';
 
-import DiscourseShareCopyButton, {
-  type DiscourseShareCopyButtonProps,
-} from './DiscourseShareCopyButton';
+import DiscourseShareButton from './DiscourseShareButton';
 
 export type PostDetailCardProps = {
   isPreviewMode?: boolean;
@@ -35,8 +33,7 @@ export type PostDetailCardProps = {
   sentimentPending?: boolean;
   onSelectSentiment?: (value: SentimentKey) => Promise<void> | void;
   requireAuth?: () => boolean;
-  shareUrl?: string;
-  share?: DiscourseShareCopyButtonProps;
+  share?: Parameters<typeof DiscourseShareButton>[0];
 };
 
 export const serializeEditorValue = (html: string) =>
@@ -142,13 +139,15 @@ export default function PostDetailCard({
         </Button>
 
         {share ? (
-          <DiscourseShareCopyButton
+          <DiscourseShareButton
             {...share}
             className={
               share.className ??
               'h-[38px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80'
             }
-          />
+          >
+            Share
+          </DiscourseShareButton>
         ) : null}
       </div>
       {/* TODO 非 preview 模式，未登录的情况下展示登录按钮，不显示 action 按钮 */}

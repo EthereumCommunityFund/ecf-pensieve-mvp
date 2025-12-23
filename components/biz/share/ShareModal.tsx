@@ -19,6 +19,10 @@ import { getAppOrigin } from '@/lib/utils/url';
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  linkTitle?: string;
+  linkIntro?: string;
+  linkDetails?: string;
   shareUrl: string;
   shareImageUrl?: string | null;
   isLoading?: boolean;
@@ -30,6 +34,10 @@ interface ShareModalProps {
 const ShareModal: FC<ShareModalProps> = ({
   isOpen,
   onClose,
+  title = 'Share Project',
+  linkTitle = 'Share Link',
+  linkIntro = 'Copy link below to share with friends',
+  linkDetails = `This link can be shared across multiple social media platforms and generates a social graph preview. (X/Twitter may need a few minutes to fetch the preview image)`,
   shareUrl,
   shareImageUrl,
   isLoading = false,
@@ -73,22 +81,17 @@ const ShareModal: FC<ShareModalProps> = ({
       }}
     >
       <ModalContent>
-        <CommonModalHeader title="Share Project" onClose={onClose} />
+        <CommonModalHeader title={title} onClose={onClose} />
         <ModalBody>
           <div className="text-[18px] font-[600] leading-[18px] text-black">
-            Share Link
+            {linkTitle}
           </div>
           <div className="space-y-2">
             <div className="text-[14px] leading-[18px] text-black/60">
-              Copy link below to share with friends
+              {linkIntro}
             </div>
             <div className="text-[13px] leading-[18px] text-black/50">
-              This link can be shared across multiple social media platforms and
-              generates a social graph preview.
-              <span className="italic">
-                {' '}
-                (X/Twitter may need a few minutes to fetch the preview image)
-              </span>
+              {linkDetails}
             </div>
           </div>
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">

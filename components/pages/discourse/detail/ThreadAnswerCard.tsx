@@ -16,9 +16,7 @@ import type {
 import { TagPill } from '../common/TagPill';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 
-import DiscourseShareCopyButton, {
-  type DiscourseShareCopyButtonProps,
-} from './DiscourseShareCopyButton';
+import DiscourseShareButton from './DiscourseShareButton';
 import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
 import type { ComposerContext } from './ThreadComposerModal';
@@ -47,8 +45,7 @@ type AnswerDetailCardProps = {
   supportPending?: boolean;
   withdrawPending?: boolean;
   sentimentPendingId?: number | null;
-  shareUrl?: string;
-  share?: DiscourseShareCopyButtonProps;
+  share?: Parameters<typeof DiscourseShareButton>[0];
 };
 
 export function AnswerDetailCard({
@@ -64,7 +61,6 @@ export function AnswerDetailCard({
   supportPending = false,
   withdrawPending = false,
   sentimentPendingId = null,
-  shareUrl,
   share,
 }: AnswerDetailCardProps) {
   const commentCount = answer.comments?.length ?? answer.commentsCount;
@@ -249,7 +245,7 @@ export function AnswerDetailCard({
               onSelect={handleSelectSentiment}
             />
             {share ? (
-              <DiscourseShareCopyButton
+              <DiscourseShareButton
                 {...share}
                 className={
                   share.className ??
@@ -257,19 +253,7 @@ export function AnswerDetailCard({
                 }
               >
                 Share
-              </DiscourseShareCopyButton>
-            ) : null}
-            {!share && shareUrl ? (
-              <DiscourseShareCopyButton
-                type="answer"
-                threadId={threadId}
-                answerId={answer.numericId}
-                fallbackUrl={shareUrl}
-                message="Answer link copied to clipboard"
-                className="h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80"
-              >
-                Share
-              </DiscourseShareCopyButton>
+              </DiscourseShareButton>
             ) : null}
           </div>
         </div>

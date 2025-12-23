@@ -29,9 +29,16 @@ export const discourseShareRouter = router({
               answerId: input.answerId,
             } as const);
 
-      return DiscourseShareService.ensureShareLink({
+      const ensured = await DiscourseShareService.ensureShareLink({
         entity,
         createdBy: ctx.user?.id,
       });
+
+      const payload = await DiscourseShareService.getSharePayload(ensured.code);
+
+      return {
+        ...ensured,
+        imageVersion: payload?.imageVersion ?? null,
+      };
     }),
 });

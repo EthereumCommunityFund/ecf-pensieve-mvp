@@ -31,7 +31,7 @@ import {
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
 
-import DiscourseShareCopyButton from './DiscourseShareCopyButton';
+import DiscourseShareButton from './DiscourseShareButton';
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import {
   useDiscussionComposer,
@@ -1072,15 +1072,15 @@ export function ScamThreadDetailPage({
                 isLoading={setThreadSentimentMutation.isPending}
                 onSelect={handleSetThreadSentiment}
               />
-              <DiscourseShareCopyButton
+              <DiscourseShareButton
                 type="thread"
                 threadId={numericThreadId}
                 fallbackUrl={longShareUrl}
-                message="Thread link copied to clipboard"
                 className="h-[38px] rounded-[6px]  border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80"
+                modalTitle="Share Discourse Thread"
               >
                 Share
-              </DiscourseShareCopyButton>
+              </DiscourseShareButton>
             </div>
 
             {/* Upvote Button */}
@@ -1218,7 +1218,7 @@ export function ScamThreadDetailPage({
                           threadId: numericThreadId,
                           answerId: claim.numericId,
                           fallbackUrl: claimShareUrl,
-                          message: 'Answer link copied to clipboard',
+                          modalTitle: 'Share Discourse Counter Claim',
                         }}
                       />
                     </div>
