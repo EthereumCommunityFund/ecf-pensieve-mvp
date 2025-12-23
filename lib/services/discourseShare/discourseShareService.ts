@@ -580,6 +580,11 @@ async function buildPayloadFromRecord(
       ? await loadThreadForPayload(entity.threadId)
       : await loadThread(entity.threadId);
     if (!thread) return null;
+
+    const variant = computeVariant(thread, entity);
+    const needsThreadAggregates =
+      variant === 'generalThread' || variant === 'scamThread';
+
     const label = resolveTopicLabel(thread.category?.[0] ?? thread.tags?.[0]);
     const project = stableFromSnapshot
       ? null
@@ -593,7 +598,7 @@ async function buildPayloadFromRecord(
     let uiStable = stableFromSnapshot?.uiStable ?? null;
 
     const [threadAgg, answerAgg, answer] = await Promise.all([
-      fetchThreadAggregates(thread.id),
+      needsThreadAggregates ? fetchThreadAggregates(thread.id) : null,
       entity.kind === 'answer' ? fetchAnswerAggregates(entity.answerId) : null,
       entity.kind === 'answer'
         ? stableFromSnapshot
@@ -607,6 +612,15 @@ async function buildPayloadFromRecord(
         return null;
       }
     }
+
+    const safeThreadAgg =
+      threadAgg ??
+      ({
+        supportersCount: 0,
+        latestVoteAt: null,
+        discussionCommentsCount: 0,
+        latestCommentAt: null,
+      } as const);
 
     if (!stableMeta || !uiStable) {
       const computed = buildStableSnapshotFromContext({
@@ -643,7 +657,6 @@ async function buildPayloadFromRecord(
       };
     }
 
-    const variant = computeVariant(thread, entity);
     const status = computeThreadStatus(thread);
 
     const upvotesCpTotal = Number(thread.support ?? 0);
@@ -655,11 +668,11 @@ async function buildPayloadFromRecord(
     if (variant === 'generalThread') {
       stats.upvotesCpTotal = upvotesCpTotal;
       stats.answersCount = threadAnswersCount;
-      stats.discussionCommentsCount = threadAgg.discussionCommentsCount;
+      stats.discussionCommentsCount = safeThreadAgg.discussionCommentsCount;
     } else if (variant === 'scamThread') {
-      stats.supportersCount = threadAgg.supportersCount;
+      stats.supportersCount = safeThreadAgg.supportersCount;
       stats.counterClaimsCount = threadCounterClaimsCount;
-      stats.discussionCommentsCount = threadAgg.discussionCommentsCount;
+      stats.discussionCommentsCount = safeThreadAgg.discussionCommentsCount;
     } else if (variant === 'answer' || variant === 'counterClaim') {
       stats.supportersCount = answerAgg?.supportersCount ?? 0;
       stats.answerCommentsCount = answerAgg?.answerCommentsCount ?? 0;
@@ -668,8 +681,8 @@ async function buildPayloadFromRecord(
     const imageMeta = resolveImageMeta([
       record.updatedAt,
       thread.updatedAt,
-      threadAgg.latestCommentAt,
-      threadAgg.latestVoteAt,
+      needsThreadAggregates ? safeThreadAgg.latestCommentAt : null,
+      needsThreadAggregates ? safeThreadAgg.latestVoteAt : null,
       entity.kind === 'answer' ? (answer as any)?.updatedAt : null,
       entity.kind === 'answer' ? answerAgg?.latestCommentAt : null,
       entity.kind === 'answer' ? answerAgg?.latestVoteAt : null,

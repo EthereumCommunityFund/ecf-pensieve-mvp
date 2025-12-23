@@ -1,8 +1,8 @@
 'use client';
 
 import { useDisclosure } from '@heroui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ShareFatIcon } from '@phosphor-icons/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/base';
 import ShareModal from '@/components/biz/share/ShareModal';
@@ -77,9 +77,7 @@ export default function DiscourseShareButton(props: DiscourseShareButtonProps) {
         return null;
       }
 
-      const version = options?.forceRefresh
-        ? String(Date.now())
-        : String(Math.floor(Date.now() / 30_000));
+      const version = options?.forceRefresh ? String(Date.now()) : null;
 
       return buildDiscourseShareOgImageUrl({
         code: normalized,

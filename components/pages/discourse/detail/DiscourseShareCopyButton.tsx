@@ -13,7 +13,7 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text);
       return true;
     } catch (error) {
-      console.error('navigator.clipboard.writeText failed', error);
+      void error;
     }
   }
 
@@ -31,8 +31,7 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
     const result = document.execCommand('copy');
     document.body.removeChild(textarea);
     return result;
-  } catch (error) {
-    console.error('Fallback clipboard copy failed', error);
+  } catch {
     return false;
   }
 }
@@ -88,7 +87,7 @@ export default function DiscourseShareCopyButton(
           usedShortLink = true;
         }
       } catch (error) {
-        console.error('Failed to ensure discourse share link:', error);
+        void error;
       }
     }
 

@@ -1,7 +1,6 @@
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
 
-import { isProduction } from '@/constants/env';
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import DiscourseShareService from '@/lib/services/discourseShare';
 import {
@@ -27,21 +26,6 @@ export async function GET(
   }
 
   try {
-    const versionParam = request.nextUrl.searchParams.get('v');
-    const normalizedVersion = versionParam?.trim() || payload.imageVersion;
-
-    if (!isProduction) {
-      console.info(
-        '[discourse-share-og-image] request',
-        JSON.stringify({
-          code,
-          vParam: versionParam ?? null,
-          normalizedVersion,
-          imageTimestamp: payload.imageTimestamp,
-        }),
-      );
-    }
-
     const fonts = await getOgFonts();
     const origin = new URL(request.url).origin;
     const element = renderDiscourseOgImage(payload, origin);
@@ -71,7 +55,6 @@ export async function GET(
 
     return response;
   } catch (error) {
-    console.error('Failed to generate discourse share OG image:', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
