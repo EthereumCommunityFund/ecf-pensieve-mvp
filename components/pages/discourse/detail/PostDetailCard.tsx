@@ -3,12 +3,15 @@ import { CaretCircleUpIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import MdEditor from '@/components/base/MdEditor';
-import Copy from '@/components/biz/common/Copy';
 
 import { SentimentKey } from '../common/sentiment/sentimentConfig';
 import { SentimentVoteButton } from '../common/sentiment/SentimentVoteButton';
 import { TopicTag } from '../common/TopicTag';
 import { UserAvatar } from '../common/UserAvatar';
+
+import DiscourseShareCopyButton, {
+  type DiscourseShareCopyButtonProps,
+} from './DiscourseShareCopyButton';
 
 export type PostDetailCardProps = {
   isPreviewMode?: boolean;
@@ -33,6 +36,7 @@ export type PostDetailCardProps = {
   onSelectSentiment?: (value: SentimentKey) => Promise<void> | void;
   requireAuth?: () => boolean;
   shareUrl?: string;
+  share?: DiscourseShareCopyButtonProps;
 };
 
 export const serializeEditorValue = (html: string) =>
@@ -60,7 +64,7 @@ export default function PostDetailCard({
   sentimentPending = false,
   onSelectSentiment,
   requireAuth,
-  shareUrl,
+  share,
 }: PostDetailCardProps) {
   return (
     <article className="flex flex-col gap-[20px] rounded-[16px]">
@@ -137,14 +141,14 @@ export default function PostDetailCard({
           </span>
         </Button>
 
-        {shareUrl ? (
-          <Copy
-            text={shareUrl}
-            message="Thread link copied to clipboard"
-            className="h-[38px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80"
-          >
-            Share
-          </Copy>
+        {share ? (
+          <DiscourseShareCopyButton
+            {...share}
+            className={
+              share.className ??
+              'h-[38px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80'
+            }
+          />
         ) : null}
       </div>
       {/* TODO 非 preview 模式，未登录的情况下展示登录按钮，不显示 action 按钮 */}

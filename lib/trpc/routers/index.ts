@@ -3,6 +3,7 @@ import { router } from '../server';
 import { activeRouter } from './active';
 import { adminWhitelistRouter } from './adminWhitelist';
 import { authRouter } from './auth';
+import { discourseShareRouter } from './discourseShare';
 import { fileRouter } from './file';
 import { itemProposalRouter } from './itemProposal';
 import { likeProjectRouter } from './likeProject';
@@ -43,6 +44,7 @@ export const appRouter = router({
   projectRelation: projectRelationRouter,
   rank: rankRouter,
   smartContracts: smartContractsRouter,
+  discourseShare: discourseShareRouter,
   share: shareRouter,
   sieve: sieveRouter,
   userActionLog: userActionLogRouter,

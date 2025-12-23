@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, ConfirmModal, MdEditor } from '@/components/base';
 import { addToast } from '@/components/base/toast';
-import Copy from '@/components/biz/common/Copy';
 import {
   SentimentKey,
   SentimentMetric,
@@ -32,6 +31,7 @@ import {
   stripHtmlToPlainText,
 } from '../utils/threadTransforms';
 
+import DiscourseShareCopyButton from './DiscourseShareCopyButton';
 import { useAnswerSupport } from './hooks/useAnswerSupport';
 import {
   useDiscussionComposer,
@@ -120,7 +120,7 @@ export function ScamThreadDetailPage({
   const isValidThreadId = Number.isFinite(numericThreadId);
   const pathname = usePathname();
   const origin = useMemo(() => getAppOrigin(), []);
-  const shareUrl = useMemo(
+  const longShareUrl = useMemo(
     () => buildAbsoluteUrl(pathname ?? `/discourse/${threadId}`, origin),
     [origin, pathname, threadId],
   );
@@ -1072,13 +1072,15 @@ export function ScamThreadDetailPage({
                 isLoading={setThreadSentimentMutation.isPending}
                 onSelect={handleSetThreadSentiment}
               />
-              <Copy
-                text={shareUrl}
+              <DiscourseShareCopyButton
+                type="thread"
+                threadId={numericThreadId}
+                fallbackUrl={longShareUrl}
                 message="Thread link copied to clipboard"
                 className="h-[38px] rounded-[6px]  border-none bg-[#EBEBEB] px-[10px] text-[13px] font-semibold text-black/80"
               >
                 Share
-              </Copy>
+              </DiscourseShareCopyButton>
             </div>
 
             {/* Upvote Button */}
@@ -1164,7 +1166,7 @@ export function ScamThreadDetailPage({
                 filteredCounterClaims.map((claim) => {
                   const isFocusedClaim = focusAnswerId === claim.numericId;
                   const claimShareUrl = buildAbsoluteUrl(
-                    `/discourse/${threadId}/answer/${claim.numericId}`,
+                    `/discourse/${threadId}?answerId=${claim.numericId}`,
                     origin,
                   );
                   return (
@@ -1211,7 +1213,13 @@ export function ScamThreadDetailPage({
                           handleShowAnswerSentimentDetail
                         }
                         onPostComment={handlePostCounterComment}
-                        shareUrl={claimShareUrl}
+                        share={{
+                          type: 'answer',
+                          threadId: numericThreadId,
+                          answerId: claim.numericId,
+                          fallbackUrl: claimShareUrl,
+                          message: 'Answer link copied to clipboard',
+                        }}
                       />
                     </div>
                   );

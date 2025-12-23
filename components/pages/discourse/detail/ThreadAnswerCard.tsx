@@ -3,7 +3,6 @@ import { CaretCircleUpIcon } from '@phosphor-icons/react';
 import { useCallback, useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
-import Copy from '@/components/biz/common/Copy';
 import { SentimentIndicator } from '@/components/pages/discourse/common/sentiment/SentimentIndicator';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { UserAvatar } from '@/components/pages/discourse/common/UserAvatar';
@@ -17,6 +16,9 @@ import type {
 import { TagPill } from '../common/TagPill';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 
+import DiscourseShareCopyButton, {
+  type DiscourseShareCopyButtonProps,
+} from './DiscourseShareCopyButton';
 import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
 import type { ComposerContext } from './ThreadComposerModal';
@@ -46,6 +48,7 @@ type AnswerDetailCardProps = {
   withdrawPending?: boolean;
   sentimentPendingId?: number | null;
   shareUrl?: string;
+  share?: DiscourseShareCopyButtonProps;
 };
 
 export function AnswerDetailCard({
@@ -62,6 +65,7 @@ export function AnswerDetailCard({
   withdrawPending = false,
   sentimentPendingId = null,
   shareUrl,
+  share,
 }: AnswerDetailCardProps) {
   const commentCount = answer.comments?.length ?? answer.commentsCount;
   const acceptedBadge =
@@ -244,14 +248,28 @@ export function AnswerDetailCard({
               size="small"
               onSelect={handleSelectSentiment}
             />
-            {shareUrl ? (
-              <Copy
-                text={shareUrl}
+            {share ? (
+              <DiscourseShareCopyButton
+                {...share}
+                className={
+                  share.className ??
+                  'h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80'
+                }
+              >
+                Share
+              </DiscourseShareCopyButton>
+            ) : null}
+            {!share && shareUrl ? (
+              <DiscourseShareCopyButton
+                type="answer"
+                threadId={threadId}
+                answerId={answer.numericId}
+                fallbackUrl={shareUrl}
                 message="Answer link copied to clipboard"
                 className="h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80"
               >
                 Share
-              </Copy>
+              </DiscourseShareCopyButton>
             ) : null}
           </div>
         </div>

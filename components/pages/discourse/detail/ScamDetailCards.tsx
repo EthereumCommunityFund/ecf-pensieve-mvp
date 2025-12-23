@@ -2,7 +2,6 @@ import { CaretCircleUp as CaretCircleUpIcon } from '@phosphor-icons/react';
 import { useCallback, useMemo } from 'react';
 
 import { Button, MdEditor } from '@/components/base';
-import Copy from '@/components/biz/common/Copy';
 import { SentimentVoteButton } from '@/components/pages/discourse/common/sentiment/SentimentVoteButton';
 import { REDRESSED_SUPPORT_THRESHOLD } from '@/constants/discourse';
 
@@ -13,6 +12,9 @@ import { TagPill } from '../common/TagPill';
 import type { AnswerItem, CommentItem } from '../common/threadData';
 import { UserAvatar } from '../common/UserAvatar';
 
+import DiscourseShareCopyButton, {
+  type DiscourseShareCopyButtonProps,
+} from './DiscourseShareCopyButton';
 import type { CommentTarget } from './hooks/useDiscussionComposer';
 import { serializeEditorValue } from './PostDetailCard';
 import type { CommentNode } from './utils/discussionMappers';
@@ -52,6 +54,7 @@ type CounterClaimCardProps = {
     target: CommentTarget;
   }) => void;
   shareUrl?: string;
+  share?: DiscourseShareCopyButtonProps;
 };
 
 export function CounterClaimCard({
@@ -70,6 +73,7 @@ export function CounterClaimCard({
   onShowSentimentIndicator,
   onPostComment,
   shareUrl,
+  share,
 }: CounterClaimCardProps) {
   const commentsCount = claim.commentsCount ?? claim.comments?.length ?? 0;
   const CP_SUPPORT_THRESHOLD = cpTarget ?? REDRESSED_SUPPORT_THRESHOLD;
@@ -216,14 +220,28 @@ export function CounterClaimCard({
               size="small"
               onSelect={handleSelectSentiment}
             />
-            {shareUrl ? (
-              <Copy
-                text={shareUrl}
+            {share ? (
+              <DiscourseShareCopyButton
+                {...share}
+                className={
+                  share.className ??
+                  'h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80'
+                }
+              >
+                Share
+              </DiscourseShareCopyButton>
+            ) : null}
+            {!share && shareUrl ? (
+              <DiscourseShareCopyButton
+                type="answer"
+                threadId={threadId}
+                answerId={claim.numericId}
+                fallbackUrl={shareUrl}
                 message="Answer link copied to clipboard"
                 className="h-[28px] rounded-[6px] border-none bg-[#EBEBEB] px-[10px] text-[12px] font-semibold text-black/80"
               >
                 Share
-              </Copy>
+              </DiscourseShareCopyButton>
             ) : null}
           </div>
 

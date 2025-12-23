@@ -120,7 +120,7 @@ export function ThreadDetailPage({
   const isValidThreadId = Number.isFinite(numericThreadId);
   const pathname = usePathname();
   const origin = useMemo(() => getAppOrigin(), []);
-  const shareUrl = useMemo(
+  const longShareUrl = useMemo(
     () => buildAbsoluteUrl(pathname ?? `/discourse/${threadId}`, origin),
     [origin, pathname, threadId],
   );
@@ -882,7 +882,12 @@ export function ThreadDetailPage({
               onWithdrawThread={handleWithdrawThread}
               onAnswer={handleOpenAnswerComposer}
               onComment={handleOpenThreadComment}
-              shareUrl={shareUrl}
+              share={{
+                type: 'thread',
+                threadId: numericThreadId,
+                fallbackUrl: longShareUrl,
+                message: 'Thread link copied to clipboard',
+              }}
             />
 
             <div className="pb-[40px]">
@@ -914,7 +919,7 @@ export function ThreadDetailPage({
                           const isFocusedAnswer =
                             focusAnswerId === answer.numericId;
                           const answerShareUrl = buildAbsoluteUrl(
-                            `/discourse/${threadId}/answer/${answer.numericId}`,
+                            `/discourse/${threadId}?answerId=${answer.numericId}`,
                             origin,
                           );
                           return (
@@ -942,7 +947,13 @@ export function ThreadDetailPage({
                                 onShowSentimentDetail={
                                   handleShowAnswerSentimentDetail
                                 }
-                                shareUrl={answerShareUrl}
+                                share={{
+                                  type: 'answer',
+                                  threadId: numericThreadId,
+                                  answerId: answer.numericId,
+                                  fallbackUrl: answerShareUrl,
+                                  message: 'Answer link copied to clipboard',
+                                }}
                                 onPostComment={makeOnPostComment(
                                   answer.numericId,
                                 )}
