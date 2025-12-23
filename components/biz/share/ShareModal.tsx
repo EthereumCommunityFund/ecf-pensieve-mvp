@@ -1,7 +1,7 @@
 'use client';
 
-import { addToast, Image, Skeleton } from '@heroui/react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { addToast, Image, Skeleton, Spinner } from '@heroui/react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button } from '@/components/base';
@@ -57,6 +57,8 @@ const ShareModal: FC<ShareModalProps> = ({
   const [failedShareImageUrl, setFailedShareImageUrl] = useState<string | null>(
     null,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -71,11 +73,28 @@ const ShareModal: FC<ShareModalProps> = ({
     });
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    if (onRefresh) {
-      void onRefresh();
+  const hasPreviewPayload = Boolean(payload);
+
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh || refreshInFlightRef.current) {
+      return;
     }
-  }, [onRefresh]);
+
+    refreshInFlightRef.current = true;
+    setIsRefreshing(true);
+
+    try {
+      await onRefresh();
+    } catch (refreshError) {
+      void refreshError;
+    } finally {
+      refreshInFlightRef.current = false;
+
+      if (hasPreviewPayload || !shareImageUrl) {
+        setIsRefreshing(false);
+      }
+    }
+  }, [hasPreviewPayload, onRefresh, shareImageUrl]);
 
   const previewCard = useMemo(() => {
     if (!payload) {
@@ -88,11 +107,28 @@ const ShareModal: FC<ShareModalProps> = ({
     return renderShareCard(payload, { origin, mode: 'preview' });
   }, [payload]);
 
-  const shouldShowShareImage = Boolean(shareImageUrl);
+  const shouldShowShareImage = !hasPreviewPayload && Boolean(shareImageUrl);
   const showShareImageSkeleton =
     shouldShowShareImage &&
     shareImageUrl !== loadedShareImageUrl &&
     shareImageUrl !== failedShareImageUrl;
+
+  useEffect(() => {
+    if (!isOpen) {
+      refreshInFlightRef.current = false;
+      setIsRefreshing(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isRefreshing) return;
+    if (refreshInFlightRef.current) return;
+    if (hasPreviewPayload || !shareImageUrl) return;
+
+    if (!showShareImageSkeleton) {
+      setIsRefreshing(false);
+    }
+  }, [hasPreviewPayload, isRefreshing, shareImageUrl, showShareImageSkeleton]);
 
   return (
     <Modal
@@ -152,9 +188,17 @@ const ShareModal: FC<ShareModalProps> = ({
                 <button
                   type="button"
                   onClick={handleRefresh}
-                  className="shrink-0 text-[13px] font-semibold text-emerald-600 hover:underline"
+                  disabled={isLoading || isRefreshing}
+                  className="inline-flex shrink-0 items-center gap-2 text-[13px] font-semibold text-emerald-600 hover:underline disabled:pointer-events-none disabled:opacity-60"
                 >
-                  Retry
+                  {isRefreshing ? (
+                    <>
+                      <Spinner size="sm" color="current" />
+                      Retrying...
+                    </>
+                  ) : (
+                    'Retry'
+                  )}
                 </button>
               )}
             </div>
@@ -188,9 +232,19 @@ const ShareModal: FC<ShareModalProps> = ({
                   <button
                     type="button"
                     onClick={handleRefresh}
-                    className="text-[13px] font-semibold text-black/30 hover:underline"
+                    disabled={
+                      isLoading || isRefreshing || showShareImageSkeleton
+                    }
+                    className="inline-flex items-center gap-2 text-[13px] font-semibold text-black/50 hover:underline disabled:pointer-events-none disabled:opacity-60"
                   >
-                    Refresh preview
+                    {isRefreshing ? (
+                      <>
+                        <Spinner size="sm" color="current" />
+                        Refreshing...
+                      </>
+                    ) : (
+                      'Refresh preview'
+                    )}
                   </button>
                 </div>
               )}
