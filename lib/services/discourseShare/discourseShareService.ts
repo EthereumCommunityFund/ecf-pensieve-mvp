@@ -453,7 +453,12 @@ function buildStableSnapshotFromContext(params: {
     return null;
   }
 
-  const title = `Answer · ${threadTitle}`;
+  const fallbackTitle = params.thread.isScam
+    ? `Counter Claim · ${threadTitle}`
+    : `Answer · ${threadTitle}`;
+  const answerHeadline =
+    truncate(stripHtml(answer.content), 80) || fallbackTitle;
+  const title = answerHeadline;
   const description = buildDescription(
     answer.content ?? project?.tagline,
     'See how the community is responding on Pensieve.',
@@ -577,13 +582,22 @@ async function buildPayloadFromRecord(
     const now = Date.now();
     const snapshot = parseSnapshot(record.ogSnapshot);
 
-    const stableFromSnapshot =
+    let stableFromSnapshot =
       snapshot && isSnapshotValid(snapshot, entity, now) ? snapshot : null;
 
-    const thread = stableFromSnapshot
+    let thread = stableFromSnapshot
       ? await loadThreadForPayload(entity.threadId)
       : await loadThread(entity.threadId);
     if (!thread) return null;
+
+    if (stableFromSnapshot && entity.kind === 'answer') {
+      const legacyTitle = `Answer · ${thread.title}`;
+      if (stableFromSnapshot.stableMeta.title === legacyTitle) {
+        stableFromSnapshot = null;
+        thread = await loadThread(entity.threadId);
+        if (!thread) return null;
+      }
+    }
 
     const variant = computeVariant(thread, entity);
     const needsThreadAggregates =

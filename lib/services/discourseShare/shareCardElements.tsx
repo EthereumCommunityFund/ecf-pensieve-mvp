@@ -98,6 +98,23 @@ function renderThreadTitle(title: string): JSX.Element {
   );
 }
 
+function renderEntityTitle(title: string): JSX.Element {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        fontFamily: FONT_FAMILY,
+        fontWeight: 600,
+        fontSize: 20,
+        lineHeight: 1.2,
+        color: TEXT_BLACK,
+      }}
+    >
+      {title || '—'}
+    </div>
+  );
+}
+
 function renderSubtitle(text: string): JSX.Element {
   return (
     <div
@@ -364,6 +381,7 @@ function renderAnswerCard(
   payload: DiscourseSharePayload,
   origin: string,
 ): JSX.Element {
+  const headline = payload.metadata.title?.trim() || payload.stable.threadTitle;
   return (
     <div style={baseContainerStyle()}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -381,7 +399,7 @@ function renderAnswerCard(
           }}
         >
           {renderSubtitle(`Complaints & Discourse → Answer`)}
-          {renderThreadTitle(payload.stable.threadTitle)}
+          {renderEntityTitle(headline)}
           {renderByline({
             origin,
             prefix: 'Answer by',
@@ -426,6 +444,7 @@ function renderCounterClaimCard(
   payload: DiscourseSharePayload,
   origin: string,
 ): JSX.Element {
+  const headline = payload.metadata.title?.trim() || payload.stable.threadTitle;
   return (
     <div style={baseContainerStyle()}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -443,7 +462,7 @@ function renderCounterClaimCard(
           }}
         >
           {renderSubtitle(`Complaints & Discourse → Counter Claim`)}
-          {renderThreadTitle(payload.stable.threadTitle)}
+          {renderEntityTitle(headline)}
           {renderByline({
             origin,
             prefix: 'Claim by',
