@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-import { desc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq, sql } from 'drizzle-orm';
 import { LRUCache } from 'lru-cache';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -30,6 +30,12 @@ const ECOSYSTEM_ITEM_KEYS = [
   'contributing_teams',
   'funding_received_grants',
 ] as const;
+const SNAPSHOT_EXCLUDED_KEYS = new Set<string>([
+  'name',
+  'categories',
+  'tags',
+  ...ECOSYSTEM_ITEM_KEYS,
+]);
 
 type SectionProjectFieldConfig = {
   sourceKey: string;
@@ -298,6 +304,23 @@ const getItemValue = (items: IProposalItem[], key: EcosystemItemKey) => {
   return match?.value ?? null;
 };
 
+const normalizeStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => (typeof entry === 'string' ? entry.trim() : null))
+      .filter((entry): entry is string => Boolean(entry));
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
 const createResponseHeaders = () => {
   const headers = new Headers();
   headers.set('Cache-Control', 'public, max-age=60, s-maxage=120');
@@ -335,20 +358,37 @@ const buildSectionsFromItems = (
 const formatProjectPayload = async (
   snapshot: ProjectSnap,
   projectNameCache: ProjectNameCache,
+  includeSnapshot: boolean,
 ) => {
-  const { sections, counts } = buildSectionsFromItems(
-    snapshot.items as IProposalItem[] | null | undefined,
-  );
+  const typedItems = Array.isArray(snapshot.items)
+    ? (snapshot.items as IProposalItem[])
+    : [];
+  const { sections, counts } = buildSectionsFromItems(typedItems);
 
   const sectionsWithNames = await enrichSectionsWithProjectNames(
     sections,
     projectNameCache,
   );
 
+  const tags = normalizeStringArray(
+    typedItems.find((item) => item.key === 'tags')?.value,
+  );
+
+  const snapshotItems =
+    includeSnapshot && typedItems.length
+      ? typedItems.reduce<Record<string, unknown>>((acc, item) => {
+          if (item?.key && !SNAPSHOT_EXCLUDED_KEYS.has(item.key)) {
+            acc[item.key] = item.value ?? null;
+          }
+          return acc;
+        }, {})
+      : undefined;
+
   return {
     id: snapshot.projectId,
     name: snapshot.name ?? '',
     categories: snapshot.categories ?? [],
+    tags,
     snapshot: {
       id: snapshot.id,
       createdAt: snapshot.createdAt?.toISOString?.() ?? null,
@@ -358,6 +398,9 @@ const formatProjectPayload = async (
     contributing_teams: sectionsWithNames.contributing_teams,
     funding_received_grants: sectionsWithNames.funding_received_grants,
     ecosystem_counts: counts,
+    ...(snapshotItems && Object.keys(snapshotItems).length
+      ? snapshotItems
+      : {}),
   };
 };
 
@@ -384,6 +427,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const projectNameCache: ProjectNameCache = new Map();
     const projectIdParam = searchParams.get('projectId');
+    const includeSnapshotParam = searchParams.get('includeSnapshot');
+    const includeSnapshot =
+      includeSnapshotParam === null
+        ? true
+        : includeSnapshotParam.toLowerCase() !== 'false';
 
     if (projectIdParam) {
       const projectId = Number(projectIdParam);
@@ -409,6 +457,7 @@ export async function GET(request: NextRequest) {
       const projectPayload = await formatProjectPayload(
         snapshot,
         projectNameCache,
+        includeSnapshot,
       );
 
       return NextResponse.json(
@@ -421,6 +470,7 @@ export async function GET(request: NextRequest) {
             snapshot_id: snapshot.id,
             last_updated: projectPayload.snapshot.createdAt,
             counts: projectPayload.ecosystem_counts,
+            include_snapshot_items: includeSnapshot,
           },
         },
         { headers: createResponseHeaders() },
@@ -429,16 +479,17 @@ export async function GET(request: NextRequest) {
 
     const limitParam = searchParams.get('limit');
     const offsetParam = searchParams.get('offset');
+    const maxLimit = includeSnapshot ? 50 : 300;
 
     const limit = Math.min(
       Math.max(1, parseInt(limitParam ?? '20', 10) || 20),
-      300,
+      maxLimit,
     );
     const offset = Math.max(0, parseInt(offsetParam ?? '0', 10) || 0);
 
     const [snapshots, countResult] = await Promise.all([
       db.query.projectSnaps.findMany({
-        orderBy: desc(projectSnaps.createdAt),
+        orderBy: [asc(projectSnaps.projectId), desc(projectSnaps.createdAt)],
         limit,
         offset,
       }),
@@ -447,7 +498,7 @@ export async function GET(request: NextRequest) {
 
     const projects = await Promise.all(
       snapshots.map((snapshot) =>
-        formatProjectPayload(snapshot, projectNameCache),
+        formatProjectPayload(snapshot, projectNameCache, includeSnapshot),
       ),
     );
     const total = countResult[0]?.count ?? 0;
@@ -466,6 +517,8 @@ export async function GET(request: NextRequest) {
         metadata: {
           source: 'project_snaps',
           keys: ECOSYSTEM_ITEM_KEYS,
+          include_snapshot_items: includeSnapshot,
+          max_limit: maxLimit,
         },
       },
       { headers: createResponseHeaders() },
