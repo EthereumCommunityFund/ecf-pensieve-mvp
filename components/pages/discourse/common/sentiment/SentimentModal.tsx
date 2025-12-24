@@ -1,7 +1,7 @@
 'use client';
 
-import { XCircleIcon } from '@phosphor-icons/react';
 import { Skeleton } from '@heroui/react';
+import { XCircleIcon } from '@phosphor-icons/react';
 
 import { Button } from '@/components/base';
 import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
