@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Cube, FileText, House } from '@phosphor-icons/react';
+import { Cube, FileText, House, PencilCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -59,6 +59,17 @@ export const navigationItems: NavigationItem[] = [
       <GitPullLightIcon className="pc:size-[18px] tablet:size-[16px]  size-[24px] shrink-0" />
     ),
     matchPath: '/projects/pending',
+  },
+  {
+    name: 'Discourse',
+    href: '/discourse',
+    icon: (
+      <PencilCircle className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
+    ),
+    activeIcon: (
+      <PencilCircle className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
+    ),
+    matchPath: '/discourse',
   },
   {
     name: 'Whitepaper',

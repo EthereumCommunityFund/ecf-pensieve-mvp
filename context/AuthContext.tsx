@@ -80,7 +80,10 @@ interface IAuthContext {
   setConnectSource: (source: ConnectSource) => void;
   fetchUserProfile: () => Promise<IProfile | null>;
   needsTurnstile: boolean;
-  continueAuthWithTurnstile: (token: string) => Promise<void>;
+  continueAuthWithTurnstile: (
+    token: string,
+    isNewUserOverride?: boolean,
+  ) => Promise<void>;
 }
 
 export const CreateProfileErrorPrefix = '[Create Profile Failed]';
@@ -117,6 +120,7 @@ const initialContext: IAuthContext = {
 };
 
 const AuthContext = createContext<IAuthContext>(initialContext);
+const isTurnstileBypassed = process.env.NEXT_PUBLIC_TURNSTILE_BYPASS === 'true';
 
 export const isUserDenied = (error: any) => {
   const errorMessageLower = error.message?.toLowerCase() || '';
@@ -337,6 +341,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [updateAuthState, fetchUserProfile, resetAuthState, handleError],
   );
 
+  const continueAuthWithTurnstile = useCallback(
+    async (turnstileToken: string, isNewUserOverride?: boolean) => {
+      if (
+        !signatureDataRef.current.message ||
+        !signatureDataRef.current.signature
+      ) {
+        handleError('Missing signature data', false, true);
+        return;
+      }
+
+      try {
+        const { message, signature } = signatureDataRef.current;
+        const isNewUser = isNewUserOverride ?? userState.newUser;
+
+        if (isNewUser) {
+          turnstileTokenRef.current = turnstileToken;
+          setNeedsTurnstile(false);
+          updateAuthState('fetching_profile');
+        } else {
+          updateAuthState('fetching_profile');
+          setNeedsTurnstile(false);
+
+          const { token } = await verifyMutation.mutateAsync({
+            address: address!,
+            signature,
+            message,
+            turnstileToken,
+          });
+          await handleSupabaseLogin(token);
+        }
+      } catch (error: any) {
+        if (!isTurnstileBypassed) {
+          setNeedsTurnstile(true);
+          updateAuthState('awaiting_turnstile_verification');
+        }
+        handleError(error.message, false, false);
+      }
+    },
+    [
+      address,
+      userState.newUser,
+      verifyMutation,
+      handleSupabaseLogin,
+      updateAuthState,
+      handleError,
+    ],
+  );
+
   const authenticate = useCallback(async () => {
     if (!address || !chain) {
       handleError('Wallet not connected, cannot authenticate.', false, false);
@@ -393,12 +445,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const signature = await signMessageAsync({ message });
       signatureDataRef.current = { message, signature };
 
-      setNeedsTurnstile(true);
-      updateAuthState('awaiting_turnstile_verification');
       setUserState((prev) => ({
         ...prev,
         newUser: !isRegistered,
       }));
+
+      if (isTurnstileBypassed) {
+        setNeedsTurnstile(false);
+        await continueAuthWithTurnstile('bypass', !isRegistered);
+        return;
+      }
+
+      setNeedsTurnstile(true);
+      updateAuthState('awaiting_turnstile_verification');
     } catch (error: any) {
       const errorMessage =
         error.message || 'Authentication failed. Please try again.';
@@ -418,53 +477,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signMessageAsync,
     verifyMutation,
     handleSupabaseLogin,
+    continueAuthWithTurnstile,
     handleError,
   ]);
-
-  const continueAuthWithTurnstile = useCallback(
-    async (turnstileToken: string) => {
-      if (
-        !signatureDataRef.current.message ||
-        !signatureDataRef.current.signature
-      ) {
-        handleError('Missing signature data', false, true);
-        return;
-      }
-
-      try {
-        const { message, signature } = signatureDataRef.current;
-
-        if (userState.newUser) {
-          turnstileTokenRef.current = turnstileToken;
-          setNeedsTurnstile(false);
-          updateAuthState('fetching_profile');
-        } else {
-          updateAuthState('fetching_profile');
-          setNeedsTurnstile(false);
-
-          const { token } = await verifyMutation.mutateAsync({
-            address: address!,
-            signature,
-            message,
-            turnstileToken,
-          });
-          await handleSupabaseLogin(token);
-        }
-      } catch (error: any) {
-        setNeedsTurnstile(true);
-        updateAuthState('awaiting_turnstile_verification');
-        handleError(error.message, false, false);
-      }
-    },
-    [
-      address,
-      userState.newUser,
-      verifyMutation,
-      handleSupabaseLogin,
-      updateAuthState,
-      handleError,
-    ],
-  );
 
   const createProfile = useCallback(
     async (username: string) => {
@@ -488,8 +503,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await handleSupabaseLogin(verifyResult.token);
       } catch (error: any) {
         turnstileTokenRef.current = null;
-        setNeedsTurnstile(true);
-        updateAuthState('awaiting_turnstile_verification');
+        if (!isTurnstileBypassed) {
+          setNeedsTurnstile(true);
+          updateAuthState('awaiting_turnstile_verification');
+        }
         handleError(
           `${CreateProfileErrorPrefix}: ${error.message || 'Please try again'}`,
           false,

@@ -118,7 +118,7 @@ export const useProjectTableData = (
 
         items.forEach((itemKey) => {
           const item = displayItemMap[itemKey as IPocItemKey];
-          const isAiCreator = item.submitter?.userId === AiSystemUserId;
+          const isAiCreator = item?.submitter?.userId === AiSystemUserId;
           if (item) {
             const groupInfo = itemToGroupMap.get(itemKey);
             const itemConfig = AllItemConfig[itemKey as IPocItemKey];

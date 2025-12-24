@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@/components/base';
 import ProjectTabs from '@/components/base/ProjectTabs';
 import { useMetricDetailModal } from '@/components/biz/modal/metricDetail/Context';
 import ProjectTopBannerAd from '@/components/pages/ad-management/HtaxAd/ProjectTopBannerAd';
@@ -20,13 +21,8 @@ import TransparentScore from '@/components/pages/project/detail/TransparentScore
 import Ecosystem from '@/components/pages/project/ecosystem';
 import { AllItemConfig } from '@/constants/itemConfig';
 import { useAuth } from '@/context/AuthContext';
+import { trpc } from '@/lib/trpc/client';
 import { IPocItemKey } from '@/types/item';
-
-const tabItems = [
-  { key: 'profile', label: 'Profile' },
-  { key: 'contributing-funds', label: 'Fund Contributions' },
-  { key: 'ecosystem', label: 'Ecosystem' },
-];
 
 // Animation variants for tab content
 const tabContentVariants = {
@@ -55,8 +51,16 @@ const tabContentVariants = {
 export type ITabKey = 'profile' | 'ecosystem' | 'contributing-funds';
 export type IModalContentType = 'viewItemProposal' | 'submitPropose';
 
+type ProjectComplaintsMeta = {
+  complaintsCount?: number;
+  redressedCount?: number;
+  scamAlertCount?: number;
+};
+
 const ProjectPage = () => {
   const { id: projectId } = useParams();
+  const numericProjectId = Number(projectId);
+  const isValidProjectId = Number.isFinite(numericProjectId);
   const { profile, showAuthPrompt } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,9 +87,36 @@ const ProjectPage = () => {
     getLeadingLogoUrl,
   } = useProjectDetailContext();
 
-  const displayedCount = useMemo(() => {
-    return Object.keys(project?.itemsTopWeight || {}).length;
-  }, [project]);
+  const projectWithMeta = project as typeof project & ProjectComplaintsMeta;
+  const threadStatsQuery =
+    trpc.projectDiscussionThread.getProjectStats.useQuery(
+      { projectId: numericProjectId },
+      { enabled: isValidProjectId },
+    );
+  const complaintsCount =
+    threadStatsQuery.data?.total ?? projectWithMeta?.complaintsCount ?? 0;
+  const scamAlertCount =
+    threadStatsQuery.data?.scamAlerts ?? projectWithMeta?.scamAlertCount ?? 0;
+
+  const tabs = useMemo(
+    () => [
+      { key: 'profile', label: 'Profile' },
+      { key: 'contributing-funds', label: 'Fund Contributions' },
+      { key: 'ecosystem', label: 'Ecosystem' },
+      {
+        key: 'complaints',
+        label: (
+          <span className="flex items-center gap-2">
+            Complaints
+            <span className="inline-flex h-[22px] items-center rounded-[2px] bg-[#CDCDCD] px-[4px] text-[13px] font-semibold text-black">
+              {complaintsCount}
+            </span>
+          </span>
+        ),
+      },
+    ],
+    [complaintsCount],
+  );
 
   const [modalContentType, setModalContentType] =
     useState<IModalContentType>('viewItemProposal');
@@ -109,16 +140,28 @@ const ProjectPage = () => {
       currentTab === 'contributing-funds'
     ) {
       setActiveTab(currentTab as ITabKey);
-    } else {
-      // Redirect any other tab to profile
-      router.replace(`/project/${projectId}?tab=profile`, {
+      return;
+    }
+
+    if (currentTab === 'complaints') {
+      router.replace(`/project/${projectId}/complaints`, {
         scroll: false,
       });
+      return;
     }
+
+    // Redirect any other tab (including null) to profile query param
+    router.replace(`/project/${projectId}?tab=profile`, {
+      scroll: false,
+    });
   }, [searchParams, projectId, router]);
 
   const handleTabChange = useCallback(
     (tabKey: string) => {
+      if (tabKey === 'complaints') {
+        router.push(`/project/${projectId}/complaints`);
+        return;
+      }
       router.push(`/project/${projectId}?tab=${tabKey}`, {
         scroll: false,
       });
@@ -219,11 +262,28 @@ const ProjectPage = () => {
       />
 
       <div className="mobile:mx-[10px] mx-[20px] mt-[20px] flex flex-wrap items-center justify-between gap-[10px]">
-        <ProjectTabs
-          tabs={tabItems}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
+        <div className="flex flex-wrap items-center gap-[12px] border-b border-black/10">
+          <ProjectTabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+          {scamAlertCount > 0 ? (
+            <div className="pb-[12px]">
+              <Button
+                className="h-[26px] rounded-[5px] border border-[#BB5D00] bg-[rgba(187,93,0,0.10)] px-[8px] text-[13px] font-semibold text-[#BB5D00] hover:bg-[#ecb47d]"
+                onPress={() =>
+                  router.push(
+                    `/project/${projectId}/complaints?isScam=true&alertOnly=true&status=all`,
+                  )
+                }
+              >
+                View Scam Alerts
+                <span>{scamAlertCount}</span>
+              </Button>
+            </div>
+          ) : null}
+        </div>
         <TransparentScore
           isDataFetched={isProjectFetched}
           itemsTopWeight={project?.itemsTopWeight || {}}

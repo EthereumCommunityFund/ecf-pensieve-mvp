@@ -9,6 +9,13 @@ export async function verifyTurnstileToken(
   token: string,
   remoteip?: string,
 ): Promise<boolean> {
+  const shouldBypassTurnstile = process.env.TURNSTILE_BYPASS === 'true';
+
+  if (shouldBypassTurnstile) {
+    console.warn('Turnstile verification bypassed via environment flag');
+    return true;
+  }
+
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secretKey) {

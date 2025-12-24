@@ -1,6 +1,6 @@
 'use client';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { cn } from '@heroui/react';
+import { cn, Skeleton } from '@heroui/react';
 import { ReactNode } from 'react';
 
 import { ECFButton } from '@/components/base/button';
@@ -47,3 +47,18 @@ const BackHeader = ({ children, className }: BackHeaderProps) => {
 };
 
 export default BackHeader;
+
+export const BackHeaderSkeleton = ({ className }: { className?: string }) => {
+  return (
+    <div
+      className={cn(
+        'mobile:px-[10px] flex h-[35px] items-center justify-start gap-[10px] px-[20px]',
+        className,
+      )}
+    >
+      <Skeleton className="h-[32px] w-[70px] rounded-[8px]" />
+      <Skeleton className="h-[18px] w-[80px] rounded-[6px]" />
+      <Skeleton className="h-[18px] w-[60px] rounded-[6px]" />
+    </div>
+  );
+};

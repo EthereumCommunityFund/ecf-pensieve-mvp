@@ -11,6 +11,10 @@ import { verifyTurnstileToken } from '@/lib/services/turnstile';
 import { publicProcedure, router } from '@/lib/trpc/server';
 
 const NONCE_EXPIRY_MS = 10 * 60 * 1000;
+const isTurnstileBypassed = process.env.TURNSTILE_BYPASS === 'true';
+const turnstileTokenSchema = isTurnstileBypassed
+  ? z.string().optional()
+  : z.string().min(1, 'Turnstile token is required');
 
 const getFakeEmail = (address: string): string =>
   `${address.toLowerCase()}@pensieve.com`;
@@ -153,7 +157,7 @@ export const authRouter = router({
           .min(1, 'Username cannot be empty')
           .optional(),
         //inviteCode: z.string().optional(),
-        turnstileToken: z.string(),
+        turnstileToken: turnstileTokenSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -169,7 +173,18 @@ export const authRouter = router({
       const normalizedAddress = address.toLowerCase();
       const email = getFakeEmail(normalizedAddress);
 
-      if (turnstileToken) {
+      if (isTurnstileBypassed) {
+        console.warn(
+          `[TRPC Verify] Turnstile verification bypassed for ${normalizedAddress}`,
+        );
+      } else {
+        if (!turnstileToken) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Turnstile token is required for authentication.',
+          });
+        }
+
         const isValidToken = await verifyTurnstileToken(turnstileToken);
         if (!isValidToken) {
           console.error(

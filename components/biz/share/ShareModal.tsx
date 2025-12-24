@@ -1,7 +1,7 @@
 'use client';
 
-import { addToast, Image, Skeleton } from '@heroui/react';
-import { FC, useCallback, useMemo } from 'react';
+import { addToast, Image, Skeleton, Spinner } from '@heroui/react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button } from '@/components/base';
@@ -12,13 +12,20 @@ import {
   ModalContent,
 } from '@/components/base/modal';
 import { CopyIcon } from '@/components/icons';
+import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import type { SharePayload } from '@/lib/services/share';
 import { renderShareCard } from '@/lib/services/share/shareCardElements';
 import { getAppOrigin } from '@/lib/utils/url';
 
+const SHARE_PREVIEW_PADDING_TOP = `${(SHARE_CARD_HEIGHT / SHARE_CARD_WIDTH) * 100}%`;
+
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  linkTitle?: string;
+  linkIntro?: string;
+  linkDetails?: string;
   shareUrl: string;
   shareImageUrl?: string | null;
   isLoading?: boolean;
@@ -30,6 +37,10 @@ interface ShareModalProps {
 const ShareModal: FC<ShareModalProps> = ({
   isOpen,
   onClose,
+  title = 'Share Project',
+  linkTitle = 'Share Link',
+  linkIntro = 'Copy link below to share with friends',
+  linkDetails = `This link can be shared across multiple social media platforms and generates a social graph preview. (X/Twitter may need a few minutes to fetch the preview image)`,
   shareUrl,
   shareImageUrl,
   isLoading = false,
@@ -37,6 +48,23 @@ const ShareModal: FC<ShareModalProps> = ({
   onRefresh,
   payload,
 }) => {
+  const normalizedShareUrl = useMemo(() => shareUrl.trim(), [shareUrl]);
+  const canCopy = !isLoading && Boolean(normalizedShareUrl);
+  const showShareUrlSkeleton = isLoading || !normalizedShareUrl;
+  const [loadedShareImageUrl, setLoadedShareImageUrl] = useState<string | null>(
+    null,
+  );
+  const [failedShareImageUrl, setFailedShareImageUrl] = useState<string | null>(
+    null,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setFailedShareImageUrl(null);
+  }, [isOpen]);
+
   const onCopySuccess = useCallback(() => {
     addToast({
       title: 'Success',
@@ -45,11 +73,28 @@ const ShareModal: FC<ShareModalProps> = ({
     });
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    if (onRefresh) {
-      void onRefresh();
+  const hasPreviewPayload = Boolean(payload);
+
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh || refreshInFlightRef.current) {
+      return;
     }
-  }, [onRefresh]);
+
+    refreshInFlightRef.current = true;
+    setIsRefreshing(true);
+
+    try {
+      await onRefresh();
+    } catch (refreshError) {
+      void refreshError;
+    } finally {
+      refreshInFlightRef.current = false;
+
+      if (hasPreviewPayload || !shareImageUrl) {
+        setIsRefreshing(false);
+      }
+    }
+  }, [hasPreviewPayload, onRefresh, shareImageUrl]);
 
   const previewCard = useMemo(() => {
     if (!payload) {
@@ -62,6 +107,29 @@ const ShareModal: FC<ShareModalProps> = ({
     return renderShareCard(payload, { origin, mode: 'preview' });
   }, [payload]);
 
+  const shouldShowShareImage = !hasPreviewPayload && Boolean(shareImageUrl);
+  const showShareImageSkeleton =
+    shouldShowShareImage &&
+    shareImageUrl !== loadedShareImageUrl &&
+    shareImageUrl !== failedShareImageUrl;
+
+  useEffect(() => {
+    if (!isOpen) {
+      refreshInFlightRef.current = false;
+      setIsRefreshing(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isRefreshing) return;
+    if (refreshInFlightRef.current) return;
+    if (hasPreviewPayload || !shareImageUrl) return;
+
+    if (!showShareImageSkeleton) {
+      setIsRefreshing(false);
+    }
+  }, [hasPreviewPayload, isRefreshing, shareImageUrl, showShareImageSkeleton]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -73,41 +141,45 @@ const ShareModal: FC<ShareModalProps> = ({
       }}
     >
       <ModalContent>
-        <CommonModalHeader title="Share Project" onClose={onClose} />
+        <CommonModalHeader title={title} onClose={onClose} />
         <ModalBody>
           <div className="text-[18px] font-[600] leading-[18px] text-black">
-            Share Link
+            {linkTitle}
           </div>
           <div className="space-y-2">
             <div className="text-[14px] leading-[18px] text-black/60">
-              Copy link below to share with friends
+              {linkIntro}
             </div>
             <div className="text-[13px] leading-[18px] text-black/50">
-              This link can be shared across multiple social media platforms and
-              generates a social graph preview.
-              <span className="italic">
-                {' '}
-                (X/Twitter may need a few minutes to fetch the preview image)
-              </span>
+              {linkDetails}
             </div>
           </div>
           <div className="flex items-center overflow-hidden rounded-[8px] border border-black/10 bg-[#F9F9F9]">
             <div className="flex h-[40px] flex-1 items-center truncate px-[10px] text-black">
-              {isLoading ? (
+              {showShareUrlSkeleton ? (
                 <Skeleton className="h-[32px] w-full rounded-md" />
               ) : (
-                <span className="truncate">{shareUrl}</span>
+                <span className="truncate">{normalizedShareUrl}</span>
               )}
             </div>
-            <CopyToClipboard text={shareUrl} onCopy={onCopySuccess}>
+            {canCopy ? (
+              <CopyToClipboard text={normalizedShareUrl} onCopy={onCopySuccess}>
+                <Button
+                  isIconOnly
+                  className="border-none bg-transparent p-0 hover:bg-gray-200"
+                >
+                  <CopyIcon width={20} height={20} />
+                </Button>
+              </CopyToClipboard>
+            ) : (
               <Button
                 isIconOnly
-                isDisabled={isLoading}
+                isDisabled
                 className="border-none bg-transparent p-0 hover:bg-gray-200"
               >
                 <CopyIcon width={20} height={20} />
               </Button>
-            </CopyToClipboard>
+            )}
           </div>
           {error && (
             <div className="flex items-start justify-between rounded-[8px] border border-red-200 bg-red-50 px-[12px] py-[10px] text-[13px] text-red-600">
@@ -116,9 +188,17 @@ const ShareModal: FC<ShareModalProps> = ({
                 <button
                   type="button"
                   onClick={handleRefresh}
-                  className="shrink-0 text-[13px] font-semibold text-emerald-600 hover:underline"
+                  disabled={isLoading || isRefreshing}
+                  className="inline-flex shrink-0 items-center gap-2 text-[13px] font-semibold text-emerald-600 hover:underline disabled:pointer-events-none disabled:opacity-60"
                 >
-                  Retry
+                  {isRefreshing ? (
+                    <>
+                      <Spinner size="sm" color="current" />
+                      Retrying...
+                    </>
+                  ) : (
+                    'Retry'
+                  )}
                 </button>
               )}
             </div>
@@ -128,11 +208,45 @@ const ShareModal: FC<ShareModalProps> = ({
               {previewCard ? (
                 <div className="flex justify-center">{previewCard}</div>
               ) : (
-                <Image
-                  src={shareImageUrl ?? ''}
-                  alt="Share preview"
-                  className="h-auto w-full rounded-[12px] border border-black/10 bg-[#F9F9F9]"
-                />
+                <div className="relative w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#F9F9F9]">
+                  <div style={{ paddingTop: SHARE_PREVIEW_PADDING_TOP }} />
+                  {showShareImageSkeleton && (
+                    <Skeleton className="absolute inset-0 size-full rounded-none" />
+                  )}
+                  {shareImageUrl && shareImageUrl !== failedShareImageUrl && (
+                    <Image
+                      key={shareImageUrl}
+                      removeWrapper
+                      disableSkeleton
+                      src={shareImageUrl}
+                      alt="Share preview"
+                      className="absolute inset-0 size-full object-contain"
+                      onLoad={() => setLoadedShareImageUrl(shareImageUrl)}
+                      onError={() => setFailedShareImageUrl(shareImageUrl)}
+                    />
+                  )}
+                </div>
+              )}
+              {onRefresh && !error && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={
+                      isLoading || isRefreshing || showShareImageSkeleton
+                    }
+                    className="inline-flex items-center gap-2 text-[13px] font-semibold text-black/50 hover:underline disabled:pointer-events-none disabled:opacity-60"
+                  >
+                    {isRefreshing ? (
+                      <>
+                        <Spinner size="sm" color="current" />
+                        Refreshing...
+                      </>
+                    ) : (
+                      'Refresh preview'
+                    )}
+                  </button>
+                </div>
               )}
             </div>
           )}

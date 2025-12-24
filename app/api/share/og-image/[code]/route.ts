@@ -1,7 +1,6 @@
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
 
-import { isProduction } from '@/constants/env';
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/constants/share';
 import ShareService from '@/lib/services/share';
 import {
@@ -38,18 +37,6 @@ export async function GET(
       }
     }
 
-    if (!isProduction) {
-      console.info(
-        '[share-og-image] request',
-        JSON.stringify({
-          code,
-          version: payload.imageVersion,
-          tsParam: timestampParam ?? null,
-          normalizedTimestamp,
-        }),
-      );
-    }
-
     const fonts = await getOgFonts();
     const origin = new URL(request.url).origin;
     const element = renderShareOgImage(payload, origin);
@@ -72,21 +59,10 @@ export async function GET(
         new Date(normalizedTimestamp).toUTCString(),
       );
       response.headers.set('ETag', `W/"share-${code}-${normalizedTimestamp}"`);
-      if (!isProduction) {
-        console.info(
-          '[share-og-image] cache-headers',
-          JSON.stringify({
-            code,
-            normalizedTimestamp,
-            lastModified: new Date(normalizedTimestamp).toISOString(),
-          }),
-        );
-      }
     }
 
     return response;
   } catch (error) {
-    console.error('Failed to generate share OG image:', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }

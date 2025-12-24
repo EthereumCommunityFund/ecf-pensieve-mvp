@@ -12,7 +12,7 @@ interface ProjectsLayoutClientProps {
 const ProjectsLayoutClient = ({ children }: ProjectsLayoutClientProps) => {
   return (
     <ProposalProgressModalProvider>
-      <div className="px-[20px] pt-[20px] mobile:px-[10px] mobile:pt-[10px]">
+      <div className="mobile:px-[10px] mobile:pt-[10px] px-[20px] pt-[20px]">
         {children}
         <ProposalProgressModalRenderer />
       </div>
