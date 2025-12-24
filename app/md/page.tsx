@@ -1,6 +1,10 @@
 'use client';
 
-import MdEditor from '@/components/base/MdEditor/index';
+import dynamic from 'next/dynamic';
+
+const MdEditor = dynamic(() => import('@/components/base/MdEditor/index'), {
+  ssr: false,
+});
 
 export default function Page() {
   return <MdEditor />;
