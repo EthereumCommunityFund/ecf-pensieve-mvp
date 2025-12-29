@@ -10,86 +10,12 @@ import {
   voteRecords,
 } from '@/lib/db/schema';
 
+import { normalizeString, normalizeStringArray } from '../utils';
+
 type SnapshotItem = {
   key?: string | null;
   value?: unknown;
 };
-
-function normalizeString(value: unknown): string | undefined {
-  if (value === null || value === undefined) {
-    return undefined;
-  }
-
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      const normalized = normalizeString(entry);
-      if (normalized) {
-        return normalized;
-      }
-    }
-    return undefined;
-  }
-
-  if (typeof value === 'object') {
-    const candidateKeys = ['value', 'label', 'name', 'title'];
-    for (const key of candidateKeys) {
-      const candidate = (value as Record<string, unknown>)[key];
-      const normalized = normalizeString(candidate);
-      if (normalized) {
-        return normalized;
-      }
-    }
-  }
-
-  return undefined;
-}
-
-function normalizeStringArray(value: unknown): string[] {
-  if (!value) {
-    return [];
-  }
-
-  if (Array.isArray(value)) {
-    const normalized = value
-      .map((entry) => normalizeString(entry))
-      .filter((entry): entry is string => Boolean(entry));
-    return Array.from(new Set(normalized));
-  }
-
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) {
-        return normalizeStringArray(parsed);
-      }
-    } catch (error) {
-      // JSON parse failed; fallback to comma-separated handling
-    }
-
-    const parts = value
-      .split(',')
-      .map((part) => part.trim())
-      .filter((part) => part.length > 0);
-
-    if (parts.length > 0) {
-      return Array.from(new Set(parts));
-    }
-
-    const normalized = normalizeString(value);
-    return normalized ? [normalized] : [];
-  }
-
-  return [];
-}
 
 type SnapshotMap = Record<string, unknown>;
 

@@ -1,0 +1,263 @@
+'use client';
+
+import { Switch } from '@heroui/react';
+import { ChartBar, Info } from '@phosphor-icons/react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { Button } from '@/components/base';
+import MdEditor from '@/components/base/MdEditor';
+import {
+  CommonModalHeader,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+} from '@/components/base/modal';
+
+import { EDITOR_MAX_CHARACTERS, parseEditorValue } from '../utils/editorValue';
+
+import type { CommentTarget } from './hooks/useDiscussionComposer';
+
+export type ComposerVariant = 'answer' | 'comment' | 'counter';
+
+type ThreadComposerModalProps = {
+  isOpen: boolean;
+  variant: ComposerVariant;
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+  isSubmitting?: boolean;
+  error?: string | null;
+  threadTitle: string;
+  threadCategory?: string;
+  isScam?: boolean;
+  contextCard?: ComposerContext;
+  titleOverride?: string;
+};
+
+type VariantCopy = {
+  title: string;
+  placeholder: string;
+  helper: string;
+  primaryLabel: string;
+  badge: string;
+};
+
+const VARIANT_CONFIG = {
+  answer: {
+    title: 'Post Answer',
+    placeholder: 'Write your answer',
+    helper: 'Markdown supported.',
+    primaryLabel: 'Publish Answer',
+    badge: 'Answer',
+  },
+  counter: {
+    title: 'Post Counter Claim',
+    placeholder: 'Share evidence or remediation steps to dispute this alert',
+    helper: 'Markdown supported.',
+    primaryLabel: 'Publish Counter Claim',
+    badge: 'Counter Claim',
+  },
+  comment: {
+    title: 'Post Comment',
+    placeholder: 'write your comment',
+    helper: 'Markdown supported.',
+    primaryLabel: 'Publish Comment',
+    badge: 'Discussion',
+  },
+} satisfies Record<ComposerVariant, VariantCopy>;
+
+export type ComposerContext = {
+  title: string;
+  author: string;
+  timestamp?: string;
+  excerpt: string;
+  isOp?: boolean;
+  target?: CommentTarget;
+};
+
+export function ThreadComposerModal({
+  isOpen,
+  variant,
+  value,
+  onChange,
+  onSubmit,
+  onClose,
+  isSubmitting,
+  error,
+  threadTitle,
+  threadCategory,
+  isScam,
+  contextCard,
+  titleOverride,
+}: ThreadComposerModalProps) {
+  const config = VARIANT_CONFIG[variant];
+  const plainText = useMemo(() => parseEditorValue(value).plain, [value]);
+  const charactersUsed = plainText.length;
+  const charactersRemaining = Math.max(
+    0,
+    EDITOR_MAX_CHARACTERS - charactersUsed,
+  );
+  const showSentimentToggle = false;
+  const [includeSentiment, setIncludeSentiment] = useState(false);
+  const modalTitle = titleOverride || config.title;
+  const showOpBadge =
+    contextCard?.isOp && !contextCard.author.toLowerCase().includes('(op)');
+
+  const handleEditorChange = (nextValue: string) => {
+    onChange(nextValue);
+  };
+
+  const badgeLabel = useMemo(() => {
+    if (variant === 'answer' && isScam) {
+      return 'Counter Claim';
+    }
+    return config.badge;
+  }, [config.badge, isScam, variant]);
+
+  const canSubmit =
+    Boolean(plainText.trim()) &&
+    plainText.length <= EDITOR_MAX_CHARACTERS &&
+    !isSubmitting;
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    onClose();
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setIncludeSentiment(false);
+    }
+  }, [isOpen]);
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      classNames={{
+        base: 'w-[700px] max-w-auto tablet:max-w-[calc(80vw)] mobile:max-w-[calc(100vw-24px)] bg-transparent border-none p-0 shadow-none',
+        body: 'p-0',
+        header: 'p-0',
+        footer: 'p-0 mt-0',
+      }}
+    >
+      <ModalContent className="overflow-hidden rounded-[10px] border border-black/10 bg-white p-0 shadow-[0_24px_80px_rgba(0,0,0,0.16)]">
+        <CommonModalHeader
+          title={modalTitle}
+          onClose={handleClose}
+          isDisabled={isSubmitting}
+          classNames={{
+            base: 'items-center px-6 pt-5 pb-4 border-b border-black/10',
+            title: 'text-[18px] font-semibold text-black',
+            button: 'opacity-50 hover:opacity-100',
+          }}
+        />
+
+        <ModalBody className="flex flex-col gap-3 px-6 pb-5 pt-4">
+          {contextCard ? (
+            <div className="rounded-[10px] border border-black/10 bg-white px-[12px] py-[10px]">
+              <p className="text-[14px] font-semibold text-black/50">
+                {contextCard.title}
+              </p>
+              <div className="mt-2 flex flex-col gap-[6px]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[14px] font-semibold text-black">
+                    {contextCard.author}
+                  </span>
+                  {showOpBadge ? (
+                    <span className="text-[12px] font-semibold text-[#1b9573]">
+                      (OP)
+                    </span>
+                  ) : null}
+                  {contextCard.timestamp ? (
+                    <span className="text-[12px] text-black/60">
+                      {contextCard.timestamp}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-[14px] leading-[20px] text-black/80">
+                  {contextCard.excerpt}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          <MdEditor
+            value={value}
+            onChange={handleEditorChange}
+            placeholder={config.placeholder}
+            hideMenuBar={true}
+            debounceMs={150}
+            className={{
+              base: `rounded-[8px] border  ${
+                error ? 'border-[#d14343]' : 'border-black/10'
+              }`,
+              editorWrapper: 'bg-black/5 p-3',
+              editor:
+                'min-h-[320px] text-[14px] leading-[20px] text-black/80 placeholder:text-black/40',
+            }}
+            isEdit={!isSubmitting}
+          />
+          {error ? <p className="text-xs text-[#d14343]">{error}</p> : null}
+          <div className="flex items-center justify-between text-xs text-black/70">
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center rounded-[3px] bg-black px-2 py-[2px] text-[10px] font-semibold uppercase tracking-[0.08em] text-white">
+                MD
+              </span>
+              <span>Markdown Available</span>
+            </span>
+            <span className="text-[11px] text-black/60">
+              {charactersRemaining.toLocaleString()} characters remaining
+            </span>
+          </div>
+
+          {showSentimentToggle ? (
+            <div className="flex items-center justify-between rounded-[5px] border border-black/10 bg-white px-3 py-2">
+              <div className="flex items-center gap-[10px] text-[14px] text-black">
+                <ChartBar size={18} weight="fill" className="text-black/60" />
+                <span className="font-medium">
+                  Include Sentiment in Comment
+                </span>
+                <Info size={16} className="text-black/40" />
+              </div>
+              <Switch
+                isSelected={includeSentiment}
+                isDisabled={isSubmitting}
+                onValueChange={setIncludeSentiment}
+                color="default"
+                classNames={{
+                  base: 'h-6',
+                  wrapper:
+                    'group-data-[selected=true]:!bg-black group-data-[selected=true]:!bg-black',
+                  thumb: '',
+                }}
+              />
+            </div>
+          ) : null}
+        </ModalBody>
+
+        <ModalFooter className="flex items-center justify-end gap-3 px-6 pb-5">
+          <Button
+            color={'secondary'}
+            className="rounded-[5px] px-[20px] py-[10px] text-[14px]"
+            onPress={handleClose}
+            isDisabled={isSubmitting}
+          >
+            Discard Draft
+          </Button>
+          <Button
+            color={'primary'}
+            onPress={onSubmit}
+            isDisabled={!canSubmit}
+            isLoading={isSubmitting}
+            className="rounded-[5px] px-[24px] py-[10px] text-[14px]"
+          >
+            {config.primaryLabel}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
