@@ -990,11 +990,17 @@ export function ScamThreadDetailPage({
   }
 
   const statusTheme = getStatusTheme(hydratedThread.status);
+  const projectComplaintsHref = threadQuery.data
+    ? `/project/${threadQuery.data.projectId}/complaints`
+    : '/discourse';
 
   return (
     <div className="flex flex-col items-center space-y-[20px] px-[20px] pb-16 pt-[20px]">
-      <BackHeader className="w-full px-0">
-        <Link href="/discourse" className="text-[14px] text-black/70">
+      <BackHeader className="w-full px-0" backHref={projectComplaintsHref}>
+        <Link
+          href={projectComplaintsHref}
+          className="text-[14px] text-black/70"
+        >
           Discourse
         </Link>
         <span className="text-black/25">/</span>
