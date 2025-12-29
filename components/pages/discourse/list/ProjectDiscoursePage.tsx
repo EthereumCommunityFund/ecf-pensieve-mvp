@@ -43,7 +43,12 @@ export default function ProjectDiscoursePage({
 }: ProjectComplaintsPageProps) {
   const router = useRouter();
   const { profile, showAuthPrompt } = useAuth();
-  const { project, isProjectFetched } = useProjectDetailContext();
+  const {
+    project,
+    isProjectFetched,
+    getLeadingProjectName,
+    getLeadingLogoUrl,
+  } = useProjectDetailContext();
   const projectMeta = project as typeof project & ProjectComplaintsMeta;
   const numericProjectId = Number(projectId);
   const isValidProjectId = Number.isFinite(numericProjectId);
@@ -103,13 +108,15 @@ export default function ProjectDiscoursePage({
     router.push(createThreadHref);
   }, [createThreadHref, profile, router, showAuthPrompt]);
 
-  const projectInitial = project?.name?.[0]?.toUpperCase() ?? 'P';
-  const projectAvatar = project?.logoUrl ? (
+  const projectName = getLeadingProjectName() || 'Project Name';
+  const projectLogo = getLeadingLogoUrl();
+  const projectInitial = projectName[0]?.toUpperCase() ?? 'P';
+  const projectAvatar = projectLogo ? (
     <div className="size-14 overflow-hidden rounded-[12px] border border-black/5 bg-white">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={project.logoUrl}
-        alt={`${project?.name || 'Project'} logo`}
+        src={projectLogo}
+        alt={`${projectName} logo`}
         className="size-full object-cover"
       />
     </div>
@@ -121,14 +128,12 @@ export default function ProjectDiscoursePage({
 
   return (
     <DiscoursePageLayout
-      title={
-        isProjectFetched ? project?.name || 'Project Name' : 'Project Name'
-      }
-      description="Project Complaints"
+      title={isProjectFetched ? projectName : 'Project Name'}
+      description={`Complaints & discourse for ${projectName} Community`}
       titleAddon={projectAvatar}
       breadcrumbs={[
         { label: 'Back', href: `/project/${projectId}` },
-        { label: project?.name || 'Project Name' },
+        { label: projectName },
         { label: 'Complaints' },
       ]}
       meta={
