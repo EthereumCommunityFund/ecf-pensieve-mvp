@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Cube, FileText, House } from '@phosphor-icons/react';
+import { Cube, House, PencilCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -12,6 +12,7 @@ import {
 } from '@/components/icons';
 import DropDownMenu from '@/components/topbar/dropDownMenu';
 import { ProjectsNavItem } from '@/components/topbar/ProjectsNavItem';
+import { isProduction } from '@/constants/env';
 
 import ECFTypography from '../base/typography';
 
@@ -61,16 +62,15 @@ export const navigationItems: NavigationItem[] = [
     matchPath: '/projects/pending',
   },
   {
-    name: 'Whitepaper',
-    href: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
+    name: 'Discourse',
+    href: isProduction ? '/project/15/complaints' : '/discourse',
     icon: (
-      <FileText className="pc:size-[18px] tablet:size-[16px]  size-[24px] shrink-0" />
+      <PencilCircle className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
     ),
     activeIcon: (
-      <FileText className="pc:size-[18px] tablet:size-[16px]  size-[24px] shrink-0" />
+      <PencilCircle className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
     ),
-    isExternal: true,
-    isDesktopOnly: false,
+    matchPath: '/discourse',
   },
   {
     name: 'Pensieve Ads',

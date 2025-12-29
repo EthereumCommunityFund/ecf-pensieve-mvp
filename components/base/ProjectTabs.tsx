@@ -2,11 +2,11 @@
 
 import { cn } from '@heroui/react';
 import { motion } from 'framer-motion';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 interface Tab {
   key: string;
-  label: string;
+  label: ReactNode;
 }
 
 interface ProjectTabsProps {
@@ -23,21 +23,16 @@ const ProjectTabs: FC<ProjectTabsProps> = ({
   className,
 }) => {
   return (
-    <div
-      className={cn(
-        'inline-flex gap-[20px] border-b border-black/10',
-        className,
-      )}
-    >
+    <div className={cn('inline-flex gap-[20px]', className)}>
       {tabs.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
           className={cn(
-            'relative pb-[12px] text-[16px] font-[600] leading-[22px] transition-colors duration-300',
+            'relative pb-[12px] text-[16px] font-[600] leading-[22px] transition-colors duration-300 text-black',
             activeTab === tab.key
-              ? 'text-black'
-              : 'text-black/60 hover:text-black',
+              ? 'opacity-100'
+              : 'opacity-40 hover:opacity-80',
           )}
         >
           {tab.label}

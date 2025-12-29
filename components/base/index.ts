@@ -1,10 +1,12 @@
 export * from './AddressDisplay';
 export { default as Autocomplete } from './Autocomplete';
 export * from './button';
+export * from './ConfirmModal';
 export * from './datePicker';
 export { default as ExternalLinkModal } from './ExternalLinkModal';
 export * from './input';
 export * from './localeDatePicker';
+export { default as MdEditor } from './MdEditor';
 export * from './modal';
 export * from './select';
 export * from './toast';
