@@ -12,6 +12,7 @@ import {
 } from '@/components/icons';
 import DropDownMenu from '@/components/topbar/dropDownMenu';
 import { ProjectsNavItem } from '@/components/topbar/ProjectsNavItem';
+import { isProduction } from '@/constants/env';
 
 import ECFTypography from '../base/typography';
 
@@ -62,7 +63,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     name: 'Discourse',
-    href: '/discourse',
+    href: isProduction ? '/project/15/complaints' : '/discourse',
     icon: (
       <PencilCircle className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
     ),
