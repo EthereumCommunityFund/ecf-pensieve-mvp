@@ -15,6 +15,7 @@ type BugBountyCardProps = {
   onPropose: () => void;
   onFilteredTransparent: () => void;
   onFilteredAccountable: () => void;
+  onReadRecap: () => void;
   onDismiss?: () => void;
   ctaVariant?: 'modal' | 'dock';
 };
@@ -28,17 +29,18 @@ const BugBountyCard = ({
   onFilteredTransparent,
   onFilteredAccountable,
   onDismiss,
+  onReadRecap,
   ctaVariant = 'modal',
 }: BugBountyCardProps) => {
   const filteredTransparentLabel =
     ctaVariant === 'modal'
-      ? 'Transparent Rank for Perennial Grant'
-      : 'Transparent Rank for Perennial Grant';
+      ? 'Transparent Rank (Archive)'
+      : 'Transparent Rank (Archive)';
 
   const filteredAccountableLabel =
     ctaVariant === 'modal'
-      ? 'Accountable Rank for Perennial Grant'
-      : 'Accountable Rank for Perennial Grant';
+      ? 'Accountable Rank (Archive)'
+      : 'Accountable Rank (Archive)';
 
   return (
     <div className={className} style={style}>
@@ -79,7 +81,7 @@ const BugBountyCard = ({
             <div className="flex flex-col ">
               <div>
                 <span className="font-mona h-[22px] rounded-[4px] bg-[#AAE1C9] px-[6px] py-[2px]  text-[11px] font-[700] leading-[1.6] text-black/80">
-                  Epoch 1
+                  Epoch 1 (Concluded)
                 </span>
               </div>
               <span className="font-mona text-[14px] font-[600] leading-[1.6] text-black/80">
@@ -112,31 +114,26 @@ const BugBountyCard = ({
         </div>
 
         <p className="font-mona text-[14px] leading-[1.6] text-black">
-          {`Rewarding Integrity, Not Noise.`}
-          <br />
           {`The `}
           <span className="font-bold">Perennial Grant Experiment</span>
-          {` is an open, evolving grant campaign, designed to make funding transparent, accountable, and community-owned from the ground up.`}
+          {` wrapped on December 23 2025. A huge thank you to everyone who participated and contributed knowledge to Pensieve during this epoch. You can read the full breakdown and recap below.`}
         </p>
 
         <div className="font-mona rounded-[8px] border-t border-black/10 pt-[12px] text-[13px] leading-[1.6] text-black">
           <span className="font-bold">Campaign Pool:</span>
-          {` $800 USD per week, `}
-          <span className="font-bold">for 10 weeks</span>
+          {` $800 USD per week for 10 weeks (closed)`}
           <br />
-          <span className="font-bold">Starts:</span>
-          {` 12 PM CET, October 14th`}
-          <br />
-          <span className="font-bold">Ends:</span>
-          {` 12 PM CET, December 23rd`}
+          <span className="font-bold">Ran:</span>
+          {` October 14 — December 23 - 2025`}
         </div>
 
-        <p className="font-mona text-[10px] font-[500] leading-normal tracking-[0.14em] text-black/35">
-          Weekly 8 Awards-{' '}
-          <span className="font-bold">Top Transparent Projects</span>: $400
-          <br />
-          <span className="font-bold">Top Accountable Projects</span>: $400
-        </p>
+        {/*} <p className="font-mona text-[10px] font-[500] leading-normal tracking-[0.14em] text-black/35">
+          Weekly awards have ended. Browse the archived
+          {` `}
+          <span className="font-bold">Transparent</span> and
+          {` `}
+          <span className="font-bold">Accountable</span> rankings.
+        </p>*/}
 
         <div className="flex flex-col gap-[10px]">
           <button
@@ -151,22 +148,29 @@ const BugBountyCard = ({
             onClick={onPropose}
             className="font-mona flex h-[44px] w-full items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-[14px] font-[600] leading-[1.6] text-black transition-colors hover:bg-[rgba(170,225,201,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Propose a Project
+            Create a Project for Next Round
           </button>
           <button
+            type="button"
+            onClick={onReadRecap}
+            className="font-mona flex h-[44px] w-full items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-[14px] font-[600] leading-[1.6] text-black transition-colors hover:bg-[rgba(170,225,201,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Read the Recap
+          </button>
+          {/*<button
             type="button"
             onClick={onFilteredTransparent}
             className="font-mona flex h-[44px] w-full items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-[14px] font-[600] leading-[1.6] text-black transition-colors hover:bg-[rgba(170,225,201,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {filteredTransparentLabel}
-          </button>
-          <button
+          </button>*/}
+          {/*<button
             type="button"
             onClick={onFilteredAccountable}
             className="font-mona flex h-[44px] w-full items-center justify-center rounded-[6px] border border-black/10 bg-white/45 text-[14px] font-[600] leading-[1.6] text-black transition-colors hover:bg-[rgba(170,225,201,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {filteredAccountableLabel}
-          </button>
+          </button>*/}
         </div>
       </div>
       <div className="pointer-events-none absolute -bottom-[160px] right-[-220px] size-[420px] rounded-full bg-[radial-gradient(circle,_rgba(132,255,205,0.35)_0%,_rgba(255,255,255,0)_65%)]" />
@@ -223,6 +227,13 @@ const BugBountyEntry = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [closeDockCard, closeModal]);
 
+  const handleOpenRecap = useCallback(() => {
+    closeDockCard();
+    closeModal();
+    const url = `https://x.com/ECFPensieve/status/2003772249661485493`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, [closeDockCard, closeModal]);
+
   const handleNavigateToCreateProject = useCallback(() => {
     if (!profile) {
       showAuthPrompt();
@@ -262,6 +273,7 @@ const BugBountyEntry = () => {
             }}
             onClose={closeModal}
             onRead={handleOpenGrantAnnouncement}
+            onReadRecap={handleOpenRecap}
             onPropose={handleNavigateToCreateProject}
             onFilteredTransparent={handleViewFilteredTransparentProjects}
             onFilteredAccountable={handleViewFilteredAccountableProjects}
@@ -285,6 +297,7 @@ const BugBountyEntry = () => {
               onPropose={handleNavigateToCreateProject}
               onFilteredTransparent={handleViewFilteredTransparentProjects}
               onFilteredAccountable={handleViewFilteredAccountableProjects}
+              onReadRecap={handleOpenRecap}
               ctaVariant="dock"
             />
           ) : (
@@ -309,7 +322,7 @@ const BugBountyEntry = () => {
                 <div className="flex flex-col">
                   <div>
                     <span className="font-mona h-[22px] rounded-[4px] bg-[#AAE1C9] px-[6px] py-[2px]  text-[11px] font-[700] leading-[1.6] text-black/80">
-                      Epoch 1
+                      Epoch 1 (Concluded)
                     </span>
                   </div>
                   <span className="font-mona text-[14px] font-[600] leading-[1.6] text-black/80">
