@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@heroui/react';
-import { Cube, FileText, House, PencilCircle } from '@phosphor-icons/react';
+import { Cube, House, PencilCircle } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -71,18 +71,6 @@ export const navigationItems: NavigationItem[] = [
       <PencilCircle className="pc:size-[18px] tablet:size-[16px] size-[24px] shrink-0" />
     ),
     matchPath: '/discourse',
-  },
-  {
-    name: 'Whitepaper',
-    href: 'https://ethereum-community-fund.gitbook.io/the-ecf-pensieve-decentralised-social-consensus',
-    icon: (
-      <FileText className="pc:size-[18px] tablet:size-[16px]  size-[24px] shrink-0" />
-    ),
-    activeIcon: (
-      <FileText className="pc:size-[18px] tablet:size-[16px]  size-[24px] shrink-0" />
-    ),
-    isExternal: true,
-    isDesktopOnly: false,
   },
   {
     name: 'Pensieve Ads',
