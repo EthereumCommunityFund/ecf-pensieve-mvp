@@ -5,6 +5,7 @@ import { useDebounce } from 'use-debounce';
 
 import { Modal, ModalBody, ModalContent } from '@/components/base/modal';
 import { trpc } from '@/lib/trpc/client';
+import type { IProject } from '@/types';
 
 import SearchBox from './SearchBox';
 import SearchResults from './SearchResults';
@@ -12,9 +13,16 @@ import SearchResults from './SearchResults';
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
+  hidePendingProjects?: boolean;
+  resolveProjectHref?: (project: IProject, isPublished: boolean) => string;
 }
 
-export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
+export default function SearchModal({
+  isOpen,
+  onClose,
+  hidePendingProjects = false,
+  resolveProjectHref,
+}: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery] = useDebounce(searchQuery, 300);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
@@ -110,6 +118,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 error={error}
                 query={debouncedQuery}
                 onClose={onClose}
+                hidePendingProjects={hidePendingProjects}
+                resolveProjectHref={resolveProjectHref}
               />
             )}
           </div>
