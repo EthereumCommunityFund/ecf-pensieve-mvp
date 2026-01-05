@@ -1,7 +1,8 @@
 'use client';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { cn, Skeleton } from '@heroui/react';
-import { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { ReactNode, useCallback } from 'react';
 
 import { ECFButton } from '@/components/base/button';
 import { useNavigationContext } from '@/hooks/useNavigation';
@@ -9,10 +10,19 @@ import { useNavigationContext } from '@/hooks/useNavigation';
 interface BackHeaderProps {
   children?: ReactNode;
   className?: string;
+  backHref?: string;
 }
 
-const BackHeader = ({ children, className }: BackHeaderProps) => {
+const BackHeader = ({ children, className, backHref }: BackHeaderProps) => {
+  const router = useRouter();
   const { onRouterBack } = useNavigationContext();
+  const handleBack = useCallback(() => {
+    if (backHref) {
+      router.replace(backHref);
+      return;
+    }
+    onRouterBack();
+  }, [backHref, onRouterBack, router]);
 
   return (
     <div
@@ -23,7 +33,7 @@ const BackHeader = ({ children, className }: BackHeaderProps) => {
     >
       <div className="mobile:hidden block">
         <ECFButton
-          onPress={onRouterBack}
+          onPress={handleBack}
           className="font-open-sans h-[35px] bg-transparent px-[10px] text-[14px] font-[600] text-black"
           startContent={<ArrowLeftIcon className="size-[20px]" />}
         >
@@ -34,7 +44,7 @@ const BackHeader = ({ children, className }: BackHeaderProps) => {
         <ECFButton
           className="h-[35px] bg-transparent px-[10px]"
           isIconOnly={true}
-          onPress={onRouterBack}
+          onPress={handleBack}
         >
           <ArrowLeftIcon className="size-[20px] shrink-0" />
         </ECFButton>

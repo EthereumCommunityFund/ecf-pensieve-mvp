@@ -3,13 +3,14 @@
 import Link from 'next/link';
 
 import { useProjectItemValue } from '@/hooks/useProjectItemValue';
-import { IProject } from '@/types';
+import type { IProject } from '@/types';
 
 interface SearchResultItemProps {
   project: IProject;
   query: string;
   isPublished: boolean;
   onClose: () => void;
+  resolveProjectHref?: (project: IProject, isPublished: boolean) => string;
 }
 
 export default function SearchResultItem({
@@ -17,6 +18,7 @@ export default function SearchResultItem({
   query,
   isPublished,
   onClose,
+  resolveProjectHref,
 }: SearchResultItemProps) {
   const { logoUrl, projectName, tagline, getItemValue } =
     useProjectItemValue(project);
@@ -45,9 +47,11 @@ export default function SearchResultItem({
   const creatorName =
     project.creator.name || project.creator.address.slice(0, 6) + '...';
 
-  const projectUrl = isPublished
-    ? `/project/${project.id}`
-    : `/project/pending/${project.id}`;
+  const projectUrl = resolveProjectHref
+    ? resolveProjectHref(project, isPublished)
+    : isPublished
+      ? `/project/${project.id}`
+      : `/project/pending/${project.id}`;
 
   return (
     <Link href={projectUrl} onClick={onClose}>

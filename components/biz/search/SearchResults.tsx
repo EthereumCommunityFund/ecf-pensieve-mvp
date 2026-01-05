@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 
+import type { IProject } from '@/types';
+
 import SearchEmptyState from './SearchEmptyState';
 import SearchResultItem from './SearchResultItem';
 import SearchResultSkeleton from './SearchResultSkeleton';
@@ -23,6 +25,8 @@ interface SearchResultsProps {
   error: any;
   query: string;
   onClose: () => void;
+  hidePendingProjects?: boolean;
+  resolveProjectHref?: (project: IProject, isPublished: boolean) => string;
 }
 
 export default function SearchResults({
@@ -31,8 +35,14 @@ export default function SearchResults({
   error,
   query,
   onClose,
+  hidePendingProjects = false,
+  resolveProjectHref,
 }: SearchResultsProps) {
   const router = useRouter();
+  const publishedItems = results?.published.items ?? [];
+  const unpublishedItems = hidePendingProjects
+    ? []
+    : (results?.unpublished.items ?? []);
 
   if (isLoading) {
     return (
@@ -63,8 +73,7 @@ export default function SearchResults({
 
   if (
     !results ||
-    (results.published.items.length === 0 &&
-      results.unpublished.items.length === 0)
+    (publishedItems.length === 0 && unpublishedItems.length === 0)
   ) {
     return (
       <SearchEmptyState
@@ -79,7 +88,7 @@ export default function SearchResults({
 
   return (
     <div className="space-y-4 p-[14px] py-3">
-      {results.published.items.length > 0 && (
+      {publishedItems.length > 0 && (
         <div>
           <div className="mb-2">
             <h3 className="text-sm font-semibold text-gray-700 opacity-50">
@@ -87,20 +96,21 @@ export default function SearchResults({
             </h3>
           </div>
           <div className="space-y-1">
-            {results.published.items.map((project) => (
+            {publishedItems.map((project) => (
               <SearchResultItem
                 key={`published-${project.id}`}
                 project={project}
                 query={query}
                 isPublished={true}
                 onClose={onClose}
+                resolveProjectHref={resolveProjectHref}
               />
             ))}
           </div>
         </div>
       )}
 
-      {results.unpublished.items.length > 0 && (
+      {unpublishedItems.length > 0 && (
         <div>
           <div className="mb-2">
             <h3 className="text-sm font-semibold text-gray-700 opacity-50">
@@ -108,13 +118,14 @@ export default function SearchResults({
             </h3>
           </div>
           <div className="space-y-1">
-            {results.unpublished.items.map((project) => (
+            {unpublishedItems.map((project) => (
               <SearchResultItem
                 key={`unpublished-${project.id}`}
                 project={project}
                 query={query}
                 isPublished={false}
                 onClose={onClose}
+                resolveProjectHref={resolveProjectHref}
               />
             ))}
           </div>
