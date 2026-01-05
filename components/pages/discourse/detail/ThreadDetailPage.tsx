@@ -847,10 +847,17 @@ export function ThreadDetailPage({
     );
   }
 
+  const projectComplaintsHref = baseThread
+    ? `/project/${baseThread.projectId}/complaints`
+    : '/discourse';
+
   return (
     <>
-      <BackHeader className="pt-[20px]">
-        <Link href="/discourse" className="text-[14px] text-black/70">
+      <BackHeader className="pt-[20px]" backHref={projectComplaintsHref}>
+        <Link
+          href={projectComplaintsHref}
+          className="text-[14px] text-black/70"
+        >
           Discourse
         </Link>
         <span className="text-black/25">/</span>
