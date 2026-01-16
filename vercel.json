@@ -13,10 +13,6 @@
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/cron/rankingSnapshot",
-      "schedule": "0 11 * * *"
-    },
-    {
       "path": "/api/cron/harbergerSlotPoke",
       "schedule": "0 */2 * * *"
     }
